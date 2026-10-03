@@ -31,6 +31,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -45,6 +46,9 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class OspreyCommandArgsTests
     {
+        // OspreyCommandArgs renders --help at 78 columns.
+        private const int HELP_WIDTH = 78;
+
         /// <summary>
         /// Parses tokens built from the Argument instances (<c>ARG_THREADS + 8</c>), split
         /// into argv the way a shell would by <see cref="ArgTokens.Split"/>.
@@ -156,8 +160,13 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.02, Parse(OspreyCommandArgs.ARG_EXPERIMENT_FDR + 0.02).ExperimentFdr);
             Assert.AreEqual(0.01, Parse(OspreyCommandArgs.ARG_PROTEIN_FDR + 0.01).ProteinFdr);
             Assert.AreEqual(8, Parse(OspreyCommandArgs.ARG_THREADS + 8).NThreads);
-            Assert.AreEqual(FdrMethod.Simple, Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"simple").FdrMethod);
-            Assert.AreEqual(FdrMethod.Percolator, Parse(OspreyCommandArgs.ARG_FDR_METHOD, @"bogus").FdrMethod); // warn -> default
+            // The classifier is no argument's value: the parse copies it from OSPREY_FDR_MODEL,
+            // read once at process start (the parse itself is pinned in CoreTypesTest). The
+            // environment cannot be varied here, so the value is passed in, and followed into the
+            // training config: #4491 was gbdt silently training the SVM, and a check that the
+            // config merely echoes the environment passes with the assignment deleted.
+            AssertClassifierReachesTraining(FdrClassifier.Gbdt, true, OspreyEnvironment.GbtMaxIterations);
+            AssertClassifierReachesTraining(FdrClassifier.LinearSvm, false, 10);
             Assert.AreEqual(FdrLevel.Peptide, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"peptide").FdrLevel);
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
@@ -225,6 +234,17 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"run.log", Parse(OspreyCommandArgs.ARG_LOG_FILE + @"run.log").LogFilePath);
         }
 
+        private static void AssertClassifierReachesTraining(FdrClassifier fdrModel, bool expectTrees,
+            int expectMaxIterations)
+        {
+            var config = OspreyCommandArgs.ParseArgs(ArgTokens.Split(new[] { OspreyCommandArgs.ARG_INPUT + @"a.mzML" }),
+                fdrModel);
+            Assert.AreEqual(fdrModel, config.FdrClassifier);
+            var percConfig = PercolatorEngine.BuildProjectionPercolatorConfig(config, null, null);
+            Assert.AreEqual(expectTrees, percConfig.UseGradientBoostedTrees);
+            Assert.AreEqual(expectMaxIterations, percConfig.MaxIterations);
+        }
+
         /// <summary>
         /// Every value a user can mistype must arrive at Main's parse sink as one of the three
         /// types it treats as a usage error, so the operator gets the flag's name and no stack.
@@ -234,10 +254,31 @@ namespace pwiz.Osprey.Test
         /// through the parser. The assertions below are the contract Program.Main's
         /// `when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)`
         /// filter reads; adding a numeric option without ParseInt / ParseDouble breaks it.
+        ///
+        /// <para>A REMOVED argument lands there too, as any unknown one does. --fdr-method went
+        /// with no alias (#4543): accepting it silently would leave a script that passes
+        /// <c>--fdr-method gbdt</c> training the linear SVM with no sign it asked for anything
+        /// else, the #4491 failure by another route.</para>
         /// </summary>
         [TestMethod]
         public void TestBadOptionValuesAreUsageErrors()
         {
+            // --fdr-method is rejected exactly the way an argument that never existed is: same
+            // exception type, same message but for the name, whatever value follows.
+            const string removedArg = @"--fdr-method";
+            const string neverArg = @"--no-such-argument";
+            string neverMessage = Assert.ThrowsException<ArgumentException>(
+                () => OspreyCommandArgs.ParseArgs(new[] { neverArg })).Message;
+            foreach (var removedValue in new[] { @"gbdt", @"percolator", @"simple" })
+            {
+                var removed = Assert.ThrowsException<ArgumentException>(
+                    () => OspreyCommandArgs.ParseArgs(new[] { removedArg, removedValue }), removedValue);
+                Assert.AreEqual(neverMessage.Replace(neverArg, removedArg), removed.Message);
+            }
+            Assert.IsFalse(OspreyCommandArgs.AllArguments.Any(a => a.ArgumentText == removedArg),
+                string.Format(@"{0} must not be declared, or it reappears in {1}",
+                    removedArg, OspreyCommandArgs.ARG_HELP.ArgumentText));
+
             var argThreads = OspreyCommandArgs.ARG_THREADS;
             foreach (var badValue in new[] { @"bad", @"1.5", @"99999999999999999999", string.Empty })
             {
@@ -320,7 +361,7 @@ namespace pwiz.Osprey.Test
             }
 
             Assert.ThrowsException<ValueUnexpectedException>(() => OspreyCommandArgs.ARG_TIMESTAMP + 1);
-            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_FDR_METHOD + @"bogus");
+            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_FDR_LEVEL + @"bogus");
             Assert.ThrowsException<ArgumentException>(() => argThreads + OspreyCommandArgs.ARG_INPUT);
             Assert.ThrowsException<ArgumentNullException>(() => OspreyCommandArgs.ARG_LIBRARY + null);
         }
@@ -336,8 +377,8 @@ namespace pwiz.Osprey.Test
         {
             var argThreads = OspreyCommandArgs.ARG_THREADS;
             Assert.AreEqual(Parse(argThreads + 8).NThreads, ParseInline(argThreads, 8).NThreads);
-            Assert.AreEqual(Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"gbdt").FdrMethod,
-                ParseInline(OspreyCommandArgs.ARG_FDR_METHOD, @"gbdt").FdrMethod);
+            Assert.AreEqual(Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"peptide").FdrLevel,
+                ParseInline(OspreyCommandArgs.ARG_FDR_LEVEL, @"peptide").FdrLevel);
             var argParallelFiles = OspreyCommandArgs.ARG_PARALLEL_FILES;
             Assert.AreEqual(4, ParseInline(argParallelFiles, 4).FileParallelism.Count);
             Assert.AreEqual(FileParallelismMode.Sequential, ParseInline(argParallelFiles, 0).FileParallelism.Mode);
@@ -520,6 +561,23 @@ namespace pwiz.Osprey.Test
                     @"NoSuchSection", OspreyCommandArgs.ARG_HELP.ArgumentText + @" sections") + Environment.NewLine,
                 OspreyCommandArgs.BuildUsage(@"NoSuchSection"));
 
+            // Japanese and Chinese: a CJK character fills two console columns, so every line must fit
+            // the table width in display columns, and a flag inside CJK text (which has no spaces to
+            // break at) must never be split across lines, where a user copying it gets a broken one.
+            foreach (var language in new[] { @"ja", @"zh-Hans" })
+            {
+                string localized;
+                using (new CultureScope(CultureInfo.GetCultureInfo(language)))
+                    localized = OspreyCommandArgs.BuildUsage(null);
+                foreach (var line in localized.Split('\n').Select(l => l.TrimEnd('\r')))
+                {
+                    Assert.IsTrue(ConsoleTable.DisplayWidth(line) <= HELP_WIDTH,
+                        string.Format(@"{0} help line is {1} columns wide: {2}", language, ConsoleTable.DisplayWidth(line), line));
+                }
+                foreach (var arg in OspreyCommandArgs.AllArguments.Where(a => !a.InternalUse))
+                    StringAssert.Contains(localized, arg.ArgumentText, language);
+            }
+
             // html: well-formed-ish document with a table.
             string html = OspreyCommandArgs.GenerateUsageHtml();
             StringAssert.Contains(html, @"<html>");
@@ -534,20 +592,40 @@ namespace pwiz.Osprey.Test
         /// <c>Documentation/Help/en/CommandLine.html</c>. The test is self-updating: when they
         /// differ it overwrites the committed file with the freshly generated content and then
         /// fails, so the fix is simply to review and commit the regenerated file. (CI fails the same
-        /// way, flagging an argument or generated-prose change that was not regenerated.) The
-        /// per-language folder leaves room for ja / zh-CHS once the descriptions move to a .resx.
+        /// way, flagging an argument or generated-prose change that was not regenerated.) As in
+        /// Skyline's Documentation/Help, there is one page per shipped language: en, ja, zh-Hans.
         /// </summary>
         [TestMethod]
         public void TestCommandLineHelpDocumentation()
         {
-            // The committed page is the English one (Help/en), whatever culture the suite runs in.
+            // Each page is generated in its own language, whatever culture the suite runs in.
+            var rewritten = new List<string>();
+            foreach (var language in new[] { @"en", @"ja", @"zh-Hans" })
+            {
+                string path = UpdateHelpPage(language);
+                if (path != null)
+                    rewritten.Add(path);
+            }
+            // Out of date (or missing): the pages were rewritten; fail so the developer reviews and
+            // commits them. Re-running after the commit passes.
+            Assert.AreEqual(0, rewritten.Count,
+                @"Command-line help pages were out of date or missing and were regenerated; review and commit: " +
+                string.Join(@", ", rewritten));
+        }
+
+        /// <summary>
+        /// Regenerates Documentation/Help/&lt;language&gt;/CommandLine.html when its content differs
+        /// from the committed page, returning its path, or null when it is up to date.
+        /// </summary>
+        private static string UpdateHelpPage(string language)
+        {
             string generated;
-            using (new CultureScope(CultureInfo.GetCultureInfo(@"en")))
+            using (new CultureScope(CultureInfo.GetCultureInfo(language)))
             {
                 generated = OspreyCommandArgs.GenerateUsageHtml();
             }
             string committedPath = Path.Combine(FindOspreySourceRoot(),
-                @"Documentation", @"Help", @"en", @"CommandLine.html");
+                @"Documentation", @"Help", language, @"CommandLine.html");
 
             // Compare EOL-agnostically: GenerateUsageHtml builds with Environment.NewLine, which
             // differs between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite
@@ -555,18 +633,13 @@ namespace pwiz.Osprey.Test
             // and it keeps a pure EOL difference from triggering a spurious rewrite.
             string committed = File.Exists(committedPath) ? File.ReadAllText(committedPath) : null;
             if (committed != null && NormalizeEol(committed) == NormalizeEol(generated))
-                return;
+                return null;
 
-            // Out of date (or missing): self-heal by writing the regenerated page, then fail so the
-            // developer reviews and commits it. Re-running after the commit passes.
             string committedDir = Path.GetDirectoryName(committedPath);
             if (!string.IsNullOrEmpty(committedDir))
                 Directory.CreateDirectory(committedDir);
             File.WriteAllText(committedPath, generated);
-            Assert.Fail(committed == null
-                    ? @"Generated usage doc did not exist; wrote {0}. Review and commit it."
-                    : @"Documentation/Help/en/CommandLine.html was out of date; regenerated it at {0}. Review and commit the change.",
-                committedPath);
+            return committedPath;
         }
 
         private static string NormalizeEol(string s)

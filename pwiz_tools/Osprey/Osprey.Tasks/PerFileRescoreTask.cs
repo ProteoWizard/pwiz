@@ -153,7 +153,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it (#4486).
         /// </summary>
-        public const string TASK_NAME = @"PerFileRescoring";
+        public const string TASK_NAME = OspreyTaskNames.PER_FILE_RESCORING;
 
         public override string Name => TASK_NAME;
 
@@ -294,7 +294,10 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx);
+                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
+                // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
+                // model, so the classifier that trained it keys this task too (empty for the SVM).
+                + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
         }
 
         /// <summary>
@@ -684,8 +687,10 @@ namespace pwiz.Osprey.Tasks
                 // Not DiagnosticsOnly: FirstPassFDR did not plan in this process, no worker bundle
                 // was supplied, and the per-run hydrate is unavailable.
                 string reason = ctx.Config.DiagnosticsOnly
-                    ? OspreyTasksResources.PerFileRescoreTask_Run___task_ModelDiagnostics_only_builds_the_report_for_a_completed_analysis__Finish_the_
-                    : OspreyTasksResources.PerFileRescoreTask_Run_the_cross_run_reconciliation_data_they_need_is_not_available_to_this_run__To_rebuild_it__;
+                    ? string.Format(OspreyTasksResources.PerFileRescoreTask_Run___task_ModelDiagnostics_only_builds_the_report_for_a_completed_analysis__Finish_the_,
+                        OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME))
+                    : string.Format(OspreyTasksResources.PerFileRescoreTask_Run_the_cross_run_reconciliation_data_they_need_is_not_available_to_this_run__To_rebuild_it__,
+                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
                 ctx.LogError(string.Format(
                     OspreyTasksResources.PerFileRescoreTask_Run_Cannot_resume___0__of__1__runs_still_need_re_scoring__but__2_,
                     pass2Expected - pass2Present, pass2Expected, reason));
@@ -1291,15 +1296,17 @@ namespace pwiz.Osprey.Tasks
             var sidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
             if (sidecar?.Model == null)
             {
-                ctx.LogVerbose(
-                    OspreyTasksResources.PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_);
+                ctx.LogVerbose(string.Format(
+                    OspreyTasksResources.PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_,
+                    SecondPassFdrTask.TASK_NAME));
                 return null;
             }
             var scorer = FrozenModelScorer.TryCreate(sidecar.Model);
             if (scorer == null)
             {
-                ctx.LogVerbose(
-                    OspreyTasksResources.PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used__so_the_per_file_part_of_second_pass_FDR_runs_);
+                ctx.LogVerbose(string.Format(
+                    OspreyTasksResources.PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used__so_the_per_file_part_of_second_pass_FDR_runs_,
+                    SecondPassFdrTask.TASK_NAME));
                 return null;
             }
             // protein-compact is the only competition mode - the guard above returned already
@@ -3336,7 +3343,8 @@ namespace pwiz.Osprey.Tasks
             // the run named in the log beside the phase that failed.
             string error = string.Format(
                 OspreyTasksResources.PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_,
-                fileName);
+                fileName, ParquetScoreCache.EXT_SCORES_RECONCILED, TASK_NAME, ParquetScoreCache.EXT_SCORES,
+                OspreyArgNames.TaskText(TASK_NAME));
             ctx.LogError(error);
             ctx.ExitCode = 1;
             throw new InvalidDataException(error);

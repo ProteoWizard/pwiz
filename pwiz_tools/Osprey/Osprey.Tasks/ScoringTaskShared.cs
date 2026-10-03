@@ -244,8 +244,11 @@ namespace pwiz.Osprey.Tasks
                 indexError = ex;
             }
             if (index == null)
+            {
                 throw new IOException(string.Format(
-                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath), indexError);
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath,
+                    ParquetScoreCache.EXT_SCORES, CalibrationIO.EXT), indexError);
+            }
             return index;
         }
 
@@ -281,7 +284,8 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 throw new SpectraCacheException(string.Format(
-                    OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read, consumer, cachePath, ex.Message),
+                    OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read, consumer, cachePath, ex.Message,
+                    PerFileScoringTask.TASK_NAME),
                     SpectraCacheRejection.None, cachePath, ex);
             }
             if (index == null)
@@ -292,10 +296,12 @@ namespace pwiz.Osprey.Tasks
                 // does not declare the cache, so over scoring that is current it only skips.
                 string spectraCacheTask = OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME);
                 string remedy = reason == SpectraCacheRejection.Absent
-                    ? string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_, fileName, spectraCacheTask)
+                    ? string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_, fileName, spectraCacheTask,
+                        OspreyArgNames.Text(OspreyArgNames.TASK), OspreyArgNames.Text(OspreyArgNames.OUTPUT_DIR),
+                        OspreyArgNames.Text(OspreyArgNames.CACHE_DIR), SpectraCache.EXT)
                     : string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_, fileName, spectraCacheTask);
                 throw new SpectraCacheException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_,
-                    consumer, cachePath, SpectraCacheException.Describe(reason), remedy),
+                    consumer, cachePath, SpectraCacheException.Describe(reason), remedy, PerFileScoringTask.TASK_NAME),
                     reason, cachePath);
             }
             return index;
@@ -337,12 +343,14 @@ namespace pwiz.Osprey.Tasks
                 : Path.GetDirectoryName(Path.GetFullPath(inputFile));
             if (string.IsNullOrEmpty(parent))
             {
-                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration, inputFile, consumer));
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration, inputFile, consumer,
+                    PerFileScoringTask.TASK_NAME));
             }
             string calPath = CalibrationIO.CalibrationPathForInput(inputFile, parent);
             if (!File.Exists(calPath))
             {
-                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration, calPath, inputFile, consumer));
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration, calPath, inputFile, consumer,
+                    PerFileScoringTask.TASK_NAME, OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME)));
             }
 
             CalibrationParams calParams;
@@ -789,7 +797,7 @@ namespace pwiz.Osprey.Tasks
         /// taking the streamed join with it.</para>
         ///
         /// <para>No consumer may read PIN features off these stubs
-        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: a non-Percolator FDR method,
+        /// (<c>PerFileScoringTask.NeedsResidentPool</c>:
         /// <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
         /// the entries those consumers index. And the analysis-wide retained base_id summary has
         /// to be on disk, because it IS the compaction predicate every refill applies; without
@@ -1061,7 +1069,8 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path))
             {
                 error =
-                    OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_No_output__blib_was_given__so_the_list_of_precursor_candidates_kept_for_cross_run_;
+                    string.Format(OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_No_output__blib_was_given__so_the_list_of_precursor_candidates_kept_for_cross_run_,
+                        LibrarySource.EXT_BLIB);
                 return null;
             }
             var retained = RetainedBaseIdSidecar.Read(path);
@@ -1073,7 +1082,7 @@ namespace pwiz.Osprey.Tasks
                 // a complete analysis reports its outputs valid and writes nothing.
                 error = string.Format(
                     OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_,
-                    path);
+                    path, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
                 return null;
             }
             return retained;

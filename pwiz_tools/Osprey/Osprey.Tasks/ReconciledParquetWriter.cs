@@ -207,7 +207,7 @@ namespace pwiz.Osprey.Tasks
                 // answer. The version stamp cannot carry this: OSPREY_VERSION_OVERRIDE is the
                 // sanctioned way to consume another build's artifacts, so it is exactly the
                 // guard an operator turns off. (issue #4486)
-                { @"osprey.reconciled", ParquetScoreCache.RECONCILED_SURVIVORS },
+                { ParquetScoreCache.META_RECONCILED, ParquetScoreCache.RECONCILED_SURVIVORS },
                 { @"osprey.reconciliation_hash", reconciliationHash },
                 // "1" iff Stage 6 actually re-scored or gap-filled something in this file.
                 // Absent on a parquet written before this key existed, which is why the

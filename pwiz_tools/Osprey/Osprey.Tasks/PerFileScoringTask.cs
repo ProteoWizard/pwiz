@@ -77,7 +77,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it.
         /// </summary>
-        public const string TASK_NAME = @"PerFileScoring";
+        public const string TASK_NAME = OspreyTaskNames.PER_FILE_SCORING;
 
         /// <summary>
         /// The largest share of generated decoys that may have no fragment of their own before
@@ -276,7 +276,7 @@ namespace pwiz.Osprey.Tasks
                 { @"osprey.version", OspreyVersion.Current },
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
-                { @"osprey.reconciled", @"false" },
+                { ParquetScoreCache.META_RECONCILED, @"false" },
             };
 
             // Resolve how many input files run concurrently for this invocation
@@ -405,9 +405,9 @@ namespace pwiz.Osprey.Tasks
             // the live objects harvested during scoring.
             // The lean path is valid only where FirstPassFdrTask actually consumes a
             // projection. It must mirror that task's dispatch exactly (FirstPassFdrTask.cs:
-            // !PerFileScoringTask.NeedsResidentPool): any other
-            // combination - a non-Percolator FdrMethod or OSPREY_FDR_PROJECTION=0 - still
-            // needs the fat stubs here. FDRBench pass 1 is NOT one of them any more (#4507):
+            // !PerFileScoringTask.NeedsResidentPool): the one other configuration -
+            // OSPREY_FDR_PROJECTION=0 - still needs the fat stubs here. A non-Percolator
+            // The FDR method was one until #4543 deleted the last. FDRBench pass 1 is NOT one of them any more (#4507):
             // it streams off the per-file sidecars. --model-diagnostics is NOT
             // one of them any more (#4505): it streams its report on every path.
             // The fat/lean decision, and the guard that checks it, key off CanUseLeanProjection -
@@ -1052,7 +1052,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.PerFileScoringTask_FinalizeAndCheck___task__0__complete__FDR_and_the__blib_are_left_to_the_next_task___1___,
-                        Name, FirstPassFdrTask.TASK_NAME));
+                        OspreyArgNames.TaskText(Name), FirstPassFdrTask.TASK_NAME, LibrarySource.EXT_BLIB));
                 }
                 ctx.ExitCode = 0;
                 return false;
@@ -1475,7 +1475,7 @@ namespace pwiz.Osprey.Tasks
             // This one KEEPS NeedsResidentPool deliberately, where the fat/lean choice above
             // moved to the builder. They answer different questions and the predicates diverged
             // when ExpectReconciledInput left NeedsResidentPool (#4486): "does a consumer read
-            // Features off THESE stubs" (a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0)
+            // Features off THESE stubs" (OSPREY_FDR_PROJECTION=0)
             // is still exactly NeedsResidentPool, while "may this load
             // go lean" additionally excludes the reconciled-input merge. Do not "fix" this by
             // copying the builder decision: the merge does not read Features off these stubs -
@@ -1732,8 +1732,9 @@ namespace pwiz.Osprey.Tasks
         /// What the resident-pool terms still filter that <c>NoJoin</c> does not: the
         /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstPassFDR's rehydrate before it
         /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
-        /// silently post-compaction one), OSPREY_FDR_PROJECTION=0 and a non-Percolator
-        /// FdrMethod. --fdrbench-pass 1 left the list with #4507: the pass-1 emitter streams
+        /// silently post-compaction one) and OSPREY_FDR_PROJECTION=0. A non-Percolator
+        /// The FDR method left the list with #4543, which deleted the simple FDR method, the last
+        /// one. --fdrbench-pass 1 left it with #4507: the pass-1 emitter streams
         /// off the per-file sidecars now. OSPREY_PASS2_QVALUE=transfer is NOT among them:
         /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
         /// own on-disk sidecar. <c>--task SecondPassFDR</c> is not among them either, and
@@ -1793,8 +1794,7 @@ namespace pwiz.Osprey.Tasks
             // become one again: the per-run-only redesign maps each adjusted peak through
             // that file's own 1st-pass (score -> run q) sidecar, one file at a time, so it
             // needs no pre-compaction pool. See NeedsResidentPool.
-            if (!config.FdrMethod.UsesPercolatorFramework())
-                return OspreyTasksResources.PerFileScoringTask_PreCompactionPoolReason_An_FDR_method_other_than_Percolator;
+            // A non-Percolator FDR method was a reason here until #4543 deleted the last one.
             if (!OspreyEnvironment.UseFdrProjection)
                 return @"OSPREY_FDR_PROJECTION=0";
             // FirstPassFDR is IN this pipeline, so it will Run and train first-pass Percolator
@@ -1864,7 +1864,7 @@ namespace pwiz.Osprey.Tasks
             {
                 throw new InvalidDataException(string.Format(
                     OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile__0__is_missing_the_feature_columns_of_an_Osprey__scores_parquet_file__Delete_it_and_re_,
-                    parquetPath));
+                    parquetPath, ParquetScoreCache.EXT_SCORES));
             }
             ctx.LogVerbose(TextUtil.GetIndentation(3) + string.Format(
                 OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile_______Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_, stubs.Count));
@@ -2227,7 +2227,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
         /// lean streamed <see cref="FdrProjection"/> set (#4400). True when the projection
-        /// path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR) - and nothing else since
+        /// path is off (OSPREY_FDR_PROJECTION=0) - and nothing else since
         /// #4507 streamed FDRBench pass 1, the last opt-in output that read every entry
         /// in memory. The reconciled-input worker join is NO LONGER one of them (#4486): it
         /// takes the streaming compacted hydrate, one file's pool resident at a time.
@@ -2281,8 +2281,12 @@ namespace pwiz.Osprey.Tasks
             // never matched: memory-safe by a type confusion, and silently pass-2-only. The
             // pass-1 emitter now streams off the per-file sidecars, so the term is gone and
             // the ratchet token with it.
-            return !useFdrProjection ||
-                   !config.FdrMethod.UsesPercolatorFramework();
+            // A non-Percolator FDR method was the last config term, and went with its token
+            // (non-percolator-fdr) when #4543 deleted the simple FDR method: every method left
+            // runs the Percolator framework and streams. No config field arms the pool now; the
+            // config stays in the signature so ResidentPoolGuardTest can keep asserting that
+            // none does, and so a future config term has one place to go.
+            return !useFdrProjection;
         }
 
         /// <summary>
@@ -2317,11 +2321,12 @@ namespace pwiz.Osprey.Tasks
         /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstPassFdrTask.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
         /// operator named THIS path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c>, throw with the token
-        /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: a
-        /// non-Percolator FdrMethod, and <c>OSPREY_FDR_PROJECTION=0</c>, which requests the
-        /// legacy resident implementation outright and so must be named like any other. The
+        /// named so the failure is actionable rather than an opaque OOM at scale. Trigger:
+        /// <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident implementation
+        /// outright and so must be named like any other. The
         /// HPC reconciled-input merge (#4486) and <c>--fdrbench-pass 1</c> (#4507) were
-        /// triggers and are streamed now.
+        /// triggers and are streamed now, and a non-Percolator FDR method was one until #4543
+        /// deleted the last.
         /// </summary>
         private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
         {
@@ -2465,10 +2470,12 @@ namespace pwiz.Osprey.Tasks
             // ExpectReconciledInput -> HPC_MERGE was here and is GONE with the token (#4486):
             // --task SecondPassFDR now streams its load, so it never reaches this method at
             // all. See NeedsResidentPool for why nothing on that node reads the pool.
-            if (!config.FdrMethod.UsesPercolatorFramework())
-                return ResidentPaths.NON_PERCOLATOR_FDR;
+            // NON_PERCOLATOR_FDR was here and is GONE with the token (#4543): the simple FDR
+            // method it named was deleted, and every method left runs the Percolator framework.
             // FDRBENCH_PASS1 was here and is GONE with the token (#4507): the pass-1 emitter
             // streams off the per-file sidecars, so no FDRBench selection reaches this method.
+            // No config-driven trigger remains; config stays in the signature so one added
+            // later is ordered against PROJECTION_OFF here, per the remarks above.
             return null;
         }
 
@@ -2706,7 +2713,8 @@ namespace pwiz.Osprey.Tasks
                 OspreyTasksResources.PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_,
                 ms1Spectra.Count, windowIndex.Ms2Count, isolationWindows.Count,
                 unsortedCount > 0
-                    ? @" " + string.Format(OspreyTasksResources.PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_, unsortedCount)
+                    ? @" " + string.Format(OspreyTasksResources.PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_, unsortedCount,
+                        OspreyArgNames.Text(OspreyArgNames.VERBOSE))
                     : string.Empty));
             ctx.LogInfo(LogTag.COUNT, @"mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
                 fileName, windowIndex.Ms2Count, ms1Spectra.Count);

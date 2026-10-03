@@ -74,7 +74,61 @@ namespace pwiz.Osprey
 
         static int Main(string[] args)
         {
-            return RunCommand(args, new CommandStatusWriter(Console.Error));
+            // Japanese and Chinese text written to a console in a code page that cannot hold it
+            // (the OEM code page of an English-locale Windows, or Shift-JIS / GBK where the reader
+            // expects UTF-8, as in "--help html > help.html") arrives as '?' or mojibake. As in
+            // SkylineCmd's EncodingManager, switch the console to UTF-8 for the run and put it back.
+            Encoding startEncoding = UsesTranslatedText(args) ? SwitchConsoleEncoding(new UTF8Encoding(false)) : null;
+            try
+            {
+                return RunCommand(args, new CommandStatusWriter(Console.Error));
+            }
+            finally
+            {
+                if (startEncoding != null)
+                    SwitchConsoleEncoding(startEncoding);
+            }
+        }
+
+        /// <summary>
+        /// True when this run may write Japanese or Chinese: an explicit <c>--culture</c> (SkylineCmd's
+        /// rule), or a UI language Osprey ships translations for.
+        /// </summary>
+        private static bool UsesTranslatedText(string[] args)
+        {
+            try
+            {
+                if (OspreyCommandArgs.FindValue(args, OspreyCommandArgs.ARG_INTERNAL_CULTURE) != null)
+                    return true;
+            }
+            catch (Exception)
+            {
+                // A malformed --culture is reported by RunCommand; decide from the UI language.
+            }
+            string language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            return language == @"ja" || language == @"zh";
+        }
+
+        /// <summary>
+        /// Sets the console output encoding, returning the one it replaced, or null when there is
+        /// no console to change (output redirected by a host that refuses it).
+        /// </summary>
+        private static Encoding SwitchConsoleEncoding(Encoding encoding)
+        {
+            try
+            {
+                Encoding previous = Console.OutputEncoding;
+                Console.OutputEncoding = encoding;
+                return previous;
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (PlatformNotSupportedException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -474,6 +528,19 @@ namespace pwiz.Osprey
                         OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
                         OspreyEnvironment.MEAN_BEST_N_MAX));
                 }
+                // OSPREY_FDR_MODEL: abort on an unrecognized value, do not fall back. A run that
+                // asked for trees and trained the linear SVM is the #4491 defect, and its output
+                // reads exactly like a tree result. The classifier is named only when it is not
+                // the default, so the linear SVM's log is unchanged; here rather than at Stage 5
+                // for the same reason as the aggregation line above.
+                if (OspreyEnvironment.FdrModelError != null)
+                {
+                    LogError(OspreyEnvironment.FdrModelError);
+                    return 1;
+                }
+                string fdrModelLine = OspreyEnvironment.DescribeFdrModel(config.FdrClassifier);
+                if (fdrModelLine != null)
+                    LogInfo(fdrModelLine);
                 // Abort, do not fall back. A run that asked for a mode it did not get would
                 // report q-values the caller never requested, under whatever output name the
                 // caller chose - and 'percolator' was removed, so existing sweep scripts still
@@ -545,7 +612,8 @@ namespace pwiz.Osprey
                     // warning said was not engaged.
                     // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
                     // reconciled-input load and the pass-1 FDRBench emitter both stream and need
-                    // no allowance.
+                    // no allowance. 'non-percolator-fdr' was retired with the simple FDR method
+                    // it named.
                     LogWarning(string.Format(
                         @"OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
                         @"have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +

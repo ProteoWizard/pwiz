@@ -70,7 +70,7 @@ namespace pwiz.Common.CommandLine
         /// host with space-separated values (Osprey) sets it to a space so the generated help
         /// and the tokens its tests build both match what its parser actually accepts.
         /// </summary>
-        public static string ArgumentValueSeparator { get; set; } = "=";
+        public static string ArgumentValueSeparator { get; set; } = @"=";
 
         /// <summary>
         /// Culture a non-string value is formatted with by the <c>+</c> operator, so that

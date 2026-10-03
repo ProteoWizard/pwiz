@@ -26,7 +26,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\..\..\..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
     <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
@@ -64,7 +63,6 @@
     <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="log4net" Version="3.4.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
 
   <!-- net472: the exact on-disk DLLs + the ClickOnce / System.Web assemblies the net8 path drops -->

@@ -320,6 +320,40 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"Encoding.UTF8 includes a BOM by default. Use 'new UTF8Encoding(false)' for UTF-8 without BOM, or 'new UTF8Encoding(true)' if you explicitly need a BOM."); // Explanation for prohibition, appears in report
 
+            // Remedy for both invisible character inspections below. Verbatim @"" strings do not process escapes, and a
+            // *.Designer.cs file copies its strings from the .resx file it is generated from.
+            const string invisibleCharacterRemedy = @"Delete it or replace it with its ASCII equivalent. If the character is intended, write it as a \uXXXX escape in a regular (not @"""") string or char literal, because verbatim strings do not process escapes. In a generated *.Designer.cs file, fix the source .resx file instead.";
+
+            // Looking for invisible format characters (soft hyphen U+00AD, zero-width spaces and joiners, direction marks,
+            // a BOM inside a file), which are pasted in from documents or produced by editing tools, cannot be seen in
+            // review, and make strings that look identical compare unequal. A BOM at the start of a file is not seen here,
+            // because File.ReadAllText removes it. The soft hyphen is listed separately because the .NET Framework regex
+            // engine classifies it as a dash (Pd), so \p{Cf} alone does not match it there. The regex sees UTF-16 code
+            // units, so format characters outside the Basic Multilingual Plane (e.g. the TAG characters U+E0001-E007F)
+            // are not matched.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Cf}\xAD]", // Forbidden pattern - any BMP character in the Unicode format category, and the soft hyphen
+                true, // Pattern is a regular expression
+                @"Invisible format character (e.g. soft hyphen U+00AD or zero-width space U+200B). " + invisibleCharacterRemedy); // Explanation for prohibition, appears in report
+
+            // Looking for space and line break characters other than the ASCII ones (non-breaking, ideographic and
+            // typographic spaces, which come from pasted text or Japanese and Chinese input methods, and the line and
+            // paragraph separators and next line character). The compiler accepts all of them, and treats the line breaks
+            // as the end of a line, so code after one inside a // comment compiles but is not seen by these inspections,
+            // which split lines only at '\n'.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Zs}\p{Zl}\p{Zp}\x85-[ ]]", // Forbidden pattern - any Unicode space, line or paragraph separator, or next line, except the ASCII space
+                true, // Pattern is a regular expression
+                @"Non-ASCII space or line break character (e.g. non-breaking space U+00A0, ideographic space U+3000 or line separator U+2028). " + invisibleCharacterRemedy); // Explanation for prohibition, appears in report
+
             FilesTreeDataModelInspection();
 
             // A few lines of fake tests that can be useful in development of this mechanism
@@ -665,11 +699,11 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Gdi32), 5 },
+                { typeof(Gdi32), 9 },
                 { typeof(Kernel32), 10 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
-                { typeof(User32), 45 },
+                { typeof(User32), 50 },
 
                 { typeof(DwmapiTest), 4 },
                 { typeof(Gdi32Test), 1 },

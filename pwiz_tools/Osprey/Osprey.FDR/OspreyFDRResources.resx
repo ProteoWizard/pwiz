@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
 	<!-- 
 		Microsoft ResX Schema
@@ -138,9 +138,6 @@
   </data>
   <data name="PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_" xml:space="preserve">
     <value>{0}: scoring all {1:N0} precursor candidate peaks with the saved first-pass model (no retraining), then target-decoy competition for q-values and PEP.</value>
-  </data>
-  <data name="PercolatorEngine_RunSimpleFdr__0____1__targets_pass__FDR__2____3__target_wins___4__decoy_wins_" xml:space="preserve">
-    <value>{0}: {1:N0} targets pass (FDR={2:F4}, {3:N0} target wins, {4:N0} decoy wins)</value>
   </data>
   <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file" xml:space="preserve">
     <value>Loading Percolator training features from 1 file</value>

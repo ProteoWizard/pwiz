@@ -29,7 +29,6 @@ using System.Threading;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
-using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -169,7 +168,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogWarning(string.Format(
                         OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_,
-                        unmatchedKeys.Count, string.Join(@", ", unmatchedKeys)));
+                        unmatchedKeys.Count, string.Join(@", ", unmatchedKeys),
+                        OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME)));
                 }
 
                 int missingPass2 = 0;
@@ -407,7 +407,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogVerbose(CountText.Format(pass2Tally.Skipped,
                         OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_,
-                        OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_));
+                        OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_,
+                        OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME)));
                 }
             }
 
@@ -1207,7 +1208,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(CountText.Format(unreadable.Count,
                         OspreyTasksResources.Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_missing_or_unreadable_for_,
                         OspreyTasksResources.Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__are_missing_or_unreadable_,
-                        string.Join(@", ", unreadable)));
+                        string.Join(@", ", unreadable), FdrScoresSidecar.EXT_FIRST_PASS));
                 }
                 ctx.LogVerbose(CountText.Format(filesRead,
                     OspreyTasksResources.Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_in_1_file_,
@@ -1605,7 +1606,8 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(experimentPath))
             {
                 ctx.LogWarning(
-                    OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_No_output__blib_was_given__so_the_second_pass_experiment_level_q_values_are_not_saved_to_);
+                    string.Format(OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_No_output__blib_was_given__so_the_second_pass_experiment_level_q_values_are_not_saved_to_,
+                        LibrarySource.EXT_BLIB));
                 return;
             }
             try
@@ -1685,8 +1687,9 @@ namespace pwiz.Osprey.Tasks
             // Absent inputs: the frozen 1st-pass model, 1st-pass scalar sidecars or protein
             // stratum, or a file whose input path could not be resolved - e.g. a warm rerun or a
             // distributed SecondPassFDR node that did not train pass 1 in-process.
-            throw new InvalidOperationException(
-                OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__);
+            throw new InvalidOperationException(string.Format(
+                OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
+                OspreyArgNames.Text(OspreyArgNames.TASK)));
         }
 
         /// <summary>
@@ -1743,7 +1746,7 @@ namespace pwiz.Osprey.Tasks
             }
             // Works for whichever classifier the 1st pass trained (linear SVM or
             // gradient-boosted trees) -- the scorer hides that choice, so this stays the
-            // honest-FDR path under --fdr-method gbdt too.
+            // honest-FDR path under OSPREY_FDR_MODEL=gbdt too.
             var scorer = FrozenModelScorer.TryCreate(frozenModel);
             if (scorer == null)
             {
@@ -1872,7 +1875,8 @@ namespace pwiz.Osprey.Tasks
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
                     ctx.LogWarning(string.Format(
-                        OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so_its_first_pass_, fileName));
+                        OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so_its_first_pass_, fileName,
+                        ParquetScoreCache.EXT_SCORES));
                     return false;
                 }
                 // ONLY WHEN THIS PASS WILL READ THEM. The default path applies the worker's own
@@ -2484,7 +2488,7 @@ namespace pwiz.Osprey.Tasks
                     // an incomplete hand-off.
                     ctx.LogWarning(string.Format(
                         OspreyTasksResources.Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so__1__precursor_candidates_,
-                        kvp.Key, kvp.Value.Count));
+                        kvp.Key, kvp.Value.Count, ParquetScoreCache.EXT_SCORES));
                     continue;
                 }
                 // Read the RECONCILED parquet - Stage 6's rescored features - which it
@@ -2526,71 +2530,55 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.TIMING, @"Reloaded PIN features for {0} peaks: {1:F1}s",
                 nReloaded, swReloadFeats.Elapsed.TotalSeconds);
 
-            switch (config.FdrMethod)
+            // Both classifiers share this path: the 2nd pass is the same sequence regardless
+            // of which classifier the 1st pass trained. The frozen model carried in ctx is
+            // whichever one that was, and the score passes select on it, so the frozen
+            // competition works unchanged for trees.
+            //
+            // protein-compact is handled by the frozen competition before the resident
+            // feature reload, so its score pass streams one file at a time. Only
+            // OSPREY_PASS2_QVALUE=transfer reaches here, which is why this no longer
+            // tests Pass2TransferQ: NormalizePass2QValue returns transfer or
+            // protein-compact and nothing else, so on this path the test was always
+            // true and reading it as a choice invited the conclusion that some other
+            // mode lands here.
+            // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
+            // the decoy-depleted reconciled+compacted set (which re-derives an
+            // anti-conservative experiment-scope q), carry the pass-1 q through and
+            // recompute ONLY the per-run q of the peaks reconciliation actually moved.
+            // Each moved/gap-filled peak is re-scored with the FROZEN 1st-pass model
+            // (its RECONCILED features are on entry.Features above) and mapped through
+            // THAT file's own (1st-pass score -> run q) table; experiment q is left as
+            // the pass-1 carry. See TODO-osprey_pass2_per_run_only_qvalue.
+            if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
+                frozenModel?.Results != null &&
+                TransferPerRunQ(perFileEntries, config, ctx, frozenModel.Results))
             {
-                // Gbdt shares this path with Percolator: the 2nd pass is the same
-                // sequence (transfer-compete's frozen-model recompute, or a retrain)
-                // regardless of which classifier the 1st pass trained. The frozen model
-                // carried in ctx is whichever one that was, and the score passes select
-                // on it, so the frozen competition works unchanged for trees.
-                case FdrMethod.Percolator:
-                case FdrMethod.Gbdt:
-                    // protein-compact is handled by the frozen competition before the resident
-                    // feature reload, so its score pass streams one file at a time. Only
-                    // OSPREY_PASS2_QVALUE=transfer reaches here, which is why this no longer
-                    // tests Pass2TransferQ: NormalizePass2QValue returns transfer or
-                    // protein-compact and nothing else, so on this path the test was always
-                    // true and reading it as a choice invited the conclusion that some other
-                    // mode lands here.
-                    // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
-                    // the decoy-depleted reconciled+compacted set (which re-derives an
-                    // anti-conservative experiment-scope q), carry the pass-1 q through and
-                    // recompute ONLY the per-run q of the peaks reconciliation actually moved.
-                    // Each moved/gap-filled peak is re-scored with the FROZEN 1st-pass model
-                    // (its RECONCILED features are on entry.Features above) and mapped through
-                    // THAT file's own (1st-pass score -> run q) table; experiment q is left as
-                    // the pass-1 carry. See TODO-osprey_pass2_per_run_only_qvalue.
-                    if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
-                        frozenModel?.Results != null &&
-                        TransferPerRunQ(perFileEntries, config, ctx, frozenModel.Results))
-                    {
-                        // Transferred. There is no retrained 2nd-pass model in any surviving
-                        // mode, so --model-diagnostics gets no pass-2 SVM model view (the
-                        // pass-2 FDR calibration curve still renders from the transferred
-                        // q-values; the pass-1 model view still renders too).
-                        return;
-                    }
-                    // The transfer could not be made, and the 2nd-pass Percolator retrain that
-                    // used to catch this case is GONE - not disabled, removed. It was cut for a
-                    // correctness reason: compaction leaves the reconciled pool decoy-depleted,
-                    // so a retrain on it mis-estimates the null and re-derives an
-                    // anti-conservative experiment-scope q (issue #4484, closed "do not
-                    // re-open the retrain"). Falling back to it produced output by the method
-                    // the project rejected, on a warning, which is warn-and-proceed where the
-                    // standing rule is hard-fail: the run would finish and its q-values would
-                    // be wrong in a direction no downstream gate looks for.
-                    //
-                    // Every reason the transfer declines has already been logged by the code
-                    // that declined it - an absent or unusable frozen model, no input-file
-                    // list, an unreadable 1st-pass experiment sidecar - so this states the
-                    // consequence and the remedy rather than re-deriving the cause.
-                    throw new InvalidOperationException(string.Format(
-                        @"Second-pass FDR in transfer mode cannot run without the first-pass model " +
-                        @"and experiment-level intermediate file (see the warning above). Re-run " +
-                        @"{0}, then {1}.",
-                        OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME)));
-                // Simple / Mokapot 2nd-pass paths intentionally
-                // not implemented yet -- the in-process pipeline's
-                // FirstPassFdrTask.RunFdr already covers Simple, and
-                // Mokapot is not used in Osprey's current
-                // scope. If those become relevant for an HPC chain,
-                // mirror the Rust dispatch in pipeline.rs:4424-4448.
-                default:
-                    ctx.LogWarning(string.Format(
-                        OspreyTasksResources.Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR_is_not_available_for_the__0__FDR_method__protein_FDR_will_use_first_pass_,
-                        config.FdrMethod.GetLocalizedString()));
-                    return;
+                // Transferred. There is no retrained 2nd-pass model in any surviving
+                // mode, so --model-diagnostics gets no pass-2 SVM model view (the
+                // pass-2 FDR calibration curve still renders from the transferred
+                // q-values; the pass-1 model view still renders too).
+                return;
             }
+            // The transfer could not be made, and the 2nd-pass Percolator retrain that
+            // used to catch this case is GONE - not disabled, removed. It was cut for a
+            // correctness reason: compaction leaves the reconciled pool decoy-depleted,
+            // so a retrain on it mis-estimates the null and re-derives an
+            // anti-conservative experiment-scope q (issue #4484, closed "do not
+            // re-open the retrain"). Falling back to it produced output by the method
+            // the project rejected, on a warning, which is warn-and-proceed where the
+            // standing rule is hard-fail: the run would finish and its q-values would
+            // be wrong in a direction no downstream gate looks for.
+            //
+            // Every reason the transfer declines has already been logged by the code
+            // that declined it - an absent or unusable frozen model, no input-file
+            // list, an unreadable 1st-pass experiment sidecar - so this states the
+            // consequence and the remedy rather than re-deriving the cause.
+            throw new InvalidOperationException(string.Format(
+                @"Second-pass FDR in transfer mode cannot run without the first-pass model " +
+                @"and experiment-level intermediate file (see the warning above). Re-run " +
+                @"{0}, then {1}.",
+                OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME)));
         }
 
         /// <summary>
@@ -2954,7 +2942,7 @@ namespace pwiz.Osprey.Tasks
         /// <c>.1st-pass.fdr_scores.bin</c> sidecar and build two per-file lookup tables from its
         /// <c>(Score, RunPrecursorQvalue)</c> / <c>(Score, RunPeptideQvalue)</c> pairs -- the
         /// sidecar Score is the averaged-model score, the SAME scale
-        /// <see cref="ScoreWithFrozenModel"/> produces, so the table is scale-consistent by
+        /// <see cref="FrozenModelScorer.Score"/> produces, so the table is scale-consistent by
         /// construction. Then classify every survivor by its reconciled feature score against
         /// its 1st-pass sidecar record:
         /// <list type="bullet">
@@ -2994,10 +2982,6 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
-            int nFeatures = avgWeights.Length;
-            var standardizer = firstPassModel.Standardizer;
-
             var inputByFileName = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var inputFile in config.InputFiles)
                 inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
@@ -3033,7 +3017,6 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
             var tally = new TransferTally();
             // Per-file progress: building each file's per-run tables + classifying its survivors ran
             // silently for minutes on an 82-file join (the gap between Stage 6 and the summary below).
@@ -3050,8 +3033,8 @@ namespace pwiz.Osprey.Tasks
                     tally.Skipped += kvp.Value.Count;
                     continue;
                 }
-                TransferOneFile(kvp.Key, inputFile, kvp.Value, standardizer, avgWeights,
-                    avgBias, nFeatures, scratch, globalExperiment, ctx.LogWarning, ref tally);
+                TransferOneFile(kvp.Key, inputFile, kvp.Value, scorer, globalExperiment,
+                    ctx.LogWarning, ref tally);
             }
             transferProgress.Dispose();
 
@@ -3101,14 +3084,20 @@ namespace pwiz.Osprey.Tasks
         /// the mode a fan-out computation that happens to be running in the join. Moving the
         /// CALLER is the point; this seam is what lets that happen without rewriting the
         /// algorithm (#4438 established the per-run form; only its home is still wrong).</para>
+        ///
+        /// <para>Scores through <see cref="FrozenModelScorer"/>, so it applies whichever
+        /// classifier the first pass trained. The transfer used to average the fold weights
+        /// itself and inline the dot product, which threw on a gradient-boosted-tree model (no
+        /// weights to average). The scorer reuses one buffer, so a caller running files in parallel needs
+        /// one scorer per thread.</para>
         /// </summary>
         internal static void TransferOneFile(
             string fileName, string inputFile, List<FdrEntry> survivors,
-            FeatureStandardizer standardizer, double[] avgWeights, double avgBias,
-            int nFeatures, double[] scratch,
+            FrozenModelScorer scorer,
             IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
             Action<string> logWarning, ref TransferTally tally)
         {
+            int nFeatures = scorer.NumFeatures;
             string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
 
             // Build this file's per-run tables + record map from its own 1st-pass sidecar.
@@ -3149,8 +3138,7 @@ namespace pwiz.Osprey.Tasks
                     tally.Skipped++;
                     continue;
                 }
-                double newScore = ScoreWithFrozenModel(
-                    entry.Features, standardizer, avgWeights, avgBias, scratch);
+                double newScore = scorer.Score(entry.Features);
 
                 FdrScoreRecord? rec1 = null;
                 if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
@@ -3342,60 +3330,11 @@ namespace pwiz.Osprey.Tasks
             return PerRunClass.GapFill;
         }
 
-        /// <summary>
-        /// Apply the averaged frozen model to a single raw feature vector: standardize a
-        /// copy into the caller-supplied <paramref name="scratch"/> buffer, then
-        /// score = avgBias + sum(avgWeights[j] * std(feat)[j]). Mirrors the per-entry math
-        /// in <c>PercolatorScorer.ScorePopulationAndComputeFdr</c>, which likewise reuses a
-        /// single feature buffer to avoid a per-entry allocation in the scoring loop. Does
-        /// not mutate <paramref name="rawFeatures"/>; overwrites <paramref name="scratch"/>
-        /// (length must be &gt;= rawFeatures.Length).
-        /// </summary>
-        internal static double ScoreWithFrozenModel(
-            double[] rawFeatures,
-            FeatureStandardizer standardizer,
-            double[] avgWeights,
-            double avgBias,
-            double[] scratch)
-        {
-            Array.Copy(rawFeatures, 0, scratch, 0, rawFeatures.Length);
-            standardizer.TransformSlice(scratch);
-            double score = avgBias;
-            for (int j = 0; j < avgWeights.Length; j++)
-                score += avgWeights[j] * scratch[j];
-            return score;
-        }
-
         /// <summary>Number of equal-count score-quantile bins
         /// <see cref="BuildScoreToQTable"/> smooths the per-entry q into. Large enough to
         /// trace the FDR curve finely, small enough that each bin averages out the
         /// per-entry q noise from the raw-vs-calibrated score scale mismatch.</summary>
         private const int SCORE_Q_TABLE_BINS = 1000;
-
-        /// <summary>
-        /// Average the frozen Percolator fold weights + biases into a single (weights, bias)
-        /// pair -- the same averaged-model math <c>PercolatorScorer.ScorePopulationAndComputeFdr</c>
-        /// applies before scoring a population. Caller has already verified the model carries
-        /// at least one fold.
-        /// </summary>
-        private static void AverageFoldModel(
-            PercolatorResults model, out double[] avgWeights, out double avgBias)
-        {
-            int nModels = model.FoldWeights.Count;
-            int nFeatures = model.FoldWeights[0].Length;
-            avgWeights = new double[nFeatures];
-            avgBias = 0.0;
-            for (int f = 0; f < nModels; f++)
-            {
-                double[] foldW = model.FoldWeights[f];
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += model.FoldBiases[f];
-            }
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nModels;
-            avgBias /= nModels;
-        }
 
         /// <summary>
         /// Build the score-&gt;q lookup table from parallel (score, q) lists (the raw
@@ -3691,7 +3630,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     _ctx.LogWarning(string.Format(
                         OspreyTasksResources.Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_,
-                        _taskName, pass2Path, ex.Message));
+                        OspreyArgNames.TaskText(_taskName), pass2Path, ex.Message));
                 }
                 return true;
             }

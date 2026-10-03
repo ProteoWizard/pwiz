@@ -20,7 +20,7 @@ actions do_tutorial_localization
 {
     $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Building $(current-dir) TutorialLocalization.exe
-    msbuild $(CURRENT_DIR)\TutorialLocalization\TutorialLocalization.csproj /p:Configuration=Release;OutDir=$(OUTPUT_DIR) /nologo /verbosity:minimal
+    msbuild $(CURRENT_DIR)\TutorialLocalization\TutorialLocalization.csproj /restore /p:Configuration=Release;OutDir=$(OUTPUT_DIR) /nologo /verbosity:minimal
     set status=%ERRORLEVEL%
     exit %status%
 }

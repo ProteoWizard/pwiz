@@ -159,6 +159,9 @@ namespace pwiz.Osprey.FDR
             // serial in row/index order (no PLINQ) so the printed numbers are stable
             // and this never perturbs finalScores.
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
+            // The row is standardized either way here, so a tree model's report costs only the
+            // binning - still taken only when the report asked for it, as on the other paths.
+            bool accumulate = gbtModels == null || AccumulatesTreeFeatures(gbtModels, config);
             if (loadFileFeatures == null)
             {
                 // Resident-feature path: each stub already carries its vector
@@ -176,7 +179,7 @@ namespace pwiz.Osprey.FDR
                     standardizer.TransformSlice(featureBuf);
                     finalScores[i] = ScoreStandardizedRow(gbtModels, avgWeights, avgBias, featureBuf);
 
-                    if (gbtModels == null)
+                    if (accumulate)
                         contribAcc.Add(featureBuf, entry.IsDecoy);
                 }
             }
@@ -210,20 +213,13 @@ namespace pwiz.Osprey.FDR
                         standardizer.TransformSlice(featureBuf);
                         finalScores[i] = ScoreStandardizedRow(gbtModels, avgWeights, avgBias, featureBuf);
 
-                        if (gbtModels == null)
+                        if (accumulate)
                             contribAcc.Add(featureBuf, entry.IsDecoy);
                     }
                 }
             }
 
-            // Null on the tree path: the report is a decomposition of linear weights.
-            // See the matching comment in PercolatorTrainer.RunPercolator.
-            FeatureContributions contributions = null;
-            if (gbtModels == null)
-            {
-                contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
-                PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
-            }
+            var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config);
 
             // Competition + PEP + per-run / experiment q-values over the flat score
             // arrays. Extracted verbatim into StreamingFdr.ComputeStreamingCompetitionQvalues
@@ -362,6 +358,7 @@ namespace pwiz.Osprey.FDR
             // per-feature distributions are byte-identical to the resident build's; off the
             // production path this stays a plain (no-histogram) accumulator.
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
+            bool accumulateTreeFeatures = AccumulatesTreeFeatures(gbtModels, config);
 
             // Streaming score pass over the projection, one file at a time. The
             // per-entry math and the per-file iteration order match the
@@ -381,14 +378,25 @@ namespace pwiz.Osprey.FDR
                     if (gbtModels != null)
                     {
                         // Tree path: parallel over contiguous row chunks. A tree score is a
-                        // pure function of its own row written to its own slot, and this path
-                        // accumulates nothing across rows (contributions are linear-only), so
-                        // this is bit-identical to scoring the file serially -- there is no
-                        // float accumulation whose order could drift. Worth doing: a tree row
-                        // costs ~NFolds x NTrees x depth node traversals against the linear
-                        // path's NFeatures multiply-adds, so serial scoring dominates the run.
-                        ScoreProjectionRowsGbt(rows, projRows, gbtModels, standardizer,
-                            nFeatures, finalScores, gi, config.NThreads);
+                        // pure function of its own row written to its own slot, and scoring
+                        // accumulates nothing across rows, so this is bit-identical to scoring
+                        // the file serially - there is no float accumulation whose order could
+                        // drift. Worth doing: a tree row costs ~NFolds x NTrees x depth node
+                        // traversals against the linear path's NFeatures multiply-adds, so serial
+                        // scoring dominates the run.
+                        ScoreRowsGbt(projRows.Count,
+                            r => ResolveFeatureRow(rows, projRows[r].ParquetIndex, projRows[r].CoelutionSum, nFeatures),
+                            gbtModels, standardizer, nFeatures, finalScores, gi, config.NThreads);
+                        // The per-feature report IS a cross-row accumulation, so it stays serial and
+                        // in row order, after the parallel pass, and only when it was asked for.
+                        if (accumulateTreeFeatures)
+                        {
+                            foreach (var proj in projRows)
+                            {
+                                contribAcc.Add(StandardizeFeatureRow(standardizer, featureBuf, rows,
+                                    proj.ParquetIndex, proj.CoelutionSum, nFeatures), proj.IsDecoy);
+                            }
+                        }
                         gi += projRows.Count;
                     }
                     else
@@ -412,13 +420,7 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            // Null on the tree path (no linear weights to decompose); see PercolatorTrainer.RunPercolator.
-            FeatureContributions contributions = null;
-            if (gbtModels == null)
-            {
-                contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
-                PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
-            }
+            var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config);
             // Surface the trained model's contributions to the caller (the projection-path
             // --model-diagnostics report reads them). No-op (null) on every path that does not
             // request them; a pure hand-off, so scoring stays byte-identical.
@@ -714,18 +716,21 @@ namespace pwiz.Osprey.FDR
         /// arrays (O(pre-compaction rows), the 82->500 file blocker), this streams every row's
         /// identity + features straight from parquet THREE times -- once to select the training
         /// subset, once to score + build the bounded q-value maps + clamp floors, once to score +
-        /// emit -- recomputing the SVM score per row instead of parking an O(n) score array. Only
+        /// emit, recomputing the score per row instead of parking an O(n) score array. Only
         /// the SUBSET (&lt;= MaxTrainSize) and the intrinsically-bounded lookups (O(base_ids) /
         /// O(peptides), via <see cref="StreamingFdr.StreamingFirstPassQ"/> + per-file run-q) are ever resident,
         /// so the peak is FLAT in file count.
         ///
         /// Byte-identical to the resident projection path on the same rows in the same (file,row)
-        /// order (verified by <c>FdrTest.TestStreamingFirstPassMatchesProjection</c>): the
-        /// training-subset selection reproduces <see cref="PercolatorSampling.SelectBestPerPrecursor"/> +
+        /// order, for either classifier (verified by <c>FdrTest.TestStreamingFirstPassMatchesProjection</c>
+        /// for the linear SVM and <c>FdrTest.TestStreamingFirstPassTrainsGbdt</c> for gradient-boosted
+        /// trees): the training-subset selection reproduces <see cref="PercolatorSampling.SelectBestPerPrecursor"/> +
         /// <see cref="PercolatorSampling.BuildTrainingSubset"/> (strict-<c>&gt;</c> first-seen dedup ranked on
         /// CoelutionSum, ascending-global-ordinal order, identical
-        /// <see cref="PercolatorSampling.SubsampleByPeptideGroup"/>), the SVM training runs the SAME
-        /// <see cref="PercolatorTrainer.RunPercolator"/> on the SAME subset, and the score + q-value math reuses the
+        /// <see cref="PercolatorSampling.SubsampleByPeptideGroup"/>), the training runs the SAME
+        /// <see cref="PercolatorTrainer.RunPercolator"/> with the SAME train-only config
+        /// (<see cref="PercolatorConfig.CloneForTrainOnly"/>) on the SAME subset, the trained model
+        /// scores each row through the same per-classifier code, and the q-value math reuses the
         /// SAME primitives (<see cref="StreamingFdr.StreamingFirstPassQ"/>, <see cref="PercolatorQValues.ComputePerFileRunQvalues"/>,
         /// <see cref="PercolatorQValues.UpdateExperimentQClampFloor"/>). This is 1st-pass-only: the 2nd pass keeps its
         /// O(survivors) resident projection (Stage 7/8 needs it) via the unchanged
@@ -759,6 +764,18 @@ namespace pwiz.Osprey.FDR
                 throw new ArgumentNullException(nameof(loadFileFeatures));
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
+            // A persisted model of the OTHER classifier is refused - neither adopted, which would
+            // score this run with the wrong classifier, nor retrained around, which would leave
+            // any file already scored off the persisted model on a different discriminant from
+            // the rest. The validity key records the FDR method, so a current model can only
+            // mismatch through a defect; this is the backstop. Checked before the Pass 0 ingest,
+            // which streams every file of the join and cannot change the answer.
+            if (pretrainedModel != null &&
+                pretrainedModel.IsGradientBoostedTrees != percConfig.UseGradientBoostedTrees)
+            {
+                throw new InvalidOperationException(ClassifierMismatchMessage(
+                    pretrainedModel.IsGradientBoostedTrees, percConfig.UseGradientBoostedTrees));
+            }
 
             int nFiles = fileNames.Count;
             int nFeatures = percConfig.FeatureInfos.Length;
@@ -957,12 +974,16 @@ namespace pwiz.Osprey.FDR
             // standardizer at the wrong width - scores that look plausible and are wrong.
             //
             // Checked HERE, above the subset load, because rejecting it after that branch would
-            // leave the subset unloaded and then train on entries with no features.
+            // leave the subset unloaded and then train on entries with no features. (The
+            // classifier, which needs no ingest to judge, is checked on entry.)
             if (pretrainedModel != null)
             {
-                int modelFeatures = pretrainedModel.FoldWeights != null && pretrainedModel.FoldWeights.Count > 0
-                    ? pretrainedModel.FoldWeights[0].Length
-                    : -1;
+                var pretrainedTrees = ResolveGbtModels(pretrainedModel);
+                int modelFeatures = pretrainedTrees != null
+                    ? pretrainedTrees[0].FeatureCount
+                    : pretrainedModel.FoldWeights != null && pretrainedModel.FoldWeights.Count > 0
+                        ? pretrainedModel.FoldWeights[0].Length
+                        : -1;
                 if (modelFeatures != nFeatures ||
                     pretrainedModel.Standardizer == null ||
                     pretrainedModel.Standardizer.NumFeatures != nFeatures)
@@ -1005,11 +1026,15 @@ namespace pwiz.Osprey.FDR
             }
             else
             {
-                // No training subset is loaded and no SVM is trained.
+                // No training subset is loaded and no model is trained.
                 log.LogInfo(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reusing_the_saved_first_pass_model_);
             }
 
-            var trainConfig = BuildStreamingTrainConfig(percConfig);
+            // The same train-only copy the two resident streaming paths hand the trainer. This
+            // path used to build its own field list, which left out the classifier choice: under
+            // gbdt it trained the linear SVM, at the tree iteration cap, and the
+            // default gbdt run never trained a tree.
+            var trainConfig = percConfig.CloneForTrainOnly();
             PercolatorResults trainResults =
                 pretrainedModel ?? PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
@@ -1029,31 +1054,40 @@ namespace pwiz.Osprey.FDR
             subsetEntries = null;
             subsetByFile = null;
 
-            // Average fold weights + biases (identical to ScoreProjectionAndComputeFdrInPlace).
-            int nModels = trainResults.FoldWeights.Count;
+            // Trees or linear weights - whichever this run trained, exactly as on the projection
+            // score pass. Null gbtModels selects the linear path, which is unchanged.
+            var gbtModels = ResolveGbtModels(trainResults);
+            int nModels = gbtModels != null ? gbtModels.Count : trainResults.FoldWeights.Count;
             if (nModels == 0)
                 throw new InvalidOperationException(
                     @"RunStreamingFirstPass: trainResults contains no fold models");
-            var avgWeights = new double[nFeatures];
+            // Average fold weights + biases (identical to ScoreProjectionAndComputeFdrInPlace).
+            // Trees are averaged per score instead (see AverageGbtScore).
+            double[] avgWeights = null;
             double avgBias = 0.0;
-            for (int fm = 0; fm < nModels; fm++)
+            if (gbtModels == null)
             {
-                double[] foldW = trainResults.FoldWeights[fm];
+                avgWeights = new double[nFeatures];
+                for (int fm = 0; fm < nModels; fm++)
+                {
+                    double[] foldW = trainResults.FoldWeights[fm];
+                    for (int j = 0; j < nFeatures; j++)
+                        avgWeights[j] += foldW[j];
+                    avgBias += trainResults.FoldBiases[fm];
+                }
+                double nModelsD = nModels;
                 for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += trainResults.FoldBiases[fm];
+                    avgWeights[j] /= nModelsD;
+                avgBias /= nModelsD;
             }
-            double nModelsD = nModels;
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nModelsD;
-            avgBias /= nModelsD;
             var standardizer = trainResults.Standardizer;
 
             // ---- Pass 1: score + build the 3 bounded q maps + reduce the clamp floors ----
             // Reuses the verified StreamingFdr.StreamingFirstPassQ kernel; per-file run-q from a bounded one-file
             // buffer, reduced into the best-of-runs clamp floors (issue #4390). The score is
-            // recomputed per row (bias first, then the averaged-weight dot product in feature order)
-            // -- byte-for-byte the resident score loop, only without the O(n) finalScores array.
+            // recomputed per row (bias first, then the averaged-weight dot product in feature order;
+            // a tree ensemble scores the file up front instead), byte-for-byte the resident score
+            // loop, only without the O(n) finalScores array.
             // Gate the aggregation on the pass label, exactly as the resident and projection score
             // passes do. This method has one caller and it passes FIRST_PASS_LABEL, so today the
             // gate is a no-op - but an ungated read of MeanBestN here is the identical shape of the
@@ -1069,6 +1103,7 @@ namespace pwiz.Osprey.FDR
             for (int f = 1; f < nFiles; f++)
                 firstOrdinal[f] = firstOrdinal[f - 1] + rowCounts[f - 1];
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
+            bool accumulateTreeFeatures = AccumulatesTreeFeatures(gbtModels, percConfig);
             int nonEmptyFiles = 0;
             int g1 = 0;
             // Pass-1 cost attribution on the [PATH] channel. The lane buckets are SUMMED over the
@@ -1115,8 +1150,8 @@ namespace pwiz.Osprey.FDR
                     {
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         t = lane1.Stop(LANE1_FEATURES, t);
-                        ScoreRows(file, featureRows, avgWeights, avgBias, standardizer, nFeatures,
-                            percConfig.CollectFeatureHistograms);
+                        ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, nFeatures,
+                            percConfig.CollectFeatureHistograms, accumulateTreeFeatures, percConfig.NThreads);
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
                     // The competition's share of this file, reduced here when it is a first-seen
@@ -1212,8 +1247,7 @@ namespace pwiz.Osprey.FDR
                 lane1.Seconds(LANE1_SCORE), lane1.Seconds(LANE1_COMPETITION), lane1.Seconds(LANE1_RUN_Q), lane1.Seconds(LANE1_FLOORS),
                 lane1.Seconds(LANE1_FLUSH), order1.Seconds(ORDER1_COMPETITION));
 
-            var contributions = contribAcc.Build(trainResults.FoldWeights, percConfig.FeatureInfos);
-            PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
+            var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig);
             captureContributions?.Invoke(contributions);
 
             // Finalize the bounded lookups. PEP is global (built always); the experiment maps use
@@ -1273,12 +1307,16 @@ namespace pwiz.Osprey.FDR
                     if (scores == null)
                     {
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
-                        var featureBuf = new double[nFeatures];
                         scores = new double[count];
-                        for (int r = 0; r < count; r++)
+                        if (ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
+                                standardizer, nFeatures, percConfig.NThreads, scores) == null)
                         {
-                            scores[r] = ComputeStreamedScore(avgWeights, avgBias, standardizer, featureBuf,
-                                featureRows, r, rows.CoelutionSums[r], nFeatures);
+                            var featureBuf = new double[nFeatures];
+                            for (int r = 0; r < count; r++)
+                            {
+                                scores[r] = ComputeStreamedScore(avgWeights, avgBias, standardizer, featureBuf,
+                                    featureRows, r, rows.CoelutionSums[r], nFeatures);
+                            }
                         }
                         PercolatorQValues.ComputePerFileRunQvalues(
                             scores, rows.IsDecoys.ToArray(), rows.EntryIds.ToArray(), rows.Peptides.ToArray(),
@@ -1354,31 +1392,6 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// The train-only configuration <see cref="RunStreamingFirstPass"/> trains its subset
-        /// with. Not <see cref="PercolatorConfig.CloneForTrainOnly"/>: the streaming score passes
-        /// average LINEAR fold weights, so this copy carries none of the tree settings. That
-        /// leaves a known gap: a <c>--fdr-method gbdt</c> run that reaches this path trains the
-        /// linear SVM.
-        /// </summary>
-        internal static PercolatorConfig BuildStreamingTrainConfig(PercolatorConfig percConfig)
-        {
-            return new PercolatorConfig
-            {
-                TrainFdr = percConfig.TrainFdr,
-                TestFdr = percConfig.TestFdr,
-                MaxIterations = percConfig.MaxIterations,
-                NFolds = percConfig.NFolds,
-                Seed = percConfig.Seed,
-                CValues = percConfig.CValues,
-                CSelectionTolerance = percConfig.CSelectionTolerance,
-                MaxTrainSize = percConfig.MaxTrainSize,
-                FeatureInfos = percConfig.FeatureInfos,
-                TrainOnly = true,
-                Diagnostics = percConfig.Diagnostics
-            };
-        }
-
-        /// <summary>
         /// Reservoir decision for the default training selection: does the
         /// <paramref name="seen"/>-th run this precursor appears in take its training slot? True
         /// with probability 1/seen, which leaves every run the precursor actually appears in
@@ -1418,19 +1431,109 @@ namespace pwiz.Osprey.FDR
         /// first + the weight dot product in feature order -- byte-for-byte the resident score
         /// loop's per-entry math (<see cref="ScoreProjectionAndComputeFdrInPlace"/>). Leaves the
         /// standardized values in <paramref name="featureBuf"/> so the caller can bin them into
-        /// the feature-contribution accumulator without recomputing.
+        /// the feature-contribution accumulator without recomputing. Linear only: a tree
+        /// ensemble scores its file before the row loop, in <see cref="ScoresBeforeRowLoop"/>.
         /// </summary>
         private static double ComputeStreamedScore(
             double[] avgWeights, double avgBias, FeatureStandardizer standardizer, double[] featureBuf,
             IReadOnlyList<double[]> rows, int parquetIndex, double coelutionSum, int nFeatures)
         {
-            double[] featRow = ResolveFeatureRow(rows, (uint)parquetIndex, coelutionSum, nFeatures);
-            Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
-            standardizer.TransformSlice(featureBuf);
+            StandardizeFeatureRow(standardizer, featureBuf, rows, (uint)parquetIndex, coelutionSum, nFeatures);
             double score = avgBias;
             for (int j = 0; j < nFeatures; j++)
                 score += avgWeights[j] * featureBuf[j];
             return score;
+        }
+
+        /// <summary>
+        /// Resolve one row's raw features by its parquet row index and standardize them into
+        /// <paramref name="featureBuf"/>, which is returned. The first half of
+        /// <see cref="ComputeStreamedScore"/>, and on its own what the tree paths'
+        /// feature-distribution report bins: the same copy and transform
+        /// <see cref="ScoreRowsGbt"/> applies before it scores, so the report sees the values the
+        /// trees did.
+        /// </summary>
+        private static double[] StandardizeFeatureRow(FeatureStandardizer standardizer, double[] featureBuf,
+            IReadOnlyList<double[]> rows, uint parquetIndex, double coelutionSum, int nFeatures)
+        {
+            double[] featRow = ResolveFeatureRow(rows, parquetIndex, coelutionSum, nFeatures);
+            Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+            standardizer.TransformSlice(featureBuf);
+            return featureBuf;
+        }
+
+        /// <summary>
+        /// One file's scores when they are known before its row loop runs in
+        /// <see cref="RunStreamingFirstPass"/>, or <c>null</c> when that loop computes them row
+        /// by row. Known when the caller read them back off the file's own sidecar
+        /// (<paramref name="completedScores"/>, returned as is), or when the model is a tree
+        /// ensemble: a tree score is a pure function of its row, so the whole file is scored here
+        /// in parallel (<see cref="ScoreRowsGbt"/>), which is what the projection score pass does
+        /// too, straight into <paramref name="destination"/> - the loop's own score array, so no
+        /// second per-file array is allocated - which is returned. The linear model returns
+        /// <c>null</c> and keeps the serial per-row dot product: the parity-locked form, and the
+        /// one that leaves each row's standardized vector behind for the feature-contribution
+        /// report.
+        /// </summary>
+        private static double[] ScoresBeforeRowLoop(
+            double[] completedScores, IReadOnlyList<double[]> rows, IReadOnlyList<double> coelutionSums,
+            IReadOnlyList<GradientBoostedTrees> gbtModels, FeatureStandardizer standardizer,
+            int nFeatures, int nThreads, double[] destination)
+        {
+            if (completedScores != null || gbtModels == null)
+                return completedScores;
+            // The running row ordinal IS the parquet row index here, exactly as it is for
+            // ComputeStreamedScore: the rows arrive in parquet order.
+            ScoreRowsGbt(destination.Length, r => ResolveFeatureRow(rows, (uint)r, coelutionSums[r], nFeatures),
+                gbtModels, standardizer, nFeatures, destination, 0, nThreads);
+            return destination;
+        }
+
+        /// <summary>
+        /// The feature-contribution report a score pass hands on. For the linear model it is the
+        /// full decomposition, printed as it always was. A tree ensemble has no weights to
+        /// decompose, so its report carries only the per-feature target/decoy distributions
+        /// (<see cref="FeatureContributions.Accumulator.BuildForTreeEnsemble"/>), and only when
+        /// <c>--model-diagnostics</c> asked for them (<see cref="AccumulatesTreeFeatures"/>);
+        /// otherwise null, as it always was for trees.
+        /// </summary>
+        private static FeatureContributions BuildContributions(FeatureContributions.Accumulator contribAcc,
+            IReadOnlyList<GradientBoostedTrees> gbtModels, IReadOnlyList<double[]> foldWeights,
+            PercolatorConfig config)
+        {
+            if (gbtModels != null)
+                return AccumulatesTreeFeatures(gbtModels, config) ? contribAcc.BuildForTreeEnsemble(config.FeatureInfos) : null;
+            var contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
+            PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
+            return contributions;
+        }
+
+        /// <summary>
+        /// Whether a score pass under a tree model standardizes each row for the feature report.
+        /// Only when the distributions were asked for (<see cref="PercolatorConfig.CollectFeatureHistograms"/>,
+        /// set by <c>--model-diagnostics</c>): the parallel tree score pass keeps no standardized
+        /// vector per row, so this is extra serial work the production gbdt run should not pay.
+        /// The linear path always accumulates, as it always has.
+        /// </summary>
+        private static bool AccumulatesTreeFeatures(IReadOnlyList<GradientBoostedTrees> gbtModels,
+            PercolatorConfig config)
+        {
+            return gbtModels != null && config.CollectFeatureHistograms;
+        }
+
+        /// <summary>
+        /// The refusal <see cref="RunStreamingFirstPass"/> throws for a pretrained model of the
+        /// other classifier. Names the two classifiers by what they are, and claims neither which
+        /// flag trained the persisted model nor what it scored: the scorer knows neither.
+        /// </summary>
+        internal static string ClassifierMismatchMessage(bool modelIsTrees, bool runUsesTrees)
+        {
+            return string.Format(
+                @"The persisted first-pass model offered for reuse is {0}, but this run uses {1}, " +
+                @"and a model of one classifier cannot score a run of the other. The task validity " +
+                @"key records the classifier, so a current model should always match; this points " +
+                @"to an inconsistency in the intermediate files. Re-run with a clean output directory.",
+                PercolatorResults.ClassifierName(modelIsTrees), PercolatorResults.ClassifierName(runUsesTrees));
         }
 
         /// <summary>
@@ -1513,14 +1616,23 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Scores every row of a pass-1 file on its lane, keeping each row's standardized feature
         /// vector for the in-order contribution sums and binning the order-free histograms here.
+        /// A tree ensemble scores the whole file first (<see cref="ScoresBeforeRowLoop"/>) and keeps
+        /// the vectors only when the report asked for its per-feature distributions
+        /// (<paramref name="accumulateTreeFeatures"/>); otherwise the file contributes nothing.
         /// </summary>
         private static void ScoreRows(Pass1File file, IReadOnlyList<double[]> featureRows,
-            double[] avgWeights, double avgBias, FeatureStandardizer standardizer, int nFeatures,
-            bool collectHistograms)
+            IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
+            FeatureStandardizer standardizer, int nFeatures, bool collectHistograms,
+            bool accumulateTreeFeatures, int nThreads)
         {
             RowBuffer rows = file.Rows;
             int count = rows.Count;
             var scores = new double[count];
+            bool linear = ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
+                standardizer, nFeatures, nThreads, scores) == null;
+            file.Scores = scores;
+            if (!linear && !accumulateTreeFeatures)
+                return;
             // checked: one flat array per file, so a file past ~100M rows must fail loudly here
             // rather than wrap the index and overwrite its own vectors.
             var standardized = new double[checked(count * nFeatures)];
@@ -1528,14 +1640,20 @@ namespace pwiz.Osprey.FDR
             var featureBuf = new double[nFeatures];
             for (int r = 0; r < count; r++)
             {
-                // ComputeStreamedScore leaves featureBuf standardized - the vector the contribution
-                // report sums and bins.
-                scores[r] = ComputeStreamedScore(
-                    avgWeights, avgBias, standardizer, featureBuf, featureRows, r, rows.CoelutionSums[r], nFeatures);
+                // Both leave featureBuf standardized - the vector the contribution report sums and
+                // bins. The trees already scored the row; the linear model scores it here.
+                if (linear)
+                {
+                    scores[r] = ComputeStreamedScore(
+                        avgWeights, avgBias, standardizer, featureBuf, featureRows, r, rows.CoelutionSums[r], nFeatures);
+                }
+                else
+                {
+                    StandardizeFeatureRow(standardizer, featureBuf, featureRows, (uint)r, rows.CoelutionSums[r], nFeatures);
+                }
                 Array.Copy(featureBuf, 0, standardized, r * nFeatures, nFeatures);
                 histograms?.AddHistogram(featureBuf, 0, rows.IsDecoys[r]);
             }
-            file.Scores = scores;
             file.Standardized = standardized;
             file.Histograms = histograms;
         }
@@ -1745,24 +1863,26 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Score one file's projection rows with the tree ensembles, in parallel over
+        /// Score <paramref name="count"/> rows with the tree ensembles, in parallel over
         /// contiguous chunks (one standardization buffer per chunk, disjoint writes into
-        /// <paramref name="finalScores"/>). Bit-identical to the serial loop: each row's
-        /// score depends only on that row, and the tree path has no cross-row
-        /// accumulation to order. Chunked rather than per-row so the work per
+        /// <paramref name="scores"/> from <paramref name="baseIndex"/>). Bit-identical to the
+        /// serial loop: each row's score depends only on that row, and the tree path has no
+        /// cross-row accumulation to order. Chunked rather than per-row so the work per
         /// <see cref="OspreyParallel"/> interlocked hand-out is a whole slice, not one row.
+        /// Shared by the projection score pass and the streaming first pass, which differ only
+        /// in how row r's raw feature vector is found - <paramref name="rawRowAt"/>, which is
+        /// called concurrently and whose result is only read.
         /// </summary>
-        private static void ScoreProjectionRowsGbt(
-            IReadOnlyList<double[]> rows,
-            List<FdrProjection> projRows,
+        internal static void ScoreRowsGbt(
+            int count,
+            Func<int, double[]> rawRowAt,
             IReadOnlyList<GradientBoostedTrees> gbtModels,
             FeatureStandardizer standardizer,
             int nFeatures,
-            double[] finalScores,
+            double[] scores,
             int baseIndex,
             int nThreads)
         {
-            int count = projRows.Count;
             if (count == 0)
                 return;
             int threads = Math.Max(1, Math.Min(nThreads, count));
@@ -1774,12 +1894,9 @@ namespace pwiz.Osprey.FDR
                 int hi = Math.Min(lo + chunk, count);
                 for (int r = lo; r < hi; r++)
                 {
-                    var proj = projRows[r];
-                    double[] featRow = ResolveFeatureRow(
-                        rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
-                    Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+                    Array.Copy(rawRowAt(r), 0, featureBuf, 0, nFeatures);
                     standardizer.TransformSlice(featureBuf);
-                    finalScores[baseIndex + r] = AverageGbtScore(gbtModels, featureBuf);
+                    scores[baseIndex + r] = AverageGbtScore(gbtModels, featureBuf);
                 }
             });
         }

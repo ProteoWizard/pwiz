@@ -115,43 +115,7 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to gradient-boosted tree.
-        /// </summary>
-        public static string FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree {
-            get {
-                return ResourceManager.GetString("FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Mokapot.
-        /// </summary>
-        public static string FdrMethodExtensions_LOCALIZED_VALUES_Mokapot {
-            get {
-                return ResourceManager.GetString("FdrMethodExtensions_LOCALIZED_VALUES_Mokapot", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Percolator.
-        /// </summary>
-        public static string FdrMethodExtensions_LOCALIZED_VALUES_Percolator {
-            get {
-                return ResourceManager.GetString("FdrMethodExtensions_LOCALIZED_VALUES_Percolator", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to simple target-decoy.
-        /// </summary>
-        public static string FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy {
-            get {
-                return ResourceManager.GetString("FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to File parallelism: {0} (explicit --parallel-files, {1} files).
+        ///   Looks up a localized string similar to File parallelism: {0} (explicit {2}, {1} files).
         /// </summary>
         public static string FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_ {
             get {
@@ -161,7 +125,7 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: 1 (sequential default; pass --parallel-files to score {0} files concurrently).
+        ///   Looks up a localized string similar to File parallelism: 1 (sequential default; pass {1} to score {0} files concurrently).
         /// </summary>
         public static string FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_ {
             get {
@@ -238,7 +202,7 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to EncyclopeDIA .elib spectral libraries are no longer supported; convert the library to DIA-NN TSV (.tsv) or .blib..
+        ///   Looks up a localized string similar to EncyclopeDIA {0} spectral libraries are no longer supported; convert the library to DIA-NN TSV ({1}) or BiblioSpec ({2})..
         /// </summary>
         public static string LibrarySource_FromPath_EncyclopeDIA__elib_spectral_libraries_are_no_longer_supported__convert_the_library_to_DIA_ {
             get {
@@ -311,6 +275,15 @@ namespace pwiz.Osprey.Core {
         public static string ProgressReporter_FormatElapsed__0_s {
             get {
                 return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}....
+        /// </summary>
+        public static string ProgressReporter_ProgressReporter__0____ {
+            get {
+                return ResourceManager.GetString("ProgressReporter_ProgressReporter__0____", resourceCulture);
             }
         }
         

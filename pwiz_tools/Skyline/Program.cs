@@ -34,6 +34,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
+using Parquet;
 using pwiz.Common;
 using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
@@ -198,6 +199,15 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// True if the loaded Parquet.dll is pwiz's patched build of Parquet.Net, identified by
+        /// a method the NuGet release does not have. Both have the same assembly identity.
+        /// </summary>
+        private static bool IsPatchedParquetNet()
+        {
+            return typeof(ParquetRowGroupWriter).GetMethod(nameof(ParquetRowGroupWriter.PrepareColumnAsync)) != null;
+        }
+
         [STAThread]
         public static int Main(string[] args = null)
         {
@@ -218,11 +228,16 @@ namespace pwiz.Skyline
                 return 1;
             }
 
+            if (!IsPatchedParquetNet())
+            {
+                MessageDlg.Show(null, string.Format(SkylineResources.Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__,
+                    typeof(ParquetRowGroupWriter).Assembly.Location, Name));
+            }
+
             CommonApplicationSettings.ProgramName = Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
             CommonActionUtil.ExceptionReporter = ReportException;
             SkylineRemoteAccountServices.Initialize();
-            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface.
             // Scan every arg, not just args[0], so --opendoc composes order-independently
@@ -820,7 +835,7 @@ namespace pwiz.Skyline
         {
             if (MainWindow != null && !MainWindow.IsDisposed)
             {
-                MainWindow.Invoke(new Action(MainWindow.Close));
+                MainWindow.Invoke(MainWindow.Close);
             }
         }
 

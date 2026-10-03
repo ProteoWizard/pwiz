@@ -27,7 +27,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <!-- Non-.resx embedded resource (a SkylineTester run config); the SDK glob doesn't pick it up. -->
     <EmbeddedResource Include="SkylineNightly.skytr" />
   </ItemGroup>
@@ -38,11 +37,6 @@
     <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
     <PackageReference Include="System.ServiceModel.NetNamedPipe" Version="8.1.2" />
-    <!-- Pinned: System.ServiceModel.Primitives pulls Cryptography.Xml, whose
-         8.0.0-8.0.3 carry GHSA-37gx-xxp4-5rgx and whose 6.0.x line pulls a
-         Pkcs with GHSA-555c-2p6r-68mm. 8.0.4 is clean and brings Pkcs [8.0.1,),
-         also clean. Drop when ServiceModel depends on a clean Xml itself. -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
   </ItemGroup>
 
   <!-- net472: the exact on-disk DLLs + the framework assemblies the SDK doesn't auto-add. -->

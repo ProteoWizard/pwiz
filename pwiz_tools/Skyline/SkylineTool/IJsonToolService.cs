@@ -493,6 +493,19 @@ namespace SkylineTool
         ActionResult DismissWithCancelButton(string formId);
 
         /// <summary>
+        /// Resizes a window, as a user does by dragging its edge: the main Skyline window or a dialog whose
+        /// border can be dragged. The window keeps its position; a maximized or minimized window is first
+        /// restored, as dragging it does. A docked or floating pane is sized by the window layout instead, so
+        /// arrange those with "File > Import > Window Layout".
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="width">The outer width in pixels, border included.</param>
+        /// <param name="height">The outer height in pixels, border and title bar included.</param>
+        /// <returns>The size the window ended up at, which is smaller or larger than asked when the window
+        /// has a minimum or maximum size.</returns>
+        WindowSize ResizeWindow(string formId, int width, int height);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
@@ -564,9 +577,11 @@ namespace SkylineTool
         /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
         /// needs neither the clipboard nor a keystroke.</para>
         ///
-        /// <para>NOT for the Targets tree: <c>SequenceTree.OnKeyPress</c> forwards each character on with
-        /// <c>SendKeys.Send</c>, which posts to the FOCUSED window, so the characters land in whatever
-        /// application is in front and arrive out of order. Use the "rename_node" action instead.</para>
+        /// <para>Typing into the Targets tree edits the selected node's label, as it does for a user, and with
+        /// a background proteome brings up the completion pop-up (a form of its own, listed by
+        /// <see cref="GetOpenForms"/>). Select an item in its list to accept it, or press "Down"/"Up" then
+        /// "Enter" on the tree; "Enter" alone accepts the text as typed and "Esc" cancels. The matches are
+        /// looked up in the background, so the pop-up opens a moment after this returns.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it
@@ -579,14 +594,17 @@ namespace SkylineTool
         /// popup, or to paste with "Ctrl+V" where the form's own handler does the pasting. The control is
         /// verified enabled first.
         ///
-        /// <para>This raises the control's KeyDown with the named key and modifiers, which is where a WinForms
-        /// handler reads a keystroke from. A key handled by the control's DEFAULT behavior rather than by a
-        /// handler - Backspace editing a text box, an arrow moving a plain list's selection - will NOT take
-        /// effect through this.</para>
+        /// <para>The key goes through everything a real press does: keyboard shortcuts and dialog keys first
+        /// (the control's PreProcessControlMessage: PreviewKeyDown, then shortcuts and dialog keys), then the key-down message - seen by any form around it that
+        /// previews keys, by KeyDown handlers, and by the control's own window procedure (an arrow moving a
+        /// list's selection) - then the character the key types (Backspace editing a text box), unless a
+        /// handler suppressed it, then the key-up. The modifiers are in the thread's keyboard state while the
+        /// key is pressed, as they are for a user.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to press the key on, matched as <see cref="GetControls"/>
-        /// reports it.</param>
+        /// reports it; empty to press it as the keyboard does while the window is active - on the control
+        /// that has the focus in the form, or the form itself when none does.</param>
         /// <param name="keyStroke">The key with any modifiers, '+'-separated and in any order, e.g.
         /// <c>"Down"</c>, <c>"Enter"</c>, <c>"Ctrl+V"</c>, <c>"Ctrl+Shift+Home"</c>.</param>
         ActionResult SendKeyStroke(string formId, string controlId, string keyStroke);

@@ -4,7 +4,6 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
 import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetCustom
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnMetric
 import jetbrains.buildServer.configs.kotlin.failureConditions.failOnMetricChange
@@ -23,11 +22,10 @@ create(DslContext.projectId, BuildType({
     artifactRules = "# Configure artifacts in tcbuild.bat"
 
     steps {
-        dotnetCustom {
-            name = "Install dotCover"
-            id = "Install_dotCover"
-            enabled = false
-            args = "tool install -g JetBrains.dotCover.CommandLineTools"
+        exec {
+            name = "Clean"
+            id = "Skyline_Clean"
+            path = "clean.bat"
         }
         exec {
             id = "RUNNER_simpleRunner_139"
@@ -60,11 +58,11 @@ create(DslContext.projectId, BuildType({
             param("GitHubAuthToken", "credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2")
             param("buildStatusUpdateState", "success")
         }
-        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Install_dotCover", "RUNNER_simpleRunner_139", "RUNNER_73", "RUNNER_85")
+        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Skyline_Clean", "RUNNER_simpleRunner_139", "RUNNER_73", "RUNNER_85")
     }
 
     failureConditions {
-        executionTimeoutMin = 180
+        executionTimeoutMin = 320
         failOnMetricChange {
             id = "BUILD_EXT_539"
             metric = BuildFailureOnMetric.MetricType.TEST_COUNT
@@ -93,5 +91,7 @@ create(DslContext.projectId, BuildType({
     requirements {
         contains("teamcity.agent.name", "MacCoss", "RQ_59")
     }
+    
+    disableSettings("RQ_59")
 }))
 
