@@ -69,7 +69,11 @@
        reference is invoked with that string as global properties, and global properties
        flow down to the referenced project's own references, so the whole out-of-solution
        subtree inherits Configuration and Platform the way a build.bat csproj build does.
-       Command-line csproj builds carry no solution configuration and are untouched. -->
+       Command-line csproj builds carry no solution configuration and are untouched.
+
+       Anything added to SetPlatform becomes a global property of the whole subtree, and
+       pwiz-sharp's Vendor.Common.csproj (RegenerateVendorSdkPins) has to remove it again, or
+       VendorPinsGenerator runs twice in one build and races itself. -->
   <Target Name="AssignOutOfSolutionProjectReferenceConfiguration"
           AfterTargets="AssignProjectConfiguration"
           Condition="'$(CurrentSolutionConfigurationContents)' != ''">

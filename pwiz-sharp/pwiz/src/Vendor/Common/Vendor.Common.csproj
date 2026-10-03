@@ -44,17 +44,42 @@
   <!-- Runs on every build, including Linux CI agents that have no pwsh, so the generator is a
        plain net10.0 console tool rather than a PowerShell script.
 
-       WorkingDirectory mirrors Agilent.csproj's AgilentPatcher call - see the long note there.
-       Short version: the child inherits the outer build's SDK, which is correct now that a single
-       repo-root global.json governs both, and scrubbing the MSBuild env vars either broke the
-       child (MSB4236) or scrubbed variables that were never set. -->
+       Once per build, not once per configuration of this project. One build can compile this
+       project more than once. A Release Osprey build compiles it three times: x64|Release for
+       the Osprey projects that reach it; Debug for the x64|Release vendor projects (Sciex,
+       Bruker, Mobilion), whose references to it drop Configuration and Platform because nothing
+       from pwiz-sharp is in Osprey.sln; and Release|AnyCPU for ProteowizardWrapper, which
+       pwiz_tools\Directory.Build.targets gives that configuration. Each compile used to run the
+       generator itself, so two `dotnet run`s compiled it into the same obj\Release\net10.0 at
+       once. The loser failed on a file the winner held open: VendorPinsGenerator.dll (CS2012)
+       or VendorPinsGenerator.sourcelink.json on Windows, or the apphost (MSB3030) on Linux.
+       Every configuration now asks MSBuild for the generator's RunVendorPinsGenerator target
+       with the same global properties, so MSBuild runs it once and gives the other callers the
+       cached result, waiting for it if it is still running.
+
+       Not in design-time builds. Visual Studio and the Roslyn language server run CoreCompile
+       without compiling, in build sessions of their own that share no results with a
+       command-line build, so each would start its own `dotnet run` into the same folder while a
+       real build does. The Compile Remove/Include pair above keeps the file in the Compile list
+       even before the first real build creates it. -->
   <PropertyGroup>
     <VendorPinsGeneratorProj>$(PwizSharpRoot)build\VendorPinsGenerator\VendorPinsGenerator.csproj</VendorPinsGeneratorProj>
   </PropertyGroup>
-  <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile">
-    <Exec Command="dotnet run --project &quot;$(VendorPinsGeneratorProj)&quot; -c Release -- &quot;$(PwizRepoRoot)&quot;"
-          WorkingDirectory="$(PwizSharpRoot)"
-          StandardOutputImportance="low" />
+  <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile" Condition="'$(DesignTimeBuild)' != 'true'">
+    <!-- MSBuild shares the result only between requests whose global properties match, and a
+         request inherits the caller's. So set or remove every global property that differs
+         between callers, or the generator runs once per distinct set again:
+         - Configuration and Platform differ between the configurations themselves.
+         - TargetFramework, RuntimeIdentifier and SelfContained are what a ProjectReference
+           removes.
+         - ShouldUnsetParentConfigurationAndPlatform=false is passed down by the SetPlatform in
+           pwiz_tools\Directory.Build.targets on out-of-solution references, so it reaches the
+           configuration ProteowizardWrapper builds and not the others. A property added there
+           must be added here too. -->
+    <MSBuild Projects="$(VendorPinsGeneratorProj)"
+             Targets="RunVendorPinsGenerator"
+             Properties="Configuration=Release;Platform=AnyCPU"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained;ShouldUnsetParentConfigurationAndPlatform" />
   </Target>
 
 </Project>
