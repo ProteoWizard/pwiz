@@ -1,0 +1,3 @@
+# The CUDA backend builds into its own folders (Directory.Build.props).
+bin-cuda/
+obj-cuda/
