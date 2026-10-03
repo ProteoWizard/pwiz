@@ -1199,13 +1199,13 @@ namespace pwiz.Common.SystemUtil
             if (IsDnsResolutionFailure(httpEx))
             {
                 return new NetworkRequestException(
-                    string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server),
+                    string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
                     NetworkFailureType.DnsResolution, uri, httpEx);
             }
 
             // Generic connection failure (no HTTP response received)
             return new NetworkRequestException(
-                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server),
+                string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
                 NetworkFailureType.ConnectionFailed, uri, httpEx);
         }
 

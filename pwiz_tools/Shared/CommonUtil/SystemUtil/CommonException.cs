@@ -52,12 +52,7 @@ namespace pwiz.Common.SystemUtil
         {
             get
             {
-                if (ExceptionDetail != null)
-                {
-                    // object.ToString() is annotated string? in .NET, and Message must never be null.
-                    return ExceptionDetail.ToString() ?? base.Message;
-                }
-                return base.Message;
+                return ExceptionDetail?.ToString() ?? base.Message;
             }
         }
     }
