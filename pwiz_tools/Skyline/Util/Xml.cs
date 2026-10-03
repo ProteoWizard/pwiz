@@ -36,13 +36,27 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
+    /// A settings list that can be merged item by item when two copies of the settings have
+    /// each changed it since they were the same.
+    /// </summary>
+    public interface IMergeableList
+    {
+        /// <summary>
+        /// A new list holding this one's changes since <paramref name="baseList"/> along with
+        /// those of <paramref name="sourceList"/>. An item changed both here and in the source
+        /// keeps the change made here.
+        /// </summary>
+        object MergeChanges(object baseList, object sourceList);
+    }
+
+    /// <summary>
     /// XML serializable MappedList for use with lists that must be
     /// stored in the program settings.
     /// </summary>
     /// <typeparam name="TKey">Type of the key used in the map</typeparam>
     /// <typeparam name="TValue">Type stored in the collection</typeparam>
     public class XmlMappedList<TKey, TValue>
-        : MappedList<TKey, TValue>, IXmlSerializable
+        : MappedList<TKey, TValue>, IXmlSerializable, IMergeableList
         where TValue : IKeyContainer<TKey>, IXmlSerializable
     {
         /// <summary>
@@ -50,6 +64,62 @@ namespace pwiz.Skyline.Util
         /// to upgrade the elements in a settings list.
         /// </summary>
         public int RevisionIndex { get; set; }
+
+        #region IMergeableList Members
+
+        public object MergeChanges(object baseList, object sourceList)
+        {
+            return MergeChanges((XmlMappedList<TKey, TValue>) baseList, (XmlMappedList<TKey, TValue>) sourceList);
+        }
+
+        /// <summary>
+        /// Items match by key. One added, changed or removed here stays that way; one left alone
+        /// here follows the source, including being removed from it; and one the source added is
+        /// added, after the items already here.
+        /// </summary>
+        public XmlMappedList<TKey, TValue> MergeChanges(XmlMappedList<TKey, TValue> baseList,
+            XmlMappedList<TKey, TValue> sourceList)
+        {
+            var merged = (XmlMappedList<TKey, TValue>) Activator.CreateInstance(GetType());
+            merged.RevisionIndex = RevisionIndex;
+            foreach (var item in this)
+            {
+                var key = item.GetKey();
+                if (!baseList.TryGetValue(key, out var baseItem) || !IsSameItem(item, baseItem))
+                    merged.Add(item);
+                else if (sourceList.TryGetValue(key, out var sourceItem))
+                    merged.Add(sourceItem);
+            }
+            foreach (var sourceItem in sourceList)
+            {
+                var key = sourceItem.GetKey();
+                if (!baseList.ContainsKey(key) && !merged.ContainsKey(key))
+                    merged.Add(sourceItem);
+            }
+            return merged;
+        }
+
+        /// <summary>
+        /// Compares what the items would save, since not every item type overrides Equals.
+        /// </summary>
+        private static bool IsSameItem(TValue item1, TValue item2)
+        {
+            return Equals(SerializeItem(item1), SerializeItem(item2));
+        }
+
+        private static string SerializeItem(TValue item)
+        {
+            var stringBuilder = new StringBuilder();
+            using (var writer = XmlWriter.Create(stringBuilder))
+            {
+                writer.WriteStartElement(@"item");
+                item.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+            return stringBuilder.ToString();
+        }
+
+        #endregion
 
         #region IXmlSerializable Members
 

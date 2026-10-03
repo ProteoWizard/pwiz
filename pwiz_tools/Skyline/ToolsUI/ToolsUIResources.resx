@@ -444,4 +444,16 @@ To enable, install the following items:
   <data name="ToolService_ReorderElements_Elements_reordered_by_external_tool" xml:space="preserve">
     <value>Elements reordered by external tool</value>
   </data>
+  <data name="ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_" xml:space="preserve">
+    <value>Choose the installation to import settings from.</value>
+  </data>
+  <data name="ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_" xml:space="preserve">
+    <value>Failed to import settings from {0}</value>
+  </data>
+  <data name="ToolOptionsUI_ImportSettings_Importing_settings" xml:space="preserve">
+    <value>Importing settings</value>
+  </data>
+  <data name="ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_" xml:space="preserve">
+    <value>No other installed Skyline with saved settings was found.</value>
+  </data>
 </root>

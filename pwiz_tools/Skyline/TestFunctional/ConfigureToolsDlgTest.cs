@@ -85,6 +85,8 @@ namespace pwiz.SkylineTestFunctional
 
             TestURL();
 
+            TestReadOnlyTools();
+
             TestImmediateWindow();
 
             TestCascadingMenuItems();
@@ -411,6 +413,57 @@ namespace pwiz.SkylineTestFunctional
                           configureToolsDlg.RemoveAllTools();
                       });
             OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
+        }
+
+        /// <summary>
+        /// A tool installed outside the current user's Tools folder, such as one an administrator
+        /// installed beside the shared user.config, can be neither changed nor removed. Moving from
+        /// it back to a web page tool must leave that tool's program-only fields disabled.
+        /// </summary>
+        private void TestReadOnlyTools()
+        {
+            const string editableTitle = "EditableWebTool"; // Not L10N
+            const string readOnlyTitle = "SharedWebTool"; // Not L10N
+            const string url = "https://skyline.ms/project/home/begin.view"; // Not L10N
+            var sharedToolDir = TestFilesDir.GetTestPath(Path.Combine(@"SharedTools", readOnlyTitle));
+            RunUI(() =>
+            {
+                Settings.Default.ToolList.Clear();
+                Settings.Default.ToolList.Add(new ToolDescription(editableTitle, url, _empty));
+                Settings.Default.ToolList.Add(new ToolDescription(readOnlyTitle, url, _empty, _empty, false, _empty,
+                    _empty, _empty, sharedToolDir, new List<AnnotationDef>(), null, null, null));
+            });
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            RunUI(() =>
+            {
+                Assert.AreEqual(editableTitle, configureToolsDlg.textTitle.Text);
+                VerifyToolFieldsEnabled(configureToolsDlg, true, false);
+
+                configureToolsDlg.TestHelperIndexChange(1);
+                Assert.AreEqual(readOnlyTitle, configureToolsDlg.textTitle.Text);
+                VerifyToolFieldsEnabled(configureToolsDlg, false, false);
+
+                configureToolsDlg.TestHelperIndexChange(0);
+                Assert.AreEqual(editableTitle, configureToolsDlg.textTitle.Text);
+                VerifyToolFieldsEnabled(configureToolsDlg, true, false);
+            });
+            OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
+            RunUI(() => Settings.Default.ToolList.Clear());
+        }
+
+        private static void VerifyToolFieldsEnabled(ConfigureToolsDlg configureToolsDlg, bool editable, bool programFields)
+        {
+            Assert.AreEqual(editable, configureToolsDlg.btnRemove.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.textTitle.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.textCommand.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.textArguments.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.btnArguments.Enabled);
+            Assert.AreEqual(editable, configureToolsDlg.comboReport.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.textInitialDirectory.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.btnFindCommand.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.btnInitialDirectory.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.btnInitialDirectoryMacros.Enabled);
+            Assert.AreEqual(programFields, configureToolsDlg.cbOutputImmediateWindow.Enabled);
         }
 
         private void TestMacros()
