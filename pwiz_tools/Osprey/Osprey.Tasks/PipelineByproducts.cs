@@ -565,6 +565,15 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public bool Streams => _materializeFile != null;
 
+        /// <summary>
+        /// How many files <see cref="StreamFiles"/> prepares at once: the materializer and every
+        /// post-materialize overlay run for files ahead of the consumer on this many lanes, while
+        /// the consumer still receives the files one at a time, in order. Both must therefore be
+        /// safe to run for different files concurrently. One - the default - prepares each file
+        /// only when the walk reaches it.
+        /// </summary>
+        public int Lanes { get; set; } = 1;
+
         /// <summary>The buffer already at its post-rescore state - nothing deferred.</summary>
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
 
@@ -698,23 +707,45 @@ namespace pwiz.Osprey.Tasks
                 // base.Value, not Value: the pairs and their (empty) lists are what we
                 // materialize INTO, so reaching them must not trigger the whole-run build this
                 // method exists to replace - nor trip the _streamed guard on a second pass.
-                foreach (var kv in base.Value)
-                {
-                    progress?.Report(++done);
-                    // Marked BEFORE the yield, not after. A consumer that breaks out of the
-                    // walk - or an enumerator abandoned by an exception - would otherwise leave
-                    // this false with runs already materialized, and a later Value read would
-                    // sail past the guard and hand back one populated run plus N-1 empty lists:
-                    // the silent almost-empty pool the guard exists to make impossible.
+                var files = base.Value;
+                // Marked BEFORE any file is materialized, not after. A consumer that breaks out of
+                // the walk - or an enumerator abandoned by an exception - would otherwise leave
+                // this false with runs already materialized, and a later Value read would sail
+                // past the guard and hand back one populated run plus N-1 empty lists: the silent
+                // almost-empty pool the guard exists to make impossible.
+                if (files.Count > 0)
                     _streamed = true;
-                    _materializeFile(kv.Key, kv.Value);
-                    _postMaterialize?.Invoke(kv.Key, kv.Value);
-                    yield return kv;
-                    // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
-                    // Clear leaves the backing array at its high-water capacity, which for a CHS
-                    // file is ~648 K references still committed per file.
-                    kv.Value.Clear();
-                    kv.Value.TrimExcess();
+                int consumed = 0;
+                try
+                {
+                    foreach (var kv in OrderedFileLanes.Enumerate(files.Count, Lanes, i =>
+                             {
+                                 var file = files[i];
+                                 _materializeFile(file.Key, file.Value);
+                                 _postMaterialize?.Invoke(file.Key, file.Value);
+                                 return file;
+                             }))
+                    {
+                        progress?.Report(++done);
+                        yield return kv;
+                        // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
+                        // Clear leaves the backing array at its high-water capacity, which for a
+                        // CHS file is ~648 K references still committed per file.
+                        kv.Value.Clear();
+                        kv.Value.TrimExcess();
+                        consumed++;
+                    }
+                }
+                finally
+                {
+                    // A walk abandoned early leaves the files the lanes prepared AHEAD of it
+                    // populated; drop them as consumed ones are dropped. Not the file the walk
+                    // stopped in, which the consumer may still be holding.
+                    for (int i = consumed + 1; i < files.Count; i++)
+                    {
+                        files[i].Value.Clear();
+                        files[i].Value.TrimExcess();
+                    }
                 }
             }
         }

@@ -329,7 +329,8 @@ namespace pwiz.Osprey.FDR
             Action<PercolatorResults> captureModel = null,
             CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
-            FileRunScopeSink flushFileRunScope = null)
+            FileRunScopeSink flushFileRunScope = null,
+            int fileLanes = 1)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -341,7 +342,7 @@ namespace pwiz.Osprey.FDR
             return PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, log, passLabel, sink,
                 captureContributions, captureModel, tryStreamCompletedScores, pretrainedModel,
-                flushFileRunScope);
+                flushFileRunScope, fileLanes);
         }
 
         /// <summary>

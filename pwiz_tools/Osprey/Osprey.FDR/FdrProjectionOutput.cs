@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
@@ -94,6 +95,72 @@ namespace pwiz.Osprey.FDR
                     throw new ArgumentOutOfRangeException(nameof(level));
             }
         }
+    }
+
+    /// <summary>
+    /// One file's complete score-pass output - every value <see cref="IFdrOutputSink.Accept"/>
+    /// receives for its rows - handed whole to <see cref="IFdrFileLaneSink.PrepareFile"/>.
+    /// </summary>
+    public sealed class FdrFileRows
+    {
+        public FdrFileRows(IReadOnlyList<uint> entryIds, IReadOnlyList<bool> isDecoys,
+            IReadOnlyList<byte> charges, IReadOnlyList<string> peptides, double[] scores,
+            double[] runPrecursorQvalues, double[] runPeptideQvalues,
+            double[] experimentPrecursorQvalues, double[] experimentPeptideQvalues, double[] peps)
+        {
+            EntryIds = entryIds;
+            IsDecoys = isDecoys;
+            Charges = charges;
+            Peptides = peptides;
+            Scores = scores;
+            _runPrecursorQvalues = runPrecursorQvalues;
+            _runPeptideQvalues = runPeptideQvalues;
+            _experimentPrecursorQvalues = experimentPrecursorQvalues;
+            _experimentPeptideQvalues = experimentPeptideQvalues;
+            _peps = peps;
+        }
+
+        private readonly double[] _runPrecursorQvalues;
+        private readonly double[] _runPeptideQvalues;
+        private readonly double[] _experimentPrecursorQvalues;
+        private readonly double[] _experimentPeptideQvalues;
+        private readonly double[] _peps;
+
+        public int Count => Scores.Length;
+        public IReadOnlyList<uint> EntryIds { get; }
+        public IReadOnlyList<bool> IsDecoys { get; }
+        public IReadOnlyList<byte> Charges { get; }
+        public IReadOnlyList<string> Peptides { get; }
+        public double[] Scores { get; }
+
+        /// <summary>The q-values Accept receives for row <paramref name="row"/>.</summary>
+        public FdrQValues QAt(int row)
+        {
+            return new FdrQValues(_runPrecursorQvalues[row], _runPeptideQvalues[row],
+                _experimentPrecursorQvalues[row], _experimentPeptideQvalues[row], _peps[row]);
+        }
+    }
+
+    /// <summary>
+    /// An <see cref="IFdrOutputSink"/> that can do the part of its per-row work that does not
+    /// depend on row ORDER for a whole file at once, on a file lane, while other files are being
+    /// produced - leaving <see cref="IFdrOutputSink.Accept"/>, which still sees every row in
+    /// (file, row) order, only the order-dependent rest.
+    /// </summary>
+    public interface IFdrFileLaneSink : IFdrOutputSink
+    {
+        /// <summary>
+        /// Called on a file lane with one file's complete output. Must touch no shared state:
+        /// the result is handed back to <see cref="AcceptPrepared"/> on the in-order thread.
+        /// </summary>
+        object PrepareFile(int fileIdx, FdrFileRows rows);
+
+        /// <summary>
+        /// Called in file order, before the file's first <see cref="IFdrOutputSink.Accept"/>,
+        /// with what <see cref="PrepareFile"/> returned for it. Accept then skips the work that
+        /// preparing the file already did.
+        /// </summary>
+        void AcceptPrepared(int fileIdx, object prepared);
     }
 
     /// <summary>
@@ -199,10 +266,16 @@ namespace pwiz.Osprey.FDR
     /// happens, so there is nothing left for it to hide behind and it becomes the dominant cost
     /// of the pass.</para>
     ///
-    /// <para>Reading them is not trusting a second writer to agree with the first. There is one
-    /// writer: pass 1 computes the score and both run q-values together and they are final when
-    /// that file's rows have been walked, so a reader gets the same bytes the recompute would
-    /// have produced from the same scores.</para>
+    /// <para>More than one path writes a 1st-pass sidecar - the streaming score pass's
+    /// <see cref="FileRunScopeSink"/>, the projection sink when the score pass leaves the write to
+    /// it (the resident path), and the resident task's own sidecar writer - and every one writes a
+    /// file's score and both run q-values together, computed from the same rows. What protects a
+    /// reader is therefore not who wrote the file but two checks the reader makes itself: the
+    /// record count must equal the file's parquet row count, and each record's entry_id must equal
+    /// its parquet row's, position by position. Entry ids repeat across a precursor's rows, so that
+    /// check catches records from other rows but not a reordering within one precursor's rows.
+    /// Whether a sidecar is current for this build and these settings is the task-validity
+    /// stamp's question, not this reader's.</para>
     /// </summary>
     public delegate bool CompletedScoreStreamer(string fileName,
         Action<uint, double, double, double> onRecord);

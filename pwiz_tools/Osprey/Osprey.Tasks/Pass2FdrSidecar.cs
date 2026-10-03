@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -703,13 +704,13 @@ namespace pwiz.Osprey.Tasks
             if (!rescored.Streams)
                 return;
             var writer = new Pass2SidecarWriter(ctx, ctx.Config, taskName, taskValidityKey);
-            // ONE join index for every file of every pass this overlay serves. StreamFiles and
-            // MaterializeAllFromSource both walk files sequentially, so a single instance is safe,
-            // and the cohort stops paying a large-object dictionary per file per pass.
-            var byEntryId = new Dictionary<uint, FdrEntry>();
+            // ONE join index per thread rather than per file: the cohort does not pay a
+            // large-object dictionary per file per pass. Per thread, not one shared: StreamFiles
+            // prepares several files at once on its lanes, each overlay on its own lane thread.
+            var byEntryId = new ThreadLocal<Dictionary<uint, FdrEntry>>(() => new Dictionary<uint, FdrEntry>());
             rescored.AddPostMaterialize((fileName, entries) =>
                 OverlayPass2SidecarOntoFile(
-                    writer, fileName, entries, experimentRecords.Value, ctx.LogWarning, byEntryId));
+                    writer, fileName, entries, experimentRecords.Value, ctx.LogWarning, byEntryId.Value));
         }
 
         /// <summary>

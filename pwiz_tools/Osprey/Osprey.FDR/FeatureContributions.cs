@@ -169,26 +169,71 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public void Add(double[] standardizedFeatures, bool isDecoy)
             {
+                AddSums(standardizedFeatures, 0, isDecoy);
+                AddHistogram(standardizedFeatures, 0, isDecoy);
+            }
+
+            /// <summary>
+            /// The order-dependent half of <see cref="Add(double[],bool)"/>: the class count and
+            /// the running per-feature sums, for the vector starting at
+            /// <paramref name="offset"/> in <paramref name="standardizedFeatures"/>. Floating-point
+            /// addition does not associate, so a caller that splits the work across files must
+            /// still call this once per row in the original row order to reproduce the sums
+            /// exactly; the histogram half has no such constraint (see
+            /// <see cref="MergeHistograms"/>).
+            /// </summary>
+            public void AddSums(double[] standardizedFeatures, int offset, bool isDecoy)
+            {
                 if (isDecoy)
                 {
                     _nDecoy++;
                     for (int j = 0; j < _sumDecoy.Length; j++)
-                        _sumDecoy[j] += standardizedFeatures[j];
+                        _sumDecoy[j] += standardizedFeatures[offset + j];
                 }
                 else
                 {
                     _nTarget++;
                     for (int j = 0; j < _sumTarget.Length; j++)
-                        _sumTarget[j] += standardizedFeatures[j];
+                        _sumTarget[j] += standardizedFeatures[offset + j];
                 }
-                if (_histTarget != null)
+            }
+
+            /// <summary>
+            /// The order-free half of <see cref="Add(double[],bool)"/>: bins the vector starting
+            /// at <paramref name="offset"/> into the per-feature class histograms, when this
+            /// accumulator collects them. Integer counts, so partial accumulators built per file
+            /// and combined with <see cref="MergeHistograms"/> give exactly the counts one
+            /// accumulator fed every row would.
+            /// </summary>
+            public void AddHistogram(double[] standardizedFeatures, int offset, bool isDecoy)
+            {
+                if (_histTarget == null)
+                    return;
+                int[][] h = isDecoy ? _histDecoy : _histTarget;
+                for (int j = 0; j < h.Length; j++)
                 {
-                    int[][] h = isDecoy ? _histDecoy : _histTarget;
-                    for (int j = 0; j < h.Length; j++)
+                    double v = standardizedFeatures[offset + j];
+                    if (!double.IsNaN(v))   // a NaN std value would pile into bin 0
+                        h[j][HistBin(v)]++;
+                }
+            }
+
+            /// <summary>
+            /// Adds <paramref name="other"/>'s histogram counts into this accumulator's. Only the
+            /// histograms: the sums and class counts are deliberately not merged, because merging
+            /// partial floating-point sums would not reproduce the row-order sum - feed those
+            /// through <see cref="AddSums"/> instead.
+            /// </summary>
+            public void MergeHistograms(Accumulator other)
+            {
+                if (_histTarget == null || other?._histTarget == null)
+                    return;
+                for (int j = 0; j < _histTarget.Length; j++)
+                {
+                    for (int b = 0; b < HistBinCount; b++)
                     {
-                        double v = standardizedFeatures[j];
-                        if (!double.IsNaN(v))   // a NaN std value would pile into bin 0
-                            h[j][HistBin(v)]++;
+                        _histTarget[j][b] += other._histTarget[j][b];
+                        _histDecoy[j][b] += other._histDecoy[j][b];
                     }
                 }
             }
