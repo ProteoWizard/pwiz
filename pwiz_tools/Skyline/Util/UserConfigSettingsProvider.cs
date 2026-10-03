@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Principal;
 using System.Xml.Linq;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -66,10 +67,10 @@ namespace pwiz.Common.SystemUtil
         private const string KEY_GROUP_NAME = @"GroupName";
 
         /// <summary>
-        /// Folder under %LOCALAPPDATA% that holds the settings of the installations a user does
-        /// not own, one subfolder for each, named for the installation folder.
+        /// File beside the executable listing the users who may use the user.config there,
+        /// instead of the folder's owner. See <see cref="IsFolderOwner"/>.
         /// </summary>
-        public const string PERSONAL_SETTINGS_FOLDER = @"ProteoWizard";
+        public const string FOLDER_OWNERS_FILE_NAME = @"folderowners.txt";
 
         private static string _defaultConfigFolder;
 
@@ -106,11 +107,12 @@ namespace pwiz.Common.SystemUtil
         /// %LOCALAPPDATA%, whether or not the folder happens to be writable to them; the
         /// user.config beside the executable is then the administrator's, shared by every user
         /// of the installation. An elevated administrator owns a folder the installer made, so
-        /// that is how the shared file gets written.
+        /// that is how the shared file gets written. See <see cref="IsFolderOwner"/> for who
+        /// counts as an owner.
         /// </summary>
         public static string GetConfigFolder(string installationFolder)
         {
-            return IsOwnedByCurrentUser(installationFolder)
+            return IsFolderOwner(installationFolder)
                 ? installationFolder
                 : GetPersonalConfigFolder(installationFolder);
         }
@@ -129,12 +131,58 @@ namespace pwiz.Common.SystemUtil
             return File.Exists(sharedConfigFile) ? sharedConfigFile : null;
         }
 
+        /// <summary>
+        /// The folder under %LOCALAPPDATA%\Skyline holding the settings and tools of an
+        /// installation the user does not own. A per machine install sits directly under
+        /// Program Files, where its folder name is unique, so the folder name is used alone.
+        /// Anywhere else, two installations can share a folder name,
+        /// such as the Debug and Release builds' net10.0-windows, so a checksum of the whole
+        /// path follows it. The path is upper cased first because Windows paths ignore case,
+        /// and one installation must not get two folders by being launched as I:\Git and I:\git.
+        /// </summary>
         public static string GetPersonalConfigFolder(string installationFolder)
         {
-            string folderName = Path.GetFileName(
-                installationFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            var fullPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(installationFolder));
+            var folderName = Path.GetFileName(fullPath);
+            if (!string.Equals(Path.GetDirectoryName(fullPath),
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), StringComparison.OrdinalIgnoreCase))
+            {
+                folderName += @"_" + AdlerChecksum.MakeForString(fullPath.ToUpperInvariant());
+            }
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                PERSONAL_SETTINGS_FOLDER, folderName);
+                @"Skyline", folderName);
+        }
+
+        /// <summary>
+        /// Whether the current user may use the user.config in the folder. A
+        /// <see cref="FOLDER_OWNERS_FILE_NAME"/> in the folder decides this when there is one:
+        /// it lists one user name per line, either the bare name or DOMAIN\name (DOMAIN/name is
+        /// accepted too), and anyone not listed gets settings of their own, so an empty file
+        /// gives everyone their own, as does a file that cannot be read. Without that file, the
+        /// folder's owner decides, by <see cref="IsOwnedByCurrentUser"/>. The file makes it easy
+        /// to try the shared settings arrangement without changing a folder's owner, which takes
+        /// elevation.
+        /// </summary>
+        public static bool IsFolderOwner(string folder)
+        {
+            var ownersFile = Path.Combine(folder, FOLDER_OWNERS_FILE_NAME);
+            if (!File.Exists(ownersFile))
+                return IsOwnedByCurrentUser(folder);
+            string[] ownerNames;
+            try
+            {
+                ownerNames = File.ReadAllLines(ownersFile);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            if (ownerNames.Length == 0)
+                return false;
+            using (var identity = WindowsIdentity.GetCurrent())
+            {
+                return ownerNames.Any(ownerName => IsUserName(ownerName, identity.Name));
+            }
         }
 
         /// <summary>
@@ -407,6 +455,20 @@ namespace pwiz.Common.SystemUtil
             var tempPath = path + @".tmp";
             document.Save(tempPath);
             File.Move(tempPath, path, true);
+        }
+
+        /// <summary>
+        /// Whether a line of <see cref="FOLDER_OWNERS_FILE_NAME"/> names the user whose
+        /// DOMAIN\name is given. A bare name matches the user in any domain.
+        /// </summary>
+        private static bool IsUserName(string ownerName, string domainUserName)
+        {
+            ownerName = ownerName.Trim().Replace('/', '\\');
+            if (ownerName.Length == 0)
+                return false;
+            if (!ownerName.Contains('\\'))
+                domainUserName = domainUserName.Substring(domainUserName.LastIndexOf('\\') + 1);
+            return string.Equals(ownerName, domainUserName, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

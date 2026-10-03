@@ -24,6 +24,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Principal;
 using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -48,6 +49,8 @@ namespace pwiz.SkylineTest
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             VerifyDefaultLocation();
             VerifyFolderOwnership();
+            VerifyPersonalFolderNames();
+            VerifyFolderOwnersFile();
             VerifySkylineSettingsUseProvider();
             VerifyDefaultsWhenNoFile();
             VerifyRoundTrip();
@@ -83,10 +86,102 @@ namespace pwiz.SkylineTest
 
             var systemFolder = Environment.SystemDirectory;
             Assert.IsFalse(UserConfigSettingsProvider.IsOwnedByCurrentUser(systemFolder));
-            var expectedFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                UserConfigSettingsProvider.PERSONAL_SETTINGS_FOLDER, Path.GetFileName(systemFolder));
-            Assert.AreEqual(expectedFolder, UserConfigSettingsProvider.GetConfigFolder(systemFolder));
+            Assert.AreEqual(UserConfigSettingsProvider.GetPersonalConfigFolder(systemFolder),
+                UserConfigSettingsProvider.GetConfigFolder(systemFolder));
+        }
+
+        /// <summary>
+        /// A per machine install directly under Program Files keeps its plain folder name.
+        /// Anywhere else, including Program Files (x86), where Skyline is never installed, the
+        /// name gets a checksum of the path, so folders that share a name get different personal
+        /// folders, while the same folder spelled differently does not. Every installation's
+        /// personal folder sits in one folder under %LOCALAPPDATA%, whatever that is called.
+        /// </summary>
+        private void VerifyPersonalFolderNames()
+        {
+            const string productFolderName = @"ExampleProductName";
+
+            var programFilesInstall = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), productFolderName);
+            var programFilesPersonalFolder = UserConfigSettingsProvider.GetPersonalConfigFolder(programFilesInstall);
+            Assert.AreEqual(productFolderName, Path.GetFileName(programFilesPersonalFolder));
+            var personalRoot = Path.GetDirectoryName(programFilesPersonalFolder);
+            Assert.AreEqual(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                Path.GetDirectoryName(personalRoot));
+
+            var x86Install = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), productFolderName);
+            VerifyChecksumFolderName(personalRoot, productFolderName, x86Install);
+
+            const string buildFolderName = @"net10.0-windows";
+            var debugFolder = TestFilesDir.GetTestPath(Path.Combine(@"Debug", buildFolderName));
+            var releaseFolder = TestFilesDir.GetTestPath(Path.Combine(@"Release", buildFolderName));
+            var debugPersonalFolder = VerifyChecksumFolderName(personalRoot, buildFolderName, debugFolder);
+            var releasePersonalFolder = VerifyChecksumFolderName(personalRoot, buildFolderName, releaseFolder);
+            Assert.AreNotEqual(debugPersonalFolder, releasePersonalFolder);
+
+            // The folder name keeps the case it was launched with, which Windows ignores.
+            Assert.IsTrue(string.Equals(debugPersonalFolder,
+                UserConfigSettingsProvider.GetPersonalConfigFolder(debugFolder.ToUpperInvariant()),
+                StringComparison.OrdinalIgnoreCase));
+            Assert.AreEqual(debugPersonalFolder,
+                UserConfigSettingsProvider.GetPersonalConfigFolder(debugFolder + Path.DirectorySeparatorChar));
+        }
+
+        private static string VerifyChecksumFolderName(string personalRoot, string folderName, string installationFolder)
+        {
+            var personalFolder = UserConfigSettingsProvider.GetPersonalConfigFolder(installationFolder);
+            Assert.AreEqual(personalRoot, Path.GetDirectoryName(personalFolder));
+            var personalFolderName = Path.GetFileName(personalFolder);
+            Assert.IsTrue(personalFolderName.StartsWith(folderName + @"_"), personalFolderName);
+            Assert.IsTrue(uint.TryParse(personalFolderName.Substring(folderName.Length + 1), out _), personalFolderName);
+            return personalFolder;
+        }
+
+        /// <summary>
+        /// A folderowners.txt overrides the folder's owner: only the users it lists keep their
+        /// settings beside the executable, by bare name or DOMAIN\name, and an empty one lists
+        /// nobody. Every case here is in a folder the current user owns, so each "not listed"
+        /// result comes from the file alone.
+        /// </summary>
+        private void VerifyFolderOwnersFile()
+        {
+            var folder = TestFilesDir.GetTestPath(@"Listed");
+            Directory.CreateDirectory(folder);
+            var ownersFile = Path.Combine(folder, UserConfigSettingsProvider.FOLDER_OWNERS_FILE_NAME);
+            var domainUserName = WindowsIdentity.GetCurrent().Name;
+            var parts = domainUserName.Split('\\');
+            var domain = parts[0];
+            var userName = parts[1];
+
+            VerifyFolderOwnersFile(folder, ownersFile, string.Empty, false);
+            VerifyFolderOwnersFile(folder, ownersFile, userName, true);
+            VerifyFolderOwnersFile(folder, ownersFile, userName.ToUpperInvariant(), true);
+            VerifyFolderOwnersFile(folder, ownersFile, domainUserName, true);
+            VerifyFolderOwnersFile(folder, ownersFile, domain + @"/" + userName, true);
+            VerifyFolderOwnersFile(folder, ownersFile, @"  " + userName + @"  ", true);
+            VerifyFolderOwnersFile(folder, ownersFile, @"someoneelse" + Environment.NewLine + userName, true);
+            VerifyFolderOwnersFile(folder, ownersFile, @"someoneelse", false);
+            VerifyFolderOwnersFile(folder, ownersFile, @"OTHERDOMAIN\" + userName, false);
+
+            // A file that cannot be read lists nobody, even when it names the current user.
+            File.WriteAllText(ownersFile, userName);
+            using (new FileStream(ownersFile, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                Assert.IsFalse(UserConfigSettingsProvider.IsFolderOwner(folder));
+            }
+            Assert.IsTrue(UserConfigSettingsProvider.IsFolderOwner(folder));
+
+            File.Delete(ownersFile);
+            Assert.IsTrue(UserConfigSettingsProvider.IsFolderOwner(folder));
+        }
+
+        private static void VerifyFolderOwnersFile(string folder, string ownersFile, string contents, bool expectedOwner)
+        {
+            File.WriteAllText(ownersFile, contents);
+            Assert.AreEqual(expectedOwner, UserConfigSettingsProvider.IsFolderOwner(folder), contents);
+            var expectedFolder = expectedOwner ? folder : UserConfigSettingsProvider.GetPersonalConfigFolder(folder);
+            Assert.AreEqual(expectedFolder, UserConfigSettingsProvider.GetConfigFolder(folder));
         }
 
         /// <summary>
