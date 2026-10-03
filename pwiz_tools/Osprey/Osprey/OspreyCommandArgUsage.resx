@@ -118,9 +118,6 @@
   <data name="_fdr_level" xml:space="preserve">
     <value>FDR level (default: {0})</value>
   </data>
-  <data name="_fdr_method" xml:space="preserve">
-    <value>FDR method (default: {0})</value>
-  </data>
   <data name="_fdrbench" xml:space="preserve">
     <value>Write an FDRBench-compatible input TSV to this path. The level is taken from {0} ({2}; {3} and {4} emit precursor-level). Includes every reported target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as '{1}', so FDRBench can compute true FDR via entrapment counting without truncation at Osprey's threshold.</value>
   </data>

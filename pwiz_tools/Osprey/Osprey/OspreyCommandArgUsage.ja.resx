@@ -121,10 +121,6 @@
     <value>FDRレベル（デフォルト：{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_fdr_method" xml:space="preserve">
-    <value>FDR手法（デフォルト：{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_fdrbench" xml:space="preserve">
     <value>FDRBench互換の入力TSVをこのパスに書き込みます。レベルは{0}から取得します（{2}。{3}と{4}はプリカーサーレベルを出力）。報告されたすべてのターゲット（つまり実際に出力に書き込まれたペプチド）をQ値に関係なく含み、生のSVM判別値を「{1}」として出力するため、FDRBenchはOspreyの閾値で切り捨てられることなく、エントラップメントのカウントによって真のFDRを計算できます。</value>
     <comment>Needs Review:New resource</comment>

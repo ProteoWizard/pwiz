@@ -456,7 +456,6 @@ namespace pwiz.Osprey.Test
 
             foreach (var variant in new[]
                      {
-                         new[] { OspreyCommandArgs.ARG_FDR_METHOD.ArgumentText, @"gbdt" },
                          new[] { OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText, @"peptide" },
                          new[] { OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText, @"protein" },
                          new[] { OspreyCommandArgs.ARG_SHARED_PEPTIDES.ArgumentText, @"razor" },
@@ -469,6 +468,22 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(BlibComparer.CountRows(Path.Combine(variantDir, BLIB_FILE), @"RefSpectra") > 0,
                     string.Join(@" ", variant) + @" reported no precursors");
             }
+
+            // The gradient-boosted trees in place of the linear SVM (OSPREY_FDR_MODEL=gbdt). The
+            // variable is read once at class load, so an override cannot reach it; set the value it
+            // parses to, as the pass-2 leg below does for OSPREY_EXPERIMENT_AGG.
+            string gbdtDir = CreateDir(@"fdr-model-gbdt");
+            var savedFdrModel = OspreyEnvironment.FdrModel;
+            try
+            {
+                OspreyEnvironment.FdrModel = FdrClassifier.Gbdt;
+                RunAnalysis(gbdtDir, DataInputs(), Verifier(false));
+            }
+            finally
+            {
+                OspreyEnvironment.FdrModel = savedFdrModel;
+            }
+            Assert.IsTrue(BlibComparer.CountRows(Path.Combine(gbdtDir, BLIB_FILE), @"RefSpectra") > 0, @"gbdt reported no precursors");
 
             // FDRBench input with one row per precursor and run.
             string benchDir = CreateDir(@"fdrbench-per-run");
