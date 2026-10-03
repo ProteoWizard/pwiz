@@ -21,10 +21,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Parquet;
-using Parquet.Data;
 using Parquet.Schema;
 using pwiz.Osprey.Core;
 
@@ -89,9 +89,14 @@ namespace pwiz.Osprey.IO
             using (var saver = new FileSaver(path))
             {
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
-                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
                 {
-                    writer.CompressionMethod = CompressionMethod.Zstd;
+                    var options = new ParquetOptions
+                    {
+                        CompressionMethod = CompressionMethod.Zstd,
+                        // Parquet.Net's default is Zstd level 19, many times slower than Optimal
+                        CompressionLevel = CompressionLevel.Optimal,
+                    };
+                    var writer = RunSync(ParquetWriter.CreateAsync(schema, stream, options));
                     writer.CustomMetadata = footer;
                     for (int start = 0; start < records.Count; start += ROWS_PER_GROUP)
                     {
@@ -102,9 +107,11 @@ namespace pwiz.Osprey.IO
                         using (var group = writer.CreateRowGroup())
                         {
                             foreach (var column in columns)
-                                RunSync(group.WriteColumnAsync(new DataColumn(column.Field, column.Build(chunk))));
+                                RunSync(column.Write(group, chunk));
                         }
                     }
+                    // Writes the footer
+                    RunSync(writer.DisposeAsync());
                 }
                 saver.Commit();
             }
@@ -118,27 +125,34 @@ namespace pwiz.Osprey.IO
         {
             var records = new List<TrainingRecord>();
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
-                // Parquet.Net 4.x's CustomMetadata is non-null (empty when the file has none).
-                metadata = new Dictionary<string, string>(reader.CustomMetadata);
-                var fieldsByName = reader.Schema.GetDataFields().ToDictionary(f => f.Name);
-                var specs = Columns(true).ToArray();
-                for (int g = 0; g < reader.RowGroupCount; g++)
+                var reader = RunSync(ParquetReader.CreateAsync(stream));
+                try
                 {
-                    using (var group = reader.OpenRowGroupReader(g))
+                    // Parquet.Net's CustomMetadata is non-null (empty when the file has none).
+                    metadata = new Dictionary<string, string>(reader.CustomMetadata);
+                    var fieldsByName = reader.Schema.GetDataFields().ToDictionary(f => f.Name);
+                    var specs = Columns(true).ToArray();
+                    for (int g = 0; g < reader.RowGroupCount; g++)
                     {
-                        var chunk = new TrainingRecord[checked((int)group.RowCount)];
-                        for (int i = 0; i < chunk.Length; i++)
-                            chunk[i] = new TrainingRecord();
-                        foreach (var spec in specs)
+                        using (var group = reader.OpenRowGroupReader(g))
                         {
-                            if (!fieldsByName.TryGetValue(spec.Field.Name, out var field))
-                                continue;
-                            spec.Assign(chunk, RunSync(group.ReadColumnAsync(field)).Data);
+                            var chunk = new TrainingRecord[checked((int)group.RowCount)];
+                            for (int i = 0; i < chunk.Length; i++)
+                                chunk[i] = new TrainingRecord();
+                            foreach (var spec in specs)
+                            {
+                                if (!fieldsByName.TryGetValue(spec.Field.Name, out var field))
+                                    continue;
+                                spec.Read(group, field, chunk);
+                            }
+                            records.AddRange(chunk);
                         }
-                        records.AddRange(chunk);
                     }
+                }
+                finally
+                {
+                    RunSync(reader.DisposeAsync());
                 }
             }
             return records;
@@ -239,18 +253,20 @@ namespace pwiz.Osprey.IO
         }
 
         private static ColumnSpec Scalar<T>(string name, Func<TrainingRecord, T> get, Action<TrainingRecord, T> set)
+            where T : struct
         {
             return new ColumnSpec(new DataField<T>(name),
-                rows =>
+                (group, field, rows) =>
                 {
                     var values = new T[rows.Length];
                     for (int i = 0; i < rows.Length; i++)
                         values[i] = get(rows[i]);
-                    return values;
+                    return group.WriteAsync(field, new ReadOnlyMemory<T>(values));
                 },
-                (rows, data) =>
+                (group, field, rows) =>
                 {
-                    var values = (T[])data;
+                    var values = new T[rows.Length];
+                    RunSync(group.ReadAsync(field, values.AsMemory()));
                     for (int i = 0; i < rows.Length; i++)
                         set(rows[i], values[i]);
                 });
@@ -259,10 +275,11 @@ namespace pwiz.Osprey.IO
         private static ColumnSpec Text(string name, Func<TrainingRecord, string> get, Action<TrainingRecord, string> set)
         {
             return new ColumnSpec(new DataField(name, typeof(string), isNullable: true, isArray: false),
-                rows => rows.Select(get).ToArray(),
-                (rows, data) =>
+                (group, field, rows) => group.WriteAsync(field, rows.Select(get).ToArray()),
+                (group, field, rows) =>
                 {
-                    var values = (string[])data;
+                    var values = new string[rows.Length];
+                    RunSync(group.ReadAsync(field, values.AsMemory()));
                     for (int i = 0; i < rows.Length; i++)
                         set(rows[i], values[i]);
                 });
@@ -271,10 +288,11 @@ namespace pwiz.Osprey.IO
         private static ColumnSpec Blob(string name, Func<TrainingRecord, byte[]> get, Action<TrainingRecord, byte[]> set)
         {
             return new ColumnSpec(new DataField(name, typeof(byte[]), isNullable: true, isArray: false),
-                rows => rows.Select(get).ToArray(),
-                (rows, data) =>
+                (group, field, rows) => group.WriteAsync(field, rows.Select(get).ToArray()),
+                (group, field, rows) =>
                 {
-                    var values = (byte[][])data;
+                    var values = new byte[rows.Length][];
+                    RunSync(group.ReadAsync(field, values.AsMemory()));
                     for (int i = 0; i < rows.Length; i++)
                         set(rows[i], values[i]);
                 });
@@ -298,23 +316,40 @@ namespace pwiz.Osprey.IO
             task.GetAwaiter().GetResult();
         }
 
+        private static void RunSync(ValueTask task)
+        {
+            task.GetAwaiter().GetResult();
+        }
+
         /// <summary>
         /// One column: its field (the instance attached to the schema, which Parquet.Net
-        /// requires the written <see cref="DataColumn"/> to share), how to build its array from
-        /// a chunk of records, and how to assign it back.
+        /// requires a written column to share), how to write it from a chunk of records, and
+        /// how to read it back into them through the field of the schema being read.
         /// </summary>
         private sealed class ColumnSpec
         {
-            public ColumnSpec(DataField field, Func<TrainingRecord[], Array> build, Action<TrainingRecord[], Array> assign)
+            private readonly Func<ParquetRowGroupWriter, DataField, TrainingRecord[], Task> _write;
+            private readonly Action<ParquetRowGroupReader, DataField, TrainingRecord[]> _read;
+
+            public ColumnSpec(DataField field, Func<ParquetRowGroupWriter, DataField, TrainingRecord[], Task> write,
+                Action<ParquetRowGroupReader, DataField, TrainingRecord[]> read)
             {
                 Field = field;
-                Build = build;
-                Assign = assign;
+                _write = write;
+                _read = read;
             }
 
             public DataField Field { get; }
-            public Func<TrainingRecord[], Array> Build { get; }
-            public Action<TrainingRecord[], Array> Assign { get; }
+
+            public Task Write(ParquetRowGroupWriter group, TrainingRecord[] rows)
+            {
+                return _write(group, Field, rows);
+            }
+
+            public void Read(ParquetRowGroupReader group, DataField field, TrainingRecord[] rows)
+            {
+                _read(group, field, rows);
+            }
         }
     }
 }
