@@ -20,7 +20,6 @@
 
 using System.IO;
 using System.Linq;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util

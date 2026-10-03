@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Microsoft.Win32;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {

@@ -27,9 +27,8 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Principal;
 using System.Xml.Linq;
-using pwiz.Skyline.Util;
 
-namespace pwiz.Common.SystemUtil
+namespace pwiz.Skyline.Util
 {
     /// <summary>
     /// Keeps user scoped settings in a "user.config" file whose folder this class chooses,
@@ -168,21 +167,20 @@ namespace pwiz.Common.SystemUtil
             var ownersFile = Path.Combine(folder, FOLDER_OWNERS_FILE_NAME);
             if (!File.Exists(ownersFile))
                 return IsOwnedByCurrentUser(folder);
-            string[] ownerNames;
             try
             {
-                ownerNames = File.ReadAllLines(ownersFile);
+                var ownerNames = File.ReadAllLines(ownersFile).Select(s=>s.Trim()).Where(s=>!string.IsNullOrEmpty(s)).ToList();
+                if (ownerNames.Count > 0)
+                {
+                    using var identity = WindowsIdentity.GetCurrent();
+                    return ownerNames.Any(ownerName => IsUserName(ownerName, identity.Name));
+                }
             }
             catch (Exception)
             {
-                return false;
+                // Ignore
             }
-            if (ownerNames.Length == 0)
-                return false;
-            using (var identity = WindowsIdentity.GetCurrent())
-            {
-                return ownerNames.Any(ownerName => IsUserName(ownerName, identity.Name));
-            }
+            return false;
         }
 
         /// <summary>
@@ -200,10 +198,8 @@ namespace pwiz.Common.SystemUtil
                     as SecurityIdentifier;
                 if (owner == null)
                     return true;
-                using (var identity = WindowsIdentity.GetCurrent())
-                {
-                    return owner.Equals(identity.User) || new WindowsPrincipal(identity).IsInRole(owner);
-                }
+                using var identity = WindowsIdentity.GetCurrent();
+                return owner.Equals(identity.User) || new WindowsPrincipal(identity).IsInRole(owner);
             }
             catch (Exception)
             {
@@ -458,14 +454,12 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Whether a line of <see cref="FOLDER_OWNERS_FILE_NAME"/> names the user whose
-        /// DOMAIN\name is given. A bare name matches the user in any domain.
+        /// Whether a trimmed, non-empty line of <see cref="FOLDER_OWNERS_FILE_NAME"/> names the
+        /// user whose DOMAIN\name is given. A bare name matches the user in any domain.
         /// </summary>
         private static bool IsUserName(string ownerName, string domainUserName)
         {
-            ownerName = ownerName.Trim().Replace('/', '\\');
-            if (ownerName.Length == 0)
-                return false;
+            ownerName = ownerName.Replace('/', '\\');
             if (!ownerName.Contains('\\'))
                 domainUserName = domainUserName.Substring(domainUserName.LastIndexOf('\\') + 1);
             return string.Equals(ownerName, domainUserName, StringComparison.OrdinalIgnoreCase);

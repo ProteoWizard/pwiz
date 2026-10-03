@@ -27,7 +27,7 @@ using System.Reflection;
 using System.Security.Principal;
 using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -344,7 +344,7 @@ namespace pwiz.SkylineTest
             return properties;
         }
 
-        private static SettingsProperty CreateProperty(string name, System.Type propertyType, object defaultValue,
+        private static SettingsProperty CreateProperty(string name, Type propertyType, object defaultValue,
             SettingsSerializeAs serializeAs)
         {
             var property = new SettingsProperty(name)
