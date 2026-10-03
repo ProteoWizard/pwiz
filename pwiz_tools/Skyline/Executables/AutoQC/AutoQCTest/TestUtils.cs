@@ -91,43 +91,9 @@ namespace AutoQCTest
 
         public static string GetSkylineBinDirectory()
         {
-            var skylineProjectDir = ExtensionTestContext.GetProjectDirectory("")
-                                    ?? throw new InvalidOperationException("Unable to find Skyline project directory");
-
-            // net472 builds to bin\x64\<config>; net8 to bin\<config>\net8.0-windows (or a
-            // Stage-Tests staging dir). Return whichever candidate holds SkylineCmd.exe, preferring
-            // the most recently built. The net8 candidates are only considered on net8 so a net472 test
-            // run never picks up a newer net8 build that happens to be present on the same machine.
-            var candidates = new[]
-            {
-                Path.Combine(skylineProjectDir, "bin", "Release", "net10.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "Debug", "net10.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "x64", "Release", "net10.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "x64", "Debug", "net10.0-windows"),
-                Path.Combine(skylineProjectDir, "bin", "staging", "Release"),
-                Path.Combine(skylineProjectDir, "bin", "x64", "Release"),
-                Path.Combine(skylineProjectDir, "bin", "x64", "Debug"),
-            };
-
-            string best = null;
-            var bestTime = DateTime.MinValue;
-            foreach (var dir in candidates)
-            {
-                var cmd = Path.Combine(dir, SkylineInstallations.SkylineCmdExe);
-                if (!File.Exists(cmd))
-                    continue;
-                var time = File.GetLastWriteTime(cmd);
-                if (best == null || time > bestTime)
-                {
-                    best = dir;
-                    bestTime = time;
-                }
-            }
-
-            if (best != null)
-                return best;
-            throw new DirectoryNotFoundException(
-                $"No {SkylineInstallations.SkylineCmdExe} found under {Path.Combine(skylineProjectDir, "bin")}");
+            return ExtensionTestContext.GetSkylineBinDirectory()
+                   ?? throw new DirectoryNotFoundException(
+                       $"No {SkylineInstallations.SkylineCmdExe} found under {ExtensionTestContext.GetProjectDirectory("bin")}");
         }
 
         public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty, string.Empty);

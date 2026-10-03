@@ -24,6 +24,7 @@ using SkylineBatch;
 using SharedBatch;
 using System.Linq;
 using SharedBatch.Properties;
+using SharedBatchTest;
 using System.Text.RegularExpressions;
 
 namespace SkylineBatchTest
@@ -365,31 +366,13 @@ namespace SkylineBatchTest
 
         /// <summary>
         /// The directory of a Skyline build in this checkout, for the tests that need a real
-        /// SkylineCmd.exe to point a configuration at.
-        ///
-        /// Release comes first so a machine with both keeps the behaviour it had, but Debug is
-        /// probed too: the batch-tool build scripts default to Debug, and before that was
-        /// allowed for every one of these tests failed on a Debug tree with "Could not find a
-        /// Skyline installation at this location: ...\bin\x64\Release" - a directory that had
-        /// never been built.
+        /// SkylineCmd.exe to point a configuration at. With no build at all, returns the default
+        /// Release location so the tests fail naming a path a developer would recognize.
         /// </summary>
         public static string GetSkylineDir()
         {
-            // net10 Skyline builds to bin\Release\net10.0-windows (or a Stage-Tests
-            // staging dir) rather than the net472 bin\x64\Release. Return whichever holds
-            // SkylineCmd.exe.
-            foreach (var rel in new[]
-                     {
-                         "bin\\Release\\net10.0-windows",
-                         "bin\\x64\\Release\\net10.0-windows",
-                         "bin\\staging\\Release"
-                     })
-            {
-                var dir = GetProjectDirectory(rel);
-                if (dir != null && File.Exists(Path.Combine(dir, SkylineInstallations.SkylineCmdExe)))
-                    return dir;
-            }
-            return GetProjectDirectory("bin\\Release\\net10.0-windows");
+            return ExtensionTestContext.GetSkylineBinDirectory()
+                   ?? GetProjectDirectory("bin\\Release\\net10.0-windows");
         }
 
         public static string GetProjectDirectory(string relativePath)

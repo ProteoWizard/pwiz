@@ -494,7 +494,7 @@ namespace SharedBatch
 
         public static string OpenFile(string initialDirectory, string filter, bool saveFileDialog)
         {
-            FileDialog dialog = saveFileDialog ? (FileDialog)new SaveFileDialog() : new OpenFileDialog();
+            FileDialog dialog = saveFileDialog ? new SaveFileDialog() : new OpenFileDialog();
             dialog.InitialDirectory = initialDirectory;
             dialog.Filter = filter;
             DialogResult result = dialog.ShowDialog();
