@@ -267,12 +267,30 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 IReadOnlyList<IReadOnlyList<CwtCandidate>> fileCwt,
                 IList<KeyValuePair<int, ReconcileAction>> fileActions)
             {
+                _perFileRefinedCal.TryGetValue(fileName, out RTCalibration refined);
+                PlanFile(fileName, refined, entries, fileCwt, fileActions);
+            }
+
+            /// <summary>
+            /// <see cref="PlanFile(string,IReadOnlyList{FdrEntry},IReadOnlyList{IReadOnlyList{CwtCandidate}},IList{KeyValuePair{int,ReconcileAction}})"/>
+            /// with the file's refined calibration passed in (null when it was not refit) rather
+            /// than looked up. The lookup reads the shared refit map, which a caller planning
+            /// several files at once is still filling; passing the file's own refit lets it plan
+            /// files concurrently and still record the refits in file order.
+            /// </summary>
+            public void PlanFile(
+                string fileName,
+                RTCalibration refinedCalibration,
+                IReadOnlyList<FdrEntry> entries,
+                IReadOnlyList<IReadOnlyList<CwtCandidate>> fileCwt,
+                IList<KeyValuePair<int, ReconcileAction>> fileActions)
+            {
                 if (entries == null)
                     return;
 
                 // Refined calibration if present, else original.
-                RTCalibration cal;
-                if (!_perFileRefinedCal.TryGetValue(fileName, out cal))
+                RTCalibration cal = refinedCalibration;
+                if (cal == null)
                     _perFileOriginalCal.TryGetValue(fileName, out cal);
                 if (cal == null)
                     return;

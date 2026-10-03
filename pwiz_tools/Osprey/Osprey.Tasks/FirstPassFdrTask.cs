@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -1972,36 +1973,54 @@ namespace pwiz.Osprey.Tasks
             return EmitFdrBenchPass1(config, ctx, sink =>
             {
                 int files = 0;
+                string error = null;
                 using (var progress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
                            OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for_1_file,
                            OspreyTasksResources.FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files),
                            projections.PerFile.Count))
                 {
-                    foreach (var kvp in projections.PerFile)
+                    // A lane reads a file and builds its rows; the sink, which dedups across files
+                    // with first-seen ties (or streams per-run rows straight to the TSV), takes them
+                    // here in file order.
+                    OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
+                    {
+                        string runName = projections.PerFile[f].Key;
+                        var rows = new List<FdrBenchInputWriter.Row>();
+                        string fileError = TryStreamFirstPassFileScores(runName, perFileParquetPaths, config,
+                            (modseq, charge, isDecoy, record) =>
+                            {
+                                if (isDecoy)
+                                    return;
+                                if (!experimentById.TryGetValue(record.EntryId, out var exp))
+                                {
+                                    // Every observation the score pass wrote a sidecar record
+                                    // for was folded into the experiment map in the same pass,
+                                    // so a miss is a defect in that contract, not a data case.
+                                    throw new InvalidOperationException(string.Format(
+                                        @"FDRBench pass 1: entry {0} in {1} has a 1st-pass sidecar " +
+                                        @"record but no experiment-scope record", record.EntryId, runName));
+                                }
+                                rows.Add(FdrBenchInputWriter.Row.FromSidecar(
+                                    modseq, charge, in record, in exp, sink.EffectiveLevel));
+                            });
+                        return (Rows: rows, Error: fileError);
+                    }, (f, file) =>
                     {
                         progress.Report(++files);
-                        string runName = kvp.Key;
-                        if (!StreamFirstPassFileScores(runName, perFileParquetPaths, config, ctx,
-                                (modseq, charge, isDecoy, record) =>
-                                {
-                                    if (isDecoy)
-                                        return;
-                                    if (!experimentById.TryGetValue(record.EntryId, out var exp))
-                                    {
-                                        // Every observation the score pass wrote a sidecar record
-                                        // for was folded into the experiment map in the same pass,
-                                        // so a miss is a defect in that contract, not a data case.
-                                        throw new InvalidOperationException(string.Format(
-                                            @"FDRBench pass 1: entry {0} in {1} has a 1st-pass sidecar " +
-                                            @"record but no experiment-scope record", record.EntryId, runName));
-                                    }
-                                    sink.Add(runName, FdrBenchInputWriter.Row.FromSidecar(
-                                        modseq, charge, in record, in exp, sink.EffectiveLevel));
-                                }))
-                        {
-                            return false;  // ExitCode set in the helper
-                        }
-                    }
+                        error = file.Error;
+                        if (error != null)
+                            return false;
+                        string runName = projections.PerFile[f].Key;
+                        foreach (var row in file.Rows)
+                            sink.Add(runName, row);
+                        return true;
+                    });
+                }
+                if (error != null)
+                {
+                    ctx.LogError(error);
+                    ctx.ExitCode = 1;
+                    return false;
                 }
                 return true;
             });
@@ -2035,7 +2054,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!produce(sink))
                     return false;
-                benchResult = sink.Commit();
+                benchResult = sink.Commit(ctx.RunPlan.FileLanes);
             }
             string manifestPath = benchPath + FdrBenchInputWriter.EXT_PAIRING;
             int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
@@ -3252,9 +3271,10 @@ namespace pwiz.Osprey.Tasks
             // Collapses the score pass's EXPERIMENT-scope columns to one record per distinct
             // entry_id (format v5, issue #4486). Protein FDR fills its protein q below, then
             // the whole thing is written once beside the blib.
-            // PER-FILE RESUME GATE. Which files already carry a 1st-pass sidecar this build
-            // wrote, under this arm and this cohort? Those need no re-scoring: the sidecar holds
-            // their scores and run q-values, and the sink can be fed from it.
+            // PER-FILE RESUME GATE. Which files already carry a 1st-pass sidecar stamped with this
+            // task's validity key - this arm and this cohort? Those need no re-scoring: the sidecar
+            // holds their scores and run q-values, and the sink can be fed from it. (The stamp also
+            // records the build that wrote it, but nothing compares that yet - issue #4764.)
             //
             // Per FILE rather than per phase on purpose. A phase-level gate still redoes a
             // 99%-complete phase, and this score pass is 137 minutes over 446 files - so a
@@ -3434,6 +3454,8 @@ namespace pwiz.Osprey.Tasks
             // pass 2 read every score back instead of reloading features and repeating the dot
             // product for all of them. An adopted file is marked on the sink for the same reason
             // a freshly written one is: its sidecar exists, so the sink must not write it again.
+            // Read and grown from the score pass's file lanes at once, so every access holds its
+            // lock.
             var scoresOnDisk = new HashSet<string>(resumableFiles, StringComparer.Ordinal);
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
@@ -3459,7 +3481,8 @@ namespace pwiz.Osprey.Tasks
                     int failures = FlushPartialSidecar(fileName, records);
                     if (failures == 0)
                     {
-                        scoresOnDisk.Add(fileName);
+                        lock (scoresOnDisk)
+                            scoresOnDisk.Add(fileName);
                         return;
                     }
                     // Fatal HERE, naming the write that failed. Since the sink can no longer
@@ -3467,7 +3490,7 @@ namespace pwiz.Osprey.Tasks
                     // remaining row and then dies an hour later in the compaction gate saying
                     // the sidecar could not be READ - blaming a missing artifact instead of the
                     // write that never happened.
-                    pass1WriteFailures += failures;
+                    Interlocked.Add(ref pass1WriteFailures, failures);
                     throw new IOException(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Could_not_write_the_first_pass_intermediate_file_for___0____and_the_analysis_cannot_, fileName));
                 };
@@ -3499,18 +3522,25 @@ namespace pwiz.Osprey.Tasks
                 // pass 2 recomputing all 446 files' scores 82 minutes after pass 1 computed
                 // them. Returns false for a file whose sidecar is not on disk, which scores
                 // normally.
-                Func<string, Action<uint, double>, bool> tryStreamCompletedScores =
-                    (fileName, onScore) =>
+                CompletedScoreStreamer tryStreamCompletedScores =
+                    (fileName, onRecord) =>
                     {
-                        if (!scoresOnDisk.Contains(fileName))
-                            return false;
+                        lock (scoresOnDisk)
+                        {
+                            if (!scoresOnDisk.Contains(fileName))
+                                return false;
+                        }
                         string doneBase = ScoringTaskShared.ResolveSidecarBasePath(
                             fileName, perFileParquetPaths, config);
                         if (string.IsNullOrEmpty(doneBase))
                             return false;
+                        // Both run q-values travel with the score. The record carries them
+                        // already - it is the record pass 1 wrote - so handing them on costs
+                        // nothing here and saves the reader a sort per file.
                         return FdrScoresSidecar.ReadRecords(
                             FdrScoresSidecar.Pass1Path(doneBase), FdrScoresSidecar.Pass.FirstPass,
-                            rec => onScore(rec.EntryId, rec.Score));
+                            rec => onRecord(rec.EntryId, rec.Score,
+                                rec.RunPrecursorQvalue, rec.RunPeptideQvalue));
                     };
                 // The adopted model is reused rather than skipped: the scorer still publishes it
                 // through captureModel, so a second pass that needs the frozen first-pass model
@@ -3534,7 +3564,7 @@ namespace pwiz.Osprey.Tasks
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                     config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                     @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                    pretrainedModel, flushFileRunScope);
+                    pretrainedModel, flushFileRunScope, ctx.RunPlan.FileLanes);
                 // Says whether the pass-1 write actually engaged. Without it a run in which
                 // flushFileRunScope never fired would look identical from the outside - the
                 // sink would have written the same sidecars from pass 2, and the output would
@@ -4077,20 +4107,37 @@ namespace pwiz.Osprey.Tasks
             // Pass 1: detected-peptide + best-score reductions, streamed per file in
             // projection order (the reductions are order-independent, but streaming in the
             // resident path's file/row order keeps the best-scores insertion order identical).
+            // Each file is reduced on its own lane and merged here in file order, which
+            // FirstPassProteinFdrAccumulator.Merge makes identical to adding every row in order.
             var accumulator = new FirstPassProteinFdrAccumulator(config.RunFdr);
             int proteinReduceFiles = 0;
+            string reduceError = null;
             using (var reduceProgress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count))
-            foreach (var kvp in projections.PerFile)
             {
-                reduceProgress.Report(++proteinReduceFiles);
-                if (!StreamFirstPassFileScores(kvp.Key, perFileParquetPaths, config, ctx,
-                        (modseq, charge, isDecoy, record) =>
-                            accumulator.Add(modseq, isDecoy, record.Score, record.RunPeptideQvalue)))
+                OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
                 {
-                    return null;  // ExitCode set in the helper
-                }
+                    var fileAccumulator = new FirstPassProteinFdrAccumulator(config.RunFdr);
+                    string error = TryStreamFirstPassFileScores(projections.PerFile[f].Key, perFileParquetPaths, config,
+                        (modseq, charge, isDecoy, record) =>
+                            fileAccumulator.Add(modseq, isDecoy, record.Score, record.RunPeptideQvalue));
+                    return (Accumulator: fileAccumulator, Error: error);
+                }, (f, file) =>
+                {
+                    reduceProgress.Report(++proteinReduceFiles);
+                    reduceError = file.Error;
+                    if (reduceError != null)
+                        return false;
+                    accumulator.Merge(file.Accumulator);
+                    return true;
+                });
+            }
+            if (reduceError != null)
+            {
+                ctx.LogError(reduceError);
+                ctx.ExitCode = 1;
+                return null;
             }
             var result = accumulator.Finish(fullLibrary, config);
             ProteinFdrEngine.LogFirstPassSummary(result, config, ctx);
@@ -4106,38 +4153,59 @@ namespace pwiz.Osprey.Tasks
             // stage that is already the bottleneck, to store one number per run of a value that
             // is the same in every run. It now finishes an in-memory map instead, and the
             // per-file sidecars written by the score pass are never reopened (issue #4486).
+            //
+            // A lane reads a file's rows and resolves each one's protein q against the finished
+            // (read-only) peptide map; the experiment map is updated here, in file order. The
+            // file reduces to one value per entry - the LAST row's, which is the one a row-by-row
+            // update would leave - so applying it is the same assignment, fewer times.
             var peptideQvalues = result.ProteinFdr.PeptideQvalues;
             int proteinResolveFiles = 0;
+            int resolveFailures = 0;
             using (var resolveProgress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file,
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files), projections.PerFile.Count))
-            foreach (var kvp in projections.PerFile)
             {
-                resolveProgress.Report(++proteinResolveFiles);
-                string fileName = kvp.Key;
-                string parquetPath = perFileParquetPaths[fileName];  // present: pass 1 read it
-                try
+                OrderedFileLanes.Run(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
                 {
-                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                        (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
-                        {
-                            double q;
-                            // Normalize a present-but-null modseq to "" so the lookup matches the
-                            // pass-1 PeptideQvalues keys (the accumulator normalizes the same way);
-                            // a null Dictionary key would otherwise throw. See StreamFirstPassFileScores.
-                            if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
-                                q = 1.0;
-                            experiment.SetProteinQvalue(entryId, q);
-                        },
-                        StubColumns.Core);
-                }
-                catch (Exception ex)
+                    string parquetPath = perFileParquetPaths[projections.PerFile[f].Key];  // present: pass 1 read it
+                    var qByEntryId = new Dictionary<uint, double>();
+                    try
+                    {
+                        ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                            (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
+                            {
+                                double q;
+                                // Normalize a present-but-null modseq to "" so the lookup matches the
+                                // pass-1 PeptideQvalues keys (the accumulator normalizes the same way);
+                                // a null Dictionary key would otherwise throw. See TryStreamFirstPassFileScores.
+                                if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
+                                    q = 1.0;
+                                qByEntryId[entryId] = q;
+                            },
+                            StubColumns.Core);
+                        return (Resolved: qByEntryId, Error: (string)null);
+                    }
+                    catch (Exception ex)
+                    {
+                        // The rows resolved before the failure still apply, as they did when the
+                        // update ran row by row.
+                        return (Resolved: qByEntryId, Error: ex.Message);
+                    }
+                }, (f, file) =>
                 {
-                    ctx.LogWarning(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_, fileName, ex.Message));
-                    patchFailures++;
-                }
+                    resolveProgress.Report(++proteinResolveFiles);
+                    foreach (var kv in file.Resolved)
+                        experiment.SetProteinQvalue(kv.Key, kv.Value);
+                    if (file.Error != null)
+                    {
+                        ctx.LogWarning(string.Format(
+                            OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_,
+                            projections.PerFile[f].Key, file.Error));
+                        resolveFailures++;
+                    }
+                });
             }
+            patchFailures = resolveFailures;
             return result;
         }
 
@@ -4147,36 +4215,35 @@ namespace pwiz.Osprey.Tasks
         /// <c>.1st-pass.fdr_scores.bin</c> into an entry_id -> record map (one file resident;
         /// bounded), then stream the parquet scalars (the modseq source PeptideById was
         /// interned from + charge + IsDecoy) in parquet-row order, joining each row to its
-        /// sidecar record by entry_id. Returns <c>false</c> (ExitCode set) on a missing parquet
-        /// path, a missing sidecar base path, or an unreadable / size-mismatched sidecar. A parquet row whose
-        /// entry_id is absent from the sidecar is SKIPPED, not a fault: the sidecar is a SUBSET
-        /// of the parquet rows, so a row with no record is simply not a first-pass row
-        /// (superset tolerance mirroring the survivor reload -- see the inline note below).
-        /// Shared by the first-pass protein FDR and the pass-1 FDRBench emitter, which is why
-        /// the walk is in parquet-row order: both consumers depend on seeing rows in the order
-        /// the resident path listed them.
+        /// sidecar record by entry_id. Returns the error to report - null on success - for a
+        /// missing parquet path, a missing sidecar base path, or an unreadable / size-mismatched
+        /// sidecar. A parquet row whose entry_id is absent from the sidecar is SKIPPED, not a
+        /// fault: the sidecar is a SUBSET of the parquet rows, so a row with no record is simply
+        /// not a first-pass row (superset tolerance mirroring the survivor reload - see the
+        /// inline note below). Shared by the first-pass protein FDR and the pass-1 FDRBench
+        /// emitter, which is why the walk is in parquet-row order: both consumers depend on
+        /// seeing rows in the order the resident path listed them.
+        ///
+        /// <para>Touches no shared state and logs nothing, so it runs on a file lane. The caller
+        /// reports the error on reaching the file in file order - the same file, and only that
+        /// file, the sequential walk would have stopped at.</para>
         /// </summary>
-        private bool StreamFirstPassFileScores(
+        private static string TryStreamFirstPassFileScores(
             string fileName,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
-            PipelineContext ctx,
             Action<string, byte, bool, FdrScoreRecord> onRow)
         {
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
-                ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_scores_file_for___0___, fileName));
-                ctx.ExitCode = 1;
-                return false;
+                return string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_scores_file_for___0___, fileName);
             }
             string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
             if (string.IsNullOrEmpty(sidecarBase))
             {
-                ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_first_pass_intermediate_files_for___0___, fileName));
-                ctx.ExitCode = 1;
-                return false;
+                return string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_first_pass_intermediate_files_for___0___, fileName);
             }
             string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
 
@@ -4184,10 +4251,8 @@ namespace pwiz.Osprey.Tasks
             if (!FdrScoresSidecar.ReadRecords(fdrPath, FdrScoresSidecar.Pass.FirstPass,
                     record => recordByEntryId[record.EntryId] = record))
             {
-                ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_, fileName, fdrPath));
-                ctx.ExitCode = 1;
-                return false;
+                return string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_, fileName, fdrPath);
             }
 
             ParquetScoreCache.ReadFdrStubScalars(parquetPath,
@@ -4208,7 +4273,7 @@ namespace pwiz.Osprey.Tasks
                         onRow(modseq ?? string.Empty, charge, isDecoy, record);
                 },
                 StubColumns.Core);
-            return true;
+            return null;
         }
 
         /// <summary>
@@ -4267,57 +4332,77 @@ namespace pwiz.Osprey.Tasks
             if (experimentByEntryId == null)
                 return null;  // ExitCode set in the helper
 
+            // Each file's passing set and row counts are built on its own lane and merged here in
+            // file order: a union and integer sums, so the result - and the order each base_id
+            // first enters either collection - is what one walk over every file gives.
             int compactFiles = 0;
+            string compactError = null;
             using (var compactProgress = new ProgressReporter(ScoringTaskShared.IsSingleFileSearch(config)
                        ? OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_re_scoring_and_second_
                        : string.Format(OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Trimming_first_pass_results_to_the_precursor_candidates_kept_for_cross_run_reconciliation_,
                            projections.PerFile.Count),
                        projections.PerFile.Count))
-            foreach (var kvp in projections.PerFile)
             {
-                compactProgress.Report(++compactFiles);
-                string fileName = kvp.Key;
-                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
-                if (string.IsNullOrEmpty(sidecarBase))
+                OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
                 {
-                    ctx.LogError(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___, fileName));
-                    ctx.ExitCode = 1;
-                    return null;
-                }
-                string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
-                if (!FdrScoresSidecar.ReadRecords(fdrPath, FdrScoresSidecar.Pass.FirstPass,
-                        record =>
-                        {
-                            // Decoy bit in entry_id == IsDecoy (decoys minted
-                            // target.Id | DECOY_ID_BIT); skip decoys, mask to the shared base_id.
-                            uint rowBaseId = record.EntryId & ScoringTaskShared.BASE_ID_MASK;
-                            // Counted BEFORE the decoy skip: a base_id is kept or dropped with
-                            // its paired decoy, so the survivor count includes both labels.
-                            rowCounts[rowBaseId] = rowCounts.TryGetValue(rowBaseId, out int n) ? n + 1 : 1;
-                            if ((record.EntryId & LibraryEntry.DECOY_ID_BIT) != 0)
-                                return;
-                            uint baseId = rowBaseId;
-                            double proteinQ =
-                                experimentByEntryId.TryGetValue(record.EntryId, out var exp)
-                                    ? exp.ExperimentProteinQvalue
-                                    : 1.0;
-                            // The stratum clause (protein-compact) admits present-protein peptides
-                            // (>=2 first-pass-detected-peptide proteins) that failed 1st-pass FDR --
-                            // identical to the legacy CompactFirstPass twin.
-                            if (record.RunPeptideQvalue <= peptideGate ||
-                                proteinQ <= proteinGate ||
-                                (stratum != null && stratum.Contains(baseId)))
+                    string fileName = projections.PerFile[f].Key;
+                    var filePassing = new HashSet<uint>();
+                    var fileRowCounts = new Dictionary<uint, int>();
+                    string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                    if (string.IsNullOrEmpty(sidecarBase))
+                    {
+                        return (Passing: filePassing, RowCounts: fileRowCounts, Error: string.Format(
+                            OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___, fileName));
+                    }
+                    string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
+                    if (!FdrScoresSidecar.ReadRecords(fdrPath, FdrScoresSidecar.Pass.FirstPass,
+                            record =>
                             {
-                                firstPassBaseIds.Add(baseId);
-                            }
-                        }))
+                                // Decoy bit in entry_id == IsDecoy (decoys minted
+                                // target.Id | DECOY_ID_BIT); skip decoys, mask to the shared base_id.
+                                uint rowBaseId = record.EntryId & ScoringTaskShared.BASE_ID_MASK;
+                                // Counted BEFORE the decoy skip: a base_id is kept or dropped with
+                                // its paired decoy, so the survivor count includes both labels.
+                                fileRowCounts[rowBaseId] = fileRowCounts.TryGetValue(rowBaseId, out int n) ? n + 1 : 1;
+                                if ((record.EntryId & LibraryEntry.DECOY_ID_BIT) != 0)
+                                    return;
+                                uint baseId = rowBaseId;
+                                double proteinQ =
+                                    experimentByEntryId.TryGetValue(record.EntryId, out var exp)
+                                        ? exp.ExperimentProteinQvalue
+                                        : 1.0;
+                                // The stratum clause (protein-compact) admits present-protein peptides
+                                // (>=2 first-pass-detected-peptide proteins) that failed 1st-pass FDR,
+                                // identical to the legacy CompactFirstPass twin.
+                                if (record.RunPeptideQvalue <= peptideGate ||
+                                    proteinQ <= proteinGate ||
+                                    (stratum != null && stratum.Contains(baseId)))
+                                {
+                                    filePassing.Add(baseId);
+                                }
+                            }))
+                    {
+                        return (Passing: filePassing, RowCounts: fileRowCounts, Error: string.Format(
+                            OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___, fileName, fdrPath));
+                    }
+                    return (Passing: filePassing, RowCounts: fileRowCounts, Error: (string)null);
+                }, (f, file) =>
                 {
-                    ctx.LogError(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___, fileName, fdrPath));
-                    ctx.ExitCode = 1;
-                    return null;
-                }
+                    compactProgress.Report(++compactFiles);
+                    compactError = file.Error;
+                    if (compactError != null)
+                        return false;
+                    foreach (var kv in file.RowCounts)
+                        rowCounts[kv.Key] = rowCounts.TryGetValue(kv.Key, out int n) ? n + kv.Value : kv.Value;
+                    firstPassBaseIds.UnionWith(file.Passing);
+                    return true;
+                });
+            }
+            if (compactError != null)
+            {
+                ctx.LogError(compactError);
+                ctx.ExitCode = 1;
+                return null;
             }
             return firstPassBaseIds;
         }

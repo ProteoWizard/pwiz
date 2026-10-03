@@ -21,6 +21,9 @@
  * limitations under the License.
  */
 
+using System;
+using pwiz.Osprey.Core;
+
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
@@ -45,5 +48,14 @@ namespace pwiz.Osprey.Tasks
         /// <c>SearchIdentity</c> hash.
         /// </summary>
         public int EffectiveFileParallelism { get; set; } = 1;
+
+        /// <summary>
+        /// How many files the FDR and planning stages work on at once in their per-file phases:
+        /// the same <see cref="EffectiveFileParallelism"/>, never below one. Those phases apply
+        /// every cross-file effect in file order (<see cref="OrderedFileLanes"/>), so the count
+        /// changes the wall clock and nothing else - and their per-file working set is a small
+        /// fraction of the scoring stage's, so the count that fit scoring fits them.
+        /// </summary>
+        public int FileLanes => Math.Max(1, EffectiveFileParallelism);
     }
 }
