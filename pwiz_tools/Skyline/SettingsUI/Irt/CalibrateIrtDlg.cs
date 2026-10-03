@@ -219,7 +219,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             regression = null;
             var helper = new MessageBoxHelper(this, showErrors);
 
-            if (!helper.ValidateDecimalTextBox(textMinIrt, SelectedRegressionOption.Regression is LogRegression ? (double?) 0.01 : null, null, out var minIrt))
+            if (!helper.ValidateDecimalTextBox(textMinIrt, SelectedRegressionOption.Regression is LogRegression ? 0.01 : null, null, out var minIrt))
                 return false;
             if (!helper.ValidateDecimalTextBox(textMaxIrt, minIrt, null, out var maxIrt))
                 return false;

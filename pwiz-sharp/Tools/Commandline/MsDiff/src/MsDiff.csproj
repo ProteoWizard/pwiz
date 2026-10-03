@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.MsDiff</RootNamespace>
+    <AssemblyName>msdiff</AssemblyName>
+    <Description>Command-line comparison of two mass spec data files. Port of pwiz_tools/commandline/msdiff.</Description>
+
+    <!-- Inherits from Pwiz.Vendor.Thermo - the Thermo SDK needs en-US culture. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- See the same switch in MsConvert.csproj: the wiff2 SDK deserializes its bundled
+         assembly resources through BinaryFormatter. -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    <UseWindowsForms>False</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Common\Vendor.Common.csproj" />
+  </ItemGroup>
+
+  <!-- The same vendor set msconvert carries. cpp msdiff builds an ExtendedReaderList, so it can
+       diff a vendor file directly against an mzML; keeping that means a reader missing here
+       would silently degrade to "unknown format" rather than compare. -->
+  <ItemGroup>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\UIMF\UIMF.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Mobilion\Mobilion.csproj" />
+    <!-- Runtime-only plugin; see the identical block in MsConvert.csproj. -->
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
+                      Condition="'$(NativeVendorsAvailable)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MsDiff.Tests" />
+  </ItemGroup>
+
+  <!-- Side-by-side wiff2 dlls. Same rationale and the same trailing-slash trap documented in
+       MsConvert.csproj's copy of this target; without it every .wiff2 fails to open. -->
+  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <PropertyGroup>
+      <_SciexWiff2DepsDir>$(PwizVendorArchivesPath)\Sciex</_SciexWiff2DepsDir>
+      <_SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</_SciexAssembliesDir>
+      <_Wiff2OutDir>$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))wiff2</_Wiff2OutDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(_Wiff2OutDir)" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(_Wiff2OutDir)\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll" DestinationFiles="$(_Wiff2OutDir)\SQLite.Interop.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(_Wiff2OutDir)\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="@(VendorNativeCrtFile)" DestinationFolder="$(_Wiff2OutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->
+  <Import Project="$(PwizRepoRoot)\pwiz_tools\Shared\Lib\VendorNativeCrt.targets" />
+
+</Project>

@@ -47,6 +47,7 @@ InstrumentFamily translateInstrumentFamily(int instrumentFamilyId)
         case 6: return InstrumentFamily_maXis;
         case 7: return InstrumentFamily_impact;
         case 8: return InstrumentFamily_compact;
+        case 9: return InstrumentFamily_timsTOF;
         case 512: return InstrumentFamily_FTMS;
         case 513: return InstrumentFamily_solariX;
         default: return InstrumentFamily_Unknown;

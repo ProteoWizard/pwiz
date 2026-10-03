@@ -524,7 +524,9 @@ namespace pwiz.SkylineTest
             using (var answerReader = new StreamReader(answer))
             using (var productReader = new StreamReader(output))
             {
-                AssertEx.FieldsEqual(answerReader, productReader, 13, null, true);
+                // tolerance absorbs .NET Core's round-half-to-even last-digit formatting
+                // difference vs the net472-generated reference (values are identical to ~1e-12).
+                AssertEx.FieldsEqual(answerReader, productReader, 13, null, true, tolerance: 1e-8);
             }
             CheckBuilderFiles(builder, false);
         }

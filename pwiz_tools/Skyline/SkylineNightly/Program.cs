@@ -27,13 +27,20 @@ namespace SkylineNightly
 {
     static class Program
     {
-        private static string PerformTests(RunSpec runSpec, string arg, string decorateSrcDirName = null)
+        private static string PerformTests(RunSpec runSpec, string arg, string decorateSrcDirName = null,
+            bool reuseCheckout = false, bool localSkylineTester = false)
         {
-            var nightly = new Nightly(runSpec, decorateSrcDirName);
+            var nightly = new Nightly(runSpec, decorateSrcDirName, null, reuseCheckout, localSkylineTester);
             var nightlyTask = Nightly.NightlyTask;
-            if (nightlyTask != null && DateTime.UtcNow.Add(nightly.TargetDuration).ToLocalTime() > nightlyTask.NextRunTime)
+            // A task with no enabled trigger has no next run time, which the Task Scheduler reports as a
+            // zero date. That must not be read as "the next run has already started", or every manual
+            // "SkylineNightly run <mode>" silently does nothing at all - no window, no log, exit code 0.
+            var nextRunTime = nightlyTask?.NextRunTime ?? DateTime.MinValue;
+            if (nextRunTime > DateTime.Now && DateTime.UtcNow.Add(nightly.TargetDuration).ToLocalTime() > nextRunTime)
             {
                 // Don't run, because the projected end time is after the start of the next scheduled start
+                nightly.Finish(string.Format(@"Skipped {0}: a {1}h run would overrun the next scheduled start at {2}",
+                    arg, nightly.TargetDuration.TotalHours, nextRunTime), string.Empty);
                 return null;
             }
             var errMessage = nightly.RunAndPost();
@@ -42,16 +49,54 @@ namespace SkylineNightly
             return errMessage;
         }
 
-        private static void PerformTests(RunSpec runSpec1, RunSpec runSpec2, string arg)
+        private static void PerformTests(RunSpec runSpec1, RunSpec runSpec2, string arg,
+            bool reuseCheckout = false, bool localSkylineTester = false)
         {
             bool sameRun = Equals(runSpec1, runSpec2);
-            var result = PerformTests(runSpec1, string.Format(@"part one of {0}", arg), sameRun ? @"A" : null);
+            var result = PerformTests(runSpec1, string.Format(@"part one of {0}", arg), sameRun ? @"A" : null,
+                reuseCheckout, localSkylineTester);
             if (Equals(result, Nightly.SkylineTesterStoppedByUser))
             {
                 return; // If user killed the first half, assume we don't want the second half
             }
             // Don't kill existing test processes for the second run, we'd like to keep any hangs around for forensics
-            PerformTests(runSpec2, string.Format(@"part two of {0}", arg), sameRun ? @"B" : null);
+            PerformTests(runSpec2, string.Format(@"part two of {0}", arg), sameRun ? @"B" : null,
+                reuseCheckout, localSkylineTester);
+        }
+
+        /// <summary>
+        /// Reuse the source tree from the previous run instead of deleting and re-cloning it.
+        /// SkylineNightly keeps its checkout inside the SkylineTester folder it normally wipes each
+        /// run, and separately tells SkylineTester to nuke and re-clone; this turns off both, so the
+        /// tree is synced with "git pull" instead.
+        /// </summary>
+        private const string REUSE_CHECKOUT_OPTION = @"--reuse-checkout";
+
+        /// <summary>
+        /// Install a locally built SkylineTester.zip instead of downloading one from TeamCity.
+        /// Lets a change to SkylineTester itself be exercised without first pushing the branch and
+        /// waiting for TeamCity to publish a new zip. Produce the zip with
+        /// "build.bat Release SkylineTester.zip".
+        /// </summary>
+        private const string LOCAL_TESTER_OPTION = @"--local";
+
+        private static bool HasOption(string[] args, string option)
+        {
+            return args.Any(a => string.Equals(a, option, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool IsKnownOption(string arg)
+        {
+            return string.Equals(arg, REUSE_CHECKOUT_OPTION, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(arg, LOCAL_TESTER_OPTION, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string UsageMessage()
+        {
+            string branches = string.Join(@"|", Enum.GetNames(typeof(Branch)));
+            string types = string.Join(@"|", SkylineNightly.RunTypes.Select(t => t.ToString()).ToArray());
+            return string.Format(@"Usage: SkylineNightly run [{0}]/[{1}] [[{0}]/[{1}]] [{2}] [{3}]",
+                branches, types, REUSE_CHECKOUT_OPTION, LOCAL_TESTER_OPTION);
         }
 
         /// <summary>
@@ -77,6 +122,19 @@ namespace SkylineNightly
 
             try
             {
+                // Options are order-independent and are removed before the parsing below, which
+                // dispatches on args.Length and would otherwise count them as run modes. Bad usage
+                // is thrown rather than reported here, so it reaches the existing handler below.
+                var reuseCheckout = HasOption(args, REUSE_CHECKOUT_OPTION);
+                var localSkylineTester = HasOption(args, LOCAL_TESTER_OPTION);
+                var unknownOption = args.FirstOrDefault(a =>
+                    a.StartsWith(@"--", StringComparison.Ordinal) && !IsKnownOption(a));
+                if (unknownOption != null)
+                    throw new Exception(string.Format(@"Unknown option {0}. {1}", unknownOption, UsageMessage()));
+                args = args.Where(a => !a.StartsWith(@"--", StringComparison.Ordinal)).ToArray();
+                if (args.Length == 0)
+                    throw new Exception(UsageMessage());
+
                 var command = args[0].ToLower();
 
                 RunSpec runSpec;
@@ -97,12 +155,13 @@ namespace SkylineNightly
                         {
                             case 1:
                             {
-                                PerformTests(runSpecs[0], runSpecs[0].ToString());
+                                PerformTests(runSpecs[0], runSpecs[0].ToString(), null, reuseCheckout, localSkylineTester);
                                 break;
                             }
                             case 2:
                             {
-                                PerformTests(runSpecs[0], runSpecs[1], runSpecs[0] + @" then " + runSpecs[1]);
+                                PerformTests(runSpecs[0], runSpecs[1], runSpecs[0] + @" then " + runSpecs[1],
+                                    reuseCheckout, localSkylineTester);
                                 break;
                             }
                             default: throw new Exception(@"Wrong number of runs specified, has to be 1 or 2");
@@ -112,7 +171,8 @@ namespace SkylineNightly
                     }
                     case "indefinitely":
                     {
-                        while (string.IsNullOrEmpty(PerformTests(RunSpec.Parse(args[1]), args[1])))
+                        while (string.IsNullOrEmpty(PerformTests(RunSpec.Parse(args[1]), args[1],
+                                   null, reuseCheckout, localSkylineTester)))
                         {
                         }
 
@@ -121,9 +181,7 @@ namespace SkylineNightly
                     case @"/?":
                     {
                         nightly = Nightly.ForCommand(@"help");
-                        string branches = string.Join(@"|", Enum.GetNames(typeof(Branch)));
-                        string types = string.Join(@"|", SkylineNightly.RunTypes.Select(t => t.ToString()).ToArray());
-                        message = string.Format(@"Usage: SkylineNightly run [{0}]/[{1}] [[{0}]/[{1}]]", branches, types);
+                        message = UsageMessage();
                         nightly.Finish(message, errMessage);
                         break;
                     }

@@ -685,7 +685,7 @@ namespace pwiz.Skyline.Model.Lib
                                 ? null
                                 : reader.GetString(iIdFilename);
                             int id = reader.GetInt32(iId);
-                            double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? (double?) null : reader.GetDouble(iIdCutoffScore);
+                            double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? null : reader.GetDouble(iIdCutoffScore);
                             WorkflowType workflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
                                 ? WorkflowType.DDA
                                 : (WorkflowType) reader.GetInt32(iWorkflowType);
@@ -1841,7 +1841,7 @@ namespace pwiz.Skyline.Model.Lib
 
                         if (hasScores)
                         {
-                            sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
+                            sheetInfo.Score = reader.IsDBNull(iScore) ? null : reader.GetDouble(iScore);
                             var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
                             var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
                             if (ScoreType.INVARIANT_NAMES.Contains(scoreType))
@@ -1901,6 +1901,13 @@ namespace pwiz.Skyline.Model.Lib
             }
             // ReSharper restore LocalizableElement
 
+            // Release our handle to the redundant library before shelling out to BlibFilter.exe,
+            // which opens it with File.OpenRead (FileShare.Read). On net8 the still-open SQLite
+            // connection keeps a write handle, making that read a sharing violation
+            // ("... cannot be opened"); net472 released it in time. BlibFilter reads the file from
+            // disk, so the in-process connection is not needed for the filter step.
+            _sqliteConnectionRedundant.CloseStream();
+
             // Write the non-redundant library to a temporary file first
             using (var saver = new FileSaver(FilePath))
             {
@@ -1909,7 +1916,6 @@ namespace pwiz.Skyline.Model.Lib
                 if (!blibFilter.Filter(FilePathRedundant, saver.SafeName, monitor, ref status))
                     throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_, FilePathRedundant, FilePath));
 
-                _sqliteConnectionRedundant.CloseStream();
                 _sqliteConnection.CloseStream();
                 saver.Commit();
             }
@@ -2333,7 +2339,7 @@ namespace pwiz.Skyline.Model.Lib
                             return null;
                         }
                         bool isCcs = ionMobilityType == (int) IonMobilityType.collisionalCrossSection;
-                        return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : (double?)null, highEnergyOffset);
+                        return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : null, highEnergyOffset);
                     }
                 }
             }

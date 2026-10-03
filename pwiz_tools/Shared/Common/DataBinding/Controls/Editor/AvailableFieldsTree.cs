@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Properties;
@@ -377,20 +378,33 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         protected override void OnDrawNode(DrawTreeNodeEventArgs e)
         {
-            Font font = e.Node.NodeFont ?? e.Node.TreeView.Font;
-            Color fore = e.Node.ForeColor;
-            if (fore == Color.Empty) fore = e.Node.TreeView.ForeColor;
-            if (e.Node == e.Node.TreeView.SelectedNode)
+            try
             {
-                fore = SystemColors.HighlightText;
-                e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
-                ControlPaint.DrawFocusRectangle(e.Graphics, e.Bounds, fore, SystemColors.Highlight);
-                TextRenderer.DrawText(e.Graphics, e.Node.Text, font, e.Bounds, fore, TextFormatFlags.GlyphOverhangPadding);
+                Font font = e.Node.NodeFont ?? e.Node.TreeView.Font;
+                Color fore = e.Node.ForeColor;
+                if (fore == Color.Empty) fore = e.Node.TreeView.ForeColor;
+                if (e.Node == e.Node.TreeView.SelectedNode)
+                {
+                    fore = SystemColors.HighlightText;
+                    e.Graphics.FillRectangle(SystemBrushes.Highlight, e.Bounds);
+                    ControlPaint.DrawFocusRectangle(e.Graphics, e.Bounds, fore, SystemColors.Highlight);
+                    TextRenderer.DrawText(e.Graphics, e.Node.Text, font, e.Bounds, fore, TextFormatFlags.GlyphOverhangPadding);
+                }
+                else
+                {
+                    e.Graphics.FillRectangle(SystemBrushes.Window, e.Bounds);
+                    TextRenderer.DrawText(e.Graphics, e.Node.Text, font, e.Bounds, fore, TextFormatFlags.GlyphOverhangPadding);
+                }
             }
-            else
+            catch (ExternalException)
             {
-                e.Graphics.FillRectangle(SystemBrushes.Window, e.Bounds);
-                TextRenderer.DrawText(e.Graphics, e.Node.Text, font, e.Bounds, fore, TextFormatFlags.GlyphOverhangPadding);
+                // The same benign GDI+ failure described at Program.IsBenignSplitterRepaintFailure:
+                // custom draw can run from a paint raised while the window is still being shown,
+                // where the DC clip region is empty and every drawing call fails at the GDI level.
+                // .NET 9 began throwing what .NET 8 ignored (dotnet/winforms#14565 fixes the
+                // SplitContainer half of this in .NET 11). Nothing can be drawn into an empty clip
+                // region, so there is nothing to recover - skip the custom draw for this node. The
+                // node is drawn normally by the repaint that follows once the window is visible.
             }
         }
 

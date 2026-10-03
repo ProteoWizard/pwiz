@@ -886,7 +886,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
-            bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
+            bool? keepEmpty = keepEmptyProteins == null ? null : bool.Parse(keepEmptyProteins);
             return InvokeOnMainWindow(mainWindow =>
                 mainWindow.SkylineWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
@@ -1120,7 +1120,7 @@ namespace pwiz.Skyline.ToolsUI
             if (mainWindow == null)
                 return;
             for (int waited = 0;
-                 waited < GRAPH_WAIT_MAX_MILLIS && (bool) mainWindow.Invoke((Func<bool>) (() => mainWindow.IsGraphUpdatePending));
+                 waited < GRAPH_WAIT_MAX_MILLIS && mainWindow.Invoke((Func<bool>) (() => mainWindow.IsGraphUpdatePending));
                  waited += GRAPH_POLL_MILLIS)
                 Thread.Sleep(GRAPH_POLL_MILLIS);
         }

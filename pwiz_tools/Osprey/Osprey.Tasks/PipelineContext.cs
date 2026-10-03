@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
@@ -42,10 +43,10 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="OspreyTask.Run"/> never ran.
     ///
     /// The context is constructed once at the top of
-    /// <c>AnalysisPipeline.Run</c> (or <c>RescoreWorker.Run</c>) and
-    /// lives for the duration of the pipeline execution.
+    /// <c>AnalysisPipeline.Run</c> and lives for the duration of the
+    /// pipeline execution.
     /// </summary>
-    public sealed class PipelineContext
+    public sealed class PipelineContext : IOspreyLog
     {
         private readonly Action<string> _logInfo;
         private readonly Action<string> _logWarning;
@@ -161,7 +162,7 @@ namespace pwiz.Osprey.Tasks
         // that needs state from a sibling asks Get/Demand for the state, never the task.
         // The one reader this property ever had was a predicate asking whether ITS OWN
         // consumer was going to run, so it could decide whether to do whole-run work - the
-        // second copy of IsIncluded's truth table that issue #4597 deleted. Leaving the hook
+        // second copy of the membership truth table that issue #4597 deleted. Leaving the hook
         // in place is an invitation to write that predicate again.
 
         /// <summary>
@@ -222,6 +223,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         public void LogInfo(string message) { _logInfo(message); }
+        /// <summary>A machine-channel line; <see cref="OspreyLog.Write"/> decides whether it is emitted.</summary>
+        public void LogInfo(LogTag tag, string text) { OspreyLog.Write(_logInfo, tag, text); }
         /// <summary>Implementer-grade detail: emitted only under --verbose (same sink as LogInfo).</summary>
         public void LogVerbose(string message) { if (OspreyOutput.Verbose) _logInfo(message); }
         public void LogWarning(string message) { _logWarning(message); }
@@ -254,7 +257,7 @@ namespace pwiz.Osprey.Tasks
                 // --task PerFileScoring boundary, whose byproducts were already published
                 // before the stop) is intentionally left benign.
                 if (!task.Rehydrate(this) && ExitCode != 0)
-                    throw new RehydrateFailedException(taskType, ExitCode);
+                    throw new RehydrateFailedException(taskType, task.Name, ExitCode);
             }
             return task;
         }
@@ -296,6 +299,15 @@ namespace pwiz.Osprey.Tasks
         public T Demand<T>() where T : OspreyTask
         {
             return (T)DemandByType(typeof(T), materialize: true);
+        }
+
+        /// <summary>
+        /// This run's instance of task <typeparamref name="T"/>, or null when the run has none,
+        /// without materializing it - for a task that asks whether another will run.
+        /// </summary>
+        internal T TaskOf<T>() where T : OspreyTask
+        {
+            return _tasksByType.TryGetValue(typeof(T), out var task) ? (T)task : null;
         }
 
         /// <summary>
@@ -368,8 +380,8 @@ namespace pwiz.Osprey.Tasks
             // every slot is legitimately republished, so its history no longer applies.
             _consumedByproducts.Clear();
 #endif
-            LogInfo(string.Format(
-                @"[DROP] Released {0} byproduct(s) at the task boundary; the library stays resident.",
+            LogInfo(LogTag.DROP, string.Format(
+                @"Released {0} byproduct(s) at the task boundary; the library stays resident.",
                 dropped.Count));
         }
 
@@ -495,7 +507,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var output in outputs)
             {
                 if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
+                if (!TaskValiditySidecar.IsValid(output, task.Name, task.OutputValidityKey(this, key, output))) return false;
             }
             return true;
         }
@@ -555,7 +567,7 @@ namespace pwiz.Osprey.Tasks
     /// pipeline definition is missing the producer); fail fast and hard so it
     /// surfaces in testing rather than at runtime.
     /// </summary>
-    public sealed class UnknownTaskException : Exception
+    public sealed class UnknownTaskException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
@@ -575,7 +587,7 @@ namespace pwiz.Osprey.Tasks
     /// that neglected to <see cref="PipelineContext.Publish{TInfo}"/> -- and are
     /// surfaced loudly rather than degrading to a silent default value.
     /// </summary>
-    public sealed class UnknownByproductException : Exception
+    public sealed class UnknownByproductException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
@@ -597,14 +609,14 @@ namespace pwiz.Osprey.Tasks
     /// rather than letting the consumer proceed with default state. Carries the
     /// task type and the exit code the failing task requested.
     /// </summary>
-    public sealed class RehydrateFailedException : Exception
+    public sealed class RehydrateFailedException : UserMessageException
     {
         public Type TaskType { get; }
         public int ExitCode { get; }
 
-        public RehydrateFailedException(Type taskType, int exitCode)
-            : base(string.Format(@"Task '{0}' failed to rehydrate its state (exit code {1}).",
-                taskType?.FullName, exitCode))
+        public RehydrateFailedException(Type taskType, string taskName, int exitCode)
+            : base(string.Format(OspreyTasksResources.RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___,
+                taskName, exitCode))
         {
             TaskType = taskType;
             ExitCode = exitCode;

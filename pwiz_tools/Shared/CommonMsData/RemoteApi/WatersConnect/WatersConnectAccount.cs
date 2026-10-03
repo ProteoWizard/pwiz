@@ -282,6 +282,9 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 var errorType = (tokenResponse[@"error"] ?? "").ToString();
                 if (errorType == @"invalid_scope")
                 {
+                    // Surface the identity server's raw (non-localized) detail so the user sees the
+                    // rejected scope. IdentityModel 7 populates TokenResponse.Raw and so reaches this
+                    // branch, which would otherwise leave the message blank.
                     message = error;
                     return AuthenticationErrorType.InvalidClientScope;
                 }
@@ -292,6 +295,8 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
                 else if (errorType == @"invalid_grant")
                 {
+                    // As with invalid_scope, surface the identity server's raw (non-localized) detail
+                    // (e.g. "password entered for this user is incorrect") rather than leaving it blank.
                     message = error;
                     return AuthenticationErrorType.InvalidPassword;
                 }

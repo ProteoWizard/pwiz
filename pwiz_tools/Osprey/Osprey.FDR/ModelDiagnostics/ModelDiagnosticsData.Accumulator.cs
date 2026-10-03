@@ -187,7 +187,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 uint baseId = entryId & BASE_ID_MASK;
                 EntrapmentClass cls = Classify(isDecoy, baseId, _classByBaseId, _haveManifest,
                     ref _nWithClass, ref _nWithoutClass);
-                string key = modifiedSequence + "|" + charge;
+                string key = modifiedSequence + @"|" + charge;
 
                 // --- best-per-precursor (== ReduceToPrecs: max score, min q at each scope) ---
                 uint pairIdx = 0;
@@ -297,8 +297,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <summary>
             /// Assemble the pass-1 <see cref="ModelDiagnosticsData"/> from the accumulated
             /// reductions, running the SAME downstream builders the batch <see cref="Build"/> uses
-            /// (only the reduction source differs). <paramref name="contributions"/> is the trained
-            /// first-pass model (null on a non-Percolator / rehydrated run -> no Model tab).
+            /// (only the reduction source differs). <paramref name="contributions"/> describes the
+            /// trained first-pass model: null on a resumed / rehydrated run (no Model tab), and for a
+            /// tree model the per-feature distributions with no weight-based contribution table
+            /// (<see cref="FeatureContributions.IsTreeEnsemble"/>).
             /// </summary>
             public ModelDiagnosticsData Build(FeatureContributions contributions)
             {
@@ -346,6 +348,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     data.ModelComposite = contributions.Composite;
                     data.ModelDegenerate = contributions.IsDegenerate;
+                    data.ModelIsTreeEnsemble = contributions.IsTreeEnsemble;
                     data.FeatureHistEdges = contributions.HistogramEdges;
                     data.Model = BuildFeatureRows(contributions);
                 }

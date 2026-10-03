@@ -27,6 +27,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
@@ -115,7 +116,7 @@ namespace pwiz.Skyline.Util
             }
             else if (fullScreen)
             {
-                snapshotBounds = (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => Screen.FromControl(ctrl).Bounds));
+                snapshotBounds = ctrl.Invoke((Func<Rectangle>)(() => Screen.FromControl(ctrl).Bounds));
             }
             else
             {
@@ -127,7 +128,7 @@ namespace pwiz.Skyline.Util
         public static Rectangle GetDockedFormBounds(DockableForm ctrl)
         {
             return ctrl.InvokeRequired
-                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
+                ? ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
                 : GetDockedFormBoundsInternal(ctrl);
         }
 
@@ -135,7 +136,7 @@ namespace pwiz.Skyline.Util
         {
             ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
             return ctrl.InvokeRequired
-                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
+                ? ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
                 : GetFramedWindowBoundsInternal(ctrl);
         }
 
@@ -458,7 +459,7 @@ namespace pwiz.Skyline.Util
             // (e.g. Skyline is shutting down). Clear the gate and report
             // unavailable rather than pending so the LLM is not told to wait
             // on a dialog that will never open.
-            if (!CommonActionUtil.SafeBeginInvoke(ownerWindow, ShowPermissionDialog))
+            if (!ControlUtil.SafeBeginInvoke(ownerWindow, ShowPermissionDialog))
             {
                 Interlocked.Exchange(ref _promptPending, 0);
                 return PermissionResult.unavailable;
@@ -553,12 +554,12 @@ namespace pwiz.Skyline.Util
         }
 
         // Draws a single control onto the bitmap at its position relative to the origin, limited to the clip.
-        // Only the visible part is painted (see Gdi32.PrintControl), however large the control.
+        // Only the visible part is painted (see Gdi32Extensions.PrintControl), however large the control.
         private static void DrawOnto(Graphics g, Control control, Point origin, Rectangle clip)
         {
             var location = GetScreenLocation(control);
             var bounds = new Rectangle(location.X - origin.X, location.Y - origin.Y, control.Width, control.Height);
-            Gdi32.PrintControl(g, control, bounds, clip);
+            g.PrintControl(control, bounds, clip);
         }
 
         // Whether a control can be drawn without side effects or risk: reading its Handle would create a missing

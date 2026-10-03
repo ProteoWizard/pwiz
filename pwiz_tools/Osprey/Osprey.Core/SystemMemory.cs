@@ -18,11 +18,7 @@
  * limitations under the License.
  */
 
-#if NETFRAMEWORK
-using System.Runtime.InteropServices;
-#else
 using System;     // GC.GetGCMemoryInfo (net8.0 only; the net472 path is pure PInvoke)
-#endif
 
 namespace pwiz.Osprey.Core
 {
@@ -49,12 +45,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static long AvailablePhysicalBytes()
         {
-#if NETFRAMEWORK
-            var status = new MEMORYSTATUSEX();
-            if (GlobalMemoryStatusEx(status))
-                return (long)status.ullAvailPhys;
-            return 0;
-#else
             var info = GC.GetGCMemoryInfo();
             // TotalAvailableMemoryBytes is the GC's view of total physical (or
             // the cgroup limit); MemoryLoadBytes is how much is currently in
@@ -65,39 +55,7 @@ namespace pwiz.Osprey.Core
                 return 0;
             long available = total - used;
             return available > 0 ? available : 0;
-#endif
         }
 
-#if NETFRAMEWORK
-        // Layout must match the Win32 MEMORYSTATUSEX struct exactly; the fields
-        // are populated by GlobalMemoryStatusEx via marshaling (the compiler
-        // cannot see those writes), and only ullAvailPhys is read here.
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        private class MEMORYSTATUSEX
-        {
-            // ReSharper disable NotAccessedField.Local
-            // ReSharper disable UnassignedField.Compiler
-            public uint dwLength;
-            public uint dwMemoryLoad;
-            public ulong ullTotalPhys;
-            public ulong ullAvailPhys;
-            public ulong ullTotalPageFile;
-            public ulong ullAvailPageFile;
-            public ulong ullTotalVirtual;
-            public ulong ullAvailVirtual;
-            public ulong ullAvailExtendedVirtual;
-            // ReSharper restore UnassignedField.Compiler
-            // ReSharper restore NotAccessedField.Local
-
-            public MEMORYSTATUSEX()
-            {
-                dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
-            }
-        }
-
-        [return: MarshalAs(UnmanagedType.Bool)]
-        [DllImport(@"kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern bool GlobalMemoryStatusEx([In, Out] MEMORYSTATUSEX lpBuffer);
-#endif
     }
 }

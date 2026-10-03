@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -105,6 +105,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class Pass2CompetitionDecoys
     {
+        public const string EXT = @".fdr_decoys.bin";
+
         // 8-byte magic. ASCII "OSPRYDCY".
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'D', (byte)'C', (byte)'Y' };
@@ -126,7 +128,7 @@ namespace pwiz.Osprey.IO
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = string.Format("{0}.2nd-pass.fdr_decoys.bin", stem);
+            string filename = string.Format(@"{0}.{1}{2}", stem, FdrScoresSidecar.LABEL_SECOND_PASS, EXT);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
 

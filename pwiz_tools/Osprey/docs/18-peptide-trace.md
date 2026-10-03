@@ -67,9 +67,9 @@ the byte-stable file writers.
 `Osprey.Diagnostics/OspreyDiagnosticsLog.cs:34` holds the stateless helpers the task
 layer can call without referencing the exe:
 
-- `LogAction` (`OspreyDiagnosticsLog.cs:40`) — the log hook the pipeline points at
-  its `LogInfo`, so `[COUNT]` / `[BISECT]` dump messages flow through the normal
-  logging channel.
+- `Log` (`OspreyDiagnosticsLog.cs:41`) — the `IOspreyLog` the pipeline points at
+  `OspreyLog.Out`, so `[BISECT]` dump messages flow through the normal logging
+  channel, each tag gated by `OspreyLog.Write`.
 - `F10(double)` (`OspreyDiagnosticsLog.cs:49`) — round-half-to-even 10-decimal
   formatter matching Rust `{:.10}`.
 - `ExitAfterDump(string)` (`OspreyDiagnosticsLog.cs:60`) — logs

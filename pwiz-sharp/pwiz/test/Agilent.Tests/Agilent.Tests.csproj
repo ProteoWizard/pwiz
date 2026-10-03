@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
+  </ItemGroup>
+
+  <!-- ChromatogramList_Agilent and AgilentSignal are compiled out in NO_VENDOR_SUPPORT mode
+       (the SDK's DeviceType enum is unavailable), so the table tests cannot build there.
+       AgilentInstrumentMetadataTests is in the same position: its mapping table is keyed on
+       DeviceType, and its fixture half needs a reader the SDK-less build cannot construct. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <Compile Remove="AgilentChromatogramTypeTests.cs" />
+    <Compile Remove="AgilentInstrumentMetadataTests.cs" />
+    <!-- AgilentPeakFilterTests takes DeviceType and calls AgilentRawData, which Agilent.csproj
+         removes from the SDK-less build. -->
+    <Compile Remove="AgilentPeakFilterTests.cs" />
+  </ItemGroup>
+
+  <!-- AgilentSignal carries the SDK's DeviceType enum. Agilent.csproj's <Reference> items are
+       not transitive, so the table test needs its own compile-time reference. Keep
+       <Private>true</Private> to match Agilent.csproj: declaring the reference here overrides
+       how the DLL reaches this project's output, and Private=false drops it, which breaks every
+       fixture test with "Could not load file or assembly 'BaseCommon'". -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' == 'true'">
+    <Reference Include="BaseCommon">
+      <HintPath>$(PwizVendorAssembliesPath)/Agilent/BaseCommon.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Agilent test fixtures ship as Reader_Agilent_Test.data.tar.bz2; unpack on build so
+       the harness can find the .d directories. Without this, every test goes Inconclusive
+       ("Agilent test data tree not found") on a fresh agent (TC, clean CI checkout, etc.). -->
+  <PropertyGroup>
+    <VendorTestArchive>$(PwizCppRoot)\data\vendor_readers\Agilent\Reader_Agilent_Test.data.tar.bz2</VendorTestArchive>
+    <VendorTestDataParent>$(PwizCppRoot)\data\vendor_readers\Agilent</VendorTestDataParent>
+  </PropertyGroup>
+  <Import Project="..\..\..\build\ExtractTestData.targets" />
+
+</Project>

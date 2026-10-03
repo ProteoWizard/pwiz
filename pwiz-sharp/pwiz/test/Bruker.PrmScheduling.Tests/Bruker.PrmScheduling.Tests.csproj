@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+
+    <!-- Reads back the .prmsqlite the scheduler writes. Same version the Bruker and UIMF readers
+         use, so a combined process still ends up with one SQLite backend. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj" />
+  </ItemGroup>
+
+  <!-- The .prmsqlite scheduling template cpp's PrmSchedulerTest.cpp uses. Staging it beside the
+       test binary keeps the reference tables and the input they were captured from in lockstep,
+       and spares the test a walk up the directory tree looking for the cpp checkout. -->
+  <ItemGroup>
+    <Content Include="$(PwizCppRoot)\utility\bindings\CLI\timstof_prm_scheduler\timstof_prm_scheduler.prmsqlite">
+      <Link>timstof_prm_scheduler.prmsqlite</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
+  <!-- prmscheduler.dll itself is x64 Windows-only; the referenced Bruker.PrmScheduling project
+       copies it next to the test runner. Where it cannot load, the test gates itself to
+       Inconclusive instead of failing - keep this project building on such machines. -->
+
+</Project>

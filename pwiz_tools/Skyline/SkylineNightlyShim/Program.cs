@@ -122,17 +122,16 @@ namespace SkylineNightlyShim
                 return;
             }
 
-            // Do our work in the SkylineNightly directory
-            var file = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
-            if (file.StartsWith(@"file:"))
-            {
-                file = file.Substring(5);
-            }
-            while (file.StartsWith(@"/"))
-            {
-                file = file.Substring(1);
-            }
-            var nightlyDirectory = Path.GetDirectoryName(file);
+            // Do our work in the SkylineNightly directory. AppContext.BaseDirectory replaces
+            // Assembly.CodeBase, which was a file: URL and needed the unescaping below; it is
+            // already a plain directory path, and unlike Assembly.Location it survives a
+            // single-file publish. It carries a trailing separator, which GetDirectoryName
+            // never produced, so trim it to keep the logged and combined paths as they were.
+            // TrimEndingDirectorySeparator rather than TrimEnd: it leaves a path root alone, so an
+            // install at a drive root stays "C:\" instead of becoming "C:", which Windows reads as
+            // drive-relative and would resolve the ZIP path and working directory against the
+            // drive's current directory rather than this one.
+            var nightlyDirectory = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
             if (!string.IsNullOrEmpty(nightlyDirectory))
                 Directory.SetCurrentDirectory(nightlyDirectory);
 
@@ -140,14 +139,14 @@ namespace SkylineNightlyShim
             {
                 // Attempt to update SkylineNightly.exe
                 string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetSkylineNightlyBranchQuery(), false);
-                var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
+                var fileName = Path.Combine(nightlyDirectory, SKYLINENIGHTLY_ZIP);
                 Log("Update " + nightlyDirectory + " with " + zipFileLink);
                 TeamCityNightlyAuth.DownloadArtifact(zipFileLink, fileName, teamCityToken);
                 using (var zipFile = new ZipFile(fileName))
                 {
                     AttemptUpdate("SkylineNightly.exe", zipFile);
                     AttemptUpdate("SkylineNightly.pdb", zipFile);
-                    AttemptUpdate("DotNetZip.dll", zipFile);
+                    AttemptUpdate("ProDotNetZip.dll", zipFile);
                     AttemptUpdate("SkylineNightlyShim.exe", zipFile);
                     AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
                 }
@@ -167,7 +166,7 @@ namespace SkylineNightlyShim
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     FileName = "SkylineNightly.exe",
-                    WorkingDirectory = nightlyDirectory ?? throw new InvalidOperationException(),
+                    WorkingDirectory = nightlyDirectory,
                     Arguments = "run",
                     CreateNoWindow = true
                 }

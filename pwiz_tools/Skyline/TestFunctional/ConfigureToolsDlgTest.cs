@@ -485,17 +485,17 @@ namespace pwiz.SkylineTestFunctional
                         ToolStripMenuItem mi = SkylineWindow.GetMenuItem(1);
                         Assert.AreEqual(EXAMPLE1, mi.DropDownItems[0].Text);
                         SkylineWindow.ToolMenuItem example1 = (SkylineWindow.ToolMenuItem) mi.DropDownItems[0];
-                        Assert.AreEqual(EXAMPLE1_EXE, example1.Command);
+                        Assert.AreEqual(EXAMPLE1_EXE, example1.ToolCommand);
 
                         Assert.AreEqual(FURTHER, mi.DropDownItems[1].Text);
                         ToolStripMenuItem mi2 = (ToolStripMenuItem) mi.DropDownItems[1];
                         Assert.AreEqual(EXAMPLE3, mi2.DropDownItems[0].Text);
                         SkylineWindow.ToolMenuItem example3 = (SkylineWindow.ToolMenuItem) mi2.DropDownItems[0];
-                        Assert.AreEqual(EXAMPLE3_EXE, example3.Command);
+                        Assert.AreEqual(EXAMPLE3_EXE, example3.ToolCommand);
 
                         Assert.AreEqual(EXAMPLE2, mi.DropDownItems[2].Text);
                         SkylineWindow.ToolMenuItem example2 = (SkylineWindow.ToolMenuItem) mi.DropDownItems[2];
-                        Assert.AreEqual(EXAMPLE2_EXE, example2.Command);
+                        Assert.AreEqual(EXAMPLE2_EXE, example2.ToolCommand);
 
                         Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
 

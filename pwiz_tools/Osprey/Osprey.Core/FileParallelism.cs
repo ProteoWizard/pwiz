@@ -139,8 +139,8 @@ namespace pwiz.Osprey.Core
                     // is safe.
                     int explicitN = Math.Max(1, Math.Min(request.Count, nFiles));
                     log?.Invoke(string.Format(
-                        @"File parallelism: {0} (explicit --parallel-files, {1} files)",
-                        explicitN, nFiles));
+                        OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_,
+                        explicitN, nFiles, OspreyArgNames.Text(OspreyArgNames.PARALLEL_FILES)));
                     return explicitN;
 
                 case FileParallelismMode.Auto:
@@ -164,8 +164,8 @@ namespace pwiz.Osprey.Core
                         return capped;
                     }
                     log?.Invoke(string.Format(
-                        @"File parallelism: 1 (sequential default; pass --parallel-files to score {0} files concurrently)",
-                        nFiles));
+                        OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_,
+                        nFiles, OspreyArgNames.Text(OspreyArgNames.PARALLEL_FILES)));
                     return 1;
             }
         }
@@ -206,7 +206,7 @@ namespace pwiz.Osprey.Core
                 // No usable memory signal -- fall back to a CPU-bound cap rather
                 // than guessing. Still safer than the old unbounded default.
                 log?.Invoke(string.Format(
-                    @"File parallelism: {0} (auto, CPU-bound: {1} cores, {2} files; memory estimate unavailable)",
+                    OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_,
                     cpuCap, cores, nFiles));
                 return cpuCap;
             }
@@ -215,7 +215,7 @@ namespace pwiz.Osprey.Core
             int memFit = (int)Math.Max(1, budget / perFileBytes);
             int chosen = Math.Max(1, Math.Min(cpuCap, memFit));
             log?.Invoke(string.Format(
-                @"File parallelism: {0} (auto: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -> {4} by RAM, capped to {5} cores / {6} files)",
+                OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__,
                 chosen, availableBytes / (double)BYTES_PER_GB, RAM_BUDGET_FRACTION,
                 perFileBytes / (double)BYTES_PER_GB, memFit, cores, nFiles));
             return chosen;

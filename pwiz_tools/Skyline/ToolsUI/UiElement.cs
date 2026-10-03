@@ -711,7 +711,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             var handle = Control.Handle;
             foreach (char c in text)
-                User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
+                User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, c, IntPtr.Zero);
         }
 
         /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
@@ -1841,7 +1841,7 @@ namespace pwiz.Skyline.ToolsUI
                 case int i: return i;
                 case long l: return (int) l;
                 case JToken token:
-                    return token.Type == JTokenType.Integer ? (object) (int) token : token.Value<string>();
+                    return token.Type == JTokenType.Integer ? (int) token : token.Value<string>();
                 default: return segment as string;
             }
         }
@@ -2054,7 +2054,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             item.Focused = true;
             User32.SendMessage(item.ListView.Handle, User32.WinMessageType.LVM_SETSELECTIONMARK,
-                IntPtr.Zero, (IntPtr) item.Index);
+                IntPtr.Zero, item.Index);
         }
 
         private static void MakeCurrent(ListBox listBox, int index)
@@ -2062,8 +2062,8 @@ namespace pwiz.Skyline.ToolsUI
             // A single-selection list moves its caret with its selection; a multi-selection one does not.
             if (listBox.SelectionMode == SelectionMode.MultiSimple || listBox.SelectionMode == SelectionMode.MultiExtended)
             {
-                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETANCHORINDEX, (IntPtr) index, IntPtr.Zero);
-                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETCARETINDEX, (IntPtr) index, IntPtr.Zero);
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETANCHORINDEX, index, IntPtr.Zero);
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETCARETINDEX, index, IntPtr.Zero);
             }
         }
 
@@ -2366,7 +2366,7 @@ namespace pwiz.Skyline.ToolsUI
         private List<UiElement> BuildChildren()
         {
             var children = new List<UiElement>();
-            if (_item is ToolStripControlHost host && host.Control != null)
+            if (_item is ToolStripControlHost host)
             {
                 var hosted = FormElement.ElementFor(host.Control);
                 if (hosted != null)

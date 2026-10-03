@@ -7,7 +7,7 @@ REM
 REM Pre-requisites on the build agent (same as tcbuild.bat, plus internet):
 REM   * pwsh (PowerShell 7+) on PATH (project standard; no powershell.exe fallback)
 REM   * Visual Studio Build Tools (MSBuild + vstest.console.exe)
-REM   * .NET 8 SDK
+REM   * .NET 10 SDK
 REM   * Outbound HTTPS to panoramaweb.org (downloads the mzML test-data zip into
 REM     the shared <Downloads>\Perftests folder on first run; skipped if present)
 REM

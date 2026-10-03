@@ -27,7 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.Controls;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
@@ -952,7 +952,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var precursor = selection.NodeTranGroup ?? SelectedPrecursor.DocNode;
                 var koinaRequest = new KoinaHelpers.KoinaRequest(
                     settings, selection.GetPeptide(precursor), precursor, labelType, nce,
-                    () => CommonActionUtil.SafeBeginInvoke(this, () => UpdateUI()));
+                    () => ControlUtil.SafeBeginInvoke(this, () => UpdateUI()));
 
                 if (_koinaRequest == null || !_koinaRequest.Equals(koinaRequest))
                 {
@@ -1769,10 +1769,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 Settings.Default.ViewLibraryPropertiesSorted = true;
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _updateManager.Dispose();
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            base.OnFormClosed(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)

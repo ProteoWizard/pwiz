@@ -1,0 +1,140 @@
+{
+  "$comment": [
+    "Single source of truth for vendor SDK pinning. Consumed by:",
+    "  - build/VendorPinsGenerator - emits pwiz/src/Vendor/Common/VendorSdkPins.generated.cs",
+    "    (the runtime resolver's pin table)",
+    "  - installer/build.ps1 - flattens 'prefixes' into the staging filter that strips",
+    "    vendor DLLs out of the MSI",
+    "Paths are repo-relative. Most archives live under pwiz_aux/msrc/utility/; Thermo on the",
+    "pwiz-sharp side has its own newer .NET-8-compatible copy under pwiz-sharp/vendor-archives/."
+  ],
+  "repo": "ProteoWizard/pwiz",
+  "vendors": [
+    {
+      "name": "Thermo",
+      "path": "pwiz-sharp/vendor-archives/vendor_api_Thermo.7z",
+      "prefixes": [ "ThermoFisher.", "OpenMcdf" ]
+    },
+    {
+      "name": "Bruker",
+      "$comment": [
+        "TDF / TSF / BAF only. The CompassXtract stack that YEP and FID need is split into the",
+        "BrukerCompassXtract archive below, so the common case does not download 3 MB of",
+        "2008-era COM binaries it will never load. That split is why this points at a pwiz-sharp",
+        "copy instead of pwiz_aux/msrc/utility/vendor_api_Bruker.7z: the upstream archive is",
+        "shared with the C++ build, which still wants CompassXtract in the same archive."
+      ],
+      "$comment2": [
+        "BaseCommon / BaseDataAccess / BaseError / BaseTof are deliberately NOT here. They are",
+        "Agilent MHDAC assemblies and this archive holds none of them (it ships exactly two",
+        "DLLs: baf2sql_c and timsdata). Listing them here broke Agilent from every",
+        "installer-based install: FindPin returns the FIRST pin whose prefix matches, Bruker",
+        "precedes Agilent, so a BaseCommon bind resolved to this archive and failed with",
+        "'extracted cleanly but contains no BaseCommon.dll'. Dev and CI builds never saw it",
+        "because they keep the vendor DLLs app-local, which the resolver prefers over the cache."
+      ],
+      "path": "pwiz-sharp/vendor-archives/vendor_api_Bruker.7z",
+      "prefixes": [
+        "Bruker.", "ProtocolBuffers", "timsdata", "baf2sql", "mcd_lib"
+      ]
+    },
+    {
+      "name": "BrukerCompassXtract",
+      "$comment": [
+        "Bruker's legacy CompassXtract COM server: needed only for YEP (Esquire / HCT ion trap)",
+        "and FID (flex MALDI) data. Nothing in it is bound as a managed assembly or through",
+        "DllImport - the reader activates EDAL.MSAnalysis as a registration-free COM class - so",
+        "neither of VendorSdkLoader's resolvers fires for it. These prefixes exist for the",
+        "installer's MSI staging filter; pwiz/src/Vendor/Bruker/CompassXtractActivationContext.cs",
+        "calls VendorSdkLoader.EnsureExtracted(\"BrukerCompassXtract\") explicitly, then builds a",
+        "CreateActCtx activation context from the extracted Interop.EDAL.SxS.manifest.",
+        "Interop.EDAL.dll / Interop.HSREADWRITELib.dll are deliberately absent: under",
+        "EmbedInteropTypes they are build-time inputs only. HSReadWrite.dll and its SxS manifest",
+        "ARE required even though no code calls them - Interop.EDAL.SxS.manifest declares a",
+        "dependency on Interop.HSREADWRITELib.SxS, and the process will not start without it.",
+        "The VC90 CRT / MFC / OpenMP runtime these binaries link against is not here either:",
+        "vendored in pwiz_tools/Shared/Lib/Microsoft.VC90.{CRT,MFC}/x64, staged app-local as",
+        "per-assembly folders by Bruker.csproj, and mirrored into this cache directory by",
+        "CompassXtractActivationContext.StageVc90Runtime so the activation context's own",
+        "assembly directory can satisfy them privately."
+      ],
+      "path": "pwiz-sharp/vendor-archives/vendor_api_BrukerCompassXtract.7z",
+      "prefixes": [
+        "CompassXtractMS", "Compass", "HSReadWrite", "BDal.", "EDAL", "Interop.EDAL",
+        "Interop.HSREADWRITELib", "mkl_sequential", "Compressor_", "boost_"
+      ]
+    },
+    {
+      "name": "Bruker-linux",
+      "$comment": [
+        "Bruker is the one vendor whose Windows and Linux native libraries live in separate",
+        "archives (see Bruker.csproj: one archive per OS so nobody downloads binaries for a",
+        "platform they are not building for). Both answer to the same prefixes, so 'os' narrows",
+        "the match - without it Linux would fetch the 10.7 MB Windows archive and still not find",
+        "libtimsdata.so. Waters needs no equivalent: its single archive carries both platforms."
+      ],
+      "os": "linux",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Bruker_linux.7z",
+      "prefixes": [ "timsdata", "baf2sql" ]
+    },
+    {
+      "name": "Waters",
+      "path": "pwiz-sharp/vendor-archives/vendor_api_Waters.7z",
+      "prefixes": [ "MassLynxRaw", "libMassLynxRaw", "MassLynx" ]
+    },
+    {
+      "name": "Agilent",
+      "$comment": [
+        "MIDAC has no trailing dot on purpose. Prefixes are matched with StartsWith against the",
+        "assembly simple name, and this archive's assembly is plain 'MIDAC', which never starts",
+        "with 'MIDAC.' - so the dotted form silently matched nothing and Agilent failed one",
+        "assembly later than the BaseCommon collision, with 'Could not load MIDAC'."
+      ],
+      "$comment2": [
+        "This archive is NOT what Agilent shipped: BaseDataAccess.dll and BaseCommon.dll in it",
+        "are Cecil-patched by pwiz-sharp/build/AgilentPatcher, and the x86 half is gone. The",
+        "patch removes Delegate.BeginInvoke/EndInvoke (PlatformNotSupportedException on .NET 5+)",
+        "and fixes a decompression path that assumes Stream.Read fills the buffer. It used to be",
+        "applied per-build to the extracted copy, which is why an install - which resolves the",
+        "SDK through this pin's cache rather than app-local - could not open half the .d",
+        "fixtures. Re-run the patcher and repack whenever the SDK is updated; its header has the",
+        "procedure."
+      ],
+      "path": "pwiz_aux/msrc/utility/vendor_api_Agilent.7z",
+      "prefixes": [
+        "Agilent.", "BaseCommon", "BaseDataAccess", "BaseError", "BaseTof", "MIDAC", "Mhdac.",
+        "MassHunter.", "MassSpecDataReader", "agtsampleinforw"
+      ]
+    },
+    {
+      "name": "ABI",
+      "path": "pwiz_aux/msrc/utility/vendor_api_ABI.7z",
+      "prefixes": [
+        "Clearcore2.", "Sciex.", "SCIEX.", "SciexToolKit", "Interop.", "OFX.Core.",
+        "ZipUtility", "protobuf-net"
+      ]
+    },
+    {
+      "name": "Shimadzu",
+      "path": "pwiz_aux/msrc/utility/vendor_api_Shimadzu.7z",
+      "prefixes": [
+        "Shimadzu.", "QTFL", "GCMS", "GCMSProto", "QTFLProto", "DataReader", "IDQuantLSS",
+        "PeakIDEA", "PeakItgLSS", "MassLibrarySearch", "MassCalcWrap", "MassStandardSpectrum",
+        "DualProbeInterface", "IoModule", "LSSMng", "CompressedTLM", "CRHAKEI", "CPCNLSS",
+        "CLFIO", "LibDB", "MSMSDB"
+      ]
+    },
+    {
+      "name": "Mobilion",
+      "$comment": [
+        "MobilionShim is deliberately NOT a prefix here. It is pwiz-sharp's own shim assembly,",
+        "built from src/Vendor/Mobilion, not something this archive carries (the archive holds",
+        "MBI_SDK.dll and its headers). Listing it made the installer's staging filter strip a",
+        "binary nothing could then supply, so Mobilion failed from every installer-based install",
+        "with 'archive contains no library matching MobilionShim.dll'."
+      ],
+      "path": "pwiz_aux/msrc/utility/vendor_api_Mobilion.7z",
+      "prefixes": [ "Mobilion.", "MBISDK", "MBI_SDK" ]
+    }
+  ]
+}

@@ -31,6 +31,10 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.Scoring;
 
+// Developer-only dump files (-d / OSPREY_DUMP_*): TSV headers and rows for comparison tools,
+// never user text. The whole file, because nearly every literal is tab-separated file content.
+// ReSharper disable LocalizableElement
+
 namespace pwiz.Osprey
 {
     /// <summary>
@@ -67,20 +71,6 @@ namespace pwiz.Osprey
     /// </summary>
     internal sealed class OspreyFileDiagnostics : IScoringDiagnostics, IOspreyDiagnostics
     {
-        /// <summary>
-        /// Newline used by every Stage 6 cross-impl bisection dump writer.
-        /// MUST be `"\n"` (not <see cref="Environment.NewLine"/>, which is
-        /// `"\r\n"` on Windows) so headers emitted via
-        /// <see cref="System.IO.StreamWriter.WriteLine(string)"/> match the
-        /// `\n`-terminated payload rows we build manually with
-        /// <see cref="System.Text.StringBuilder.Append(char)"/>. Mixed
-        /// newlines break the byte-for-byte diff against the corresponding
-        /// `rust_*.tsv` dumps that this tooling depends on. Apply via
-        /// <c>writer.NewLine = LF;</c> immediately after constructing each
-        /// dump <see cref="System.IO.StreamWriter"/>.
-        /// </summary>
-        private const string LF = "\n";
-
         // ----- Env-var gate flags (read once at process start) -----
 
         /// <summary>
@@ -466,7 +456,7 @@ namespace pwiz.Osprey
         /// </summary>
         public void ExitAfterDump(string varName)
         {
-            LogAction(string.Format(@"[BISECT] {0} set - aborting after dump", varName));
+            Log.LogInfo(LogTag.BISECT, string.Format(@"{0} set - aborting after dump", varName));
             Environment.Exit(0);
         }
 
@@ -477,7 +467,7 @@ namespace pwiz.Osprey
         // The pipeline-wired logger lives on the OspreyDiagnostics facade; the
         // sink's own dump methods log through it via this alias so [COUNT] /
         // [BISECT] lines flow through the same channel as before.
-        private static Action<string> LogAction => OspreyDiagnosticsLog.LogAction;
+        private static IOspreyLog Log => OspreyDiagnosticsLog.Log;
 
         // ----- Cal sample dump -----
 
@@ -489,26 +479,34 @@ namespace pwiz.Osprey
         /// </summary>
         public void WriteCalSampleDump(string fileName, IEnumerable<LibraryEntry> sampledEntries)
         {
-            string dumpPath = fileName + ".cs_cal_sample.txt";
+            string dumpPath = fileName + @".cs_cal_sample.txt";
             var tuples = new List<string>();
             foreach (var e in sampledEntries)
             {
                 if (e.IsDecoy)
                     continue;
-                tuples.Add(string.Format(CultureInfo.InvariantCulture,
-                    "{0}\t{1}\t{2}\t{3:F4}\t{4:F4}",
-                    e.Id, e.ModifiedSequence, e.Charge, e.PrecursorMz, e.RetentionTime));
+                tuples.Add(new[]
+                {
+                    e.Id.ToString(CultureInfo.InvariantCulture),
+                    e.ModifiedSequence,
+                    e.Charge.ToString(CultureInfo.InvariantCulture),
+                    e.PrecursorMz.ToString(@"F4", CultureInfo.InvariantCulture),
+                    e.RetentionTime.ToString(@"F4", CultureInfo.InvariantCulture)
+                }.ToDsvLine(TextUtil.SEPARATOR_TSV));
             }
             tuples.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            using (var w = new StreamWriter(dumpPath))
+            using (var saver = new FileSaver(dumpPath))
             {
-                w.WriteLine("id\tmodseq\tcharge\tmz\trt");
-                foreach (var t in tuples)
-                    w.WriteLine(t);
+                using (var w = new StreamWriter(saver.SafeName))
+                {
+                    w.WriteLine(new[] { @"id", @"modseq", @"charge", @"mz", @"rt" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var t in tuples)
+                        w.WriteLine(t);
+                }
+                saver.Commit();
             }
-            LogAction(string.Format(CultureInfo.InvariantCulture,
-                @"[COUNT] Wrote calibration sample: {0} ({1} targets)",
-                dumpPath, tuples.Count));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration sample: {0} ({1} targets)",
+                dumpPath, tuples.Count);
         }
 
         // ----- Cal scalars + grid dump (gated by same DumpCalSample flag) -----
@@ -527,47 +525,61 @@ namespace pwiz.Osprey
             int nOccupied, int perCell, ulong seed,
             List<int>[,] grid)
         {
-            using (var w = new StreamWriter(@"cs_cal_scalars.txt"))
+            using (var saver = new FileSaver(@"cs_cal_scalars.txt"))
             {
-                w.WriteLine(@"n_targets" + "\t" + targets.Count);
-                w.WriteLine(@"n_decoys" + "\t" + decoys.Count);
-                w.WriteLine(@"bins_per_axis" + "\t" + binsPerAxis);
-                w.WriteLine(@"rt_min" + "\t" + rtMin.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"rt_max" + "\t" + rtMax.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_min" + "\t" + mzMin.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_max" + "\t" + mzMax.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"rt_range" + "\t" + rtRange.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_range" + "\t" + mzRange.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"rt_bin_width" + "\t" + rtBinWidth.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"mz_bin_width" + "\t" + mzBinWidth.ToString(@"G17", CultureInfo.InvariantCulture));
-                w.WriteLine(@"n_occupied" + "\t" + nOccupied);
-                w.WriteLine(@"per_cell" + "\t" + perCell);
-                w.WriteLine(@"seed" + "\t" + seed);
-            }
-            using (var w = new StreamWriter(@"cs_cal_grid.txt"))
-            {
-                w.WriteLine("rt_bin\tmz_bin\tcount\ttarget_ids");
-                for (int r = 0; r < binsPerAxis; r++)
+                using (var w = new StreamWriter(saver.SafeName))
                 {
-                    for (int c = 0; c < binsPerAxis; c++)
+                    w.WriteLine(@"n_targets" + TextUtil.SEPARATOR_TSV + targets.Count);
+                    w.WriteLine(@"n_decoys" + TextUtil.SEPARATOR_TSV + decoys.Count);
+                    w.WriteLine(@"bins_per_axis" + TextUtil.SEPARATOR_TSV + binsPerAxis);
+                    w.WriteLine(@"rt_min" + TextUtil.SEPARATOR_TSV + rtMin.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"rt_max" + TextUtil.SEPARATOR_TSV + rtMax.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"mz_min" + TextUtil.SEPARATOR_TSV + mzMin.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"mz_max" + TextUtil.SEPARATOR_TSV + mzMax.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"rt_range" + TextUtil.SEPARATOR_TSV + rtRange.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"mz_range" + TextUtil.SEPARATOR_TSV + mzRange.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"rt_bin_width" + TextUtil.SEPARATOR_TSV + rtBinWidth.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"mz_bin_width" + TextUtil.SEPARATOR_TSV + mzBinWidth.ToString(@"G17", CultureInfo.InvariantCulture));
+                    w.WriteLine(@"n_occupied" + TextUtil.SEPARATOR_TSV + nOccupied);
+                    w.WriteLine(@"per_cell" + TextUtil.SEPARATOR_TSV + perCell);
+                    w.WriteLine(@"seed" + TextUtil.SEPARATOR_TSV + seed);
+                }
+                saver.Commit();
+            }
+            using (var saver = new FileSaver(@"cs_cal_grid.txt"))
+            {
+                using (var w = new StreamWriter(saver.SafeName))
+                {
+                    w.WriteLine(new[] { @"rt_bin", @"mz_bin", @"count", @"target_ids" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    for (int r = 0; r < binsPerAxis; r++)
                     {
-                        var cell = grid[r, c];
-                        if (cell.Count == 0)
-                            continue;
-                        var ids = new List<uint>(cell.Count);
-                        foreach (int ti in cell)
-                            ids.Add(targets[ti].Id);
-                        ids.Sort(); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-                        var sb = new StringBuilder();
-                        for (int k = 0; k < ids.Count; k++)
+                        for (int c = 0; c < binsPerAxis; c++)
                         {
-                            if (k > 0)
-                                sb.Append(',');
-                            sb.Append(ids[k]);
+                            var cell = grid[r, c];
+                            if (cell.Count == 0)
+                                continue;
+                            var ids = new List<uint>(cell.Count);
+                            foreach (int ti in cell)
+                                ids.Add(targets[ti].Id);
+                            ids.Sort(); // Array.Sort OK: diagnostic dump only, not parity-sensitive
+                            var sb = new StringBuilder();
+                            for (int k = 0; k < ids.Count; k++)
+                            {
+                                if (k > 0)
+                                    sb.Append(',');
+                                sb.Append(ids[k]);
+                            }
+                            w.WriteLine(new[]
+                            {
+                                r.ToString(CultureInfo.InvariantCulture),
+                                c.ToString(CultureInfo.InvariantCulture),
+                                cell.Count.ToString(CultureInfo.InvariantCulture),
+                                sb.ToString()
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                         }
-                        w.WriteLine("{0}\t{1}\t{2}\t{3}", r, c, cell.Count, sb.ToString());
                     }
                 }
+                saver.Commit();
             }
         }
 
@@ -593,18 +605,19 @@ namespace pwiz.Osprey
         {
             if (s_calWindowRows == null)
                 return;
-            s_calWindowRows.Add(string.Format(CultureInfo.InvariantCulture,
-                "{0}\t{1}\t{2}\t{3:F6}\t{4:F6}\t{5:F6}\t{6:F6}\t{7:F6}\t{8:F6}\t{9:F6}",
-                entry.Id,
-                entry.IsDecoy ? 1 : 0,
-                entry.Charge,
-                entry.PrecursorMz,
-                entry.RetentionTime,
-                iso.LowerBound,
-                iso.UpperBound,
-                expectedRt,
-                rtLo,
-                rtHi));
+            s_calWindowRows.Add(new[]
+            {
+                entry.Id.ToString(CultureInfo.InvariantCulture),
+                (entry.IsDecoy ? 1 : 0).ToString(CultureInfo.InvariantCulture),
+                entry.Charge.ToString(CultureInfo.InvariantCulture),
+                entry.PrecursorMz.ToString(@"F6", CultureInfo.InvariantCulture),
+                entry.RetentionTime.ToString(@"F6", CultureInfo.InvariantCulture),
+                iso.LowerBound.ToString(@"F6", CultureInfo.InvariantCulture),
+                iso.UpperBound.ToString(@"F6", CultureInfo.InvariantCulture),
+                expectedRt.ToString(@"F6", CultureInfo.InvariantCulture),
+                rtLo.ToString(@"F6", CultureInfo.InvariantCulture),
+                rtHi.ToString(@"F6", CultureInfo.InvariantCulture)
+            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
         }
 
         /// <summary>
@@ -618,15 +631,18 @@ namespace pwiz.Osprey
                 return;
             var rows = new List<string>(s_calWindowRows);
             rows.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            using (var w = new StreamWriter(@"cs_cal_windows.txt"))
+            using (var saver = new FileSaver(@"cs_cal_windows.txt"))
             {
-                w.WriteLine("entry_id\tis_decoy\tcharge\tprecursor_mz\tlibrary_rt\tiso_lower\tiso_upper\texpected_rt\trt_window_start\trt_window_end");
-                foreach (var r in rows)
-                    w.WriteLine(r);
+                using (var w = new StreamWriter(saver.SafeName))
+                {
+                    w.WriteLine(new[] { @"entry_id", @"is_decoy", @"charge", @"precursor_mz", @"library_rt", @"iso_lower", @"iso_upper", @"expected_rt", @"rt_window_start", @"rt_window_end" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var r in rows)
+                        w.WriteLine(r);
+                }
+                saver.Commit();
             }
-            LogAction(string.Format(CultureInfo.InvariantCulture,
-                @"[COUNT] Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
-                passNumber, rows.Count));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
+                passNumber, rows.Count);
             s_calWindowRows = null;
         }
 
@@ -653,56 +669,71 @@ namespace pwiz.Osprey
 
             int nMatched = 0, nUnmatched = 0;
             var inv = CultureInfo.InvariantCulture;
-            using (var w = new StreamWriter(dumpPath))
+            using (var saver = new FileSaver(dumpPath))
             {
-                w.WriteLine("entry_id\tis_decoy\tcharge\thas_match\tscan\tapex_rt\tcorrelation\tlibcosine\ttop6\txcorr\tsnr");
-                foreach (var entry in sortedSampled)
+                using (var w = new StreamWriter(saver.SafeName))
                 {
-                    CalibrationMatch m;
-                    if (matchById.TryGetValue(entry.Id, out m))
+                    w.WriteLine(new[] { @"entry_id", @"is_decoy", @"charge", @"has_match", @"scan", @"apex_rt", @"correlation", @"libcosine", @"top6", @"xcorr", @"snr" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var entry in sortedSampled)
                     {
-                        KeyValuePair<double, double> rtPair;
-                        matchRts.TryGetValue(entry.Id, out rtPair);
-                        double snr;
-                        if (!snrByEntryId.TryGetValue(entry.Id, out snr))
-                            snr = 0.0;
-                        // G17 (17 significant digits) for round-trip-safe f64.
-                        // .NET Framework 4.7.2's F17 truncates output at ~15
-                        // significant digits and pads with zeros, so a
-                        // string -> parse round-trip yields a different f64
-                        // than the original. G17 prints enough digits for the
-                        // result to round-trip exactly back to the same f64.
-                        // The cross-impl comparator parses both sides as
-                        // numbers, so variable-width G17 output on C# vs
-                        // fixed {:.17} on Rust is fine - both round-trip to
-                        // the same f64 when the underlying value matches.
-                        w.WriteLine(string.Format(inv,
-                            "{0}\t{1}\t{2}\t1\t{3}\t{4:G17}\t{5:G17}\t{6:G17}\t{7}\t{8:G17}\t{9:G17}",
-                            entry.Id,
-                            entry.IsDecoy ? 1 : 0,
-                            entry.Charge,
-                            m.ScanNumber,
-                            rtPair.Value,
-                            m.CorrelationScore,
-                            m.LibcosineApex,
-                            m.Top6MatchedApex,
-                            m.XcorrScore,
-                            snr));
-                        nMatched++;
-                    }
-                    else
-                    {
-                        w.WriteLine("{0}\t{1}\t{2}\t0\t\t\t\t\t\t\t",
-                            entry.Id,
-                            entry.IsDecoy ? 1 : 0,
-                            entry.Charge);
-                        nUnmatched++;
+                        CalibrationMatch m;
+                        if (matchById.TryGetValue(entry.Id, out m))
+                        {
+                            KeyValuePair<double, double> rtPair;
+                            matchRts.TryGetValue(entry.Id, out rtPair);
+                            double snr;
+                            if (!snrByEntryId.TryGetValue(entry.Id, out snr))
+                                snr = 0.0;
+                            // G17 (17 significant digits) for round-trip-safe f64.
+                            // .NET Framework 4.7.2's F17 truncates output at ~15
+                            // significant digits and pads with zeros, so a
+                            // string -> parse round-trip yields a different f64
+                            // than the original. G17 prints enough digits for the
+                            // result to round-trip exactly back to the same f64.
+                            // The cross-impl comparator parses both sides as
+                            // numbers, so variable-width G17 output on C# vs
+                            // fixed {:.17} on Rust is fine - both round-trip to
+                            // the same f64 when the underlying value matches.
+                            w.WriteLine(new[]
+                            {
+                                entry.Id.ToString(inv),
+                                (entry.IsDecoy ? 1 : 0).ToString(inv),
+                                entry.Charge.ToString(inv),
+                                @"1",
+                                m.ScanNumber.ToString(inv),
+                                rtPair.Value.ToString(@"G17", inv),
+                                m.CorrelationScore.ToString(@"G17", inv),
+                                m.LibcosineApex.ToString(@"G17", inv),
+                                m.Top6MatchedApex.ToString(inv),
+                                m.XcorrScore.ToString(@"G17", inv),
+                                snr.ToString(@"G17", inv)
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                            nMatched++;
+                        }
+                        else
+                        {
+                            w.WriteLine(new[]
+                            {
+                                entry.Id.ToString(CultureInfo.InvariantCulture),
+                                (entry.IsDecoy ? 1 : 0).ToString(CultureInfo.InvariantCulture),
+                                entry.Charge.ToString(CultureInfo.InvariantCulture),
+                                @"0",
+                                string.Empty,
+                                string.Empty,
+                                string.Empty,
+                                string.Empty,
+                                string.Empty,
+                                string.Empty,
+                                string.Empty
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                            nUnmatched++;
+                        }
                     }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
-                passNumber, dumpPath, nMatched, nUnmatched));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
+                passNumber, dumpPath, nMatched, nUnmatched);
         }
 
         // ----- LDA scores dump -----
@@ -733,56 +764,66 @@ namespace pwiz.Osprey
             var inv = CultureInfo.InvariantCulture;
             int nRows = 0;
             int nMatches = 0;
-            using (var w = new StreamWriter(@"cs_ms2_cal_errors.txt"))
+            using (var saver = new FileSaver(@"cs_ms2_cal_errors.txt"))
             {
-                w.WriteLine("entry_id\tfrag_order_idx\terror");
-                foreach (var m in sortedByEntry)
+                using (var w = new StreamWriter(saver.SafeName))
                 {
-                    nMatches++;
-                    if (m.Ms2MassErrors == null) continue;
-                    for (int i = 0; i < m.Ms2MassErrors.Length; i++)
+                    w.WriteLine(new[] { @"entry_id", @"frag_order_idx", @"error" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var m in sortedByEntry)
                     {
-                        double err = m.Ms2MassErrors[i];
-                        // G17: round-trip-safe canonical form. C# G17 and
-                        // Rust ryu (the `{}` default) format the same f64
-                        // value with different strings (e.g. "1.23E-05"
-                        // vs "0.0000123"), so this dump is intended to be
-                        // compared numerically via a Python diff script,
-                        // not via SHA byte-equality. Inside one impl, the
-                        // G17 strings round-trip the f64 bits exactly.
-                        w.WriteLine(string.Format(inv,
-                            "{0}\t{1}\t{2:G17}",
-                            m.EntryId, i, err));
-                        nRows++;
+                        nMatches++;
+                        if (m.Ms2MassErrors == null) continue;
+                        for (int i = 0; i < m.Ms2MassErrors.Length; i++)
+                        {
+                            double err = m.Ms2MassErrors[i];
+                            // G17: round-trip-safe canonical form. C# G17 and
+                            // Rust ryu (the `{}` default) format the same f64
+                            // value with different strings (e.g. "1.23E-05"
+                            // vs "0.0000123"), so this dump is intended to be
+                            // compared numerically via a Python diff script,
+                            // not via SHA byte-equality. Inside one impl, the
+                            // G17 strings round-trip the f64 bits exactly.
+                            w.WriteLine(new[]
+                            {
+                                m.EntryId.ToString(inv),
+                                i.ToString(inv),
+                                err.ToString(@"G17", inv)
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                            nRows++;
+                        }
                     }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
-                nRows, nMatches));
+            Log.LogInfo(LogTag.COUNT, @"Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
+                nRows, nMatches);
         }
 
         public void WriteLdaScoresDump(int passNumber, IEnumerable<CalibrationMatch> matchArray)
         {
             var sortedByEntry = matchArray.OrderBy(m => m.EntryId).ToArray();
             var inv = CultureInfo.InvariantCulture;
-            using (var w = new StreamWriter(@"cs_lda_scores.txt"))
+            using (var saver = new FileSaver(@"cs_lda_scores.txt"))
             {
-                w.WriteLine("entry_id\tis_decoy\tdiscriminant\tq_value");
-                foreach (var m in sortedByEntry)
+                using (var w = new StreamWriter(saver.SafeName))
                 {
-                    // G17 for round-trip-safe f64 (same rationale as cal_match dump).
-                    w.WriteLine(string.Format(inv,
-                        "{0}\t{1}\t{2:G17}\t{3:G17}",
-                        m.EntryId,
-                        m.IsDecoy ? 1 : 0,
-                        m.DiscriminantScore,
-                        m.QValue));
+                    w.WriteLine(new[] { @"entry_id", @"is_decoy", @"discriminant", @"q_value" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var m in sortedByEntry)
+                    {
+                        // G17 for round-trip-safe f64 (same rationale as cal_match dump).
+                        w.WriteLine(new[]
+                        {
+                            m.EntryId.ToString(inv),
+                            (m.IsDecoy ? 1 : 0).ToString(inv),
+                            m.DiscriminantScore.ToString(@"G17", inv),
+                            m.QValue.ToString(@"G17", inv)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
-                passNumber, sortedByEntry.Length));
+            Log.LogInfo(LogTag.COUNT, @"Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
+                passNumber, sortedByEntry.Length);
         }
 
         // ----- LOESS input dump -----
@@ -805,20 +846,27 @@ namespace pwiz.Osprey
                 return a.Value.CompareTo(b.Value);
             });
             var inv = CultureInfo.InvariantCulture;
-            using (var w = new StreamWriter(@"cs_loess_input.txt"))
+            using (var saver = new FileSaver(@"cs_loess_input.txt"))
             {
-                w.WriteLine(string.Format(inv,
-                    "# n_library_rts={0} n_measured_rts={1}", libRts.Length, measuredRts.Length));
-                w.WriteLine("idx\tlib_rt\tmeasured_rt");
-                for (int i = 0; i < pairs.Count; i++)
+                using (var w = new StreamWriter(saver.SafeName))
                 {
-                    w.WriteLine(string.Format(inv, "{0}\t{1:F17}\t{2:F17}",
-                        i, pairs[i].Key, pairs[i].Value));
+                    w.WriteLine(string.Format(inv,
+                        @"# n_library_rts={0} n_measured_rts={1}", libRts.Length, measuredRts.Length));
+                    w.WriteLine(new[] { @"idx", @"lib_rt", @"measured_rt" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    for (int i = 0; i < pairs.Count; i++)
+                    {
+                        w.WriteLine(new[]
+                        {
+                            i.ToString(inv),
+                            pairs[i].Key.ToString(@"F17", inv),
+                            pairs[i].Value.ToString(@"F17", inv)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
-                passNumber, pairs.Count));
+            Log.LogInfo(LogTag.COUNT, @"Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
+                passNumber, pairs.Count);
         }
 
         // ----- Calibration summary dump -----
@@ -837,37 +885,40 @@ namespace pwiz.Osprey
             MzCalibrationResult ms2Cal)
         {
             var inv = CultureInfo.InvariantCulture;
-            using (var w = new StreamWriter(@"cs_cal_summary.txt"))
+            using (var saver = new FileSaver(@"cs_cal_summary.txt"))
             {
-                Action<string, double> writeD = (key, val) =>
-                    w.WriteLine(key + "\t" + val.ToString(@"F17", inv));
-                Action<string, int> writeI = (key, val) =>
-                    w.WriteLine(key + "\t" + val.ToString(inv));
+                using (var w = new StreamWriter(saver.SafeName))
+                {
+                    Action<string, double> writeD = (key, val) =>
+                        w.WriteLine(key + TextUtil.SEPARATOR_TSV + val.ToString(@"F17", inv));
+                    Action<string, int> writeI = (key, val) =>
+                        w.WriteLine(key + TextUtil.SEPARATOR_TSV + val.ToString(inv));
 
-                if (ms1Cal != null)
-                {
-                    writeD("ms1.mean",      ms1Cal.Mean);
-                    writeD("ms1.sd",        ms1Cal.SD);
-                    writeI("ms1.count",     ms1Cal.Count);
-                    writeD("ms1.tolerance", ms1Cal.AdjustedTolerance ?? 0.0);
+                    if (ms1Cal != null)
+                    {
+                        writeD(@"ms1.mean",      ms1Cal.Mean);
+                        writeD(@"ms1.sd",        ms1Cal.SD);
+                        writeI(@"ms1.count",     ms1Cal.Count);
+                        writeD(@"ms1.tolerance", ms1Cal.AdjustedTolerance ?? 0.0);
+                    }
+                    if (ms2Cal != null)
+                    {
+                        writeD(@"ms2.mean",      ms2Cal.Mean);
+                        writeD(@"ms2.sd",        ms2Cal.SD);
+                        writeI(@"ms2.count",     ms2Cal.Count);
+                        writeD(@"ms2.tolerance", ms2Cal.AdjustedTolerance ?? 0.0);
+                    }
+                    if (rtCal != null)
+                    {
+                        var stats = rtCal.Stats();
+                        writeI(@"rt.n_points",    stats.NPoints);
+                        writeD(@"rt.r_squared",   stats.RSquared);
+                        writeD(@"rt.residual_sd", stats.ResidualSD);
+                    }
                 }
-                if (ms2Cal != null)
-                {
-                    writeD("ms2.mean",      ms2Cal.Mean);
-                    writeD("ms2.sd",        ms2Cal.SD);
-                    writeI("ms2.count",     ms2Cal.Count);
-                    writeD("ms2.tolerance", ms2Cal.AdjustedTolerance ?? 0.0);
-                }
-                if (rtCal != null)
-                {
-                    var stats = rtCal.Stats();
-                    writeI("rt.n_points",    stats.NPoints);
-                    writeD("rt.r_squared",   stats.RSquared);
-                    writeD("rt.residual_sd", stats.ResidualSD);
-                }
+                saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote calibration summary: cs_cal_summary.txt (11 scalars)"));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration summary: cs_cal_summary.txt (11 scalars)");
         }
 
         // ----- Per-entry calibration XIC dump -----
@@ -900,82 +951,106 @@ namespace pwiz.Osprey
         {
             string diagXicPath = @"cs_xic_entry_" + entry.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
-            using (var dw = new StreamWriter(diagXicPath))
+            // Two file-threads can both match ShouldDumpCalXicFor for the same entry before
+            // either reaches Environment.Exit below; the lock keeps their FileSaver commits
+            // from racing (see WriteSearchXicDump for the same reasoning at higher volume).
+            lock (DiagnosticFileLock.For(diagXicPath))
             {
-                dw.WriteLine(string.Format(inv,
-                    @"# per-entry chromatogram dump for entry_id={0} (pass {1})",
-                    entry.Id, currentPass));
-                dw.WriteLine(string.Format(inv,
-                    @"# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
-                    entry.ModifiedSequence, entry.Sequence, entry.Charge,
-                    entry.RetentionTime, entry.PrecursorMz));
-
-                if (calibrationModel != null)
+            using (var saver = new FileSaver(diagXicPath))
+            {
+                using (var dw = new StreamWriter(saver.SafeName))
                 {
-                    var loessStats = calibrationModel.Stats();
-                    dw.WriteLine("# LOESS MODEL (pass 2 RT calibration)");
-                    dw.WriteLine(string.Format(inv, "# loess.n_points={0}", loessStats.NPoints));
-                    dw.WriteLine(string.Format(inv, "# loess.r_squared={0:F10}", loessStats.RSquared));
-                    dw.WriteLine(string.Format(inv, "# loess.residual_sd={0:F10}", loessStats.ResidualSD));
-                    dw.WriteLine(string.Format(inv, "# loess.mean_residual={0:F10}", loessStats.MeanResidual));
-                    dw.WriteLine(string.Format(inv, "# loess.max_residual={0:F10}", loessStats.MaxResidual));
-                    dw.WriteLine(string.Format(inv, "# loess.p20_abs_residual={0:F10}", loessStats.P20AbsResidual));
-                    dw.WriteLine(string.Format(inv, "# loess.p80_abs_residual={0:F10}", loessStats.P80AbsResidual));
-                    dw.WriteLine(string.Format(inv, "# loess.mad={0:F10}", loessStats.MAD));
-                }
-                dw.WriteLine("# PASS CALCULATIONS");
-                dw.WriteLine(string.Format(inv, "# pass.library_rt={0:F10}", entry.RetentionTime));
-                dw.WriteLine(string.Format(inv, "# pass.expected_rt={0:F10}", expectedRt));
-                dw.WriteLine(string.Format(inv, "# pass.tolerance={0:F10}", initialTolerance));
-                dw.WriteLine(string.Format(inv, "# pass.rt_window_lo={0:F10}", expectedRt - initialTolerance));
-                dw.WriteLine(string.Format(inv, "# pass.rt_window_hi={0:F10}", expectedRt + initialTolerance));
-                dw.WriteLine(string.Format(inv, "# pass.rt_slope={0:F10}", rtSlope));
-                dw.WriteLine(string.Format(inv, "# pass.rt_intercept={0:F10}", rtIntercept));
-
-                dw.WriteLine("# n_post_prefilter_candidates=" + candidateSpectra.Count);
-                dw.WriteLine("# CANDIDATES (post-prefilter, sorted by RT)");
-                dw.WriteLine("candidate\tscan_idx\tscan_number\trt\tiso_lower\tiso_upper");
-                for (int i = 0; i < candidateSpectra.Count; i++)
-                {
-                    var iso = candidateSpectra[i].IsolationWindow;
                     dw.WriteLine(string.Format(inv,
-                        "candidate\t{0}\t{1}\t{2}\t{3}\t{4}",
-                        i, candidateSpectra[i].ScanNumber,
-                        F10(candidateSpectra[i].RetentionTime),
-                        F10(iso.LowerBound), F10(iso.UpperBound)));
-                }
-
-                var sortedByIntensity = new List<KeyValuePair<int, float>>(entry.Fragments.Count);
-                for (int fi = 0; fi < entry.Fragments.Count; fi++)
-                    sortedByIntensity.Add(new KeyValuePair<int, float>(fi, entry.Fragments[fi].RelativeIntensity));
-                sortedByIntensity.Sort((a, b) => b.Value.CompareTo(a.Value)); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-                int topN = Math.Min(6, sortedByIntensity.Count);
-
-                dw.WriteLine("# TOP-6 FRAGMENTS (selected by intensity desc)");
-                dw.WriteLine("topfrag\ttop_idx\tlib_idx\tlib_mz\tlib_intensity");
-                for (int rank = 0; rank < topN; rank++)
-                {
-                    int fi = sortedByIntensity[rank].Key;
-                    var fobj = entry.Fragments[fi];
+                        @"# per-entry chromatogram dump for entry_id={0} (pass {1})",
+                        entry.Id, currentPass));
                     dw.WriteLine(string.Format(inv,
-                        "topfrag\t{0}\t{1}\t{2}\t{3}",
-                        rank, fi, F10(fobj.Mz), F10(fobj.RelativeIntensity)));
-                }
+                        @"# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
+                        entry.ModifiedSequence, entry.Sequence, entry.Charge,
+                        entry.RetentionTime, entry.PrecursorMz));
 
-                dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
-                dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
-                foreach (var xic in xics)
-                {
-                    for (int i = 0; i < xic.RetentionTimes.Length; i++)
+                    if (calibrationModel != null)
                     {
-                        dw.WriteLine(string.Format(inv,
-                            "xic\t{0}\t{1}\t{2}\t{3}",
-                            xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
+                        var loessStats = calibrationModel.Stats();
+                        dw.WriteLine(@"# LOESS MODEL (pass 2 RT calibration)");
+                        dw.WriteLine(string.Format(inv, @"# loess.n_points={0}", loessStats.NPoints));
+                        dw.WriteLine(string.Format(inv, @"# loess.r_squared={0:F10}", loessStats.RSquared));
+                        dw.WriteLine(string.Format(inv, @"# loess.residual_sd={0:F10}", loessStats.ResidualSD));
+                        dw.WriteLine(string.Format(inv, @"# loess.mean_residual={0:F10}", loessStats.MeanResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.max_residual={0:F10}", loessStats.MaxResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.p20_abs_residual={0:F10}", loessStats.P20AbsResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.p80_abs_residual={0:F10}", loessStats.P80AbsResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.mad={0:F10}", loessStats.MAD));
+                    }
+                    dw.WriteLine(@"# PASS CALCULATIONS");
+                    dw.WriteLine(string.Format(inv, @"# pass.library_rt={0:F10}", entry.RetentionTime));
+                    dw.WriteLine(string.Format(inv, @"# pass.expected_rt={0:F10}", expectedRt));
+                    dw.WriteLine(string.Format(inv, @"# pass.tolerance={0:F10}", initialTolerance));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_window_lo={0:F10}", expectedRt - initialTolerance));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_window_hi={0:F10}", expectedRt + initialTolerance));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_slope={0:F10}", rtSlope));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_intercept={0:F10}", rtIntercept));
+
+                    dw.WriteLine(@"# n_post_prefilter_candidates=" + candidateSpectra.Count);
+                    dw.WriteLine(@"# CANDIDATES (post-prefilter, sorted by RT)");
+                    dw.WriteLine(new[] { @"candidate", @"scan_idx", @"scan_number", @"rt", @"iso_lower", @"iso_upper" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    for (int i = 0; i < candidateSpectra.Count; i++)
+                    {
+                        var iso = candidateSpectra[i].IsolationWindow;
+                        dw.WriteLine(new[]
+                        {
+                            @"candidate",
+                            i.ToString(inv),
+                            candidateSpectra[i].ScanNumber.ToString(inv),
+                            F10(candidateSpectra[i].RetentionTime),
+                            F10(iso.LowerBound),
+                            F10(iso.UpperBound)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    }
+
+                    var sortedByIntensity = new List<KeyValuePair<int, float>>(entry.Fragments.Count);
+                    for (int fi = 0; fi < entry.Fragments.Count; fi++)
+                        sortedByIntensity.Add(new KeyValuePair<int, float>(fi, entry.Fragments[fi].RelativeIntensity));
+                    sortedByIntensity.Sort((a, b) => b.Value.CompareTo(a.Value)); // Array.Sort OK: diagnostic dump only, not parity-sensitive
+                    int topN = Math.Min(6, sortedByIntensity.Count);
+
+                    dw.WriteLine(@"# TOP-6 FRAGMENTS (selected by intensity desc)");
+                    dw.WriteLine(new[] { @"topfrag", @"top_idx", @"lib_idx", @"lib_mz", @"lib_intensity" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    for (int rank = 0; rank < topN; rank++)
+                    {
+                        int fi = sortedByIntensity[rank].Key;
+                        var fobj = entry.Fragments[fi];
+                        dw.WriteLine(new[]
+                        {
+                            @"topfrag",
+                            rank.ToString(inv),
+                            fi.ToString(inv),
+                            F10(fobj.Mz),
+                            F10(fobj.RelativeIntensity)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    }
+
+                    dw.WriteLine(@"# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
+                    dw.WriteLine(new[] { @"xic", @"lib_idx", @"scan_idx", @"rt", @"intensity" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var xic in xics)
+                    {
+                        for (int i = 0; i < xic.RetentionTimes.Length; i++)
+                        {
+                            dw.WriteLine(new[]
+                            {
+                                @"xic",
+                                xic.FragmentIndex.ToString(inv),
+                                i.ToString(inv),
+                                F10(xic.RetentionTimes[i]),
+                                F10(xic.Intensities[i])
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        }
                     }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[BISECT] OSPREY_DIAG_XIC_ENTRY_ID matched on pass {0} - wrote {1} and exiting",
+            }
+            Log.LogInfo(LogTag.BISECT, string.Format(inv,
+                @"OSPREY_DIAG_XIC_ENTRY_ID matched on pass {0} - wrote {1} and exiting",
                 currentPass, diagXicPath));
             Environment.Exit(0);
         }
@@ -1004,69 +1079,91 @@ namespace pwiz.Osprey
         {
             string dumpPath = @"cs_search_xic_entry_" + candidate.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
-            using (var dw = new StreamWriter(dumpPath))
+            // Shares DiagnosticFileLock.For(dumpPath) with PeakDataExtractor's own append to
+            // this SAME path later in one candidate's scoring - two independent FileSaver
+            // commits to one file, uncoordinated, would otherwise let whichever Commit lands
+            // last silently win (or interleave foreign content on a read-existing rewrite).
+            lock (DiagnosticFileLock.For(dumpPath))
             {
-                dw.WriteLine(string.Format(inv,
-                    @"# search XIC dump for entry_id={0}", candidate.Id));
-                dw.WriteLine(string.Format(inv,
-                    @"# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
-                    candidate.ModifiedSequence, candidate.Sequence, candidate.Charge,
-                    candidate.RetentionTime, candidate.PrecursorMz));
-                dw.WriteLine(string.Format(inv,
-                    @"# is_decoy={0}", candidate.IsDecoy ? 1 : 0));
-                dw.WriteLine(string.Format(inv,
-                    @"# expected_rt={0:F10}", expectedRt));
-                dw.WriteLine(string.Format(inv,
-                    @"# rt_tolerance={0:F10}", rtTolerance));
-                dw.WriteLine(string.Format(inv,
-                    @"# scan_range=[{0}..{1}] n_scans={2}",
-                    startScan, endScan, rangeLen));
-                dw.WriteLine("# CANDIDATES (scan_idx, scan_number, rt)");
-                dw.WriteLine("candidate\tscan_idx\tscan_number\trt");
-                for (int i = startScan; i <= endScan; i++)
+            using (var saver = new FileSaver(dumpPath))
+            {
+                using (var dw = new StreamWriter(saver.SafeName))
                 {
                     dw.WriteLine(string.Format(inv,
-                        "candidate\t{0}\t{1}\t{2:F10}",
-                        i - startScan, windowSpectra[i].ScanNumber,
-                        windowSpectra[i].RetentionTime));
-                }
-                dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
-                dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
-                foreach (var xic in xics)
-                {
-                    for (int i = 0; i < xic.RetentionTimes.Length; i++)
+                        @"# search XIC dump for entry_id={0}", candidate.Id));
+                    dw.WriteLine(string.Format(inv,
+                        @"# {0} ({1}, charge={2}, lib_rt={3:F10}, mz={4:F10})",
+                        candidate.ModifiedSequence, candidate.Sequence, candidate.Charge,
+                        candidate.RetentionTime, candidate.PrecursorMz));
+                    dw.WriteLine(string.Format(inv,
+                        @"# is_decoy={0}", candidate.IsDecoy ? 1 : 0));
+                    dw.WriteLine(string.Format(inv,
+                        @"# expected_rt={0:F10}", expectedRt));
+                    dw.WriteLine(string.Format(inv,
+                        @"# rt_tolerance={0:F10}", rtTolerance));
+                    dw.WriteLine(string.Format(inv,
+                        @"# scan_range=[{0}..{1}] n_scans={2}",
+                        startScan, endScan, rangeLen));
+                    dw.WriteLine(@"# CANDIDATES (scan_idx, scan_number, rt)");
+                    dw.WriteLine(new[] { @"candidate", @"scan_idx", @"scan_number", @"rt" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    for (int i = startScan; i <= endScan; i++)
                     {
-                        dw.WriteLine(string.Format(inv,
-                            "xic\t{0}\t{1}\t{2}\t{3}",
-                            xic.FragmentIndex, i, F10(xic.RetentionTimes[i]), F10(xic.Intensities[i])));
+                        dw.WriteLine(new[]
+                        {
+                            @"candidate",
+                            (i - startScan).ToString(inv),
+                            windowSpectra[i].ScanNumber.ToString(inv),
+                            windowSpectra[i].RetentionTime.ToString(@"F10", inv)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     }
-                }
+                    dw.WriteLine(@"# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
+                    dw.WriteLine(new[] { @"xic", @"lib_idx", @"scan_idx", @"rt", @"intensity" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var xic in xics)
+                    {
+                        for (int i = 0; i < xic.RetentionTimes.Length; i++)
+                        {
+                            dw.WriteLine(new[]
+                            {
+                                @"xic",
+                                xic.FragmentIndex.ToString(inv),
+                                i.ToString(inv),
+                                F10(xic.RetentionTimes[i]),
+                                F10(xic.Intensities[i])
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        }
+                    }
 
-                // CWT CONSENSUS: per-scan median consensus value across
-                // the fragment CWT coefficients. Cross-impl diff at this
-                // section pinpoints the first scan where the consensus
-                // signal diverges -- the seam upstream of peak detection.
-                // Use round-trip-safe formatting so f64 bits compare
-                // exactly between Rust (format_f64_roundtrip) and C#.
-                var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
-                double[] consensusSig = CwtPeakDetector.GetConsensusSignal(
-                    xicList, out double cwtSigma);
-                dw.WriteLine("# CWT CONSENSUS (sigma, scan_idx, value)");
-                dw.WriteLine(string.Format(inv,
-                    "# sigma={0}", Diagnostics.FormatF64Roundtrip(cwtSigma)));
-                if (consensusSig != null)
-                {
-                    dw.WriteLine("consensus\tscan_idx\tvalue");
-                    for (int i = 0; i < consensusSig.Length; i++)
+                    // CWT CONSENSUS: per-scan median consensus value across
+                    // the fragment CWT coefficients. Cross-impl diff at this
+                    // section pinpoints the first scan where the consensus
+                    // signal diverges - the seam upstream of peak detection.
+                    // Use round-trip-safe formatting so f64 bits compare
+                    // exactly between Rust (format_f64_roundtrip) and C#.
+                    var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
+                    double[] consensusSig = CwtPeakDetector.GetConsensusSignal(
+                        xicList, out double cwtSigma);
+                    dw.WriteLine(@"# CWT CONSENSUS (sigma, scan_idx, value)");
+                    dw.WriteLine(string.Format(inv,
+                        @"# sigma={0}", Diagnostics.FormatF64Roundtrip(cwtSigma)));
+                    if (consensusSig != null)
                     {
-                        dw.WriteLine(string.Format(inv,
-                            "consensus\t{0}\t{1}",
-                            i, Diagnostics.FormatF64Roundtrip(consensusSig[i])));
+                        dw.WriteLine(new[] { @"consensus", @"scan_idx", @"value" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        for (int i = 0; i < consensusSig.Length; i++)
+                        {
+                            dw.WriteLine(new[]
+                            {
+                                @"consensus",
+                                i.ToString(inv),
+                                Diagnostics.FormatF64Roundtrip(consensusSig[i])
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        }
                     }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[BISECT] Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
+            }
+            Log.LogInfo(LogTag.BISECT, string.Format(inv,
+                @"Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
                 candidate.Id, xics.Count, rangeLen, dumpPath));
         }
 
@@ -1095,36 +1192,53 @@ namespace pwiz.Osprey
             IReadOnlyList<KeyValuePair<int, double[]>> peakXics)
         {
             var inv = CultureInfo.InvariantCulture;
-            using (var dw = new StreamWriter(@"cs_mp_diag.txt"))
+            using (var saver = new FileSaver(@"cs_mp_diag.txt"))
             {
-                dw.WriteLine(string.Format(inv,
-                    @"# Median polish diagnostic for {0} scan={1}",
-                    candidate.ModifiedSequence, apexScanNumber));
-                dw.WriteLine(string.Format(inv,
-                    @"# peak range: start={0} apex={1} end={2} len={3}",
-                    bestPeak.StartIndex, bestPeak.ApexIndex, bestPeak.EndIndex, peakLen));
-                dw.WriteLine(string.Format(inv,
-                    @"# mp_cosine={0:F10} mp_rr={1:F10} mp_r2={2:F10} mp_rc={3:F10}",
-                    mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr));
-                dw.WriteLine("# ELUTION PROFILE (ColEffects)");
-                for (int ep = 0; ep < polish.ColEffects.Length; ep++)
+                using (var dw = new StreamWriter(saver.SafeName))
+                {
                     dw.WriteLine(string.Format(inv,
-                        "elution\t{0}\t{1:F10}", ep, polish.ColEffects[ep]));
-                dw.WriteLine("# FRAGMENT EFFECTS (RowEffects)");
-                for (int fe = 0; fe < polish.RowEffects.Length; fe++)
+                        @"# Median polish diagnostic for {0} scan={1}",
+                        candidate.ModifiedSequence, apexScanNumber));
                     dw.WriteLine(string.Format(inv,
-                        "frag_effect\t{0}\t{1:F10}", fe, polish.RowEffects[fe]));
-                dw.WriteLine(string.Format(inv,
-                    @"# grand_mean={0:F10}", polish.Overall));
-                dw.WriteLine(string.Format(inv,
-                    @"# n_iterations={0} converged={1}", polish.NIterations, polish.Converged));
-                dw.WriteLine("# INPUT MATRIX (frag_idx, scan_idx, value)");
-                for (int xi = 0; xi < peakXics.Count; xi++)
-                    for (int s = 0; s < peakXics[xi].Value.Length; s++)
-                        dw.WriteLine(string.Format(inv,
-                            "input\t{0}\t{1}\t{2:F10}", xi, s, peakXics[xi].Value[s]));
+                        @"# peak range: start={0} apex={1} end={2} len={3}",
+                        bestPeak.StartIndex, bestPeak.ApexIndex, bestPeak.EndIndex, peakLen));
+                    dw.WriteLine(string.Format(inv,
+                        @"# mp_cosine={0:F10} mp_rr={1:F10} mp_r2={2:F10} mp_rc={3:F10}",
+                        mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr));
+                    dw.WriteLine(@"# ELUTION PROFILE (ColEffects)");
+                    for (int ep = 0; ep < polish.ColEffects.Length; ep++)
+                        dw.WriteLine(new[]
+                        {
+                            @"elution",
+                            ep.ToString(inv),
+                            polish.ColEffects[ep].ToString(@"F10", inv)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    dw.WriteLine(@"# FRAGMENT EFFECTS (RowEffects)");
+                    for (int fe = 0; fe < polish.RowEffects.Length; fe++)
+                        dw.WriteLine(new[]
+                        {
+                            @"frag_effect",
+                            fe.ToString(inv),
+                            polish.RowEffects[fe].ToString(@"F10", inv)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    dw.WriteLine(string.Format(inv,
+                        @"# grand_mean={0:F10}", polish.Overall));
+                    dw.WriteLine(string.Format(inv,
+                        @"# n_iterations={0} converged={1}", polish.NIterations, polish.Converged));
+                    dw.WriteLine(@"# INPUT MATRIX (frag_idx, scan_idx, value)");
+                    for (int xi = 0; xi < peakXics.Count; xi++)
+                        for (int s = 0; s < peakXics[xi].Value.Length; s++)
+                            dw.WriteLine(new[]
+                            {
+                                @"input",
+                                xi.ToString(inv),
+                                s.ToString(inv),
+                                peakXics[xi].Value[s].ToString(@"F10", inv)
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                }
+                saver.Commit();
             }
-            LogAction(@"[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt");
+            Log.LogInfo(LogTag.BISECT, @"Wrote median polish diagnostic: cs_mp_diag.txt");
         }
 
         // ----- Median polish inputs (cross-impl bisection) -----
@@ -1135,6 +1249,9 @@ namespace pwiz.Osprey
         // writer open across calls amortizes the OS-level append cost
         // over millions of rows (peak_xics fires once per scoring call,
         // each row is small -- per-call open/close would dominate).
+        // Written directly at its final path, not through FileSaver: this
+        // is a log, and seeing however far the rescore loop got before a
+        // throw is more useful than an all-or-nothing file.
         private StreamWriter _mpInputsWriter;
         private readonly object _mpInputsLock = new object();
 
@@ -1167,12 +1284,12 @@ namespace pwiz.Osprey
                 int n = Math.Min(intensities.Length, peakRts.Length);
                 for (int scanIdx = 0; scanIdx < n; scanIdx++)
                 {
-                    sb.Append(entryId).Append('\t')
-                      .Append(apexScan).Append('\t')
-                      .Append(fragPos).Append('\t')
-                      .Append(fragIdx).Append('\t')
-                      .Append(scanIdx).Append('\t')
-                      .Append(Diagnostics.FormatF64Roundtrip(peakRts[scanIdx])).Append('\t')
+                    sb.Append(entryId).Append(TextUtil.SEPARATOR_TSV)
+                      .Append(apexScan).Append(TextUtil.SEPARATOR_TSV)
+                      .Append(fragPos).Append(TextUtil.SEPARATOR_TSV)
+                      .Append(fragIdx).Append(TextUtil.SEPARATOR_TSV)
+                      .Append(scanIdx).Append(TextUtil.SEPARATOR_TSV)
+                      .Append(Diagnostics.FormatF64Roundtrip(peakRts[scanIdx])).Append(TextUtil.SEPARATOR_TSV)
                       .Append(Diagnostics.FormatF64Roundtrip(intensities[scanIdx])).Append('\n');
                 }
             }
@@ -1182,11 +1299,11 @@ namespace pwiz.Osprey
                 if (_mpInputsWriter == null)
                 {
                     _mpInputsWriter = new StreamWriter(@"cs_stage6_mp_inputs.tsv");
-                    _mpInputsWriter.NewLine = LF;
+                    _mpInputsWriter.NewLine = TextUtil.LF;
                     _mpInputsWriter.WriteLine(
-                        "# entry_id\tapex_scan\tfrag_pos\tfrag_idx\tscan_idx\trt\tintensity");
-                    LogAction(
-                        @"[BISECT] OSPREY_DUMP_MP_INPUTS active: writing tukey_median_polish inputs to cs_stage6_mp_inputs.tsv");
+                        new[] { @"# entry_id", @"apex_scan", @"frag_pos", @"frag_idx", @"scan_idx", @"rt", @"intensity" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    Log.LogInfo(LogTag.BISECT, 
+                        @"OSPREY_DUMP_MP_INPUTS active: writing tukey_median_polish inputs to cs_stage6_mp_inputs.tsv");
                 }
                 _mpInputsWriter.Write(payload);
             }
@@ -1219,6 +1336,9 @@ namespace pwiz.Osprey
         // workflow handles the duplicates the predict-call site can
         // produce (same entry_id scored across multiple windows) with
         // post-hoc `sort -u`.
+        // Written directly at its final path, not through FileSaver: this is a
+        // log, and seeing however far the rescore loop got before a throw is
+        // more useful than an all-or-nothing file.
         private StreamWriter _predictRtWriter;
         private readonly object _predictRtLock = new object();
 
@@ -1228,11 +1348,11 @@ namespace pwiz.Osprey
             if (_predictRtWriter != null)
                 return;
             _predictRtWriter = new StreamWriter(@"cs_stage6_predict_rt.tsv");
-            _predictRtWriter.NewLine = LF;
+            _predictRtWriter.NewLine = TextUtil.LF;
             _predictRtWriter.WriteLine(
-                "# section\tfile_name_or_entry_id\tarray_or_apex\tidx_or_lib_rt\tvalue_or_expected_rt");
-            LogAction(
-                @"[BISECT] OSPREY_DUMP_PREDICT_RT active: writing predict() inputs/outputs to cs_stage6_predict_rt.tsv");
+                new[] { @"# section", @"file_name_or_entry_id", @"array_or_apex", @"idx_or_lib_rt", @"value_or_expected_rt" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+            Log.LogInfo(LogTag.BISECT, 
+                @"OSPREY_DUMP_PREDICT_RT active: writing predict() inputs/outputs to cs_stage6_predict_rt.tsv");
         }
 
         /// <summary>
@@ -1253,17 +1373,17 @@ namespace pwiz.Osprey
             var sb = new StringBuilder((libraryRts.Length + fittedValues.Length) * 64);
             for (int i = 0; i < libraryRts.Length; i++)
             {
-                sb.Append("cal_arrays\t").Append(fileName)
-                  .Append("\tlibrary_rts\t").Append(i.ToString(inv))
-                  .Append('\t').Append(Diagnostics.FormatF64Roundtrip(libraryRts[i]))
-                  .Append('\n');
+                sb.Append(@"cal_arrays").Append(TextUtil.SEPARATOR_TSV).Append(fileName)
+                  .Append(TextUtil.SEPARATOR_TSV).Append(@"library_rts").Append(TextUtil.SEPARATOR_TSV).Append(i.ToString(inv))
+                  .Append(TextUtil.SEPARATOR_TSV).Append(Diagnostics.FormatF64Roundtrip(libraryRts[i]))
+                  .Append(TextUtil.LF);
             }
             for (int i = 0; i < fittedValues.Length; i++)
             {
-                sb.Append("cal_arrays\t").Append(fileName)
-                  .Append("\tfitted_values\t").Append(i.ToString(inv))
-                  .Append('\t').Append(Diagnostics.FormatF64Roundtrip(fittedValues[i]))
-                  .Append('\n');
+                sb.Append(@"cal_arrays").Append(TextUtil.SEPARATOR_TSV).Append(fileName)
+                  .Append(TextUtil.SEPARATOR_TSV).Append(@"fitted_values").Append(TextUtil.SEPARATOR_TSV).Append(i.ToString(inv))
+                  .Append(TextUtil.SEPARATOR_TSV).Append(Diagnostics.FormatF64Roundtrip(fittedValues[i]))
+                  .Append(TextUtil.LF);
             }
             string payload = sb.ToString();
             lock (_predictRtLock)
@@ -1282,11 +1402,11 @@ namespace pwiz.Osprey
         {
             if (!DumpPredictRt)
                 return;
-            string line = string.Concat(
-                "predict_calls\t", entryId.ToString(CultureInfo.InvariantCulture),
-                "\t-\t", Diagnostics.FormatF64Roundtrip(libraryRt),
-                "\t", Diagnostics.FormatF64Roundtrip(expectedRt),
-                "\n");
+            string line = new[]
+            {
+                @"predict_calls", entryId.ToString(CultureInfo.InvariantCulture), @"-",
+                Diagnostics.FormatF64Roundtrip(libraryRt), Diagnostics.FormatF64Roundtrip(expectedRt)
+            }.ToDsvLine(TextUtil.SEPARATOR_TSV) + TextUtil.LF;
             lock (_predictRtLock)
             {
                 OpenPredictRtWriterLocked();
@@ -1300,6 +1420,9 @@ namespace pwiz.Osprey
         // Lazy-opened on first WriteCwtPathRow call. Threaded scoring
         // serializes only on the file write itself; the row-build
         // happens lock-free.
+        // Written directly at its final path, not through FileSaver: this is a
+        // log, and seeing however far scoring got before a throw is more
+        // useful than an all-or-nothing file.
         private StreamWriter _cwtPathWriter;
         private readonly object _cwtPathLock = new object();
 
@@ -1359,26 +1482,26 @@ namespace pwiz.Osprey
             }
             var inv = CultureInfo.InvariantCulture;
             string line = string.Concat(
-                fileName, '\t',
-                entryId.ToString(inv), '\t',
-                nCwtPeaks.ToString(inv), '\t',
-                nFinalPeaks.ToString(inv), '\t',
-                nScored.ToString(inv), '\t',
-                (scored ? "1" : "0"), '\t',
-                Diagnostics.FormatF64Roundtrip(sigma), '\t',
-                Diagnostics.FormatF64Roundtrip(consensusL1), '\t',
-                Diagnostics.FormatF64Roundtrip(consensusMaxAbs), '\t',
+                fileName, TextUtil.SEPARATOR_TSV,
+                entryId.ToString(inv), TextUtil.SEPARATOR_TSV,
+                nCwtPeaks.ToString(inv), TextUtil.SEPARATOR_TSV,
+                nFinalPeaks.ToString(inv), TextUtil.SEPARATOR_TSV,
+                nScored.ToString(inv), TextUtil.SEPARATOR_TSV,
+                (scored ? @"1" : @"0"), TextUtil.SEPARATOR_TSV,
+                Diagnostics.FormatF64Roundtrip(sigma), TextUtil.SEPARATOR_TSV,
+                Diagnostics.FormatF64Roundtrip(consensusL1), TextUtil.SEPARATOR_TSV,
+                Diagnostics.FormatF64Roundtrip(consensusMaxAbs), TextUtil.SEPARATOR_TSV,
                 consensusArgmax.ToString(inv), '\n');
             lock (_cwtPathLock)
             {
                 if (_cwtPathWriter == null)
                 {
                     _cwtPathWriter = new StreamWriter(@"cs_stage6_cwt_path.tsv");
-                    _cwtPathWriter.NewLine = LF;
+                    _cwtPathWriter.NewLine = TextUtil.LF;
                     _cwtPathWriter.WriteLine(
-                        "file_name\tentry_id\tn_cwt_peaks\tn_final_peaks\tn_scored\tscored\tsigma\tconsensus_l1\tconsensus_max_abs\tconsensus_argmax");
-                    LogAction(
-                        @"[BISECT] OSPREY_DUMP_CWT_PATH active: writing CWT path summary to cs_stage6_cwt_path.tsv");
+                        new[] { @"file_name", @"entry_id", @"n_cwt_peaks", @"n_final_peaks", @"n_scored", @"scored", @"sigma", @"consensus_l1", @"consensus_max_abs", @"consensus_argmax" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    Log.LogInfo(LogTag.BISECT, 
+                        @"OSPREY_DUMP_CWT_PATH active: writing CWT path summary to cs_stage6_cwt_path.tsv");
                 }
                 _cwtPathWriter.Write(line);
             }
@@ -1505,28 +1628,32 @@ namespace pwiz.Osprey
                 return a.Value.EntryId.CompareTo(b.Value.EntryId);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_protein_q	experiment_precursor_q	experiment_peptide_q");
-                foreach (var row in rows)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var e = row.Value;
-                    sw.Write(row.Key);
-                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.ModifiedSequence ?? string.Empty);
-                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"charge", @"modified_sequence", @"is_decoy", @"score", @"pep", @"run_precursor_q", @"run_peptide_q", @"experiment_protein_q", @"experiment_precursor_q", @"experiment_peptide_q" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var row in rows)
+                    {
+                        var e = row.Value;
+                        sw.Write(row.Key);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.EntryId.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.Charge.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.ModifiedSequence ?? string.Empty);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.IsDecoy.ToLowerText());
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
         }
 
         /// <summary>
@@ -1573,28 +1700,32 @@ namespace pwiz.Osprey
                 .ThenBy(r => r.Value.EntryId)
                 .ToList();
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	charge	modified_sequence	is_decoy	score	pep	run_precursor_q	run_peptide_q	experiment_protein_q	experiment_precursor_q	experiment_peptide_q");
-                foreach (var row in rows)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var e = row.Value;
-                    sw.Write(row.Key);
-                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.ModifiedSequence ?? string.Empty);
-                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"charge", @"modified_sequence", @"is_decoy", @"score", @"pep", @"run_precursor_q", @"run_peptide_q", @"experiment_protein_q", @"experiment_precursor_q", @"experiment_peptide_q" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var row in rows)
+                    {
+                        var e = row.Value;
+                        sw.Write(row.Key);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.EntryId.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.Charge.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.ModifiedSequence ?? string.Empty);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.IsDecoy.ToLowerText());
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 rescored dump: {0} ({1} rows)", path, rows.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 rescored dump: {0} ({1} rows)", path, rows.Count));
         }
 
         // ---- Stage 6 planning dumps ----
@@ -1613,24 +1744,28 @@ namespace pwiz.Osprey
         {
             const string path = @"cs_stage6_consensus.tsv";
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"is_decoy	modified_sequence	consensus_library_rt	median_peak_width	n_runs_detected	apex_library_rt_mad");
-                foreach (var c in consensus)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.Write(c.IsDecoy ? @"true" : @"false");
-                    sw.Write('\t'); sw.Write(c.ModifiedSequence ?? string.Empty);
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(c.ConsensusLibraryRt));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(c.MedianPeakWidth));
-                    sw.Write('\t'); sw.Write(c.NRunsDetected.ToString(CultureInfo.InvariantCulture));
-                    sw.Write('\t');
-                    if (c.ApexLibraryRtMad.HasValue)
-                        sw.Write(Diagnostics.FormatF64Roundtrip(c.ApexLibraryRtMad.Value));
-                    sw.WriteLine();
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"is_decoy", @"modified_sequence", @"consensus_library_rt", @"median_peak_width", @"n_runs_detected", @"apex_library_rt_mad" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var c in consensus)
+                    {
+                        sw.Write(c.IsDecoy.ToLowerText());
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(c.ModifiedSequence ?? string.Empty);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(c.ConsensusLibraryRt));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(c.MedianPeakWidth));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(c.NRunsDetected.ToString(CultureInfo.InvariantCulture));
+                        sw.Write(TextUtil.SEPARATOR_TSV);
+                        if (c.ApexLibraryRtMad.HasValue)
+                            sw.Write(Diagnostics.FormatF64Roundtrip(c.ApexLibraryRtMad.Value));
+                        sw.WriteLine();
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 consensus dump: {0} ({1} rows)", path, consensus.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 consensus dump: {0} ({1} rows)", path, consensus.Count));
         }
 
         /// <summary>
@@ -1674,20 +1809,24 @@ namespace pwiz.Osprey
                 return a.EntryId.CompareTo(b.EntryId);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	consensus_apex	consensus_start	consensus_end");
-                foreach (var r in rows)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.Write(r.FileName);
-                    sw.Write('\t'); sw.Write(r.EntryId.ToString(CultureInfo.InvariantCulture));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.Apex));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.Start));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.End));
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"consensus_apex", @"consensus_start", @"consensus_end" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var r in rows)
+                    {
+                        sw.Write(r.FileName);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(r.EntryId.ToString(CultureInfo.InvariantCulture));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.Apex));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.Start));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.End));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 multi-charge dump: {0} ({1} rows)", path, rows.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 multi-charge dump: {0} ({1} rows)", path, rows.Count));
         }
 
         /// <summary>
@@ -1705,21 +1844,25 @@ namespace pwiz.Osprey
             var fileNames = new List<string>(refinedCalibrations.Keys);
             fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	n_points	r_squared	residual_sd	mad");
-                foreach (var fileName in fileNames)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var stats = refinedCalibrations[fileName].Stats();
-                    sw.Write(fileName);
-                    sw.Write('\t'); sw.Write(stats.NPoints.ToString(CultureInfo.InvariantCulture));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(stats.RSquared));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(stats.ResidualSD));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stats.MAD));
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"file_name", @"n_points", @"r_squared", @"residual_sd", @"mad" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var fileName in fileNames)
+                    {
+                        var stats = refinedCalibrations[fileName].Stats();
+                        sw.Write(fileName);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(stats.NPoints.ToString(CultureInfo.InvariantCulture));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(stats.RSquared));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(stats.ResidualSD));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stats.MAD));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
         }
 
         /// <summary>
@@ -1766,78 +1909,139 @@ namespace pwiz.Osprey
                 return a.EntryId.CompareTo(b.EntryId);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	entry_id	action	apex_or_expected_rt	start_rt	end_rt	half_width	candidate_index");
-                foreach (var row in rows)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.Write(row.FileName);
-                    sw.Write('\t'); sw.Write(row.EntryId.ToString(CultureInfo.InvariantCulture));
-                    sw.Write('\t');
-                    var useCwt = row.Action as ReconcileAction.UseCwtPeak;
-                    var forced = row.Action as ReconcileAction.ForcedIntegration;
-                    if (useCwt != null)
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"action", @"apex_or_expected_rt", @"start_rt", @"end_rt", @"half_width", @"candidate_index" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var row in rows)
                     {
-                        sw.Write(@"use_cwt_peak");
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.ApexRt));
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.StartRt));
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.EndRt));
-                        sw.Write('\t'); // half_width empty
-                        sw.Write('\t'); sw.WriteLine(useCwt.CandidateIndex.ToString(CultureInfo.InvariantCulture));
-                    }
-                    else if (forced != null)
-                    {
-                        sw.Write(@"forced_integration");
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(forced.ExpectedRt));
-                        sw.Write('\t'); // start_rt empty
-                        sw.Write('\t'); // end_rt empty
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(forced.HalfWidth));
-                        sw.WriteLine('\t'); // candidate_index empty
-                    }
-                    else
-                    {
-                        // Defensive: planner shouldn't return Keep, but emit
-                        // a row anyway so a future regression is visible.
-                        sw.Write(@"keep");
-                        sw.WriteLine("\t\t\t\t\t");
+                        sw.Write(row.FileName);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(row.EntryId.ToString(CultureInfo.InvariantCulture));
+                        sw.Write(TextUtil.SEPARATOR_TSV);
+                        var useCwt = row.Action as ReconcileAction.UseCwtPeak;
+                        var forced = row.Action as ReconcileAction.ForcedIntegration;
+                        if (useCwt != null)
+                        {
+                            sw.Write(@"use_cwt_peak");
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.ApexRt));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.StartRt));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.EndRt));
+                            sw.Write(TextUtil.SEPARATOR_TSV); // half_width empty
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(useCwt.CandidateIndex.ToString(CultureInfo.InvariantCulture));
+                        }
+                        else if (forced != null)
+                        {
+                            sw.Write(@"forced_integration");
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(forced.ExpectedRt));
+                            sw.Write(TextUtil.SEPARATOR_TSV); // start_rt empty
+                            sw.Write(TextUtil.SEPARATOR_TSV); // end_rt empty
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(forced.HalfWidth));
+                            sw.WriteLine(TextUtil.SEPARATOR_TSV); // candidate_index empty
+                        }
+                        else
+                        {
+                            // Defensive: planner shouldn't return Keep, but emit
+                            // a row anyway so a future regression is visible.
+                            sw.WriteLine(new[]
+                            {
+                                @"keep", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        }
                     }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 reconciliation dump: {0} ({1} rows)",
+            Log.LogInfo(string.Format(@"Wrote Stage 6 reconciliation dump: {0} ({1} rows)",
                 path, rows.Count));
         }
+
+        // ----- Stage 6 calibration arrays (cross-impl bisection) -----
+
+        // Held open across calls, like _mpInputsWriter/_cwtPathWriter above: one call per
+        // rescored file, so re-reading and rewriting the whole accumulated file on every
+        // call (the previous shape) was O(files^2) total I/O - real cost at the 446-file
+        // production scale this task type runs at, not bounded to a small bisection run.
+        // Flushed in CloseStage6CalibrationDump, which CloseAll (below) calls, so a
+        // normal Environment.Exit still flushes its buffered tail. Written directly
+        // at its final path, not through FileSaver: this is a log, and seeing however
+        // far the rescore loop got before a throw is more useful than an
+        // all-or-nothing file.
+        private StreamWriter _stage6CalibrationWriter;
+        private readonly object _stage6CalibrationLock = new object();
 
         /// <summary>
         /// Append the loaded calibration arrays for one file to
         /// cs_stage6_calibration.tsv. Mirrors Rust dump_stage6_calibration.
-        /// Header is written on the first call (file does not yet exist),
-        /// subsequent calls append. Each call writes one row per
-        /// (libraryRts[i], fittedValues[i]) pair. Used for cross-impl
-        /// JSON-decode bisection — see DumpCalibration docs.
+        /// Each call writes one row per (libraryRts[i], fittedValues[i]) pair.
+        /// Used for cross-impl JSON-decode bisection — see DumpCalibration docs.
         /// </summary>
         public void WriteStage6CalibrationDump(
             string fileName, double[] libraryRts, double[] fittedValues)
         {
-            const string path = @"cs_stage6_calibration.tsv";
-            bool headerNeeded = !File.Exists(path);
-            using (var sw = new StreamWriter(path, append: true))
+            int n = Math.Min(libraryRts.Length, fittedValues.Length);
+            lock (_stage6CalibrationLock)
             {
-                sw.NewLine = "\n";
-                if (headerNeeded)
-                    sw.WriteLine(@"file_name	idx	library_rt	fitted_value");
-                int n = Math.Min(libraryRts.Length, fittedValues.Length);
+                if (_stage6CalibrationWriter == null)
+                {
+                    _stage6CalibrationWriter = new StreamWriter(@"cs_stage6_calibration.tsv");
+                    _stage6CalibrationWriter.NewLine = TextUtil.LF;
+                    _stage6CalibrationWriter.WriteLine(new[] { @"file_name", @"idx", @"library_rt", @"fitted_value" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                }
                 for (int i = 0; i < n; i++)
                 {
-                    sw.Write(fileName);
-                    sw.Write('\t'); sw.Write(i.ToString(CultureInfo.InvariantCulture));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(libraryRts[i]));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(fittedValues[i]));
+                    _stage6CalibrationWriter.Write(fileName);
+                    _stage6CalibrationWriter.Write(TextUtil.SEPARATOR_TSV);
+                    _stage6CalibrationWriter.Write(i.ToString(CultureInfo.InvariantCulture));
+                    _stage6CalibrationWriter.Write(TextUtil.SEPARATOR_TSV);
+                    _stage6CalibrationWriter.Write(Diagnostics.FormatF64Roundtrip(libraryRts[i]));
+                    _stage6CalibrationWriter.Write(TextUtil.SEPARATOR_TSV);
+                    _stage6CalibrationWriter.WriteLine(Diagnostics.FormatF64Roundtrip(fittedValues[i]));
                 }
             }
-            LogAction(string.Format(
-                @"Appended {0} calibration rows for {1} to {2}",
-                Math.Min(libraryRts.Length, fittedValues.Length), fileName, path));
+            Log.LogInfo(string.Format(
+                @"Appended {0} calibration rows for {1} to cs_stage6_calibration.tsv", n, fileName));
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_calibration.tsv writer. Safe to call when the
+        /// writer was never opened (no-op), and safe to call more than once.
+        /// </summary>
+        public void CloseStage6CalibrationDump()
+        {
+            lock (_stage6CalibrationLock)
+            {
+                if (_stage6CalibrationWriter == null)
+                    return;
+                _stage6CalibrationWriter.Flush();
+                _stage6CalibrationWriter.Dispose();
+                _stage6CalibrationWriter = null;
+            }
+        }
+
+        /// <summary>
+        /// Close every held-open dump writer. Registered against
+        /// <see cref="AppDomain.ProcessExit"/> in <c>OspreyDiagnostics.Initialize</c> so a
+        /// mid-run <c>Environment.Exit</c> (there are two dozen call sites, mostly the
+        /// <c>*_ONLY</c> bisection early-exits) still flushes whatever these writers
+        /// accumulated. Each writer is opened directly at its final path, so the rows
+        /// written so far are already there regardless of how the process ends; this
+        /// only covers the buffered tail a <see cref="StreamWriter"/> has not yet handed
+        /// to the OS. Each Close method is idempotent, so calling this after a task's own
+        /// explicit close (mode 3's rescore loop already calls
+        /// CloseMpInputsDump/CloseCwtPathDump at its natural end) is a safe no-op for
+        /// those two.
+        /// </summary>
+        public void CloseAll()
+        {
+            CloseMpInputsDump();
+            CloseCwtPathDump();
+            CloseStage6CalibrationDump();
+            // ClosePredictRtDump is deliberately NOT called here: neither WritePredictRtArrays
+            // nor WritePredictRtCall has a live caller (disabled as a perf hotspot; see the
+            // commented-out call in PerFileRescoreTask.cs), so _predictRtWriter is never
+            // opened and this would be a no-op today regardless.
         }
 
         /// <summary>
@@ -1874,21 +2078,25 @@ namespace pwiz.Osprey
                 return a.LibraryRt.CompareTo(b.LibraryRt);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	is_decoy	modified_sequence	apex_rt	library_rt	weight");
-                foreach (var r in sorted)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.Write(r.FileName);
-                    sw.Write('\t'); sw.Write(r.IsDecoy ? @"true" : @"false");
-                    sw.Write('\t'); sw.Write(r.ModifiedSequence ?? string.Empty);
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.ApexRt));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.LibraryRt));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.Weight));
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"file_name", @"is_decoy", @"modified_sequence", @"apex_rt", @"library_rt", @"weight" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var r in sorted)
+                    {
+                        sw.Write(r.FileName);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(r.IsDecoy.ToLowerText());
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(r.ModifiedSequence ?? string.Empty);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.ApexRt));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.LibraryRt));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.Weight));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 6 inverse-predict dump: {0} ({1} rows)",
                 path, sorted.Count));
         }
@@ -1929,24 +2137,28 @@ namespace pwiz.Osprey
                 return string.CompareOrdinal(a.Key, b.Key);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"is_decoy	modified_sequence	best_qvalue	score	protein_qvalue");
-                foreach (var row in rows)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var ps = row.Value;
-                    double q;
-                    if (!peptideQvalues.TryGetValue(row.Key, out q))
-                        q = 1.0;
-                    sw.Write(ps.IsDecoy ? @"true" : @"false");
-                    sw.Write('\t'); sw.Write(row.Key ?? string.Empty);
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(ps.BestQvalue));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(ps.Score));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(q));
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"is_decoy", @"modified_sequence", @"best_qvalue", @"score", @"protein_qvalue" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var row in rows)
+                    {
+                        var ps = row.Value;
+                        double q;
+                        if (!peptideQvalues.TryGetValue(row.Key, out q))
+                            q = 1.0;
+                        sw.Write(ps.IsDecoy.ToLowerText());
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(row.Key ?? string.Empty);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(ps.BestQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(ps.Score));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(q));
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 6 first-pass protein FDR dump: {0} ({1} rows)",
                 path, rows.Count));
         }
@@ -2026,21 +2238,25 @@ namespace pwiz.Osprey
                 return string.CompareOrdinal(a.Accessions, b.Accessions);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"accessions	n_unique	n_shared	best_peptide_score	group_qvalue	is_target_winner");
-                foreach (var r in rows)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.Write(r.Accessions);
-                    sw.Write('\t'); sw.Write(r.NUnique.ToString(CultureInfo.InvariantCulture));
-                    sw.Write('\t'); sw.Write(r.NShared.ToString(CultureInfo.InvariantCulture));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.BestPeptideScore));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(r.GroupQvalue));
-                    sw.Write('\t'); sw.WriteLine(r.IsTargetWinner ? @"true" : @"false");
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"accessions", @"n_unique", @"n_shared", @"best_peptide_score", @"group_qvalue", @"is_target_winner" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var r in rows)
+                    {
+                        sw.Write(r.Accessions);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(r.NUnique.ToString(CultureInfo.InvariantCulture));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(r.NShared.ToString(CultureInfo.InvariantCulture));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.BestPeptideScore));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.GroupQvalue));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(r.IsTargetWinner.ToLowerText());
+                    }
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 7 second-pass protein FDR dump: {0} ({1} rows)",
                 path, rows.Count));
         }
@@ -2073,29 +2289,33 @@ namespace pwiz.Osprey
             fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
             int totalRows = 0;
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"file_name	idx	library_rt	fitted_value	abs_residual");
-                foreach (var fileName in fileNames)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var cal = refinedCalibrations[fileName];
-                    var libRts = cal.LibraryRts;
-                    var fitted = cal.FittedValues;
-                    var residuals = cal.AbsResiduals;
-                    int n = Math.Min(libRts.Length, Math.Min(fitted.Length, residuals.Length));
-                    for (int i = 0; i < n; i++)
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"file_name", @"idx", @"library_rt", @"fitted_value", @"abs_residual" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var fileName in fileNames)
                     {
-                        sw.Write(fileName);
-                        sw.Write('\t'); sw.Write(i.ToString(CultureInfo.InvariantCulture));
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(libRts[i]));
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(fitted[i]));
-                        sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(residuals[i]));
+                        var cal = refinedCalibrations[fileName];
+                        var libRts = cal.LibraryRts;
+                        var fitted = cal.FittedValues;
+                        var residuals = cal.AbsResiduals;
+                        int n = Math.Min(libRts.Length, Math.Min(fitted.Length, residuals.Length));
+                        for (int i = 0; i < n; i++)
+                        {
+                            sw.Write(fileName);
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(i.ToString(CultureInfo.InvariantCulture));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(libRts[i]));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(fitted[i]));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(residuals[i]));
+                        }
+                        totalRows += n;
                     }
-                    totalRows += n;
                 }
+                saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 6 LOESS fit dump: {0} ({1} rows across {2} files)",
                 path, totalRows, fileNames.Count));
         }
@@ -2113,13 +2333,17 @@ namespace pwiz.Osprey
             sorted.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
             // Force LF (not File.WriteAllLines' OS newline) so this cross-impl
             // bisection artifact stays byte-stable across platforms.
-            using (var w = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                w.NewLine = LF;
-                foreach (var p in sorted)
-                    w.WriteLine(p);
+                using (var w = new StreamWriter(saver.SafeName))
+                {
+                    w.NewLine = TextUtil.LF;
+                    foreach (var p in sorted)
+                        w.WriteLine(p);
+                }
+                saver.Commit();
             }
-            LogAction(string.Format(@"[DIAG] Wrote {0} ({1} entries)", path, sorted.Count));
+            Log.LogInfo(LogTag.DIAG, string.Format(@"Wrote {0} ({1} entries)", path, sorted.Count));
         }
 
     }

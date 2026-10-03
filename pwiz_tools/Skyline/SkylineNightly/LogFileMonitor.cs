@@ -272,7 +272,9 @@ namespace SkylineNightly
 
                     try
                     {
-                        using (var dataTarget = DataTarget.AttachToProcess(process.Id, 5000, AttachFlag.Passive))
+                        // Passive/non-invasive attach. The API changed between the legacy net40 ClrMD
+                        // (AttachFlag) and the modern net8 package (a suspend bool); Passive == don't suspend.
+                        using (var dataTarget = DataTarget.AttachToProcess(process.Id, false))
                         {
                             var runtime = dataTarget.ClrVersions[0].CreateRuntime();
                             foreach (var thread in runtime.Threads)
@@ -285,6 +287,9 @@ namespace SkylineNightly
 
                                 foreach (var frame in thread.EnumerateStackTrace())
                                 {
+                                    // ClrMD annotates Type non-null, but this walks a process that is
+                                    // already wedged; an NRE here costs the stack the nightly needs
+                                    // ReSharper disable once ConstantConditionalAccessQualifier
                                     message.AppendFormat("  {0}.{1}", frame.Method?.Type?.Name ?? "[Unknown]",
                                         frame.Method?.Name ?? "[Unknown]");
                                     message.AppendLine();

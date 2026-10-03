@@ -661,7 +661,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 try
                 {
                     using var stream = File.OpenRead(parquetPath);
-                    using var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                    // The reader holds nothing of its own over a caller's stream, so it is not disposed
+                    var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
                     return (long?) reader.RowGroups.Sum(rg => rg.RowCount);
                 }
                 catch

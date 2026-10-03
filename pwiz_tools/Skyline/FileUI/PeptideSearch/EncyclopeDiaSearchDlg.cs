@@ -160,13 +160,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public double? MinMz
         {
-            get => minMzCombo.Text.IsNullOrEmpty() ? null : (double?) Convert.ToDouble(minMzCombo.Text);
+            get => minMzCombo.Text.IsNullOrEmpty() ? null : Convert.ToDouble(minMzCombo.Text);
             set => minMzCombo.Text = value?.ToString(LocalizationHelper.CurrentCulture) ?? string.Empty;
         }
 
         public double? MaxMz
         {
-            get => maxMzCombo.Text.IsNullOrEmpty() ? null : (double?) Convert.ToDouble(maxMzCombo.Text);
+            get => maxMzCombo.Text.IsNullOrEmpty() ? null : Convert.ToDouble(maxMzCombo.Text);
             set => maxMzCombo.Text = value?.ToString(LocalizationHelper.CurrentCulture) ?? string.Empty;
         }
 
@@ -634,7 +634,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 status = status.NextSegment();
 
                 // hash Koina CSV input to generate blib filename (so if blib file already exists there's no need to go to Koina)
-                var hasher = new BlockHash(new MD5CryptoServiceProvider());
+                var hasher = new BlockHash(MD5.Create());
                 var hashBytes = hasher.HashFile(koinaCsvFilepath);
                 var hashString = string.Join("", hashBytes.Select(b => b.ToString(@"X")));
                 string modelSuffix = Properties.Settings.Default.KoinaIntensityModel + @"-" +
@@ -742,7 +742,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!filesNotAlreadyDownloaded.Any())
                 return true;
 
-            Invoke(new Action(() =>
+            Invoke(() =>
             {
                 try
                 {
@@ -754,7 +754,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     MessageDlg.ShowWithException(Parent, x.Message, x);
                 }
-            }));
+            });
 
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }

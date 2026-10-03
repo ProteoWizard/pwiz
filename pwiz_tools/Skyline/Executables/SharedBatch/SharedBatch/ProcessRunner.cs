@@ -66,6 +66,10 @@ namespace SharedBatch
                 ChildProcessTracker.AddProcess(cmd);
                 cmd.BeginOutputReadLine();
                 cmd.BeginErrorReadLine();
+                // stdin is redirected but never written to; close it so the child gets EOF and doesn't
+                // block waiting for input. net8 SkylineCmd.exe reads stdin after processing its args, so
+                // an open stdin pipe leaves it running forever (cmd.HasExited never becomes true).
+                cmd.StandardInput.Close();
             }
             catch (Exception e)
             {

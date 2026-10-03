@@ -243,11 +243,8 @@ namespace SkylineTester
             this.label29 = new System.Windows.Forms.Label();
             this.groupBox20 = new System.Windows.Forms.GroupBox();
             this.nightlyRunIndefinitely = new System.Windows.Forms.CheckBox();
-            this.nightlyRandomize = new System.Windows.Forms.CheckBox();
-            this.nightlyRepeat = new System.Windows.Forms.ComboBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.nightlyRunPerfTests = new System.Windows.Forms.CheckBox();
+            this.nightlyRunType = new System.Windows.Forms.ComboBox();
+            this.labelNightlyRunType = new System.Windows.Forms.Label();
             this.buttonNow = new System.Windows.Forms.Button();
             this.nightlyStartTime = new System.Windows.Forms.DateTimePicker();
             this.nightlyBuildType = new System.Windows.Forms.DomainUpDown();
@@ -2527,11 +2524,8 @@ namespace SkylineTester
             // groupBox20
             // 
             this.groupBox20.Controls.Add(this.nightlyRunIndefinitely);
-            this.groupBox20.Controls.Add(this.nightlyRandomize);
-            this.groupBox20.Controls.Add(this.nightlyRepeat);
-            this.groupBox20.Controls.Add(this.label8);
-            this.groupBox20.Controls.Add(this.label11);
-            this.groupBox20.Controls.Add(this.nightlyRunPerfTests);
+            this.groupBox20.Controls.Add(this.nightlyRunType);
+            this.groupBox20.Controls.Add(this.labelNightlyRunType);
             this.groupBox20.Controls.Add(this.buttonNow);
             this.groupBox20.Controls.Add(this.nightlyStartTime);
             this.groupBox20.Controls.Add(this.nightlyBuildType);
@@ -2552,70 +2546,39 @@ namespace SkylineTester
             // nightlyRunIndefinitely
             // 
             this.nightlyRunIndefinitely.AutoSize = true;
-            this.nightlyRunIndefinitely.Location = new System.Drawing.Point(10, 199);
+            this.nightlyRunIndefinitely.Location = new System.Drawing.Point(10, 121);
             this.nightlyRunIndefinitely.Name = "nightlyRunIndefinitely";
             this.nightlyRunIndefinitely.Size = new System.Drawing.Size(98, 17);
             this.nightlyRunIndefinitely.TabIndex = 39;
             this.nightlyRunIndefinitely.Text = "Run indefinitely";
             this.nightlyRunIndefinitely.UseVisualStyleBackColor = true;
             // 
-            // nightlyRandomize
+            // nightlyRunType
             // 
-            this.nightlyRandomize.AutoSize = true;
-            this.nightlyRandomize.Location = new System.Drawing.Point(10, 176);
-            this.nightlyRandomize.Name = "nightlyRandomize";
-            this.nightlyRandomize.Size = new System.Drawing.Size(126, 17);
-            this.nightlyRandomize.TabIndex = 38;
-            this.nightlyRandomize.Text = "Randomize test order";
-            this.nightlyRandomize.UseVisualStyleBackColor = true;
+            this.nightlyRunType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.nightlyRunType.FormattingEnabled = true;
+            this.nightlyRunType.Items.AddRange(new object[] {
+            "Standard",
+            "Leak checking",
+            "Perf",
+            "Standard with leak checking"});
+            this.nightlyRunType.Location = new System.Drawing.Point(85, 94);
+            this.nightlyRunType.Name = "nightlyRunType";
+            this.nightlyRunType.Size = new System.Drawing.Size(147, 21);
+            this.nightlyRunType.TabIndex = 33;
+            this.toolTip1.SetToolTip(this.nightlyRunType, "Standard: pass 0, then all tests in each language until stopped. Leak checking: pa" +
+        "ss 1 over every test until stopped. Perf: perf tests, then all tests in each lan" +
+        "guage, then perf tests in further languages. Standard with leak checking: pass 0" +
+        ", pass 1, then pass 2 (the pre-split nightly).");
             // 
-            // nightlyRepeat
+            // labelNightlyRunType
             // 
-            this.nightlyRepeat.FormattingEnabled = true;
-            this.nightlyRepeat.Items.AddRange(new object[] {
-            "1",
-            "2",
-            "5",
-            "10",
-            "20",
-            "50",
-            "100"});
-            this.nightlyRepeat.Location = new System.Drawing.Point(87, 145);
-            this.nightlyRepeat.Name = "nightlyRepeat";
-            this.nightlyRepeat.Size = new System.Drawing.Size(52, 21);
-            this.nightlyRepeat.TabIndex = 36;
-            this.toolTip1.SetToolTip(this.nightlyRepeat, "Stress each test by running it multiple times before proceeding to next test.  Pe" +
-        "rf tests only run once.");
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(145, 148);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(77, 13);
-            this.label8.TabIndex = 37;
-            this.label8.Text = "time(s) in a row";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(7, 148);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(74, 13);
-            this.label11.TabIndex = 35;
-            this.label11.Text = "Run each test";
-            // 
-            // nightlyRunPerfTests
-            // 
-            this.nightlyRunPerfTests.AutoSize = true;
-            this.nightlyRunPerfTests.Location = new System.Drawing.Point(9, 95);
-            this.nightlyRunPerfTests.Name = "nightlyRunPerfTests";
-            this.nightlyRunPerfTests.Size = new System.Drawing.Size(169, 17);
-            this.nightlyRunPerfTests.TabIndex = 33;
-            this.nightlyRunPerfTests.Text = "Include perf tests in nightly run";
-            this.toolTip1.SetToolTip(this.nightlyRunPerfTests, "Perf tests run only once per language, and only in pass 2 (no leak detection or i" +
-        "nitial novendor check)");
-            this.nightlyRunPerfTests.UseVisualStyleBackColor = true;
+            this.labelNightlyRunType.AutoSize = true;
+            this.labelNightlyRunType.Location = new System.Drawing.Point(6, 97);
+            this.labelNightlyRunType.Name = "labelNightlyRunType";
+            this.labelNightlyRunType.Size = new System.Drawing.Size(48, 13);
+            this.labelNightlyRunType.TabIndex = 40;
+            this.labelNightlyRunType.Text = "Run type";
             // 
             // buttonNow
             // 
@@ -2664,9 +2627,9 @@ namespace SkylineTester
             this.label35.AutoSize = true;
             this.label35.Location = new System.Drawing.Point(6, 71);
             this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(31, 13);
+            this.label35.Size = new System.Drawing.Size(54, 13);
             this.label35.TabIndex = 29;
-            this.label35.Text = "Type";
+            this.label35.Text = "Build type";
             // 
             // nightlyDuration
             // 
@@ -3512,7 +3475,8 @@ namespace SkylineTester
         private TabPage tabNightly;
         private TableLayoutPanel nightlyTableLayout;
         private Panel panel3;
-        private CheckBox nightlyRunPerfTests;
+        private ComboBox nightlyRunType;
+        private Label labelNightlyRunType;
         private GroupBox groupBox22;
         private RadioButton nightlyBranch;
         private RadioButton nightlyBuildTrunk;
@@ -3606,10 +3570,6 @@ namespace SkylineTester
         private Label label3;
         private CheckBox randomize;
         private ComboBox repeat;
-        private CheckBox nightlyRandomize;
-        private ComboBox nightlyRepeat;
-        private Label label8;
-        private Label label11;
         private CheckBox testsRunSmallMoleculeVersions;
         private CheckBox qualityRunSmallMoleculeVersions;
         private ComboBox comboBoxRunStatsCompare;

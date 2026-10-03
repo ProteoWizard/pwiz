@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  * 
@@ -105,10 +106,13 @@ namespace pwiz.SkylineTestData.Results
             string dirPath = Path.GetDirectoryName(resultsPath) ?? "";
             string docPath;
             SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
-            // Give this two chances to succeed. It can succeed tens of thousands of times
-            // in a row, but it still occasionally fails on nightly tests. Hopefully two
-            // tries will make this extremely unlikely.
-            for (int tries = 0; tries < 2; tries++)
+            // Retries are kept as a guard against the one outcome that proves nothing - the
+            // import finishing before the cancel could take effect - but neither half of the
+            // race that used to produce it remains: the cancel is issued from the loader's own
+            // progress report below, and SingleFileLoadMonitor now re-checks for cancellation
+            // as soon as the document changes rather than at most once every 10 ms.
+            const int maxTries = 5;
+            for (int tries = 0; tries < maxTries; tries++)
             {
                 using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
                 {
@@ -121,37 +125,53 @@ namespace pwiz.SkylineTestData.Results
                     string name = Path.GetFileNameWithoutExtension(resultsPath);
                     var listChromatograms = new List<ChromatogramSet> { new ChromatogramSet(name, new[] { MsDataFileUri.Parse(resultsPath) }) };
                     var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+                    // The cancel is issued from inside the loader's own progress report, on the
+                    // loader's thread, rather than from here after polling for the cache file.
+                    // Polling cannot win: measured on this import, the temp cache file exists
+                    // before the loader's first progress report, and the import then reports
+                    // progress 51 more times and finishes within a few milliseconds - well inside
+                    // one 10 ms poll. Cold, the JIT slowed the loader enough for the poll to win;
+                    // warm (test #1065 of pass 0 in the nightly, or after a handful of mzML imports
+                    // in one process) the import finished first on every one of five tries, and
+                    // the cancel's compare-and-swap failed against the already-loaded document.
+                    // Cancelling from a progress callback lands while the loader is paused inside
+                    // that report, so issuing it cannot lose. Observing it could still: the
+                    // loader's cancel check was throttled to once per 10 ms, and fully warm the
+                    // whole import ran inside that window and committed the final .skyd anyway,
+                    // once in ~90 iterations alone. Hence the document-change re-check in
+                    // SingleFileLoadMonitor, which this test now also covers.
+                    var canceler = new CancelFromProgressMonitor(docContainer, doc, docResults, dirPath);
+                    docContainer.ProgressMonitor = canceler;
                     // Start cache load, but don't wait for completion
                     Assert.IsTrue(docContainer.SetDocument(docResults, doc));
 
-                    // Wait up to 10 second for the cache to start being written
-                    bool cacheFound = false;
-                    for (int i = 0; i < 1000; i++)
-                    {
-                        if (Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) != -1)
-                        {
-                            cacheFound = true;
-                            break;
-                        }
+                    // Wait up to 30 seconds for the loader to report progress with its cache file on disk.
+                    // This wait now also covers opening the data file, which for a vendor format on a
+                    // busy nightly agent can take longer than the 10 seconds the old temp-file poll had.
+                    for (int i = 0; i < 3000 && canceler.Outcome == CancelOutcome.pending; i++)
                         Thread.Sleep(10);
-                    }
-                    if (!cacheFound)
+                    if (canceler.Outcome == CancelOutcome.pending)
                     {
-                        Assert.Fail(TextUtil.LineSeparate("Failed to create cache file. Found files:", TextUtil.LineSeparate(Directory.GetFiles(dirPath))));
+                        AssertEx.Fail(TextUtil.LineSeparate("Loader never reported progress with a cache file present. Found files:",
+                            TextUtil.LineSeparate(Directory.GetFiles(dirPath)),
+                            docContainer.DescribeLoadState(docContainer.LastProgress)));
                     }
-
-                    // Cancel by reverting to the original document
-                    Assert.IsTrue(docContainer.SetDocument(doc, docResults));
+                    if (canceler.Outcome == CancelOutcome.import_finished_first)
+                    {
+                        // Should now be unreachable - the callback runs before the loader can finish
+                        // its report - but if it ever is, it means the same thing the finished-cache
+                        // check below retries on: nothing about cancellation was exercised.
+                        if (tries < maxTries - 1)
+                            continue;   // Try again - the top of the loop clears the cache files
+                        AssertEx.Fail(TextUtil.LineSeparate(string.Format("Import finished before the cancel could be issued on all {0} tries.", maxTries),
+                            docContainer.DescribeLoadState(docContainer.LastProgress)));
+                    }
                     // Wait up to 10 seconds for cancel to occur
-                    bool cancelOccurred = false;
-                    for (int i = 0; i < 1000; i++)
+                    bool cancelOccurred = IsCancelReported(docContainer);
+                    for (int i = 0; i < 1000 && !cancelOccurred; i++)
                     {
-                        if (docContainer.LastProgress != null && docContainer.LastProgress.IsCanceled)
-                        {
-                            cancelOccurred = true;
-                            break;
-                        }
                         Thread.Sleep(10);
+                        cancelOccurred = IsCancelReported(docContainer);
                     }
                     // Wait up to 20 seconds for the cache to be removed
                     bool cacheRemoved = false;
@@ -164,26 +184,97 @@ namespace pwiz.SkylineTestData.Results
                         }
                         Thread.Sleep(100);
                     }
+                    // The cancelled status can land after the 10 second wait above gave up but
+                    // before the cache wait returned, so look once more before judging it.
+                    cancelOccurred = cancelOccurred || IsCancelReported(docContainer);
+                    var loadState = docContainer.DescribeLoadState(docContainer.LastProgress);
                     if (!cacheRemoved)
                     {
-                        if (tries == 0 && File.Exists(Path.ChangeExtension(docPath, ChromatogramCache.EXT)))
+                        if (tries < maxTries - 1 && File.Exists(Path.ChangeExtension(docPath, ChromatogramCache.EXT)))
                         {
-                            // Allow a single failure where we end up with the final cache instead of a cancelation
-                            FileEx.SafeDelete(docPath);
-                            continue;   // Try again
+                            // Ending up with the final cache means the import finished before the
+                            // cancel could take effect, so the cancellation this test exists to
+                            // check never actually happened - the attempt proves nothing either
+                            // way and is not a failure. Retrying that was already the intent here,
+                            // but allowing it only on the first attempt is not enough where the
+                            // import consistently wins the race: importing pre-converted mzML
+                            // (pass 0) is fast enough that both attempts finished first.
+                            continue;   // Try again - the top of the loop clears the cache files
                         }
                         if (!cancelOccurred)
-                        {
-                            Assert.Fail("Attempt to cancel results load failed on try {0}. {1}", tries + 1,
-                                docContainer.LastProgress != null && docContainer.LastProgress.ErrorException != null
-                                    ? docContainer.LastProgress.ErrorException.Message : string.Empty);
-                        }
-                        Assert.Fail(TextUtil.LineSeparate("Failed to remove cache file. Found files:", TextUtil.LineSeparate(Directory.GetFiles(dirPath))));
+                            AssertEx.Fail(TextUtil.LineSeparate(string.Format("Attempt to cancel results load failed on try {0}.", tries + 1), loadState));
+                        AssertEx.Fail(TextUtil.LineSeparate("Failed to remove cache file. Found files:", TextUtil.LineSeparate(Directory.GetFiles(dirPath)), loadState));
                     }
+                    // The cache being gone is necessary but not sufficient: this is the assertion
+                    // the test exists to make, so it is checked on the success path too rather
+                    // than only when cleanup failed.
+                    AssertEx.IsTrue(cancelOccurred, TextUtil.LineSeparate("Cache file was removed but the loader never reported a cancelled status.", loadState));
                     break;  // If we make it here then, successful
                 }
             }
             // Cache file has been removed
+        }
+
+        private static bool IsCancelReported(ResultsTestDocumentContainer docContainer)
+        {
+            // Snapshot: loader threads write LastProgress, and a completing status sets it null.
+            var progress = docContainer.LastProgress;
+            return progress != null && progress.IsCanceled;
+        }
+
+        private enum CancelOutcome { pending, issued, import_finished_first }
+
+        /// <summary>
+        /// Cancels a results import from inside the loader's own progress report, by reverting
+        /// the container to the original document while the loader is paused in that report.
+        /// Fires once, on the first running-state report made with a cache or temp file on
+        /// disk - the 50% report the data provider makes once the cache stream is open and
+        /// before any chromatogram is written - so the loader has temp files to clean up.
+        /// The container ignores the return value and IsCanceled; reverting the document is
+        /// the only effect this monitor has.
+        /// </summary>
+        private class CancelFromProgressMonitor : IProgressMonitor
+        {
+            private readonly ResultsTestDocumentContainer _container;
+            private readonly SrmDocument _docOriginal;
+            private readonly SrmDocument _docLoading;
+            private readonly string _dirPath;
+            // Progress reports arrive on the loader's thread and, in later phases, on several
+            // worker threads at once; the outcome is read from the test thread.
+            private int _outcome;
+            private int _claimed;
+
+            public CancelFromProgressMonitor(ResultsTestDocumentContainer container, SrmDocument docOriginal,
+                SrmDocument docLoading, string dirPath)
+            {
+                _container = container;
+                _docOriginal = docOriginal;
+                _docLoading = docLoading;
+                _dirPath = dirPath;
+            }
+
+            public CancelOutcome Outcome { get { return (CancelOutcome) Volatile.Read(ref _outcome); } }
+
+            public bool IsCanceled { get { return false; } }
+            public bool HasUI { get { return false; } }
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                // Once claimed, the remaining reports need not scan the directory.
+                if (Volatile.Read(ref _claimed) != 0 || status.State != ProgressState.running)
+                    return UpdateProgressResponse.normal;
+                if (Directory.GetFiles(_dirPath).IndexOf(IsCacheOrTempFile) == -1)
+                    return UpdateProgressResponse.normal;
+                // First qualifying report claims the cancel; any concurrent report backs off.
+                if (Interlocked.CompareExchange(ref _claimed, 1, 0) != 0)
+                    return UpdateProgressResponse.normal;
+
+                var outcome = _container.SetDocument(_docOriginal, _docLoading)
+                    ? CancelOutcome.issued
+                    : CancelOutcome.import_finished_first;
+                Volatile.Write(ref _outcome, (int) outcome);
+                return UpdateProgressResponse.normal;
+            }
         }
 
         private static bool IsCacheOrTempFile(string path)

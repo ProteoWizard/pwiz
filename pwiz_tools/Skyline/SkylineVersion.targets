@@ -1,0 +1,109 @@
+<Project>
+
+  <!--
+    Central Skyline build-version composition, shared by Skyline.csproj and the
+    standalone tools that must stamp the same version (e.g. the AI Connector tool
+    ZIP). Builds on the Jam-free git-date pieces from pwiz-sharp\build\PwizVersion.targets
+    and composes Skyline's YEAR.ORDINAL.BRANCH.DOY scheme (DOY accumulates across
+    years like Jamfile.jam: (YY - YEAR)*365 + day-of-year of the git commit date).
+
+    Depend on ComputeSkylineVersion and read:
+      $(SkylineNumericVersion)        e.g. 26.1.1.203  (also the AssemblyVersion)
+      $(SkylineInformationalVersion)  e.g. 26.1.1.203-b4bf6df10d (developer build)
+    Override either with -p:SkylineNumericVersion=... / -p:SkylineInformationalVersion=... .
+
+    This file is target-framework-agnostic. A consumer that also builds net472
+    should gate its import per-TFM (as Skyline.csproj does) so the git-date
+    computation runs only on the net8 pass.
+  -->
+  <Import Project="..\..\pwiz-sharp\build\PwizVersion.targets"
+          Condition="Exists('..\..\pwiz-sharp\build\PwizVersion.targets')" />
+
+  <PropertyGroup>
+    <SkylineVersionYear>26</SkylineVersionYear>
+    <SkylineVersionOrdinal>1</SkylineVersionOrdinal>
+    <!-- 0 = release, 1 = daily, 9 = feature-complete daily (mirrors SKYLINE_BRANCH
+         in Jamfile.jam). This is the .Build component, which TestDocumentFormatCurrent
+         keys off (skips the version/format sync check on feature-complete builds). -->
+    <SkylineVersionBranch>1</SkylineVersionBranch>
+    <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_SkylineBuildKindSuffix>
+    <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_SkylineBuildKindSuffix>
+  </PropertyGroup>
+
+  <Target Name="ComputeSkylineVersion" DependsOnTargets="ComputePwizBuildVersion">
+    <PropertyGroup>
+      <!-- Floor at 0: a commit dated before SkylineVersionYear (e.g. building an older commit
+           after the base year was bumped) would otherwise yield a negative, invalid version component. -->
+      <_SkylineDoy>$([System.Math]::Max(0, $([MSBuild]::Add($([MSBuild]::Multiply($([MSBuild]::Subtract($(PwizVersionYear2), $(SkylineVersionYear))), 365)), $(PwizVersionDayOfYearRaw)))))</_SkylineDoy>
+      <!-- Plain numeric version YEAR.ORDINAL.BRANCH.DOY, e.g. 26.1.1.203 -->
+      <SkylineNumericVersion Condition="'$(SkylineNumericVersion)' == ''">$(SkylineVersionYear).$(SkylineVersionOrdinal).$(SkylineVersionBranch).$(_SkylineDoy)</SkylineNumericVersion>
+      <SkylineInformationalVersion Condition="'$(SkylineInformationalVersion)' == ''">$(SkylineNumericVersion)-$(PwizVersionGitHash) ($(_SkylineBuildKindSuffix))</SkylineInformationalVersion>
+    </PropertyGroup>
+  </Target>
+
+  <!--
+    Prints the ProteoWizard build banner the bjam build used to emit, in the exact shape
+    SkylineNightly scrapes for a run's revision and git hash (the reRevision regex in
+    SkylineNightly\Nightly.cs). The net8 build never runs bjam, so without this the scrape
+    finds nothing, Nightly.cs falls back to GetRevision() and reports the revision as
+    "unknownDate.<hash>". LabKey parses that field as an integer, so every posted run is
+    rejected into the Posting Errors tab and nightly reporting stops with no visible error.
+
+    pwiz's revision is {YY}{DDD} - the same git-date pieces the assembly version is stamped
+    from, so the banner cannot drift from the build it describes. The day-of-year must stay
+    zero-padded to 3 (PwizVersionDayOfYear, not ...Raw): only 26 + 005 gives the 5-digit
+    26005 that matches the historical bjam shape, and LabKey stores whatever group 1 holds.
+    The regex needs a space after the hash, so neither field may contain one.
+    Run standalone (no restore, no ProjectReference graph) with:
+      dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner
+
+    The regex also anchors on a newline immediately followed by "ProteoWizard", and MSBuild
+    indents Message output by two spaces, which would never match. So the caller that needs
+    the scrapable form passes PwizVersionBannerFile and emits the file itself at column 0.
+    The Message is only visible at -v:m or higher - build.bat passes -v:q and shows the
+    human the banner by emitting the file - so it is for a direct standalone invocation.
+  -->
+  <Target Name="PrintPwizVersionBanner" DependsOnTargets="ComputePwizBuildVersion">
+    <Exec Command="git rev-parse --abbrev-ref HEAD"
+          ConsoleToMSBuild="true"
+          EchoOff="true"
+          StandardOutputImportance="low"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PwizBannerBranchRaw" />
+    </Exec>
+    <!-- CI agents check out a commit, not a branch ref, and on a detached HEAD the command
+         above prints the literal "HEAD". Resolve it the way SkylineTester.csproj does. -->
+    <Exec Condition="'$(_PwizBannerBranchRaw.Trim())' == 'HEAD'"
+          Command="git name-rev --name-only --exclude=tags/* HEAD"
+          ConsoleToMSBuild="true"
+          EchoOff="true"
+          StandardOutputImportance="low"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PwizBannerNameRev" />
+    </Exec>
+    <PropertyGroup>
+      <_PwizBannerBranch>$(_PwizBannerBranchRaw.Trim())</_PwizBannerBranch>
+      <_PwizBannerBranch Condition="'$(_PwizBannerBranch)' == 'HEAD' and '$(_PwizBannerNameRev)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(_PwizBannerNameRev.Trim()), '^(remotes/)?origin/', ''))</_PwizBannerBranch>
+      <_PwizBannerBranch>$([System.Text.RegularExpressions.Regex]::Replace($(_PwizBannerBranch), '[~^].*$', ''))</_PwizBannerBranch>
+      <!-- Shape guard, not just an emptiness test. Exec's ConsoleToMSBuild captures stderr as
+           well as stdout, and MSBuild still gathers ConsoleOutput when the command fails under
+           ContinueOnError - so a git failure ("fatal: detected dubious ownership in repository
+           at ...", which a nightly agent hits when the tree is owned by another account) lands
+           the error text here, non-empty. Multi-line output is joined with ';', and
+           WriteLinesToFile takes ITaskItem[], so a ';' would also split the banner across
+           lines. Accepting only a git-ref shape rejects all of that. -->
+      <_PwizBannerBranch Condition="'$([System.Text.RegularExpressions.Regex]::IsMatch($(_PwizBannerBranch), `^[A-Za-z0-9._/+-]+$`))' != 'true'">unknown</_PwizBannerBranch>
+      <_PwizBannerBranch Condition="'$(_PwizBannerBranch)' == 'HEAD'">unknown</_PwizBannerBranch>
+      <PwizVersionBanner>ProteoWizard 3.0.$(PwizVersionYear2)$(PwizVersionDayOfYear).$(PwizVersionGitHash) $(_PwizBannerBranch) x64 AMD64 NT</PwizVersionBanner>
+    </PropertyGroup>
+    <Message Importance="high" Text="$(PwizVersionBanner)" />
+    <WriteLinesToFile Condition="'$(PwizVersionBannerFile)' != ''"
+                      File="$(PwizVersionBannerFile)"
+                      Lines="$(PwizVersionBanner)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="false" />
+  </Target>
+
+</Project>

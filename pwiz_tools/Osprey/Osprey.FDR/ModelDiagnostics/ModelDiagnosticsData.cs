@@ -92,6 +92,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // ----- tabs -----
         public double ModelComposite { get; set; }
         public bool ModelDegenerate { get; set; }
+
+        /// <summary>
+        /// True when the first-pass model is gradient-boosted trees
+        /// (<see cref="FeatureContributions.IsTreeEnsemble"/>): <see cref="Model"/> then lists
+        /// each feature's target-decoy mean gap and histograms with no coefficient or
+        /// contribution, and the page says the contribution table does not apply rather than
+        /// that the model was not retrained. Written only when true
+        /// (<see cref="ShouldSerializeModelIsTreeEnsemble"/>), so a linear model's data is
+        /// byte-for-byte what it was before trees were reported.
+        /// </summary>
+        public bool ModelIsTreeEnsemble { get; set; }
+
+        /// <summary>Newtonsoft's conditional-serialization convention for
+        /// <see cref="ModelIsTreeEnsemble"/>: this project has no Json.NET reference to put an
+        /// attribute on it.</summary>
+        public bool ShouldSerializeModelIsTreeEnsemble()
+        {
+            return ModelIsTreeEnsemble;
+        }
+
         public List<FeatureRow> Model { get; set; }
         /// <summary>
         /// The complete pass-2 (final reported pool) bundle -- every pass-dependent
@@ -536,7 +556,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// Build the full model-diagnostics data model from first-pass results.
         /// </summary>
         /// <param name="perFileEntries">Per-file first-pass FdrEntry lists, scored and q-valued, pre-compaction.</param>
-        /// <param name="contributions">The trained model's feature contributions (may be null for non-Percolator FDR).</param>
+        /// <param name="contributions">The trained model's feature contributions (may be null: a tree model has none).</param>
         /// <param name="classByBaseId">
         /// library base-id (<c>EntryId &amp; 0x7FFFFFFF</c>) -> target-side
         /// entrapment class (Target / PTarget), resolved from the library
@@ -615,6 +635,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 data.ModelComposite = contributions.Composite;
                 data.ModelDegenerate = contributions.IsDegenerate;
+                data.ModelIsTreeEnsemble = contributions.IsTreeEnsemble;
                 data.FeatureHistEdges = contributions.HistogramEdges;
                 data.Model = BuildFeatureRows(contributions);
             }
@@ -674,7 +695,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         bool isEntrap = haveManifest
                             && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var fcls)
                             && fcls == EntrapmentClass.PTarget;
-                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + "|" + e.Charge, isEntrap,
+                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + @"|" + e.Charge, isEntrap,
                             e.EffectiveRunQvalue(fdrLevel), e.EffectiveExperimentQvalue(fdrLevel));
                     }
                     FrontierFlushFile(frontier, fileMinQ);   // one increment per detected precursor = one file
@@ -762,7 +783,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;
             var progress = new ProgressReporter(
-                string.Format(@"Building {0} pass-2 diagnostics card(s)", cards),
+                CountText.Format(cards, OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel,
+                    OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels),
                 cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Indented one level: this reporter nests inside the card reporter, and without it
@@ -864,14 +886,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var rows = new List<FeatureRow>();
             var targetHist = contributions.TargetHistograms;
             var decoyHist = contributions.DecoyHistograms;
+            // A tree ensemble has no percents to rank by, so its rows stay in feature order.
+            bool unranked = contributions.IsDegenerate || contributions.IsTreeEnsemble;
             foreach (var f in contributions.Features
-                .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                .OrderByDescending(f => unranked ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))
             {
                 rows.Add(new FeatureRow
                 {
                     Index = f.Index,
-                    Label = f.Label,
+                    // Invariant: the report and its intermediate file read the same in every UI language.
+                    Label = f.ReportLabel,
                     Coefficient = f.Coefficient,
                     Percent = f.Percent,
                     DeltaMu = f.TargetDecoyMeanGap,
@@ -1018,7 +1043,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
             out int nWithClass, out int nWithoutClass,
-            string indent = "")
+            string indent = null)
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
@@ -1030,7 +1055,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // larger dataset. The reporter's throttle means a small run still costs one line.
             int reduceIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Reducing {0} file(s) to best-per-precursor", perFileEntries.Count),
+                       CountText.Format(perFileEntries.Count,
+                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file,
+                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files),
                        perFileEntries.Count, indent, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
@@ -1044,7 +1071,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         uint pairIdx = 0;
                         bool hasPair = pairByBaseId != null &&
                             pairByBaseId.TryGetValue(baseId, out pairIdx);
-                        string key = e.ModifiedSequence + "|" + e.Charge;
+                        string key = e.ModifiedSequence + @"|" + e.Charge;
                         if (!best.TryGetValue(key, out var cur))
                         {
                             cur = new Prec
@@ -1496,7 +1523,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // matching the Summary per-file loop -- not a hardcoded peptide q.
                     if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
                         continue;
-                    string key = e.ModifiedSequence + "|" + e.Charge;   // same key as ReduceToPrecs
+                    string key = e.ModifiedSequence + @"|" + e.Charge;   // same key as ReduceToPrecs
                     bool expOk = e.EffectiveExperimentQvalue(fdrLevel) <= runFdr; // max(run q, exp q) <= FDR
                     // Entrapment (p_target) is a known false set that by design does not
                     // reproduce: route it to its own sets so it can't inflate the real-target

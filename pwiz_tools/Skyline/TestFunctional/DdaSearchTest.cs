@@ -38,6 +38,7 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -118,11 +119,44 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(133, 334, 396, 1188, 164)
+                // Counts for the standalone MS Amanda (3.0.22.864) + Percolator; only percolator-validated
+                // PSMs enter the library, so these are lower than the retired in-process integration's.
+                ExpectedResultsFinal = new ExpectedResults(79, 192, 241, 723, 93)
             };
 
             RunFunctionalTest();
             Assert.IsFalse(IsRecordMode);
+        }
+
+        /// <summary>
+        /// The search settings page collects a maximum number of variable modifications per peptide and
+        /// hands it to every search engine through SetModifications. MS Amanda takes it as MaxNoDynModifs
+        /// in the settings XML the wrapper generates, and nothing else in the pipeline reads that value
+        /// back, so a settings XML built without it would look correct everywhere but the search.
+        /// </summary>
+        [TestMethod]
+        public void TestMaxVariableModsReachesSettingsXml()
+        {
+            var mods = new[]
+            {
+                new StaticMod(@"Carbamidomethyl (C)", @"C", null, @"C2H3ON"),
+                new StaticMod(@"Oxidation (M)", @"M", null, @"O").ChangeVariable(true)
+            };
+
+            using (var searchEngine = new MSAmandaSearchWrapper())
+            {
+                // One parameter, one control: MaxNoDynModifs is driven by the max variable mods
+                // setting, so it must not also appear in the additional settings grid.
+                Assert.IsFalse(searchEngine.AdditionalSettings.ContainsKey(@"MaxNoDynModifs"),
+                    "MaxNoDynModifs should not be an additional setting");
+
+                foreach (int maxVariableMods in new[] { 0, 2, 9 })
+                {
+                    searchEngine.SetModifications(mods, maxVariableMods);
+                    AssertEx.Contains(searchEngine.BuildSettingsXml(), string.Format(CultureInfo.InvariantCulture,
+                        @"<MaxNoDynModifs>{0}</MaxNoDynModifs>", maxVariableMods));
+                }
+            }
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -161,7 +195,7 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165)
+                ExpectedResultsFinal = new ExpectedResults(106, 249, 301, 903, 121) // net8 Comet: FixPercolatorPepXml now excludes Percolator-unmatched PSMs (was 145, 338, 392, 1176, 165)
             };
 
             RunFunctionalTest();
@@ -828,7 +862,7 @@ namespace pwiz.SkylineTestFunctional
             const string MSFRAGGER_PRESET_NAME = "Imported MSFragger";
 
             // Create a temp Comet .params file
-            var cometParamsPath = Path.Combine(TestContext.TestDir, "test_comet.params");
+            var cometParamsPath = Path.Combine(TestContext.TestRunDirectory, "test_comet.params");
             File.WriteAllText(cometParamsPath, string.Join("\r\n",
                 @"peptide_mass_tolerance = 20.0",
                 @"peptide_mass_units = 2",
@@ -849,7 +883,7 @@ namespace pwiz.SkylineTestFunctional
                 @"1.  Trypsin                1      KR          P"));
 
             // Create a temp MSFragger .params file
-            var msFraggerParamsPath = Path.Combine(TestContext.TestDir, "test_fragger.params");
+            var msFraggerParamsPath = Path.Combine(TestContext.TestRunDirectory, "test_fragger.params");
             File.WriteAllText(msFraggerParamsPath, string.Join("\r\n",
                 @"precursor_true_tolerance = 20",
                 @"precursor_true_units = 1",
@@ -934,7 +968,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestEditListImportShare()
         {
-            var sharePath = Path.Combine(TestContext.TestDir, "shared_presets.skysp");
+            var sharePath = Path.Combine(TestContext.TestRunDirectory, "shared_presets.skysp");
 
             // Open Edit List dialog from the preset combo's "Edit list..." option
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
@@ -1197,7 +1231,7 @@ namespace pwiz.SkylineTestFunctional
                 //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
@@ -1221,7 +1255,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (TestSettings.SearchEngine != SearchEngine.MSAmanda)
+                // Every engine reaching this point may still need the generic download-
+                // confirmation dialog handled. MSFragger's binary is downloaded by
+                // MsFraggerDownloadDlg above, but its Java and Crux dependencies still come
+                // through here; MSAmanda and the other engines download their tool here too
+                // (all on-demand on net8). Excluding any engine leaves its dialog unhandled.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
@@ -1286,11 +1324,11 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Start a second search, test cannot-close-during-search, then cancel
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
 
-            SkylineWindow.BeginInvoke(new Action(importPeptideSearchDlg.Close)); // try to close (don't wait for return)
+            SkylineWindow.BeginInvoke(importPeptideSearchDlg.Close); // try to close (don't wait for return)
             var cannotCloseDuringSearchDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_,
                 cannotCloseDuringSearchDlg.Message);
@@ -1550,7 +1588,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Rerun search
             searchSucceeded = null;
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)

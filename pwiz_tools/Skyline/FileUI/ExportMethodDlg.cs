@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -33,6 +32,7 @@ using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
+// stubs provided in Model/RemoteApiStubs.net8.cs for net8
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -314,11 +314,11 @@ namespace pwiz.Skyline.FileUI
             base.OnHandleCreated(e);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             _cancellationTokenSource.Cancel();
 
-            base.OnClosing(e);
+            base.OnFormClosing(e);
         }
 
         public string InstrumentType
@@ -1648,7 +1648,7 @@ namespace pwiz.Skyline.FileUI
             if (textIntensityThreshold.Visible)
             {
                 var surequant = cbSureQuant.Checked;
-                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, surequant ? (double?) 100 : null, out var intensityThreshold))
+                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, surequant ? 100 : null, out var intensityThreshold))
                     return false;
 
                 if (surequant)
@@ -2462,7 +2462,8 @@ namespace pwiz.Skyline.FileUI
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
                 Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))
             {
-                using (var chooseDirDialog = new FolderBrowserDialog())
+                // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+                using (var chooseDirDialog = FormUtil.CreateFolderBrowserDialog())
                 {
                     chooseDirDialog.Description = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template;
                     if (!string.IsNullOrEmpty(templateName))
@@ -2625,10 +2626,14 @@ namespace pwiz.Skyline.FileUI
 
         public void ShowSchedulingGraph()
         {
-            var brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
+            string brukerTemplate = null;
+            BrukerTimsTofMethodExporter.Metrics brukerMetrics = null;
+            // Gather Bruker timsTOF scheduling metrics for the graph. On net472 this goes through the
+            // C++/CLI PrmScheduling SDK; on net8 BrukerTimsTofMethodExporter binds to the managed
+            // Pwiz.Vendor.Bruker.PrmScheduling P/Invoke port (see Export.cs), so it runs on both.
+            brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
                 ? textTemplateFile.Text
                 : null;
-            BrukerTimsTofMethodExporter.Metrics brukerMetrics = null;
 
             if (!string.IsNullOrEmpty(brukerTemplate))
             {
@@ -2657,7 +2662,7 @@ namespace pwiz.Skyline.FileUI
                     });
                 }
             }
-            
+
             using (var dlg = new ExportMethodScheduleGraph(_document, brukerTemplate, brukerMetrics))
             {
                 if (dlg.Exception != null)

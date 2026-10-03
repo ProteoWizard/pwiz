@@ -277,6 +277,9 @@ Output:
   <data name="PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__" xml:space="preserve">
     <value>{0} This sometimes could take 3-5 minutes. Please be patient. {1} </value>
   </data>
+  <data name="PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__" xml:space="preserve">
+    <value>Timed out after {0} minutes running: [{1}]</value>
+  </data>
   <data name="PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package" xml:space="preserve">
     <value>Downloading Python embeddable package.</value>
   </data>

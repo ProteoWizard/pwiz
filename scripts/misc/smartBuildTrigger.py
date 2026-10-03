@@ -77,6 +77,10 @@ def merge(dict1, *dicts):
                 r[k] = d[k]
     return r
 
+# Default for config files that do not define it (the nightly one does not); the exec below
+# overrides it when the config file has its own.
+extraStatuses = {}
+
 # exec the targets_and_paths_file to define the targets and matchPaths variables
 with open(targets_and_paths_file, "rb") as source_file:
     code = compile(source_file.read(), targets_and_paths_file, "exec")
@@ -141,7 +145,9 @@ if (current_branch == "master" or current_branch.startswith("skyline_")) and len
                     triggers[target] = "merge to %s" % base_branch
 else:
     for path in changed_files:
-        if os.path.basename(path) == "smartBuildTrigger.py":
+        # Skip the trigger machinery itself — editing these files shouldn't fan out to "build
+        # everything" via the generic scripts/.* match further down.
+        if os.path.basename(path) in ("smartBuildTrigger.py", "vcs_trigger_and_paths_config.py"):
             continue
         triggered = False # only trigger once per path
         for tuple in matchPaths:
@@ -170,7 +176,14 @@ for targetKey in targets:
             notBuildingDueToChangedFiles[target] = targets[targetKey][target]
         elif isBaseBranchDict:
             for target2 in targets[targetKey][target]:
-                if target2 not in triggers and not base_branch == target:
+                if target2 in triggers:
+                    # target2 was promoted to top-level and triggered by a changed file;
+                    # record its display name so the trigger loop's building[trigger] lookup
+                    # succeeds. Targets reachable only via merge()'d matchPaths entries never
+                    # have their global dict mutated by promotion, so this is the only place
+                    # they enter building (e.g. ProteoWizard_SkylineWindowsNet).
+                    building[target2] = targets[targetKey][target][target2]
+                elif not base_branch == target:
                     notBuildingDueToBranch[target2] = targets[targetKey][target][target2]
         else:
             building[target] = targets[targetKey][target]
@@ -195,6 +208,13 @@ for target in notBuildingDueToChangedFiles:
     print("Not building %s (%s) due to unchanged files, but reporting success to GitHub." % (notBuildingDueToChangedFiles[target], target))
     data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuildingDueToChangedFiles[target]
     rsp = post(githubUrl, data, headers)
+    # A config can report more than one status (Skyline Windows .NET also reports code
+    # inspection); those have to be reported too, or they go missing for this commit.
+    # These are whole contexts, posted verbatim - see the comment on extraStatuses.
+    for extraStatus in extraStatuses.get(target, []):
+        print("Also reporting success for %s's paired status '%s'." % (target, extraStatus))
+        data = '{"state": "success", "context": "%s", "description": "Build not necessary with these changed files"}' % extraStatus
+        rsp = post(githubUrl, data, headers)
 
 for target in notBuildingDueToBranch:
     print("Not building %s (%s) or reporting to GitHub due to PR's target branch." % (notBuildingDueToBranch[target], target))

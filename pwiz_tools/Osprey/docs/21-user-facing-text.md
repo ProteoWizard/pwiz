@@ -1,0 +1,119 @@
+# 21. User-Facing Text (C#)
+
+> Applies to every `LogInfo` / `LogWarning` / `LogError` line, every `ProgressReporter`
+> label, and every CLI error. Corresponds to `Osprey.Core/OspreyOutput.cs` (the one
+> output seam) and the `[TASK]` markers parsed by `perfviz.py` and `regression.ps1`.
+
+The log is the only UI Osprey has. Its reader is a mass spectrometrist running a search,
+not the developer who named the classes, and many of the words in the code came from
+class and method names during development. This page records which of those words never
+appear in default-tier text, what replaces them, and the small set of dev terms that
+stay. It is a review checklist: run every new or edited user-facing string against it.
+
+## Words that never appear in user text
+
+| Developer term | User text | Why |
+|---|---|---|
+| sidecar | **intermediate file** / intermediate results file / intermediate analysis file | "Intermediate" reads instantly as "not the end result". "Sidecar" was never the user's word. |
+| entries | **precursor candidates (targets + decoys)** | "entries" is shorthand for a library row, coined for memory assertions ("no O(files x entries)"). |
+| base_id(s) | **precursor candidates** | Same reason; consistency with the line above. |
+| compaction | say what was kept and why | The operation name says nothing about the result. |
+| stratum / protein-compact subset | **precursor candidates from proteins with 2 or more detections** | A noun swap ("set") is as opaque as the original; the phrase names the criterion. "protein-compact subset" is acceptable only where the flag itself is named. "Detections" is the general word for passing the current cutoff. |
+| boundary file pair | **intermediate files** | Do not add "that the next task needs". |
+| bundle / envelope / reconciliation plan | **cross-run reconciliation files** | "Reconciliation files" already implies intermediate; do not stack the two words. |
+| results (for anything written beside an input) | **intermediate file** | "Results" is reserved for the end results a user looks at. |
+| use_cwt / forced / gap-fill (reconciliation actions) | **peaks re-picked** / **peak boundaries imputed** / **peak boundaries imputed for missing peaks** | Skyline's "peak boundary imputation" vocabulary. |
+| frozen model / no retrain | (dropped) | Records what the code no longer does. Diagnostic channel only if a test needs it. |
+| resident / byproduct / interned / hydrate | (dropped) | Implementation words. If a test needs them, they are diagnostic output, not user text. |
+| fold (verb) | (dropped) | Even as a dev term. |
+| Stage N | the `--task` name | The CLI help documents the task names; nothing documents stage numbers for a user. |
+| class, method and env-var names | (dropped from default-tier lines) | Code-path narration goes behind `--verbose`. |
+
+## Terms that stay
+
+- **reconciliation** / **cross-run reconciliation**: not a standard term, but "cross-run"
+  carries the meaning and the nearest published concept (TRIC, transfer of identification
+  confidence) is no clearer.
+- **coelution**: a known DIA term; Skyline has a "coelution score".
+- **`[TASK] Name:status` markers**: unchanged; `perfviz.py` and `regression.ps1` parse them.
+- The `--task` names (`PerFileScoring`, `FirstPassFDR`, `PerFileRescoring`,
+  `SecondPassFDR`): documented in the CLI help.
+
+Still open, with no objection recorded to the proposals: survivors, scalars, competition,
+worker.
+
+## Numbers
+
+Every count gets a thousands separator (`{0:N0}`). Counts of five or more digits
+(1448698, 2110341) cannot be read for magnitude without one; at the 2026-09-09 review only
+3 of 582 call sites used it.
+
+A count states its denominator where the reader needs scale: "kept 996,439 of 1,448,698
+precursor candidates". Never print two counts that look like the same quantity on
+neighbouring lines.
+
+## Grammar
+
+No possessive on an inanimate noun; use the noun attributively or rephrase. "precursor
+candidate q-values", "the best charge state of the same peptide", "the inputs of this run",
+not "the peptide's best charge state" or "this run's inputs".
+
+## Outcomes, not mechanisms
+
+A noun swap does not fix a data-structure word. Say the outcome in the reader's terms:
+which candidates get new q-values, what was kept, what will be imputed. A line does not
+have to report an action; a plain outcome ("Unique library strings: 1,433,253 / 5,241,881
+total (72.7% reduced)") is often the clearer form, where "Interned library strings ...
+collapsed" named the code's operation. A warning keeps the one sentence the user needs and
+the remedy they can apply; the mechanism, issue numbers and measured costs go in a code
+comment beside the call.
+
+## Files written
+
+A line reporting a saved file names the file ("Saved the trained first-pass model to
+<path>"), and does not explain what the file enables later. When the same file is written
+once per input, name the first and count the rest.
+
+## Peaks, candidates, library
+
+- **Library precursors**: rows of the spectral library as loaded (targets).
+- **Precursor candidates**: targets + decoys searched ("Full library: N precursor candidates").
+- **Precursor candidate peaks**: one candidate's scored peak in one run. Per-run counts,
+  scored rows, training rows and blib retention times are peaks, never "entries".
+
+## Enums
+
+Use Skyline's pattern: a `GetLocalizedString(this Enum)` extension over a
+`LOCALIZED_VALUES` property that returns resource strings (see `Skyline/Model/Export.cs`). A
+property, never a static field: tests switch the UI culture in process, and a static would
+keep the first language it saw. `DecoyMethod`, `ResolutionMode` and
+`LibraryFormat` have one; never print an enum's `ToString()` in user text.
+
+## Tiers
+
+- **Default**: what the researcher reads. Everything above applies.
+- **`--verbose`**: code-path narration, per-file detail, the feature table.
+- **`-d` diagnostics**: developer output; may use any vocabulary, and lives off the
+  mainline path (see `00-pipeline-architecture.md`).
+
+## Resources
+
+Every string on this page lives in the owning assembly's `.resx` (see "Localization" in
+`20-command-line.md`). When you add or reword one:
+
+- Put the English in the `.resx` and let Visual Studio regenerate the Designer; the key is
+  Skyline's `Class_Member_Text_with_underscores`, as ReSharper's "Move to resource" writes it.
+- The resource holds the whole format string (`{0:N0}` included); `string.Format` stays at
+  the call site. A count that can be 1 is two resources, singular and plural (`CountText`).
+- Names a user types or a program reads - `--task` values, argument names, file extensions,
+  column headings - go in as `{0}` arguments, never inside the translated text. Take each from
+  its declaration: `OspreyArgNames.Text` / `TaskText` (or the `OspreyCommandArgs.ARG_*`
+  instance in the executable and the tests), `OspreyTaskNames`, and the `EXT` constants on
+  the class that owns the file. `CodeInspectionTest.TestArgumentTextComesFromArguments` fails
+  on a flag or file extension in an English `.resx` value, and on a string literal anywhere in
+  Osprey that spells out a declared argument.
+- A test asserts the resource, formatted with the same arguments, never the English:
+  `Assert.AreEqual(string.Format(OspreyIOResources.X, path), message)`. The suite runs under
+  `ja-JP` and `fr-FR` as well as `en-US`.
+- `CodeInspectionTest` scans the English `.resx` values for the words in the first table on
+  this page, so a banned word cannot come back through a resource.
