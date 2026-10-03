@@ -153,10 +153,6 @@
     <value>{0}：保存された第1パスモデルですべての{1:N0}個のプリカーサー候補ピークをスコアリングし（再トレーニングなし）、その後Q値とPEPのためにターゲット-デコイ競合を行います。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PercolatorEngine_RunSimpleFdr__0____1__targets_pass__FDR__2____3__target_wins___4__decoy_wins_" xml:space="preserve">
-    <value>{0}：ターゲット{1:N0}個が通過（FDR={2:F4}、ターゲット勝ち{3:N0}個、デコイ勝ち{4:N0}個）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file" xml:space="preserve">
     <value>1個のファイルからPercolatorトレーニングフィーチャーを読み込み中</value>
     <comment>Needs Review:New resource</comment>

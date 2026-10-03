@@ -153,10 +153,6 @@
     <value>{0}：使用已保存的第一轮模型对全部 {1:N0} 个母离子候选峰评分（不重新训练），然后通过目标-诱饵竞争计算 q 值和 PEP。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PercolatorEngine_RunSimpleFdr__0____1__targets_pass__FDR__2____3__target_wins___4__decoy_wins_" xml:space="preserve">
-    <value>{0}：{1:N0} 个目标通过（FDR={2:F4}，目标胜出 {3:N0} 次，诱饵胜出 {4:N0} 次）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file" xml:space="preserve">
     <value>正在从 1 个文件加载 Percolator 训练特征</value>
     <comment>Needs Review:New resource</comment>

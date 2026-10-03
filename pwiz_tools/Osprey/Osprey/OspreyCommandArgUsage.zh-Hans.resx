@@ -121,10 +121,6 @@
     <value>FDR 水平（默认：{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_fdr_method" xml:space="preserve">
-    <value>FDR 方法（默认：{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_fdrbench" xml:space="preserve">
     <value>将与 FDRBench 兼容的输入 TSV 写入此路径。水平取自“{0}”（{2}；{3} 和 {4} 输出母离子水平）。包含每个报告的目标，即实际写入输出的肽段，不论 q 值如何，并将原始 SVM 判别值作为“{1}”，以便 FDRBench 通过诱捕计数计算真实 FDR，而不会在 Osprey 的阈值处截断。</value>
     <comment>Needs Review:New resource</comment>

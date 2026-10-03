@@ -45,7 +45,6 @@ a { color: #1565c0; }
 <tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>实验水平 FDR 阈值（默认：0.01）</td></tr>
 <tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>为跨运行协调和第二轮保留第一轮肽段的肽段 q 值阈值（默认：0.01 =“<nobr>--run-fdr</nobr>”；可放宽，例如到 0.05，以扩大协调池）</td></tr>
 <tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>蛋白质水平 FDR 阈值（可选）</td></tr>
-<tr><td><nobr>--fdr-method</nobr> &lt;percolator | gbdt | simple&gt;</td><td>FDR 方法（默认：percolator）</td></tr>
 <tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDR 水平（默认：precursor）</td></tr>
 <tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>共享肽段处理方式（默认：all）</td></tr>
 <tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>将与 FDRBench 兼容的输入 TSV 写入此路径。水平取自“<nobr>--fdr-level</nobr>”（peptide；precursor 和 both 输出母离子水平）。包含每个报告的目标，即实际写入输出的肽段，不论 q 值如何，并将原始 SVM 判别值作为“score”，以便 FDRBench 通过诱捕计数计算真实 FDR，而不会在 Osprey 的阈值处截断。</td></tr>

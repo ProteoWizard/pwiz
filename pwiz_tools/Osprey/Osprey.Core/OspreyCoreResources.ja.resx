@@ -121,20 +121,6 @@
     <value>プリカーサーとペプチド</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_Mokapot" xml:space="preserve">
-    <value>Mokapot</value>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_Percolator" xml:space="preserve">
-    <value>Percolator</value>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree" xml:space="preserve">
-    <value>勾配ブースティング木</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy" xml:space="preserve">
-    <value>単純ターゲット-デコイ</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_" xml:space="preserve">
     <value>ファイル並列度：{0}（自動、CPUバウンド：{1}コア、{2}ファイル、メモリ推定値なし）</value>
     <comment>Needs Review:New resource</comment>

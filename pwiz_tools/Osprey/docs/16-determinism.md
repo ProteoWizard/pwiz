@@ -201,7 +201,7 @@ any future edit:
 
 Partitioning over ROWS instead - the obvious "optimization" if the invariant is
 not understood - would make each bin's summation order depend on where the range
-boundaries fell, and would silently move every `--fdr-method gbdt` q-value.
+boundaries fell, and would silently move every `OSPREY_FDR_MODEL=gbdt` q-value.
 Nothing in `regression.ps1` would catch that: the gate runs the default SVM
 path, which never constructs a tree, so the golden test below is the only guard.
 Sibling-subtraction histogram construction (deriving a child's histogram as
@@ -306,7 +306,7 @@ changes the output, only scheduling or which order-sensitive algorithm runs.
 | `OSPREY_MAX_PARALLEL_FILES` | unset | Legacy back-compat cap on the outer file count when `--parallel-files` is absent (`FileParallelism.cs:153-165`). Scheduling only. |
 | Percolator `Seed` | `42` | Fixed PRNG seed for SVM shuffle + peptide-group subsample (`PercolatorConfig.cs:48,:132`). Not exposed as a CLI flag; the constant matches Rust's `seed=42`. |
 | `--shared-peptides {all\|razor\|unique}` | `all` | Selects the shared-peptide reassignment. `all` and `unique` are order-independent; `razor` runs the order-sensitive greedy in Step 9 (see divergence). |
-| `--fdr-method {percolator\|simple}` | `percolator` | `percolator` uses the seeded SVM (Steps 4-6); `simple` skips SVM training (no PRNG involved). |
+| `OSPREY_FDR_MODEL` | unset (linear SVM) | Unset / `svm` uses the seeded SVM (Steps 4-6). **Experimental** `gbdt` trains seeded gradient-boosted trees (`XorShift64`, the `GbtParams` seed) whose histogram sums are order-fixed as described above, so it is deterministic too. Replaced the removed `--fdr-method`, whose `simple` value (no PRNG) was deleted. |
 | `OSPREY_VERSION_OVERRIDE` | unset | Pins the `osprey_version` blib metadata cell so the golden compare stays byte-stable; set to `26.1.1.0` by the regression gate (`regression.ps1:133`). |
 | `-Tolerance` (regression.ps1) | `1e-9` | The determinism/parity tolerance the oracle enforces across all three modes (`regression.ps1:114`). |
 
