@@ -514,6 +514,11 @@ namespace pwiz.Osprey
                 string trainingExport = DescribeTrainingExport(config);
                 if (trainingExport != null)
                     LogInfo(trainingExport);
+                // Named only when a DIAGNOSTIC switch is set: output is identical either way, so the
+                // log is the only record of which arm a timing run measured.
+                string windowReads = OspreyEnvironment.DescribeWindowReads();
+                if (windowReads != null)
+                    LogInfo(windowReads);
                 // Always print which experiment-wide aggregation is in force, active or not.
                 // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
