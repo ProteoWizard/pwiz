@@ -104,7 +104,10 @@ namespace pwiz.Osprey
                 // Does not run on a hard crash (AccessViolationException, a killed process) -
                 // no cleanup mechanism does; that content is recoverable, if at all, only via
                 // OspreyEnvironment.KeepFailedWrites naming the abandoned temp.
-                AppDomain.CurrentDomain.ProcessExit += (_, _) => s_sink.CloseAll();
+                // Closes the sink this call created, not whatever s_sink holds at exit: a later
+                // Initialize with diagnostics off sets s_sink to null, and a handler reading the
+                // field then threw NullReferenceException at process exit (every test host run).
+                AppDomain.CurrentDomain.ProcessExit += (_, _) => sink.CloseAll();
             }
         }
 
