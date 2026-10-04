@@ -247,6 +247,38 @@ namespace pwiz.Osprey.Core
         public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
 
         /// <summary>
+        /// DIAGNOSTIC. Calibration and the Stage 6 re-score read a run's spectra cache one isolation
+        /// window block at a time (<c>SpectraWindowIndex.LoadWindowSerialRead</c>), because both are
+        /// often the first read of a cache that is no longer in the file cache. Default ON;
+        /// <c>OSPREY_SERIAL_WINDOW_READS=0</c> makes those two read in parallel as they did before,
+        /// the A/B arm for timing. Output is the same either way. A training export made later reads
+        /// serially regardless.
+        /// </summary>
+        public static bool SerialWindowReads { get; set; } = IsNotZero(@"OSPREY_SERIAL_WINDOW_READS");
+
+        /// <summary>
+        /// DIAGNOSTIC. <c>OSPREY_SERIAL_READ_SCOPE=process</c> makes the serial window reads take
+        /// turns across every file in the process instead of within each file. Under
+        /// --parallel-files the per-file default lets that many files' reads compete for one disk.
+        /// It covers only those block reads, not mzML parsing, cache writes or parallel window reads.
+        /// </summary>
+        public static bool SerialReadsProcessWide { get; set; } =
+            string.Equals(GetVariable(@"OSPREY_SERIAL_READ_SCOPE"), @"process", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// The log line naming the window-read switches when either is set, so a timing run records
+        /// which arm it was; null at the defaults, leaving a default run's log unchanged.
+        /// </summary>
+        public static string DescribeWindowReads()
+        {
+            if (SerialWindowReads && !SerialReadsProcessWide)
+                return null;
+            return string.Format(@"Window reads (DIAGNOSTIC): calibration and Stage 6 {0}; serial read lock {1}",
+                SerialWindowReads ? @"serial" : @"parallel (OSPREY_SERIAL_WINDOW_READS=0)",
+                SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file");
+        }
+
+        /// <summary>
         /// Stage 6 rebuilds each file's post-compaction survivors from that file's
         /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
         /// them again once its reconciled parquet is on disk - so the all-files survivor
