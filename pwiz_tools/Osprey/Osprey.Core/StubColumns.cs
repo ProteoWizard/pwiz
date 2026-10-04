@@ -48,5 +48,12 @@ namespace pwiz.Osprey.Core
         /// <c>ParquetScoreCache.ReadApexRtsByParquetIndex</c>; nothing else reads it.
         /// </summary>
         ApexRt = 1,
+
+        /// <summary>
+        /// Leave <c>fragment_coelution_sum</c> undecoded and report 0.0 for it. For callers that
+        /// do not use it: it is the one Core column that sits among the feature columns rather
+        /// than beside entry_id, so reading it costs a second disk read in every row group.
+        /// </summary>
+        SkipCoelutionSum = 2,
     }
 }

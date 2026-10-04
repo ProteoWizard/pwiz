@@ -231,6 +231,7 @@ namespace pwiz.Osprey.Tasks
             // parquet does not hide the others -- and still before any planning happens.
             var cwtInvalid = new List<string>();
 
+            _ctx.LogBlockReads(@"Planning before pass 1");
             using (var scanProgress = new ProgressReporter(
                        ScoringTaskShared.IsSingleFileSearch(config)
                            ? OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_
@@ -412,6 +413,7 @@ namespace pwiz.Osprey.Tasks
                     libLookup, libPrecursorMz, perFileIsolationMz)
                 : null;
 
+            _ctx.LogBlockReads(@"Planning before pass 2");
             using (var planProgress = new ProgressReporter(
                        ScoringTaskShared.IsSingleFileSearch(config)
                            ? OspreyTasksResources.Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_

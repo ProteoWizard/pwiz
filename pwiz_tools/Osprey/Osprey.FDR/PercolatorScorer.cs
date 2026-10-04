@@ -904,6 +904,7 @@ namespace pwiz.Osprey.FDR
             ingestProgress.Dispose();
             int n = g;
             log.LogInfo(LogTag.PATH, @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n);
+            LogBlockReads(log, passLabel, @"pass 0");
             log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} peaks ({2} targets, {3} decoys, {4} features)",
                 passLabel, n, nInputTargets, nInputDecoys, nFeatures);
 
@@ -1044,6 +1045,7 @@ namespace pwiz.Osprey.FDR
             // OSPREY_PASS2_QVALUE=transfer pass-2 step. No-op (null) on the default path, so this
             // streaming first pass stays byte-identical. See TODO-osprey_pass2_per_run_only_qvalue.
             captureModel?.Invoke(trainResults);
+            LogBlockReads(log, passLabel, @"training load");
 
             // Release the pass-0 working sets before the score passes so only the bounded lookups
             // remain resident across the peak.
@@ -1246,6 +1248,7 @@ namespace pwiz.Osprey.FDR
                 lane1.Seconds(LANE1_WALK), lane1.Seconds(LANE1_SIDECAR), lane1.Seconds(LANE1_FEATURES),
                 lane1.Seconds(LANE1_SCORE), lane1.Seconds(LANE1_COMPETITION), lane1.Seconds(LANE1_RUN_Q), lane1.Seconds(LANE1_FLOORS),
                 lane1.Seconds(LANE1_FLUSH), order1.Seconds(ORDER1_COMPETITION));
+            LogBlockReads(log, passLabel, @"pass 1");
 
             var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig);
             captureContributions?.Invoke(contributions);
@@ -1290,7 +1293,12 @@ namespace pwiz.Osprey.FDR
                     // gate marks the rest - but that is an invariant maintained in another file, and
                     // the cost of being wrong is a fabricated retention time in a persisted artifact
                     // that no reader could distinguish from a measured one.
-                    RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.ApexRt, rowCounts[f]);
+                    // Without coelution_sum: only the rescore below uses it, and only for a file
+                    // with no sidecar, which re-reads its rows with the column. It is the one
+                    // walk column among the features, so leaving it out saves a disk read per
+                    // row group.
+                    RowBuffer rows = ReadFileRows(streamFileRows, fileName,
+                        StubColumns.ApexRt | StubColumns.SkipCoelutionSum, rowCounts[f]);
                     t = lane2.Stop(LANE2_WALK, t);
                     int count = rows.Count;
                     // Pass 1's run q-values, read back off the sidecar with the scores. Recomputing
@@ -1306,6 +1314,7 @@ namespace pwiz.Osprey.FDR
                     // TryLoadCompletedScores returns null exactly when it returns no q-values.
                     if (scores == null)
                     {
+                        rows = ReadFileRows(streamFileRows, fileName, StubColumns.ApexRt, rowCounts[f]);
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         scores = new double[count];
                         if (ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
@@ -1387,6 +1396,7 @@ namespace pwiz.Osprey.FDR
                 lane2.Seconds(LANE2_WALK), lane2.Seconds(LANE2_SIDECAR), lane2.Seconds(LANE2_RESCORE),
                 lane2.Seconds(LANE2_LOOKUPS), lane2.Seconds(LANE2_PREPARE), order2.Seconds(ORDER2_PREPARED),
                 order2.Seconds(ORDER2_SINK));
+            LogBlockReads(log, passLabel, @"pass 2");
             sink.Finish(log);
             return false;
         }
@@ -1662,6 +1672,14 @@ namespace pwiz.Osprey.FDR
         private static int LanesUsed(int fileLanes, int nFiles)
         {
             return Math.Max(1, Math.Min(fileLanes, nFiles));
+        }
+
+        // Experimental block-read totals (OSPREY_BLOCK_READ_MB) at a phase boundary; silent when off.
+        private static void LogBlockReads(IOspreyLog log, string passLabel, string phase)
+        {
+            string text = BlockReadStats.Text();
+            if (text != null)
+                log.LogInfo(LogTag.PATH, @"{0} after {1}: {2}", passLabel, phase, text);
         }
 
         /// <summary>

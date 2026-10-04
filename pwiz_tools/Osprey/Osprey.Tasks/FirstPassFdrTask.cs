@@ -205,6 +205,8 @@ namespace pwiz.Osprey.Tasks
         /// LOADER instead of a materialized buffer, so the per-file lists it published are
         /// empty by design rather than by failure.</summary>
         private bool _survivorsStreamed;
+        // Built once, on first use, when OSPREY_STUB_IDENTITY asks for it. See StubIdentity.
+        private LibraryIdentity _stubIdentity;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
         private IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions
@@ -1982,11 +1984,12 @@ namespace pwiz.Osprey.Tasks
                     // A lane reads a file and builds its rows; the sink, which dedups across files
                     // with first-seen ties (or streams per-run rows straight to the TSV), takes them
                     // here in file order.
+                    var stubIdentity = StubIdentity(ctx);
                     OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
                     {
                         string runName = projections.PerFile[f].Key;
                         var rows = new List<FdrBenchInputWriter.Row>();
-                        string fileError = TryStreamFirstPassFileScores(runName, perFileParquetPaths, config,
+                        string fileError = TryStreamFirstPassFileScores(runName, perFileParquetPaths, config, stubIdentity,
                             (modseq, charge, isDecoy, record) =>
                             {
                                 if (isDecoy)
@@ -2210,6 +2213,7 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             PipelineContext ctx)
         {
+            ctx.LogBlockReads(@"First-pass before planning");
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(ScoringTaskShared.IsSingleFileSearch(config)
                 ? OspreyTasksResources.FirstPassFdrTask_PlanStage6_Multi_charge_consensus_planning
@@ -3513,9 +3517,10 @@ namespace pwiz.Osprey.Tasks
                 // and Run seeds every path up front. Moving that assignment inside the lean
                 // branch - where it looks redundant, since that arm adds an empty entry list -
                 // would break this indexer deep inside the Stage-5 streaming pass.
+                var stubIdentity = StubIdentity(ctx);
                 Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
                     (fileName, columns, onRow) =>
-                        ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow, columns);
+                        ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow, columns, stubIdentity);
                 // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
                 // load that file's feature vectors or re-run the dot product. Consulted by BOTH
                 // passes, and the set grows during pass 1 - so on a cold run this is what stops
@@ -3954,7 +3959,10 @@ namespace pwiz.Osprey.Tasks
             // Stage 6's positional CWT lookup byte-identical -- the same parquet + sidecar
             // round-trip modes 2/3 already validate.
             _survivorLoader = new FirstPassSurvivorLoader(
-                perFileParquetPaths, config, firstPassBaseIds, ctx.Get<SequencePool>().Value);
+                perFileParquetPaths, config, firstPassBaseIds, ctx.Get<SequencePool>().Value)
+            {
+                Identity = StubIdentity(ctx)
+            };
 
             // Summing the per-base_id row counts over the passing set gives exactly what a
             // materialized reload would have counted: a survivor is a parquet row whose
@@ -4109,7 +4117,9 @@ namespace pwiz.Osprey.Tasks
             // resident path's file/row order keeps the best-scores insertion order identical).
             // Each file is reduced on its own lane and merged here in file order, which
             // FirstPassProteinFdrAccumulator.Merge makes identical to adding every row in order.
+            ctx.LogBlockReads(@"First-pass before protein FDR");
             var accumulator = new FirstPassProteinFdrAccumulator(config.RunFdr);
+            var stubIdentity = StubIdentity(ctx);
             int proteinReduceFiles = 0;
             string reduceError = null;
             using (var reduceProgress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
@@ -4119,7 +4129,7 @@ namespace pwiz.Osprey.Tasks
                 OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
                 {
                     var fileAccumulator = new FirstPassProteinFdrAccumulator(config.RunFdr);
-                    string error = TryStreamFirstPassFileScores(projections.PerFile[f].Key, perFileParquetPaths, config,
+                    string error = TryStreamFirstPassFileScores(projections.PerFile[f].Key, perFileParquetPaths, config, stubIdentity,
                         (modseq, charge, isDecoy, record) =>
                             fileAccumulator.Add(modseq, isDecoy, record.Score, record.RunPeptideQvalue));
                     return (Accumulator: fileAccumulator, Error: error);
@@ -4182,7 +4192,7 @@ namespace pwiz.Osprey.Tasks
                                     q = 1.0;
                                 qByEntryId[entryId] = q;
                             },
-                            StubColumns.Core);
+                            StubColumns.Core | StubColumns.SkipCoelutionSum, stubIdentity);
                         return (Resolved: qByEntryId, Error: (string)null);
                     }
                     catch (Exception ex)
@@ -4209,6 +4219,16 @@ namespace pwiz.Osprey.Tasks
             return result;
         }
 
+        // Experimental (OSPREY_STUB_IDENTITY): the library lookup that lets the first-pass walks
+        // take charge, decoy flag and peptide from entry_id rather than decode them from every
+        // row. Null when the switch is off. Call before starting lanes: it builds on first use.
+        private LibraryIdentity StubIdentity(PipelineContext ctx)
+        {
+            if (OspreyEnvironment.StubIdentity == 0)
+                return null;
+            return _stubIdentity ?? (_stubIdentity = new LibraryIdentity(ctx.Get<FullLibrary>().Value));
+        }
+
         /// <summary>
         /// Stream one file's first-pass rows to <paramref name="onRow"/> as
         /// <c>(modseq, charge, isDecoy, FdrScoreRecord)</c>: read the file's
@@ -4232,6 +4252,7 @@ namespace pwiz.Osprey.Tasks
             string fileName,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
+            LibraryIdentity identity,
             Action<string, byte, bool, FdrScoreRecord> onRow)
         {
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
@@ -4247,13 +4268,25 @@ namespace pwiz.Osprey.Tasks
             }
             string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
 
-            var recordByEntryId = new Dictionary<uint, FdrScoreRecord>();
-            if (!FdrScoresSidecar.ReadRecords(fdrPath, FdrScoresSidecar.Pass.FirstPass,
-                    record => recordByEntryId[record.EntryId] = record))
+            var records = new List<FdrScoreRecord>();
+            if (!FdrScoresSidecar.ReadRecords(fdrPath, FdrScoresSidecar.Pass.FirstPass, records.Add))
             {
                 return string.Format(
                     OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_, fileName, fdrPath);
             }
+            // Experimental (OSPREY_STUB_IDENTITY=1): the sidecar holds exactly the parquet's
+            // first-pass rows, in parquet-row order, and the library supplies each row's peptide,
+            // charge and decoy flag from its entry_id - so when the library holds every id, the
+            // rows stream from the sidecar alone and the parquet is never opened.
+            if (identity != null && OspreyEnvironment.StubIdentity == 1 &&
+                TryStreamFromLibrary(records, identity, onRow))
+            {
+                return null;
+            }
+            var recordByEntryId = new Dictionary<uint, FdrScoreRecord>(records.Count);
+            foreach (var record in records)
+                recordByEntryId[record.EntryId] = record;
+            records = null;
 
             ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                 (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
@@ -4272,8 +4305,29 @@ namespace pwiz.Osprey.Tasks
                     if (recordByEntryId.TryGetValue(entryId, out FdrScoreRecord record))
                         onRow(modseq ?? string.Empty, charge, isDecoy, record);
                 },
-                StubColumns.Core);
+                StubColumns.Core | StubColumns.SkipCoelutionSum, identity);
             return null;
+        }
+
+        // The sidecar-only half of TryStreamFirstPassFileScores. False, having emitted nothing,
+        // when the library lacks any of the file's ids.
+        private static bool TryStreamFromLibrary(List<FdrScoreRecord> records, LibraryIdentity identity,
+            Action<string, byte, bool, FdrScoreRecord> onRow)
+        {
+            var entries = new LibraryEntry[records.Count];
+            for (int i = 0; i < records.Count; i++)
+            {
+                entries[i] = identity.Find(records[i].EntryId);
+                if (entries[i] == null)
+                    return false;
+            }
+            for (int i = 0; i < records.Count; i++)
+            {
+                var record = records[i];
+                onRow(entries[i].ModifiedSequence ?? string.Empty, entries[i].Charge,
+                    (record.EntryId & LibraryEntry.DECOY_ID_BIT) != 0, record);
+            }
+            return true;
         }
 
         /// <summary>
@@ -4335,6 +4389,7 @@ namespace pwiz.Osprey.Tasks
             // Each file's passing set and row counts are built on its own lane and merged here in
             // file order: a union and integer sums, so the result - and the order each base_id
             // first enters either collection - is what one walk over every file gives.
+            ctx.LogBlockReads(@"First-pass before trim");
             int compactFiles = 0;
             string compactError = null;
             using (var compactProgress = new ProgressReporter(ScoringTaskShared.IsSingleFileSearch(config)

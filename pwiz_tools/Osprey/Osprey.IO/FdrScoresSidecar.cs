@@ -348,7 +348,7 @@ namespace pwiz.Osprey.IO
             if (selectRecord != null && selected == null)
                 throw new ArgumentNullException(nameof(selected));
             selected?.Clear();
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var fs = BlockReadStream.OpenRead(path))
             {
                 long len = fs.Length;
                 if (len < HeaderLength)
@@ -824,7 +824,7 @@ namespace pwiz.Osprey.IO
             // false return MEANS to the caller, not about how large the allocation was.
             try
             {
-                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var fs = BlockReadStream.OpenRead(path))
                 {
                     long len = fs.Length;
                     if (len < HeaderLength)
@@ -939,7 +939,7 @@ namespace pwiz.Osprey.IO
 
             try
             {
-                using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var src = BlockReadStream.OpenRead(path))
                 {
                     if (src.Length < HeaderLength)
                         return false;

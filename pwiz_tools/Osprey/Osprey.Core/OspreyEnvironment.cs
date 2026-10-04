@@ -68,6 +68,31 @@ namespace pwiz.Osprey.Core
         public static readonly int MaxParallelFiles = ParseIntOrZero(@"OSPREY_MAX_PARALLEL_FILES");
 
         /// <summary>
+        /// OSPREY_BLOCK_READ_MB: read score parquets and FDR score sidecars in blocks of this
+        /// many MB, serving the reader's smaller reads from memory. 0 or unset reads them
+        /// directly, as before. Experimental, for spinning disks: a cold parquet walk is many
+        /// small column-chunk reads, and the columns one walk needs sit together in each row
+        /// group, so one block read replaces several seeks.
+        /// </summary>
+        public static readonly int BlockReadMb = ParseIntOrZero(@"OSPREY_BLOCK_READ_MB");
+
+        /// <summary>
+        /// OSPREY_BLOCK_READ_GATE=1: with <see cref="BlockReadMb"/>, only one thread in the
+        /// process reads a block from disk at a time, so concurrent file lanes take turns at
+        /// the disk instead of interleaving their reads, and decode concurrently.
+        /// </summary>
+        public static readonly bool BlockReadGate = IsSetAndNotZero(@"OSPREY_BLOCK_READ_GATE");
+
+        /// <summary>
+        /// OSPREY_STUB_IDENTITY: where the first-pass FDR walk takes each score row's charge,
+        /// decoy flag and peptide. Experimental. 0 or unset reads them from the score file, as
+        /// before; 1 takes them from the library entry the row's entry_id names, which skips
+        /// decoding three columns (two of them strings) from every row; 2 reads both and stops
+        /// at the first row where they differ, to prove the two agree on a cohort.
+        /// </summary>
+        public static readonly int StubIdentity = ParseIntOrZero(@"OSPREY_STUB_IDENTITY");
+
+        /// <summary>
         /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
         /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before
