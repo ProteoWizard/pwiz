@@ -115,18 +115,6 @@
   <data name="FdrLevelExtension_LOCALIZED_VALUES_precursor_and_peptide" xml:space="preserve">
     <value>precursor and peptide</value>
   </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_Mokapot" xml:space="preserve">
-    <value>Mokapot</value>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_Percolator" xml:space="preserve">
-    <value>Percolator</value>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree" xml:space="preserve">
-    <value>gradient-boosted tree</value>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy" xml:space="preserve">
-    <value>simple target-decoy</value>
-  </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_" xml:space="preserve">
     <value>File parallelism: {0} (auto, CPU-bound: {1} cores, {2} files; memory estimate unavailable)</value>
   </data>

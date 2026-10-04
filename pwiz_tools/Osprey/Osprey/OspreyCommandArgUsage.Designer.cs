@@ -124,15 +124,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FDR method (default: {0}).
-        /// </summary>
-        public static string _fdr_method {
-            get {
-                return ResourceManager.GetString("_fdr_method", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Write an FDRBench-compatible input TSV to this path. The level is taken from {0} ({2}; {3} and {4} emit precursor-level). Includes every reported target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as &apos;{1}&apos;, so FDRBench can compute true FDR via entrapment counting without truncation at Osprey&apos;s threshold..
         /// </summary>
         public static string _fdrbench {

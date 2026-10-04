@@ -17,17 +17,21 @@
  * limitations under the License.
  */
 using Parquet;
-using Parquet.Data;
 using Parquet.Schema;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -39,15 +43,35 @@ namespace pwiz.Skyline.Model.Databinding
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
-            using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
-            writer.CompressionMethod = CompressionMethod.Zstd;
-            using var writeWorker = new QueueWorker<DataColumn[]>(
-                consume: (dataColumns, threadIndex) =>
+            var options = new ParquetOptions
+            {
+                CompressionMethod = CompressionMethod.Zstd,
+                // Parquet.Net's default is SmallestSize, which is Zstd level 19 and many times slower
+                // than the level 3 that Optimal maps to, for a few percent smaller file
+                CompressionLevel = CompressionLevel.Optimal,
+                // Parquet.Net 6 only dictionary-encodes a column when asked to, and decides by scanning the
+                // column's values; a sample of this many rows rejects a mostly unique column without the full scan
+                DictionaryEncodingSampleSize = 10000
+            };
+            // The strings in a report are mostly repeated (protein, peptide, replicate and file names),
+            // which Parquet.Net 4 dictionary-encoded without being asked. List columns are left plain
+            // because some readers cannot decode dictionary-encoded lists.
+            foreach (var column in columns.Where(col => col.ListElementType == null && col.StorageType == typeof(string)))
+            {
+                options.ColumnEncodingHints[column.DataField.Path.ToString()] = EncodingHint.Dictionary;
+            }
+            // Parquet.Net 6 does not use ConfigureAwait(false) when it writes the file's header and footer,
+            // so blocking on it from a thread with a WinForms SynchronizationContext would deadlock
+            var writer = ActionUtil.CallWithoutSynchronizationContext(() =>
+                ParquetWriter.CreateAsync(schema, stream, options).GetAwaiter().GetResult());
+            using var writeWorker = new QueueWorker<Array[]>(
+                consume: (chunkArrays, threadIndex) =>
                 {
                     using var groupWriter = writer.CreateRowGroup();
-                    foreach (var dataColumn in dataColumns)
+                    // A row group's columns have to be written in schema order, one after another
+                    for (int i = 0; i < columns.Count; i++)
                     {
-                        groupWriter.WriteColumnAsync(dataColumn).GetAwaiter().GetResult();
+                        columns[i].WriteColumnAsync(groupWriter, chunkArrays[i]).GetAwaiter().GetResult();
                     }
                 });
             // Single writer thread, queue at most 1 chunk ahead
@@ -82,13 +106,7 @@ namespace pwiz.Skyline.Model.Databinding
                     break;
                 }
 
-                // Create DataColumns and queue for writing
-                var dataColumns = new DataColumn[columns.Count];
-                for (int i = 0; i < columns.Count; i++)
-                {
-                    dataColumns[i] = columns[i].CreateDataColumn(chunkArrays[i]);
-                }
-                writeWorker.Add(dataColumns);
+                writeWorker.Add(chunkArrays);
             }
 
             writeWorker.DoneAdding(wait: true);
@@ -96,6 +114,10 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 throw writeWorker.Exception;
             }
+            // Disposing the writer writes the file's footer, so it is not disposed when the export fails:
+            // that would throw again and hide the exception which says why. The writer holds nothing but
+            // the caller's stream.
+            ActionUtil.CallWithoutSynchronizationContext(() => writer.DisposeAsync().GetAwaiter().GetResult());
         }
 
         private List<ColumnData> BuildColumns(ItemProperties itemProperties)
@@ -222,7 +244,7 @@ namespace pwiz.Skyline.Model.Databinding
                     ElementStorageType = DecideStorageType(ListElementType);
                     StorageType = typeof(IEnumerable<>).MakeGenericType(ElementStorageType);
                     // Element is nullable so individual list slots can hold nulls
-                    var elementField = new DataField(@"element", ElementStorageType,
+                    var elementField = MakeDataField(@"element", ElementStorageType,
                         isNullable: true, isArray: false);
                     SchemaField = new ListField(Name, elementField);
                     DataField = elementField;
@@ -230,7 +252,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else
                 {
                     StorageType = DecideStorageType(valueType);
-                    DataField = new DataField(Name, StorageType);
+                    DataField = MakeDataField(Name, StorageType);
                     SchemaField = DataField;
                 }
             }
@@ -254,45 +276,27 @@ namespace pwiz.Skyline.Model.Databinding
                 return Array.CreateInstance(StorageType, rowCount);
             }
 
-            public DataColumn CreateDataColumn(Array chunkArray)
+            /// <summary>
+            /// Writes the chunk's values, from the array made by <see cref="CreateArray"/>, as the next
+            /// column of the row group.
+            /// </summary>
+            public Task WriteColumnAsync(ParquetRowGroupWriter groupWriter, Array chunkArray)
             {
-                if (ListElementType == null)
+                if (ListElementType != null)
                 {
-                    // Simple column - no flattening needed
-                    return new DataColumn(DataField, chunkArray);
+                    // Parquet.Net 6 stores a string as ReadOnlyMemory<char>
+                    var elementType = ElementStorageType == typeof(string)
+                        ? typeof(ReadOnlyMemory<char>)
+                        : Nullable.GetUnderlyingType(ElementStorageType);
+                    return (Task) WRITE_LIST_COLUMN_METHOD.MakeGenericMethod(elementType)
+                        .Invoke(null, BindingFlags.DoNotWrapExceptions, null, new object[] { groupWriter, DataField, chunkArray }, null);
                 }
-
-                // List column - need to flatten data and create repetition levels
-                var allElements = new List<object>();
-                var repetitionLevels = new List<int>();
-
-                for (int rowIndex = 0; rowIndex < chunkArray.Length; rowIndex++)
+                if (StorageType == typeof(string))
                 {
-                    var listValue = chunkArray.GetValue(rowIndex) as Array;
-                    if (listValue == null || listValue.Length == 0)
-                    {
-                        // Empty or null list - still need to represent this row
-                        allElements.Add(null);
-                        repetitionLevels.Add(0);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < listValue.Length; i++)
-                        {
-                            allElements.Add(listValue.GetValue(i));
-                            repetitionLevels.Add(i == 0 ? 0 : 1); // 0 = start of new list, 1 = continuation
-                        }
-                    }
+                    return groupWriter.WriteAsync(DataField, (string[]) chunkArray);
                 }
-
-                // Create flattened array of the element storage type
-                var flattenedArray = Array.CreateInstance(ElementStorageType, allElements.Count);
-                for (int i = 0; i < allElements.Count; i++)
-                {
-                    flattenedArray.SetValue(allElements[i], i);
-                }
-
-                return new DataColumn(DataField, flattenedArray, repetitionLevels.ToArray());
+                return (Task) WRITE_NULLABLE_COLUMN_METHOD.MakeGenericMethod(Nullable.GetUnderlyingType(StorageType))
+                    .Invoke(null, BindingFlags.DoNotWrapExceptions, null, new object[] { groupWriter, DataField, chunkArray }, null);
             }
 
             public void StoreValue(RowItem rowItem, int rowIndex, Array values)
@@ -310,9 +314,37 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else
                 {
-                    value = ConvertToStorageType(value, StorageType);
+                    value = ConvertToColumnValue(value, StorageType);
                 }
                 values.SetValue(value, rowIndex);
+            }
+
+            private DataField MakeDataField(string name, Type storageType, bool? isNullable = null, bool? isArray = null)
+            {
+                if (storageType != typeof(DateTime?))
+                {
+                    return new DataField(name, storageType, isNullable, isArray);
+                }
+                // Without a format, Parquet.Net writes DateTime as the deprecated INT96. The
+                // values are stored to the millisecond because Parquet.Net 6 writes the digits
+                // of a Millis value as they are, but does its own time zone conversion when it
+                // writes Micros or Nanos.
+                return new DateTimeDataField(name, DateTimeFormat.Timestamp, true,
+                    DateTimeTimeUnit.Millis, isNullable ?? true, isArray);
+            }
+
+            private object ConvertToColumnValue(object value, Type type)
+            {
+                value = ConvertToStorageType(value, type);
+                // Parquet.Net writes the DateTime digits without looking at DateTime.Kind,
+                // so a local time has to be converted to UTC here. A time with no time zone
+                // (DateTimeKind.Unspecified) is written as if it were UTC, which keeps the
+                // output the same on every computer.
+                if (value is DateTime dateTime && dateTime.Kind == DateTimeKind.Local)
+                {
+                    return dateTime.ToUniversalTime();
+                }
+                return value;
             }
 
             private Array ConvertListColumnValue(object listColumnValue)
@@ -324,7 +356,7 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType)
+                if (array.GetType().GetElementType() == ListElementType && ListElementType != typeof(DateTime?))
                 {
                     return array;
                 }
@@ -332,7 +364,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var convertedArray = Array.CreateInstance(ListElementType, array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    var value = ConvertToStorageType(array.GetValue(i), ListElementType);
+                    var value = ConvertToColumnValue(array.GetValue(i), ListElementType);
                     if (value != null)
                     {
                         convertedArray.SetValue(value, i);
@@ -342,6 +374,58 @@ namespace pwiz.Skyline.Model.Databinding
                 return convertedArray;
             }
         }
+        private static readonly MethodInfo WRITE_NULLABLE_COLUMN_METHOD =
+            typeof(ParquetReportExporter).GetMethod(nameof(WriteNullableColumnAsync), BindingFlags.NonPublic | BindingFlags.Static);
+
+        private static Task WriteNullableColumnAsync<T>(ParquetRowGroupWriter groupWriter, DataField field, Array values) where T : struct
+        {
+            return groupWriter.WriteAsync(field, new ReadOnlyMemory<T?>((T?[]) values));
+        }
+
+        private static readonly MethodInfo WRITE_LIST_COLUMN_METHOD =
+            typeof(ParquetReportExporter).GetMethod(nameof(WriteListColumnAsync), BindingFlags.NonPublic | BindingFlags.Static);
+
+        /// <summary>
+        /// Flattens the lists of a chunk into the elements which are not null, with the repetition levels
+        /// which say where each list starts and the definition levels which say whether a row's list is
+        /// null, empty, or has a null element, and writes them as the next column of the row group.
+        /// </summary>
+        private static Task WriteListColumnAsync<T>(ParquetRowGroupWriter groupWriter, DataField elementField, Array lists) where T : struct
+        {
+            var values = new List<T>();
+            var definitionLevels = new List<int>();
+            var repetitionLevels = new List<int>();
+            // The element's definition level counts the levels of nesting which are present: the
+            // list, the list's repeated group (so at least one element), and the element's value
+            int valueLevel = elementField.MaxDefinitionLevel;
+            foreach (Array list in lists)
+            {
+                if (list == null || list.Length == 0)
+                {
+                    repetitionLevels.Add(0);
+                    definitionLevels.Add(list == null ? valueLevel - 3 : valueLevel - 2);
+                    continue;
+                }
+                for (int i = 0; i < list.Length; i++)
+                {
+                    // 0 starts a new list, 1 continues the previous element's list
+                    repetitionLevels.Add(i == 0 ? 0 : 1);
+                    var element = list.GetValue(i);
+                    if (element == null)
+                    {
+                        definitionLevels.Add(valueLevel - 1);
+                    }
+                    else
+                    {
+                        definitionLevels.Add(valueLevel);
+                        values.Add(element is string s ? (T) (object) s.AsMemory() : (T) element);
+                    }
+                }
+            }
+            return groupWriter.WriteAllPartsAsync<T>(elementField, values.ToArray(),
+                definitionLevels.ToArray(), repetitionLevels.ToArray(), CancellationToken.None);
+        }
+
         private static Type GetListColumnValueStorageType(Type type)
         {
             var elementType = ListColumnValue.GetElementType(type);
@@ -363,7 +447,8 @@ namespace pwiz.Skyline.Model.Databinding
             { typeof(decimal), typeof(decimal?) },
             // Old call sites wrapped DateTime as DateTimeOffset with a local-Kind
             // assumption that wasn't actually valid; store DateTime? directly so
-            // the value goes through unchanged.
+            // the value goes through unchanged. See ColumnData.MakeDataField for
+            // how it is encoded.
             { typeof(DateTime), typeof(DateTime?) }
         };
 

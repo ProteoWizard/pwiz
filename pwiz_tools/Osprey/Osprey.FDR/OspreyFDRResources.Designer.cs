@@ -194,16 +194,6 @@ namespace pwiz.Osprey.FDR {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: {1:N0} targets pass (FDR={2:F4}, {3:N0} target wins, {4:N0} decoy wins).
-        /// </summary>
-        public static string PercolatorEngine_RunSimpleFdr__0____1__targets_pass__FDR__2____3__target_wins___4__decoy_wins_ {
-            get {
-                return ResourceManager.GetString("PercolatorEngine_RunSimpleFdr__0____1__targets_pass__FDR__2____3__target_wins___4" +
-                        "__decoy_wins_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Loading Percolator training features from {0:N0} files.
         /// </summary>
         public static string PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from__0__files {

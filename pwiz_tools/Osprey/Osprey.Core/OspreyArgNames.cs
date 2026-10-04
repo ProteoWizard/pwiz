@@ -37,7 +37,6 @@ namespace pwiz.Osprey.Core
         public const string OUTPUT = @"output";
         public const string OUTPUT_DIR = @"output-dir";
         public const string CACHE_DIR = @"cache-dir";
-        public const string FDR_METHOD = @"fdr-method";
         public const string DECOYS_IN_LIBRARY = @"decoys-in-library";
         public const string RESOLUTION = @"resolution";
         public const string FRAGMENT_TOLERANCE = @"fragment-tolerance";
