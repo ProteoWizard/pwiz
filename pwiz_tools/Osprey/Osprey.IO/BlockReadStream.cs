@@ -70,6 +70,15 @@ namespace pwiz.Osprey.IO
             return new BlockReadStream(path, blockMb * 1024 * 1024, OspreyEnvironment.BlockReadGate);
         }
 
+        /// <summary>
+        /// A <see cref="BlockReadStream"/> with an explicit block size and gate, independent of
+        /// the process environment - for tests, which cannot change the environment settings.
+        /// </summary>
+        internal static BlockReadStream Open(string path, int blockBytes, bool gate)
+        {
+            return new BlockReadStream(path, blockBytes, gate);
+        }
+
         private readonly FileStream _file;
         private readonly long _length;
         private readonly bool _gate;
