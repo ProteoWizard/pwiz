@@ -3736,6 +3736,48 @@ namespace pwiz.Osprey.Test
 
         // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
         // overlay preserves the canonical sort key of the row it replaces.
+        /// <summary>
+        /// A score parquet with a zero charge - the pre-2026-09-17 column-writer race - is
+        /// refused by the stub walks even when the charges are taken from the library
+        /// (OSPREY_STUB_IDENTITY=1, the default), which never needs the file's charge. Without
+        /// the check such a file passed Stages 5 and 6 on library charges and failed hours later.
+        /// Asserts the exception type only: the message is a resource string.
+        /// </summary>
+        [TestMethod]
+        public void TestZeroChargeRefusedUnderLibraryIdentity()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_zero_charge_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Odd ids, so MakeStreamEntry marks them targets, matching the library.
+                var entries = new List<FdrEntry> { MakeStreamEntry(1, 100.0), MakeStreamEntry(3, 300.0) };
+                entries[1].Charge = 0;
+                string path = Path.Combine(dir, "zero.scores.parquet");
+                ParquetScoreCache.WriteScoresParquet(path, entries, null, null, "f.mzML");
+                var identity = new LibraryIdentity(new List<LibraryEntry>
+                {
+                    new LibraryEntry(1, @"PEPTIDE1", @"PEPTIDE1", 2, 450.0, 10.0),
+                    new LibraryEntry(3, @"PEPTIDE3", @"PEPTIDE3", 2, 460.0, 11.0),
+                });
+
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    ParquetScoreCache.ReadFdrStubScalars(path, (id, charge, decoy, coelution, modseq, apex) => { },
+                        StubColumns.Core, identity));
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    ParquetScoreCache.LoadFdrStubsFromParquet(path, null, null, identity));
+                // And without the library, as before.
+                Assert.ThrowsException<InvalidDataException>(() =>
+                    ParquetScoreCache.ReadFdrStubScalars(path, (id, charge, decoy, coelution, modseq, apex) => { },
+                        StubColumns.Core));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
         private static FdrEntry MakeStreamEntry(uint id, double baseValue)
         {
             var features = new double[ParquetScoreCache.NUM_PIN_FEATURES];

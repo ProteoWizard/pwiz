@@ -191,11 +191,23 @@ namespace pwiz.Osprey.FDR.Reconciliation
             /// </summary>
             public IReadOnlyList<GapFillTarget> IdentifyFile(string fileName, IReadOnlyList<FdrEntry> entries)
             {
+                _perFileRefinedCal.TryGetValue(fileName, out RTCalibration refined);
+                return IdentifyFile(fileName, refined, entries);
+            }
+
+            /// <summary>
+            /// <see cref="IdentifyFile(string,IReadOnlyList{FdrEntry})"/> with the file's refined
+            /// calibration passed in (null when it was not refit) rather than looked up in the
+            /// shared refit map, which a caller planning several files at once is still filling.
+            /// </summary>
+            public IReadOnlyList<GapFillTarget> IdentifyFile(string fileName, RTCalibration refinedCalibration,
+                IReadOnlyList<FdrEntry> entries)
+            {
                 if (entries == null || _passingPrecursors.Count == 0)
                     return Array.Empty<GapFillTarget>();
 
-                RTCalibration cal;
-                if (!_perFileRefinedCal.TryGetValue(fileName, out cal))
+                RTCalibration cal = refinedCalibration;
+                if (cal == null)
                     _perFileOriginalCal.TryGetValue(fileName, out cal);
                 if (cal == null)
                     return Array.Empty<GapFillTarget>();

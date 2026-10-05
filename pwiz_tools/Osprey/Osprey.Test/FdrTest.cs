@@ -30,6 +30,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
@@ -1096,11 +1097,26 @@ namespace pwiz.Osprey.Test
             private readonly Dictionary<(int, int), (uint EntryId, bool IsDecoy, byte Charge, string Peptide)> _ident =
                 new Dictionary<(int, int), (uint, bool, byte, string)>();
             private readonly Dictionary<(int, int), double> _apexRts = new Dictionary<(int, int), double>();
+            private (int File, int Row) _last = (-1, -1);
+
+            /// <summary>
+            /// Calls that did not arrive in (file, row) order. The production sinks fold rows
+            /// into order-dependent state - first-seen tie-breaks, per-file flushes - so a score
+            /// pass must hand them over in exactly the order the sequential loop did, however
+            /// many file lanes produced them.
+            /// </summary>
+            public int OrderViolations { get; private set; }
 
             public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
                 byte charge, string peptide, double score, double experimentAggregateScore,
                 double apexRt, in FdrQValues q)
             {
+                bool inOrder = fileIdx == _last.File
+                    ? rowIdx == _last.Row + 1
+                    : fileIdx > _last.File && rowIdx == 0;
+                if (!inOrder)
+                    OrderViolations++;
+                _last = (fileIdx, rowIdx);
                 _scores[(fileIdx, rowIdx)] = score;
                 _expAgg[(fileIdx, rowIdx)] = experimentAggregateScore;
                 _q[(fileIdx, rowIdx)] = q;
@@ -1378,6 +1394,24 @@ namespace pwiz.Osprey.Test
         /// here would diverge. The fixture carries ParquetIndex == within-file row position, so the
         /// streaming path's running row ordinal indexes the same feature row the resident path's
         /// ParquetIndex does (the production invariant: parquet written in row order).
+        ///
+        /// A THIRD arm runs the streaming path with pass 1's run-scope output captured and served
+        /// back to pass 2, which is how a cold production run behaves once pass 1 has written each
+        /// file's sidecar. Pass 2 then reads both run q-values instead of re-deriving them, and
+        /// this arm is what holds that read-back to the same byte-identity as the sort: it is
+        /// compared against the resident oracle, so it cannot pass by agreeing with a streaming
+        /// arm that is itself wrong. It also counts the read-backs, and a marked variant serves
+        /// sentinel q-values, so the arm observes pass 2 reading - and emitting - what pass 1
+        /// stored rather than inferring it from an output a recompute would also produce.
+        ///
+        /// A FOURTH arm serves a sidecar with one record too many, placed first so that accepting
+        /// a prefix of it would misalign every row; the reader must refuse it and score the files.
+        ///
+        /// A FIFTH arm runs the score passes on several file lanes over a fixture whose files
+        /// share precursors and carry exactly tied scores, so the competition, clamp floors and
+        /// tie-breaks all cross files. It must match the oracle, deliver rows to the sink in
+        /// (file, row) order, and build the same feature contributions - floating-point sums and
+        /// histograms - as the one-lane run.
         /// </summary>
         [TestMethod]
         public void TestStreamingFirstPassMatchesProjection()
@@ -1417,19 +1451,138 @@ namespace pwiz.Osprey.Test
 
             // Streaming-from-row-source path (the change under test): identity streamed straight
             // from the fixture (== parquet), features by fileName, no resident projection.
-            var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
-            var sinkStr = new CapturingSink();
+            var sinkStr = RunStreamingArm(fixtureStr, featuresStr, percConfig);
+            AssertSinkMatchesOracle(sinkRes, sinkStr, fixtureStr, projSet);
+
+            // Third arm: the same streaming path, but pass 1's finished run-scope output is
+            // captured and handed back to pass 2 instead of pass 2 recomputing it. On this arm
+            // pass 2 takes BOTH run q-values off the sidecar rather than sorting the file again,
+            // so a divergence here - measured against the SAME resident oracle, not merely
+            // against the other streaming arm - is the read-back disagreeing with the sort it
+            // replaces. Nothing else in the pass changes, which is why one fixture and one
+            // oracle cover all three arms.
+            var fixtureSide = BuildMultiObservationEquivFixture(nFeat, out var featuresSide);
+            var sidecar = new SidecarStandIn();
+            var sinkSide = RunStreamingArm(fixtureSide, featuresSide, percConfig, sidecar);
+            // Without these the arm could pass vacuously: a pass 1 that flushed nothing, or a
+            // pass 2 that never asked, leaves pass 2 on the recompute path, which matches the
+            // oracle too. Pass 1 asks for each file before writing it, so every read-back that
+            // succeeds is pass 2's.
+            Assert.AreEqual(fixtureSide.Count, sidecar.Count);
+            Assert.AreEqual(fixtureSide.Count, sidecar.ReadBacks);
+            AssertSinkMatchesOracle(sinkRes, sinkSide, fixtureSide, projSet);
+
+            // The read-back must also be what pass 2 EMITS. Served q-values replaced by sentinels
+            // no computation could produce must arrive at the sink unchanged; a pass 2 that read
+            // the sidecar but still emitted a recompute would match the oracle above and fail here.
+            const double markedPrecursorQ = 0.123456789;
+            const double markedPeptideQ = 0.987654321;
+            var fixtureMarked = BuildMultiObservationEquivFixture(nFeat, out var featuresMarked);
+            var marked = new SidecarStandIn(records => records.ConvertAll(rec =>
+                (rec.EntryId, rec.Score, markedPrecursorQ, markedPeptideQ)));
+            var sinkMarked = RunStreamingArm(fixtureMarked, featuresMarked, percConfig, marked);
+            Assert.AreEqual(fixtureMarked.Count, marked.ReadBacks);
+            for (int f = 0; f < fixtureMarked.Count; f++)
+            {
+                for (int r = 0; r < fixtureMarked[f].Value.Count; r++)
+                {
+                    Assert.AreEqual(markedPrecursorQ, sinkMarked.QAt(f, r).RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(markedPeptideQ, sinkMarked.QAt(f, r).RunPeptideQvalue, 0.0);
+                }
+            }
+
+            // Fourth arm: a sidecar holding MORE records than the parquet has rows. The reader
+            // sizes its arrays from the parquet row count, so this is the case that would run
+            // off the end of them. It has to refuse the file and score it normally - not throw,
+            // and above all not accept a misaligned shortcut, which is the failure that would
+            // finish the run clean with wrong identifications. The extra record goes FIRST: an
+            // implementation that kept the first expectedCount records would then misalign every
+            // row, where one appended last would leave a prefix that happens to be right. Refusing
+            // means both passes fall back to computing, so the output must match the oracle again.
+            var fixtureLong = BuildMultiObservationEquivFixture(nFeat, out var featuresLong);
+            var oneTooMany = new SidecarStandIn(records =>
+            {
+                var served = new List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>(records);
+                // A zero-row file has no record to repeat; it is served as stored.
+                if (records.Count > 0)
+                    served.Insert(0, records[0]);
+                return served;
+            });
+            var sinkLong = RunStreamingArm(fixtureLong, featuresLong, percConfig, oneTooMany);
+            Assert.AreEqual(fixtureLong.Count, oneTooMany.ReadBacks);
+            AssertSinkMatchesOracle(sinkRes, sinkLong, fixtureLong, projSet);
+
+            // Fifth arm: file lanes. Files share precursors and tie exactly, so the competition,
+            // the clamp floors and first-seen tie-breaks all cross files; with histograms on, the
+            // contribution accumulator's order-free half is merged per file while its sums are
+            // replayed in row order. Production shape throughout: pass 1 writes the sidecar and
+            // pass 2 reads it back.
+            const int laneFiles = 6;
+            var lanesConfig = new PercolatorConfig
+            {
+                MaxIterations = percConfig.MaxIterations,
+                NFolds = percConfig.NFolds,
+                Seed = percConfig.Seed,
+                TrainFdr = percConfig.TrainFdr,
+                TestFdr = percConfig.TestFdr,
+                MaxTrainSize = percConfig.MaxTrainSize,
+                FeatureInfos = featureInfos,
+                CollectFeatureHistograms = true
+            };
+            var fixtureLanesRes = BuildMultiObservationEquivFixture(nFeat, out var featuresLanesRes, laneFiles, true);
+            var projLanes = FdrProjectionSet.BuildFromEntries(fixtureLanesRes);
+            var sinkLanesRes = new CapturingSink();
+            FeatureContributions contributionsRes = null;
+            Assert.IsFalse(PercolatorEngine.RunStreamingIntoProjection(
+                projLanes.PerFile, projLanes.PeptideById, lanesConfig, OspreyLog.None, "First-pass",
+                f => featuresLanesRes[f], f => ApexRtsByParquetIndex(fixtureLanesRes, f), sinkLanesRes,
+                c => contributionsRes = c));
+            FeatureContributions contributionsOneLane = null;
+            FeatureContributions contributionsLanes = null;
+            var fixtureOneLane = BuildMultiObservationEquivFixture(nFeat, out var featuresOneLane, laneFiles, true);
+            var sinkOneLane = RunStreamingArm(fixtureOneLane, featuresOneLane, lanesConfig, new SidecarStandIn(),
+                1, c => contributionsOneLane = c);
+            var fixtureLanes = BuildMultiObservationEquivFixture(nFeat, out var featuresLanes, laneFiles, true);
+            var sidecarLanes = new SidecarStandIn();
+            var sinkLanes = RunStreamingArm(fixtureLanes, featuresLanes, lanesConfig, sidecarLanes,
+                4, c => contributionsLanes = c);
+            Assert.AreEqual(laneFiles, sidecarLanes.Count);
+            Assert.AreEqual(laneFiles, sidecarLanes.ReadBacks);
+            AssertSinkMatchesOracle(sinkLanesRes, sinkOneLane, fixtureOneLane, projLanes);
+            AssertSinkMatchesOracle(sinkLanesRes, sinkLanes, fixtureLanes, projLanes);
+            AssertContributionsEqual(contributionsRes, contributionsOneLane);
+            AssertContributionsEqual(contributionsRes, contributionsLanes);
+
+            // Sixth arm: pass 1 flushes each file's run-scope output once, with the values the sink
+            // received, and a resume handed the published model reproduces the fresh run whether
+            // or not a file's scores come back off its sidecar.
+            var fixtureFlush = BuildMultiObservationEquivFixture(nFeat, out var featuresFlush);
+            var fileNames = fixtureFlush.ConvertAll(kv => kv.Key);
+            var sinkFlush = new CapturingSink();
             var flushes = new RunScopeFlushes();
             PercolatorResults model = null;
-            bool abortStr = PercolatorScorer.RunStreamingFirstPass(
-                fileNames, StreamRowsFrom(fixtureStr), f => featuresStr[f], percConfig, OspreyLog.None,
-                "First-pass", sinkStr, captureModel: m => model = m, flushFileRunScope: flushes.Flush);
-            Assert.IsFalse(abortStr);
+            bool abortFlush = PercolatorScorer.RunStreamingFirstPass(
+                fileNames, StreamRowsFrom(fixtureFlush), f => featuresFlush[f], percConfig, OspreyLog.None,
+                "First-pass", sinkFlush, captureModel: m => model = m, flushFileRunScope: flushes.Flush);
+            Assert.IsFalse(abortFlush);
 
-            Assert.AreEqual(projSet.PerFile.Count, fixtureStr.Count);
-            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkRes, sinkStr));
-            flushes.AssertOnePerFile(fixtureStr, sinkStr);
-            AssertResumedFileMatchesFreshRun(fixtureStr, featuresStr, percConfig, model, sinkStr, flushes);
+            AssertSinkMatchesOracle(sinkRes, sinkFlush, fixtureFlush, projSet);
+            flushes.AssertOnePerFile(fixtureFlush, sinkFlush);
+            AssertResumedFileMatchesFreshRun(fixtureFlush, featuresFlush, percConfig, model, sinkFlush, flushes);
+        }
+
+        /// <summary>
+        /// Positional compare of a streaming arm's sink against the resident projection oracle:
+        /// Score, all five q-values, identity and apex RT, every row, exact (0.0 delta). Shared
+        /// by the streaming arms of <see cref="TestStreamingFirstPassMatchesProjection"/> so each
+        /// is held to the same oracle rather than to the arm before it.
+        /// </summary>
+        private static void AssertSinkMatchesOracle(CapturingSink oracle, CapturingSink actual,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, FdrProjectionSet projSet)
+        {
+            Assert.AreEqual(0, actual.OrderViolations);
+            Assert.AreEqual(projSet.PerFile.Count, fixture.Count);
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixture, oracle, actual));
         }
 
         /// <summary>
@@ -1503,6 +1656,18 @@ namespace pwiz.Osprey.Test
             AssertScoresVary(fixtureStr, sinkStr);
             flushes.AssertOnePerFile(fixtureStr, sinkStr);
             AssertTreeFeatureDistributions(residentContributions, streamedContributions, projSet.TotalRows);
+
+            // The same on file lanes, the sidecar written by pass 1 and read back by pass 2 as in
+            // production: the trees score each file on its lane, and the distributions' sums are
+            // replayed in row order while their histograms merge per file.
+            FeatureContributions laneContributions = null;
+            var fixtureLanes = BuildNonMonotoneFirstPassFixture(out var featuresLanes);
+            var sidecarLanes = new SidecarStandIn();
+            var sinkLanes = RunStreamingArm(fixtureLanes, featuresLanes, treeConfig, sidecarLanes, 4,
+                c => laneContributions = c);
+            Assert.AreEqual(fixtureLanes.Count, sidecarLanes.ReadBacks);
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureLanes, sinkRes, sinkLanes));
+            AssertTreeFeatureDistributions(residentContributions, laneContributions, projSet.TotalRows);
 
             // A resume adopts the persisted model instead of training. Scoring with the adopted
             // trees must reproduce the fresh run exactly, or resumed and re-scored files would
@@ -1668,13 +1833,17 @@ namespace pwiz.Osprey.Test
 
             /// <summary>Feed one flushed file back as <c>tryStreamCompletedScores</c> would read
             /// it off that file's sidecar; false when the file was never flushed.</summary>
-            public bool Replay(string fileName, Action<uint, double> onScore)
+            public bool Replay(string fileName, Action<uint, double, double, double> onRecord)
             {
                 int i = _flushes.FindIndex(fl => fl.FileName == fileName);
                 if (i < 0)
                     return false;
-                for (int r = 0; r < _flushes[i].Scores.Length; r++)
-                    onScore(_flushes[i].EntryIds[r], _flushes[i].Scores[r]);
+                var flushed = _flushes[i];
+                for (int r = 0; r < flushed.Scores.Length; r++)
+                {
+                    onRecord(flushed.EntryIds[r], flushed.Scores[r],
+                        flushed.RunPrecursorQvalues[r], flushed.RunPeptideQvalues[r]);
+                }
                 return true;
             }
 
@@ -1786,6 +1955,121 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Runs <see cref="PercolatorScorer.RunStreamingFirstPass"/> over a fixture the way the
+        /// parquet row source serves it, optionally writing pass 1's output to a sidecar stand-in
+        /// and reading it back in pass 2, and returns what reached the sink.
+        /// </summary>
+        private static CapturingSink RunStreamingArm(List<KeyValuePair<string, List<FdrEntry>>> fixture,
+            Dictionary<string, List<double[]>> features, PercolatorConfig config,
+            SidecarStandIn sidecar = null, int fileLanes = 1,
+            Action<FeatureContributions> captureContributions = null)
+        {
+            var sink = new CapturingSink();
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f], config, OspreyLog.None,
+                "First-pass", sink, captureContributions, null, sidecar?.Read, null, sidecar?.Write,
+                fileLanes));
+            return sink;
+        }
+
+        /// <summary>
+        /// Exact equality of two feature-contribution reports: the per-feature values derived from
+        /// the floating-point target/decoy sums, and the histogram counts.
+        /// </summary>
+        private static void AssertContributionsEqual(FeatureContributions expected, FeatureContributions actual)
+        {
+            Assert.IsNotNull(expected);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(expected.Features.Count, actual.Features.Count);
+            for (int i = 0; i < expected.Features.Count; i++)
+            {
+                Assert.AreEqual(expected.Features[i].Coefficient, actual.Features[i].Coefficient, 0.0);
+                Assert.AreEqual(expected.Features[i].TargetDecoyMeanGap, actual.Features[i].TargetDecoyMeanGap, 0.0);
+                Assert.AreEqual(expected.Features[i].Weighted, actual.Features[i].Weighted, 0.0);
+                Assert.AreEqual(expected.Features[i].Percent, actual.Features[i].Percent, 0.0);
+            }
+            Assert.AreEqual(expected.Composite, actual.Composite, 0.0);
+            // Collected, or the merge they test was never exercised.
+            Assert.IsNotNull(expected.TargetHistograms);
+            AssertHistogramsEqual(expected.TargetHistograms, actual.TargetHistograms);
+            AssertHistogramsEqual(expected.DecoyHistograms, actual.DecoyHistograms);
+        }
+
+        private static void AssertHistogramsEqual(IReadOnlyList<int[]> expected, IReadOnlyList<int[]> actual)
+        {
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int j = 0; j < expected.Count; j++)
+                CollectionAssert.AreEqual(expected[j], actual[j]);
+        }
+
+        /// <summary>
+        /// Stands in for the on-disk 1st-pass sidecars: pass 1 writes each file's run-scope output
+        /// here, pass 2 reads it back, and only files pass 1 has written are served - which is what
+        /// the production streamer does through its scoresOnDisk set. Locked, because file lanes
+        /// write one file while another is being read. An optional <c>serve</c> transform makes
+        /// what is read differ from what was written, to model a sidecar the reader must refuse,
+        /// or values it must pass through untouched.
+        /// </summary>
+        private sealed class SidecarStandIn
+        {
+            private readonly Dictionary<string, List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>> _files =
+                new Dictionary<string, List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>>(StringComparer.Ordinal);
+            private readonly Func<List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>,
+                List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>> _serve;
+            private int _readBacks;
+
+            public SidecarStandIn(Func<List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>,
+                List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>> serve = null)
+            {
+                _serve = serve;
+            }
+
+            /// <summary>Files written.</summary>
+            public int Count
+            {
+                get
+                {
+                    lock (_files)
+                    {
+                        return _files.Count;
+                    }
+                }
+            }
+
+            /// <summary>Read requests that were served. Pass 1 asks for a file before it writes
+            /// it, so on a cold run every one of these is pass 2's.</summary>
+            public int ReadBacks => Volatile.Read(ref _readBacks);
+
+            public FileRunScopeSink Write =>
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
+                {
+                    // Copied out, not retained: the sink contract says these arrays are the
+                    // pass's own scratch and are reused after this returns.
+                    var records = new List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>(rowCount);
+                    for (int r = 0; r < rowCount; r++)
+                        records.Add((entryIds[r], scores[r], runPrecQ[r], runPeptQ[r]));
+                    lock (_files)
+                        _files[fileName] = records;
+                };
+
+            public CompletedScoreStreamer Read =>
+                (fileName, onRecord) =>
+                {
+                    List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)> records;
+                    lock (_files)
+                    {
+                        if (!_files.TryGetValue(fileName, out records))
+                            return false;
+                    }
+                    Interlocked.Increment(ref _readBacks);
+                    foreach (var rec in _serve == null ? records : _serve(records))
+                        onRecord(rec.EntryId, rec.Score, rec.RunPrecQ, rec.RunPeptQ);
+                    return true;
+                };
+        }
+
+        /// <summary>
         /// Paired target/decoy fixture for the projection equivalence test: 2 files x
         /// 40 pairs, well-separated target (high) vs decoy (low) features so the SVM
         /// trains cleanly. Each row carries ParquetIndex = its within-file row index,
@@ -1863,11 +2147,18 @@ namespace pwiz.Osprey.Test
         /// sort (EntryId, Charge, ParquetIndex) yields the identical order the FdrEntry
         /// sort (EntryId, Charge, ScanNumber, ParquetIndex) does. CoelutionSum =
         /// features[0], the value best-per-precursor ranks on (highest scan kept).
+        ///
+        /// <para>By default every file has its own precursors, so files never meet in the
+        /// competition. <paramref name="sharePrecursors"/> gives every file the SAME precursors -
+        /// the production shape, where one library precursor is observed in every run - so the
+        /// cross-file state is actually exercised: best-of-runs competition, the clamp floors, and
+        /// first-seen tie-breaks, since files whose index is not 1 mod 3 carry bit-identical
+        /// features and therefore exactly tied scores.</para>
         /// </summary>
         private static List<KeyValuePair<string, List<FdrEntry>>> BuildMultiObservationEquivFixture(
-            int nFeat, out Dictionary<string, List<double[]>> featuresByFile)
+            int nFeat, out Dictionary<string, List<double[]>> featuresByFile,
+            int filesCount = 2, bool sharePrecursors = false)
         {
-            const int filesCount = 2;
             const int precursorsPerFile = 20;
             const int obsPerPrecursor = 3;
             featuresByFile = new Dictionary<string, List<double[]>>();
@@ -1882,18 +2173,23 @@ namespace pwiz.Osprey.Test
                 {
                     // EntryId unique per (file, precursor); the decoy bit distinguishes
                     // the target/decoy base_id, exactly as the production stubs do.
-                    uint targetId = (uint)(file * 1000 + p + 1);
+                    uint targetId = sharePrecursors ? (uint)(p + 1) : (uint)(file * 1000 + p + 1);
                     uint decoyId = targetId | 0x80000000u;
-                    string pepSeq = string.Format("PEPTIDE{0}_{1}", file, p);
-                    string decoySeq = string.Format("DECOY{0}_{1}", file, p);
+                    string pepSeq = sharePrecursors
+                        ? string.Format("PEPTIDE_{0}", p)
+                        : string.Format("PEPTIDE{0}_{1}", file, p);
+                    string decoySeq = sharePrecursors
+                        ? string.Format("DECOY_{0}", p)
+                        : string.Format("DECOY{0}_{1}", file, p);
+                    double fileShift = sharePrecursors && file % 3 == 1 ? 0.013 : 0.0;
                     for (int k = 0; k < obsPerPrecursor; k++)
                     {
                         var targetFeatures = new double[nFeat];
                         var decoyFeatures = new double[nFeat];
                         for (int j = 0; j < nFeat; j++)
                         {
-                            targetFeatures[j] = 4.0 + p * 0.05 + k * 0.7 + j * 0.1;
-                            decoyFeatures[j] = 0.5 + p * 0.04 + k * 0.6 + j * 0.1;
+                            targetFeatures[j] = 4.0 + p * 0.05 + k * 0.7 + j * 0.1 + fileShift;
+                            decoyFeatures[j] = 0.5 + p * 0.04 + k * 0.6 + j * 0.1 + fileShift;
                         }
 
                         list.Add(new FdrEntry

@@ -115,6 +115,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Experimental (OSPREY_STUB_IDENTITY): the library lookup the parquet read takes charge,
+        /// decoy flag and peptide from instead of decoding them. Null reads them from the file.
+        /// </summary>
+        internal LibraryIdentity Identity { get; set; }
+
+        /// <summary>
         /// Load one file's survivors. Returns null with <paramref name="error"/> set
         /// on any missing path or failed sidecar overlay; those are genuine faults
         /// rather than absences, because Stage 5 just wrote both artifacts. The
@@ -183,7 +189,7 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> stubs;
             try
             {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor, _sequencePool);
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor, _sequencePool, Identity);
             }
             catch (Exception ex)
             {

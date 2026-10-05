@@ -69,6 +69,7 @@ namespace pwiz.Osprey.Test
         private const string LIBDECOY_FILE = @"stellar-subset-libdecoy.tsv";
         private const string LIBDECOY_PAIRING_FILE = @"stellar-subset-libdecoy-pairing.tsv";
         private const string BLIB_FILE = @"output.blib";
+        private const string FDR_FILE_LANES = @"OSPREY_FDR_FILE_LANES";
         private const string MZML_EXTENSION = SpectrumFileReader.EXT_MZML;
         private const string SPECTRA_CACHE_EXTENSION = SpectraCache.EXT;
         private const double TOLERANCE = 1e-9;
@@ -404,16 +405,18 @@ namespace pwiz.Osprey.Test
         {
             string baseDir = CreateDir(@"sequential");
             // Explicitly one file at a time: OSPREY_MAX_PARALLEL_FILES is read at class load, so an
-            // exported value would otherwise make this baseline parallel too.
-            string baseLog = RunAnalysis(baseDir, DataInputs(), Verifier(false),
+            // exported value would otherwise make this baseline parallel too. First-pass FDR takes
+            // its lane count from threads and memory instead, so it is pinned to one lane as well.
+            string baseLog = RunAnalysis(baseDir, DataInputs(), FdrLanes(1),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, @"1");
             string baseBlib = Path.Combine(baseDir, BLIB_FILE);
 
             // Files scored and re-scored concurrently must give the sequential answer. The subset's
             // three runs reach the second-pass worker together, so a race there shows every time
-            // (a shared FrozenModelScorer scratch buffer mixed the files' features).
+            // (a shared FrozenModelScorer scratch buffer mixed the files' features). First-pass FDR
+            // gets a lane per file whatever the machine, so its lanes are compared here too.
             string parallelDir = CreateDir(@"parallel-files");
-            RunAnalysis(parallelDir, DataInputs(), Verifier(false),
+            RunAnalysis(parallelDir, DataInputs(), FdrLanes(RUN_NAMES.Length),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
 
@@ -1107,7 +1110,20 @@ namespace pwiz.Osprey.Test
             {
                 { @"OSPREY_PASS2_VERIFY_WORKER", on ? @"1" : string.Empty },
                 { @"OSPREY_ALLOW_UNFIXED_RESIDENT", string.Empty },
-                { @"OSPREY_PASS2_QVALUE", string.Empty }
+                { @"OSPREY_PASS2_QVALUE", string.Empty },
+                { FDR_FILE_LANES, string.Empty }
+            };
+        }
+
+        /// <summary>
+        /// <see cref="Verifier"/> off, with first-pass FDR forced to <paramref name="lanes"/> file
+        /// lanes instead of the count the machine's threads and memory would choose.
+        /// </summary>
+        private static IReadOnlyDictionary<string, string> FdrLanes(int lanes)
+        {
+            return new Dictionary<string, string>(Verifier(false))
+            {
+                [FDR_FILE_LANES] = lanes.ToString(CultureInfo.InvariantCulture)
             };
         }
 

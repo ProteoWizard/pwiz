@@ -68,6 +68,54 @@ namespace pwiz.Osprey.Core
         public static readonly int MaxParallelFiles = ParseIntOrZero(@"OSPREY_MAX_PARALLEL_FILES");
 
         /// <summary>
+        /// OSPREY_FDR_FILE_LANES: forces how many files first-pass FDR works on at once,
+        /// bypassing <see cref="FdrLaneResolver"/>'s thread and memory limits (clamped to the
+        /// file count only). For measuring the lane curve, and for a test that needs a
+        /// one-lane oracle; 0 / unset lets the resolver choose.
+        /// </summary>
+        public static int FdrFileLanes => ParseIntOrZero(@"OSPREY_FDR_FILE_LANES");
+
+        /// <summary>
+        /// OSPREY_BLOCK_READ_MB: score parquets are read in planned spans - the column chunks a
+        /// reader touches in each row group, read together - and FDR score sidecars in blocks of
+        /// this many MB, serving the reader's smaller reads from memory. Default 4. A cold parquet
+        /// walk is otherwise many small column-chunk reads, one seek each on a spinning disk.
+        /// <c>0</c> reads directly, the pre-#4765 path, kept only for parity testing (see the
+        /// parity-path retirement catalogue). Larger values are clamped to
+        /// <see cref="MAX_BLOCK_READ_MB"/>.
+        /// </summary>
+        public static readonly int BlockReadMb = ClampBlockReadMb(ParseIntOrNull(@"OSPREY_BLOCK_READ_MB") ?? 4);
+
+        /// <summary>The largest <see cref="BlockReadMb"/>: a block is one array.</summary>
+        public const int MAX_BLOCK_READ_MB = 1024;
+
+        /// <summary>
+        /// A <see cref="BlockReadMb"/> setting made safe: 0 (off) for zero or less, otherwise
+        /// at most <see cref="MAX_BLOCK_READ_MB"/>.
+        /// </summary>
+        public static int ClampBlockReadMb(int blockMb)
+        {
+            return blockMb <= 0 ? 0 : Math.Min(blockMb, MAX_BLOCK_READ_MB);
+        }
+
+        /// <summary>
+        /// OSPREY_BLOCK_READ_GATE: with <see cref="BlockReadMb"/>, only one thread in the process
+        /// reads from disk at a time, so concurrent file lanes take turns at the disk instead of
+        /// interleaving their reads, and decode concurrently. On by default; <c>0</c> turns it off.
+        /// </summary>
+        public static readonly bool BlockReadGate = IsNotZero(@"OSPREY_BLOCK_READ_GATE");
+
+        /// <summary>
+        /// OSPREY_STUB_IDENTITY: where the first-pass FDR walks take each score row's charge,
+        /// decoy flag and peptide. Default 1: from the library entry the row's entry_id names,
+        /// which skips decoding three columns (two of them strings) from every row; a row group
+        /// with an id the library lacks reads them from the file. <c>0</c> always reads them from
+        /// the file, the pre-#4765 path kept only for parity testing; <c>2</c> reads both and
+        /// stops at the first row where they differ.
+        /// </summary>
+        public static readonly int StubIdentity = ParseIntOrNull(@"OSPREY_STUB_IDENTITY") ?? 1;
+
+        /// <summary>
         /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
         /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before
