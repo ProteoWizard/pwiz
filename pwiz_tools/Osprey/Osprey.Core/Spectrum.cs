@@ -62,14 +62,20 @@ namespace pwiz.Osprey.Core
         /// in O(1) through an m/z bucket index built on the first call. Scoring asks this for
         /// every top fragment of every candidate at every scan of its RT range, which made
         /// the binary search a third of first-pass scoring time.
+        ///
+        /// <para>The index answers for the array it was built from, and is rebuilt whenever
+        /// that is not the current <see cref="Mzs"/>, so a reassignment racing a lookup cannot
+        /// pair one array with another's index. Editing the array's values in place after the
+        /// first lookup remains disallowed: the index cannot see it.</para>
         /// </summary>
         public int MzLowerBound(double value)
         {
-            // Built into a local first: a concurrent first call builds an identical index.
+            // Read into locals first: a concurrent first call builds an identical index.
+            var mzs = _mzs;
             var index = _mzIndex;
-            if (index == null)
-                _mzIndex = index = new MzBucketIndex(_mzs);
-            return index.LowerBound(_mzs, value);
+            if (index == null || !ReferenceEquals(index.Source, mzs))
+                _mzIndex = index = new MzBucketIndex(mzs);
+            return index.LowerBound(value);
         }
 
         /// <summary>

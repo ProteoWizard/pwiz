@@ -2308,7 +2308,7 @@ namespace pwiz.Osprey.Tasks
                 double upper = frag.Mz + tolDa;
 
                 int best = TopFragmentExtractor.FindClosestPeakInWindow(
-                    apexSpectrum.Mzs, frag.Mz, lower, upper);
+                    apexSpectrum, frag.Mz, lower, upper);
                 if (best >= 0)
                     ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, apexSpectrum.Mzs[best]));
             }

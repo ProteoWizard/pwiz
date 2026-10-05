@@ -65,9 +65,10 @@ namespace pwiz.Osprey.Core
 
         private static double[] GetTop6FragmentMzs(LibraryEntry entry)
         {
-            return _top6MzCache.GetOrAdd(entry.Id, _ =>
+            // Entry passed as the factory argument, not captured: a cache hit allocates nothing.
+            return _top6MzCache.GetOrAdd(entry.Id, static (_, e) =>
             {
-                var frags = entry.Fragments;
+                var frags = e.Fragments;
                 if (frags == null || frags.Count == 0)
                     return new double[0];
 
@@ -89,7 +90,7 @@ namespace pwiz.Osprey.Core
                     .Select(i => frags[i].Mz)
                     .ToArray();
                 return result;
-            });
+            }, entry);
         }
 
         /// <summary>
@@ -100,23 +101,19 @@ namespace pwiz.Osprey.Core
         public static bool HasTopNFragmentMatch(
             LibraryEntry entry, double[] spectrumMzs, FragmentToleranceConfig fragTol)
         {
-            return HasTopNFragmentMatch(entry, spectrumMzs, null, fragTol);
+            return HasTopNFragmentMatch(entry, new Spectrum { Mzs = spectrumMzs }, fragTol);
         }
 
         /// <summary>
         /// <see cref="HasTopNFragmentMatch(LibraryEntry, double[], FragmentToleranceConfig)"/>
-        /// through the spectrum's m/z bucket index (<see cref="Spectrum.MzLowerBound"/>): the
-        /// same lower bound, found in O(1). The scoring prefilter's hot path.
+        /// for a spectrum, through its m/z bucket index (<see cref="Spectrum.MzLowerBound"/>):
+        /// the binary search's lower bound, found in O(1). The scoring prefilter's hot path, and
+        /// the one implementation.
         /// </summary>
         public static bool HasTopNFragmentMatch(
             LibraryEntry entry, Spectrum spectrum, FragmentToleranceConfig fragTol)
         {
-            return HasTopNFragmentMatch(entry, spectrum.Mzs, spectrum, fragTol);
-        }
-
-        private static bool HasTopNFragmentMatch(
-            LibraryEntry entry, double[] spectrumMzs, Spectrum indexed, FragmentToleranceConfig fragTol)
-        {
+            var spectrumMzs = spectrum.Mzs;
             var frags = entry.Fragments;
             if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
                 return true;
@@ -134,17 +131,7 @@ namespace pwiz.Osprey.Core
                 double tolDa = fragTol.ToleranceDa(mz);
                 double lower = mz - tolDa;
                 double upper = mz + tolDa;
-                int lo;
-                if (indexed != null)
-                {
-                    lo = indexed.MzLowerBound(lower);
-                }
-                else
-                {
-                    lo = 0;
-                    int hi = spectrumMzs.Length;
-                    while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
-                }
+                int lo = spectrum.MzLowerBound(lower);
                 if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
                 {
                     matchCount++;
