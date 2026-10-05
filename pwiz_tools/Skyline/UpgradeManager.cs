@@ -21,9 +21,11 @@ using System;
 using System.ComponentModel;
 using System.Deployment.Application;
 using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -100,6 +102,14 @@ namespace pwiz.Skyline
         {
             try
             {
+                // A newer Skyline published as an installer replaces this ClickOnce one. Until
+                // one is published, ClickOnce keeps updating as before.
+                var publishedVersion = AppDeployment.GetPublishedInstallerVersion();
+                if (publishedVersion != null)
+                {
+                    e.Result = publishedVersion;
+                    return;
+                }
                 e.Result = AppDeployment.CheckForDetailedUpdate();
             }
             catch (Exception x)
@@ -110,6 +120,12 @@ namespace pwiz.Skyline
 
         private void updateCheck_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
+            if (e.Result is Version publishedVersion)
+            {
+                if (ShowUpgradeForm(publishedVersion, true, true))
+                    AppDeployment.InstallPublishedVersion(ParentWindow, publishedVersion);
+                return;
+            }
             var exTrust = e.Result as TrustNotGrantedException;
             if (exTrust != null)
             {
@@ -273,6 +289,19 @@ namespace pwiz.Skyline
 
             Version GetVersionFromUpdateLocation();
             void OpenInstallLink(Control parentWindow);
+
+            /// <summary>
+            /// The version of the installer published in the InstallUrl folder, when it is newer
+            /// than this one, or null when none is published, it cannot be read, or it is not newer.
+            /// </summary>
+            Version GetPublishedInstallerVersion();
+
+            /// <summary>
+            /// Downloads the published installer, leaves the new Skyline what it needs to take this
+            /// one's settings and uninstall it (see <see cref="InstallerHandoff"/>), starts the
+            /// installer, and closes this Skyline so that it can be replaced.
+            /// </summary>
+            void InstallPublishedVersion(Control parentWindow, Version version);
         }
 
         public sealed class UpdateCheckDetails
@@ -404,6 +433,72 @@ namespace pwiz.Skyline
                     : (is64 ? @"skyline-daily64" : @"skyline-daily32"); // Keep -daily
 
                 WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
+            }
+
+            public Version GetPublishedInstallerVersion()
+            {
+                try
+                {
+                    // The manifest the installer build publishes beside the installer:
+                    // { "version": "26.1.1.300" }
+                    using var httpClient = new HttpClientWithProgress(new SilentProgressMonitor());
+                    var manifest = JObject.Parse(httpClient.DownloadString(
+                        GetPublishedUri(Settings.Default.ProductName + @".json")));
+                    string versionText = (string) manifest[@"version"] ?? string.Empty;
+                    if (!Version.TryParse(versionText, out var version))
+                        return null;
+                    return version > CurrentVersion ? version : null;
+                }
+                catch (Exception ex)
+                {
+                    // Not published yet, or unreachable: ClickOnce carries on as before.
+                    Debug.WriteLine($@"No published installer: {ex.Message}");
+                    return null;
+                }
+            }
+
+            public void InstallPublishedVersion(Control parentWindow, Version version)
+            {
+                string installerFileName = Settings.Default.ProductName + @"-Setup-" + version + @".exe";
+                string installerPath = Path.Combine(Path.GetTempPath(), installerFileName);
+                try
+                {
+                    using (var longWaitDlg = new LongWaitDlg())
+                    {
+                        longWaitDlg.Text = string.Format(SkylineResources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
+                        longWaitDlg.Message = string.Format(
+                            SkylineResources.UpgradeManager_InstallPublishedVersion_Downloading_the__0__installer,
+                            Settings.Default.ProductName);
+                        var status = longWaitDlg.PerformWork(parentWindow, 500, progressMonitor =>
+                        {
+                            using var httpClient = new HttpClientWithProgress(progressMonitor);
+                            httpClient.DownloadFile(GetPublishedUri(installerFileName), installerPath);
+                        });
+                        if (status.IsCanceled)
+                            return;
+                    }
+                    var handoff = new InstallerHandoff();
+                    handoff.Record(handoff.FindClickOnceUninstallCommand());
+                    // For the current user only, as the ClickOnce installation was, and without
+                    // asking: the installer otherwise offers to install for everyone.
+                    Process.Start(new ProcessStartInfo(installerPath, @"/CURRENTUSER") { UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    MessageDlg.ShowWithException(parentWindow,
+                        Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, ex);
+                    return;
+                }
+                // The installer replaces this Skyline, and the new one uninstalls it.
+                Application.Exit();
+            }
+
+            private static Uri GetPublishedUri(string fileName)
+            {
+                string folderUrl = Settings.Default.InstallUrl;
+                if (!folderUrl.EndsWith(@"/"))
+                    folderUrl += @"/";
+                return new Uri(folderUrl + Uri.EscapeDataString(fileName));
             }
         }
     }

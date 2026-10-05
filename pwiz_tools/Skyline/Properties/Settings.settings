@@ -947,5 +947,14 @@
     <Setting Name="EnableMcpAutoConnect" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="InstallUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://skyline.ms/_webdav/home/software/Skyline/daily/@files/Skyline-daily</Value>
+    </Setting>
+    <Setting Name="ProductName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Skyline-daily</Value>
+    </Setting>
+    <Setting Name="UninstallCommand" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

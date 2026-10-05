@@ -19,14 +19,18 @@
 using System;
 using System.ComponentModel;
 using System.Deployment.Application;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 using pwiz.Common.GUI;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -172,7 +176,7 @@ namespace pwiz.SkylineTestFunctional
             // Any other exception
             _deployment.UpdateCheckError = new Exception(errorText);
             var errorDlg = ShowDialog<MessageDlg>(SkylineWindow.CheckForUpdate);
-            Assert.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, errorDlg.Message);
+            Assert.AreEqual(Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, errorDlg.Message);
             Assert.AreEqual(CommonAlertDlg.FormatExceptionDetailMessage(_deployment.UpdateCheckError), errorDlg.DetailMessage);
             RunDlg<UpgradeDlg>(errorDlg.OkDialog, noUpdateDlg =>
             {
@@ -188,7 +192,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(_deployment.UpdateVersion.ToString(), upgradeDlg.VersionText);
             RunDlg<MessageDlg>(upgradeDlg.AcceptButton.PerformClick, dlg =>
             {
-                Assert.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, dlg.Message);
+                Assert.AreEqual(Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, dlg.Message);
                 Assert.AreEqual(CommonAlertDlg.FormatExceptionDetailMessage(_deployment.UpdateError), errorDlg.DetailMessage);
                 dlg.OkDialog();
             });
@@ -201,6 +205,71 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(TestDeployment.INSTALL_LINK_TEXT, dlg.Message);
                 dlg.OkDialog();
             });
+        }
+    }
+
+    /// <summary>
+    /// A ClickOnce Skyline that finds a newer Skyline published as an installer: the startup
+    /// check offers that version, and accepting it installs that instead of updating through
+    /// ClickOnce. Then what the installed Skyline is handed: the settings with this
+    /// installation's uninstall command saved in them, and their path in the registry.
+    /// </summary>
+    [TestClass]
+    public class UpgradeToInstallerTest : AbstractFunctionalTest
+    {
+        private const string UNINSTALL_COMMAND = "uninstall this installation";
+        private const string PRODUCT_NAME = "ExampleProductName";
+        private static readonly string HANDOFF_KEY_PATH = @"Software\MacCossLabUW\" + nameof(UpgradeToInstallerTest);
+
+        private TestDeployment _deployment;
+
+        [TestMethod]
+        public void UpgradeToInstallerFunctionalTest()
+        {
+            using (_deployment = UpgradeBasicTest.CreateDeployment())
+            {
+                _deployment.PublishedInstallerVersion = new Version(3, 6, 1, 10200);
+                RunFunctionalTest();
+            }
+        }
+
+        protected override void InitializeSkylineSettings()
+        {
+            base.InitializeSkylineSettings();
+            UpgradeManager.CheckAtStartup = true;
+        }
+
+        protected override void DoTest()
+        {
+            var upgradeDlg = WaitForOpenForm<UpgradeDlg>();
+            Assert.IsTrue(upgradeDlg.UpdateFound);
+            Assert.AreEqual(_deployment.PublishedInstallerVersion.ToString(), upgradeDlg.VersionText);
+            OkDialog(upgradeDlg, upgradeDlg.AcceptButton.PerformClick);
+            WaitForCondition(() => Equals(_deployment.PublishedInstallerVersion, _deployment.InstalledPublishedVersion));
+            // Not updated through ClickOnce
+            Assert.AreNotEqual(_deployment.UpdateVersion, _deployment.CurrentVersion);
+
+            var handoff = new InstallerHandoff { HandoffKeyPath = HANDOFF_KEY_PATH, ProductName = PRODUCT_NAME };
+            try
+            {
+                RunUI(() => handoff.Record(UNINSTALL_COMMAND));
+                Assert.AreEqual(UNINSTALL_COMMAND, Settings.Default.UninstallCommand);
+                string configFile;
+                using (var key = Registry.CurrentUser.OpenSubKey(HANDOFF_KEY_PATH))
+                {
+                    Assert.IsNotNull(key);
+                    configFile = key.GetValue(PRODUCT_NAME) as string;
+                }
+                // The settings file just saved, which the new Skyline reads the command from
+                Assert.IsNotNull(configFile);
+                Assert.AreEqual("user.config", Path.GetFileName(configFile));
+                AssertEx.FileExists(configFile);
+                AssertEx.Contains(File.ReadAllText(configFile), UNINSTALL_COMMAND);
+            }
+            finally
+            {
+                Registry.CurrentUser.DeleteSubKeyTree(HANDOFF_KEY_PATH, false);
+            }
         }
     }
 
@@ -277,6 +346,28 @@ namespace pwiz.SkylineTestFunctional
         public void OpenInstallLink(Control parentWindow)
         {
             MessageDlg.Show(parentWindow, INSTALL_LINK_TEXT);
+        }
+
+        /// <summary>
+        /// The installer version to report as published, or null for none, which leaves the
+        /// ClickOnce update path the other tests exercise.
+        /// </summary>
+        public Version PublishedInstallerVersion { get; set; }
+
+        /// <summary>
+        /// The version <see cref="InstallPublishedVersion"/> was asked for, instead of downloading
+        /// and running an installer.
+        /// </summary>
+        public Version InstalledPublishedVersion { get; private set; }
+
+        public Version GetPublishedInstallerVersion()
+        {
+            return PublishedInstallerVersion;
+        }
+
+        public void InstallPublishedVersion(Control parentWindow, Version version)
+        {
+            InstalledPublishedVersion = version;
         }
 
         public void Dispose()

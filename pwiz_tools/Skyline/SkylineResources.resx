@@ -1196,6 +1196,9 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
     <value>Upgrading to {0} (downloading {1} of {2})</value>
   </data>
+  <data name="UpgradeManager_InstallPublishedVersion_Downloading_the__0__installer" xml:space="preserve">
+    <value>Downloading the {0} installer</value>
+  </data>
   <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
     <value>Upgrading {0}</value>
   </data>
