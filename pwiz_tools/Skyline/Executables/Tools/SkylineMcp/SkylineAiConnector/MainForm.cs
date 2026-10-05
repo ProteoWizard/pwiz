@@ -556,18 +556,7 @@ namespace SkylineAiConnector
                 bool codexInstalled = ChatAppRegistry.IsCodexInstalled();
                 checkCodex.Enabled = codexInstalled;
                 if (codexInstalled)
-                {
-                    // Registration is read through the codex CLI, which can fail on a bad config.toml
-                    try
-                    {
-                        checkCodex.Checked = ChatAppRegistry.IsRegisteredInCodex();
-                    }
-                    catch (Exception ex)
-                    {
-                        checkCodex.Enabled = false;
-                        labelSetupStatus.Text = "Codex: " + ex.Message;
-                    }
-                }
+                    checkCodex.Checked = ChatAppRegistry.IsRegisteredInCodex();
                 else
                     checkCodex.Text = "Codex (not installed)";
             }

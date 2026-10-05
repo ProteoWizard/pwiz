@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -34,7 +35,7 @@ namespace SkylineAiConnector
     /// - Gemini CLI: direct JSON edit of ~/.gemini/settings.json
     /// - VS Code (Copilot): direct JSON edit of %APPDATA%/Code/User/mcp.json
     /// - Cursor: direct JSON edit of ~/.cursor/mcp.json
-    /// - Codex: delegates to the `codex` CLI for registration in config.toml
+    /// - Codex: delegates to the `codex` CLI to edit ~/.codex/config.toml, which it reads directly
     /// </summary>
     public static class ChatAppRegistry
     {
@@ -322,20 +323,49 @@ namespace SkylineAiConnector
 
         // -- Codex --
 
-        public static bool IsCodexInstalled()
+        private const string CODEX_SERVER_TABLE = "[mcp_servers." + MCP_SERVER_NAME + "]";
+
+        private static string CodexHome
         {
-            return FindCodexExe() != null;
+            get
+            {
+                string codexHome = Environment.GetEnvironmentVariable("CODEX_HOME");
+                if (!string.IsNullOrEmpty(codexHome))
+                    return codexHome;
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".codex");
+            }
         }
 
+        public static bool IsCodexInstalled()
+        {
+            // Every Codex front end (CLI, desktop app, IDE extension) creates this folder on first run
+            return Directory.Exists(CodexHome);
+        }
+
+        /// <summary>
+        /// Read from config.toml rather than through `codex mcp list`, which loads auth and
+        /// cloud configuration and can refresh tokens over the network.
+        /// </summary>
         public static bool IsRegisteredInCodex()
         {
-            using var doc = JsonDocument.Parse(RunCodexCli("mcp", "list", "--json"));
-            foreach (var server in doc.RootElement.EnumerateArray())
+            string configPath = Path.Combine(CodexHome, "config.toml");
+            try
             {
-                if (server.GetProperty("name").GetString() == MCP_SERVER_NAME)
-                    return true;
+                if (!File.Exists(configPath))
+                    return false;
+                foreach (string line in File.ReadLines(configPath))
+                {
+                    if (line.Trim() == CODEX_SERVER_TABLE)
+                        return true;
+                }
+                return false;
             }
-            return false;
+            catch
+            {
+                return false;
+            }
         }
 
         public static void AddToCodex()
@@ -348,49 +378,86 @@ namespace SkylineAiConnector
             RunCodexCli("mcp", "remove", MCP_SERVER_NAME);
         }
 
+        /// <summary>
+        /// Find the codex CLI the user runs from a terminal first, falling back to the copy
+        /// bundled with the desktop app.
+        /// </summary>
         private static string FindCodexExe()
         {
-            foreach (string directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(Path.PathSeparator))
+            foreach (string pathEntry in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(Path.PathSeparator))
             {
-                if (string.IsNullOrWhiteSpace(directory))
+                if (string.IsNullOrWhiteSpace(pathEntry))
                     continue;
-                string path = Path.Combine(directory.Trim().Trim('"'), "codex.exe");
-                if (File.Exists(path))
-                    return path;
-            }
-
-            // The desktop app bundles a CLI in a versioned directory, even when it is not on PATH.
-            string binDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "OpenAI", "Codex", "bin");
-            string newestExe = null;
-            if (Directory.Exists(binDir))
-            {
-                foreach (string directory in Directory.GetDirectories(binDir))
+                string directory = pathEntry.Trim().Trim('"');
+                string exePath = Path.Combine(directory, "codex.exe");
+                if (File.Exists(exePath))
+                    return exePath;
+                // npm, whatever its prefix, puts a codex.cmd shim beside its node_modules. Launch the
+                // native binary directly to avoid cmd.exe argument quoting.
+                if (File.Exists(Path.Combine(directory, "codex.cmd")))
                 {
-                    string path = Path.Combine(directory, "codex.exe");
-                    if (File.Exists(path) && (newestExe == null || File.GetLastWriteTimeUtc(path) > File.GetLastWriteTimeUtc(newestExe)))
-                        newestExe = path;
+                    string npmExe = FindNpmCodexExe(Path.Combine(directory, "node_modules", "@openai"));
+                    if (npmExe != null)
+                        return npmExe;
                 }
             }
-            if (newestExe != null)
-                return newestExe;
 
-            // npm installs a .cmd shim; launch its native binary directly to avoid shell quoting.
-            string npmPackages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "npm", "node_modules", "@openai");
-            if (Directory.Exists(npmPackages))
+            // The desktop app bundles a CLI in a versioned directory that is not on PATH.
+            string newestExe = null;
+            foreach (string directory in GetDirectoriesSafe(Path.Combine(
+                         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                         "OpenAI", "Codex", "bin"), "*"))
             {
-                foreach (string package in Directory.GetDirectories(npmPackages, "codex*"))
+                string exePath = Path.Combine(directory, "codex.exe");
+                if (File.Exists(exePath) && (newestExe == null || File.GetLastWriteTimeUtc(exePath) > File.GetLastWriteTimeUtc(newestExe)))
+                    newestExe = exePath;
+            }
+            return newestExe;
+        }
+
+        /// <summary>
+        /// The npm package ships a native codex.exe per platform under vendor\&lt;target triple&gt;,
+        /// either in @openai/codex itself or in a platform package such as @openai/codex-win32-x64.
+        /// </summary>
+        private static string FindNpmCodexExe(string openAiPackagesDir)
+        {
+            string targetTriple = RuntimeInformation.OSArchitecture == Architecture.Arm64
+                ? "aarch64-pc-windows-msvc"
+                : "x86_64-pc-windows-msvc";
+            foreach (string package in GetDirectoriesSafe(openAiPackagesDir, "codex*"))
+            {
+                try
                 {
-                    string[] executables = Directory.GetFiles(package, "codex.exe", SearchOption.AllDirectories);
-                    if (executables.Length > 0)
-                        return executables[0];
+                    foreach (string exePath in Directory.EnumerateFiles(package, "codex.exe",
+                                 new EnumerationOptions { RecurseSubdirectories = true }))
+                    {
+                        if (exePath.IndexOf(targetTriple, StringComparison.OrdinalIgnoreCase) >= 0)
+                            return exePath;
+                    }
+                }
+                catch (IOException)
+                {
+                    // Dangling junction left by npm link, or similar
                 }
             }
             return null;
         }
 
-        private static string RunCodexCli(params string[] arguments)
+        private static string[] GetDirectoriesSafe(string directory, string searchPattern)
+        {
+            try
+            {
+                return Directory.Exists(directory)
+                    ? Directory.GetDirectories(directory, searchPattern)
+                    : Array.Empty<string>();
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                return Array.Empty<string>();
+            }
+        }
+
+        private static void RunCodexCli(params string[] arguments)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -414,11 +481,13 @@ namespace SkylineAiConnector
                 process.Kill();
                 throw new InvalidOperationException("Codex CLI timed out.");
             }
+            output.GetAwaiter().GetResult();
             string errorText = error.GetAwaiter().GetResult();
             if (process.ExitCode != 0)
+            {
                 throw new InvalidOperationException("Codex CLI failed: " +
                     (string.IsNullOrWhiteSpace(errorText) ? "exit code " + process.ExitCode : errorText.Trim()));
-            return output.GetAwaiter().GetResult();
+            }
         }
 
         // -- Shared JSON config helpers --
@@ -626,24 +695,13 @@ namespace SkylineAiConnector
         /// </summary>
         public static bool AnyClientRegistered()
         {
-            bool codexRegistered;
-            try
-            {
-                codexRegistered = IsCodexInstalled() && IsRegisteredInCodex();
-            }
-            catch
-            {
-                // A CLI/configuration error should not prevent opening the connector.
-                // ProbeRegistrationState reports the error beside the Codex checkbox.
-                codexRegistered = false;
-            }
             return (IsClaudeDesktopInstalled() && IsRegisteredInClaudeDesktop()) ||
                    (IsClaudeCodeInstalled() && IsRegisteredInClaudeCode()) ||
                    (IsGeminiCliInstalled() && IsRegisteredInGeminiCli()) ||
                    (IsAntigravityInstalled() && IsRegisteredInAntigravity()) ||
                    (IsVSCodeInstalled() && IsRegisteredInVSCode()) ||
                    (IsCursorInstalled() && IsRegisteredInCursor()) ||
-                   codexRegistered;
+                   (IsCodexInstalled() && IsRegisteredInCodex());
         }
     }
 }
