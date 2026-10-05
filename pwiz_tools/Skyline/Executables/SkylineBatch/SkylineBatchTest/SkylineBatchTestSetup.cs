@@ -56,8 +56,9 @@ namespace SkylineBatchTest
         {
             TestUtils.SetupMockRInstallations();
             SkylineInstallations.TestAdminSkylineCmdPath = FindBuiltSkylineCmd();
-            // SkylineSettings uses an Inno Setup install before the checkout build above. Point the Inno Setup lookup
-            // at a registry key that does not exist, so a Skyline installed by Inno Setup is not used by the tests.
+            // SkylineSettings uses an Inno Setup install before the checkout build above. Point the Inno Setup
+            // lookup at a registry key that does not exist, so that lookup does not change which Skyline the
+            // tests use.
             SkylineInstallations.TestInnoRegistryKey = @"Software\MacCossLabUW-SkylineBatchTest";
 
             // Publish into Settings now. The fallback feeds FindAdministrativeInstallations, and

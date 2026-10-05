@@ -124,7 +124,8 @@ namespace AutoQC
                     // installation settings over the ones InitSkylineSettings() finds. MigrateConfigsIfRequired() comes
                     // after, because converting configurations saved by an older AutoQC needs the installations found.
                     UpgradeSettingsIfRequired();
-                    if (!InitSkylineSettings()) return;
+                    if (!InitSkylineSettings())
+                        return;
                     MigrateConfigsIfRequired();
                 }
                 catch (Exception e)

@@ -33,9 +33,10 @@ namespace SkylineBatchTest
         private const string TEST_REGISTRY_KEY = @"Software\MacCossLabUW-SkylineInstallationsTest";
 
         /// <summary>
-        /// Tests that FindSkyline finds an Inno Setup install from the InstallDir recorded in the registry and ignores
-        /// an unusable InstallDir, and that SkylineSettings uses the Inno Setup install before a ClickOnce or
-        /// administrative install.
+        /// Tests that <see cref="SkylineInstallations.FindSkyline"/> finds an Inno Setup install from the InstallDir
+        /// recorded in the registry. A per-user install comes before an all-users one, and an unusable InstallDir is
+        /// ignored. <see cref="SkylineSettings"/> uses the Inno Setup install before a ClickOnce or administrative
+        /// install.
         /// </summary>
         [TestMethod]
         public void TestFindInnoSkyline()
@@ -59,6 +60,7 @@ namespace SkylineBatchTest
                         @"\Skyline-daily does not exist");
 
                     ValidateRegistryInstalls(testDir);
+                    ValidateAllUsersInstall(testDir);
                     ValidateUnusableInstallDirs(testDir);
                     ValidateInnoPreferredOverClickOnce();
                 }
@@ -97,6 +99,38 @@ namespace SkylineBatchTest
             settings.SkylineInnoCmdPath = settings.SkylineDailyInnoCmdPath = null;
             AssertEx.IsFalse(SkylineInstallations.HasSkyline, "Expected no HasSkyline with no install");
             AssertEx.IsFalse(SkylineInstallations.HasSkylineDaily, "Expected no HasSkylineDaily with no install");
+        }
+
+        private static void ValidateAllUsersInstall(string testDir)
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(TEST_REGISTRY_KEY, false);
+            var allUsersCmd = MakeSkylineCmd(Path.Combine(testDir, @"AllUsers"));
+            var perUserCmd = MakeSkylineCmd(Path.Combine(testDir, @"PerUser"));
+            var allUsersDir = Path.GetDirectoryName(allUsersCmd);
+            var perUserDir = Path.GetDirectoryName(perUserCmd);
+            try
+            {
+                SkylineInstallations.TestReadInnoInstallDir = (hive, channel) =>
+                    !Equals(SkylineInstallations.Skyline, channel) ? null :
+                    hive == RegistryHive.LocalMachine ? allUsersDir : null;
+                SkylineInstallations.FindSkyline();
+                AssertEx.AreEqual(allUsersCmd, SharedSettings.Default.SkylineInnoCmdPath,
+                    "Expected the all-users install folder recorded in HKLM when HKCU records none");
+                AssertEx.IsNull(SharedSettings.Default.SkylineDailyInnoCmdPath,
+                    "Expected no Inno Setup Skyline-daily since neither hive records one");
+
+                SkylineInstallations.TestReadInnoInstallDir = (hive, channel) =>
+                    !Equals(SkylineInstallations.Skyline, channel) ? null :
+                    hive == RegistryHive.CurrentUser ? perUserDir :
+                    hive == RegistryHive.LocalMachine ? allUsersDir : null;
+                SkylineInstallations.FindSkyline();
+                AssertEx.AreEqual(perUserCmd, SharedSettings.Default.SkylineInnoCmdPath,
+                    "Expected the per-user install folder recorded in HKCU before the all-users one in HKLM");
+            }
+            finally
+            {
+                SkylineInstallations.TestReadInnoInstallDir = null;
+            }
         }
 
         private static void ValidateUnusableInstallDirs(string testDir)

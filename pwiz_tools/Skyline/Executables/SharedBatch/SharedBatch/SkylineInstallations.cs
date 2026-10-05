@@ -63,6 +63,13 @@ namespace SharedBatch
         /// </summary>
         public static string TestInnoRegistryKey { get; set; }
 
+        /// <summary>
+        /// Test seam: replaces the registry read of an Inno Setup install folder. Takes the hive and the channel and
+        /// returns the InstallDir recorded there, or null. A test cannot write HKLM without running elevated.
+        /// When this is set, <see cref="TestInnoRegistryKey"/> is not used.
+        /// </summary>
+        public static Func<RegistryHive, string, string> TestReadInnoInstallDir { get; set; }
+
         public static bool HasLocalSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineLocalCommandPath);
 
         public static bool HasCustomSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath) && File.Exists(Settings.Default.SkylineCustomCmdPath);
@@ -118,6 +125,8 @@ namespace SharedBatch
 
         private static string GetInnoInstallDir(RegistryHive hive, string channel)
         {
+            if (TestReadInnoInstallDir != null)
+                return TestReadInnoInstallDir(hive, channel);
             var channelKeyPath = (TestInnoRegistryKey ?? @"Software\MacCossLabUW") + @"\" + channel;
             try
             {
