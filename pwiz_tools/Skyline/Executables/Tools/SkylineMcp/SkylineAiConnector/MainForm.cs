@@ -445,6 +445,30 @@ namespace SkylineAiConnector
             }
         }
 
+        private void checkCodex_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressCheckEvents)
+                return;
+            try
+            {
+                if (checkCodex.Checked)
+                {
+                    ChatAppRegistry.AddToCodex();
+                    labelSetupStatus.Text = "Codex: Registered. Restart Codex to activate.";
+                }
+                else
+                {
+                    ChatAppRegistry.RemoveFromCodex();
+                    labelSetupStatus.Text = "Codex: Removed. Restart Codex to apply.";
+                }
+            }
+            catch (Exception ex)
+            {
+                labelSetupStatus.Text = "Codex: " + ex.Message;
+                RevertCheckbox(checkCodex);
+            }
+        }
+
         // -- Expand/collapse --
 
         private void ToggleSetupPanel()
@@ -527,6 +551,25 @@ namespace SkylineAiConnector
                     checkCursor.Checked = ChatAppRegistry.IsRegisteredInCursor();
                 else
                     checkCursor.Text = "Cursor (not installed)";
+
+                // Codex
+                bool codexInstalled = ChatAppRegistry.IsCodexInstalled();
+                checkCodex.Enabled = codexInstalled;
+                if (codexInstalled)
+                {
+                    // Registration is read through the codex CLI, which can fail on a bad config.toml
+                    try
+                    {
+                        checkCodex.Checked = ChatAppRegistry.IsRegisteredInCodex();
+                    }
+                    catch (Exception ex)
+                    {
+                        checkCodex.Enabled = false;
+                        labelSetupStatus.Text = "Codex: " + ex.Message;
+                    }
+                }
+                else
+                    checkCodex.Text = "Codex (not installed)";
             }
             finally
             {

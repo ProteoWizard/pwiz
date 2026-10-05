@@ -34,6 +34,7 @@ namespace SkylineAiConnector
     /// - Gemini CLI: direct JSON edit of ~/.gemini/settings.json
     /// - VS Code (Copilot): direct JSON edit of %APPDATA%/Code/User/mcp.json
     /// - Cursor: direct JSON edit of ~/.cursor/mcp.json
+    /// - Codex: delegates to the `codex` CLI for registration in config.toml
     /// </summary>
     public static class ChatAppRegistry
     {
@@ -319,6 +320,107 @@ namespace SkylineAiConnector
             RemoveFromJsonConfig(CursorConfigPath, MCP_SERVERS_KEY);
         }
 
+        // -- Codex --
+
+        public static bool IsCodexInstalled()
+        {
+            return FindCodexExe() != null;
+        }
+
+        public static bool IsRegisteredInCodex()
+        {
+            using var doc = JsonDocument.Parse(RunCodexCli("mcp", "list", "--json"));
+            foreach (var server in doc.RootElement.EnumerateArray())
+            {
+                if (server.GetProperty("name").GetString() == MCP_SERVER_NAME)
+                    return true;
+            }
+            return false;
+        }
+
+        public static void AddToCodex()
+        {
+            RunCodexCli("mcp", "add", MCP_SERVER_NAME, "--", McpServerDeployer.DeployedExePath);
+        }
+
+        public static void RemoveFromCodex()
+        {
+            RunCodexCli("mcp", "remove", MCP_SERVER_NAME);
+        }
+
+        private static string FindCodexExe()
+        {
+            foreach (string directory in (Environment.GetEnvironmentVariable("PATH") ?? string.Empty).Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrWhiteSpace(directory))
+                    continue;
+                string path = Path.Combine(directory.Trim().Trim('"'), "codex.exe");
+                if (File.Exists(path))
+                    return path;
+            }
+
+            // The desktop app bundles a CLI in a versioned directory, even when it is not on PATH.
+            string binDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "OpenAI", "Codex", "bin");
+            string newestExe = null;
+            if (Directory.Exists(binDir))
+            {
+                foreach (string directory in Directory.GetDirectories(binDir))
+                {
+                    string path = Path.Combine(directory, "codex.exe");
+                    if (File.Exists(path) && (newestExe == null || File.GetLastWriteTimeUtc(path) > File.GetLastWriteTimeUtc(newestExe)))
+                        newestExe = path;
+                }
+            }
+            if (newestExe != null)
+                return newestExe;
+
+            // npm installs a .cmd shim; launch its native binary directly to avoid shell quoting.
+            string npmPackages = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "npm", "node_modules", "@openai");
+            if (Directory.Exists(npmPackages))
+            {
+                foreach (string package in Directory.GetDirectories(npmPackages, "codex*"))
+                {
+                    string[] executables = Directory.GetFiles(package, "codex.exe", SearchOption.AllDirectories);
+                    if (executables.Length > 0)
+                        return executables[0];
+                }
+            }
+            return null;
+        }
+
+        private static string RunCodexCli(params string[] arguments)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = FindCodexExe() ?? throw new InvalidOperationException("Codex CLI was not found."),
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                // Registration is user-wide; do not pick up a project-specific Codex configuration.
+                WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+            };
+            foreach (string argument in arguments)
+                startInfo.ArgumentList.Add(argument);
+            using var process = Process.Start(startInfo);
+            if (process == null)
+                throw new InvalidOperationException("Failed to start Codex CLI.");
+            var output = process.StandardOutput.ReadToEndAsync();
+            var error = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(10000))
+            {
+                process.Kill();
+                throw new InvalidOperationException("Codex CLI timed out.");
+            }
+            string errorText = error.GetAwaiter().GetResult();
+            if (process.ExitCode != 0)
+                throw new InvalidOperationException("Codex CLI failed: " +
+                    (string.IsNullOrWhiteSpace(errorText) ? "exit code " + process.ExitCode : errorText.Trim()));
+            return output.GetAwaiter().GetResult();
+        }
+
         // -- Shared JSON config helpers --
 
         /// <summary>
@@ -524,12 +626,24 @@ namespace SkylineAiConnector
         /// </summary>
         public static bool AnyClientRegistered()
         {
+            bool codexRegistered;
+            try
+            {
+                codexRegistered = IsCodexInstalled() && IsRegisteredInCodex();
+            }
+            catch
+            {
+                // A CLI/configuration error should not prevent opening the connector.
+                // ProbeRegistrationState reports the error beside the Codex checkbox.
+                codexRegistered = false;
+            }
             return (IsClaudeDesktopInstalled() && IsRegisteredInClaudeDesktop()) ||
                    (IsClaudeCodeInstalled() && IsRegisteredInClaudeCode()) ||
                    (IsGeminiCliInstalled() && IsRegisteredInGeminiCli()) ||
                    (IsAntigravityInstalled() && IsRegisteredInAntigravity()) ||
                    (IsVSCodeInstalled() && IsRegisteredInVSCode()) ||
-                   (IsCursorInstalled() && IsRegisteredInCursor());
+                   (IsCursorInstalled() && IsRegisteredInCursor()) ||
+                   codexRegistered;
         }
     }
 }
