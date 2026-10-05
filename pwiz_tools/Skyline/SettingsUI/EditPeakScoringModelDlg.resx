@@ -358,11 +358,14 @@ document to calculate the equation with linear regression</value>
   <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="zedGraphMProphet.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
   <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>-1, -1</value>
   </data>
   <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 441</value>
+    <value>447, 443</value>
   </data>
   <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -383,7 +386,7 @@ document to calculate the equation with linear regression</value>
     <value>4, 22</value>
   </data>
   <data name="tabPage1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
     <value>445, 441</value>
@@ -451,6 +454,9 @@ document to calculate the equation with linear regression</value>
   <data name="zedGraphSelectedCalculator.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="zedGraphSelectedCalculator.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
   <data name="zedGraphSelectedCalculator.Location" type="System.Drawing.Point, System.Drawing">
     <value>-2, -1</value>
   </data>
@@ -476,7 +482,7 @@ document to calculate the equation with linear regression</value>
     <value>4, 22</value>
   </data>
   <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
     <value>445, 441</value>
@@ -501,6 +507,9 @@ document to calculate the equation with linear regression</value>
   </data>
   <data name="zedGraphPValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphPValues.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
   </data>
   <data name="zedGraphPValues.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, -1</value>
@@ -527,7 +536,7 @@ document to calculate the equation with linear regression</value>
     <value>4, 22</value>
   </data>
   <data name="tabPage4.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="tabPage4.Size" type="System.Drawing.Size, System.Drawing">
     <value>445, 441</value>
@@ -552,6 +561,9 @@ document to calculate the equation with linear regression</value>
   </data>
   <data name="zedGraphQValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphQValues.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
   </data>
   <data name="zedGraphQValues.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, -1</value>
@@ -578,7 +590,7 @@ document to calculate the equation with linear regression</value>
     <value>4, 22</value>
   </data>
   <data name="tabPage3.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+    <value>0, 0, 0, 0</value>
   </data>
   <data name="tabPage3.Size" type="System.Drawing.Size, System.Drawing">
     <value>445, 441</value>

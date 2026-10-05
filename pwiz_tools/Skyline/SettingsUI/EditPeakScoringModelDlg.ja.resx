@@ -359,10 +359,10 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+    <value>-1, -1</value>
   </data>
   <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 441</value>
+    <value>447, 443</value>
   </data>
   <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
