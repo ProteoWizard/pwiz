@@ -1716,6 +1716,106 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
+        #region Scan-major prefilter
+
+        // Unique top-6 memo Ids for the scan-major prefilter test, clear of MZ_INDEX_ID_BASE's.
+        private const uint SCAN_MAJOR_ID_BASE = 920000u;
+
+        /// <summary>
+        /// The window-level scan-major prefilter gives every candidate the verdict the
+        /// candidate-major loop in TryExtract gives it, and leaves the candidates TryExtract never
+        /// prefilters (boundary override, no scan range) to TryExtract. The spectra draw each of a
+        /// small pool of fragment m/z values at random, so candidates pass at varied offsets into
+        /// their ranges and others run out of range without passing.
+        /// </summary>
+        [TestMethod]
+        public void TestScanMajorPrefilterMatchesCandidateMajor()
+        {
+            var random = new Random(4711);
+            const int nScans = 80;
+            var pool = new double[24];
+            for (int p = 0; p < pool.Length; p++)
+                pool[p] = 300.0 + 600.0 * random.NextDouble();
+            var spectra = new List<Spectrum>(nScans);
+            var rts = new double[nScans];
+            for (int s = 0; s < nScans; s++)
+            {
+                rts[s] = 10.0 + 0.05 * s;
+                var mzs = new List<double>();
+                foreach (double mz in pool)
+                {
+                    if (random.NextDouble() < 0.3)
+                        mzs.Add(mz);
+                }
+                for (int n = 0; n < 20; n++)
+                    mzs.Add(200.0 + 800.0 * random.NextDouble());
+                mzs.Sort();
+                spectra.Add(new Spectrum { Mzs = mzs.ToArray(), Intensities = new float[mzs.Count], RetentionTime = rts[s] });
+            }
+
+            var candidates = new List<LibraryEntry>();
+            for (int c = 0; c < 400; c++)
+            {
+                // RTs past both ends of the window too, so some ranges are clipped or empty.
+                double rt = 9.0 + 6.0 * random.NextDouble();
+                var entry = new LibraryEntry(SCAN_MAJOR_ID_BASE + (uint)c, "PEPTIDEK", "PEPTIDEK", 2, 500.0, rt);
+                entry.Fragments = Enumerable.Range(0, 6).Select(f => new LibraryFragment
+                {
+                    Mz = f < 4 ? pool[random.Next(pool.Length)] : 100.0 + f,
+                    RelativeIntensity = 1.0f + f
+                }).ToList();
+                candidates.Add(entry);
+            }
+
+            var config = new OspreyConfig
+            {
+                FragmentTolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm }
+            };
+            var overrideId = candidates[0].Id;
+            var context = new ScoringContext(config, @"synthetic")
+            {
+                BoundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>
+                {
+                    { overrideId, (11.0, 10.9, 11.1) },
+                },
+            };
+            const double rtTolerance = 0.3;
+            var extractor = new PeakDataExtractor(null);
+            var verdicts = extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context);
+            Assert.IsNotNull(verdicts);
+            Assert.AreEqual(candidates.Count, verdicts.Length);
+
+            var counts = new Dictionary<PrefilterVerdict, int>();
+            for (int c = 0; c < candidates.Count; c++)
+            {
+                var expected = PrefilterVerdict.not_computed;
+                if (PeakDataExtractor.TryResolveScanRange(candidates[c], rts, null, rtTolerance, context,
+                        out var overrideBounds, out _, out int startScan, out int endScan) &&
+                    !overrideBounds.HasValue)
+                {
+                    expected = PeakDataExtractor.HasPrefilterSignal(candidates[c], spectra, startScan, endScan,
+                        config.FragmentTolerance)
+                        ? PrefilterVerdict.passed
+                        : PrefilterVerdict.failed;
+                }
+                Assert.AreEqual(expected, verdicts[c], string.Format(@"candidate {0}", c));
+                counts.TryGetValue(expected, out int n);
+                counts[expected] = n + 1;
+            }
+            Assert.AreEqual(PrefilterVerdict.not_computed, verdicts[0], @"a boundary override is not prefiltered");
+            foreach (var verdict in new[] { PrefilterVerdict.not_computed, PrefilterVerdict.passed, PrefilterVerdict.failed })
+                Assert.IsTrue(counts.ContainsKey(verdict) && counts[verdict] > 10, verdict.ToString());
+
+            // With the prefilter off, or a window too short to score, there is nothing to compute.
+            config.PrefilterEnabled = false;
+            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context));
+            config.PrefilterEnabled = true;
+            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra.Take(4).ToList(), rts.Take(4).ToArray(),
+                null, rtTolerance, context));
+        }
+
+        #endregion
+
         #region Sparse XCorr cache (issue #4398)
 
         /// <summary>

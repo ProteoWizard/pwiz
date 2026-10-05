@@ -135,16 +135,26 @@ namespace pwiz.Osprey.Scoring
 
             try
             {
+                // Run the signal prefilter for all candidates at once, scan-major, so each
+                // spectrum is matched against every candidate while it is in cache. Null when
+                // the prefilter is off (or OSPREY_SCAN_MAJOR_PREFILTER=0), leaving each
+                // candidate's own TryExtract to run it as before.
+                var prefilterVerdicts = OspreyEnvironment.ScanMajorPrefilter
+                    ? _extractor.ComputePrefilterScanMajor(candidates, windowSpectra, windowRts,
+                        rtCalibration, globalRtTolerance, context)
+                    : null;
+
                 // Score each candidate
-                foreach (var candidate in candidates)
+                for (int c = 0; c < candidates.Count; c++)
                 {
                     var fdrEntry = ScoreCandidate(
-                        candidate, windowSpectra, windowRts,
+                        candidates[c], windowSpectra, windowRts,
                         rtCalibration,
                         globalRtTolerance, rtSigma,
                         ms1Spectra, ms1Calibration,
                         context,
-                        ospreyContext, ospreyPeakData);
+                        ospreyContext, ospreyPeakData,
+                        prefilterVerdicts?[c] ?? PrefilterVerdict.not_computed);
 
                     if (fdrEntry != null)
                         entries.Add(fdrEntry);
@@ -180,12 +190,13 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
             OspreyScoringContext ospreyContext,
-            OspreyPeakData ospreyPeakData)
+            OspreyPeakData ospreyPeakData,
+            PrefilterVerdict prefilterVerdict)
         {
             if (!_extractor.TryExtract(
                     candidate, windowSpectra, windowRts, rtCalibration,
                     globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
-                    context, ospreyPeakData, out var ext))
+                    context, ospreyPeakData, prefilterVerdict, out var ext))
                 return null;
 
             var bestPeak = ext.BestPeak;

@@ -44,6 +44,11 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class PeakDataExtractor
     {
+        // Signal prefilter rule: at least PREFILTER_MIN_PASS of PREFILTER_WINDOW
+        // consecutive scans must match 2 of the top 6 fragments.
+        private const int PREFILTER_WINDOW = 4;
+        private const int PREFILTER_MIN_PASS = 3;
+
         private readonly IScoringDiagnostics _diagnostics;
 
         public PeakDataExtractor(IScoringDiagnostics diagnostics)
@@ -71,6 +76,7 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
             OspreyPeakData peakData,
+            PrefilterVerdict prefilterVerdict,
             out ExtractedPeak extracted)
         {
             extracted = default;
@@ -79,65 +85,29 @@ namespace pwiz.Osprey.Scoring
             if (nScans < 5)
                 return false;
 
-            // Stage 6 boundary override (post-FDR re-scoring): when set,
-            // peak detection + the signal pre-filter are skipped and
-            // scoring uses the supplied (apex, start, end) RT triple.
-            // Mirrors the boundary_overrides path in run_search at
-            // osprey/crates/osprey/src/pipeline.rs:6453-6664.
-            (double Apex, double Start, double End)? overrideBounds = null;
-            if (context.BoundaryOverrides != null &&
-                context.BoundaryOverrides.TryGetValue(candidate.Id, out var bnd))
-            {
-                overrideBounds = bnd;
-            }
-
-            // Determine RT search window.
             // Use the global tolerance passed from RunCoelutionScoring (matches
             // Rust's single rt_tolerance for all entries in run_search).
-            double expectedRt = rtCalibration != null
-                ? rtCalibration.Predict(candidate.RetentionTime)
-                : candidate.RetentionTime;
             double rtTolerance = globalRtTolerance;
-
-            // Find scan range for XIC extraction. Extracted to FindScanRange
-            // (override-bounds vs normal-search filter shapes).
-            FindScanRange(overrideBounds, windowRts, nScans, expectedRt, rtTolerance,
-                out int startScan, out int endScan);
-
-            if (startScan < 0 || endScan < 0 || endScan - startScan + 1 < 5)
+            if (!TryResolveScanRange(candidate, windowRts, rtCalibration, rtTolerance, context,
+                    out var overrideBounds, out double expectedRt, out int startScan, out int endScan))
+            {
                 return false;
+            }
 
             int rangeLen = endScan - startScan + 1;
 
             // Signal pre-filter: require at least 2 of top 6 fragments present
             // in at least 3 of 4 consecutive scans. Matches Rust pipeline.rs:6032-6066.
             // Skips noise-only candidates before the expensive XIC extraction.
-            // Skipped for boundary overrides — caller has already decided to
-            // score here.
+            // Skipped for boundary overrides - caller has already decided to
+            // score here. The window scorer may already have evaluated it for every
+            // candidate at once (ComputePrefilterScanMajor); the verdict is the same.
             if (config.PrefilterEnabled && !overrideBounds.HasValue)
             {
-                const int WIN = 4;
-                const int MIN_PASS = 3;
-                bool[] window = new bool[WIN];
-                int winSum = 0;
-                bool hasSignal = false;
-
-                for (int i = startScan; i <= endScan; i++)
-                {
-                    bool passes = FragmentMath.HasTopNFragmentMatch(
-                        candidate, windowSpectra[i], config.FragmentTolerance);
-                    int slot = (i - startScan) % WIN;
-                    if (window[slot])
-                        winSum--;
-                    window[slot] = passes;
-                    if (passes)
-                        winSum++;
-                    if (i - startScan + 1 >= WIN && winSum >= MIN_PASS)
-                    {
-                        hasSignal = true;
-                        break;
-                    }
-                }
+                bool hasSignal = prefilterVerdict != PrefilterVerdict.not_computed
+                    ? prefilterVerdict == PrefilterVerdict.passed
+                    : HasPrefilterSignal(candidate, windowSpectra, startScan, endScan,
+                        config.FragmentTolerance);
                 if (!hasSignal)
                     return false;
             }
@@ -577,6 +547,185 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
+        /// Evaluate the signal prefilter <see cref="TryExtract"/> would run, for every candidate
+        /// of a window at once and scan-major: the outer loop walks the window's spectra in
+        /// order, the inner loop the candidates whose scan range covers that spectrum and that
+        /// have not yet passed or run out of range. Each candidate carries the same 4-scan ring
+        /// and count the candidate-major loop does, so its verdict is identical - the verdict
+        /// depends only on the candidate, its scan range and the spectra - while each spectrum's
+        /// arrays are touched once, while hot, instead of once per candidate.
+        /// <para>Returns one verdict per candidate, aligned with <paramref name="candidates"/>,
+        /// or null when the prefilter does not run at all. A candidate the prefilter would not
+        /// reach in <see cref="TryExtract"/> (boundary override, no or too short a scan range)
+        /// stays <see cref="PrefilterVerdict.not_computed"/>, so TryExtract handles it as before.</para>
+        /// </summary>
+        public PrefilterVerdict[] ComputePrefilterScanMajor(
+            List<LibraryEntry> candidates,
+            List<Spectrum> windowSpectra,
+            double[] windowRts,
+            RTCalibration rtCalibration,
+            double globalRtTolerance,
+            ScoringContext context)
+        {
+            var config = context.Config;
+            int nScans = windowSpectra.Count;
+            if (!config.PrefilterEnabled || nScans < 5)
+                return null;
+
+            int nCandidates = candidates.Count;
+            var verdicts = new PrefilterVerdict[nCandidates];
+            var startScans = new int[nCandidates];
+            var endScans = new int[nCandidates];
+            // Candidates entering at each scan, as a counting sort on start scan.
+            var enterOffsets = new int[nScans + 1];
+            for (int c = 0; c < nCandidates; c++)
+            {
+                startScans[c] = -1;
+                if (!TryResolveScanRange(candidates[c], windowRts, rtCalibration, globalRtTolerance,
+                        context, out var overrideBounds, out _, out int startScan, out int endScan) ||
+                    overrideBounds.HasValue)
+                {
+                    continue;
+                }
+                startScans[c] = startScan;
+                endScans[c] = endScan;
+                enterOffsets[startScan + 1]++;
+            }
+            for (int s = 0; s < nScans; s++)
+                enterOffsets[s + 1] += enterOffsets[s];
+            var entering = new int[enterOffsets[nScans]];
+            var fillPos = (int[])enterOffsets.Clone();
+            for (int c = 0; c < nCandidates; c++)
+            {
+                if (startScans[c] >= 0)
+                    entering[fillPos[startScans[c]]++] = c;
+            }
+
+            // Per candidate: bit i of ring is the match result for the scan at offset
+            // (k * PREFILTER_WINDOW + i) from its start; ringSums counts the set bits.
+            var ring = new byte[nCandidates];
+            var ringSums = new byte[nCandidates];
+            var active = new int[entering.Length];
+            int nActive = 0;
+            var fragmentTolerance = config.FragmentTolerance;
+            for (int s = 0; s < nScans; s++)
+            {
+                for (int e = enterOffsets[s]; e < enterOffsets[s + 1]; e++)
+                    active[nActive++] = entering[e];
+
+                var spectrum = windowSpectra[s];
+                int a = 0;
+                while (a < nActive)
+                {
+                    int c = active[a];
+                    bool passes = FragmentMath.HasTopNFragmentMatch(
+                        candidates[c], spectrum, fragmentTolerance);
+                    int offset = s - startScans[c];
+                    int bit = 1 << (offset % PREFILTER_WINDOW);
+                    if ((ring[c] & bit) != 0)
+                        ringSums[c]--;
+                    if (passes)
+                    {
+                        ring[c] = (byte)(ring[c] | bit);
+                        ringSums[c]++;
+                    }
+                    else
+                    {
+                        ring[c] = (byte)(ring[c] & ~bit);
+                    }
+
+                    PrefilterVerdict verdict = PrefilterVerdict.not_computed;
+                    if (offset + 1 >= PREFILTER_WINDOW && ringSums[c] >= PREFILTER_MIN_PASS)
+                        verdict = PrefilterVerdict.passed;
+                    else if (s == endScans[c])
+                        verdict = PrefilterVerdict.failed;
+                    if (verdict == PrefilterVerdict.not_computed)
+                    {
+                        a++;
+                        continue;
+                    }
+                    // Finished: record it and swap the last active candidate into this slot.
+                    // Visiting order within a scan does not affect any candidate's verdict.
+                    verdicts[c] = verdict;
+                    active[a] = active[--nActive];
+                }
+            }
+            return verdicts;
+        }
+
+        /// <summary>
+        /// The candidate's boundary override (Stage 6 re-scoring), expected RT and XIC scan
+        /// range, as both <see cref="TryExtract"/> and <see cref="ComputePrefilterScanMajor"/>
+        /// see them. Returns false when no range of at least 5 scans exists, where TryExtract
+        /// drops the candidate.
+        /// </summary>
+        internal static bool TryResolveScanRange(
+            LibraryEntry candidate,
+            double[] windowRts,
+            RTCalibration rtCalibration,
+            double rtTolerance,
+            ScoringContext context,
+            out (double Apex, double Start, double End)? overrideBounds,
+            out double expectedRt,
+            out int startScan,
+            out int endScan)
+        {
+            // Stage 6 boundary override (post-FDR re-scoring): when set,
+            // peak detection + the signal pre-filter are skipped and
+            // scoring uses the supplied (apex, start, end) RT triple.
+            // Mirrors the boundary_overrides path in run_search at
+            // osprey/crates/osprey/src/pipeline.rs:6453-6664.
+            overrideBounds = null;
+            if (context.BoundaryOverrides != null &&
+                context.BoundaryOverrides.TryGetValue(candidate.Id, out var bnd))
+            {
+                overrideBounds = bnd;
+            }
+
+            // Determine RT search window.
+            expectedRt = rtCalibration != null
+                ? rtCalibration.Predict(candidate.RetentionTime)
+                : candidate.RetentionTime;
+
+            // Find scan range for XIC extraction. Extracted to FindScanRange
+            // (override-bounds vs normal-search filter shapes).
+            FindScanRange(overrideBounds, windowRts, windowRts.Length, expectedRt, rtTolerance,
+                out startScan, out endScan);
+
+            return startScan >= 0 && endScan >= 0 && endScan - startScan + 1 >= 5;
+        }
+
+        /// <summary>
+        /// The candidate-major signal prefilter: walk the candidate's scan range in order and
+        /// pass as soon as some <see cref="PREFILTER_WINDOW"/> consecutive scans hold at least
+        /// <see cref="PREFILTER_MIN_PASS"/> top-6 fragment matches.
+        /// </summary>
+        internal static bool HasPrefilterSignal(
+            LibraryEntry candidate,
+            List<Spectrum> windowSpectra,
+            int startScan,
+            int endScan,
+            FragmentToleranceConfig fragmentTolerance)
+        {
+            bool[] window = new bool[PREFILTER_WINDOW];
+            int winSum = 0;
+            for (int i = startScan; i <= endScan; i++)
+            {
+                bool passes = FragmentMath.HasTopNFragmentMatch(
+                    candidate, windowSpectra[i], fragmentTolerance);
+                int slot = (i - startScan) % PREFILTER_WINDOW;
+                if (window[slot])
+                    winSum--;
+                window[slot] = passes;
+                if (passes)
+                    winSum++;
+                if (i - startScan + 1 >= PREFILTER_WINDOW && winSum >= PREFILTER_MIN_PASS)
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Find the [startScan..endScan] range for XIC extraction. For boundary
         /// overrides: the given boundaries plus margin for SNR context (peak_width
         /// each side, 0.2 min floor; run_search pipeline.rs:6473-6477). For normal
@@ -927,6 +1076,19 @@ namespace pwiz.Osprey.Scoring
                 apexEnvelope = envelope.Intensities;
             }
         }
+    }
+
+    /// <summary>
+    /// A candidate's signal-prefilter verdict when
+    /// <see cref="PeakDataExtractor.ComputePrefilterScanMajor"/> evaluated it ahead of
+    /// <see cref="PeakDataExtractor.TryExtract"/>; <see cref="not_computed"/> leaves TryExtract
+    /// to evaluate it itself.
+    /// </summary>
+    internal enum PrefilterVerdict : byte
+    {
+        not_computed,
+        passed,
+        failed
     }
 
     /// <summary>

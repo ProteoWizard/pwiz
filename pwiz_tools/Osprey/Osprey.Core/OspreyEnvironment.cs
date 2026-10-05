@@ -465,6 +465,16 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool PickLda = IsNotZero(@"OSPREY_PICK_LDA");
 
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_PREFILTER: evaluate the first-pass signal prefilter for all of a
+        /// window's candidates at once, scan by scan, so each spectrum is visited once while its
+        /// arrays are in cache. DEFAULT ON; set OSPREY_SCAN_MAJOR_PREFILTER=0 for the original
+        /// candidate-by-candidate loop, the A/B arm for timing. Output is the same either way:
+        /// the prefilter verdict is a pure function of the candidate, its scan range and the
+        /// spectra.
+        /// </summary>
+        public static readonly bool ScanMajorPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_PREFILTER");
+
         /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and
