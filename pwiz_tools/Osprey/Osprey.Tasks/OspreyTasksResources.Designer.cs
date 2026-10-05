@@ -1023,16 +1023,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This analysis cannot resume from its completed first pass with {0}. Delete this analysis&apos;s {1} files and run again to repeat the first pass..
-        /// </summary>
-        public static string FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_c" +
-                        "ompleted_first_pass_with__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Reloading the kept precursor candidates from {0:N0} files.
         /// </summary>
         public static string FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files {
@@ -1059,25 +1049,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_it" +
                         "s_report_is_built_from_the_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Running {0} FDR control on the scored precursor candidates....
-        /// </summary>
-        public static string FirstPassFdrTask_Run_Running__0__FDR_control_on_the_scored_precursor_candidates___ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_Run_Running__0__FDR_control_on_the_scored_precursor_candidates__" +
-                        "_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to FDR method {0} not yet supported, falling back to simple.
-        /// </summary>
-        public static string FirstPassFdrTask_RunFdr_FDR_method__0__not_yet_supported__falling_back_to_simple {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFdr_FDR_method__0__not_yet_supported__falling_back_to_simple", resourceCulture);
             }
         }
         
@@ -1620,16 +1591,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The first-pass model was not retrained on this run (it resumed from saved first-pass results), so the Model tab has no feature table or per-feature distributions. Delete the {0} intermediate files to retrain it..
-        /// </summary>
-        public static string ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_ {
-            get {
-                return ResourceManager.GetString("ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retraine" +
-                        "d_on_this_run__it_resumed_from_saved_first_pass_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The saved first-pass diagnostics results were not found, so the report keeps its first-pass content and the second-pass results are not added..
         /// </summary>
         public static string ModelDiagnosticsReport_ReadPass1ForEnrichment_The_saved_first_pass_diagnostics_results_were_not_found__so_the_report_keeps_its_first_ {
@@ -2070,16 +2031,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_" +
                         "file___3___does_not_match_the_first_pass_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR is not available for the {0} FDR method; protein FDR will use first-pass scores..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR_is_not_available_for_the__0__FDR_method__protein_FDR_will_use_first_pass_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR_is_not_available_for_the__0_" +
-                        "_FDR_method__protein_FDR_will_use_first_pass_", resourceCulture);
             }
         }
         
@@ -3544,15 +3495,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_pe" +
                         "aks_from_1_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to An FDR method other than Percolator.
-        /// </summary>
-        public static string PerFileScoringTask_PreCompactionPoolReason_An_FDR_method_other_than_Percolator {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_PreCompactionPoolReason_An_FDR_method_other_than_Percolator", resourceCulture);
             }
         }
         

@@ -515,15 +515,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown FDR method &apos;{0}&apos;, defaulting to {1}.
-        /// </summary>
-        public static string OspreyCommandArgs_Unknown_FDR_method___0____defaulting_to__1_ {
-            get {
-                return ResourceManager.GetString("OspreyCommandArgs_Unknown_FDR_method___0____defaulting_to__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unknown fragment unit &apos;{0}&apos;, defaulting to {1}.
         /// </summary>
         public static string OspreyCommandArgs_Unknown_fragment_unit___0____defaulting_to__1_ {

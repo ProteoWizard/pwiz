@@ -485,10 +485,6 @@
     <value>{0:N0}個のラン間整合ファイルから、欠損ピークの対象と精密化された校正を{1:F1}秒で読み取りました</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_" xml:space="preserve">
-    <value>この解析は、{0}では完了済みの第1パスから再開できません。この解析の{1}ファイルを削除し、再実行して第1パスをやり直してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
     <value>中間ファイルに保存された第1パスのQ値を使用します。第1パスPercolatorは再実行されません。</value>
     <comment>Needs Review:New resource</comment>
@@ -499,10 +495,6 @@
   </data>
   <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
     <value>{0:N0}個のファイルから保持されたプリカーサー候補を再読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFdr_FDR_method__0__not_yet_supported__falling_back_to_simple" xml:space="preserve">
-    <value>FDR手法{0}はまだサポートされていないため、simpleにフォールバックします</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
@@ -603,10 +595,6 @@
   </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>モデル診断：第1パスはすでに完了しているため、レポートは第1パス中間ファイルから構築されます。再実行は行いません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_Run_Running__0__FDR_control_on_the_scored_precursor_candidates___" xml:space="preserve">
-    <value>スコアリングされたプリカーサー候補に対して{0} FDR制御を実行中...</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
@@ -727,10 +715,6 @@
   </data>
   <data name="ModelDiagnosticsReport_FinalizePass2_Added_the_second_pass_results_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>第2パスの結果をモデル診断レポートに追加しました：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_" xml:space="preserve">
-    <value>この実行では第1パスモデルは再トレーニングされなかった（保存された第1パスの結果から再開した）ため、Modelタブにはフィーチャー表もフィーチャーごとの分布もありません。再トレーニングするには、{0}中間ファイルを削除してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ModelDiagnosticsReport_ReadPass1ForEnrichment_The_saved_first_pass_diagnostics_results_were_not_found__so_the_report_keeps_its_first_" xml:space="preserve">
@@ -915,10 +899,6 @@
   </data>
   <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_file___3___does_not_match_the_first_pass_" xml:space="preserve">
     <value>第2パスFDR：再スコアリングされた中間ファイル「{3}」が「{0}」の第1パス中間ファイルと一致しません（{1:N0}行、想定{2:N0}行）。{4:N0}個のプリカーサー候補はフィーチャーなしでスコアリングされます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR_is_not_available_for_the__0__FDR_method__protein_FDR_will_use_first_pass_" xml:space="preserve">
-    <value>{0} FDR手法では第2パスFDRを利用できません。タンパク質FDRには第1パスのスコアを使用します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
@@ -1523,10 +1503,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>{1:N0}個のファイルから{0:N0}個の第1パスプリカーサー候補ピークを読み込みました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_An_FDR_method_other_than_Percolator" xml:space="preserve">
-    <value>Percolator以外のFDR手法</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">
