@@ -363,8 +363,8 @@ namespace pwiz.Skyline
                             longWaitDlg.PerformWork(null, 1000*3, broker => new SettingsImporter(null).CopyTools(broker));
                         }
                     }
-                    ImportedSettingsUpdater.ForSharedSettings()?.UpdateIfChanged();
-                    new ImportedSettingsUpdater().UpdateIfChanged();
+                    SharedSettingsMerger.ForSharedSettings()?.MergeIfChanged();
+                    SharedSettingsMerger.ForImportedSettings().MergeIfChanged();
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch

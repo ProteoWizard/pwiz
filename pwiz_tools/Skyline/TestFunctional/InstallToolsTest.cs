@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
 
                 TestToolVersioning();
 
-                TestSharedToolNotReinstalled();
+                TestSharedToolCannotBeReinstalled();
 
                 TestPackageVersioning();
 
@@ -306,7 +306,7 @@ namespace pwiz.SkylineTestFunctional
         /// installed for all users, cannot be reinstalled or updated, because that would delete the
         /// installed copy.
         /// </summary>
-        private void TestSharedToolNotReinstalled()
+        private void TestSharedToolCannotBeReinstalled()
         {
             string counterZip = TestFilesDir.GetTestPath("TestToolVersioning\\1.0\\Counter.zip");
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
@@ -330,19 +330,20 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(tool.IsReadOnly);
             });
 
-            var dlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            RunDlg<MessageDlg>(() => dlg.InstallZipTool(counterZip), messageDlg =>
+            RunLongDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, dlg =>
             {
-                Assert.AreEqual(string.Format(ToolsResources.ToolInstaller_UnpackZipTool_The_tool__0__was_installed_for_all_users_of_this_Skyline_installation__Only_the_owner_of_the_installation_folder_can_reinstall_or_update_it_,
-                    "Counter"), messageDlg.Message);
-                messageDlg.OkDialog();
-            });
-            RunUI(() =>
-            {
-                Assert.AreEqual(1, dlg.ToolList.Count);
-                Assert.AreEqual(sharedToolDir, Settings.Default.ToolList.Single().ToolDirPath);
-            });
-            OkDialog(dlg, dlg.Cancel);
+                RunDlg<MessageDlg>(() => dlg.InstallZipTool(counterZip), messageDlg =>
+                {
+                    Assert.AreEqual(string.Format(ToolsResources.ToolInstaller_UnpackZipTool_The_tool__0__was_installed_for_all_users_of_this_Skyline_installation__Only_the_owner_of_the_installation_folder_can_reinstall_or_update_it_,
+                        "Counter"), messageDlg.Message);
+                    messageDlg.OkDialog();
+                });
+                RunUI(() =>
+                {
+                    Assert.AreEqual(1, dlg.ToolList.Count);
+                    Assert.AreEqual(sharedToolDir, Settings.Default.ToolList.Single().ToolDirPath);
+                });
+            }, dlg => dlg.Cancel());
             Assert.IsTrue(File.Exists(sharedFile));
 
             RunUI(() => Settings.Default.ToolList.Single().ToolDirPath = installedToolDir);

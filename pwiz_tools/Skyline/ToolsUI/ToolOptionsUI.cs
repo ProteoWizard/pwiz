@@ -498,65 +498,48 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public void ImportSettings()
         {
-            IsImportingSettings = true;
+            var installations = FindInstallations().ToList();
+            if (installations.Count == 0)
+            {
+                MessageDlg.Show(this, ToolsUIResources.ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_);
+                return;
+            }
+            SettingsImporter importer;
+            using (var dlg = new ImportSettingsDlg(installations))
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                importer = dlg.Importer;
+            }
+            importer.RunUninstall = RunUninstall;
             try
             {
-                var installations = FindInstallations().ToList();
-                if (installations.Count == 0)
-                {
-                    MessageDlg.Show(this, ToolsUIResources.ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_);
-                    return;
-                }
-                SettingsImporter importer;
-                using (var dlg = new ImportSettingsDlg(installations))
-                {
-                    if (dlg.ShowDialog(this) != DialogResult.OK)
-                        return;
-                    importer = dlg.Importer;
-                }
-                importer.RunUninstall = RunUninstall;
+                importer.ImportSettingsFile();
+                bool toolsCopied = false;
                 try
                 {
-                    importer.ImportSettingsFile();
-                    bool toolsCopied = false;
-                    try
-                    {
-                        using (var longWaitDlg = new LongWaitDlg())
-                        {
-                            longWaitDlg.Text = Program.Name;
-                            longWaitDlg.Message = ToolsUIResources.ToolOptionsUI_ImportSettings_Importing_settings;
-                            longWaitDlg.PerformWork(this, 800, broker => toolsCopied = importer.CopyTools(broker));
-                        }
-                    }
-                    finally
-                    {
-                        // Canceled or failed: nothing is imported, and nothing is uninstalled.
-                        if (!toolsCopied)
-                            importer.RevertImport();
-                    }
-                    if (toolsCopied)
-                        importer.FinishImport();
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.Text = Program.Name;
+                    longWaitDlg.Message = ToolsUIResources.ToolOptionsUI_ImportSettings_Importing_settings;
+                    longWaitDlg.PerformWork(this, 800, broker => toolsCopied = importer.CopyTools(broker));
                 }
-                catch (Exception exception)
+                finally
                 {
-                    MessageDlg.ShowWithException(this,
-                        string.Format(ToolsUIResources.ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_,
-                            importer.SourceConfigFile), exception);
+                    // Canceled or failed: nothing is imported, and nothing is uninstalled.
+                    if (!toolsCopied)
+                        importer.RevertImport();
                 }
-                LoadSettings();
+                if (toolsCopied)
+                    importer.FinishImport();
             }
-            finally
+            catch (Exception exception)
             {
-                IsImportingSettings = false;
+                MessageDlg.ShowWithException(this,
+                    string.Format(ToolsUIResources.ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_,
+                        importer.SourceConfigFile), exception);
             }
+            LoadSettings();
         }
-
-        /// <summary>
-        /// True from the moment <see cref="ImportSettings"/> starts until its dialogs are gone
-        /// and the controls show the imported values. The import runs with a message pump, so a
-        /// test that has dismissed the dialog waits on this rather than on a value it expects.
-        /// </summary>
-        public bool IsImportingSettings { get; private set; }
 
         private void koinaDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {

@@ -36,78 +36,44 @@ namespace pwiz.SkylineTest
     public class ClickOnceInstallationsTest : AbstractUnitTest
     {
         private const string TEST_ZIP_PATH = @"Test\ClickOnceInstallationsTest.zip";
-        private const string ASSEMBLY_NAME = @"Skyline-daily";
+        private const string ASSEMBLY_NAME = @"ExampleProductName";
         private const string COMPANY_FOLDER = @"University_of_Washington";
         private const string INSTALLED_VERSION = @"26.1.1.209";
         private const string UNINSTALLED_VERSION = @"26.1.1.231";
-        private const string UNINSTALL_COMMAND =
-            @"rundll32.exe dfshim.dll,ShArpMaintain Skyline-daily.application, Culture=neutral, PublicKeyToken=9286511f3362df93, processorArchitecture=msil";
+        private const string UNINSTALL_COMMAND = @"rundll32.exe dfshim.dll,ShArpMaintain " + ASSEMBLY_NAME +
+            @".application, Culture=neutral, PublicKeyToken=9286511f3362df93, processorArchitecture=msil";
 
         [TestMethod]
         public void TestClickOnceInstallations()
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
-            VerifyDeploymentNameIdentifiesTheProduct();
-            VerifyNameComesFromTheAssembly();
-            VerifyEachCandidateCarriesItsOwnExecutableFolder();
-            VerifySettingsWithoutAnInstallationAreNotCandidates();
-            VerifyInstallationWithoutSettingsIsNotACandidate();
-            VerifyOtherCompanyFoldersAreSearched();
-            VerifyOtherApplicationsAreIgnored();
+            VerifyTwoInstallationsArePairedWithTheirOwnSettings();
+            VerifyDeveloperBuildSettingsAreNotOffered();
+            VerifyNeverRunInstallationIsNotOffered();
+            VerifySettingsUnderAnyCompanyFolderAreFound();
+            VerifyOtherProductsAreNotOffered();
         }
 
         /// <summary>
-        /// The registry entry is matched on its deployment manifest name, which ClickOnce takes
-        /// from the assembly name, so that a display name which does not match the assembly
-        /// cannot make the installation unfindable.
+        /// A ClickOnce installation's program folder (where its Tools are) and its settings folder
+        /// are in unrelated places, matched up by version. With two installations on disk, each
+        /// must be found with its own program folder and its own user.config. The one Programs and
+        /// Features no longer lists is still offered, but has nothing to uninstall.
         /// </summary>
-        private void VerifyDeploymentNameIdentifiesTheProduct()
-        {
-            // Real uninstall commands, read out of the registry.
-            Assert.AreEqual(@"Skyline-daily.application", ClickOnceInstallations.GetDeploymentName(
-                @"rundll32.exe dfshim.dll,ShArpMaintain Skyline-daily.application, Culture=neutral, PublicKeyToken=9286511f3362df93, processorArchitecture=msil"));
-            Assert.AreEqual(@"AutoQC.application", ClickOnceInstallations.GetDeploymentName(
-                @"rundll32.exe dfshim.dll,ShArpMaintain AutoQC.application, Culture=neutral, PublicKeyToken=9286511f3362df93, processorArchitecture=msil"));
-
-            // Anything that is not a ClickOnce uninstall, so that an ordinary installer sharing
-            // the name cannot be mistaken for one.
-            Assert.IsNull(ClickOnceInstallations.GetDeploymentName(
-                @"C:\Program Files\Skyline\uninstall.exe /S"));
-            Assert.IsNull(ClickOnceInstallations.GetDeploymentName(
-                @"MsiExec.exe /X{00000000-0000-0000-0000-000000000000}, Culture=neutral"));
-            Assert.IsNull(ClickOnceInstallations.GetDeploymentName(@"rundll32.exe dfshim.dll"));
-            Assert.IsNull(ClickOnceInstallations.GetDeploymentName(null));
-        }
-
-        /// <summary>
-        /// The name is taken from the assembly handed in, so that SkylineCmd.exe and
-        /// Skyline-daily.exe, which start different entry assemblies, look for the same product.
-        /// </summary>
-        private void VerifyNameComesFromTheAssembly()
-        {
-            var assembly = typeof(ClickOnceInstallations).Assembly;
-            Assert.AreEqual(assembly.GetName().Name, new ClickOnceInstallations(assembly).AssemblyName);
-        }
-
-        /// <summary>
-        /// The point of returning candidates rather than a single file. Two installations can be
-        /// on disk at once, only one of them listed in Programs and Features, and each carries the
-        /// executable folder its own Tools folder is in.
-        /// </summary>
-        private void VerifyEachCandidateCarriesItsOwnExecutableFolder()
+        private void VerifyTwoInstallationsArePairedWithTheirOwnSettings()
         {
             var localAppData = CreateLocalAppData(@"TwoInstallations");
             var currentFolder = WriteInstallation(localAppData, INSTALLED_VERSION);
-            var currentConfig = WriteConfig(localAppData, COMPANY_FOLDER, @"Skyline-daily.exe_Url_current",
+            var currentConfig = WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_current",
                 INSTALLED_VERSION);
             var removedFolder = WriteInstallation(localAppData, UNINSTALLED_VERSION);
-            var removedConfig = WriteConfig(localAppData, COMPANY_FOLDER, @"Skyline-daily.exe_Url_removed",
+            var removedConfig = WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_removed",
                 UNINSTALLED_VERSION);
 
-            var candidates = ListCandidates(localAppData);
-            Assert.AreEqual(2, candidates.Count);
+            var installations = FindInstallations(localAppData);
+            Assert.AreEqual(2, installations.Count);
 
-            var current = candidates[INSTALLED_VERSION];
+            var current = installations[INSTALLED_VERSION];
             Assert.AreEqual(ASSEMBLY_NAME, current.ProductName);
             Assert.AreEqual(currentFolder, current.ExecutableFolder);
             Assert.AreEqual(currentConfig, current.UserConfigFile);
@@ -116,9 +82,7 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(current.CanUninstall);
             Assert.AreEqual(UNINSTALL_COMMAND, current.UninstallCommand);
 
-            // Still a candidate, and still paired with its own folder, even though Programs and
-            // Features no longer lists it. Nothing left to uninstall, though.
-            var removed = candidates[UNINSTALLED_VERSION];
+            var removed = installations[UNINSTALLED_VERSION];
             Assert.AreEqual(removedFolder, removed.ExecutableFolder);
             Assert.AreEqual(removedConfig, removed.UserConfigFile);
             Assert.IsFalse(removed.IsCurrentlyInstalled);
@@ -126,59 +90,66 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// The hazard this class exists for. A developer machine collects a settings folder for
-        /// every folder Skyline has ever run from, hundreds of them, with versions higher than any
-        /// installation's. None is an installation, so none has an executable folder to offer and
-        /// none is a candidate.
+        /// A developer machine collects a settings folder for every folder Skyline has ever run
+        /// from, hundreds of them, with versions higher than any installation's. None belongs to an
+        /// installation, so none is offered.
         /// </summary>
-        private void VerifySettingsWithoutAnInstallationAreNotCandidates()
+        private void VerifyDeveloperBuildSettingsAreNotOffered()
         {
             var localAppData = CreateLocalAppData(@"DeveloperBuilds");
-            WriteConfig(localAppData, COMPANY_FOLDER, @"Skyline-daily.exe_Url_developerbuild", @"26.1.1.238");
-            WriteConfig(localAppData, COMPANY_FOLDER, @"Skyline-daily.exe_Url_olderbuild", @"25.1.1.401");
+            WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_developerbuild", @"26.1.1.238");
+            WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_olderbuild", @"25.1.1.401");
 
-            Assert.AreEqual(0, ListCandidates(localAppData).Count);
+            Assert.AreEqual(0, FindInstallations(localAppData).Count);
         }
 
         /// <summary>
-        /// An installation that was never run wrote no settings, and there is nothing to inherit
-        /// from it.
+        /// An installation that was never run wrote no settings, so there is nothing to import.
         /// </summary>
-        private void VerifyInstallationWithoutSettingsIsNotACandidate()
+        private void VerifyNeverRunInstallationIsNotOffered()
         {
             var localAppData = CreateLocalAppData(@"NeverRun");
             WriteInstallation(localAppData, INSTALLED_VERSION);
 
-            Assert.AreEqual(0, ListCandidates(localAppData).Count);
-        }
-
-        private void VerifyOtherCompanyFoldersAreSearched()
-        {
-            var localAppData = CreateLocalAppData(@"OtherCompany");
-            WriteInstallation(localAppData, INSTALLED_VERSION);
-            var expected = WriteConfig(localAppData, @"Some_Other_Company", @"Skyline-daily.exe_Url_current",
-                INSTALLED_VERSION);
-
-            Assert.AreEqual(expected, ListCandidates(localAppData)[INSTALLED_VERSION].UserConfigFile);
-        }
-
-        private void VerifyOtherApplicationsAreIgnored()
-        {
-            var localAppData = CreateLocalAppData(@"OtherApplication");
-            WriteInstallation(localAppData, INSTALLED_VERSION, @"Skyline");
-            WriteInstallation(localAppData, INSTALLED_VERSION, @"AutoQC");
-            WriteConfig(localAppData, COMPANY_FOLDER, @"Skyline.exe_Url_current", INSTALLED_VERSION);
-            WriteConfig(localAppData, COMPANY_FOLDER, @"AutoQC.exe_Url_current", INSTALLED_VERSION);
-
-            Assert.AreEqual(0, ListCandidates(localAppData).Count);
+            Assert.AreEqual(0, FindInstallations(localAppData).Count);
         }
 
         /// <summary>
-        /// Candidates by version. InstalledVersions is always supplied, so that no case falls
+        /// The settings folder sits under a folder named for the assembly's company, which is not
+        /// the same for every build.
+        /// </summary>
+        private void VerifySettingsUnderAnyCompanyFolderAreFound()
+        {
+            var localAppData = CreateLocalAppData(@"OtherCompany");
+            WriteInstallation(localAppData, INSTALLED_VERSION);
+            var expected = WriteConfig(localAppData, @"Some_Other_Company", ASSEMBLY_NAME + @".exe_Url_current",
+                INSTALLED_VERSION);
+
+            Assert.AreEqual(expected, FindInstallations(localAppData)[INSTALLED_VERSION].UserConfigFile);
+        }
+
+        /// <summary>
+        /// Includes a product whose name is the start of this one's, as the release channel's
+        /// name is the start of the daily channel's.
+        /// </summary>
+        private void VerifyOtherProductsAreNotOffered()
+        {
+            const string prefixName = @"Example";
+            var localAppData = CreateLocalAppData(@"OtherApplication");
+            WriteInstallation(localAppData, INSTALLED_VERSION, prefixName);
+            WriteInstallation(localAppData, INSTALLED_VERSION, @"AutoQC");
+            WriteConfig(localAppData, COMPANY_FOLDER, prefixName + @".exe_Url_current", INSTALLED_VERSION);
+            WriteConfig(localAppData, COMPANY_FOLDER, @"AutoQC.exe_Url_current", INSTALLED_VERSION);
+
+            Assert.AreEqual(0, FindInstallations(localAppData).Count);
+        }
+
+        /// <summary>
+        /// Installations found, by version. InstalledVersions is always supplied, so that no case falls
         /// through to the registry of whatever machine the test is running on, and AssemblyName
         /// too, so the assembly handed to the constructor does not matter here.
         /// </summary>
-        private static IDictionary<string, SkylineInstallation> ListCandidates(string localAppData)
+        private static IDictionary<string, SkylineInstallation> FindInstallations(string localAppData)
         {
             var clickOnceInstallations = new StubClickOnceInstallations(typeof(ClickOnceInstallations).Assembly)
             {
@@ -186,7 +157,7 @@ namespace pwiz.SkylineTest
                 LocalApplicationDataFolder = localAppData,
                 InstalledVersions = new Dictionary<string, string> { { INSTALLED_VERSION, UNINSTALL_COMMAND } }
             };
-            return clickOnceInstallations.ListCandidates().ToDictionary(candidate => candidate.Version);
+            return clickOnceInstallations.ListCandidates().ToDictionary(installation => installation.Version);
         }
 
         private string CreateLocalAppData(string name)

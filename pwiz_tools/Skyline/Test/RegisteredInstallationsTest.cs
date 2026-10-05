@@ -35,17 +35,17 @@ namespace pwiz.SkylineTest
     public class RegisteredInstallationsTest : AbstractUnitTest
     {
         private const string TEST_ZIP_PATH = @"Test\RegisteredInstallationsTest.zip";
-        private const string DAILY = @"Skyline-daily";
-        private const string RELEASE = @"Skyline";
+        private const string PRODUCT = @"ExampleProductName";
+        private const string OTHER_PRODUCT = @"OtherProductName";
         private const string INSTALLED_VERSION = @"26.2.1.100";
 
         [TestMethod]
         public void TestRegisteredInstallations()
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
-            var installed = WriteInstallation(@"Installed", DAILY, true);
-            var neverRun = WriteInstallation(@"NeverRun", DAILY, false);
-            var otherProduct = WriteInstallation(@"OtherProduct", RELEASE, true);
+            var installed = WriteInstallation(@"Installed", PRODUCT, true);
+            var neverRun = WriteInstallation(@"NeverRun", PRODUCT, false);
+            var otherProduct = WriteInstallation(@"OtherProduct", OTHER_PRODUCT, true);
             var uninstallCommand = @"""" + Path.Combine(installed, @"unins000.exe") + @"""";
             var entries = new[]
             {
@@ -81,10 +81,10 @@ namespace pwiz.SkylineTest
                 new RegisteredInstallations.UninstallEntry { DisplayVersion = @"1.0" }
             };
 
-            var found = new StubRegisteredInstallations(DAILY, entries).ListInstallations().ToList();
+            var found = new StubRegisteredInstallations(PRODUCT, entries).ListInstallations().ToList();
             Assert.AreEqual(1, found.Count);
             var installation = found[0];
-            Assert.AreEqual(DAILY, installation.ProductName);
+            Assert.AreEqual(PRODUCT, installation.ProductName);
             Assert.AreEqual(INSTALLED_VERSION, installation.Version);
             Assert.AreEqual(installed, installation.ExecutableFolder);
             Assert.AreEqual(Path.Combine(installed, @"user.config"), installation.UserConfigFile);
@@ -92,14 +92,14 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(installation.CanUninstall);
             Assert.AreEqual(uninstallCommand, installation.UninstallCommand);
 
-            var otherFound = new StubRegisteredInstallations(RELEASE, entries).ListInstallations().ToList();
+            var otherFound = new StubRegisteredInstallations(OTHER_PRODUCT, entries).ListInstallations().ToList();
             Assert.AreEqual(1, otherFound.Count);
-            Assert.AreEqual(RELEASE, otherFound[0].ProductName);
+            Assert.AreEqual(OTHER_PRODUCT, otherFound[0].ProductName);
             Assert.AreEqual(otherProduct, otherFound[0].ExecutableFolder);
 
             // A registered folder is one whether or not it has been run, and however the
             // separator and case were written
-            var registered = new StubRegisteredInstallations(DAILY, entries);
+            var registered = new StubRegisteredInstallations(PRODUCT, entries);
             AssertEx.IsTrue(registered.IsInstallationFolder(installed));
             AssertEx.IsTrue(registered.IsInstallationFolder(neverRun + Path.DirectorySeparatorChar));
             AssertEx.IsTrue(registered.IsInstallationFolder(otherProduct.ToUpperInvariant()));

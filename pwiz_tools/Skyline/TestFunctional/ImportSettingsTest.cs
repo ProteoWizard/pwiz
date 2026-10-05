@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -74,17 +75,17 @@ namespace pwiz.SkylineTestFunctional
                 // settings can be imported but which cannot be uninstalled
                 var stale = new SkylineInstallation
                 {
-                    ProductName = @"Skyline-daily",
+                    ProductName = @"ExampleProductName",
                     Version = @"25.1.1.100",
                     ExecutableFolder = Path.GetDirectoryName(other.ExecutableFolder),
                     UserConfigFile = other.UserConfigFile
                 };
                 WriteOwnSettings(provider, TestFilesDir.GetTestPath(@"Own"));
 
-                TestImportKeepingOwnIdentity(other, stale);
-                TestRevertImport(other);
-                TestTrackedChangesMerge(other);
-                TestImportWithUninstall(other);
+                TestImportReplacesSettingsAndCopiesTools(other, stale);
+                TestCanceledImportIsUndone(other);
+                TestLaterSourceChangesAreMergedIn(other);
+                TestImportAndUninstallTakesOverTheOtherInstallation(other);
             }
             finally
             {
@@ -99,11 +100,9 @@ namespace pwiz.SkylineTestFunctional
         /// and, on request, a copy of the imported file is kept so that later changes to it can
         /// be noticed.
         /// </summary>
-        private void TestImportKeepingOwnIdentity(SkylineInstallation other, SkylineInstallation stale)
+        private void TestImportReplacesSettingsAndCopiesTools(SkylineInstallation other, SkylineInstallation stale)
         {
-            var toolsOptions = ShowToolOptions(new[] { other, stale }, out var uninstallsRun);
-            var importDlg = ShowDialog<ImportSettingsDlg>(toolsOptions.ImportSettings);
-            RunUI(() =>
+            var uninstallsRun = ImportFromToolOptions(new[] { other, stale }, importDlg =>
             {
                 Assert.AreEqual(2, importDlg.Installations.Count);
                 Assert.AreSame(other, importDlg.SelectedInstallation);
@@ -118,9 +117,6 @@ namespace pwiz.SkylineTestFunctional
                 importDlg.SelectedInstallation = other;
                 importDlg.TrackChanges = true;
             });
-            OkDialog(importDlg, importDlg.OkDialog);
-            WaitForImport(toolsOptions);
-            OkDialog(toolsOptions, toolsOptions.OkDialog);
 
             Assert.AreEqual(0, uninstallsRun.Count);
             Assert.AreEqual(OTHER_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
@@ -144,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
         /// An import canceled or failed partway is undone, down to a change made in this session
         /// and not yet saved.
         /// </summary>
-        private void TestRevertImport(SkylineInstallation other)
+        private void TestCanceledImportIsUndone(SkylineInstallation other)
         {
             RunUI(() =>
             {
@@ -167,12 +163,12 @@ namespace pwiz.SkylineTestFunctional
         /// one changed in both places keeps this one's, and the tool list gains the tools added
         /// in each place.
         /// </summary>
-        private void TestTrackedChangesMerge(SkylineInstallation other)
+        private void TestLaterSourceChangesAreMergedIn(SkylineInstallation other)
         {
-            var updater = new ImportedSettingsUpdater();
-            Assert.IsTrue(updater.IsTracking);
-            Assert.AreEqual(other.UserConfigFile, updater.SourcePath);
-            Assert.IsFalse(updater.HasSourceChanged());
+            var merger = SharedSettingsMerger.ForImportedSettings();
+            Assert.IsTrue(merger.IsTracking);
+            Assert.AreEqual(other.UserConfigFile, merger.SourcePath);
+            Assert.IsFalse(merger.HasSourceChanged());
 
             RunUI(() =>
             {
@@ -188,9 +184,9 @@ namespace pwiz.SkylineTestFunctional
                     new ToolDescription(SOURCE_TOOL_TITLE, @"source.exe", string.Empty)));
                 source.Save();
             });
-            Assert.IsTrue(updater.HasSourceChanged());
+            Assert.IsTrue(merger.HasSourceChanged());
 
-            RunUI(updater.UpdateIfChanged);
+            RunUI(merger.MergeIfChanged);
 
             Assert.AreEqual(SOURCE_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
             Assert.AreEqual(OWN_LIBRARY_DIRECTORY, Settings.Default.LibraryDirectory);
@@ -201,18 +197,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(Path.Combine(_toolsDirectory, TOOL_FOLDER),
                 Settings.Default.ToolList.Single(tool => tool.Title == TOOL_TITLE).ToolDirPath);
             // The base copy was refreshed, so the next start has nothing to bring across
-            Assert.IsFalse(updater.HasSourceChanged());
+            Assert.IsFalse(merger.HasSourceChanged());
         }
 
         /// <summary>
         /// Importing and uninstalling the other installation: this installation takes over the
         /// other's id, the uninstall command is run, and there is no source left to track.
         /// </summary>
-        private void TestImportWithUninstall(SkylineInstallation other)
+        private void TestImportAndUninstallTakesOverTheOtherInstallation(SkylineInstallation other)
         {
-            var toolsOptions = ShowToolOptions(new[] { other }, out var uninstallsRun);
-            var importDlg = ShowDialog<ImportSettingsDlg>(toolsOptions.ImportSettings);
-            RunUI(() =>
+            var uninstallsRun = ImportFromToolOptions(new[] { other }, importDlg =>
             {
                 importDlg.TrackChanges = true;
                 importDlg.UninstallSelected = true;
@@ -220,9 +214,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(importDlg.TrackChangesEnabled);
                 Assert.IsFalse(importDlg.TrackChanges);
             });
-            OkDialog(importDlg, importDlg.OkDialog);
-            WaitForImport(toolsOptions);
-            OkDialog(toolsOptions, toolsOptions.OkDialog);
 
             Assert.AreEqual(1, uninstallsRun.Count);
             Assert.AreEqual(UNINSTALL_COMMAND, uninstallsRun[0]);
@@ -232,27 +223,30 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(File.Exists(SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath)));
         }
 
-        private ToolOptionsUI ShowToolOptions(SkylineInstallation[] installations, out List<string> uninstallsRun)
-        {
-            var commandsRun = new List<string>();
-            uninstallsRun = commandsRun;
-            var toolsOptions = ShowDialog<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI);
-            RunUI(() =>
-            {
-                toolsOptions.SelectedTab = ToolOptionsUI.TABS.Miscellaneous;
-                toolsOptions.FindInstallations = () => installations;
-                toolsOptions.RunUninstall = commandsRun.Add;
-            });
-            return toolsOptions;
-        }
-
         /// <summary>
-        /// The import pumps messages while it runs, so dismissing the dialog is not the end of
-        /// it. The options dialog says when it is done.
+        /// Clicks Import Settings in Tools > Options, offering the given installations, makes the
+        /// choices in the Import Settings dialog, which runs on the UI thread, and accepts both
+        /// dialogs. Returns once the whole import is done. The uninstall commands it would have
+        /// run are returned instead of being run.
         /// </summary>
-        private static void WaitForImport(ToolOptionsUI toolsOptions)
+        private List<string> ImportFromToolOptions(SkylineInstallation[] installations, Action<ImportSettingsDlg> chooseImport)
         {
-            WaitForConditionUI(() => !toolsOptions.IsImportingSettings);
+            var uninstallsRun = new List<string>();
+            RunLongDlg<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI, toolsOptions =>
+            {
+                RunUI(() =>
+                {
+                    toolsOptions.SelectedTab = ToolOptionsUI.TABS.Miscellaneous;
+                    toolsOptions.FindInstallations = () => installations;
+                    toolsOptions.RunUninstall = uninstallsRun.Add;
+                });
+                RunDlg<ImportSettingsDlg>(toolsOptions.ImportSettings, importDlg =>
+                {
+                    chooseImport(importDlg);
+                    importDlg.OkDialog();
+                });
+            }, toolsOptions => toolsOptions.OkDialog());
+            return uninstallsRun;
         }
 
         /// <summary>
@@ -277,7 +271,7 @@ namespace pwiz.SkylineTestFunctional
 
             return new SkylineInstallation
             {
-                ProductName = @"Skyline-daily",
+                ProductName = @"ExampleProductName",
                 Version = @"26.1.1.209",
                 ExecutableFolder = otherFolder,
                 UserConfigFile = provider.ConfigFilePath,

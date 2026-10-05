@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Util
     {
         /// <summary>
         /// Name of the copy of the imported file kept beside user.config when the import is to
-        /// be kept up to date. <see cref="ImportedSettingsUpdater"/> compares the source
+        /// be kept up to date. <see cref="SharedSettingsMerger.ForImportedSettings"/> compares the source
         /// against it to see whether anything changed.
         /// </summary>
         public const string BASE_CONFIG_FILE_NAME = @"base.user.config";

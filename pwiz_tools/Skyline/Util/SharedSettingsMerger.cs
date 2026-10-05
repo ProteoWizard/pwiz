@@ -25,13 +25,20 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
-    /// Keeps this program's settings in step with another settings file they were copied from:
-    /// one imported with "keep up to date", or the administrator's user.config beside the
-    /// executable of an installation the user does not own. A copy of the other file, the base,
-    /// is kept beside this program's user.config, and a source that no longer matches it has
-    /// changed since the copy was taken.
+    /// Brings an administrator's changes to the shared settings of an installation to an ordinary
+    /// user of it. When Skyline is installed for all users, the administrator's user.config sits
+    /// beside the executable and each other user keeps settings of their own, so external tools
+    /// the administrator installs, and other settings they change, would never reach anyone else.
+    /// At startup this merges whatever changed in the shared file into the user's own settings,
+    /// keeping the user's own changes.
+    ///
+    /// A copy of the shared file, the base, is kept beside the user's user.config. A shared file
+    /// that no longer matches it has changed since the last merge.
+    ///
+    /// Import Settings' "Keep these settings up to date" follows the file it imported from the
+    /// same way; see <see cref="ForImportedSettings"/>.
     /// </summary>
-    public class ImportedSettingsUpdater
+    public class SharedSettingsMerger
     {
         /// <summary>
         /// Name of the base copy of the administrator's user.config, kept apart from the one
@@ -40,29 +47,32 @@ namespace pwiz.Skyline.Util
         public const string SHARED_BASE_CONFIG_FILE_NAME = @"shared.base.user.config";
 
         /// <summary>
-        /// Tracks the file the settings were imported from, if they were imported with "keep up
-        /// to date".
-        /// </summary>
-        public ImportedSettingsUpdater()
-        {
-            SourcePath = Settings.Default.ImportedSettingsPath;
-            BaseConfigFilePath = SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath);
-        }
-
-        /// <summary>
-        /// Tracks the administrator's user.config, or returns null when the user's settings are
+        /// Follows the administrator's user.config, or returns null when the user's settings are
         /// that file.
         /// </summary>
-        public static ImportedSettingsUpdater ForSharedSettings()
+        public static SharedSettingsMerger ForSharedSettings()
         {
             var sharedConfigFile = UserConfigSettingsProvider.GetSharedConfigFile();
             if (sharedConfigFile == null)
                 return null;
-            return new ImportedSettingsUpdater
+            return new SharedSettingsMerger
             {
                 SourcePath = sharedConfigFile,
                 BaseConfigFilePath = Path.Combine(UserConfigSettingsProvider.GetDefaultConfigFolder(),
                     SHARED_BASE_CONFIG_FILE_NAME)
+            };
+        }
+
+        /// <summary>
+        /// Follows the file the settings were imported from, when they were imported with "Keep
+        /// these settings up to date".
+        /// </summary>
+        public static SharedSettingsMerger ForImportedSettings()
+        {
+            return new SharedSettingsMerger
+            {
+                SourcePath = Settings.Default.ImportedSettingsPath,
+                BaseConfigFilePath = SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath)
             };
         }
 
@@ -96,7 +106,7 @@ namespace pwiz.Skyline.Util
             return !File.ReadAllBytes(SourcePath).SequenceEqual(File.ReadAllBytes(BaseConfigFilePath));
         }
 
-        public void UpdateIfChanged()
+        public void MergeIfChanged()
         {
             if (!HasSourceChanged())
                 return;

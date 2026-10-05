@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestURL();
 
-            TestReadOnlyTools();
+            TestSharedToolsCannotBeChanged();
 
             TestImmediateWindow();
 
@@ -420,7 +420,7 @@ namespace pwiz.SkylineTestFunctional
         /// installed beside the shared user.config, can be neither changed nor removed. Moving from
         /// it back to a web page tool must leave that tool's program-only fields disabled.
         /// </summary>
-        private void TestReadOnlyTools()
+        private void TestSharedToolsCannotBeChanged()
         {
             const string editableTitle = "EditableWebTool"; // Not L10N
             const string readOnlyTitle = "SharedWebTool"; // Not L10N
@@ -433,8 +433,7 @@ namespace pwiz.SkylineTestFunctional
                 Settings.Default.ToolList.Add(new ToolDescription(readOnlyTitle, url, _empty, _empty, false, _empty,
                     _empty, _empty, sharedToolDir, new List<AnnotationDef>(), null, null, null));
             });
-            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            RunUI(() =>
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
             {
                 Assert.AreEqual(editableTitle, configureToolsDlg.textTitle.Text);
                 VerifyToolFieldsEnabled(configureToolsDlg, true, false);
@@ -446,8 +445,8 @@ namespace pwiz.SkylineTestFunctional
                 configureToolsDlg.TestHelperIndexChange(0);
                 Assert.AreEqual(editableTitle, configureToolsDlg.textTitle.Text);
                 VerifyToolFieldsEnabled(configureToolsDlg, true, false);
+                configureToolsDlg.Cancel();
             });
-            OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
             RunUI(() => Settings.Default.ToolList.Clear());
         }
 
