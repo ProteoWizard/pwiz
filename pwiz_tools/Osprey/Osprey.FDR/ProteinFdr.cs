@@ -192,6 +192,36 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Folds in an accumulator that <see cref="Add"/> built over one file's rows alone - on a
+        /// file lane, while other files are read. Merged once per file in file order, this leaves
+        /// exactly the state <see cref="Add"/> would have reached row by row: the best score is a
+        /// maximum and the best q-value a minimum, which no grouping changes; a peptide keeps the
+        /// decoy flag of its first occurrence, which is in the earliest file that has it; and
+        /// both collections gain each peptide when its first file is merged, the order they
+        /// would have been inserted in. <paramref name="file"/> is consumed - its entries are
+        /// adopted, not copied - and must not be used again.
+        /// </summary>
+        public void Merge(FirstPassProteinFdrAccumulator file)
+        {
+            foreach (string peptide in file._detectedPeptides)
+                _detectedPeptides.Add(peptide);
+            foreach (var kv in file._bestScores)
+            {
+                if (_bestScores.TryGetValue(kv.Key, out PeptideScore ps))
+                {
+                    if (kv.Value.Score > ps.Score)
+                        ps.Score = kv.Value.Score;
+                    if (kv.Value.BestQvalue < ps.BestQvalue)
+                        ps.BestQvalue = kv.Value.BestQvalue;
+                }
+                else
+                {
+                    _bestScores[kv.Key] = kv.Value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Fold one row into the detected-peptide set (targets passing peptide-level run FDR,
         /// matching Rust pipeline.rs:4301) and the per-peptide best (max) score / best (min)
         /// run peptide q-value reduction (matching

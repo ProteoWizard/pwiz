@@ -117,11 +117,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // one input the reproducibility frontier needs beyond the gated cross-run sets.
             private readonly Dictionary<string, FrontierPrec> _frontier =
                 new Dictionary<string, FrontierPrec>(StringComparer.Ordinal);
-            // Within-file dedup buffer: the current file's per-precursor best run-q, flushed into
-            // the bins at each file boundary (rows arrive in file-major order).
-            private readonly Dictionary<string, double> _frontierFileMinQ =
-                new Dictionary<string, double>(StringComparer.Ordinal);
-            private int _frontierCurFile = -1;
+            // The file the row-by-row Add is folding now, merged when the next file starts or
+            // a Build begins; and the last file merged, which merges must ascend from.
+            private FileFold _open;
+            private int _lastMergedFile = -1;
 
             /// <param name="runNames">Input-file names in scoring (input-file) order -- the x for
             /// the per-file table and cross-run curves; also fixes <see cref="FileCount"/>.</param>
@@ -184,113 +183,308 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public void Add(int fileIdx, string modifiedSequence, byte charge, uint entryId,
                 bool isDecoy, double score, in FdrQValues q)
             {
-                uint baseId = entryId & BASE_ID_MASK;
-                EntrapmentClass cls = Classify(isDecoy, baseId, _classByBaseId, _haveManifest,
-                    ref _nWithClass, ref _nWithoutClass);
-                string key = modifiedSequence + @"|" + charge;
-
-                // --- best-per-precursor (== ReduceToPrecs: max score, min q at each scope) ---
-                uint pairIdx = 0;
-                bool hasPair = _pairByBaseId != null && _pairByBaseId.TryGetValue(baseId, out pairIdx);
-                if (!_best.TryGetValue(key, out var cur))
+                // Rows arrive file-major (IFdrOutputSink's contract), so each file's rows are
+                // reduced into a FileFold of their own and merged when the next file starts. That
+                // is the same path a file lane takes through BeginFile and MergeFile, so there is
+                // one implementation of every reduction rather than a row-by-row one beside a
+                // per-file one that could drift from it.
+                if (_open == null || _open.FileIdx != fileIdx)
                 {
-                    cur = new Prec
-                    {
-                        Score = score,
-                        QRunPrecursor = q.RunPrecursorQvalue,
-                        QExpPrecursor = q.ExperimentPrecursorQvalue,
-                        IsDecoy = isDecoy,
-                        Class = cls,
-                        PairIndex = pairIdx,
-                        Charge = charge,
-                        HasPair = hasPair,
-                    };
+                    FlushOpenFile();
+                    _open = BeginFile(fileIdx);
                 }
-                else
+                _open.Add(modifiedSequence, charge, entryId, isDecoy, score, in q);
+            }
+
+            /// <summary>
+            /// A fold for one file's rows. Building it reads only this accumulator's immutable
+            /// configuration, so folds for different files can be built at once, on file lanes;
+            /// merge each with <see cref="MergeFile"/>, in file order.
+            /// </summary>
+            public FileFold BeginFile(int fileIdx)
+            {
+                return new FileFold(this, fileIdx);
+            }
+
+            /// <summary>
+            /// Folds one file's reductions in. Files must arrive in ascending order - the order
+            /// the row-by-row <see cref="Add"/> sees them - and each exactly once.
+            /// </summary>
+            public void MergeFile(FileFold fold)
+            {
+                if (fold == null)
+                    throw new ArgumentNullException(nameof(fold));
+                FlushOpenFile();
+                fold.MergeInto(this);
+            }
+
+            private void FlushOpenFile()
+            {
+                if (_open == null)
+                    return;
+                var open = _open;
+                _open = null;
+                open.MergeInto(this);
+            }
+
+            /// <summary>
+            /// One file's share of <see cref="Add"/>: every reduction the accumulator keeps,
+            /// computed over that file's rows alone, and merged by <see cref="MergeInto"/> so that
+            /// merging the files in order reproduces folding every row in order.
+            ///
+            /// <para>Why the merge is exact, reduction by reduction. Best-per-precursor keeps the
+            /// first row with the highest score and the lowest q-values; a file's own best, merged
+            /// only when it is strictly higher, is the first highest row overall, and a minimum is
+            /// a minimum. Counts add. A cross-run stream takes a file's passing keys as one set,
+            /// in the order its rows added them. The win fraction keeps per base_id the highest
+            /// target and decoy scores and the class of the first row reaching the highest target
+            /// score - again strict on merge. The frontier keeps a precursor's first-seen
+            /// entrapment flag and lowest experiment q, and counts each file's lowest run q once,
+            /// which is what a file's own minimum flushed once per file does. Each collection
+            /// gains a key when the first file holding it is merged, in that file's row order -
+            /// the order the row-by-row fold inserted it in.</para>
+            /// </summary>
+            public sealed class FileFold
+            {
+                private readonly Accumulator _owner;
+                private readonly Dictionary<string, Prec> _best = new Dictionary<string, Prec>(StringComparer.Ordinal);
+                private int _nWithClass;
+                private int _nWithoutClass;
+                private int _targets;
+                private int _decoys;
+                private int _entrap;
+                private readonly HashSet<string> _runKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _expKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _entRunKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _entExpKeys = new HashSet<string>(StringComparer.Ordinal);
+                private readonly Dictionary<uint, double[]> _bt = new Dictionary<uint, double[]>();
+                private readonly Dictionary<uint, EntrapmentClass> _tClass = new Dictionary<uint, EntrapmentClass>();
+                // Pass 1 only: the precursor's first-seen entrapment flag and lowest experiment q,
+                // and the file's lowest run q - the frontier's whole per-file input.
+                private readonly Dictionary<string, (bool IsEntrapment, double MinExpQ)> _frontier;
+                private readonly Dictionary<string, double> _frontierMinQ;
+
+                internal FileFold(Accumulator owner, int fileIdx)
                 {
-                    if (score > cur.Score)
+                    _owner = owner;
+                    FileIdx = fileIdx;
+                    if (owner._pass == 1)
                     {
-                        cur.Score = score;
-                        cur.IsDecoy = isDecoy;
-                        cur.Class = cls;
-                        cur.PairIndex = pairIdx;
-                        cur.HasPair = hasPair;
+                        _frontier = new Dictionary<string, (bool IsEntrapment, double MinExpQ)>(StringComparer.Ordinal);
+                        _frontierMinQ = new Dictionary<string, double>(StringComparer.Ordinal);
                     }
-                    if (q.RunPrecursorQvalue < cur.QRunPrecursor)
-                        cur.QRunPrecursor = q.RunPrecursorQvalue;
-                    if (q.ExperimentPrecursorQvalue < cur.QExpPrecursor)
-                        cur.QExpPrecursor = q.ExperimentPrecursorQvalue;
                 }
-                _best[key] = cur;
 
-                // --- per-file passing counts (== BuildPerFile) + cross-run key-sets
-                //     (== BuildCrossRunDetection): the run-level FDR gate, decoys counted but
-                //     excluded from the reproducibility sets, entrapment routed to its own sets. ---
-                bool isEntrap = _haveManifest && _classByBaseId != null
-                    && _classByBaseId.TryGetValue(baseId, out var pcls)
-                    && pcls == EntrapmentClass.PTarget;
-                if (q.EffectiveRunQvalue(_fdrLevel) <= _runFdr)
+                public int FileIdx { get; }
+
+                /// <summary>Folds one row of this file; the per-row half of
+                /// <see cref="Accumulator.Add"/>.</summary>
+                public void Add(string modifiedSequence, byte charge, uint entryId,
+                    bool isDecoy, double score, in FdrQValues q)
                 {
-                    if (isDecoy)
+                    var owner = _owner;
+                    uint baseId = entryId & BASE_ID_MASK;
+                    EntrapmentClass cls = Classify(isDecoy, baseId, owner._classByBaseId, owner._haveManifest,
+                        ref _nWithClass, ref _nWithoutClass);
+                    string key = modifiedSequence + @"|" + charge;
+
+                    // --- best-per-precursor (== ReduceToPrecs: max score, min q at each scope) ---
+                    uint pairIdx = 0;
+                    bool hasPair = owner._pairByBaseId != null && owner._pairByBaseId.TryGetValue(baseId, out pairIdx);
+                    if (!_best.TryGetValue(key, out var cur))
                     {
-                        _fileDecoys[fileIdx]++;
+                        cur = new Prec
+                        {
+                            Score = score,
+                            QRunPrecursor = q.RunPrecursorQvalue,
+                            QExpPrecursor = q.ExperimentPrecursorQvalue,
+                            IsDecoy = isDecoy,
+                            Class = cls,
+                            PairIndex = pairIdx,
+                            Charge = charge,
+                            HasPair = hasPair,
+                        };
                     }
                     else
                     {
-                        if (isEntrap)
-                            _fileEntrap[fileIdx]++;
-                        else
-                            _fileTargets[fileIdx]++;
-
-                        bool expOk = q.EffectiveExperimentQvalue(_fdrLevel) <= _runFdr;
-                        if (isEntrap)
+                        if (score > cur.Score)
                         {
-                            _entRunStream.Add(fileIdx, key);
-                            if (expOk)
-                                _entExpStream.Add(fileIdx, key);
-                            _anyEntrapment = true;
+                            cur.Score = score;
+                            cur.IsDecoy = isDecoy;
+                            cur.Class = cls;
+                            cur.PairIndex = pairIdx;
+                            cur.HasPair = hasPair;
                         }
-                        else
-                        {
-                            _runStream.Add(fileIdx, key);
-                            if (expOk)
-                                _expStream.Add(fileIdx, key);
-                        }
+                        if (q.RunPrecursorQvalue < cur.QRunPrecursor)
+                            cur.QRunPrecursor = q.RunPrecursorQvalue;
+                        if (q.ExperimentPrecursorQvalue < cur.QExpPrecursor)
+                            cur.QExpPrecursor = q.ExperimentPrecursorQvalue;
                     }
-                }
+                    _best[key] = cur;
 
-                // Frontier: fold the UN-GATED first-pass row into the within-file run-q tally
-                // (target side only). On a new file, flush the previous file's per-precursor best
-                // run-q into the bins first (rows arrive in file-major order). Pass 1 only -
-                // Pass2Data has no Frontier card, so in pass 2 this is work with no reader.
-                if (_pass == 1 && !isDecoy)
-                {
-                    if (fileIdx != _frontierCurFile)
+                    // --- per-file passing counts (== BuildPerFile) + cross-run key-sets
+                    //     (== BuildCrossRunDetection): the run-level FDR gate, decoys counted but
+                    //     excluded from the reproducibility sets, entrapment routed to its own sets. ---
+                    bool isEntrap = owner._haveManifest && owner._classByBaseId != null
+                        && owner._classByBaseId.TryGetValue(baseId, out var pcls)
+                        && pcls == EntrapmentClass.PTarget;
+                    if (q.EffectiveRunQvalue(owner._fdrLevel) <= owner._runFdr)
                     {
-                        if (_frontierCurFile >= 0)
-                            FrontierFlushFile(_frontier, _frontierFileMinQ);
-                        _frontierCurFile = fileIdx;
+                        if (isDecoy)
+                        {
+                            _decoys++;
+                        }
+                        else
+                        {
+                            if (isEntrap)
+                                _entrap++;
+                            else
+                                _targets++;
+
+                            bool expOk = q.EffectiveExperimentQvalue(owner._fdrLevel) <= owner._runFdr;
+                            if (isEntrap)
+                            {
+                                _entRunKeys.Add(key);
+                                if (expOk)
+                                    _entExpKeys.Add(key);
+                            }
+                            else
+                            {
+                                _runKeys.Add(key);
+                                if (expOk)
+                                    _expKeys.Add(key);
+                            }
+                        }
                     }
-                    FrontierRow(_frontier, _frontierFileMinQ, key, isEntrap,
-                        q.EffectiveRunQvalue(_fdrLevel), q.EffectiveExperimentQvalue(_fdrLevel));
+
+                    // Frontier: fold the UN-GATED first-pass row into the within-file run-q tally
+                    // (target side only). Pass 1 only - Pass2Data has no Frontier card, so in pass 2
+                    // this is work with no reader.
+                    if (_frontier != null && !isDecoy)
+                    {
+                        double effExpQ = q.EffectiveExperimentQvalue(owner._fdrLevel);
+                        if (_frontier.TryGetValue(key, out var fp))
+                        {
+                            if (effExpQ < fp.MinExpQ)
+                                _frontier[key] = (fp.IsEntrapment, effExpQ);
+                        }
+                        else
+                        {
+                            // The comparison FrontierRow makes against a fresh precursor's MaxValue,
+                            // not Math.Min, which would let a NaN through where it does not.
+                            _frontier[key] = (isEntrap, effExpQ < double.MaxValue ? effExpQ : double.MaxValue);
+                        }
+                        double effRunQ = q.EffectiveRunQvalue(owner._fdrLevel);
+                        if (!_frontierMinQ.TryGetValue(key, out double curRunQ) || effRunQ < curRunQ)
+                            _frontierMinQ[key] = effRunQ;
+                    }
+
+                    // --- win fraction per base_id (== BuildWinFraction: best target vs best decoy) ---
+                    if (!_bt.TryGetValue(baseId, out var slot))
+                    {
+                        slot = new[] { double.NegativeInfinity, double.NegativeInfinity };
+                        _bt[baseId] = slot;
+                    }
+                    if (isDecoy)
+                    {
+                        if (score > slot[1])
+                            slot[1] = score;
+                    }
+                    else if (score > slot[0])
+                    {
+                        slot[0] = score;
+                        _tClass[baseId] = owner._haveManifest && owner._classByBaseId != null
+                            && owner._classByBaseId.TryGetValue(baseId, out var c)
+                            ? c : EntrapmentClass.Target;
+                    }
                 }
 
-                // --- win fraction per base_id (== BuildWinFraction: best target vs best decoy) ---
-                if (!_bt.TryGetValue(baseId, out var slot))
+                internal void MergeInto(Accumulator acc)
                 {
-                    slot = new[] { double.NegativeInfinity, double.NegativeInfinity };
-                    _bt[baseId] = slot;
-                }
-                if (isDecoy)
-                {
-                    if (score > slot[1]) slot[1] = score;
-                }
-                else if (score > slot[0])
-                {
-                    slot[0] = score;
-                    _tClass[baseId] = _haveManifest && _classByBaseId != null
-                        && _classByBaseId.TryGetValue(baseId, out var c)
-                        ? c : EntrapmentClass.Target;
+                    if (!ReferenceEquals(acc, _owner))
+                        throw new ArgumentException(@"A file fold merges only into the accumulator that began it.");
+                    if (FileIdx <= acc._lastMergedFile)
+                    {
+                        throw new InvalidOperationException(string.Format(
+                            @"Model diagnostics: file {0} folded after file {1}; files must be merged once each, in order.",
+                            FileIdx, acc._lastMergedFile));
+                    }
+                    acc._lastMergedFile = FileIdx;
+
+                    foreach (var kv in _best)
+                    {
+                        var file = kv.Value;
+                        if (!acc._best.TryGetValue(kv.Key, out var cur))
+                        {
+                            acc._best[kv.Key] = file;
+                            continue;
+                        }
+                        if (file.Score > cur.Score)
+                        {
+                            cur.Score = file.Score;
+                            cur.IsDecoy = file.IsDecoy;
+                            cur.Class = file.Class;
+                            cur.PairIndex = file.PairIndex;
+                            cur.HasPair = file.HasPair;
+                        }
+                        if (file.QRunPrecursor < cur.QRunPrecursor)
+                            cur.QRunPrecursor = file.QRunPrecursor;
+                        if (file.QExpPrecursor < cur.QExpPrecursor)
+                            cur.QExpPrecursor = file.QExpPrecursor;
+                        acc._best[kv.Key] = cur;
+                    }
+
+                    acc._nWithClass += _nWithClass;
+                    acc._nWithoutClass += _nWithoutClass;
+                    acc._fileTargets[FileIdx] += _targets;
+                    acc._fileDecoys[FileIdx] += _decoys;
+                    acc._fileEntrap[FileIdx] += _entrap;
+
+                    // A stream only hears of a file with keys, exactly as when each key was added.
+                    acc._runStream.AddFile(FileIdx, _runKeys);
+                    acc._expStream.AddFile(FileIdx, _expKeys);
+                    acc._entRunStream.AddFile(FileIdx, _entRunKeys);
+                    acc._entExpStream.AddFile(FileIdx, _entExpKeys);
+                    if (_entRunKeys.Count > 0)
+                        acc._anyEntrapment = true;
+
+                    if (_frontier != null)
+                    {
+                        foreach (var kv in _frontier)
+                        {
+                            if (!acc._frontier.TryGetValue(kv.Key, out var fp))
+                            {
+                                fp = new FrontierPrec { IsEntrapment = kv.Value.IsEntrapment };
+                                acc._frontier[kv.Key] = fp;
+                            }
+                            if (kv.Value.MinExpQ < fp.MinExpQ)
+                                fp.MinExpQ = kv.Value.MinExpQ;
+                        }
+                        FrontierFlushFile(acc._frontier, _frontierMinQ);
+                    }
+
+                    // Classes first, in this file's own first-target order, judged against the
+                    // highest target scores BEFORE this file's are merged: the class map gains a
+                    // key at its first target row, which is not necessarily its base_id's first row.
+                    foreach (var kv in _tClass)
+                    {
+                        double before = acc._bt.TryGetValue(kv.Key, out var accSlot)
+                            ? accSlot[0] : double.NegativeInfinity;
+                        if (_bt[kv.Key][0] > before)
+                            acc._tClass[kv.Key] = kv.Value;
+                    }
+                    foreach (var kv in _bt)
+                    {
+                        if (!acc._bt.TryGetValue(kv.Key, out var accSlot))
+                        {
+                            acc._bt[kv.Key] = kv.Value;   // adopted: a merged fold is not used again
+                            continue;
+                        }
+                        if (kv.Value[1] > accSlot[1])
+                            accSlot[1] = kv.Value[1];
+                        if (kv.Value[0] > accSlot[0])
+                            accSlot[0] = kv.Value[0];
+                    }
                 }
             }
 
@@ -304,6 +498,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public ModelDiagnosticsData Build(FeatureContributions contributions)
             {
+                FlushOpenFile();
                 if (_pass != 1)
                     throw new InvalidOperationException(PassMismatch(1, nameof(BuildPass2)));
                 var precs = _best.Values.ToList();
@@ -381,7 +576,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // Reproducibility frontier (first-pass, pre-compaction; entrapment-gated).
                 if (data.HasEntrapment)
                 {
-                    FrontierFlushFile(_frontier, _frontierFileMinQ);   // flush the final file
                     data.Frontier = BuildFrontier(_frontier.Values, _nFiles, r, _runFdr);
                 }
 
@@ -423,6 +617,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public Pass2Data BuildPass2(FeatureContributions contributions,
                 CoAssignmentData coAssignment)
             {
+                FlushOpenFile();
                 if (_pass != 2)
                     throw new InvalidOperationException(PassMismatch(2, nameof(Build)));
                 var precs = _best.Values.ToList();
@@ -530,16 +725,22 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 internal int[] CumIntersection { get; }
                 internal IReadOnlyDictionary<string, int> RunCount => _runCount;
 
-                /// <summary>Record <paramref name="key"/> as passing in run <paramref name="fileIdx"/>.
-                /// Rows arrive in file-major order, so a change of index closes the previous run.</summary>
-                internal void Add(int fileIdx, string key)
+                /// <summary>
+                /// One file's passing keys, in the order its rows added them. Files arrive in
+                /// file-major order, so a change of index closes the previous run. A file with none
+                /// is not reported at all - as when keys were added one at a time - so its run
+                /// closes with an empty set when a later file or Finish closes through it.
+                /// </summary>
+                internal void AddFile(int fileIdx, HashSet<string> keys)
                 {
+                    if (keys.Count == 0)
+                        return;
                     if (fileIdx != _curFile)
                     {
                         CloseThrough(fileIdx);
                         _curFile = fileIdx;
                     }
-                    _current.Add(key);
+                    _current.UnionWith(keys);
                 }
 
                 /// <summary>Close the run in progress and every remaining run, so all

@@ -106,6 +106,21 @@
   <data name="DecoyMethodExtension_LOCALIZED_VALUES_shuffled_sequence" xml:space="preserve">
     <value>shuffled-sequence</value>
   </data>
+  <data name="FdrLaneResolver_Resolve_First_pass_FDR_file_lanes___0___limited_by__1____2__threads___3__GB_free___4__GB_per_lane___5__files_" xml:space="preserve">
+    <value>First-pass FDR file lanes: {0} (limited by {1}; {2} threads, {3:F1} GB free, {4:F1} GB per lane, {5} files)</value>
+  </data>
+  <data name="FdrLaneResolver_Resolve_limit_files" xml:space="preserve">
+    <value>file count</value>
+  </data>
+  <data name="FdrLaneResolver_Resolve_limit_maximum" xml:space="preserve">
+    <value>maximum</value>
+  </data>
+  <data name="FdrLaneResolver_Resolve_limit_memory" xml:space="preserve">
+    <value>memory</value>
+  </data>
+  <data name="FdrLaneResolver_Resolve_limit_threads" xml:space="preserve">
+    <value>threads</value>
+  </data>
   <data name="FdrLevelExtension_LOCALIZED_VALUES_peptide" xml:space="preserve">
     <value>peptide</value>
   </data>

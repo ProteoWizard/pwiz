@@ -28,7 +28,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -132,7 +131,7 @@ namespace pwiz.Osprey.Tasks
             = new Dictionary<string, HashSet<uint>>(StringComparer.Ordinal);
 
         // Guards the dictionary ABOVE, not the sets inside it. RescoreOneFile reaches it from
-        // inside ExecuteRescore's Parallel.For over files, and its TryGetValue-then-insert is a
+        // inside ExecuteRescore's parallel loop over files, and its TryGetValue-then-insert is a
         // read-modify-write: two workers inserting across a resize can drop an entry or walk a
         // torn bucket chain. A dropped key makes ResetRescoredTargetsForFile return early, so
         // that file's rescored survivors keep first-pass q-values in the rebuilt Stage 7 pool -
@@ -551,7 +550,7 @@ namespace pwiz.Osprey.Tasks
             // is not "make the materializer idempotent" but "hand it a list it can rebuild",
             // which is what BuildRunPerRunSource establishes before offering the source at all.
             var rescored = new RescoredEntries(_perFileEntries, () => BuildRescoredPool(ctx),
-                BuildRunPerRunSource(ctx, survivorLoader));
+                BuildRunPerRunSource(ctx, survivorLoader)) { Lanes = ctx.RunPlan.FileLanes };
             ctx.Publish(rescored);
 
             // Self-gate: rescore + reconciliation only run when there is
@@ -919,7 +918,7 @@ namespace pwiz.Osprey.Tasks
                     var resumeBuffer = _perFileEntries;
                     ctx.Publish(new RescoredEntries(resumeBuffer,
                         () => MaterializeAllFromSource(resumeBuffer, resumeSource, ctx),
-                        resumeSource));
+                        resumeSource) { Lanes = ctx.RunPlan.FileLanes });
                     return true;
                 }
 
@@ -979,7 +978,10 @@ namespace pwiz.Osprey.Tasks
             {
                 var buffer = _perFileEntries;
                 ctx.Publish(new RescoredEntries(buffer,
-                    () => MaterializeAllFromSource(buffer, stage7Source, ctx), stage7Source));
+                    () => MaterializeAllFromSource(buffer, stage7Source, ctx), stage7Source)
+                {
+                    Lanes = ctx.RunPlan.FileLanes
+                });
             }
 
             var bundle = ctx.Get<RescoreBundle>().Value;
@@ -1138,7 +1140,7 @@ namespace pwiz.Osprey.Tasks
                 FullLibrary = fullLibrary,
                 // The run's shared entry_id index. The reconciled-parquet writer
                 // used to build its own ~6.3M-entry copy of this map per FILE,
-                // under Parallel.For - loop-invariant work at O(files x library).
+                // under the parallel loop - loop-invariant work at O(files x library).
                 LibraryById = ctx.Get<LibraryById>().Value,
                 Config = config,
                 FileNameToIdx = fileNameToIdx,
@@ -1195,9 +1197,10 @@ namespace pwiz.Osprey.Tasks
                             : key;
                     ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", i + 1, label));
                 }
+                // One file at a time from a shared queue, in input order, so a lane that finishes
+                // takes the next file rather than working through a block dealt to it up front.
                 var multi = new MultiProgressReporter();
-                var parallelOpts = new ParallelOptions { MaxDegreeOfParallelism = parallelism };
-                Parallel.For(0, nTotalFiles, parallelOpts, fileNum =>
+                OrderedFileLanes.For(nTotalFiles, parallelism, fileNum =>
                 {
                     using (multi.BeginFile(fileNum, RESCORE_FILE_SEGMENTS))
                     {
