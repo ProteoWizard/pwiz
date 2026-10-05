@@ -638,56 +638,21 @@ namespace pwiz.Osprey.FDR
             runPeptideQvalues = null;
             if (tryStream == null)
                 return null;
-            // Sized exactly, because the row count is known before the first record arrives, and
-            // allocated only when that record does. A streamer with nothing on disk for the file
-            // refuses without calling back - on a cold run that is every file, in both passes - and
-            // allocating and zeroing four row-sized arrays (28 bytes a row, ~120 MB for a cohort
-            // file) only to drop them would put that cost back on exactly the run with no sidecars
-            // to read.
-            double[] scores = null;
-            uint[] entryIds = null;
-            double[] runPrec = null;
-            double[] runPept = null;
-            int nRead = 0;
-            if (!tryStream(fileName, (entryId, score, runPrecQ, runPeptQ) =>
-                {
-                    if (scores == null)
-                    {
-                        scores = new double[expectedCount];
-                        entryIds = new uint[expectedCount];
-                        runPrec = new double[expectedCount];
-                        runPept = new double[expectedCount];
-                    }
-                    // A sidecar holding MORE records than the parquet has rows would run off the
-                    // end of these arrays. Keep counting past it and let the length check below
-                    // refuse the file, without an exception on the way.
-                    if (nRead < expectedCount)
-                    {
-                        entryIds[nRead] = entryId;
-                        scores[nRead] = score;
-                        runPrec[nRead] = runPrecQ;
-                        runPept[nRead] = runPeptQ;
-                    }
-                    nRead++;
-                }))
-            {
+            var read = new CompletedScoreRecords(expectedCount);
+            if (!tryStream(fileName, read.Add))
                 return null;
-            }
             // A count mismatch means the sidecar and the parquet disagree about how many rows
             // this file has, which no validity key can catch - so refuse the shortcut and score
             // it rather than emit a silently misaligned file.
-            if (nRead != expectedCount)
+            if (read.Count != expectedCount)
                 return null;
             // A zero-row file the streamer accepted never called back. It is still a file whose
             // (empty) output is on disk, and returning null would have the caller score it and
             // write its attested sidecar a second time.
-            if (scores == null)
-            {
-                scores = Array.Empty<double>();
-                entryIds = Array.Empty<uint>();
-                runPrec = Array.Empty<double>();
-                runPept = Array.Empty<double>();
-            }
+            double[] scores = read.Scores ?? Array.Empty<double>();
+            uint[] entryIds = read.EntryIds ?? Array.Empty<uint>();
+            double[] runPrec = read.RunPrecursorQvalues ?? Array.Empty<double>();
+            double[] runPept = read.RunPeptideQvalues ?? Array.Empty<double>();
             // And the ROWS must line up, not just the count. This binds the sidecar's records
             // to parquet rows by POSITION, while every other reader of the file matches by
             // entry_id - so a sidecar that is complete but ordered differently (the resident
@@ -705,6 +670,59 @@ namespace pwiz.Osprey.FDR
             runPrecursorQvalues = runPrec;
             runPeptideQvalues = runPept;
             return scores;
+        }
+
+        /// <summary>
+        /// Collects a file's records from a <see cref="CompletedScoreStreamer"/> in arrival order.
+        /// Sized exactly, because the row count is known before the first record arrives, and
+        /// allocated only when that record does. A streamer with nothing on disk for the file
+        /// refuses without calling back - on a cold run that is every file, in both passes - and
+        /// allocating and zeroing four row-sized arrays (28 bytes a row, ~120 MB for a cohort
+        /// file) only to drop them would put that cost back on exactly the run with no sidecars
+        /// to read. The arrays stay null until the first record.
+        /// </summary>
+        private sealed class CompletedScoreRecords
+        {
+            private readonly int _expectedCount;
+            private double[] _scores;
+            private uint[] _entryIds;
+            private double[] _runPrec;
+            private double[] _runPept;
+
+            public CompletedScoreRecords(int expectedCount)
+            {
+                _expectedCount = expectedCount;
+            }
+
+            /// <summary>Records received, including any past <c>expectedCount</c>.</summary>
+            public int Count { get; private set; }
+
+            public double[] Scores => _scores;
+            public uint[] EntryIds => _entryIds;
+            public double[] RunPrecursorQvalues => _runPrec;
+            public double[] RunPeptideQvalues => _runPept;
+
+            public void Add(uint entryId, double score, double runPrecQ, double runPeptQ)
+            {
+                if (_scores == null)
+                {
+                    _scores = new double[_expectedCount];
+                    _entryIds = new uint[_expectedCount];
+                    _runPrec = new double[_expectedCount];
+                    _runPept = new double[_expectedCount];
+                }
+                // A sidecar holding MORE records than the parquet has rows would run off the
+                // end of these arrays. Keep counting past it and let the caller's length check
+                // refuse the file, without an exception on the way.
+                if (Count < _expectedCount)
+                {
+                    _entryIds[Count] = entryId;
+                    _scores[Count] = score;
+                    _runPrec[Count] = runPrecQ;
+                    _runPept[Count] = runPeptQ;
+                }
+                Count++;
+            }
         }
 
         /// <summary>
@@ -795,9 +813,9 @@ namespace pwiz.Osprey.FDR
             // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
             var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
-            // Run bookkeeping for the reservoir, allocated only when it is on so the default-off
-            // arm keeps exactly the dictionaries, and the memory, it has always had.
-            var runPick = OspreyEnvironment.TrainPickRun ? new Dictionary<uint, PercolatorSampling.RunPickState>() : null;
+            // Run bookkeeping for the reservoir. Only written when it is on; an empty dictionary
+            // allocates no buckets, so the off arm keeps the memory it has always had.
+            var runPick = new Dictionary<uint, PercolatorSampling.RunPickState>();
             // Which observation represents a precursor. Logged when it is NOT the default,
             // because nothing else in the output would say which population trained the model.
             // Plain prose in the default log, not a gated tag: the user set the variable, and it
@@ -1005,8 +1023,10 @@ namespace pwiz.Osprey.FDR
             // to reproduce a model that was already persisted per file as .1st-pass.model.json.
             if (pretrainedModel == null)
             {
-                // Each file fills only its own subset entries, so the files need no ordering.
+                // Each file fills only its own subset entries, so the files need no ordering. The
+                // lanes read a copy of the list reference, because the method drops its own below.
                 var subsetFiles = new List<KeyValuePair<string, List<int>>>(subsetByFile);
+                var laneEntries = subsetEntries;
                 int subsetFilesLoaded = 0;
                 using (var loadProgress = new ProgressReporter(CountText.Format(subsetFiles.Count,
                            OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file,
@@ -1017,7 +1037,7 @@ namespace pwiz.Osprey.FDR
                         IReadOnlyList<double[]> rows = loadFileFeatures(subsetFiles[i].Key);
                         foreach (int k in subsetFiles[i].Value)
                         {
-                            var entry = subsetEntries[k];
+                            var entry = laneEntries[k];
                             entry.Features = (double[])ResolveFeatureRow(
                                 rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
                         }
@@ -1048,9 +1068,12 @@ namespace pwiz.Osprey.FDR
             LogBlockReads(log, passLabel, @"training load");
 
             // Release the pass-0 working sets before the score passes so only the bounded lookups
-            // remain resident across the peak.
-            bestTarget = null;
-            bestDecoy = null;
+            // remain resident across the peak. The dedup maps are emptied, not dropped: pass 0's
+            // file walk captured them, so they live as long as this method does.
+            bestTarget.Clear();
+            bestTarget.TrimExcess();
+            bestDecoy.Clear();
+            bestDecoy.TrimExcess();
             dedup = null;
             localSelected = null;
             subsetEntries = null;
@@ -1140,19 +1163,16 @@ namespace pwiz.Osprey.FDR
                     // file could read them back, but here they feed only the clamp-floor reduction,
                     // so the saving would be confined to a resume while the blast radius would be
                     // global state rather than one row's output.
-                    var file = new Pass1File
-                    {
-                        Rows = rows,
-                        Scores = TryLoadCompletedScores(
-                            tryStreamCompletedScores, fileName, count, rows.EntryIds, out _, out _)
-                    };
+                    double[] scores = TryLoadCompletedScores(
+                        tryStreamCompletedScores, fileName, count, rows.EntryIds, out _, out _);
+                    var file = new Pass1File { Rows = rows, Scores = scores };
                     t = lane1.Stop(LANE1_SIDECAR, t);
-                    bool scoredHere = file.Scores == null;
+                    bool scoredHere = scores == null;
                     if (scoredHere)
                     {
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         t = lane1.Stop(LANE1_FEATURES, t);
-                        ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, nFeatures,
+                        scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, nFeatures,
                             percConfig.CollectFeatureHistograms, accumulateTreeFeatures, percConfig.NThreads);
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
@@ -1164,7 +1184,7 @@ namespace pwiz.Osprey.FDR
                         var competition = streamingQ.BeginFile();
                         int g0 = firstOrdinal[f];
                         for (int r = 0; r < count; r++)
-                            competition.Add(g0 + r, file.Scores[r], rows.EntryIds[r], rows.IsDecoys[r], rows.Peptides[r]);
+                            competition.Add(g0 + r, scores[r], rows.EntryIds[r], rows.IsDecoys[r], rows.Peptides[r]);
                         file.Competition = competition;
                     }
                     t = lane1.Stop(LANE1_COMPETITION, t);
@@ -1172,7 +1192,7 @@ namespace pwiz.Osprey.FDR
                     var entryIds = rows.EntryIds.ToArray();
                     var peptides = rows.Peptides.ToArray();
                     PercolatorQValues.ComputePerFileRunQvalues(
-                        file.Scores, labels, entryIds, peptides, 0, count,
+                        scores, labels, entryIds, peptides, 0, count,
                         out double[] runPrecFile, out double[] runPeptFile);
                     t = lane1.Stop(LANE1_RUN_Q, t);
                     // The clamp floors are minimums: this file's rows reduce to one value per key
@@ -1629,8 +1649,9 @@ namespace pwiz.Osprey.FDR
         /// A tree ensemble scores the whole file first (<see cref="ScoresBeforeRowLoop"/>) and keeps
         /// the vectors only when the report asked for its per-feature distributions
         /// (<paramref name="accumulateTreeFeatures"/>); otherwise the file contributes nothing.
+        /// Returns the scores it also stores on <paramref name="file"/>.
         /// </summary>
-        private static void ScoreRows(Pass1File file, IReadOnlyList<double[]> featureRows,
+        private static double[] ScoreRows(Pass1File file, IReadOnlyList<double[]> featureRows,
             IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
             FeatureStandardizer standardizer, int nFeatures, bool collectHistograms,
             bool accumulateTreeFeatures, int nThreads)
@@ -1642,7 +1663,7 @@ namespace pwiz.Osprey.FDR
                 standardizer, nFeatures, nThreads, scores) == null;
             file.Scores = scores;
             if (!linear && !accumulateTreeFeatures)
-                return;
+                return scores;
             // checked: one flat array per file, so a file past ~100M rows must fail loudly here
             // rather than wrap the index and overwrite its own vectors.
             var standardized = new double[checked(count * nFeatures)];
@@ -1666,6 +1687,7 @@ namespace pwiz.Osprey.FDR
             }
             file.Standardized = standardized;
             file.Histograms = histograms;
+            return scores;
         }
 
         /// <summary>The lanes a pass actually runs: never more than the files it has.</summary>

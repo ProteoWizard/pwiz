@@ -434,7 +434,8 @@ namespace pwiz.Osprey.Tasks
 
                     List<KeyValuePair<int, ReconcileAction>> fileActions = null;
                     IReadOnlyList<GapFillTarget> fileGapFill = Array.Empty<GapFillTarget>();
-                    if (planning)
+                    // Both exist exactly when planning.
+                    if (planner != null && gapFiller != null)
                     {
                         // Load this file's CWT candidates on demand and release them when it is
                         // planned - a lane holds one file's at a time.
@@ -458,7 +459,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     if (filePlan.RefinedCalibration != null)
                         refinedCalibrations[filePlan.FileName] = filePlan.RefinedCalibration;
-                    if (planning)
+                    // Exists exactly when planning, which is also when the file plan has actions.
+                    if (actions != null && filePlan.Actions != null)
                     {
                         foreach (var action in filePlan.Actions)
                             actions[(filePlan.FileName, action.Key)] = action.Value;

@@ -724,12 +724,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 internal int[] CumIntersection { get; }
                 internal IReadOnlyDictionary<string, int> RunCount => _runCount;
 
-                /// <summary>Record <paramref name="key"/> as passing in run <paramref name="fileIdx"/>.
-                /// Rows arrive in file-major order, so a change of index closes the previous run.</summary>
                 /// <summary>
-                /// One file's passing keys, in the order its rows added them. A file with none is
-                /// not reported at all - as when keys were added one at a time - so its run closes
-                /// with an empty set when a later file or Finish closes through it.
+                /// One file's passing keys, in the order its rows added them. Files arrive in
+                /// file-major order, so a change of index closes the previous run. A file with none
+                /// is not reported at all - as when keys were added one at a time - so its run
+                /// closes with an empty set when a later file or Finish closes through it.
                 /// </summary>
                 internal void AddFile(int fileIdx, HashSet<string> keys)
                 {

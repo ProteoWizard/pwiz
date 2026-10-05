@@ -4193,7 +4193,7 @@ namespace pwiz.Osprey.Tasks
                                 qByEntryId[entryId] = q;
                             },
                             StubColumns.Core | StubColumns.SkipCoelutionSum, stubIdentity);
-                        return (Resolved: qByEntryId, Error: (string)null);
+                        return (Resolved: qByEntryId, Error: null);
                     }
                     catch (Exception ex)
                     {
@@ -4440,7 +4440,7 @@ namespace pwiz.Osprey.Tasks
                         return (Passing: filePassing, RowCounts: fileRowCounts, Error: string.Format(
                             OspreyTasksResources.FirstPassFdrTask_ComputeFirstPassBaseIds_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___, fileName, fdrPath));
                     }
-                    return (Passing: filePassing, RowCounts: fileRowCounts, Error: (string)null);
+                    return (Passing: filePassing, RowCounts: fileRowCounts, Error: null);
                 }, (f, file) =>
                 {
                     compactProgress.Report(++compactFiles);

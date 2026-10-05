@@ -968,7 +968,10 @@ namespace pwiz.Osprey.IO
             public ParquetRowGroupReader OpenRowGroupReader(int index)
             {
                 // A block-read stream plans its disk reads from the row group's chunk extents.
-                _blockStream?.BeginRowGroup(_reader.Metadata.RowGroups[index].Columns);
+                // Without a footer it has none to plan from and reads fixed blocks.
+                var metadata = _reader.Metadata;
+                if (metadata != null)
+                    _blockStream?.BeginRowGroup(metadata.RowGroups[index].Columns);
                 return _reader.OpenRowGroupReader(index);
             }
 
@@ -1308,7 +1311,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// One file's <c>apex_rt</c> column, indexed by <c>FdrProjection.ParquetIndex</c> - the
-        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars"/> rather
+        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/> rather
         /// than opening the column directly, so the ordinal this array is keyed by and the
         /// ordinal the projection rows carry are produced by the same walk and the same
         /// row-group skip rule. A second reader with its own copy of that rule is how a join
@@ -1393,7 +1396,8 @@ namespace pwiz.Osprey.IO
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
                         var entryIdCol = ReadColumnByName<uint>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        if (identityMode == 1 && entryIdCol != null && AllInLibrary(entryIdCol, identity))
+                        if (identityMode == 1 && identity != null && entryIdCol != null &&
+                            AllInLibrary(entryIdCol, identity))
                         {
                             var coelution = wantCoelution
                                 ? ReadColumnByName<double>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name)
@@ -1584,7 +1588,7 @@ namespace pwiz.Osprey.IO
         /// 1,342,686,095-row scalar scan that used to produce the same number.</para>
         ///
         /// <para><b>The schema test covers the columns that make the declared count TRUSTWORTHY,
-        /// not just the feature schema.</b> <see cref="ReadFdrStubScalars"/> skips a row group
+        /// not just the feature schema.</b> <see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/> skips a row group
         /// whose <c>entry_id</c> or <c>is_decoy</c> comes back null, and because the lookup is
         /// over the file-level schema that is all-or-nothing per file: such a parquet declares N
         /// rows in its footer and yields 0 on a read. While the count came from a scan the two
@@ -1624,7 +1628,7 @@ namespace pwiz.Osprey.IO
         /// Footer-only check that a scores parquet carries the PIN feature columns,
         /// reading the schema WITHOUT decoding any column data. The lean resume /
         /// HPC-merge paths stream only the scalar stub columns
-        /// (<see cref="ReadFdrStubScalars"/>) and never materialize the 21-float
+        /// (<see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/>) and never materialize the 21-float
         /// feature vectors, so they lose the fat path's implicit
         /// <c>features.Count == stubs.Count</c> corruption guard (which throws when
         /// <see cref="LoadPinFeaturesFromParquet"/> yields zero rows because the

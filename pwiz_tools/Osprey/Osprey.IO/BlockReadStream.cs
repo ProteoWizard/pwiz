@@ -92,8 +92,9 @@ namespace pwiz.Osprey.IO
         private long[] _chunkStart;
         private long[] _chunkEnd;
         private int[] _fileOrder;
-        // Columns the reader has touched in any row group of this file.
-        private bool[] _touched;
+        // Columns the reader has touched in any row group of this file. Empty until a row group
+        // begins.
+        private bool[] _touched = Array.Empty<bool>();
 
         private BlockReadStream(string path, int blockSize, bool gate)
         {
@@ -124,13 +125,20 @@ namespace pwiz.Osprey.IO
         public void BeginRowGroup(List<ColumnChunk> columns)
         {
             int n = columns.Count;
-            if (_touched == null || _touched.Length != n)
+            if (_touched.Length != n)
                 _touched = new bool[n];
             _chunkStart = new long[n];
             _chunkEnd = new long[n];
             for (int c = 0; c < n; c++)
             {
+                // Optional in the format, though every writer of these files sets it. Without it
+                // the extents cannot be planned, so this row group reads fixed blocks.
                 var meta = columns[c].MetaData;
+                if (meta == null)
+                {
+                    _fileOrder = null;
+                    return;
+                }
                 long start = meta.DataPageOffset;
                 long? dictionary = meta.DictionaryPageOffset;
                 if (dictionary.HasValue && dictionary.Value > 0 && dictionary.Value < start)
@@ -168,7 +176,7 @@ namespace pwiz.Osprey.IO
                 }
 
                 int k = _fileOrder != null ? FindChunk(_position) : -1;
-                if (k >= 0)
+                if (k >= 0 && _fileOrder != null)
                 {
                     _touched[_fileOrder[k]] = true;
                     PlanSpan(k, out long spanStart, out long spanEnd);
