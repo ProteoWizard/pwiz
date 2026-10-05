@@ -32,7 +32,6 @@ namespace pwiz.Skyline.ToolsUI
             this.labelInstallations = new System.Windows.Forms.Label();
             this.listInstallations = new System.Windows.Forms.ListBox();
             this.cbUninstall = new System.Windows.Forms.CheckBox();
-            this.cbTrackChanges = new System.Windows.Forms.CheckBox();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -54,13 +53,6 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.cbUninstall, "cbUninstall");
             this.cbUninstall.Name = "cbUninstall";
             this.cbUninstall.UseVisualStyleBackColor = true;
-            this.cbUninstall.CheckedChanged += new System.EventHandler(this.cbUninstall_CheckedChanged);
-            //
-            // cbTrackChanges
-            //
-            resources.ApplyResources(this.cbTrackChanges, "cbTrackChanges");
-            this.cbTrackChanges.Name = "cbTrackChanges";
-            this.cbTrackChanges.UseVisualStyleBackColor = true;
             //
             // btnOk
             //
@@ -84,7 +76,6 @@ namespace pwiz.Skyline.ToolsUI
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.cbTrackChanges);
             this.Controls.Add(this.cbUninstall);
             this.Controls.Add(this.listInstallations);
             this.Controls.Add(this.labelInstallations);
@@ -102,7 +93,6 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label labelInstallations;
         private System.Windows.Forms.ListBox listInstallations;
         private System.Windows.Forms.CheckBox cbUninstall;
-        private System.Windows.Forms.CheckBox cbTrackChanges;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
     }

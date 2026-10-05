@@ -38,19 +38,7 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class SettingsImporter
     {
-        /// <summary>
-        /// Name of the copy of the imported file kept beside user.config when the import is to
-        /// be kept up to date. <see cref="SharedSettingsMerger.ForImportedSettings"/> compares the source
-        /// against it to see whether anything changed.
-        /// </summary>
-        public const string BASE_CONFIG_FILE_NAME = @"base.user.config";
-
         private const string INSTALLING_SUFFIX = @"_installing";
-
-        public static string GetBaseConfigPath(string configFilePath)
-        {
-            return Path.Combine(Path.GetDirectoryName(configFilePath) ?? string.Empty, BASE_CONFIG_FILE_NAME);
-        }
 
         /// <summary>
         /// Runs a command line the way Programs and Features would, through the shell so that an
@@ -77,12 +65,6 @@ namespace pwiz.Skyline.Util
         /// installation is going away.
         /// </summary>
         public bool KeepInstallationId { get; set; } = true;
-
-        /// <summary>
-        /// Whether to remember where the settings came from, so that later changes to that file
-        /// can be brought across at startup.
-        /// </summary>
-        public bool TrackChanges { get; set; }
 
         /// <summary>
         /// Command to run after importing to uninstall the other installation, or null to leave
@@ -135,25 +117,11 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Records where the settings came from, saves everything, and uninstalls the other
-        /// installation when that was asked for.
+        /// Saves everything, and uninstalls the other installation when that was asked for.
         /// </summary>
         public void FinishImport()
         {
-            var settings = Settings.Default;
-            var baseConfigFile = GetBaseConfigPath(settings.SettingsFilePath);
-            if (TrackChanges)
-            {
-                File.Copy(SourceConfigFile, baseConfigFile, true);
-                settings.ImportedSettingsPath = SourceConfigFile;
-            }
-            else
-            {
-                // Whatever the imported file itself was tracking is not this program's business.
-                settings.ImportedSettingsPath = string.Empty;
-                FileEx.SafeDelete(baseConfigFile, true);
-            }
-            settings.Save();
+            Settings.Default.Save();
 
             if (!string.IsNullOrEmpty(UninstallCommand))
                 RunUninstall(UninstallCommand);

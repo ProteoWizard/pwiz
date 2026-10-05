@@ -34,15 +34,11 @@ namespace pwiz.Skyline.Util
     ///
     /// A copy of the shared file, the base, is kept beside the user's user.config. A shared file
     /// that no longer matches it has changed since the last merge.
-    ///
-    /// Import Settings' "Keep these settings up to date" follows the file it imported from the
-    /// same way; see <see cref="ForImportedSettings"/>.
     /// </summary>
     public class SharedSettingsMerger
     {
         /// <summary>
-        /// Name of the base copy of the administrator's user.config, kept apart from the one
-        /// for an imported file since a user can have both.
+        /// Name of the base copy of the administrator's user.config.
         /// </summary>
         public const string SHARED_BASE_CONFIG_FILE_NAME = @"shared.base.user.config";
 
@@ -64,20 +60,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Follows the file the settings were imported from, when they were imported with "Keep
-        /// these settings up to date".
-        /// </summary>
-        public static SharedSettingsMerger ForImportedSettings()
-        {
-            return new SharedSettingsMerger
-            {
-                SourcePath = Settings.Default.ImportedSettingsPath,
-                BaseConfigFilePath = SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath)
-            };
-        }
-
-        /// <summary>
-        /// The file the settings follow, or empty when they follow none.
+        /// The administrator's user.config.
         /// </summary>
         public string SourcePath { get; set; }
 
@@ -85,11 +68,6 @@ namespace pwiz.Skyline.Util
         /// The copy of <see cref="SourcePath"/> as it was when last brought across.
         /// </summary>
         public string BaseConfigFilePath { get; set; }
-
-        public bool IsTracking
-        {
-            get { return !string.IsNullOrEmpty(SourcePath); }
-        }
 
         /// <summary>
         /// Whether the source file differs from the copy taken when it was last brought across.
@@ -99,7 +77,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public bool HasSourceChanged()
         {
-            if (!IsTracking || !File.Exists(SourcePath))
+            if (!File.Exists(SourcePath))
                 return false;
             if (!File.Exists(BaseConfigFilePath))
                 return true;

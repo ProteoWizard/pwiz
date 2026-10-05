@@ -210,8 +210,7 @@ namespace pwiz.Skyline.Properties
         /// </summary>
         private static readonly ISet<string> UNMERGED_SETTINGS = new HashSet<string>
         {
-            nameof(InstallationId),
-            nameof(ImportedSettingsPath)
+            nameof(InstallationId)
         };
 
         /// <summary>

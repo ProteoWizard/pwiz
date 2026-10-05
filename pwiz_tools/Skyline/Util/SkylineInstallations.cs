@@ -26,14 +26,24 @@ using System.Linq;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
-    /// Every Skyline on the machine, other than the running one, whose settings a user could
-    /// import. Both products are searched, so that Skyline can take its settings from a
-    /// Skyline-daily and the other way round, and both kinds of installation, ClickOnce and
-    /// installer, since a machine can have either or both.
+    /// The other installations of this Skyline whose settings a user could import: the same
+    /// product, so that Skyline and Skyline-daily never take each other's settings, and no newer
+    /// than this one, whose settings could hold what this version does not understand. Both kinds
+    /// of installation are searched, ClickOnce and installer, since a machine can have either or
+    /// both.
     /// </summary>
     public class SkylineInstallations
     {
-        public static readonly IList<string> PRODUCT_NAMES = new[] { @"Skyline", @"Skyline-daily" };
+        /// <summary>
+        /// The product to look for, which is the name of its assembly: Skyline or Skyline-daily.
+        /// </summary>
+        public string ProductName { get; set; } = typeof(Program).Assembly.GetName().Name;
+
+        /// <summary>
+        /// The newest version offered. Null when the running version cannot be read, which
+        /// leaves every version on offer.
+        /// </summary>
+        public Version CurrentVersion { get; set; } = ParseVersion(Install.BareVersion);
 
         /// <summary>
         /// The running program's own settings file, which is the one installation never worth
@@ -42,25 +52,46 @@ namespace pwiz.Skyline.Util
         public string OwnUserConfigFile { get; set; } = Path.Combine(
             UserConfigSettingsProvider.GetDefaultConfigFolder(), UserConfigSettingsProvider.CONFIG_FILE_NAME);
 
+        /// <summary>
+        /// The installations on offer, the ones Programs and Features lists first, then the
+        /// newest first.
+        /// </summary>
         public IEnumerable<SkylineInstallation> ListOtherInstallations()
         {
-            return PRODUCT_NAMES.SelectMany(ListInstallations)
-                .Where(installation => !IsOwnInstallation(installation))
-                .OrderBy(installation => installation.ProductName)
-                .ThenByDescending(installation => installation.IsCurrentlyInstalled)
-                .ThenByDescending(installation => installation.Version);
+            return FindInstallations()
+                .Where(installation => !IsOwnInstallation(installation) && IsNoNewerThanThis(installation))
+                .OrderByDescending(installation => installation.IsCurrentlyInstalled)
+                .ThenByDescending(installation => ParseVersion(installation.Version));
         }
 
-        private static IEnumerable<SkylineInstallation> ListInstallations(string productName)
+        /// <summary>
+        /// Whether the installation's version is known and no newer than this one's.
+        /// </summary>
+        public bool IsNoNewerThanThis(SkylineInstallation installation)
         {
-            return new ClickOnceInstallations(productName).ListCandidates()
-                .Concat(new RegisteredInstallations(productName).ListInstallations());
+            var version = ParseVersion(installation.Version);
+            return version != null && (CurrentVersion == null || version <= CurrentVersion);
+        }
+
+        /// <summary>
+        /// Every installation of <see cref="ProductName"/> with settings, this one included.
+        /// Overridable so a test can say what is installed.
+        /// </summary>
+        protected virtual IEnumerable<SkylineInstallation> FindInstallations()
+        {
+            return new ClickOnceInstallations(ProductName).ListCandidates()
+                .Concat(new RegisteredInstallations(ProductName).ListInstallations());
         }
 
         private bool IsOwnInstallation(SkylineInstallation installation)
         {
             return string.Equals(Path.GetFullPath(installation.UserConfigFile), Path.GetFullPath(OwnUserConfigFile),
                 StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static Version ParseVersion(string version)
+        {
+            return Version.TryParse(version, out var parsed) ? parsed : null;
         }
     }
 }

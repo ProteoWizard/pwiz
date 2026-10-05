@@ -3782,17 +3782,5 @@ namespace pwiz.Skyline.Properties {
                 this["EnableMcpAutoConnect"] = value;
             }
         }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ImportedSettingsPath {
-            get {
-                return ((string)(this["ImportedSettingsPath"]));
-            }
-            set {
-                this["ImportedSettingsPath"] = value;
-            }
-        }
     }
 }

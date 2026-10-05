@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestFunctional
 
                 TestImportReplacesSettingsAndCopiesTools(other, stale);
                 TestCanceledImportIsUndone(other);
-                TestLaterSourceChangesAreMergedIn(other);
+                TestAdminChangesAreMergedIn(other);
                 TestImportAndUninstallTakesOverTheOtherInstallation(other);
             }
             finally
@@ -93,9 +93,8 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// The default import: the other installation's settings replace this one's, its tools
-        /// are copied into this installation's Tools folder, this installation keeps its own id,
-        /// and, on request, a copy of the imported file is kept so that later changes to it can
-        /// be noticed.
+        /// are copied into this installation's Tools folder, and this installation keeps its own
+        /// id.
         /// </summary>
         private void TestImportReplacesSettingsAndCopiesTools(SkylineInstallation other, SkylineInstallation stale)
         {
@@ -104,15 +103,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, importDlg.Installations.Count);
                 Assert.AreSame(other, importDlg.SelectedInstallation);
                 Assert.IsTrue(importDlg.UninstallEnabled);
-                Assert.IsTrue(importDlg.TrackChangesEnabled);
 
                 // Nothing to uninstall for an installation Programs and Features no longer lists
                 importDlg.SelectedInstallation = stale;
                 Assert.IsFalse(importDlg.UninstallEnabled);
-                Assert.IsTrue(importDlg.TrackChangesEnabled);
 
                 importDlg.SelectedInstallation = other;
-                importDlg.TrackChanges = true;
             });
 
             Assert.AreEqual(0, uninstallsRun.Count);
@@ -125,12 +121,6 @@ namespace pwiz.SkylineTestFunctional
             string expectedToolDir = Path.Combine(_toolsDirectory, TOOL_FOLDER);
             Assert.AreEqual(expectedToolDir, tool.ToolDirPath);
             AssertEx.FileExists(Path.Combine(expectedToolDir, TOOL_FILE));
-
-            // Tracking: the source is remembered, along with a copy of what it held
-            Assert.AreEqual(other.UserConfigFile, Settings.Default.ImportedSettingsPath);
-            string baseConfigFile = SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath);
-            AssertEx.FileExists(baseConfigFile);
-            Assert.IsTrue(File.ReadAllBytes(baseConfigFile).SequenceEqual(File.ReadAllBytes(other.UserConfigFile)));
         }
 
         /// <summary>
@@ -147,7 +137,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(OTHER_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
                 importer.RevertImport();
                 Assert.AreEqual(OWN_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
-                Assert.AreEqual(other.UserConfigFile, Settings.Default.ImportedSettingsPath);
 
                 // Back to what was imported, for the merge that follows
                 Settings.Default.AnnotationColor = OTHER_ANNOTATION_COLOR;
@@ -155,16 +144,23 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// The startup check brings across what changed in the tracked file since the import,
-        /// without undoing what changed here: a setting changed only there takes its new value,
-        /// one changed in both places keeps this one's, and the tool list gains the tools added
-        /// in each place.
+        /// What an ordinary user of an installation made for all users gets at startup, with the
+        /// other installation's user.config standing in for the administrator's shared one, and
+        /// the settings just imported from it for the user's own. Changes the administrator made
+        /// since the last merge are brought across without undoing the user's: a setting changed
+        /// only by the administrator takes the new value, one changed by both keeps the user's,
+        /// the tool list gains the tools added on each side, and the user keeps their own
+        /// installation id.
         /// </summary>
-        private void TestLaterSourceChangesAreMergedIn(SkylineInstallation other)
+        private void TestAdminChangesAreMergedIn(SkylineInstallation other)
         {
-            var merger = SharedSettingsMerger.ForImportedSettings();
-            Assert.IsTrue(merger.IsTracking);
-            Assert.AreEqual(other.UserConfigFile, merger.SourcePath);
+            var baseConfigFile = TestFilesDir.GetTestPath(SharedSettingsMerger.SHARED_BASE_CONFIG_FILE_NAME);
+            File.Copy(other.UserConfigFile, baseConfigFile, true);
+            var merger = new SharedSettingsMerger
+            {
+                SourcePath = other.UserConfigFile,
+                BaseConfigFilePath = baseConfigFile
+            };
             Assert.IsFalse(merger.HasSourceChanged());
 
             RunUI(() =>
@@ -199,25 +195,17 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Importing and uninstalling the other installation: this installation takes over the
-        /// other's id, the uninstall command is run, and there is no source left to track.
+        /// other's id, and the uninstall command is run.
         /// </summary>
         private void TestImportAndUninstallTakesOverTheOtherInstallation(SkylineInstallation other)
         {
-            var uninstallsRun = ImportFromToolOptions(new[] { other }, importDlg =>
-            {
-                importDlg.TrackChanges = true;
-                importDlg.UninstallSelected = true;
-                // Nothing to keep up with once the source is gone
-                Assert.IsFalse(importDlg.TrackChangesEnabled);
-                Assert.IsFalse(importDlg.TrackChanges);
-            });
+            var uninstallsRun = ImportFromToolOptions(new[] { other },
+                importDlg => importDlg.UninstallSelected = true);
 
             Assert.AreEqual(1, uninstallsRun.Count);
             Assert.AreEqual(UNINSTALL_COMMAND, uninstallsRun[0]);
             Assert.AreEqual(OTHER_INSTALLATION_ID, Settings.Default.InstallationId);
             Assert.AreEqual(OTHER_INSTALLATION_ID, ReadSavedInstallationId());
-            Assert.AreEqual(string.Empty, Settings.Default.ImportedSettingsPath);
-            Assert.IsFalse(File.Exists(SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath)));
         }
 
         /// <summary>

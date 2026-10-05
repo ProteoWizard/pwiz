@@ -364,7 +364,6 @@ namespace pwiz.Skyline
                         }
                     }
                     SharedSettingsMerger.ForSharedSettings()?.MergeIfChanged();
-                    SharedSettingsMerger.ForImportedSettings().MergeIfChanged();
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -655,7 +654,8 @@ namespace pwiz.Skyline
                 if (File.Exists(configFile))
                     return;
                 var candidate = ChooseClickOnceInstallation(
-                    new ClickOnceInstallations(typeof(Program).Assembly).ListCandidates());
+                    new ClickOnceInstallations(typeof(Program).Assembly).ListCandidates()
+                        .Where(new SkylineInstallations().IsNoNewerThanThis));
                 if (candidate == null)
                     return;
                 Directory.CreateDirectory(UserConfigSettingsProvider.GetDefaultConfigFolder());
