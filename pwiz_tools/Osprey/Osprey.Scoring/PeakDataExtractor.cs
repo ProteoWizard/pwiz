@@ -77,6 +77,7 @@ namespace pwiz.Osprey.Scoring
             ScoringContext context,
             OspreyPeakData peakData,
             PrefilterVerdict prefilterVerdict,
+            List<XicData> precomputedXics,
             out ExtractedPeak extracted)
         {
             extracted = default;
@@ -112,8 +113,9 @@ namespace pwiz.Osprey.Scoring
                     return false;
             }
 
-            // Extract fragment XICs within the RT range
-            var xics = TopFragmentExtractor.ExtractFragmentXics(
+            // Extract fragment XICs within the RT range, unless the window scorer already
+            // extracted them scan-major (ExtractXicsScanMajor) over this same range.
+            var xics = precomputedXics ?? TopFragmentExtractor.ExtractFragmentXics(
                 candidate, windowSpectra, windowRts, startScan, endScan, config);
 
             // Per-entry search XIC diagnostic. Fires for every scoring
@@ -558,6 +560,9 @@ namespace pwiz.Osprey.Scoring
         /// or null when the prefilter does not run at all. A candidate the prefilter would not
         /// reach in <see cref="TryExtract"/> (boundary override, no or too short a scan range)
         /// stays <see cref="PrefilterVerdict.not_computed"/>, so TryExtract handles it as before.</para>
+        /// <para><paramref name="startScans"/> and <paramref name="endScans"/> receive each
+        /// prefiltered candidate's XIC scan range (start -1 for the others), for
+        /// <see cref="ExtractXicsScanMajor"/>.</para>
         /// </summary>
         public PrefilterVerdict[] ComputePrefilterScanMajor(
             List<LibraryEntry> candidates,
@@ -565,8 +570,12 @@ namespace pwiz.Osprey.Scoring
             double[] windowRts,
             RTCalibration rtCalibration,
             double globalRtTolerance,
-            ScoringContext context)
+            ScoringContext context,
+            out int[] startScans,
+            out int[] endScans)
         {
+            startScans = null;
+            endScans = null;
             var config = context.Config;
             int nScans = windowSpectra.Count;
             if (!config.PrefilterEnabled || nScans < 5)
@@ -574,8 +583,8 @@ namespace pwiz.Osprey.Scoring
 
             int nCandidates = candidates.Count;
             var verdicts = new PrefilterVerdict[nCandidates];
-            var startScans = new int[nCandidates];
-            var endScans = new int[nCandidates];
+            startScans = new int[nCandidates];
+            endScans = new int[nCandidates];
             // Each candidate's top-6 fragment m/z windows, computed once rather than per scan.
             const int STRIDE = FragmentMath.TOP_N_WINDOW_VALUES;
             var fragmentWindows = new double[nCandidates * STRIDE];
@@ -658,6 +667,131 @@ namespace pwiz.Osprey.Scoring
                 }
             }
             return verdicts;
+        }
+
+        /// <summary>
+        /// Extract the fragment XICs <see cref="TryExtract"/> would extract for the candidates in
+        /// [<paramref name="blockStart"/>, <paramref name="blockEnd"/>) that passed
+        /// <see cref="ComputePrefilterScanMajor"/>, scan-major: the outer loop walks the spectra
+        /// the block's scan ranges cover, the inner loop the candidates whose range covers that
+        /// spectrum, so each spectrum is probed for all of the block's fragments while its arrays
+        /// are in cache, instead of once per candidate. Each value comes from the same
+        /// <see cref="TopFragmentExtractor.FindClosestPeakInWindow(Spectrum, double, double, double)"/>
+        /// call over the same fragments, m/z windows and scan range as
+        /// <see cref="TopFragmentExtractor.ExtractFragmentXics"/>, so the XICs are identical.
+        /// <para>Returns one XIC list per block candidate (index c - blockStart), null for a
+        /// candidate that did not pass, which TryExtract then handles as before. The block bounds
+        /// how many candidates' XICs are alive at once.</para>
+        /// </summary>
+        public static List<XicData>[] ExtractXicsScanMajor(
+            List<LibraryEntry> candidates,
+            int blockStart,
+            int blockEnd,
+            PrefilterVerdict[] verdicts,
+            int[] startScans,
+            int[] endScans,
+            List<Spectrum> windowSpectra,
+            double[] windowRts,
+            OspreyConfig config)
+        {
+            int blockSize = blockEnd - blockStart;
+            var blockXics = new List<XicData>[blockSize];
+            // One target per (passing candidate, top fragment): its m/z window and XIC array,
+            // at slot b * MAX_FRAGS + t for block candidate b and its t-th top fragment.
+            const int MAX_FRAGS = TopFragmentExtractor.CAL_TOP_N_FRAGMENTS;
+            var targetMzs = new double[blockSize * MAX_FRAGS];
+            var targetLowers = new double[blockSize * MAX_FRAGS];
+            var targetUppers = new double[blockSize * MAX_FRAGS];
+            var targetIntensities = new double[blockSize * MAX_FRAGS][];
+            var targetCounts = new int[blockSize];
+            var fragmentTolerance = config.FragmentTolerance;
+            int firstScan = int.MaxValue;
+            int lastScan = -1;
+            int nPassing = 0;
+            for (int b = 0; b < blockSize; b++)
+            {
+                int c = blockStart + b;
+                if (verdicts[c] != PrefilterVerdict.passed)
+                    continue;
+                var candidate = candidates[c];
+                int startScan = startScans[c];
+                int rangeLen = endScans[c] - startScan + 1;
+                int[] topIndices = TopFragmentExtractor.SelectTopFragmentIndices(
+                    candidate.Fragments, MAX_FRAGS);
+                // One RT array shared by the candidate's XICs, as ExtractFragmentXics builds it.
+                double[] rangeRts = new double[rangeLen];
+                Array.Copy(windowRts, startScan, rangeRts, 0, rangeLen);
+                var xics = new List<XicData>(topIndices.Length);
+                for (int t = 0; t < topIndices.Length; t++)
+                {
+                    var fragment = candidate.Fragments[topIndices[t]];
+                    double tolDa = fragmentTolerance.ToleranceDa(fragment.Mz);
+                    int target = b * MAX_FRAGS + t;
+                    targetMzs[target] = fragment.Mz;
+                    targetLowers[target] = fragment.Mz - tolDa;
+                    targetUppers[target] = fragment.Mz + tolDa;
+                    var intensities = new double[rangeLen];
+                    targetIntensities[target] = intensities;
+                    xics.Add(new XicData(topIndices[t], rangeRts, intensities));
+                }
+                targetCounts[b] = topIndices.Length;
+                blockXics[b] = xics;
+                firstScan = Math.Min(firstScan, startScan);
+                lastScan = Math.Max(lastScan, endScans[c]);
+                nPassing++;
+            }
+            if (nPassing == 0)
+                return blockXics;
+
+            // Block candidates entering at each scan, as a counting sort on start scan.
+            int span = lastScan - firstScan + 1;
+            var enterOffsets = new int[span + 1];
+            for (int b = 0; b < blockSize; b++)
+            {
+                if (blockXics[b] != null)
+                    enterOffsets[startScans[blockStart + b] - firstScan + 1]++;
+            }
+            for (int s = 0; s < span; s++)
+                enterOffsets[s + 1] += enterOffsets[s];
+            var entering = new int[nPassing];
+            var fillPos = (int[])enterOffsets.Clone();
+            for (int b = 0; b < blockSize; b++)
+            {
+                if (blockXics[b] != null)
+                    entering[fillPos[startScans[blockStart + b] - firstScan]++] = b;
+            }
+
+            var active = new int[nPassing];
+            int nActive = 0;
+            for (int s = firstScan; s <= lastScan; s++)
+            {
+                for (int e = enterOffsets[s - firstScan]; e < enterOffsets[s - firstScan + 1]; e++)
+                    active[nActive++] = entering[e];
+
+                var spectrum = windowSpectra[s];
+                var spectrumIntensities = spectrum.Intensities;
+                int a = 0;
+                while (a < nActive)
+                {
+                    int b = active[a];
+                    int c = blockStart + b;
+                    int offset = s - startScans[c];
+                    int targetEnd = b * MAX_FRAGS + targetCounts[b];
+                    for (int target = b * MAX_FRAGS; target < targetEnd; target++)
+                    {
+                        int best = TopFragmentExtractor.FindClosestPeakInWindow(spectrum,
+                            targetMzs[target], targetLowers[target], targetUppers[target]);
+                        if (best >= 0)
+                            targetIntensities[target][offset] = spectrumIntensities[best];
+                    }
+                    // Past its range: swap the last active candidate into this slot.
+                    if (s == endScans[c])
+                        active[a] = active[--nActive];
+                    else
+                        a++;
+                }
+            }
+            return blockXics;
         }
 
         /// <summary>

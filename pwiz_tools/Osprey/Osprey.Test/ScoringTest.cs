@@ -1726,12 +1726,16 @@ namespace pwiz.Osprey.Test
         /// candidate-major loop in TryExtract gives it, and leaves the candidates TryExtract never
         /// prefilters (boundary override, no scan range) to TryExtract. The spectra draw each of a
         /// small pool of fragment m/z values at random, so candidates pass at varied offsets into
-        /// their ranges and others run out of range without passing.
+        /// their ranges and others run out of range without passing. The passing candidates'
+        /// scan-major XICs (ExtractXicsScanMajor) equal the candidate-major ones bitwise.
         /// </summary>
         [TestMethod]
         public void TestScanMajorPrefilterMatchesCandidateMajor()
         {
             var random = new Random(4711);
+            // Intensities and near-duplicate peaks draw from their own stream, leaving the
+            // prefilter's m/z draws as they were.
+            var randomXic = new Random(817);
             const int nScans = 80;
             var pool = new double[24];
             for (int p = 0; p < pool.Length; p++)
@@ -1745,12 +1749,18 @@ namespace pwiz.Osprey.Test
                 foreach (double mz in pool)
                 {
                     if (random.NextDouble() < 0.3)
+                    {
                         mzs.Add(mz);
+                        // A second peak inside the 10 ppm window, so the closest-peak pick matters.
+                        if (randomXic.NextDouble() < 0.3)
+                            mzs.Add(mz * (1.0 + (randomXic.NextDouble() - 0.5) * 1.6e-5));
+                    }
                 }
                 for (int n = 0; n < 20; n++)
                     mzs.Add(200.0 + 800.0 * random.NextDouble());
                 mzs.Sort();
-                spectra.Add(new Spectrum { Mzs = mzs.ToArray(), Intensities = new float[mzs.Count], RetentionTime = rts[s] });
+                var intensities = mzs.Select(_ => (float)(1000.0 * randomXic.NextDouble())).ToArray();
+                spectra.Add(new Spectrum { Mzs = mzs.ToArray(), Intensities = intensities, RetentionTime = rts[s] });
             }
 
             var candidates = new List<LibraryEntry>();
@@ -1781,7 +1791,8 @@ namespace pwiz.Osprey.Test
             };
             const double rtTolerance = 0.3;
             var extractor = new PeakDataExtractor(null);
-            var verdicts = extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context);
+            var verdicts = extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context,
+                out var startScans, out var endScans);
             Assert.IsNotNull(verdicts);
             Assert.AreEqual(candidates.Count, verdicts.Length);
 
@@ -1806,12 +1817,67 @@ namespace pwiz.Osprey.Test
             foreach (var verdict in new[] { PrefilterVerdict.not_computed, PrefilterVerdict.passed, PrefilterVerdict.failed })
                 Assert.IsTrue(counts.ContainsKey(verdict) && counts[verdict] > 10, verdict.ToString());
 
+            // The passing candidates' scan-major XICs equal the candidate-major ones bitwise,
+            // whatever the block size.
+            foreach (int blockSize in new[] { 1, 37, 128, candidates.Count })
+                AssertScanMajorXicsMatch(candidates, verdicts, startScans, endScans, spectra, rts, config, blockSize);
+
             // With the prefilter off, or a window too short to score, there is nothing to compute.
             config.PrefilterEnabled = false;
-            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context));
+            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context,
+                out _, out _));
             config.PrefilterEnabled = true;
             Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra.Take(4).ToList(), rts.Take(4).ToArray(),
-                null, rtTolerance, context));
+                null, rtTolerance, context, out _, out _));
+        }
+
+        /// <summary>
+        /// Extract the XICs scan-major in blocks of <paramref name="blockSize"/> candidates and
+        /// check every passing candidate's against TopFragmentExtractor.ExtractFragmentXics over
+        /// its scan range, bit for bit, and that no other candidate gets any.
+        /// </summary>
+        private static void AssertScanMajorXicsMatch(List<LibraryEntry> candidates, PrefilterVerdict[] verdicts,
+            int[] startScans, int[] endScans, List<Spectrum> spectra, double[] rts, OspreyConfig config, int blockSize)
+        {
+            int nonZero = 0;
+            for (int blockStart = 0; blockStart < candidates.Count; blockStart += blockSize)
+            {
+                int blockEnd = Math.Min(candidates.Count, blockStart + blockSize);
+                var blockXics = PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd, verdicts,
+                    startScans, endScans, spectra, rts, config);
+                Assert.AreEqual(blockEnd - blockStart, blockXics.Length);
+                for (int c = blockStart; c < blockEnd; c++)
+                {
+                    var actual = blockXics[c - blockStart];
+                    if (verdicts[c] != PrefilterVerdict.passed)
+                    {
+                        Assert.IsNull(actual, string.Format(@"candidate {0}", c));
+                        continue;
+                    }
+                    Assert.IsNotNull(actual);
+                    var expected = TopFragmentExtractor.ExtractFragmentXics(candidates[c], spectra, rts,
+                        startScans[c], endScans[c], config);
+                    Assert.AreEqual(expected.Count, actual.Count);
+                    for (int f = 0; f < expected.Count; f++)
+                    {
+                        Assert.AreEqual(expected[f].FragmentIndex, actual[f].FragmentIndex);
+                        AssertBitwiseEqual(expected[f].RetentionTimes, actual[f].RetentionTimes, c, f);
+                        AssertBitwiseEqual(expected[f].Intensities, actual[f].Intensities, c, f);
+                        nonZero += expected[f].Intensities.Count(i => i != 0);
+                    }
+                }
+            }
+            Assert.IsTrue(nonZero > 1000, nonZero.ToString());
+        }
+
+        private static void AssertBitwiseEqual(double[] expected, double[] actual, int candidate, int fragment)
+        {
+            Assert.AreEqual(expected.Length, actual.Length);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[i]), BitConverter.DoubleToInt64Bits(actual[i]),
+                    string.Format(@"candidate {0} fragment {1} scan {2}", candidate, fragment, i));
+            }
         }
 
         #endregion

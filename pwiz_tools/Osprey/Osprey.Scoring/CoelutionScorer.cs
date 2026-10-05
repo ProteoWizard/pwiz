@@ -49,7 +49,11 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public class CoelutionScorer
     {
-        private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
+        // Candidates whose XICs ScoreWindow extracts scan-major at once. At ~6 fragments x
+        // ~100-300 scans each, a block's XICs are a few MB per concurrently scored window.
+        private const int XIC_BLOCK_SIZE = 512;
+
+        private readonly IScoringDiagnostics _diagnostics;  // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
 
         public CoelutionScorer(IScoringDiagnostics diagnostics)
@@ -139,25 +143,46 @@ namespace pwiz.Osprey.Scoring
                 // spectrum is matched against every candidate while it is in cache. Null when
                 // the prefilter is off (or OSPREY_SCAN_MAJOR_PREFILTER=0), leaving each
                 // candidate's own TryExtract to run it as before.
+                int[] startScans = null, endScans = null;
                 var prefilterVerdicts = OspreyEnvironment.ScanMajorPrefilter
                     ? _extractor.ComputePrefilterScanMajor(candidates, windowSpectra, windowRts,
-                        rtCalibration, globalRtTolerance, context)
+                        rtCalibration, globalRtTolerance, context, out startScans, out endScans)
                     : null;
+                // The passing candidates' fragment XICs, also extracted scan-major, one block of
+                // consecutive candidates at a time to bound the XICs alive at once. Scoring
+                // order is unchanged.
+                bool scanMajorXics = prefilterVerdicts != null && OspreyEnvironment.ScanMajorXic;
 
                 // Score each candidate
-                for (int c = 0; c < candidates.Count; c++)
+                for (int blockStart = 0; blockStart < candidates.Count; blockStart += XIC_BLOCK_SIZE)
                 {
-                    var fdrEntry = ScoreCandidate(
-                        candidates[c], windowSpectra, windowRts,
-                        rtCalibration,
-                        globalRtTolerance, rtSigma,
-                        ms1Spectra, ms1Calibration,
-                        context,
-                        ospreyContext, ospreyPeakData,
-                        prefilterVerdicts?[c] ?? PrefilterVerdict.not_computed);
+                    int blockEnd = Math.Min(candidates.Count, blockStart + XIC_BLOCK_SIZE);
+                    var blockXics = scanMajorXics
+                        ? PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd,
+                            prefilterVerdicts, startScans, endScans, windowSpectra, windowRts, config)
+                        : null;
+                    for (int c = blockStart; c < blockEnd; c++)
+                    {
+                        List<XicData> precomputedXics = null;
+                        if (blockXics != null)
+                        {
+                            precomputedXics = blockXics[c - blockStart];
+                            blockXics[c - blockStart] = null;    // Released with the candidate's scoring
+                        }
 
-                    if (fdrEntry != null)
-                        entries.Add(fdrEntry);
+                        var fdrEntry = ScoreCandidate(
+                            candidates[c], windowSpectra, windowRts,
+                            rtCalibration,
+                            globalRtTolerance, rtSigma,
+                            ms1Spectra, ms1Calibration,
+                            context,
+                            ospreyContext, ospreyPeakData,
+                            prefilterVerdicts?[c] ?? PrefilterVerdict.not_computed,
+                            precomputedXics);
+
+                        if (fdrEntry != null)
+                            entries.Add(fdrEntry);
+                    }
                 }
 
                 return entries;
@@ -191,12 +216,13 @@ namespace pwiz.Osprey.Scoring
             ScoringContext context,
             OspreyScoringContext ospreyContext,
             OspreyPeakData ospreyPeakData,
-            PrefilterVerdict prefilterVerdict)
+            PrefilterVerdict prefilterVerdict,
+            List<XicData> precomputedXics)
         {
             if (!_extractor.TryExtract(
                     candidate, windowSpectra, windowRts, rtCalibration,
                     globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
-                    context, ospreyPeakData, prefilterVerdict, out var ext))
+                    context, ospreyPeakData, prefilterVerdict, precomputedXics, out var ext))
                 return null;
 
             var bestPeak = ext.BestPeak;

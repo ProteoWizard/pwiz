@@ -475,6 +475,16 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool ScanMajorPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_PREFILTER");
 
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_XIC: extract the fragment XICs of the candidates that pass the
+        /// scan-major prefilter scan by scan too, a block of candidates at a time, instead of
+        /// one candidate's whole scan range after another. DEFAULT ON (takes effect only with
+        /// <see cref="ScanMajorPrefilter"/>); set OSPREY_SCAN_MAJOR_XIC=0 for the
+        /// candidate-by-candidate extraction, the A/B arm for timing. Output is the same either
+        /// way: each XIC value comes from the same peak lookup in the same spectrum.
+        /// </summary>
+        public static readonly bool ScanMajorXic = IsNotZero(@"OSPREY_SCAN_MAJOR_XIC");
+
         /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and
