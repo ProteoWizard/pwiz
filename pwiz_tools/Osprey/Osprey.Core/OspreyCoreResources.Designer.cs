@@ -88,6 +88,52 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to First-pass FDR file lanes: {0} (limited by {1}; {2} threads, {3:F1} GB free, {4:F1} GB per lane, {5} files).
+        /// </summary>
+        public static string FdrLaneResolver_Resolve_First_pass_FDR_file_lanes___0___limited_by__1____2__threads___3__GB_free___4__GB_per_lane___5__files_ {
+            get {
+                return ResourceManager.GetString("FdrLaneResolver_Resolve_First_pass_FDR_file_lanes___0___limited_by__1____2__thre" +
+                        "ads___3__GB_free___4__GB_per_lane___5__files_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to file count.
+        /// </summary>
+        public static string FdrLaneResolver_Resolve_limit_files {
+            get {
+                return ResourceManager.GetString("FdrLaneResolver_Resolve_limit_files", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to maximum.
+        /// </summary>
+        public static string FdrLaneResolver_Resolve_limit_maximum {
+            get {
+                return ResourceManager.GetString("FdrLaneResolver_Resolve_limit_maximum", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to memory.
+        /// </summary>
+        public static string FdrLaneResolver_Resolve_limit_memory {
+            get {
+                return ResourceManager.GetString("FdrLaneResolver_Resolve_limit_memory", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to threads.
+        /// </summary>
+        public static string FdrLaneResolver_Resolve_limit_threads {
+            get {
+                return ResourceManager.GetString("FdrLaneResolver_Resolve_limit_threads", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to peptide.
         /// </summary>
         public static string FdrLevelExtension_LOCALIZED_VALUES_peptide {

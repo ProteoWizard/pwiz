@@ -237,6 +237,10 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public sealed class PeptideInputSink : IDisposable
         {
+            // Rows per formatting block in Commit: large enough that a block's hand-off is
+            // noise beside formatting it, small enough to spread a few million rows over lanes.
+            private const int COMMIT_BLOCK_ROWS = 65536;
+
             private readonly IReadOnlyDictionary<uint, LibraryEntry> _libraryById;
             private readonly bool _perRun;
             private readonly ICollection<string> _skipEntrapmentSeqs;
@@ -324,8 +328,10 @@ namespace pwiz.Osprey.Tasks
                 }
             }
 
-            /// <summary>Write the per-precursor rows (if any), commit the file and return the counts.</summary>
-            public Result Commit()
+            /// <summary>Write the per-precursor rows (if any), commit the file and return the
+            /// counts. <paramref name="lanes"/> threads format the sorted rows in blocks, which are
+            /// written in order, so the file is the same whatever the count.</summary>
+            public Result Commit(int lanes = 1)
             {
                 if (!_perRun)
                 {
@@ -334,21 +340,43 @@ namespace pwiz.Osprey.Tasks
                     // writing. The key is unique per surviving row, so this is a total order with no
                     // ties - deterministic, diff-friendly output. Ordinal compare avoids any
                     // culture-dependent sequence ordering.
-                    foreach (var best in _best.Values
+                    var sorted = _best.Values
                         .OrderBy(r => r.ModifiedSequence, StringComparer.Ordinal)
-                        .ThenBy(r => r.Charge))
+                        .ThenBy(r => r.Charge)
+                        .ToArray();
+                    // Formatting - two E10 doubles and a protein list per row - is the cost, and each
+                    // row's text depends on that row alone, so blocks are formatted on lanes and
+                    // written here in sorted order; the counts are integers, summed the same way.
+                    int blocks = (sorted.Length + COMMIT_BLOCK_ROWS - 1) / COMMIT_BLOCK_ROWS;
+                    OrderedFileLanes.Run(blocks, lanes, b => FormatBlock(sorted, b), (b, block) =>
                     {
-                        var lookup = ResolveLibrary(_libraryById, best.EntryId, ref _result);
-                        if (_skipEntrapmentSeqs != null && _skipEntrapmentSeqs.Contains(lookup.Peptide))
-                            continue; // excluded orphan entrapment (kept consistent with the manifest)
-                        _writer.WriteLine(FormatRow(lookup.Peptide, best.ModifiedSequence,
-                            best.Charge, best.ExperimentQvalue, best.Score, lookup.Protein, null));
-                        _result.Rows++;
-                    }
+                        _writer.Write(block.Text);
+                        _result.Rows += block.Counts.Rows;
+                        _result.MissingLibrary += block.Counts.MissingLibrary;
+                        _result.TruncatedProtein += block.Counts.TruncatedProtein;
+                    });
                 }
                 _writer.Dispose();
                 _saver.Commit();
                 return _result;
+            }
+
+            private (string Text, Result Counts) FormatBlock(Row[] sorted, int block)
+            {
+                var counts = new Result();
+                var text = new StringWriter(CultureInfo.InvariantCulture) { NewLine = _writer.NewLine };
+                int end = Math.Min(sorted.Length, (block + 1) * COMMIT_BLOCK_ROWS);
+                for (int i = block * COMMIT_BLOCK_ROWS; i < end; i++)
+                {
+                    var best = sorted[i];
+                    var lookup = ResolveLibrary(_libraryById, best.EntryId, ref counts);
+                    if (_skipEntrapmentSeqs != null && _skipEntrapmentSeqs.Contains(lookup.Peptide))
+                        continue; // excluded orphan entrapment (kept consistent with the manifest)
+                    text.WriteLine(FormatRow(lookup.Peptide, best.ModifiedSequence,
+                        best.Charge, best.ExperimentQvalue, best.Score, lookup.Protein, null));
+                    counts.Rows++;
+                }
+                return (text.ToString(), counts);
             }
 
             public void Dispose()
