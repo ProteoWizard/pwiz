@@ -120,8 +120,12 @@ namespace AutoQC
                         ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                     configFile = config.FilePath;
                     ProgramLog.Info(string.Format("user.config path: {0}", configFile));
-                    if (!InitSkylineSettings()) return;
+                    // Upgrade before InitSkylineSettings(), because Upgrade() copies the previous version's Skyline
+                    // installation settings over the ones InitSkylineSettings() finds. MigrateConfigsIfRequired() comes
+                    // after, because converting configurations saved by an older AutoQC needs the installations found.
                     UpgradeSettingsIfRequired();
+                    if (!InitSkylineSettings()) return;
+                    MigrateConfigsIfRequired();
                 }
                 catch (Exception e)
                 {
@@ -218,13 +222,14 @@ namespace AutoQC
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade(); // This should copy all the settings from the previous version
-                // Upgrade() also copies the previous version's Skyline installation paths over the ones
-                // InitSkylineSettings() just found, so find them again.
-                SkylineInstallations.FindSkyline();
                 Settings.Default.SettingsUpgradeRequired = false;
                 Settings.Default.Save();
                 Settings.Default.Reload();
             }
+        }
+
+        private static void MigrateConfigsIfRequired()
+        {
             GetCurrentAndLastInstalledVersions();
             Settings.Default.UpdateIfNecessary(_install.BareVersion, ConfigMigrationRequired());
         }
@@ -311,7 +316,9 @@ namespace AutoQC
                     string.Format(Resources.Program_InitSkylineSettings_Please_install_Skyline_to_run__0__, AppName), AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-            
+
+            // Save the folder the user selected, so the dialog is not shown again at the next start.
+            SharedBatch.Properties.Settings.Default.Save();
             return true;
         }
 
