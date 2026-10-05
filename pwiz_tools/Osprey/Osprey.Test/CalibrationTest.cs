@@ -43,6 +43,11 @@ namespace pwiz.Osprey.Test
     {
         private const double TOLERANCE = 1e-6;
 
+        // FragmentMath memoizes top-6 m/z by entry Id in a process-wide cache, so every entry
+        // handed to HasTopNFragmentMatch needs a unique Id. A base clear of the other tests'
+        // (see ScoringTest's MZ_INDEX_ID_BASE).
+        private const uint SCAN_MAJOR_CAL_ID_BASE = 930000u;
+
         #region RT Calibration Tests
 
         /// <summary>
@@ -1315,16 +1320,14 @@ namespace pwiz.Osprey.Test
 
         #region Scan-major calibration prefilter
 
-        // FragmentMath memoizes top-6 m/z by entry Id in a process-wide cache, so every entry
-        // handed to HasTopNFragmentMatch needs a unique Id. A base clear of the other tests'.
-        private const uint SCAN_MAJOR_CAL_ID_BASE = 930000u;
-
         /// <summary>
         /// The window-level scan-major calibration prefilter gives every entry the candidate
         /// window indices, in the same order, that the entry-by-entry loop gives it: over
         /// windows with repeated RTs, expected RTs inside, near and past both ends of the
         /// window, a NaN expected RT (which the RT test never rejects), an entry without
-        /// fragments, and a window holding a NaN RT (which falls back to whole-window ranges).
+        /// fragments, entries with 1 to 12 fragments and tied relative intensities (so fewer than
+        /// 6 windows and the top-6 selection among ties are both exercised), a window holding a
+        /// NaN RT (which falls back to whole-window ranges), and entries taken in blocks.
         /// </summary>
         [TestMethod]
         public void TestScanMajorCalibrationPrefilterMatchesEntryMajor()
@@ -1341,13 +1344,13 @@ namespace pwiz.Osprey.Test
             {
                 var entry = new LibraryEntry(SCAN_MAJOR_CAL_ID_BASE + (uint)e, @"PEPTIDEK", @"PEPTIDEK", 2, 500.0, 0);
                 var fragments = new List<LibraryFragment>();
-                int nFragments = e == 1 ? 0 : 6;
+                int nFragments = e == 1 ? 0 : 1 + e % 12;
                 for (int f = 0; f < nFragments; f++)
                 {
                     fragments.Add(new LibraryFragment
                     {
-                        Mz = f < 4 ? pool[random.Next(pool.Length)] : 100.0 + f,
-                        RelativeIntensity = 1.0f + f
+                        Mz = f % 3 != 2 ? pool[random.Next(pool.Length)] : 100.0 + f,
+                        RelativeIntensity = 1.0f + f % 4    // Ties among 5 or more fragments
                     });
                 }
                 entry.Fragments = fragments;
@@ -1370,7 +1373,7 @@ namespace pwiz.Osprey.Test
 
             // No spectra, no entries.
             AssertScanMajorCalCandidatesMatch(entries, expectedRts.ToArray(), new List<Spectrum>(), 0.3, tolerance);
-            Assert.AreEqual(0, Calibrator.FindCalibrationCandidatesScanMajor(new List<LibraryEntry>(),
+            Assert.AreEqual(0, Calibrator.FindCalibrationCandidatesScanMajor(new List<LibraryEntry>(), 0, 0,
                 new double[0], spectra, 0.3, tolerance).Length);
         }
 
@@ -1404,17 +1407,25 @@ namespace pwiz.Osprey.Test
         private static int AssertScanMajorCalCandidatesMatch(List<LibraryEntry> entries, double[] expectedRts,
             List<Spectrum> spectra, double rtTolerance, FragmentToleranceConfig tolerance)
         {
-            var scanMajor = Calibrator.FindCalibrationCandidatesScanMajor(entries, expectedRts, spectra,
-                rtTolerance, tolerance);
-            Assert.AreEqual(entries.Count, scanMajor.Length);
             int nCandidates = 0;
-            for (int e = 0; e < entries.Count; e++)
+            foreach (int blockSize in new[] { entries.Count, 37, 1 })
             {
-                var expected = Calibrator.FindCalibrationCandidates(entries[e], expectedRts[e], spectra,
-                    rtTolerance, tolerance);
-                CollectionAssert.AreEqual(expected, scanMajor[e],
-                    string.Format(@"entry {0}, RT tolerance {1}", e, rtTolerance));
-                nCandidates += expected.Count;
+                nCandidates = 0;
+                for (int blockStart = 0; blockStart < entries.Count; blockStart += blockSize)
+                {
+                    int blockEnd = Math.Min(entries.Count, blockStart + blockSize);
+                    var scanMajor = Calibrator.FindCalibrationCandidatesScanMajor(entries, blockStart, blockEnd,
+                        expectedRts, spectra, rtTolerance, tolerance);
+                    Assert.AreEqual(blockEnd - blockStart, scanMajor.Length);
+                    for (int e = blockStart; e < blockEnd; e++)
+                    {
+                        var expected = Calibrator.FindCalibrationCandidates(entries[e], expectedRts[e], spectra,
+                            rtTolerance, tolerance);
+                        CollectionAssert.AreEqual(expected, scanMajor[e - blockStart],
+                            string.Format(@"entry {0}, RT tolerance {1}, block size {2}", e, rtTolerance, blockSize));
+                        nCandidates += expected.Count;
+                    }
+                }
             }
             return nCandidates;
         }

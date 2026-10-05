@@ -76,7 +76,8 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
             OspreyPeakData peakData,
-            PrefilterVerdict prefilterVerdict,
+            WindowPrefilter prefilter,
+            int prefilterIndex,
             List<XicData> precomputedXics,
             out ExtractedPeak extracted)
         {
@@ -89,29 +90,43 @@ namespace pwiz.Osprey.Scoring
             // Use the global tolerance passed from RunCoelutionScoring (matches
             // Rust's single rt_tolerance for all entries in run_search).
             double rtTolerance = globalRtTolerance;
-            if (!TryResolveScanRange(candidate, windowRts, rtCalibration, rtTolerance, context,
-                    out var overrideBounds, out double expectedRt, out int startScan, out int endScan))
+            (double Apex, double Start, double End)? overrideBounds;
+            double expectedRt;
+            int startScan, endScan;
+            if (prefilter != null && prefilter.Verdicts[prefilterIndex] != PrefilterVerdict.not_computed)
             {
-                return false;
+                // The window scorer already resolved the scan range and ran the signal
+                // pre-filter below for every candidate at once (ComputePrefilterScanMajor),
+                // with the same result. A verdict means no boundary override and a range of
+                // at least 5 scans; nothing before this point has a side effect to repeat.
+                if (prefilter.Verdicts[prefilterIndex] == PrefilterVerdict.failed)
+                    return false;
+                overrideBounds = null;
+                expectedRt = prefilter.ExpectedRts[prefilterIndex];
+                startScan = prefilter.StartScans[prefilterIndex];
+                endScan = prefilter.EndScans[prefilterIndex];
+            }
+            else
+            {
+                if (!TryResolveScanRange(candidate, windowRts, rtCalibration, rtTolerance, context,
+                        out overrideBounds, out expectedRt, out startScan, out endScan))
+                {
+                    return false;
+                }
+
+                // Signal pre-filter: require at least 2 of top 6 fragments present
+                // in at least 3 of 4 consecutive scans. Matches Rust pipeline.rs:6032-6066.
+                // Skips noise-only candidates before the expensive XIC extraction.
+                // Skipped for boundary overrides - caller has already decided to
+                // score here.
+                if (config.PrefilterEnabled && !overrideBounds.HasValue &&
+                    !HasPrefilterSignal(candidate, windowSpectra, startScan, endScan, config.FragmentTolerance))
+                {
+                    return false;
+                }
             }
 
             int rangeLen = endScan - startScan + 1;
-
-            // Signal pre-filter: require at least 2 of top 6 fragments present
-            // in at least 3 of 4 consecutive scans. Matches Rust pipeline.rs:6032-6066.
-            // Skips noise-only candidates before the expensive XIC extraction.
-            // Skipped for boundary overrides - caller has already decided to
-            // score here. The window scorer may already have evaluated it for every
-            // candidate at once (ComputePrefilterScanMajor); the verdict is the same.
-            if (config.PrefilterEnabled && !overrideBounds.HasValue)
-            {
-                bool hasSignal = prefilterVerdict != PrefilterVerdict.not_computed
-                    ? prefilterVerdict == PrefilterVerdict.passed
-                    : HasPrefilterSignal(candidate, windowSpectra, startScan, endScan,
-                        config.FragmentTolerance);
-                if (!hasSignal)
-                    return false;
-            }
 
             // Extract fragment XICs within the RT range, unless the window scorer already
             // extracted them scan-major (ExtractXicsScanMajor) over this same range.
@@ -557,34 +572,31 @@ namespace pwiz.Osprey.Scoring
         /// depends only on the candidate, its scan range and the spectra - while each spectrum's
         /// arrays are touched once, while hot, instead of once per candidate.
         /// <para>Returns one verdict per candidate, aligned with <paramref name="candidates"/>,
-        /// or null when the prefilter does not run at all. A candidate the prefilter would not
-        /// reach in <see cref="TryExtract"/> (boundary override, no or too short a scan range)
-        /// stays <see cref="PrefilterVerdict.not_computed"/>, so TryExtract handles it as before.</para>
-        /// <para><paramref name="startScans"/> and <paramref name="endScans"/> receive each
-        /// prefiltered candidate's XIC scan range (start -1 for the others), for
-        /// <see cref="ExtractXicsScanMajor"/>.</para>
+        /// with each prefiltered candidate's expected RT and XIC scan range (start -1 for the
+        /// others), which TryExtract and <see cref="ExtractXicsScanMajor"/> then use instead of
+        /// resolving them again; null when the prefilter does not run at all. A candidate the
+        /// prefilter would not reach in <see cref="TryExtract"/> (boundary override, no or too
+        /// short a scan range) stays <see cref="PrefilterVerdict.not_computed"/>, so TryExtract
+        /// handles it as before.</para>
         /// </summary>
-        public PrefilterVerdict[] ComputePrefilterScanMajor(
+        public WindowPrefilter ComputePrefilterScanMajor(
             List<LibraryEntry> candidates,
             List<Spectrum> windowSpectra,
             double[] windowRts,
             RTCalibration rtCalibration,
             double globalRtTolerance,
-            ScoringContext context,
-            out int[] startScans,
-            out int[] endScans)
+            ScoringContext context)
         {
-            startScans = null;
-            endScans = null;
             var config = context.Config;
             int nScans = windowSpectra.Count;
             if (!config.PrefilterEnabled || nScans < 5)
                 return null;
 
             int nCandidates = candidates.Count;
-            var verdicts = new PrefilterVerdict[nCandidates];
-            startScans = new int[nCandidates];
-            endScans = new int[nCandidates];
+            var prefilter = new WindowPrefilter(nCandidates);
+            var verdicts = prefilter.Verdicts;
+            var startScans = prefilter.StartScans;
+            var endScans = prefilter.EndScans;
             // Each candidate's top-6 fragment m/z windows, computed once rather than per scan.
             const int STRIDE = FragmentMath.TOP_N_WINDOW_VALUES;
             var fragmentWindows = new double[nCandidates * STRIDE];
@@ -596,13 +608,14 @@ namespace pwiz.Osprey.Scoring
             {
                 startScans[c] = -1;
                 if (!TryResolveScanRange(candidates[c], windowRts, rtCalibration, globalRtTolerance,
-                        context, out var overrideBounds, out _, out int startScan, out int endScan) ||
+                        context, out var overrideBounds, out double expectedRt, out int startScan, out int endScan) ||
                     overrideBounds.HasValue)
                 {
                     continue;
                 }
                 startScans[c] = startScan;
                 endScans[c] = endScan;
+                prefilter.ExpectedRts[c] = expectedRt;
                 fragmentWindowCounts[c] = FragmentMath.GetTopNFragmentWindows(candidates[c],
                     fragmentTolerance, new Span<double>(fragmentWindows, c * STRIDE, STRIDE));
                 enterOffsets[startScan + 1]++;
@@ -666,7 +679,7 @@ namespace pwiz.Osprey.Scoring
                     active[a] = active[--nActive];
                 }
             }
-            return verdicts;
+            return prefilter;
         }
 
         /// <summary>
@@ -687,13 +700,14 @@ namespace pwiz.Osprey.Scoring
             List<LibraryEntry> candidates,
             int blockStart,
             int blockEnd,
-            PrefilterVerdict[] verdicts,
-            int[] startScans,
-            int[] endScans,
+            WindowPrefilter prefilter,
             List<Spectrum> windowSpectra,
             double[] windowRts,
             OspreyConfig config)
         {
+            var verdicts = prefilter.Verdicts;
+            var startScans = prefilter.StartScans;
+            var endScans = prefilter.EndScans;
             int blockSize = blockEnd - blockStart;
             var blockXics = new List<XicData>[blockSize];
             // One target per (passing candidate, top fragment): its m/z window and XIC array,
@@ -713,30 +727,18 @@ namespace pwiz.Osprey.Scoring
                 int c = blockStart + b;
                 if (verdicts[c] != PrefilterVerdict.passed)
                     continue;
-                var candidate = candidates[c];
-                int startScan = startScans[c];
-                int rangeLen = endScans[c] - startScan + 1;
-                int[] topIndices = TopFragmentExtractor.SelectTopFragmentIndices(
-                    candidate.Fragments, MAX_FRAGS);
-                // One RT array shared by the candidate's XICs, as ExtractFragmentXics builds it.
-                double[] rangeRts = new double[rangeLen];
-                Array.Copy(windowRts, startScan, rangeRts, 0, rangeLen);
-                var xics = new List<XicData>(topIndices.Length);
-                for (int t = 0; t < topIndices.Length; t++)
-                {
-                    var fragment = candidate.Fragments[topIndices[t]];
-                    double tolDa = fragmentTolerance.ToleranceDa(fragment.Mz);
-                    int target = b * MAX_FRAGS + t;
-                    targetMzs[target] = fragment.Mz;
-                    targetLowers[target] = fragment.Mz - tolDa;
-                    targetUppers[target] = fragment.Mz + tolDa;
-                    var intensities = new double[rangeLen];
-                    targetIntensities[target] = intensities;
-                    xics.Add(new XicData(topIndices[t], rangeRts, intensities));
-                }
-                targetCounts[b] = topIndices.Length;
+                // The same XICs and m/z windows ExtractFragmentXics sets up; a candidate without
+                // fragments gets none, as there.
+                var xics = TopFragmentExtractor.CreateFragmentXics(candidates[c], windowRts,
+                    startScans[c], endScans[c], fragmentTolerance,
+                    new Span<double>(targetMzs, b * MAX_FRAGS, MAX_FRAGS),
+                    new Span<double>(targetLowers, b * MAX_FRAGS, MAX_FRAGS),
+                    new Span<double>(targetUppers, b * MAX_FRAGS, MAX_FRAGS));
+                for (int t = 0; t < xics.Count; t++)
+                    targetIntensities[b * MAX_FRAGS + t] = xics[t].Intensities;
+                targetCounts[b] = xics.Count;
                 blockXics[b] = xics;
-                firstScan = Math.Min(firstScan, startScan);
+                firstScan = Math.Min(firstScan, startScans[c]);
                 lastScan = Math.Max(lastScan, endScans[c]);
                 nPassing++;
             }
@@ -1230,6 +1232,67 @@ namespace pwiz.Osprey.Scoring
         not_computed,
         passed,
         failed
+    }
+
+    /// <summary>
+    /// What <see cref="PeakDataExtractor.ComputePrefilterScanMajor"/> resolved for each candidate
+    /// of a window, aligned with its candidate list: the prefilter verdict and, for a prefiltered
+    /// candidate, its expected RT and XIC scan range (start -1 for the others). TryExtract and
+    /// <see cref="PeakDataExtractor.ExtractXicsScanMajor"/> use these rather than resolving the
+    /// range again, so each candidate's range is resolved once.
+    /// </summary>
+    internal sealed class WindowPrefilter
+    {
+        public WindowPrefilter(int nCandidates)
+        {
+            Verdicts = new PrefilterVerdict[nCandidates];
+            StartScans = new int[nCandidates];
+            EndScans = new int[nCandidates];
+            ExpectedRts = new double[nCandidates];
+        }
+
+        public PrefilterVerdict[] Verdicts { get; }
+        public int[] StartScans { get; }
+        public int[] EndScans { get; }
+        public double[] ExpectedRts { get; }
+
+        /// <summary>
+        /// The end (exclusive) of the block of consecutive candidates starting at
+        /// <paramref name="blockStart"/> whose XICs <see cref="PeakDataExtractor.ExtractXicsScanMajor"/>
+        /// extracts at once: at most <paramref name="maxCandidates"/> candidates, and no more
+        /// than fit in <paramref name="maxBytes"/> of XICs, but always at least one candidate.
+        /// The candidate count alone does not bound memory, since a wide RT tolerance (a failed
+        /// calibration's fallback) makes every scan range, and so every XIC, several times longer.
+        /// </summary>
+        public int NextXicBlockEnd(int blockStart, int maxCandidates, long maxBytes)
+        {
+            int nCandidates = Verdicts.Length;
+            int blockLimit = (int)Math.Min(nCandidates, (long)blockStart + maxCandidates);
+            int blockEnd = blockStart;
+            long blockBytes = 0;
+            while (blockEnd < blockLimit)
+            {
+                long bytes = XicBytes(blockEnd);
+                if (blockEnd > blockStart && blockBytes + bytes > maxBytes)
+                    break;
+                blockBytes += bytes;
+                blockEnd++;
+            }
+            return blockEnd;
+        }
+
+        /// <summary>
+        /// An upper bound on the bytes of candidate <paramref name="c"/>'s XICs: one intensity
+        /// array per top fragment plus the shared RT array, over its scan range; 0 for a
+        /// candidate that did not pass, which gets none.
+        /// </summary>
+        private long XicBytes(int c)
+        {
+            if (Verdicts[c] != PrefilterVerdict.passed)
+                return 0;
+            long rangeLen = EndScans[c] - StartScans[c] + 1;
+            return (TopFragmentExtractor.CAL_TOP_N_FRAGMENTS + 1) * rangeLen * sizeof(double);
+        }
     }
 
     /// <summary>

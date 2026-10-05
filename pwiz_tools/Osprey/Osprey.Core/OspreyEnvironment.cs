@@ -495,6 +495,25 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool ScanMajorCalPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_CAL_PREFILTER");
 
+        /// <summary>
+        /// The log line naming the OSPREY_SCAN_MAJOR_* switches set to 0, so a timing run records
+        /// which arm it was; null at the defaults, leaving a default run's log unchanged.
+        /// </summary>
+        public static string DescribeScanMajorSwitches()
+        {
+            var off = new List<string>();
+            if (!ScanMajorPrefilter)
+                off.Add(@"OSPREY_SCAN_MAJOR_PREFILTER=0");
+            if (!ScanMajorXic)
+                off.Add(@"OSPREY_SCAN_MAJOR_XIC=0");
+            if (!ScanMajorCalPrefilter)
+                off.Add(@"OSPREY_SCAN_MAJOR_CAL_PREFILTER=0");
+            if (off.Count == 0)
+                return null;
+            return string.Format(@"Scan-major passes (DIAGNOSTIC): candidate-major for {0}",
+                string.Join(@", ", off));
+        }
+
         /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and

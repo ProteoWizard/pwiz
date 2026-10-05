@@ -49,9 +49,13 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public class CoelutionScorer
     {
-        // Candidates whose XICs ScoreWindow extracts scan-major at once. At ~6 fragments x
-        // ~100-300 scans each, a block's XICs are a few MB per concurrently scored window.
+        // Most candidates whose XICs ScoreWindow extracts scan-major at once, and most bytes of
+        // XICs: a block ends at whichever comes first. At ~6 fragments x ~100-300 scans each,
+        // 512 candidates' XICs are a few MB, but a wide RT tolerance (a failed calibration's
+        // 2 min fallback, or a 3 min maximum) makes each several times longer, so the byte
+        // budget is what bounds the XICs alive per concurrently scored window.
         private const int XIC_BLOCK_SIZE = 512;
+        private const long XIC_BLOCK_BYTES = 4L * 1024 * 1024;
 
         private readonly IScoringDiagnostics _diagnostics;  // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
@@ -143,23 +147,25 @@ namespace pwiz.Osprey.Scoring
                 // spectrum is matched against every candidate while it is in cache. Null when
                 // the prefilter is off (or OSPREY_SCAN_MAJOR_PREFILTER=0), leaving each
                 // candidate's own TryExtract to run it as before.
-                int[] startScans = null, endScans = null;
-                var prefilterVerdicts = OspreyEnvironment.ScanMajorPrefilter
+                var prefilter = OspreyEnvironment.ScanMajorPrefilter
                     ? _extractor.ComputePrefilterScanMajor(candidates, windowSpectra, windowRts,
-                        rtCalibration, globalRtTolerance, context, out startScans, out endScans)
+                        rtCalibration, globalRtTolerance, context)
                     : null;
                 // The passing candidates' fragment XICs, also extracted scan-major, one block of
                 // consecutive candidates at a time to bound the XICs alive at once. Scoring
                 // order is unchanged.
-                bool scanMajorXics = prefilterVerdicts != null && OspreyEnvironment.ScanMajorXic;
+                bool scanMajorXics = prefilter != null && OspreyEnvironment.ScanMajorXic;
 
                 // Score each candidate
-                for (int blockStart = 0; blockStart < candidates.Count; blockStart += XIC_BLOCK_SIZE)
+                int blockEnd;
+                for (int blockStart = 0; blockStart < candidates.Count; blockStart = blockEnd)
                 {
-                    int blockEnd = Math.Min(candidates.Count, blockStart + XIC_BLOCK_SIZE);
+                    blockEnd = scanMajorXics
+                        ? prefilter.NextXicBlockEnd(blockStart, XIC_BLOCK_SIZE, XIC_BLOCK_BYTES)
+                        : candidates.Count;
                     var blockXics = scanMajorXics
                         ? PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd,
-                            prefilterVerdicts, startScans, endScans, windowSpectra, windowRts, config)
+                            prefilter, windowSpectra, windowRts, config)
                         : null;
                     for (int c = blockStart; c < blockEnd; c++)
                     {
@@ -177,8 +183,7 @@ namespace pwiz.Osprey.Scoring
                             ms1Spectra, ms1Calibration,
                             context,
                             ospreyContext, ospreyPeakData,
-                            prefilterVerdicts?[c] ?? PrefilterVerdict.not_computed,
-                            precomputedXics);
+                            prefilter, c, precomputedXics);
 
                         if (fdrEntry != null)
                             entries.Add(fdrEntry);
@@ -216,13 +221,14 @@ namespace pwiz.Osprey.Scoring
             ScoringContext context,
             OspreyScoringContext ospreyContext,
             OspreyPeakData ospreyPeakData,
-            PrefilterVerdict prefilterVerdict,
+            WindowPrefilter prefilter,
+            int prefilterIndex,
             List<XicData> precomputedXics)
         {
             if (!_extractor.TryExtract(
                     candidate, windowSpectra, windowRts, rtCalibration,
                     globalRtTolerance, rtSigma, ms1Spectra, ms1Calibration,
-                    context, ospreyPeakData, prefilterVerdict, precomputedXics, out var ext))
+                    context, ospreyPeakData, prefilter, prefilterIndex, precomputedXics, out var ext))
                 return null;
 
             var bestPeak = ext.BestPeak;

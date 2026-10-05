@@ -56,6 +56,9 @@ namespace pwiz.Osprey.Tasks
         private const double MIN_SNR_FOR_RT_CAL = 5.0;
         private const double MIN_COELUTION_CORR_SCORE = 0.5;
         private const int MIN_COELUTION_SPECTRA = 3;
+        // Calibration entries of a window whose candidate spectra are found scan-major at once,
+        // bounding the candidate lists alive per concurrently scored window.
+        private const int CAL_PREFILTER_BLOCK_SIZE = 512;
         private const double CAL_FDR_THRESHOLD = 0.01;
         // Hard floor for LOESS refit in the two-pass calibration
         // refinement. Matches Rust's ABSOLUTE_MIN_CALIBRATION_POINTS
@@ -1597,28 +1600,36 @@ namespace pwiz.Osprey.Tasks
                             windowPreprocessed[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(windowSpectra[i]);
 
                         var windowEntries = kvp.Value;
-                        List<int>[] candidateIndices = null;
-                        if (OspreyEnvironment.ScanMajorCalPrefilter)
-                        {
-                            var expectedRts = new double[windowEntries.Count];
-                            for (int e = 0; e < windowEntries.Count; e++)
-                                expectedRts[e] = ExpectedCalibrationRt(windowEntries[e], rtSlope, rtIntercept, calibrationModel);
-                            candidateIndices = FindCalibrationCandidatesScanMajor(windowEntries, expectedRts,
-                                windowSpectra, tolerance, config.FragmentTolerance);
-                        }
+                        var expectedRts = new double[windowEntries.Count];
                         for (int e = 0; e < windowEntries.Count; e++)
+                            expectedRts[e] = ExpectedCalibrationRt(windowEntries[e], rtSlope, rtIntercept, calibrationModel);
+                        // Scan-major candidate spectra for one block of entries at a time, in
+                        // their original order, so only one block's lists are alive at once.
+                        int blockSize = OspreyEnvironment.ScanMajorCalPrefilter
+                            ? CAL_PREFILTER_BLOCK_SIZE
+                            : windowEntries.Count;
+                        for (int blockStart = 0; blockStart < windowEntries.Count; blockStart += blockSize)
                         {
-                            var entry = windowEntries[e];
-                            var match = ScoreResolvedCalibrationEntry(
-                                entry, candidateIndices?[e], windowSpectra, windowPreprocessed, ms1Spectra, context,
-                                rtSlope, rtIntercept, tolerance, calibrationModel, localScorer,
-                                out double entrySnr, out double entryLibRt, out double entryMeasuredRt);
-                            if (match != null)
+                            int blockEnd = Math.Min(windowEntries.Count, blockStart + blockSize);
+                            var candidateIndices = OspreyEnvironment.ScanMajorCalPrefilter
+                                ? FindCalibrationCandidatesScanMajor(windowEntries, blockStart, blockEnd,
+                                    expectedRts, windowSpectra, tolerance, config.FragmentTolerance)
+                                : null;
+                            for (int e = blockStart; e < blockEnd; e++)
                             {
-                                matches.Add(match);
-                                snrByEntryId[entry.Id] = entrySnr;
-                                matchRts[entry.Id] = new KeyValuePair<double, double>(
-                                    entryLibRt, entryMeasuredRt);
+                                var entry = windowEntries[e];
+                                var match = ScoreResolvedCalibrationEntry(
+                                    entry, expectedRts[e], candidateIndices?[e - blockStart], windowSpectra,
+                                    windowPreprocessed, ms1Spectra, context, rtSlope, rtIntercept, tolerance,
+                                    calibrationModel, localScorer,
+                                    out double entrySnr, out double entryLibRt, out double entryMeasuredRt);
+                                if (match != null)
+                                {
+                                    matches.Add(match);
+                                    snrByEntryId[entry.Id] = entrySnr;
+                                    matchRts[entry.Id] = new KeyValuePair<double, double>(
+                                        entryLibRt, entryMeasuredRt);
+                                }
                             }
                         }
                         progress.Report(Interlocked.Increment(ref windowsDone));
@@ -1954,9 +1965,11 @@ namespace pwiz.Osprey.Tasks
         /// extract fragment XICs across the window's spectra within the initial RT
         /// tolerance, detect the best co-eluting peak, and compute the four LDA features at
         /// the apex (correlation, LibCosine, top-6 matched, XCorr). Returns null if the entry
-        /// has no viable peak. On pass 1 (calibrationModel == null) expectedRt is the linear
+        /// has no viable peak. <paramref name="expectedRt"/> is the caller's
+        /// <see cref="ExpectedCalibrationRt"/>, the same value its scan-major candidate search
+        /// used: on pass 1 (calibrationModel == null) the linear
         /// (rtSlope * library_rt + rtIntercept) mapping; on pass 2 the LOESS-fitted
-        /// <see cref="RTCalibration"/> predicts expectedRt with a much tighter tolerance.
+        /// <see cref="RTCalibration"/> prediction, with a much tighter tolerance.
         /// <paramref name="windowSpectra"/> is the resolved window's spectra in RT-sorted
         /// order; <paramref name="windowPreprocessed"/> its matching XCorr cache (same
         /// order, may be null). <paramref name="precomputedCandidateIndices"/>, when not null, is
@@ -1965,6 +1978,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private CalibrationMatch ScoreResolvedCalibrationEntry(
             LibraryEntry entry,
+            double expectedRt,
             List<int> precomputedCandidateIndices,
             List<Spectrum> windowSpectra,
             float[][] windowPreprocessed,
@@ -1981,14 +1995,6 @@ namespace pwiz.Osprey.Tasks
             signalToNoise = 0.0;
             libraryRt = entry.RetentionTime;
             measuredRt = 0.0;
-
-            // Compute expected RT for this library entry.
-            // Pass 1 (calibrationModel == null): use the linear pre-fit mapping
-            //     rtSlope * library_rt + rtIntercept
-            // Pass 2 (calibrationModel != null): use the LOESS-fitted prediction
-            //     rtCalibration.Predict(library_rt)
-            // Matches Rust's predict_fn pattern in pipeline.rs:740.
-            double expectedRt = ExpectedCalibrationRt(entry, rtSlope, rtIntercept, calibrationModel);
 
             // Diagnostic: record per-entry m/z + RT window selection.
             // C# selects ONE window per entry (the first match in dictionary order),
@@ -2208,6 +2214,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The measured RT a calibration entry is expected at: the LOESS prediction on pass 2
         /// (<paramref name="calibrationModel"/> not null), the linear pre-fit mapping on pass 1.
+        /// Matches Rust's predict_fn pattern in pipeline.rs:740.
         /// </summary>
         private static double ExpectedCalibrationRt(LibraryEntry entry,
             double rtSlope, double rtIntercept, RTCalibration calibrationModel)
@@ -2240,20 +2247,21 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// <see cref="FindCalibrationCandidates"/> for every entry of a window at once, scan-major:
+        /// <see cref="FindCalibrationCandidates"/> for the entries of a window in
+        /// [<paramref name="blockStart"/>, <paramref name="blockEnd"/>) at once, scan-major:
         /// the outer loop walks the RT-sorted window spectra, the inner loop the entries whose RT
         /// range covers that spectrum, so each spectrum is probed for all of them while its arrays
         /// are in cache, instead of once per entry. Each entry's top-6 fragment windows are
-        /// computed once. Returns one list per entry, aligned with <paramref name="entries"/>,
-        /// equal to what <see cref="FindCalibrationCandidates"/> returns for it given
+        /// computed once. Returns one list per block entry (index e - blockStart), equal to what
+        /// <see cref="FindCalibrationCandidates"/> returns for entry e given
         /// <paramref name="expectedRts"/>[e]: the same RT test and fragment test on each spectrum,
         /// with indices appended in ascending order.
         /// </summary>
         internal static List<int>[] FindCalibrationCandidatesScanMajor(List<LibraryEntry> entries,
-            double[] expectedRts, List<Spectrum> windowSpectra, double initialTolerance,
-            FragmentToleranceConfig fragmentTolerance)
+            int blockStart, int blockEnd, double[] expectedRts, List<Spectrum> windowSpectra,
+            double initialTolerance, FragmentToleranceConfig fragmentTolerance)
         {
-            int nEntries = entries.Count;
+            int nEntries = blockEnd - blockStart;
             int nScans = windowSpectra.Count;
             var candidateIndices = new List<int>[nEntries];
             // With finite RTs in ascending order, the spectra passing the RT test form one
@@ -2277,10 +2285,10 @@ namespace pwiz.Osprey.Tasks
             for (int e = 0; e < nEntries; e++)
             {
                 candidateIndices[e] = new List<int>();
-                fragmentWindowCounts[e] = FragmentMath.GetTopNFragmentWindows(entries[e],
+                fragmentWindowCounts[e] = FragmentMath.GetTopNFragmentWindows(entries[blockStart + e],
                     fragmentTolerance, new Span<double>(fragmentWindows, e * STRIDE, STRIDE));
                 int startScan = 0, endScan = nScans;
-                double expectedRt = expectedRts[e];
+                double expectedRt = expectedRts[blockStart + e];
                 if (rtsSearchable && double.IsFinite(expectedRt))
                 {
                     startScan = FirstScanPastRtOffset(windowSpectra, expectedRt, -initialTolerance, true);
@@ -2323,7 +2331,7 @@ namespace pwiz.Osprey.Tasks
                         active[a] = active[--nActive];
                         continue;
                     }
-                    if (!(Math.Abs(rt - expectedRts[e]) > initialTolerance) &&
+                    if (!(Math.Abs(rt - expectedRts[blockStart + e]) > initialTolerance) &&
                         FragmentMath.HasTopNFragmentMatch(
                             new ReadOnlySpan<double>(fragmentWindows, e * STRIDE, fragmentWindowCounts[e]),
                             spectrum))

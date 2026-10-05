@@ -113,8 +113,11 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// <see cref="HasTopNFragmentMatch(LibraryEntry, double[], FragmentToleranceConfig)"/>
         /// for a spectrum, through its m/z bucket index (<see cref="Spectrum.MzLowerBound"/>):
-        /// the binary search's lower bound, found in O(1). The scoring prefilter's hot path, and
-        /// the one implementation.
+        /// the binary search's lower bound, found in O(1). Computes the entry's windows on every
+        /// call; the scan-major passes, which match one entry against many spectra, compute them
+        /// once with <see cref="GetTopNFragmentWindows"/> and call the
+        /// <see cref="HasTopNFragmentMatch(ReadOnlySpan{double}, Spectrum)"/> overload, the hot
+        /// path and the one implementation.
         /// </summary>
         public static bool HasTopNFragmentMatch(
             LibraryEntry entry, Spectrum spectrum, FragmentToleranceConfig fragTol)
