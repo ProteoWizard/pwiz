@@ -48,10 +48,30 @@ namespace pwiz.Osprey.Core
     /// <para>A failure is reported for the first file, in file order, whose work failed - the file
     /// the sequential loop would have stopped at - and is rethrown as the original exception
     /// rather than inside an <see cref="AggregateException"/>, so its message reaches the
-    /// user.</para>
+    /// user. A later file that also failed while produced ahead is not reported: the sequential
+    /// loop would never have run it. The unordered <see cref="For"/> has no such loop to
+    /// match, and reports every failure - see there.</para>
+    ///
+    /// <para>If a lane's thread cannot be started - the process is out of threads - the lanes
+    /// already started are stopped and waited for before that failure is rethrown, so no lane
+    /// outlives the call.</para>
     /// </summary>
     public static class OrderedFileLanes
     {
+        [ThreadStatic]
+        private static Func<int, Exception> _laneStartFailure;
+
+        /// <summary>
+        /// Test seam: when set, consulted on the calling thread before each lane's thread is
+        /// started, with the lane number; an exception it returns is thrown in place of starting
+        /// that lane, as <see cref="Thread.Start()"/> throws when no thread can be created.
+        /// </summary>
+        internal static Func<int, Exception> LaneStartFailure
+        {
+            get { return _laneStartFailure; }
+            set { _laneStartFailure = value; }
+        }
+
         /// <summary>
         /// Calls <paramref name="produce"/> for every index in [0, <paramref name="count"/>) on up
         /// to <paramref name="lanes"/> threads, and <paramref name="consume"/> with each result on
@@ -127,8 +147,12 @@ namespace pwiz.Osprey.Core
         /// lane holds only the file it is working on, and one slow file never idles the
         /// others.</para>
         ///
-        /// <para>After a failure no lane starts another file. The failure reported is the one at
-        /// the lowest index, rethrown as the original exception.</para>
+        /// <para>After a failure no lane starts another file, but files already running on other
+        /// lanes finish, and may fail too. A single failure is rethrown as the original
+        /// exception, stack intact. More than one is thrown as an <see cref="AggregateException"/>
+        /// of them all in file order - what the <c>Parallel.For</c> this replaces threw - so a
+        /// defect that failed beside a user error is reported as the defect it is, not hidden
+        /// behind the user error's message.</para>
         /// </summary>
         public static void For(int count, int lanes, Action<int> body)
         {
@@ -145,42 +169,51 @@ namespace pwiz.Osprey.Core
 
             var errors = new Exception[count];
             int next = -1;
-            int failed = 0;
-            var threads = new Thread[Math.Min(lanes, count)];
-            for (int t = 0; t < threads.Length; t++)
+            using (var stop = new CancellationTokenSource())
             {
-                threads[t] = new Thread(() =>
+                var threads = new Thread[Math.Min(lanes, count)];
+                for (int t = 0; t < threads.Length; t++)
                 {
-                    while (Volatile.Read(ref failed) == 0)
+                    threads[t] = new Thread(() =>
                     {
-                        int i = Interlocked.Increment(ref next);
-                        if (i >= count)
-                            return;
-                        try
+                        while (!stop.IsCancellationRequested)
                         {
-                            body(i);
+                            int i = Interlocked.Increment(ref next);
+                            if (i >= count)
+                                return;
+                            try
+                            {
+                                body(i);
+                            }
+                            catch (Exception ex)
+                            {
+                                errors[i] = ex;
+                                stop.Cancel();
+                                return;
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            errors[i] = ex;
-                            Volatile.Write(ref failed, 1);
-                            return;
-                        }
-                    }
-                })
+                    })
+                    {
+                        IsBackground = true,
+                        Name = @"OspreyFileLane"
+                    };
+                }
+                int started = 0;
+                try
                 {
-                    IsBackground = true,
-                    Name = @"OspreyFileLane"
-                };
-                threads[t].Start();
+                    for (; started < threads.Length; started++)
+                        StartLane(threads[started], started);
+                }
+                catch
+                {
+                    // No lane takes another file, and none outlives this call.
+                    stop.Cancel();
+                    JoinLanes(threads, started);
+                    throw;
+                }
+                JoinLanes(threads, started);
             }
-            foreach (var thread in threads)
-                thread.Join();
-            foreach (var error in errors)
-            {
-                if (error != null)
-                    ExceptionDispatchInfo.Capture(error).Throw();
-            }
+            ThrowFailures(errors);
         }
 
         private static IEnumerable<T> EnumerateInline<T>(int count, Func<int, T> produce)
@@ -195,6 +228,42 @@ namespace pwiz.Osprey.Core
             // reusing ones that have already been stopped.
             foreach (var result in new Pipeline<T>(count, lanes, produce).Pull())
                 yield return result;
+        }
+
+        private static void StartLane(Thread thread, int lane)
+        {
+            var failure = _laneStartFailure?.Invoke(lane);
+            if (failure != null)
+                throw failure;
+            thread.Start();
+        }
+
+        /// <summary>
+        /// Waits for the first <paramref name="started"/> lanes - the ones whose threads were
+        /// started; joining a thread never started would throw.
+        /// </summary>
+        private static void JoinLanes(Thread[] threads, int started)
+        {
+            for (int t = 0; t < started; t++)
+                threads[t].Join();
+        }
+
+        /// <summary>
+        /// Rethrows the one failure as itself, or several as an <see cref="AggregateException"/>
+        /// in file order.
+        /// </summary>
+        private static void ThrowFailures(Exception[] errors)
+        {
+            var failures = new List<Exception>();
+            foreach (var error in errors)
+            {
+                if (error != null)
+                    failures.Add(error);
+            }
+            if (failures.Count == 1)
+                ExceptionDispatchInfo.Capture(failures[0]).Throw();
+            if (failures.Count > 1)
+                throw new AggregateException(failures);
         }
 
         private sealed class Pipeline<T>
@@ -212,6 +281,7 @@ namespace pwiz.Osprey.Core
             private readonly SemaphoreSlim _slots;
             private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
             private int _next = -1;
+            private int _started;
 
             public Pipeline(int count, int lanes, Func<int, T> produce)
             {
@@ -234,9 +304,9 @@ namespace pwiz.Osprey.Core
 
             public bool Drain(Func<int, T, bool> consume)
             {
-                Start();
                 try
                 {
+                    Start();
                     for (int i = 0; i < _count; i++)
                     {
                         if (!consume(i, Take(i)))
@@ -252,9 +322,9 @@ namespace pwiz.Osprey.Core
 
             public IEnumerable<T> Pull()
             {
-                Start();
                 try
                 {
+                    Start();
                     for (int i = 0; i < _count; i++)
                         yield return Take(i);
                 }
@@ -264,10 +334,14 @@ namespace pwiz.Osprey.Core
                 }
             }
 
+            /// <summary>
+            /// Starts the lanes, counting each as it starts, so a failure to start one leaves
+            /// <see cref="Stop"/> joining exactly the lanes that are running.
+            /// </summary>
             private void Start()
             {
-                foreach (var thread in _threads)
-                    thread.Start();
+                for (; _started < _threads.Length; _started++)
+                    StartLane(_threads[_started], _started);
             }
 
             /// <summary>
@@ -302,8 +376,7 @@ namespace pwiz.Osprey.Core
             private void Stop()
             {
                 _cancel.Cancel();
-                foreach (var thread in _threads)
-                    thread.Join();
+                JoinLanes(_threads, _started);
                 _cancel.Dispose();
                 _slots.Dispose();
             }

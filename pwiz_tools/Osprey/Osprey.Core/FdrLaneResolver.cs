@@ -44,6 +44,8 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class FdrLaneResolver
     {
+        private const double BYTES_PER_GB = 1024.0 * 1024.0 * 1024.0;
+
         /// <summary>
         /// Upper bound on lanes. The largest count measured: on NVMe 6 lanes was still 15%
         /// faster than 3 (CHS, 128 files), while on one HDD the knee was 3 (4 lanes 1.6%
@@ -74,9 +76,9 @@ namespace pwiz.Osprey.Core
         public const double RAM_BUDGET_FRACTION = 0.5;
 
         /// <summary>
-        /// Resolve the lane count. <paramref name="availableBytes"/> of 0 means unknown, and
-        /// then memory does not limit the count; <paramref name="maxRowsPerFile"/> of 0 (no
-        /// rows) likewise. <paramref name="overrideLanes"/> &gt; 0 wins, clamped to the file
+        /// Resolve the lane count. <paramref name="availableBytes"/> of 0 means none free, and
+        /// gives one lane; <paramref name="maxRowsPerFile"/> of 0 (no rows) leaves memory out
+        /// of it. <paramref name="overrideLanes"/> &gt; 0 wins, clamped to the file
         /// count. <paramref name="log"/> (optional) receives one line naming the count and
         /// what limited it.
         /// </summary>
@@ -97,9 +99,12 @@ namespace pwiz.Osprey.Core
             int threadCap = Math.Max(1, nThreads / THREADS_PER_LANE);
             long bytesPerLane = maxRowsPerFile * BYTES_PER_ROW_PER_LANE;
             int memoryCap = int.MaxValue;
-            if (availableBytes > 0 && bytesPerLane > 0)
+            if (bytesPerLane > 0)
             {
-                long budget = (long)(availableBytes * RAM_BUDGET_FRACTION);
+                // Zero free is what SystemMemory reports when memory is exhausted - a cgroup or
+                // GC heap hard limit at its ceiling - so it is the tightest case, not an unknown
+                // one, and gets a single lane.
+                long budget = (long)(Math.Max(0, availableBytes) * RAM_BUDGET_FRACTION);
                 memoryCap = (int)Math.Max(1, Math.Min(int.MaxValue, budget / bytesPerLane));
             }
 
@@ -121,7 +126,5 @@ namespace pwiz.Osprey.Core
             }
             return lanes;
         }
-
-        private const double BYTES_PER_GB = 1024.0 * 1024.0 * 1024.0;
     }
 }

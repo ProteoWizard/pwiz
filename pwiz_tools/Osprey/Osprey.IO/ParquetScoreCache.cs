@@ -1085,6 +1085,22 @@ namespace pwiz.Osprey.IO
                 path, row, entryId, COLUMN_ENTRY_ID, rewriteTask, rowGroup));
         }
 
+        /// <summary>
+        /// <see cref="RequireCharge"/> over a row group whose charges are taken from the library
+        /// (OSPREY_STUB_IDENTITY=1). The library's charge is the right one, but a zero in the
+        /// file still marks a file from the write race, and the walks that take charges from
+        /// the library are the first to read it - left unchecked, the file would pass Stages 5
+        /// and 6 and fail hours later with a remedy that cannot work. One byte column, inside
+        /// the span the walk reads anyway.
+        /// </summary>
+        private static void RequireFileCharges(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, uint[] entryIdCol, int rowGroup, string path)
+        {
+            var chargeCol = ReadColumnByName<byte>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+            for (int row = 0; row < entryIdCol.Length; row++)
+                RequireCharge(chargeCol, rowGroup, row, entryIdCol[row], path);
+        }
+
         #endregion
 
         #region Load FDR Stubs
@@ -1160,7 +1176,9 @@ namespace pwiz.Osprey.IO
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path, Func<uint, bool> keepEntry,
             LibraryStringInterner sequencePool, LibraryIdentity identity)
         {
-            bool fromLibrary = identity != null && OspreyEnvironment.StubIdentity == 1;
+            int identityMode = identity != null ? OspreyEnvironment.StubIdentity : 0;
+            bool fromLibrary = identityMode == 1;
+            bool verifyIdentity = identityMode == 2;
             var stubs = new List<FdrEntry>();
             // Counted separately from stubs.Count, which no longer tracks it once rows are
             // dropped. Advanced only for rows actually decoded, so a row group skipped below
@@ -1189,6 +1207,7 @@ namespace pwiz.Osprey.IO
                         {
                             // Charge, decoy flag and peptide come from the library entry each
                             // entry_id names, exactly as the file would give them.
+                            RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
                             isDecoyCol = new bool[entryIdCol.Length];
                             chargeCol = new byte[entryIdCol.Length];
                             modseqCol = new string[entryIdCol.Length];
@@ -1205,6 +1224,8 @@ namespace pwiz.Osprey.IO
                             isDecoyCol = ReadColumnByName<bool>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
                             chargeCol = ReadColumnByName<byte>(groupReader, fieldsByName, FIELD_CHARGE.Name);
                             modseqCol = ReadStringColumnByName(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
+                            if (verifyIdentity && entryIdCol != null && isDecoyCol != null)
+                                VerifyLibraryIdentity(path, g, entryIdCol, isDecoyCol, chargeCol, modseqCol, identity);
                         }
                         var scanCol = ReadColumnByName<uint>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name);
                         var apexCol = ReadColumnByName<double>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
@@ -1399,6 +1420,7 @@ namespace pwiz.Osprey.IO
                         if (identityMode == 1 && identity != null && entryIdCol != null &&
                             AllInLibrary(entryIdCol, identity))
                         {
+                            RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
                             var coelution = wantCoelution
                                 ? ReadColumnByName<double>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name)
                                 : null;

@@ -39,8 +39,13 @@ namespace pwiz.Osprey.IO
     /// (<see cref="BeginRowGroup"/>), the stream learns which chunks the reader touches - readers
     /// ask for the same columns in every row group - and on a miss reads the whole span of
     /// touched chunks around the one asked for, in one read. Untouched chunks inside the span
-    /// are read through when the gap is small and split the span when it is not. Without
-    /// row-group extents (a sequential file such as a sidecar) it reads fixed-size blocks.</para>
+    /// are read through when the gap is small and split the span when it is not. A chunk already
+    /// read in the current row group is not read again for a neighbor's miss.</para>
+    ///
+    /// <para>Without row-group extents (a sequential file such as a sidecar, or a parquet before
+    /// its first row group) a read that continues the previous disk read reads ahead a fixed-size
+    /// block, and any other read - a format probe such as Parquet.Net's head magic, or a footer
+    /// read - reads exactly what it asks.</para>
     ///
     /// <para>With the gate, concurrent file lanes take turns at the disk - each holding it for
     /// one read - and decode concurrently, instead of interleaving their reads so the disk seeks
@@ -64,10 +69,20 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static Stream OpenRead(string path)
         {
-            int blockMb = OspreyEnvironment.BlockReadMb;
-            if (blockMb <= 0)
+            int blockBytes = BlockBytes(OspreyEnvironment.BlockReadMb);
+            if (blockBytes <= 0)
                 return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return new BlockReadStream(path, blockMb * 1024 * 1024, OspreyEnvironment.BlockReadGate);
+            return new BlockReadStream(path, blockBytes, OspreyEnvironment.BlockReadGate);
+        }
+
+        /// <summary>
+        /// The block size in bytes for a setting of <paramref name="blockMb"/> MB, clamped by
+        /// <see cref="OspreyEnvironment.ClampBlockReadMb"/>; 0 when block reads are off.
+        /// </summary>
+        internal static int BlockBytes(int blockMb)
+        {
+            // In long, though the clamp keeps the result well inside an int.
+            return (int)((long)OspreyEnvironment.ClampBlockReadMb(blockMb) << 20);
         }
 
         /// <summary>
@@ -83,10 +98,13 @@ namespace pwiz.Osprey.IO
         private readonly long _length;
         private readonly bool _gate;
         private readonly int _blockSize;
+        // Allocated on the first fill, sized to it.
         private byte[] _block;
         private long _blockStart;
         private int _blockCount;
         private long _position;
+        // Where the last disk read ended: a read starting there is sequential. -1 before any.
+        private long _lastReadEnd = -1;
         // The current row group's column-chunk extents, by column index, and the column indices
         // in file order. Null until a row group begins.
         private long[] _chunkStart;
@@ -95,17 +113,38 @@ namespace pwiz.Osprey.IO
         // Columns the reader has touched in any row group of this file. Empty until a row group
         // begins.
         private bool[] _touched = Array.Empty<bool>();
+        // Columns whose chunk in the current row group has already been read into the block.
+        private bool[] _delivered = Array.Empty<bool>();
 
         private BlockReadStream(string path, int blockSize, bool gate)
         {
+            if (blockSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(blockSize));
             // Buffer size 1 turns off FileStream's own buffer: each disk read goes straight
             // into the block.
             _file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 1);
-            _length = _file.Length;
+            try
+            {
+                _length = _file.Length;
+            }
+            catch
+            {
+                _file.Dispose();
+                throw;
+            }
             _gate = gate;
             _blockSize = (int)Math.Min(blockSize, Math.Max(1, _length));
-            _block = new byte[_blockSize];
         }
+
+        /// <summary>
+        /// Disk reads this stream has made, for tests.
+        /// </summary>
+        internal int DiskReadCount { get; private set; }
+
+        /// <summary>
+        /// Bytes this stream has read from disk, for tests.
+        /// </summary>
+        internal long DiskReadBytes { get; private set; }
 
         public override bool CanRead => true;
         public override bool CanSeek => true;
@@ -127,6 +166,7 @@ namespace pwiz.Osprey.IO
             int n = columns.Count;
             if (_touched.Length != n)
                 _touched = new bool[n];
+            _delivered = new bool[n];
             _chunkStart = new long[n];
             _chunkEnd = new long[n];
             for (int c = 0; c < n; c++)
@@ -181,11 +221,14 @@ namespace pwiz.Osprey.IO
                     _touched[_fileOrder[k]] = true;
                     PlanSpan(k, out long spanStart, out long spanEnd);
                     FillBlock(spanStart, (int)(spanEnd - spanStart));
+                    MarkDelivered(spanStart, spanEnd);
                 }
-                else if (_fileOrder != null || dest.Length >= _blockSize)
+                else if (_fileOrder != null || dest.Length >= _blockSize || _position != _lastReadEnd)
                 {
-                    // Outside every column chunk (the footer, a page index) or at least a block
-                    // long: read exactly what was asked, straight into the caller's buffer.
+                    // Outside every column chunk (the footer, a page index), at least a block
+                    // long, or not continuing the previous disk read (a format probe such as
+                    // Parquet.Net's head magic, or a footer read): read exactly what was asked,
+                    // straight into the caller's buffer.
                     int n = (int)Math.Min(dest.Length, _length - _position);
                     ReadFromDisk(_position, dest.Slice(0, n));
                     _position += n;
@@ -193,6 +236,7 @@ namespace pwiz.Osprey.IO
                 }
                 else
                 {
+                    // A sequential reader, such as a sidecar walk: read ahead a block.
                     FillBlock(_position, (int)Math.Min(_blockSize, _length - _position));
                 }
             }
@@ -261,7 +305,9 @@ namespace pwiz.Osprey.IO
 
         // The span to read for a miss in the chunk at file-order position k: that chunk plus
         // every touched chunk reachable from it across gaps no longer than MAX_GAP_BYTES, in
-        // both directions, capped at MAX_PLANNED_READ_BYTES.
+        // both directions, capped at MAX_PLANNED_READ_BYTES. It stops at a chunk already read in
+        // this row group: in the first row group a reader decoding adjacent columns one at a
+        // time would otherwise re-read every column before the one it asks for.
         private void PlanSpan(int k, out long spanStart, out long spanEnd)
         {
             int c = _fileOrder[k];
@@ -270,6 +316,8 @@ namespace pwiz.Osprey.IO
             for (int j = k + 1; j < _fileOrder.Length; j++)
             {
                 int col = _fileOrder[j];
+                if (_delivered[col])
+                    break;
                 if (!_touched[col])
                     continue;
                 if (_chunkStart[col] - spanEnd > MAX_GAP_BYTES || _chunkEnd[col] - spanStart > MAX_PLANNED_READ_BYTES)
@@ -279,6 +327,8 @@ namespace pwiz.Osprey.IO
             for (int j = k - 1; j >= 0; j--)
             {
                 int col = _fileOrder[j];
+                if (_delivered[col])
+                    break;
                 if (!_touched[col])
                     continue;
                 if (spanStart - _chunkEnd[col] > MAX_GAP_BYTES || spanEnd - _chunkStart[col] > MAX_PLANNED_READ_BYTES)
@@ -288,10 +338,25 @@ namespace pwiz.Osprey.IO
             spanEnd = Math.Min(spanEnd, _length);
         }
 
+        // Marks every chunk of the current row group that lies wholly in [start, end) as read.
+        private void MarkDelivered(long start, long end)
+        {
+            foreach (int col in _fileOrder)
+            {
+                if (_chunkStart[col] >= start && _chunkEnd[col] <= end)
+                    _delivered[col] = true;
+            }
+        }
+
         private void FillBlock(long start, int count)
         {
-            if (_block.Length < count)
-                _block = new byte[count];
+            if (_block == null || _block.Length < count)
+            {
+                // Grow at least twice over, up to the planned-read cap, so spans that grow a
+                // little at a time do not reallocate the block on every miss.
+                long grown = _block == null ? 0 : Math.Min(2L * _block.Length, MAX_PLANNED_READ_BYTES);
+                _block = new byte[Math.Max(count, grown)];
+            }
             _blockStart = start;
             _blockCount = count;
             ReadFromDisk(start, new Span<byte>(_block, 0, count));
@@ -315,6 +380,9 @@ namespace pwiz.Osprey.IO
             {
                 ReadExactlyAt(start, dest);
             }
+            _lastReadEnd = start + dest.Length;
+            DiskReadCount++;
+            DiskReadBytes += dest.Length;
             BlockReadStats.Add(dest.Length, Stopwatch.GetTimestamp() - t0, waited, _fileOrder != null);
         }
 

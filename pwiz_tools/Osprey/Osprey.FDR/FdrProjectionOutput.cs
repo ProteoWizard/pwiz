@@ -103,6 +103,12 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public sealed class FdrFileRows
     {
+        private readonly double[] _runPrecursorQvalues;
+        private readonly double[] _runPeptideQvalues;
+        private readonly double[] _experimentPrecursorQvalues;
+        private readonly double[] _experimentPeptideQvalues;
+        private readonly double[] _peps;
+
         public FdrFileRows(IReadOnlyList<uint> entryIds, IReadOnlyList<bool> isDecoys,
             IReadOnlyList<byte> charges, IReadOnlyList<string> peptides, double[] scores,
             double[] runPrecursorQvalues, double[] runPeptideQvalues,
@@ -119,12 +125,6 @@ namespace pwiz.Osprey.FDR
             _experimentPeptideQvalues = experimentPeptideQvalues;
             _peps = peps;
         }
-
-        private readonly double[] _runPrecursorQvalues;
-        private readonly double[] _runPeptideQvalues;
-        private readonly double[] _experimentPrecursorQvalues;
-        private readonly double[] _experimentPeptideQvalues;
-        private readonly double[] _peps;
 
         public int Count => Scores.Length;
         public IReadOnlyList<uint> EntryIds { get; }
@@ -272,8 +272,8 @@ namespace pwiz.Osprey.FDR
     /// file's score and both run q-values together, computed from the same rows. What protects a
     /// reader is therefore not who wrote the file but two checks the reader makes itself: the
     /// record count must equal the file's parquet row count, and each record's entry_id must equal
-    /// its parquet row's, position by position. Entry ids repeat across a precursor's rows, so that
-    /// check catches records from other rows but not a reordering within one precursor's rows.
+    /// its parquet row's, position by position. A file's entry ids are unique and ascending (one
+    /// row per precursor, written sorted), so together the two checks pin every record to its row.
     /// Whether a sidecar is current for this build and these settings is the task-validity
     /// stamp's question, not this reader's.</para>
     /// </summary>

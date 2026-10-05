@@ -192,12 +192,6 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Fold one row into the detected-peptide set (targets passing peptide-level run FDR,
-        /// matching Rust pipeline.rs:4301) and the per-peptide best (max) score / best (min)
-        /// run peptide q-value reduction (matching
-        /// <see cref="ProteinFdr.CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>).
-        /// </summary>
-        /// <summary>
         /// Folds in an accumulator that <see cref="Add"/> built over one file's rows alone - on a
         /// file lane, while other files are read. Merged once per file in file order, this leaves
         /// exactly the state <see cref="Add"/> would have reached row by row: the best score is a
@@ -227,6 +221,12 @@ namespace pwiz.Osprey.FDR
             }
         }
 
+        /// <summary>
+        /// Fold one row into the detected-peptide set (targets passing peptide-level run FDR,
+        /// matching Rust pipeline.rs:4301) and the per-peptide best (max) score / best (min)
+        /// run peptide q-value reduction (matching
+        /// <see cref="ProteinFdr.CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>).
+        /// </summary>
         public void Add(string modifiedSequence, bool isDecoy, double score, double runPeptideQvalue)
         {
             if (!isDecoy && runPeptideQvalue <= _runFdr)

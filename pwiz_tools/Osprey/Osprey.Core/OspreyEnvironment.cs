@@ -81,9 +81,22 @@ namespace pwiz.Osprey.Core
         /// this many MB, serving the reader's smaller reads from memory. Default 4. A cold parquet
         /// walk is otherwise many small column-chunk reads, one seek each on a spinning disk.
         /// <c>0</c> reads directly, the pre-#4765 path, kept only for parity testing (see the
-        /// parity-path retirement catalogue).
+        /// parity-path retirement catalogue). Larger values are clamped to
+        /// <see cref="MAX_BLOCK_READ_MB"/>.
         /// </summary>
-        public static readonly int BlockReadMb = ParseIntOrNull(@"OSPREY_BLOCK_READ_MB") ?? 4;
+        public static readonly int BlockReadMb = ClampBlockReadMb(ParseIntOrNull(@"OSPREY_BLOCK_READ_MB") ?? 4);
+
+        /// <summary>The largest <see cref="BlockReadMb"/>: a block is one array.</summary>
+        public const int MAX_BLOCK_READ_MB = 1024;
+
+        /// <summary>
+        /// A <see cref="BlockReadMb"/> setting made safe: 0 (off) for zero or less, otherwise
+        /// at most <see cref="MAX_BLOCK_READ_MB"/>.
+        /// </summary>
+        public static int ClampBlockReadMb(int blockMb)
+        {
+            return blockMb <= 0 ? 0 : Math.Min(blockMb, MAX_BLOCK_READ_MB);
+        }
 
         /// <summary>
         /// OSPREY_BLOCK_READ_GATE: with <see cref="BlockReadMb"/>, only one thread in the process

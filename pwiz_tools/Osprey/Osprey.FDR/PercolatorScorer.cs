@@ -1074,6 +1074,8 @@ namespace pwiz.Osprey.FDR
             bestTarget.TrimExcess();
             bestDecoy.Clear();
             bestDecoy.TrimExcess();
+            runPick.Clear();
+            runPick.TrimExcess();
             dedup = null;
             localSelected = null;
             subsetEntries = null;
@@ -1129,6 +1131,10 @@ namespace pwiz.Osprey.FDR
                 firstOrdinal[f] = firstOrdinal[f - 1] + rowCounts[f - 1];
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
             bool accumulateTreeFeatures = AccumulatesTreeFeatures(gbtModels, percConfig);
+            // The linear contribution report has two readers: --model-diagnostics, which
+            // captures it, and --verbose, which prints it. With neither, the per-row vectors
+            // it is summed from are not kept.
+            bool keepLinearVectors = captureContributions != null || OspreyOutput.Verbose;
             int nonEmptyFiles = 0;
             int g1 = 0;
             // Pass-1 cost attribution on the [PATH] channel. The lane buckets are SUMMED over the
@@ -1173,7 +1179,8 @@ namespace pwiz.Osprey.FDR
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         t = lane1.Stop(LANE1_FEATURES, t);
                         scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, nFeatures,
-                            percConfig.CollectFeatureHistograms, accumulateTreeFeatures, percConfig.NThreads);
+                            percConfig.CollectFeatureHistograms, accumulateTreeFeatures, keepLinearVectors,
+                            percConfig.NThreads);
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
                     // The competition's share of this file, reduced here when it is a first-seen
@@ -1287,6 +1294,7 @@ namespace pwiz.Osprey.FDR
             // Built unconditionally -- see ScoreProjectionAndComputeFdrInPlace for why the
             // single-file shortcut does NOT apply to the aggregate.
             var expAggByEntryId = streamingQ.BuildExperimentAggregateScoreMap();
+            streamingQ.Release();
 
             // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
             // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
@@ -1649,12 +1657,15 @@ namespace pwiz.Osprey.FDR
         /// A tree ensemble scores the whole file first (<see cref="ScoresBeforeRowLoop"/>) and keeps
         /// the vectors only when the report asked for its per-feature distributions
         /// (<paramref name="accumulateTreeFeatures"/>); otherwise the file contributes nothing.
-        /// Returns the scores it also stores on <paramref name="file"/>.
+        /// The linear model keeps them only when the report has a reader
+        /// (<paramref name="keepLinearVectors"/>) - 168 bytes a row, ~0.5 GB for a cohort file,
+        /// held until the consumer reaches the file. Returns the scores it also stores on
+        /// <paramref name="file"/>.
         /// </summary>
         private static double[] ScoreRows(Pass1File file, IReadOnlyList<double[]> featureRows,
             IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
             FeatureStandardizer standardizer, int nFeatures, bool collectHistograms,
-            bool accumulateTreeFeatures, int nThreads)
+            bool accumulateTreeFeatures, bool keepLinearVectors, int nThreads)
         {
             RowBuffer rows = file.Rows;
             int count = rows.Count;
@@ -1666,7 +1677,7 @@ namespace pwiz.Osprey.FDR
                 return scores;
             // checked: one flat array per file, so a file past ~100M rows must fail loudly here
             // rather than wrap the index and overwrite its own vectors.
-            var standardized = new double[checked(count * nFeatures)];
+            var standardized = !linear || keepLinearVectors ? new double[checked(count * nFeatures)] : null;
             var histograms = collectHistograms ? new FeatureContributions.Accumulator(nFeatures, true) : null;
             var featureBuf = new double[nFeatures];
             for (int r = 0; r < count; r++)
@@ -1682,7 +1693,8 @@ namespace pwiz.Osprey.FDR
                 {
                     StandardizeFeatureRow(standardizer, featureBuf, featureRows, (uint)r, rows.CoelutionSums[r], nFeatures);
                 }
-                Array.Copy(featureBuf, 0, standardized, r * nFeatures, nFeatures);
+                if (standardized != null)
+                    Array.Copy(featureBuf, 0, standardized, r * nFeatures, nFeatures);
                 histograms?.AddHistogram(featureBuf, 0, rows.IsDecoys[r]);
             }
             file.Standardized = standardized;

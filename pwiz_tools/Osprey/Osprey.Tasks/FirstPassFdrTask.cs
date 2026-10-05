@@ -1992,7 +1992,7 @@ namespace pwiz.Osprey.Tasks
                         string runName = projections.PerFile[f].Key;
                         var rows = new List<FdrBenchInputWriter.Row>();
                         string fileError = TryStreamFirstPassFileScores(runName, perFileParquetPaths, config, stubIdentity,
-                            (modseq, charge, isDecoy, record) =>
+                            projections.RowCount(f), (modseq, charge, isDecoy, record) =>
                             {
                                 if (isDecoy)
                                     return;
@@ -3157,6 +3157,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Sets <see cref="RunPlan.FirstPassFdrLanes"/> for this stage's per-file phases, before
+        /// the first of them. Free memory is measured here, after Stage 1-4 state is loaded and
+        /// before the first pass grows its own.
+        /// </summary>
+        private static void ResolveFileLanes(PipelineContext ctx, int nFiles, long maxRowsPerFile)
+        {
+            ctx.RunPlan.FirstPassFdrLanes = FdrLaneResolver.Resolve(nFiles, ctx.Config.NThreads,
+                maxRowsPerFile, SystemMemory.AvailablePhysicalBytes(), OspreyEnvironment.FdrFileLanes,
+                ctx.LogInfo);
+        }
+
+        /// <summary>
         /// Projection-buffer first-pass FDR span (issue #4355 step (b) increment ii).
         /// Materializes the thin <see cref="FdrProjectionSet"/> from the cold
         /// hand-off buffer, RELEASES the <see cref="FdrEntry"/> stubs so they are not
@@ -3169,18 +3181,6 @@ namespace pwiz.Osprey.Tasks
         /// Returns <c>null</c> (with <see cref="PipelineContext.ExitCode"/> set) only
         /// on a StopAfterStage5 sidecar-write failure or a survivor-reload fault.
         /// </summary>
-        /// <summary>
-        /// Sets <see cref="RunPlan.FirstPassFdrLanes"/> for this stage's per-file phases, before
-        /// the first of them. Free memory is measured here, after Stage 1-4 state is loaded and
-        /// before the first pass grows its own.
-        /// </summary>
-        private static void ResolveFileLanes(PipelineContext ctx, int nFiles, long maxRowsPerFile)
-        {
-            ctx.RunPlan.FirstPassFdrLanes = FdrLaneResolver.Resolve(nFiles, ctx.Config.NThreads,
-                maxRowsPerFile, SystemMemory.AvailablePhysicalBytes(), OspreyEnvironment.FdrFileLanes,
-                ctx.LogInfo);
-        }
-
         private List<KeyValuePair<string, List<FdrEntry>>> RunFirstPassProjection(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -4148,7 +4148,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     var fileAccumulator = new FirstPassProteinFdrAccumulator(config.RunFdr);
                     string error = TryStreamFirstPassFileScores(projections.PerFile[f].Key, perFileParquetPaths, config, stubIdentity,
-                        (modseq, charge, isDecoy, record) =>
+                        projections.RowCount(f), (modseq, charge, isDecoy, record) =>
                             fileAccumulator.Add(modseq, isDecoy, record.Score, record.RunPeptideQvalue));
                     return (Accumulator: fileAccumulator, Error: error);
                 }, (f, file) =>
@@ -4172,9 +4172,11 @@ namespace pwiz.Osprey.Tasks
 
             // Pass 2: resolve each entry's experiment_protein_qvalue from peptide -> q into the
             // experiment-scope map, which is written once beside the blib after this returns.
-            // The modseq MUST come from the parquet scalars (the same value the pass-1
-            // PeptideQvalues keys were built from), not re-derived from the library, so the
-            // peptide -> q lookup matches.
+            // The modseq must be the one the pass-1 PeptideQvalues keys were built from. Both
+            // come from the same source per row group - the library entry the entry_id names
+            // when the library holds every id (OSPREY_STUB_IDENTITY=1), the parquet otherwise -
+            // and the library entry is exactly the peptide the file was written with, so the
+            // peptide -> q lookup matches either way.
             //
             // Before the v5 scope split this loop REWROTE every file's sidecar to push the
             // value back in - 52.3 GB of serial, un-parallelizable rewrite at 257 files, in the
@@ -4213,10 +4215,11 @@ namespace pwiz.Osprey.Tasks
                             StubColumns.Core | StubColumns.SkipCoelutionSum, stubIdentity);
                         return (Resolved: qByEntryId, Error: null);
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (!(ex is OutOfMemoryException))
                     {
                         // The rows resolved before the failure still apply, as they did when the
-                        // update ran row by row.
+                        // update ran row by row. Out of memory is not a file's fault and must stop
+                        // the run, not become a warning.
                         return (Resolved: qByEntryId, Error: ex.Message);
                     }
                 }, (f, file) =>
@@ -4271,6 +4274,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             LibraryIdentity identity,
+            int parquetRows,
             Action<string, byte, bool, FdrScoreRecord> onRow)
         {
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
@@ -4292,11 +4296,15 @@ namespace pwiz.Osprey.Tasks
                 return string.Format(
                     OspreyTasksResources.FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_, fileName, fdrPath);
             }
-            // Experimental (OSPREY_STUB_IDENTITY=1): the sidecar holds exactly the parquet's
-            // first-pass rows, in parquet-row order, and the library supplies each row's peptide,
+            // OSPREY_STUB_IDENTITY=1 (the default): every sidecar writer emits exactly the
+            // parquet's rows, in parquet-row order, and the library supplies each row's peptide,
             // charge and decoy flag from its entry_id - so when the library holds every id, the
-            // rows stream from the sidecar alone and the parquet is never opened.
+            // rows stream from the sidecar alone and the parquet is never opened. That is the join
+            // below only while the sidecar really is one record per parquet row with unique ids in
+            // the parquet's ascending order; a sidecar that is not - repeated, reordered or extra
+            // records - takes the join, which keeps the last record per id and only parquet rows.
             if (identity != null && OspreyEnvironment.StubIdentity == 1 &&
+                IsOneRecordPerRow(records, parquetRows) &&
                 TryStreamFromLibrary(records, identity, onRow))
             {
                 return null;
@@ -4325,6 +4333,20 @@ namespace pwiz.Osprey.Tasks
                 },
                 StubColumns.Core | StubColumns.SkipCoelutionSum, identity);
             return null;
+        }
+
+        // True when the sidecar holds one record per parquet row with strictly ascending entry
+        // ids - the parquet's own order, since its rows are unique and sorted by entry id.
+        private static bool IsOneRecordPerRow(List<FdrScoreRecord> records, int parquetRows)
+        {
+            if (records.Count != parquetRows)
+                return false;
+            for (int i = 1; i < records.Count; i++)
+            {
+                if (records[i].EntryId <= records[i - 1].EntryId)
+                    return false;
+            }
+            return true;
         }
 
         // The sidecar-only half of TryStreamFirstPassFileScores. False, having emitted nothing,

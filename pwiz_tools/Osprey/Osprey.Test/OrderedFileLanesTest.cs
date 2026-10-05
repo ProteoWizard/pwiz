@@ -20,8 +20,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Test
@@ -45,8 +47,10 @@ namespace pwiz.Osprey.Test
                 AssertStopsWhenConsumerStops(lanes);
                 AssertForVisitsEveryFileOnce(lanes);
             }
+            AssertForReportsEveryConcurrentFailure();
             AssertBoundsLookAhead();
             AssertForDoesNotWaitOnASlowFile();
+            AssertLaneStartFailureStopsStartedLanes();
         }
 
         /// <summary>
@@ -122,8 +126,8 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The unordered form still visits every index exactly once, and reports its lowest
-        /// failing index.
+        /// The unordered form still visits every index exactly once, and a single failure comes
+        /// back as the original exception with the stack it was thrown from.
         /// </summary>
         private static void AssertForVisitsEveryFileOnce(int lanes)
         {
@@ -137,16 +141,58 @@ namespace pwiz.Osprey.Test
             {
                 OrderedFileLanes.For(count, lanes, i =>
                 {
-                    if (i == 3 || i == 17)
-                        throw new InvalidOperationException(i.ToString());
+                    if (i == 3)
+                        ThrowForFile(i);
                 });
                 Assert.Fail(@"no exception");
             }
             catch (InvalidOperationException ex)
             {
-                // Lane timing decides whether 17 is reached before 3 stops the hand-out; when both
-                // fail, 3 is the one reported.
                 Assert.AreEqual(@"3", ex.Message);
+                Assert.IsNotNull(ex.StackTrace);
+                StringAssert.Contains(ex.StackTrace, nameof(ThrowForFile));
+            }
+        }
+
+        /// <summary>
+        /// Two files fail while both are running: neither is dropped. They come back together in
+        /// file order, as the Parallel.For the unordered form replaced reported them, so a defect
+        /// beside a user error still reads as a defect.
+        /// </summary>
+        private static void AssertForReportsEveryConcurrentFailure()
+        {
+            var userError = new IOException(@"cannot open file 0");
+            var defect = new NullReferenceException();
+            // Files 0 and 1 go to different lanes - the one that took 0 is held until 1 has
+            // started - so both are in flight before either fails.
+            using (var bothStarted = new CountdownEvent(2))
+            {
+                try
+                {
+                    OrderedFileLanes.For(10, 4, i =>
+                    {
+                        if (i > 1)
+                            return;
+                        bothStarted.Signal();
+                        Assert.IsTrue(bothStarted.Wait(TimeSpan.FromSeconds(60)));
+                        // The higher index fails first, so the report order cannot be the clock's.
+                        if (i == 0)
+                        {
+                            Thread.Sleep(20);
+                            throw userError;
+                        }
+                        throw defect;
+                    });
+                    Assert.Fail(@"no exception");
+                }
+                catch (AggregateException ex)
+                {
+                    Assert.AreEqual(2, ex.InnerExceptions.Count);
+                    Assert.AreSame(userError, ex.InnerExceptions[0]);
+                    Assert.AreSame(defect, ex.InnerExceptions[1]);
+                    // The mixed aggregate is the defect report, not the user error's message.
+                    Assert.AreSame(ex, CommonExceptionUtil.UnwrapUserException(ex));
+                }
             }
         }
 
@@ -179,24 +225,101 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// The unordered form has no look-ahead bound, so one slow file does not stop the other
-        /// lanes from taking every remaining file.
+        /// lanes from taking every remaining file: file 0 does not finish until all the others
+        /// have, which would never happen if they waited on it.
         /// </summary>
         private static void AssertForDoesNotWaitOnASlowFile()
         {
             const int count = 50;
-            int fastDone = 0;
-            int fastDoneBeforeSlowEnded = -1;
-            OrderedFileLanes.For(count, 4, i =>
+            bool othersFinishedFirst = false;
+            using (var othersDone = new CountdownEvent(count - 1))
             {
-                if (i == 0)
+                OrderedFileLanes.For(count, 4, i =>
                 {
-                    Thread.Sleep(1000);
-                    fastDoneBeforeSlowEnded = Volatile.Read(ref fastDone);
-                    return;
-                }
-                Interlocked.Increment(ref fastDone);
+                    if (i == 0)
+                        othersFinishedFirst = othersDone.Wait(TimeSpan.FromSeconds(60));
+                    else
+                        othersDone.Signal();
+                });
+            }
+            Assert.IsTrue(othersFinishedFirst);
+        }
+
+        /// <summary>
+        /// A lane whose thread cannot be started - as Thread.Start fails when the process is out
+        /// of threads - fails the call with that exception, and the lanes already started are
+        /// stopped and waited for first: none is still running once the call returns. Run, Enumerate
+        /// and For each start their own lanes, so each is checked.
+        /// </summary>
+        private static void AssertLaneStartFailureStopsStartedLanes()
+        {
+            const int count = 200;
+            const int failingLane = 2;
+            AssertLaneStartFailure(failingLane, produce =>
+                OrderedFileLanes.Run(count, 4, produce, (i, result) => { }));
+            AssertLaneStartFailure(failingLane, produce =>
+            {
+                foreach (int result in OrderedFileLanes.Enumerate(count, 4, produce))
+                    Assert.IsTrue(result >= 0);
             });
-            Assert.AreEqual(count - 1, fastDoneBeforeSlowEnded);
+            AssertLaneStartFailure(failingLane, produce =>
+                OrderedFileLanes.For(count, 4, i => produce(i)));
+        }
+
+        /// <summary>
+        /// Fails the start of lane <paramref name="failingLane"/> once a started lane is at work,
+        /// runs <paramref name="runLanes"/> with a produce that records its thread, and checks the
+        /// start failure comes back and every recorded thread has ended.
+        /// </summary>
+        private static void AssertLaneStartFailure(int failingLane, Action<Func<int, int>> runLanes)
+        {
+            var startFailure = new OutOfMemoryException(@"lane start failure");
+            var laneThreads = new List<Thread>();
+            using (var working = new ManualResetEventSlim())
+            {
+                OrderedFileLanes.LaneStartFailure = lane =>
+                {
+                    if (lane != failingLane)
+                        return null;
+                    // Not vacuous: an earlier lane is producing when the start fails.
+                    Assert.IsTrue(working.Wait(TimeSpan.FromSeconds(60)));
+                    return startFailure;
+                };
+                try
+                {
+                    runLanes(i =>
+                    {
+                        lock (laneThreads)
+                        {
+                            if (!laneThreads.Contains(Thread.CurrentThread))
+                                laneThreads.Add(Thread.CurrentThread);
+                        }
+                        working.Set();
+                        Thread.Sleep(5);
+                        return i;
+                    });
+                    Assert.Fail(@"no exception");
+                }
+                catch (OutOfMemoryException ex)
+                {
+                    Assert.AreSame(startFailure, ex);
+                }
+                finally
+                {
+                    OrderedFileLanes.LaneStartFailure = null;
+                }
+            }
+            lock (laneThreads)
+            {
+                Assert.IsTrue(laneThreads.Count > 0);
+                foreach (var thread in laneThreads)
+                    Assert.IsFalse(thread.IsAlive);
+            }
+        }
+
+        private static void ThrowForFile(int i)
+        {
+            throw new InvalidOperationException(i.ToString());
         }
     }
 }

@@ -125,8 +125,9 @@ namespace pwiz.Osprey.Test
             // Memory too tight for even one lane still gives one.
             Assert.AreEqual(1, ResolveLanes(446, 30, chsRows, 4 * GB));
 
-            // Unknown free memory, or no rows, leaves the other limits.
-            Assert.AreEqual(6, ResolveLanes(446, 12, chsRows, 0));
+            // Zero free is exhausted memory - a cgroup or heap limit at its ceiling - not an
+            // unknown: one lane, however many threads. No rows leaves memory out of it.
+            Assert.AreEqual(1, ResolveLanes(446, 12, chsRows, 0, expectLimit: OspreyCoreResources.FdrLaneResolver_Resolve_limit_memory));
             Assert.AreEqual(FdrLaneResolver.MAX_LANES, ResolveLanes(446, 30, 0, 50 * GB));
 
             // The override wins over threads and memory, clamped only to the file count.

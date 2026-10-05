@@ -387,7 +387,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                     if (isDecoy)
                     {
-                        if (score > slot[1]) slot[1] = score;
+                        if (score > slot[1])
+                            slot[1] = score;
                     }
                     else if (score > slot[0])
                     {

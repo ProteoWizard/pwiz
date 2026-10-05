@@ -1114,6 +1114,26 @@ namespace pwiz.Osprey.FDR
             /// re-attaching the bit here recovers the per-entry key the sidecar record uses
             /// without the caller having to mask anything.</para>
             /// </summary>
+            /// <summary>
+            /// Drops the per-precursor and per-peptide bests once every map has been built from
+            /// them; each Build method returns a new map, so nothing built depends on them. The
+            /// file lanes' closures keep this object reachable through pass 2, the stage's memory
+            /// peak, so dropping the reference would not be enough.
+            /// </summary>
+            public void Release()
+            {
+                _precTargets.Clear();
+                _precTargets.TrimExcess();
+                _precDecoys.Clear();
+                _precDecoys.TrimExcess();
+                _peptBest.Clear();
+                _peptBest.TrimExcess();
+                _mb2Targets?.Clear();
+                _mb2Targets?.TrimExcess();
+                _mb2Decoys?.Clear();
+                _mb2Decoys?.TrimExcess();
+            }
+
             public Dictionary<uint, double> BuildExperimentAggregateScoreMap()
             {
                 ResolveExperimentBests(out var targets, out var decoys);
