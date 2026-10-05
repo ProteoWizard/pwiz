@@ -100,6 +100,23 @@ namespace pwiz.Osprey.Core
         public static bool HasTopNFragmentMatch(
             LibraryEntry entry, double[] spectrumMzs, FragmentToleranceConfig fragTol)
         {
+            return HasTopNFragmentMatch(entry, spectrumMzs, null, fragTol);
+        }
+
+        /// <summary>
+        /// <see cref="HasTopNFragmentMatch(LibraryEntry, double[], FragmentToleranceConfig)"/>
+        /// through the spectrum's m/z bucket index (<see cref="Spectrum.MzLowerBound"/>): the
+        /// same lower bound, found in O(1). The scoring prefilter's hot path.
+        /// </summary>
+        public static bool HasTopNFragmentMatch(
+            LibraryEntry entry, Spectrum spectrum, FragmentToleranceConfig fragTol)
+        {
+            return HasTopNFragmentMatch(entry, spectrum.Mzs, spectrum, fragTol);
+        }
+
+        private static bool HasTopNFragmentMatch(
+            LibraryEntry entry, double[] spectrumMzs, Spectrum indexed, FragmentToleranceConfig fragTol)
+        {
             var frags = entry.Fragments;
             if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
                 return true;
@@ -117,8 +134,17 @@ namespace pwiz.Osprey.Core
                 double tolDa = fragTol.ToleranceDa(mz);
                 double lower = mz - tolDa;
                 double upper = mz + tolDa;
-                int lo = 0, hi = spectrumMzs.Length;
-                while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
+                int lo;
+                if (indexed != null)
+                {
+                    lo = indexed.MzLowerBound(lower);
+                }
+                else
+                {
+                    lo = 0;
+                    int hi = spectrumMzs.Length;
+                    while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
+                }
                 if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
                 {
                     matchCount++;

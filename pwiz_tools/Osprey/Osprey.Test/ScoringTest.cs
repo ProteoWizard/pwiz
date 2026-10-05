@@ -1554,6 +1554,92 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
+        #region m/z bucket index
+
+        /// <summary>
+        /// <see cref="MzBucketIndex"/> must return exactly the binary search's lower bound for
+        /// every query - it replaces that search in the scoring hot paths, so any difference
+        /// would silently move a peak match. Checks clustered, duplicate, single-peak and
+        /// all-equal spectra against queries at, between, below, above every peak and NaN, then
+        /// the two scoring entry points through a <see cref="Spectrum"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestMzBucketIndexMatchesBinarySearch()
+        {
+            var random = new Random(4768);
+            var spectra = new List<double[]>
+            {
+                new[] { 500.0 },
+                new[] { 500.0, 500.0, 500.0 },
+                new[] { 100.0, 100.0, 100.5, 200.0, 200.0, 1999.9 },
+                new[] { 150.0, 150.0000001, 150.0000002, 1800.0 },   // a dense cluster, then a gap
+            };
+            for (int s = 0; s < 20; s++)
+            {
+                int n = 1 + random.Next(3000);
+                var mzs = new double[n];
+                double mz = 150 + random.NextDouble() * 10;
+                for (int i = 0; i < n; i++)
+                {
+                    // Mostly fine steps, occasional duplicates and large gaps.
+                    double r = random.NextDouble();
+                    mz += r < 0.05 ? 0 : r < 0.1 ? random.NextDouble() * 200 : random.NextDouble() * 0.5;
+                    mzs[i] = mz;
+                }
+                spectra.Add(mzs);
+            }
+
+            foreach (var mzs in spectra)
+            {
+                var index = new MzBucketIndex(mzs);
+                var queries = new List<double> { double.NaN, double.NegativeInfinity, double.PositiveInfinity,
+                    mzs[0] - 1, mzs[0], mzs[mzs.Length - 1], mzs[mzs.Length - 1] + 1 };
+                foreach (double peak in mzs)
+                {
+                    queries.Add(peak);
+                    queries.Add(peak - 1e-9);
+                    queries.Add(peak + 1e-9);
+                    queries.Add(peak + random.NextDouble());
+                }
+                foreach (double q in queries)
+                {
+                    Assert.AreEqual(ScoringMath.BinarySearchLowerBound(mzs, q), index.LowerBound(mzs, q),
+                        string.Format("Lower bound of {0:R} in a {1}-peak spectrum", q, mzs.Length));
+                }
+            }
+            Assert.AreEqual(0, new MzBucketIndex(new double[0]).LowerBound(new double[0], 500.0));
+
+            // The scoring entry points through a Spectrum agree with their array forms.
+            var tolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm };
+            foreach (var mzs in spectra)
+            {
+                var spectrum = new Spectrum { Mzs = mzs, Intensities = new float[mzs.Length] };
+                for (int k = 0; k < 50; k++)
+                {
+                    double target = mzs[random.Next(mzs.Length)] + (random.NextDouble() - 0.5) * 0.02;
+                    double tolDa = tolerance.ToleranceDa(target);
+                    Assert.AreEqual(
+                        TopFragmentExtractor.FindClosestPeakInWindow(mzs, target, target - tolDa, target + tolDa),
+                        TopFragmentExtractor.FindClosestPeakInWindow(spectrum, target, target - tolDa, target + tolDa));
+                }
+                var entry = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+                var frags = new List<LibraryFragment>();
+                for (int f = 0; f < 6; f++)
+                    frags.Add(new LibraryFragment { Mz = mzs[random.Next(mzs.Length)] + 0.001 * f, RelativeIntensity = 1.0f + f });
+                entry.Fragments = frags;
+                Assert.AreEqual(FragmentMath.HasTopNFragmentMatch(entry, mzs, tolerance),
+                    FragmentMath.HasTopNFragmentMatch(entry, spectrum, tolerance));
+            }
+
+            // A new m/z array replaces the index.
+            var reassigned = new Spectrum { Mzs = new[] { 100.0, 200.0 } };
+            Assert.AreEqual(1, reassigned.MzLowerBound(150.0));
+            reassigned.Mzs = new[] { 160.0, 170.0, 180.0 };
+            Assert.AreEqual(0, reassigned.MzLowerBound(150.0));
+        }
+
+        #endregion
+
         #region Sparse XCorr cache (issue #4398)
 
         /// <summary>
