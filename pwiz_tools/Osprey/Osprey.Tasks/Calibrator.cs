@@ -1596,10 +1596,21 @@ namespace pwiz.Osprey.Tasks
                         for (int i = 0; i < windowSpectra.Count; i++)
                             windowPreprocessed[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(windowSpectra[i]);
 
-                        foreach (var entry in kvp.Value)
+                        var windowEntries = kvp.Value;
+                        List<int>[] candidateIndices = null;
+                        if (OspreyEnvironment.ScanMajorCalPrefilter)
                         {
+                            var expectedRts = new double[windowEntries.Count];
+                            for (int e = 0; e < windowEntries.Count; e++)
+                                expectedRts[e] = ExpectedCalibrationRt(windowEntries[e], rtSlope, rtIntercept, calibrationModel);
+                            candidateIndices = FindCalibrationCandidatesScanMajor(windowEntries, expectedRts,
+                                windowSpectra, tolerance, config.FragmentTolerance);
+                        }
+                        for (int e = 0; e < windowEntries.Count; e++)
+                        {
+                            var entry = windowEntries[e];
                             var match = ScoreResolvedCalibrationEntry(
-                                entry, windowSpectra, windowPreprocessed, ms1Spectra, context,
+                                entry, candidateIndices?[e], windowSpectra, windowPreprocessed, ms1Spectra, context,
                                 rtSlope, rtIntercept, tolerance, calibrationModel, localScorer,
                                 out double entrySnr, out double entryLibRt, out double entryMeasuredRt);
                             if (match != null)
@@ -1948,10 +1959,13 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RTCalibration"/> predicts expectedRt with a much tighter tolerance.
         /// <paramref name="windowSpectra"/> is the resolved window's spectra in RT-sorted
         /// order; <paramref name="windowPreprocessed"/> its matching XCorr cache (same
-        /// order, may be null).
+        /// order, may be null). <paramref name="precomputedCandidateIndices"/>, when not null, is
+        /// the entry's <see cref="FindCalibrationCandidatesScanMajor"/> result, which replaces the
+        /// per-entry RT and top-6 fragment filter.
         /// </summary>
         private CalibrationMatch ScoreResolvedCalibrationEntry(
             LibraryEntry entry,
+            List<int> precomputedCandidateIndices,
             List<Spectrum> windowSpectra,
             float[][] windowPreprocessed,
             List<MS1Spectrum> ms1Spectra,
@@ -1974,9 +1988,7 @@ namespace pwiz.Osprey.Tasks
             // Pass 2 (calibrationModel != null): use the LOESS-fitted prediction
             //     rtCalibration.Predict(library_rt)
             // Matches Rust's predict_fn pattern in pipeline.rs:740.
-            double expectedRt = calibrationModel != null
-                ? calibrationModel.Predict(entry.RetentionTime)
-                : entry.RetentionTime * rtSlope + rtIntercept;
+            double expectedRt = ExpectedCalibrationRt(entry, rtSlope, rtIntercept, calibrationModel);
 
             // Diagnostic: record per-entry m/z + RT window selection.
             // C# selects ONE window per entry (the first match in dictionary order),
@@ -1993,18 +2005,11 @@ namespace pwiz.Osprey.Tasks
 
             // Filter by RT tolerance and top-6 fragment prefilter.
             // Track window indices for preprocessed XCorr lookup.
-            var candidateSpectra = new List<Spectrum>();
-            var candidateWindowIndices = new List<int>();
-            for (int si = 0; si < windowSpectra.Count; si++)
-            {
-                var spec = windowSpectra[si];
-                if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
-                    continue;
-                if (!FragmentMath.HasTopNFragmentMatch(entry, spec, config.FragmentTolerance))
-                    continue;
-                candidateSpectra.Add(spec);
-                candidateWindowIndices.Add(si);
-            }
+            var candidateWindowIndices = precomputedCandidateIndices ??
+                FindCalibrationCandidates(entry, expectedRt, windowSpectra, initialTolerance, config.FragmentTolerance);
+            var candidateSpectra = new List<Spectrum>(candidateWindowIndices.Count);
+            foreach (int si in candidateWindowIndices)
+                candidateSpectra.Add(windowSpectra[si]);
 
             if (candidateSpectra.Count < MIN_COELUTION_SPECTRA)
                 return null;
@@ -2198,6 +2203,160 @@ namespace pwiz.Osprey.Tasks
                 Ms2MassErrors = ms2Errors.ToArray(),
                 Ms1Error = ms1Error
             };
+        }
+
+        /// <summary>
+        /// The measured RT a calibration entry is expected at: the LOESS prediction on pass 2
+        /// (<paramref name="calibrationModel"/> not null), the linear pre-fit mapping on pass 1.
+        /// </summary>
+        private static double ExpectedCalibrationRt(LibraryEntry entry,
+            double rtSlope, double rtIntercept, RTCalibration calibrationModel)
+        {
+            return calibrationModel != null
+                ? calibrationModel.Predict(entry.RetentionTime)
+                : entry.RetentionTime * rtSlope + rtIntercept;
+        }
+
+        /// <summary>
+        /// The window indices of the spectra a calibration entry is scored against, ascending:
+        /// those within <paramref name="initialTolerance"/> of <paramref name="expectedRt"/>
+        /// that hold at least 2 of the entry's top-6 fragments
+        /// (<see cref="FragmentMath.HasTopNFragmentMatch(LibraryEntry, Spectrum, FragmentToleranceConfig)"/>).
+        /// </summary>
+        internal static List<int> FindCalibrationCandidates(LibraryEntry entry, double expectedRt,
+            List<Spectrum> windowSpectra, double initialTolerance, FragmentToleranceConfig fragmentTolerance)
+        {
+            var candidateWindowIndices = new List<int>();
+            for (int si = 0; si < windowSpectra.Count; si++)
+            {
+                var spec = windowSpectra[si];
+                if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
+                    continue;
+                if (!FragmentMath.HasTopNFragmentMatch(entry, spec, fragmentTolerance))
+                    continue;
+                candidateWindowIndices.Add(si);
+            }
+            return candidateWindowIndices;
+        }
+
+        /// <summary>
+        /// <see cref="FindCalibrationCandidates"/> for every entry of a window at once, scan-major:
+        /// the outer loop walks the RT-sorted window spectra, the inner loop the entries whose RT
+        /// range covers that spectrum, so each spectrum is probed for all of them while its arrays
+        /// are in cache, instead of once per entry. Each entry's top-6 fragment windows are
+        /// computed once. Returns one list per entry, aligned with <paramref name="entries"/>,
+        /// equal to what <see cref="FindCalibrationCandidates"/> returns for it given
+        /// <paramref name="expectedRts"/>[e]: the same RT test and fragment test on each spectrum,
+        /// with indices appended in ascending order.
+        /// </summary>
+        internal static List<int>[] FindCalibrationCandidatesScanMajor(List<LibraryEntry> entries,
+            double[] expectedRts, List<Spectrum> windowSpectra, double initialTolerance,
+            FragmentToleranceConfig fragmentTolerance)
+        {
+            int nEntries = entries.Count;
+            int nScans = windowSpectra.Count;
+            var candidateIndices = new List<int>[nEntries];
+            // With finite RTs in ascending order, the spectra passing the RT test form one
+            // contiguous run, found by binary search. Otherwise (a NaN or infinite RT anywhere)
+            // every entry walks the whole window. The exact RT test is applied either way.
+            bool rtsSearchable = double.IsFinite(initialTolerance);
+            for (int s = 0; s < nScans && rtsSearchable; s++)
+            {
+                double rt = windowSpectra[s].RetentionTime;
+                if (!double.IsFinite(rt) || (s > 0 && rt < windowSpectra[s - 1].RetentionTime))
+                    rtsSearchable = false;
+            }
+
+            const int STRIDE = FragmentMath.TOP_N_WINDOW_VALUES;
+            var fragmentWindows = new double[nEntries * STRIDE];
+            var fragmentWindowCounts = new int[nEntries];
+            var endScans = new int[nEntries];
+            var startScans = new int[nEntries];
+            // Entries entering at each scan, as a counting sort on start scan.
+            var enterOffsets = new int[nScans + 1];
+            for (int e = 0; e < nEntries; e++)
+            {
+                candidateIndices[e] = new List<int>();
+                fragmentWindowCounts[e] = FragmentMath.GetTopNFragmentWindows(entries[e],
+                    fragmentTolerance, new Span<double>(fragmentWindows, e * STRIDE, STRIDE));
+                int startScan = 0, endScan = nScans;
+                double expectedRt = expectedRts[e];
+                if (rtsSearchable && double.IsFinite(expectedRt))
+                {
+                    startScan = FirstScanPastRtOffset(windowSpectra, expectedRt, -initialTolerance, true);
+                    endScan = FirstScanPastRtOffset(windowSpectra, expectedRt, initialTolerance, false);
+                }
+                startScans[e] = startScan;
+                endScans[e] = endScan;
+                if (startScan < endScan)
+                    enterOffsets[startScan + 1]++;
+            }
+            for (int s = 0; s < nScans; s++)
+                enterOffsets[s + 1] += enterOffsets[s];
+            var entering = new int[enterOffsets[nScans]];
+            var fillPos = (int[])enterOffsets.Clone();
+            for (int e = 0; e < nEntries; e++)
+            {
+                if (startScans[e] < endScans[e])
+                    entering[fillPos[startScans[e]]++] = e;
+            }
+
+            var active = new int[entering.Length];
+            int nActive = 0;
+            for (int s = 0; s < nScans; s++)
+            {
+                for (int i = enterOffsets[s]; i < enterOffsets[s + 1]; i++)
+                    active[nActive++] = entering[i];
+                if (nActive == 0)
+                    continue;
+
+                var spectrum = windowSpectra[s];
+                double rt = spectrum.RetentionTime;
+                int a = 0;
+                while (a < nActive)
+                {
+                    int e = active[a];
+                    if (s >= endScans[e])
+                    {
+                        // Out of range: swap the last active entry into this slot. Visiting
+                        // order within a scan does not affect any entry's list.
+                        active[a] = active[--nActive];
+                        continue;
+                    }
+                    if (!(Math.Abs(rt - expectedRts[e]) > initialTolerance) &&
+                        FragmentMath.HasTopNFragmentMatch(
+                            new ReadOnlySpan<double>(fragmentWindows, e * STRIDE, fragmentWindowCounts[e]),
+                            spectrum))
+                    {
+                        candidateIndices[e].Add(s);
+                    }
+                    a++;
+                }
+            }
+            return candidateIndices;
+        }
+
+        /// <summary>
+        /// The first index whose RT minus <paramref name="expectedRt"/> exceeds
+        /// <paramref name="offset"/> (or equals it, with <paramref name="orEqual"/>), over spectra
+        /// with finite, ascending RTs. The rounded difference is monotone in the RT, so the
+        /// predicate flips once.
+        /// </summary>
+        private static int FirstScanPastRtOffset(List<Spectrum> spectra, double expectedRt,
+            double offset, bool orEqual)
+        {
+            int lo = 0, hi = spectra.Count;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                double diff = spectra[mid].RetentionTime - expectedRt;
+                bool past = orEqual ? diff >= offset : diff > offset;
+                if (past)
+                    hi = mid;
+                else
+                    lo = mid + 1;
+            }
+            return lo;
         }
 
         /// <summary>

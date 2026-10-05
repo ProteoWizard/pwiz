@@ -485,6 +485,16 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool ScanMajorXic = IsNotZero(@"OSPREY_SCAN_MAJOR_XIC");
 
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_CAL_PREFILTER: evaluate the calibration top-6 fragment prefilter
+        /// for all of a window's calibration entries at once, scan by scan, so each spectrum is
+        /// visited once while its arrays are in cache. DEFAULT ON; set
+        /// OSPREY_SCAN_MAJOR_CAL_PREFILTER=0 for the original entry-by-entry loop, the A/B arm
+        /// for timing. Output is the same either way: each entry gets the same candidate spectra
+        /// in the same order.
+        /// </summary>
+        public static readonly bool ScanMajorCalPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_CAL_PREFILTER");
+
         /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and

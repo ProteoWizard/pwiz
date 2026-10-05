@@ -1312,5 +1312,113 @@ namespace pwiz.Osprey.Test
         }
 
         #endregion
+
+        #region Scan-major calibration prefilter
+
+        // FragmentMath memoizes top-6 m/z by entry Id in a process-wide cache, so every entry
+        // handed to HasTopNFragmentMatch needs a unique Id. A base clear of the other tests'.
+        private const uint SCAN_MAJOR_CAL_ID_BASE = 930000u;
+
+        /// <summary>
+        /// The window-level scan-major calibration prefilter gives every entry the candidate
+        /// window indices, in the same order, that the entry-by-entry loop gives it: over
+        /// windows with repeated RTs, expected RTs inside, near and past both ends of the
+        /// window, a NaN expected RT (which the RT test never rejects), an entry without
+        /// fragments, and a window holding a NaN RT (which falls back to whole-window ranges).
+        /// </summary>
+        [TestMethod]
+        public void TestScanMajorCalibrationPrefilterMatchesEntryMajor()
+        {
+            var random = new Random(2026);
+            var pool = new double[24];
+            for (int p = 0; p < pool.Length; p++)
+                pool[p] = 300.0 + 600.0 * random.NextDouble();
+            var tolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm };
+
+            var entries = new List<LibraryEntry>();
+            var expectedRts = new List<double>();
+            for (int e = 0; e < 300; e++)
+            {
+                var entry = new LibraryEntry(SCAN_MAJOR_CAL_ID_BASE + (uint)e, @"PEPTIDEK", @"PEPTIDEK", 2, 500.0, 0);
+                var fragments = new List<LibraryFragment>();
+                int nFragments = e == 1 ? 0 : 6;
+                for (int f = 0; f < nFragments; f++)
+                {
+                    fragments.Add(new LibraryFragment
+                    {
+                        Mz = f < 4 ? pool[random.Next(pool.Length)] : 100.0 + f,
+                        RelativeIntensity = 1.0f + f
+                    });
+                }
+                entry.Fragments = fragments;
+                entries.Add(entry);
+                // Past both ends of the window too, so some ranges are clipped or empty.
+                expectedRts.Add(e == 0 ? double.NaN : 9.0 + 6.0 * random.NextDouble());
+            }
+
+            var spectra = MakeScanMajorCalSpectra(random, pool, 80);
+            foreach (double rtTolerance in new[] { 0.0, 0.05, 0.3, 10.0 })
+                AssertScanMajorCalCandidatesMatch(entries, expectedRts.ToArray(), spectra, rtTolerance, tolerance);
+            // Not vacuous: the fragment test both keeps and rejects spectra in range.
+            int nKept = AssertScanMajorCalCandidatesMatch(entries, expectedRts.ToArray(), spectra, 10.0, tolerance);
+            Assert.IsTrue(nKept > 0);
+            Assert.IsTrue(nKept < entries.Count * spectra.Count);
+
+            // A NaN RT breaks the sort order assumption: every entry walks the whole window.
+            spectra[40].RetentionTime = double.NaN;
+            AssertScanMajorCalCandidatesMatch(entries, expectedRts.ToArray(), spectra, 0.3, tolerance);
+
+            // No spectra, no entries.
+            AssertScanMajorCalCandidatesMatch(entries, expectedRts.ToArray(), new List<Spectrum>(), 0.3, tolerance);
+            Assert.AreEqual(0, Calibrator.FindCalibrationCandidatesScanMajor(new List<LibraryEntry>(),
+                new double[0], spectra, 0.3, tolerance).Length);
+        }
+
+        // RT-sorted spectra, two per RT for the first quarter (repeated RTs), each drawing the
+        // pool's fragment m/z values at random plus noise peaks.
+        private static List<Spectrum> MakeScanMajorCalSpectra(Random random, double[] pool, int nScans)
+        {
+            var spectra = new List<Spectrum>(nScans);
+            for (int s = 0; s < nScans; s++)
+            {
+                int rtStep = s < nScans / 4 ? s - s % 2 : s;
+                double rt = 10.0 + 0.05 * rtStep;
+                var mzs = new List<double>();
+                foreach (double mz in pool)
+                {
+                    if (random.NextDouble() < 0.3)
+                        mzs.Add(mz);
+                }
+                for (int n = 0; n < 20; n++)
+                    mzs.Add(200.0 + 800.0 * random.NextDouble());
+                mzs.Sort();
+                var intensities = new float[mzs.Count];
+                for (int i = 0; i < intensities.Length; i++)
+                    intensities[i] = 100f;
+                spectra.Add(new Spectrum { Mzs = mzs.ToArray(), Intensities = intensities, RetentionTime = rt });
+            }
+            return spectra;
+        }
+
+        // Returns the number of candidate spectra over all entries.
+        private static int AssertScanMajorCalCandidatesMatch(List<LibraryEntry> entries, double[] expectedRts,
+            List<Spectrum> spectra, double rtTolerance, FragmentToleranceConfig tolerance)
+        {
+            var scanMajor = Calibrator.FindCalibrationCandidatesScanMajor(entries, expectedRts, spectra,
+                rtTolerance, tolerance);
+            Assert.AreEqual(entries.Count, scanMajor.Length);
+            int nCandidates = 0;
+            for (int e = 0; e < entries.Count; e++)
+            {
+                var expected = Calibrator.FindCalibrationCandidates(entries[e], expectedRts[e], spectra,
+                    rtTolerance, tolerance);
+                CollectionAssert.AreEqual(expected, scanMajor[e],
+                    string.Format(@"entry {0}, RT tolerance {1}", e, rtTolerance));
+                nCandidates += expected.Count;
+            }
+            return nCandidates;
+        }
+
+        #endregion
     }
 }
