@@ -576,6 +576,11 @@ namespace pwiz.Osprey.Scoring
             var verdicts = new PrefilterVerdict[nCandidates];
             var startScans = new int[nCandidates];
             var endScans = new int[nCandidates];
+            // Each candidate's top-6 fragment m/z windows, computed once rather than per scan.
+            const int STRIDE = FragmentMath.TOP_N_WINDOW_VALUES;
+            var fragmentWindows = new double[nCandidates * STRIDE];
+            var fragmentWindowCounts = new int[nCandidates];
+            var fragmentTolerance = config.FragmentTolerance;
             // Candidates entering at each scan, as a counting sort on start scan.
             var enterOffsets = new int[nScans + 1];
             for (int c = 0; c < nCandidates; c++)
@@ -589,6 +594,8 @@ namespace pwiz.Osprey.Scoring
                 }
                 startScans[c] = startScan;
                 endScans[c] = endScan;
+                fragmentWindowCounts[c] = FragmentMath.GetTopNFragmentWindows(candidates[c],
+                    fragmentTolerance, new Span<double>(fragmentWindows, c * STRIDE, STRIDE));
                 enterOffsets[startScan + 1]++;
             }
             for (int s = 0; s < nScans; s++)
@@ -607,7 +614,6 @@ namespace pwiz.Osprey.Scoring
             var ringSums = new byte[nCandidates];
             var active = new int[entering.Length];
             int nActive = 0;
-            var fragmentTolerance = config.FragmentTolerance;
             for (int s = 0; s < nScans; s++)
             {
                 for (int e = enterOffsets[s]; e < enterOffsets[s + 1]; e++)
@@ -619,7 +625,8 @@ namespace pwiz.Osprey.Scoring
                 {
                     int c = active[a];
                     bool passes = FragmentMath.HasTopNFragmentMatch(
-                        candidates[c], spectrum, fragmentTolerance);
+                        new ReadOnlySpan<double>(fragmentWindows, c * STRIDE, fragmentWindowCounts[c]),
+                        spectrum);
                     int offset = s - startScans[c];
                     int bit = 1 << (offset % PREFILTER_WINDOW);
                     if ((ring[c] & bit) != 0)
