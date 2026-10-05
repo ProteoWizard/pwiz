@@ -135,8 +135,9 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
-        /// The provider that reads and writes the user scoped settings. Tests point its
-        /// ConfigFolder at a folder of their own to keep a settings file of their own.
+        /// The provider that reads and writes the user scoped settings. Point its
+        /// <see cref="UserConfigSettingsProvider.ConfigFilePath"/> at another file to read or
+        /// write the settings of another installation.
         /// </summary>
         public UserConfigSettingsProvider UserConfigProvider
         {

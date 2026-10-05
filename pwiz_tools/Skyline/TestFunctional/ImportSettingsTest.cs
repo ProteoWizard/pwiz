@@ -64,13 +64,11 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var provider = Settings.Default.UserConfigProvider;
-            string originalConfigFolder = provider.ConfigFolder;
             _toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
             DirectoryEx.SafeDelete(_toolsDirectory);
             try
             {
-                var other = WriteOtherInstallation(provider);
+                var other = WriteOtherInstallation();
                 // Also an installation that is no longer in Programs and Features, whose
                 // settings can be imported but which cannot be uninstalled
                 var stale = new SkylineInstallation
@@ -80,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
                     ExecutableFolder = Path.GetDirectoryName(other.ExecutableFolder),
                     UserConfigFile = other.UserConfigFile
                 };
-                WriteOwnSettings(provider, TestFilesDir.GetTestPath(@"Own"));
+                WriteOwnSettings();
 
                 TestImportReplacesSettingsAndCopiesTools(other, stale);
                 TestCanceledImportIsUndone(other);
@@ -89,7 +87,6 @@ namespace pwiz.SkylineTestFunctional
             }
             finally
             {
-                provider.ConfigFolder = originalConfigFolder;
                 DirectoryEx.SafeDelete(_toolsDirectory);
             }
         }
@@ -177,7 +174,7 @@ namespace pwiz.SkylineTestFunctional
                     new ToolDescription(OWN_TOOL_TITLE, @"own.exe", string.Empty)));
 
                 var source = new Settings();
-                source.UserConfigProvider.ConfigFolder = other.ExecutableFolder;
+                source.UserConfigProvider.ConfigFilePath = other.UserConfigFile;
                 source.AnnotationColor = SOURCE_ANNOTATION_COLOR;
                 source.LibraryDirectory = SOURCE_LIBRARY_DIRECTORY;
                 source.ToolList = ToolList.CopyTools(source.ToolList.Append(
@@ -251,10 +248,9 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Writes the settings file of the other installation, along with the external tool it
-        /// names under its own Tools folder, by pointing the settings provider at that folder
-        /// for the duration.
+        /// names under its own Tools folder.
         /// </summary>
-        private SkylineInstallation WriteOtherInstallation(UserConfigSettingsProvider provider)
+        private SkylineInstallation WriteOtherInstallation()
         {
             string otherFolder = TestFilesDir.GetTestPath(@"Other");
             string toolDir = Path.Combine(otherFolder, @"Tools", TOOL_FOLDER);
@@ -262,27 +258,27 @@ namespace pwiz.SkylineTestFunctional
             string toolPath = Path.Combine(toolDir, TOOL_FILE);
             File.WriteAllText(toolPath, @"@echo off");
 
-            provider.ConfigFolder = otherFolder;
-            Settings.Default.InstallationId = OTHER_INSTALLATION_ID;
-            Settings.Default.AnnotationColor = OTHER_ANNOTATION_COLOR;
+            var otherSettings = new Settings();
+            otherSettings.UserConfigProvider.ConfigFilePath = Path.Combine(otherFolder, UserConfigSettingsProvider.CONFIG_FILE_NAME);
+            otherSettings.InstallationId = OTHER_INSTALLATION_ID;
+            otherSettings.AnnotationColor = OTHER_ANNOTATION_COLOR;
             var tool = new ToolDescription(TOOL_TITLE, toolPath, string.Empty) { ToolDirPath = toolDir };
-            Settings.Default.ToolList = ToolList.CopyTools(new[] { tool });
-            Settings.Default.Save();
+            otherSettings.ToolList = ToolList.CopyTools(new[] { tool });
+            otherSettings.Save();
 
             return new SkylineInstallation
             {
                 ProductName = @"ExampleProductName",
                 Version = @"26.1.1.209",
                 ExecutableFolder = otherFolder,
-                UserConfigFile = provider.ConfigFilePath,
+                UserConfigFile = otherSettings.SettingsFilePath,
                 IsCurrentlyInstalled = true,
                 UninstallCommand = UNINSTALL_COMMAND
             };
         }
 
-        private static void WriteOwnSettings(UserConfigSettingsProvider provider, string ownFolder)
+        private static void WriteOwnSettings()
         {
-            provider.ConfigFolder = ownFolder;
             Settings.Default.InstallationId = OWN_INSTALLATION_ID;
             Settings.Default.AnnotationColor = 0;
             Settings.Default.ToolList = new ToolList();

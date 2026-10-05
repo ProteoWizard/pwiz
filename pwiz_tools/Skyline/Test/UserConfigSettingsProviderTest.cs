@@ -182,7 +182,10 @@ namespace pwiz.SkylineTest
         {
             var folder = TestFilesDir.GetTestPath(folderName);
             Directory.CreateDirectory(folder);
-            var provider = new UserConfigSettingsProvider { ConfigFolder = folder };
+            var provider = new UserConfigSettingsProvider
+            {
+                ConfigFilePath = Path.Combine(folder, UserConfigSettingsProvider.CONFIG_FILE_NAME)
+            };
             provider.Initialize(null, null);
             return provider;
         }

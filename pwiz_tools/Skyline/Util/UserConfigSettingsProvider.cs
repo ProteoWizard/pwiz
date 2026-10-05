@@ -208,29 +208,13 @@ namespace pwiz.Skyline.Util
         }
 
         private readonly LocalFileSettingsProvider _applicationScopedProvider = new LocalFileSettingsProvider();
-        private string _configFolder;
 
         /// <summary>
-        /// Folder that holds user.config. Defaults to <see cref="GetDefaultConfigFolder"/>.
-        /// Set this to store settings somewhere else, which is what a test wanting its own
-        /// settings file should do.
+        /// The file the settings are read from and written to: user.config in
+        /// <see cref="GetDefaultConfigFolder"/>, unless set to another file, as when reading the
+        /// settings of another installation or a copy of them.
         /// </summary>
-        public string ConfigFolder
-        {
-            get { return _configFolder ?? (_configFolder = GetDefaultConfigFolder()); }
-            set { _configFolder = value; }
-        }
-
-        /// <summary>
-        /// Name of the settings file in <see cref="ConfigFolder"/>. Something other than
-        /// user.config only for reading a copy of one, as the settings merge does.
-        /// </summary>
-        public string ConfigFileName { get; set; } = CONFIG_FILE_NAME;
-
-        public string ConfigFilePath
-        {
-            get { return Path.Combine(ConfigFolder, ConfigFileName); }
-        }
+        public string ConfigFilePath { get; set; } = Path.Combine(GetDefaultConfigFolder(), CONFIG_FILE_NAME);
 
         public override string ApplicationName { get; set; }
 

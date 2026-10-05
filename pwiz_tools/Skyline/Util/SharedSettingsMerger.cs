@@ -132,9 +132,7 @@ namespace pwiz.Skyline.Util
         private static Settings ReadSettings(string configFilePath)
         {
             var settings = new Settings();
-            var provider = settings.UserConfigProvider;
-            provider.ConfigFolder = Path.GetDirectoryName(configFilePath);
-            provider.ConfigFileName = Path.GetFileName(configFilePath);
+            settings.UserConfigProvider.ConfigFilePath = configFilePath;
             return settings;
         }
     }
