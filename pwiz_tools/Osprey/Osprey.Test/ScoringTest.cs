@@ -1623,6 +1623,40 @@ namespace pwiz.Osprey.Test
             double denseScore = scorer.XcorrFromPreprocessed(dense, entry, new bool[nBins]);
             double sparseScore = scorer.XcorrFromSparse(sparse, entry, new bool[nBins]);
             Assert.AreEqual(denseScore, sparseScore, 0.0, "XcorrFromSparse must match XcorrFromPreprocessed exactly");
+
+            // Through the HRAM strategy's window cache, which fills each row on demand from one
+            // scratch it holds for the window: every row, filled in any order, must score exactly
+            // as a spectrum preprocessed on its own, and a row filled before release must still be
+            // served after it (not fall back to the live f64 path).
+            var windowSpectra = new List<Spectrum>();
+            for (int s = 0; s < 4; s++)
+            {
+                var shifted = new double[spectrum.Mzs.Length];
+                for (int i = 0; i < shifted.Length; i++)
+                    shifted[i] = spectrum.Mzs[i] + s * 0.37;
+                windowSpectra.Add(new Spectrum { Mzs = shifted, Intensities = spectrum.Intensities });
+            }
+            var expectedScores = new double[windowSpectra.Count];
+            for (int s = 0; s < windowSpectra.Count; s++)
+            {
+                expectedScores[s] = scorer.XcorrFromSparse(
+                    scorer.PreprocessSpectrumForXcorrSparse(windowSpectra[s], new XcorrScratch(nBins)), entry, new bool[nBins]);
+            }
+            var hram = ResolutionStrategy.Create(ResolutionMode.HRAM);
+            var pool = new XcorrScratchPool(nBins);
+            var cache = hram.PreprocessWindowSpectra(windowSpectra, scorer, pool);
+            var filled = new[] { 2, 0, 3 };     // out of order; row 1 is never filled
+            foreach (int s in filled)
+            {
+                Assert.AreEqual(expectedScores[s], hram.ScoreXcorr(cache, s, windowSpectra[s], entry, scorer, pool), 0.0,
+                    string.Format("On-demand row {0} must match its own preprocessing", s));
+            }
+            hram.ReleaseWindowCache(cache, pool);
+            foreach (int s in filled)
+            {
+                Assert.AreEqual(expectedScores[s], hram.ScoreXcorr(cache, s, windowSpectra[s], entry, scorer, pool), 0.0,
+                    string.Format("Row {0} filled before release must be served after it", s));
+            }
         }
 
         /// <summary>

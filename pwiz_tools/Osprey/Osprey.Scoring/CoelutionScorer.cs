@@ -117,10 +117,8 @@ namespace pwiz.Osprey.Scoring
             for (int i = 0; i < windowSpectra.Count; i++)
                 windowRts[i] = windowSpectra[i].RetentionTime;
 
-            // The window's XCorr cache, via the resolution strategy: Unit-res preprocesses
-            // every spectrum up front (small dense arrays, matching Rust pipeline.rs:5954-5957),
-            // HRAM fills each spectrum on demand when a candidate first needs it. Released,
-            // with its rented scratch, once all candidates for this window are scored.
+            // The window's XCorr cache (see IResolutionStrategy.PreprocessWindowSpectra);
+            // released once all candidates for this window are scored.
             var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
                 windowSpectra, scorer, context.XcorrScratchPool);
 

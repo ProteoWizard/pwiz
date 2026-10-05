@@ -50,7 +50,9 @@ namespace pwiz.Osprey.Scoring
         internal readonly SparseXcorrSpectrum[] Sparse;
         internal readonly bool[] VisitedBins;
         // On-demand HRAM fill: the window's spectra, the scorer that preprocesses them and the
-        // scratch rented for the window's lifetime (returned by ReleaseWindowCache).
+        // scratch rented for the window's lifetime (returned by ReleaseWindowCache). The scratch
+        // is for filling only - each fill clears the buffers it reads, but leaves them dirty, so
+        // it must never be handed to XcorrAtScan, which expects the pool's zeroed buffers.
         internal readonly IList<Spectrum> Spectra;
         internal readonly SpectralScorer Scorer;
         internal XcorrScratch Scratch;
@@ -87,15 +89,19 @@ namespace pwiz.Osprey.Scoring
         SpectralScorer CreateScorer();
 
         /// <summary>
-        /// Pre-preprocess all spectra in a window for XCorr. Returns a
-        /// strategy-typed cache handle. Caller releases via
-        /// <see cref="ReleaseWindowCache"/> at end of window.
+        /// Create a window's XCorr cache. Returns a strategy-typed cache handle. Unit
+        /// resolution preprocesses every spectrum here; HRAM preprocesses each one the first
+        /// time <see cref="ScoreXcorr"/> asks for it, so the cache keeps
+        /// <paramref name="spectra"/> and reads it until release: the list and its spectra
+        /// must not change, and the cache must be used from one thread at a time. Caller
+        /// releases via <see cref="ReleaseWindowCache"/> at end of window.
         /// </summary>
         WindowXcorrCache PreprocessWindowSpectra(IList<Spectrum> spectra,
             SpectralScorer scorer, XcorrScratchPool scratchPool);
 
         /// <summary>Release rented buffers from a cache produced by
-        /// <see cref="PreprocessWindowSpectra"/>. Pass the same cache back.</summary>
+        /// <see cref="PreprocessWindowSpectra"/>. Pass the same cache back. Rows already filled
+        /// are still served afterwards; no new rows are filled.</summary>
         void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool);
 
         /// <summary>Pool-aware scoring for a library entry at one spectrum.</summary>
@@ -207,14 +213,21 @@ namespace pwiz.Osprey.Scoring
             Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
             XcorrScratchPool scratchPool)
         {
-            if (preprocessed != null && preprocessed.Sparse != null && preprocessed.Scratch != null &&
+            if (preprocessed != null && preprocessed.Sparse != null &&
                 spectrumIndex >= 0 && spectrumIndex < preprocessed.Sparse.Length)
             {
-                // The window's own spectrum and scorer, so a spectrum preprocessed on demand is the
-                // one the whole-window loop this replaced would have produced.
-                var sparse = preprocessed.Sparse[spectrumIndex] ??= preprocessed.Scorer.PreprocessSpectrumForXcorrSparse(
-                    preprocessed.Spectra[spectrumIndex], preprocessed.Scratch);
-                return scorer.XcorrFromSparse(sparse, entry, preprocessed.VisitedBins);
+                // A filled row is served whether or not the window still holds its scratch, so a
+                // released cache returns the same (f32-narrowed) values rather than the live f64
+                // path's. Only filling needs the scratch. The window's own spectrum and scorer, so
+                // a spectrum preprocessed on demand is the one an up-front loop would have produced.
+                var sparse = preprocessed.Sparse[spectrumIndex];
+                if (sparse == null && preprocessed.Scratch != null)
+                {
+                    sparse = preprocessed.Sparse[spectrumIndex] = preprocessed.Scorer.PreprocessSpectrumForXcorrSparse(
+                        preprocessed.Spectra[spectrumIndex], preprocessed.Scratch);
+                }
+                if (sparse != null)
+                    return scorer.XcorrFromSparse(sparse, entry, preprocessed.VisitedBins);
             }
 
             if (scratchPool == null)
