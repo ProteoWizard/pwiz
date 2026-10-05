@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
@@ -21,6 +22,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         public ChooseViewsControl()
         {
             InitializeComponent();
+            ImageListScaler.ScaleToDpi(this, imageList1);   // 16x16 icons are a 96-DPI design (issue #4599)
         }
 
         [Browsable(false)]

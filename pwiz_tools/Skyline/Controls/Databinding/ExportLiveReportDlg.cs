@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
@@ -50,6 +51,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public ExportLiveReportDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+            ImageListScaler.ScaleToDpi(this, imageList1);   // 16x16 icons are a 96-DPI design (issue #4599)
             Icon = Resources.Skyline;
             _skylineWindow = skylineWindow;
             Debug.Assert(indexLocalizedLanguage == comboLanguage.Items.Count);
