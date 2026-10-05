@@ -76,6 +76,7 @@
     <Compile Include="ConfigFormFunctionalTest.cs" />
     <Compile Include="MainFormFunctionalTest.cs" />
     <Compile Include="TemplateFileDependencyTest.cs" />
+    <Compile Include="SkylineInstallationsTest.cs" />
     <Compile Include="SkylineSettingsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConfigRunnerTest.cs" />

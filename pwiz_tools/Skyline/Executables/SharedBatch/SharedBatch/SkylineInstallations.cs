@@ -1,6 +1,7 @@
 /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +21,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security;
+using Microsoft.Win32;
 using SharedBatch.Properties;
 
 namespace SharedBatch
@@ -53,19 +56,27 @@ namespace SharedBatch
         /// </summary>
         public static string TestAdminSkylineCmdPath { get; set; }
 
+        /// <summary>
+        /// Test seam: the registry key path used in place of <c>Software\MacCossLabUW</c>. The Inno Setup
+        /// installer writes each channel's install folder to the InstallDir value of
+        /// <c>Software\MacCossLabUW\&lt;channel&gt;</c>.
+        /// </summary>
+        public static string TestInnoRegistryKey { get; set; }
+
         public static bool HasLocalSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineLocalCommandPath);
 
         public static bool HasCustomSkylineCmd => !string.IsNullOrEmpty(Settings.Default.SkylineCustomCmdPath) && File.Exists(Settings.Default.SkylineCustomCmdPath);
 
-        public static bool HasSkyline => !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
+        public static bool HasSkyline => !string.IsNullOrEmpty(Settings.Default.SkylineInnoCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
 
-        public static bool HasSkylineDaily => !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
+        public static bool HasSkylineDaily => !string.IsNullOrEmpty(Settings.Default.SkylineDailyInnoCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath) || !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
 
         #region Skyline
 
         public static bool FindSkyline()
         {
             FindLocalSkyline();
+            FindInnoInstallations();
             FindClickOnceInstallations();
             FindAdministrativeInstallations();
             return HasSkyline || HasSkylineDaily || HasLocalSkylineCmd || HasCustomSkylineCmd;
@@ -75,6 +86,52 @@ namespace SharedBatch
         {
             var skylineCmdPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, SkylineCmdExe);
             Settings.Default.SkylineLocalCommandPath = File.Exists(skylineCmdPath) ? skylineCmdPath : null;
+        }
+
+        private static void FindInnoInstallations()
+        {
+            Settings.Default.SkylineInnoCmdPath = FindInnoSkylineCmd(Skyline);
+            Settings.Default.SkylineDailyInnoCmdPath = FindInnoSkylineCmd(SkylineDaily);
+        }
+
+        /// <summary>
+        /// Returns the SkylineCmd.exe of an Inno Setup install of the channel, or null. Looks in the install
+        /// folder the installer records in HKCU, then in HKLM.
+        /// </summary>
+        private static string FindInnoSkylineCmd(string channel)
+        {
+            return GetSkylineCmdInDir(GetInnoInstallDir(RegistryHive.CurrentUser, channel)) ??
+                   GetSkylineCmdInDir(GetInnoInstallDir(RegistryHive.LocalMachine, channel));
+        }
+
+        private static string GetSkylineCmdInDir(string installDir)
+        {
+            // A registry value can hold anything, and Path.Combine throws on characters not allowed in a path.
+            if (string.IsNullOrEmpty(installDir) || installDir.IndexOfAny(Path.GetInvalidPathChars()) >= 0 ||
+                !Path.IsPathRooted(installDir))
+            {
+                return null;
+            }
+            var cmdPath = Path.Combine(installDir, SkylineCmdExe);
+            return File.Exists(cmdPath) ? cmdPath : null;
+        }
+
+        private static string GetInnoInstallDir(RegistryHive hive, string channel)
+        {
+            var channelKeyPath = (TestInnoRegistryKey ?? @"Software\MacCossLabUW") + @"\" + channel;
+            try
+            {
+                // The installer runs in 64-bit mode, so an all-users install writes to the 64-bit view of HKLM.
+                using (var baseKey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64))
+                using (var channelKey = baseKey.OpenSubKey(channelKeyPath))
+                {
+                    return channelKey?.GetValue(@"InstallDir") as string;
+                }
+            }
+            catch (Exception e) when (e is SecurityException || e is UnauthorizedAccessException || e is IOException)
+            {
+                return null;
+            }
         }
 
         private static void FindClickOnceInstallations()

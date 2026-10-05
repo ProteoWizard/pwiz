@@ -1,6 +1,7 @@
 /*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -217,6 +218,9 @@ namespace AutoQC
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade(); // This should copy all the settings from the previous version
+                // Upgrade() also copies the previous version's Skyline installation paths over the ones
+                // InitSkylineSettings() just found, so find them again.
+                SkylineInstallations.FindSkyline();
                 Settings.Default.SettingsUpgradeRequired = false;
                 Settings.Default.Save();
                 Settings.Default.Reload();
@@ -278,11 +282,11 @@ namespace AutoQC
             {
                 if (SkylineInstallations.HasSkyline)
                 {
-                    ProgramLog.Info(string.Format("Found SkylineRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineRunnerPath));
+                    ProgramLog.Info(string.Format("The Skyline option uses: {0}.", new SkylineSettings(SkylineType.Skyline, null).CmdPath));
                 }
                 if (SkylineInstallations.HasSkylineDaily)
                 {
-                    ProgramLog.Info(string.Format("Found SkylineDailyRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineDailyRunnerPath));
+                    ProgramLog.Info(string.Format("The Skyline-daily option uses: {0}.", new SkylineSettings(SkylineType.SkylineDaily, null).CmdPath));
                 }
                 // Save the Skyline settings otherwise, in a new installation of AutoQC Loader, "Skyline" and "Skyline Daily" options
                 // are disabled in the "Skyline" tab.
