@@ -52,11 +52,7 @@ namespace pwiz.Common.SystemUtil
         {
             get
             {
-                if (ExceptionDetail != null)
-                {
-                    return ExceptionDetail.ToString();
-                }
-                return base.Message;
+                return ExceptionDetail?.ToString() ?? base.Message;
             }
         }
     }

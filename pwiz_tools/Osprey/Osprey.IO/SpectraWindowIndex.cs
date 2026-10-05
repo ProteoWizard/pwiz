@@ -53,6 +53,9 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public sealed class SpectraWindowIndex
     {
+        // Shared by every index under OSPREY_SERIAL_READ_SCOPE=process.
+        private static readonly object PROCESS_BLOCK_READ_LOCK = new object();
+
         private readonly string _cachePath;
         private readonly Dictionary<int, List<long>> _windowKeyToOffsets;
         private readonly Dictionary<int, IsolationWindow> _windowKeyToFirstIso;
@@ -279,7 +282,8 @@ namespace pwiz.Osprey.IO
         /// concurrent LoadWindow calls each walk their own window in small reads, so the disk
         /// seeks between as many streams as there are threads. When the spectra are already in
         /// the file cache, LoadWindow is faster. A window too large for one array is read by
-        /// LoadWindow.</para>
+        /// LoadWindow. Under OSPREY_SERIAL_READ_SCOPE=process the lock is shared by every index in
+        /// the process instead.</para>
         /// </summary>
         public List<Spectrum> LoadWindowSerialRead(int windowKey)
         {
@@ -303,7 +307,7 @@ namespace pwiz.Osprey.IO
                     return LoadWindow(windowKey);
                 // Allocated before taking the lock, so no other thread's read waits on it.
                 block = new byte[end - start];
-                lock (_blockReadLock)
+                lock (OspreyEnvironment.SerialReadsProcessWide ? PROCESS_BLOCK_READ_LOCK : _blockReadLock)
                 {
                     fs.Seek(start, SeekOrigin.Begin);
                     fs.ReadExactly(block);
