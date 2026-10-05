@@ -348,7 +348,7 @@ namespace pwiz.Osprey.IO
             if (selectRecord != null && selected == null)
                 throw new ArgumentNullException(nameof(selected));
             selected?.Clear();
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var fs = BlockReadStream.OpenRead(path))
             {
                 long len = fs.Length;
                 if (len < HeaderLength)
@@ -824,7 +824,7 @@ namespace pwiz.Osprey.IO
             // false return MEANS to the caller, not about how large the allocation was.
             try
             {
-                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var fs = BlockReadStream.OpenRead(path))
                 {
                     long len = fs.Length;
                     if (len < HeaderLength)
@@ -939,7 +939,7 @@ namespace pwiz.Osprey.IO
 
             try
             {
-                using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var src = BlockReadStream.OpenRead(path))
                 {
                     if (src.Length < HeaderLength)
                         return false;
@@ -962,12 +962,19 @@ namespace pwiz.Osprey.IO
                     if (src.Length != expectedLen)
                         return false;
 
-                    var record = new byte[RecordLength];
-                    for (int rec = 0; rec < (int)headerCount; rec++)
+                    // Read in RECORDS_PER_CHUNK-record blocks, as TryWalkRecords does: one read call
+                    // per 36-byte record was most of what this reader cost, and it now serves
+                    // every per-file consumer of the first pass.
+                    var chunk = new byte[RECORDS_PER_CHUNK * RecordLength];
+                    int remaining = (int)headerCount;
+                    while (remaining > 0)
                     {
-                        if (!ReadFully(src, record, RecordLength))
+                        int take = Math.Min(RECORDS_PER_CHUNK, remaining);
+                        if (!ReadFully(src, chunk, take * RecordLength))
                             return false;
-                        onRecord(DecodeRecord(record));
+                        remaining -= take;
+                        for (int rec = 0; rec < take; rec++)
+                            onRecord(DecodeRecord(chunk, rec * RecordLength));
                     }
                 }
             }
@@ -989,14 +996,14 @@ namespace pwiz.Osprey.IO
         /// <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the writer so
         /// the read/write byte layout cannot drift.
         /// </summary>
-        private static FdrScoreRecord DecodeRecord(byte[] rec)
+        private static FdrScoreRecord DecodeRecord(byte[] rec, int offset = 0)
         {
             return new FdrScoreRecord(
-                BitConverter.ToUInt32(rec, 0),    // [0..4]   entry_id
-                BitConverter.ToDouble(rec, 4),    // [4..12]  svm_score
-                BitConverter.ToDouble(rec, 12),   // [12..20] run_precursor_qvalue
-                BitConverter.ToDouble(rec, 20),   // [20..28] run_peptide_qvalue
-                BitConverter.ToDouble(rec, 28));  // [28..36] apex_rt
+                BitConverter.ToUInt32(rec, offset),        // [0..4]   entry_id
+                BitConverter.ToDouble(rec, offset + 4),    // [4..12]  svm_score
+                BitConverter.ToDouble(rec, offset + 12),   // [12..20] run_precursor_qvalue
+                BitConverter.ToDouble(rec, offset + 20),   // [20..28] run_peptide_qvalue
+                BitConverter.ToDouble(rec, offset + 28));  // [28..36] apex_rt
         }
     }
 }

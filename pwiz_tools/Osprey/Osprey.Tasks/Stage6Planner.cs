@@ -231,6 +231,7 @@ namespace pwiz.Osprey.Tasks
             // parquet does not hide the others -- and still before any planning happens.
             var cwtInvalid = new List<string>();
 
+            _ctx.LogBlockReads(@"Planning before pass 1");
             using (var scanProgress = new ProgressReporter(
                        ScoringTaskShared.IsSingleFileSearch(config)
                            ? OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_
@@ -239,10 +240,23 @@ namespace pwiz.Osprey.Tasks
                        fileNames.Count))
             {
                 int done = 0;
-                foreach (string fileName in fileNames)
+                // Loading a file's survivors, choosing its multi-charge targets and range-checking
+                // its parquet are the file's own work and run on the file lanes. Everything folded
+                // into the scan result is shared - the consensus accumulator and the passing sets
+                // keep insertion order - so it goes in on this thread, in file order.
+                OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FirstPassFdrLanes, i =>
                 {
-                    var entries = loadFileEntries(fileName);
-                    var targets = MultiChargeConsensus.SelectRescoreTargets(entries, config.RunFdr);
+                    var fileEntries = loadFileEntries(fileNames[i]);
+                    var fileInvalid = new List<string>();
+                    CwtCandidateLoader.ValidateFileInRange(fileNames[i], fileEntries, perFileParquetPaths, fileInvalid);
+                    return (Entries: fileEntries,
+                        Targets: MultiChargeConsensus.SelectRescoreTargets(fileEntries, config.RunFdr),
+                        Invalid: fileInvalid);
+                }, (i, file) =>
+                {
+                    string fileName = fileNames[i];
+                    var entries = file.Entries;
+                    var targets = file.Targets;
                     scan.PerFileConsensusTargets[fileName] = targets;
                     scan.TotalMulticharge += targets.Count;
                     scan.ConsensusAccumulator?.AddFile(fileName, entries);
@@ -255,11 +269,11 @@ namespace pwiz.Osprey.Tasks
                     // so the distinct base_ids across all files ARE that set.
                     foreach (var entry in entries)
                         scan.GlobalBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
-                    CwtCandidateLoader.ValidateFileInRange(fileName, entries, perFileParquetPaths, cwtInvalid);
+                    cwtInvalid.AddRange(file.Invalid);
                     scan.EntriesForDump?.Add(
                         new KeyValuePair<string, IReadOnlyList<FdrEntry>>(fileName, entries));
                     scanProgress.Report(++done);
-                }
+                });
             }
             CwtCandidateLoader.ThrowIfAnyInvalid(cwtInvalid, fileNames.Count);
 
@@ -385,10 +399,10 @@ namespace pwiz.Osprey.Tasks
             // skip, not an error -- only a corrupt input aborts (in pass A).
             bool planning = consensus.Count > 0 && !refitOnlyExit;
             var actions = planning ? new Dictionary<(string, int), ReconcileAction>() : null;
-            // The planner and the gap-fill identifier are handed refinedCalibrations while it is
-            // still being filled. That is safe BECAUSE each reads only the file it is planning,
-            // and that file's refit is added immediately above the call -- the all-at-once
-            // version could not have looked at another file's calibration either.
+            // The planner and the gap-fill identifier are handed refinedCalibrations, but the file
+            // walk below passes each file's own refit to them explicitly: files are planned on
+            // file lanes while the map is filled in file order, and a lookup would race those
+            // writes. Each reads only the file it is planning, so nothing else is needed.
             var planner = planning
                 ? new ReconciliationPlanner.FilePlanner(
                     consensus, scan.PassingBaseIds, refinedCalibrations, perFileCalibrations)
@@ -399,6 +413,7 @@ namespace pwiz.Osprey.Tasks
                     libLookup, libPrecursorMz, perFileIsolationMz)
                 : null;
 
+            _ctx.LogBlockReads(@"Planning before pass 2");
             using (var planProgress = new ProgressReporter(
                        ScoringTaskShared.IsSingleFileSearch(config)
                            ? OspreyTasksResources.Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_
@@ -407,25 +422,48 @@ namespace pwiz.Osprey.Tasks
                        fileNames.Count))
             {
                 int done = 0;
-                foreach (string fileName in fileNames)
+                // Planning a file reads only that file - its survivors, its CWT candidates, its
+                // own refit, passed in explicitly rather than read from refinedCalibrations - so
+                // files are planned on the file lanes. Recording the refit and the actions, and
+                // the caller's per-file write, happen on this thread in file order.
+                Stage6FilePlan PlanOneFile(int i)
                 {
+                    string fileName = fileNames[i];
                     var entries = loadFileEntries(fileName);
                     var refined = CalibrationRefit.Refit(consensus, entries, config.Reconciliation.ConsensusFdr);
-                    if (refined != null)
-                        refinedCalibrations[fileName] = refined;
 
                     List<KeyValuePair<int, ReconcileAction>> fileActions = null;
                     IReadOnlyList<GapFillTarget> fileGapFill = Array.Empty<GapFillTarget>();
-                    if (planning)
+                    // Both exist exactly when planning.
+                    if (planner != null && gapFiller != null)
                     {
-                        // Load this file's CWT candidates on demand and release them at the end
-                        // of the iteration -- one file resident at a time.
+                        // Load this file's CWT candidates on demand and release them when it is
+                        // planned - a lane holds one file's at a time.
                         fileActions = new List<KeyValuePair<int, ReconcileAction>>();
-                        planner.PlanFile(fileName, entries,
+                        planner.PlanFile(fileName, refined, entries,
                             CwtCandidateLoader.LoadOneFile(fileName, perFileParquetPaths), fileActions);
-                        foreach (var action in fileActions)
-                            actions[(fileName, action.Key)] = action.Value;
-                        fileGapFill = gapFiller.IdentifyFile(fileName, entries);
+                        fileGapFill = gapFiller.IdentifyFile(fileName, refined, entries);
+                    }
+                    return new Stage6FilePlan
+                    {
+                        FileName = fileName,
+                        Entries = entries,
+                        Actions = fileActions,
+                        GapFill = fileGapFill,
+                        RefinedCalibration = refined,
+                        GlobalBaseIds = scan.GlobalBaseIds,
+                    };
+                }
+
+                void RecordFilePlan(int i, Stage6FilePlan filePlan)
+                {
+                    if (filePlan.RefinedCalibration != null)
+                        refinedCalibrations[filePlan.FileName] = filePlan.RefinedCalibration;
+                    // Exists exactly when planning, which is also when the file plan has actions.
+                    if (actions != null && filePlan.Actions != null)
+                    {
+                        foreach (var action in filePlan.Actions)
+                            actions[(filePlan.FileName, action.Key)] = action.Value;
                     }
 
                     // Nothing is handed on when a diagnostic dump is about to end the run: the
@@ -433,19 +471,11 @@ namespace pwiz.Osprey.Tasks
                     // "no actions" because planning was skipped would be indistinguishable
                     // from one that was planned and found none.
                     if (!refitOnlyExit && !suppressEnvelopes)
-                    {
-                        onFilePlanned?.Invoke(new Stage6FilePlan
-                        {
-                            FileName = fileName,
-                            Entries = entries,
-                            Actions = fileActions,
-                            GapFill = fileGapFill,
-                            RefinedCalibration = refined,
-                            GlobalBaseIds = scan.GlobalBaseIds,
-                        });
-                    }
+                        onFilePlanned?.Invoke(filePlan);
                     planProgress.Report(++done);
                 }
+
+                OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FirstPassFdrLanes, PlanOneFile, RecordFilePlan);
             }
 
             if (fileNames.Count > 1)

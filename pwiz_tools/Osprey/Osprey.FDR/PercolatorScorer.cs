@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -45,6 +47,29 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public static class PercolatorScorer
     {
+        // [PATH] cost buckets of RunStreamingFirstPass's two score passes. LANE buckets are timed
+        // on the file lanes and summed over them; ORDER buckets on the in-order consumer.
+        private const int LANE1_WALK = 0;
+        private const int LANE1_SIDECAR = 1;
+        private const int LANE1_FEATURES = 2;
+        private const int LANE1_SCORE = 3;
+        private const int LANE1_COMPETITION = 4;
+        private const int LANE1_RUN_Q = 5;
+        private const int LANE1_FLOORS = 6;
+        private const int LANE1_FLUSH = 7;
+        private const int PASS1_LANE_BUCKETS = 8;
+        private const int ORDER1_COMPETITION = 0;
+        private const int PASS1_ORDER_BUCKETS = 1;
+        private const int LANE2_WALK = 0;
+        private const int LANE2_SIDECAR = 1;
+        private const int LANE2_RESCORE = 2;
+        private const int LANE2_LOOKUPS = 3;
+        private const int LANE2_PREPARE = 4;
+        private const int PASS2_LANE_BUCKETS = 5;
+        private const int ORDER2_SINK = 0;
+        private const int ORDER2_PREPARED = 1;
+        private const int PASS2_ORDER_BUCKETS = 2;
+
         /// <summary>
         /// Streaming-path continuation: given the <paramref name="trainResults"/>
         /// returned by <see cref="PercolatorTrainer.RunPercolator"/> with <c>TrainOnly = true</c>
@@ -587,34 +612,47 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// A file's already-computed scores, in parquet row order, or null when the caller has
-        /// nothing on disk for it.
+        /// nothing on disk for it. The two run q-values pass 1 stored with each score come back
+        /// through <paramref name="runPrecursorQvalues"/> and <paramref name="runPeptideQvalues"/>
+        /// in the same row order, and are null exactly when the return is.
         ///
-        /// <para>Only the SCORE is taken from disk. The run q-values are recomputed from it,
-        /// which is a sort and costs nothing next to loading a file's feature vectors and
-        /// re-running the dot product - and recomputing keeps a resumed file byte-identical to a
-        /// freshly scored one by construction rather than by trusting two writers to agree.</para>
+        /// <para>Taking the q-values from disk rather than recomputing them is byte-identical,
+        /// not a second opinion: whichever path wrote the sidecar produced all three together
+        /// from these same scores (see <see cref="CompletedScoreStreamer"/>), and nothing revises
+        /// them afterwards. The count and entry_id checks below are what bind them to this file's
+        /// rows. The recompute is a sort per file, and the reason it
+        /// reads as free is that it is normally weighed against loading the file's feature
+        /// vectors and re-running the dot product. On this path neither happens - that is what
+        /// having the scores on disk means - so the sort is measured against nothing and becomes
+        /// the pass's dominant cost.</para>
+        ///
+        /// <para>A caller that must WRITE the q-values still has to compute them; the sort is
+        /// what produces them. Only a pure reader can take them from here.</para>
         /// </summary>
         private static double[] TryLoadCompletedScores(
-            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount,
-            IReadOnlyList<uint> expectedEntryIds)
+            CompletedScoreStreamer tryStream, string fileName, int expectedCount,
+            IReadOnlyList<uint> expectedEntryIds, out double[] runPrecursorQvalues,
+            out double[] runPeptideQvalues)
         {
+            runPrecursorQvalues = null;
+            runPeptideQvalues = null;
             if (tryStream == null)
                 return null;
-            var scores = new List<double>(expectedCount);
-            var entryIds = new List<uint>(expectedCount);
-            if (!tryStream(fileName, (entryId, score) =>
-                {
-                    entryIds.Add(entryId);
-                    scores.Add(score);
-                }))
-            {
+            var read = new CompletedScoreRecords(expectedCount);
+            if (!tryStream(fileName, read.Add))
                 return null;
-            }
             // A count mismatch means the sidecar and the parquet disagree about how many rows
             // this file has, which no validity key can catch - so refuse the shortcut and score
             // it rather than emit a silently misaligned file.
-            if (scores.Count != expectedCount)
+            if (read.Count != expectedCount)
                 return null;
+            // A zero-row file the streamer accepted never called back. It is still a file whose
+            // (empty) output is on disk, and returning null would have the caller score it and
+            // write its attested sidecar a second time.
+            double[] scores = read.Scores ?? Array.Empty<double>();
+            uint[] entryIds = read.EntryIds ?? Array.Empty<uint>();
+            double[] runPrec = read.RunPrecursorQvalues ?? Array.Empty<double>();
+            double[] runPept = read.RunPeptideQvalues ?? Array.Empty<double>();
             // And the ROWS must line up, not just the count. This binds the sidecar's records
             // to parquet rows by POSITION, while every other reader of the file matches by
             // entry_id - so a sidecar that is complete but ordered differently (the resident
@@ -626,7 +664,65 @@ namespace pwiz.Osprey.FDR
                 if (entryIds[r] != expectedEntryIds[r])
                     return null;
             }
-            return scores.ToArray();
+            // Published only now that count and row identity have both checked out, so a
+            // rejected sidecar hands back three nulls together rather than q-values a caller
+            // could pair with scores it was told not to use.
+            runPrecursorQvalues = runPrec;
+            runPeptideQvalues = runPept;
+            return scores;
+        }
+
+        /// <summary>
+        /// Collects a file's records from a <see cref="CompletedScoreStreamer"/> in arrival order.
+        /// Sized exactly, because the row count is known before the first record arrives, and
+        /// allocated only when that record does. A streamer with nothing on disk for the file
+        /// refuses without calling back - on a cold run that is every file, in both passes - and
+        /// allocating and zeroing four row-sized arrays (28 bytes a row, ~120 MB for a cohort
+        /// file) only to drop them would put that cost back on exactly the run with no sidecars
+        /// to read. The arrays stay null until the first record.
+        /// </summary>
+        private sealed class CompletedScoreRecords
+        {
+            private readonly int _expectedCount;
+            private double[] _scores;
+            private uint[] _entryIds;
+            private double[] _runPrec;
+            private double[] _runPept;
+
+            public CompletedScoreRecords(int expectedCount)
+            {
+                _expectedCount = expectedCount;
+            }
+
+            /// <summary>Records received, including any past <c>expectedCount</c>.</summary>
+            public int Count { get; private set; }
+
+            public double[] Scores => _scores;
+            public uint[] EntryIds => _entryIds;
+            public double[] RunPrecursorQvalues => _runPrec;
+            public double[] RunPeptideQvalues => _runPept;
+
+            public void Add(uint entryId, double score, double runPrecQ, double runPeptQ)
+            {
+                if (_scores == null)
+                {
+                    _scores = new double[_expectedCount];
+                    _entryIds = new uint[_expectedCount];
+                    _runPrec = new double[_expectedCount];
+                    _runPept = new double[_expectedCount];
+                }
+                // A sidecar holding MORE records than the parquet has rows would run off the
+                // end of these arrays. Keep counting past it and let the caller's length check
+                // refuse the file, without an exception on the way.
+                if (Count < _expectedCount)
+                {
+                    _entryIds[Count] = entryId;
+                    _scores[Count] = score;
+                    _runPrec[Count] = runPrecQ;
+                    _runPept[Count] = runPeptQ;
+                }
+                Count++;
+            }
         }
 
         /// <summary>
@@ -675,9 +771,10 @@ namespace pwiz.Osprey.FDR
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null,
-            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
-            FileRunScopeSink flushFileRunScope = null)
+            FileRunScopeSink flushFileRunScope = null,
+            int fileLanes = 1)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -701,11 +798,13 @@ namespace pwiz.Osprey.FDR
             int nFiles = fileNames.Count;
             int nFeatures = percConfig.FeatureInfos.Length;
             int maxTrain = percConfig.MaxTrainSize;
-            // One file's raw rows buffered at a time (bounded -- the same one-file resident set the
-            // per-file run-q already needs). The stream callback only appends to the buffer's lists
-            // (reference types, never reassigned), so the running row/global ordinals are advanced
-            // in the plain indexed loops below, not captured-and-mutated inside the closure.
-            var buffer = new RowBuffer();
+            // Each pass below walks the files through OrderedFileLanes: the file-local work - the
+            // parquet decode, the feature load, the dot products, the per-file sort - runs on up to
+            // fileLanes threads, and everything that crosses files (the training dedup, the
+            // competition, the contribution sums, the sink) is applied on this thread in file
+            // order, as the plain loop applied it. A file's raw rows live in that file's own
+            // RowBuffer, so a bounded number of files (twice the lane count) is resident at once
+            // rather than one; with one lane it is the plain loop exactly.
 
             // ---- Pass 0: stream identity, build the training subset, train the model ----
             // Best-per-precursor dedup captured WITH identity, in flat (file,row) order. Strict
@@ -714,9 +813,9 @@ namespace pwiz.Osprey.FDR
             // (byte-identical to Features[0] on the 1st pass), so no feature load is needed here.
             var bestTarget = new Dictionary<uint, FirstPassDedupRow>();
             var bestDecoy = new Dictionary<uint, FirstPassDedupRow>();
-            // Run bookkeeping for the reservoir, allocated only when it is on so the default-off
-            // arm keeps exactly the dictionaries, and the memory, it has always had.
-            var runPick = OspreyEnvironment.TrainPickRun ? new Dictionary<uint, PercolatorSampling.RunPickState>() : null;
+            // Run bookkeeping for the reservoir. Only written when it is on; an empty dictionary
+            // allocates no buckets, so the off arm keeps the memory it has always had.
+            var runPick = new Dictionary<uint, PercolatorSampling.RunPickState>();
             // Which observation represents a precursor. Logged when it is NOT the default,
             // because nothing else in the output would say which population trained the model.
             // Plain prose in the default log, not a gated tag: the user set the variable, and it
@@ -736,14 +835,17 @@ namespace pwiz.Osprey.FDR
                 CountText.Format(nFiles, OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from_1_file,
                     OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from__0__files), nFiles,
                 intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
-            for (int f = 0; f < nFiles; f++)
+            // The decode is this pass's cost and is file-local, so the lanes read files ahead. The
+            // dedup is order-dependent - a tie goes to the first-seen ordinal, and the reservoir
+            // draws per run in arrival order - so it stays on this thread, in file order.
+            // Each file's row count, recorded here so the later passes can size a file's buffers
+            // exactly instead of growing them.
+            var rowCounts = new int[nFiles];
+            void DedupFile(int f, RowBuffer buffer)
             {
                 string file = fileNames[f];
-                buffer.Clear();
-                // Core only: this pass reduces to a best-per-precursor training subset and never
-                // looks at RowBuffer.ApexRts, so decoding apex_rt here is pure waste.
-                streamFileRows(file, StubColumns.Core, buffer.Add);
                 int count = buffer.Count;
+                rowCounts[f] = count;
                 for (int r = 0; r < count; r++)
                 {
                     uint entryId = buffer.EntryIds[r];
@@ -812,9 +914,15 @@ namespace pwiz.Osprey.FDR
                 }
                 ingestProgress.Report(f + 1);
             }
+            OrderedFileLanes.Run(nFiles, fileLanes,
+                // Core only: this pass reduces to a best-per-precursor training subset and never
+                // looks at RowBuffer.ApexRts, so decoding apex_rt here is pure waste.
+                f => ReadFileRows(streamFileRows, fileNames[f], StubColumns.Core),
+                DedupFile);
             ingestProgress.Dispose();
             int n = g;
             log.LogInfo(LogTag.PATH, @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n);
+            LogBlockReads(log, passLabel, @"pass 0");
             log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} peaks ({2} targets, {3} decoys, {4} features)",
                 passLabel, n, nInputTargets, nInputDecoys, nFeatures);
 
@@ -915,20 +1023,26 @@ namespace pwiz.Osprey.FDR
             // to reproduce a model that was already persisted per file as .1st-pass.model.json.
             if (pretrainedModel == null)
             {
+                // Each file fills only its own subset entries, so the files need no ordering. The
+                // lanes read a copy of the list reference, because the method drops its own below.
+                var subsetFiles = new List<KeyValuePair<string, List<int>>>(subsetByFile);
+                var laneEntries = subsetEntries;
                 int subsetFilesLoaded = 0;
-                using (var loadProgress = new ProgressReporter(CountText.Format(subsetByFile.Count,
+                using (var loadProgress = new ProgressReporter(CountText.Format(subsetFiles.Count,
                            OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file,
-                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files), subsetByFile.Count))
-                foreach (var kvp in subsetByFile)
+                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files), subsetFiles.Count))
                 {
-                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                    foreach (int k in kvp.Value)
+                    OrderedFileLanes.For(subsetFiles.Count, fileLanes, i =>
                     {
-                        var entry = subsetEntries[k];
-                        entry.Features = (double[])ResolveFeatureRow(
-                            rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
-                    }
-                    loadProgress.Report(++subsetFilesLoaded);
+                        IReadOnlyList<double[]> rows = loadFileFeatures(subsetFiles[i].Key);
+                        foreach (int k in subsetFiles[i].Value)
+                        {
+                            var entry = laneEntries[k];
+                            entry.Features = (double[])ResolveFeatureRow(
+                                rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures).Clone();
+                        }
+                        loadProgress.Report(Interlocked.Increment(ref subsetFilesLoaded));
+                    });
                 }
             }
             else
@@ -951,11 +1065,17 @@ namespace pwiz.Osprey.FDR
             // OSPREY_PASS2_QVALUE=transfer pass-2 step. No-op (null) on the default path, so this
             // streaming first pass stays byte-identical. See TODO-osprey_pass2_per_run_only_qvalue.
             captureModel?.Invoke(trainResults);
+            LogBlockReads(log, passLabel, @"training load");
 
             // Release the pass-0 working sets before the score passes so only the bounded lookups
-            // remain resident across the peak.
-            bestTarget = null;
-            bestDecoy = null;
+            // remain resident across the peak. The dedup maps are emptied, not dropped: pass 0's
+            // file walk captured them, so they live as long as this method does.
+            bestTarget.Clear();
+            bestTarget.TrimExcess();
+            bestDecoy.Clear();
+            bestDecoy.TrimExcess();
+            runPick.Clear();
+            runPick.TrimExcess();
             dedup = null;
             localSelected = null;
             subsetEntries = null;
@@ -988,7 +1108,6 @@ namespace pwiz.Osprey.FDR
                 avgBias /= nModelsD;
             }
             var standardizer = trainResults.Standardizer;
-            var featureBuf = new double[nFeatures];
 
             // ---- Pass 1: score + build the 3 bounded q maps + reduce the clamp floors ----
             // Reuses the verified StreamingFdr.StreamingFirstPassQ kernel; per-file run-q from a bounded one-file
@@ -1003,93 +1122,160 @@ namespace pwiz.Osprey.FDR
             // second-pass caller would reintroduce it silently.
             var streamingQ = new StreamingFdr.StreamingFirstPassQ(
                 passLabel == PercolatorEngine.FIRST_PASS_LABEL ? OspreyEnvironment.MeanBestN : 0);
-            var minRunBothByEntryId = new Dictionary<uint, double>();
-            var minRunBothByPeptide = new Dictionary<(string, bool), double>();
+            var clampFloors = new PercolatorQValues.ExperimentQClampFloors();
+            // Each file's first global row ordinal - the g its first row takes in the plain loop -
+            // from pass 0's counts, so a lane can stamp a file's ordinals before the files ahead of
+            // it have been consumed.
+            var firstOrdinal = new int[nFiles];
+            for (int f = 1; f < nFiles; f++)
+                firstOrdinal[f] = firstOrdinal[f - 1] + rowCounts[f - 1];
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
             bool accumulateTreeFeatures = AccumulatesTreeFeatures(gbtModels, percConfig);
+            // The linear contribution report has two readers: --model-diagnostics, which
+            // captures it, and --verbose, which prints it. With neither, the per-row vectors
+            // it is summed from are not kept.
+            bool keepLinearVectors = captureContributions != null || OspreyOutput.Verbose;
             int nonEmptyFiles = 0;
             int g1 = 0;
+            // Pass-1 cost attribution on the [PATH] channel. The lane buckets are SUMMED over the
+            // lanes - thread time, not wall time - so they say where the work is, and they add up to
+            // more than the pass when lanes overlap. The in-order buckets and the wall clock are
+            // single-threaded and say what the pass actually waits on. The run-q bucket is the one
+            // pass 2 no longer pays: this pass calls the SAME per-file sort on the SAME rows, so it
+            // measures directly what reading the q-values off the sidecar saves. Every timer reads
+            // the clock once per FILE, never per row.
+            var lane1 = new LaneCost(PASS1_LANE_BUCKETS);
+            var order1 = new LaneCost(PASS1_ORDER_BUCKETS);
+            var wall1 = Stopwatch.StartNew();
             // No "Running Percolator on N" heading here: it would print AFTER the training lines
             // above, reading as a second Percolator pass. The score heading below marks the step.
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
             // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
             using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n))
-            for (int f = 0; f < nFiles; f++)
             {
-                // Identity first (entry_id / charge / decoy / modseq): scalar parquet columns,
-                // cheap, and needed either way. The FEATURE vectors are what cost, so they are
-                // loaded only when this file actually has to be scored.
-                buffer.Clear();
-                // The ONE walk that needs it: this pass hands the file's finished run-scope
-                // output to flushFileRunScope, which writes the v7 sidecar.
-                streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
-                int count = buffer.Count;
-                if (count > 0)
-                    nonEmptyFiles++;
-                double[] doneScores = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
-                IReadOnlyList<double[]> rows = doneScores == null ? loadFileFeatures(fileNames[f]) : null;
-                var fScores = new double[count];
-                double[] knownScores = ScoresBeforeRowLoop(doneScores, rows, buffer.CoelutionSums,
-                    gbtModels, standardizer, nFeatures, percConfig.NThreads, fScores);
-                var fLabels = new bool[count];
-                var fEntryIds = new uint[count];
-                var fPeptides = new string[count];
-                // The sidecar's apex-RT column (format v7). Copied out of the buffer rather than
-                // read from it at the flush because the buffer is cleared per file and the sink
-                // contract says the arrays are consumed synchronously - the same rule the other
-                // four already follow.
-                var fApexRts = new double[count];
-                for (int r = 0; r < count; r++)
+                // On a lane: everything about one file that no other file can see.
+                Pass1File ScoreFile(int f)
                 {
-                    // ComputeStreamedScore leaves featureBuf standardized, which contribAcc bins.
-                    double score = knownScores != null
-                        ? knownScores[r]
-                        : ComputeStreamedScore(
-                            avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
-                    bool isDecoy = buffer.IsDecoys[r];
-                    fScores[r] = score;   // Already there when the trees scored into fScores.
-                    fLabels[r] = isDecoy;
-                    fEntryIds[r] = buffer.EntryIds[r];
-                    fPeptides[r] = buffer.Peptides[r];
-                    fApexRts[r] = buffer.ApexRts[r];
-                    streamingQ.Add(g1, score, buffer.EntryIds[r], isDecoy, buffer.Peptides[r]);
-                    // A resumed file's features are never loaded, so it feeds the report nothing:
-                    // featureBuf would hold a stale or zeroed vector, and omitting it makes the
-                    // report cover the files actually scored, which is the honest reading. The
-                    // linear score left this row's standardized vector in featureBuf; the tree
-                    // score pass did not, so under trees the row is standardized here, and only
-                    // when the report asked for the per-feature distributions.
-                    if (doneScores == null)
+                    string fileName = fileNames[f];
+                    long t = Stopwatch.GetTimestamp();
+                    // The ONE walk that needs apex RT: this pass hands the file's finished run-scope
+                    // output to flushFileRunScope, which writes the v7 sidecar.
+                    RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.ApexRt, rowCounts[f]);
+                    t = lane1.Stop(LANE1_WALK, t);
+                    int count = rows.Count;
+                    // Discards the stored q-values deliberately. This pass is the WRITER, and for
+                    // any file it actually scores the sort is the step that produces them. A resumed
+                    // file could read them back, but here they feed only the clamp-floor reduction,
+                    // so the saving would be confined to a resume while the blast radius would be
+                    // global state rather than one row's output.
+                    double[] scores = TryLoadCompletedScores(
+                        tryStreamCompletedScores, fileName, count, rows.EntryIds, out _, out _);
+                    var file = new Pass1File { Rows = rows, Scores = scores };
+                    t = lane1.Stop(LANE1_SIDECAR, t);
+                    bool scoredHere = scores == null;
+                    if (scoredHere)
                     {
-                        if (gbtModels == null)
-                            contribAcc.Add(featureBuf, isDecoy);
-                        else if (accumulateTreeFeatures)
-                            contribAcc.Add(StandardizeFeatureRow(standardizer, featureBuf, rows, (uint)r, buffer.CoelutionSums[r], nFeatures), isDecoy);
+                        IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
+                        t = lane1.Stop(LANE1_FEATURES, t);
+                        scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, nFeatures,
+                            percConfig.CollectFeatureHistograms, accumulateTreeFeatures, keepLinearVectors,
+                            percConfig.NThreads);
+                        t = lane1.Stop(LANE1_SCORE, t);
                     }
-                    g1++;
-                    scoreProgress.Report(g1);
-                }
-                PercolatorQValues.ComputePerFileRunQvalues(
-                    fScores, fLabels, fEntryIds, fPeptides, 0, count,
-                    out double[] runPrecFile, out double[] runPeptFile);
-                for (int r = 0; r < count; r++)
-                {
-                    double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
-                    PercolatorQValues.UpdateExperimentQClampFloor(
-                        minRunBothByEntryId, minRunBothByPeptide, fEntryIds[r], fPeptides[r], fLabels[r], runBoth);
+                    // The competition's share of this file, reduced here when it is a first-seen
+                    // maximum (the default max mode) and the file holds the rows pass 0 counted, so
+                    // its ordinals are right. Otherwise the consumer adds the rows one at a time.
+                    if (streamingQ.ReducesByFile && count == rowCounts[f])
+                    {
+                        var competition = streamingQ.BeginFile();
+                        int g0 = firstOrdinal[f];
+                        for (int r = 0; r < count; r++)
+                            competition.Add(g0 + r, scores[r], rows.EntryIds[r], rows.IsDecoys[r], rows.Peptides[r]);
+                        file.Competition = competition;
+                    }
+                    t = lane1.Stop(LANE1_COMPETITION, t);
+                    var labels = rows.IsDecoys.ToArray();
+                    var entryIds = rows.EntryIds.ToArray();
+                    var peptides = rows.Peptides.ToArray();
+                    PercolatorQValues.ComputePerFileRunQvalues(
+                        scores, labels, entryIds, peptides, 0, count,
+                        out double[] runPrecFile, out double[] runPeptFile);
+                    t = lane1.Stop(LANE1_RUN_Q, t);
+                    // The clamp floors are minimums: this file's rows reduce to one value per key
+                    // here, and fold into the shared floors from this lane, in whatever order the
+                    // files finish - see ExperimentQClampFloors for why no order is needed.
+                    var fileFloorByEntryId = new Dictionary<uint, double>();
+                    var fileFloorByPeptide = new Dictionary<(string, bool), double>();
+                    for (int r = 0; r < count; r++)
+                    {
+                        double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
+                        PercolatorQValues.UpdateExperimentQClampFloor(fileFloorByEntryId,
+                            fileFloorByPeptide, entryIds[r], peptides[r], labels[r], runBoth);
+                    }
+                    clampFloors.Merge(fileFloorByEntryId, fileFloorByPeptide);
+                    t = lane1.Stop(LANE1_FLOORS, t);
+
+                    // This file's run-scope output is COMPLETE here - score, run precursor q and run
+                    // peptide q are all final, and none of them depends on another file. Hand it to
+                    // the caller so it lands on disk now rather than one phase later, which is what
+                    // makes an interrupted run lose one file instead of every file (see
+                    // FileRunScopeSink). Skipped when the scores came off an existing sidecar: that
+                    // file is already written, and rewriting an artifact a validity marker attests
+                    // would replace it with a copy the marker no longer describes.
+                    if (scoredHere)
+                    {
+                        flushFileRunScope?.Invoke(fileName, f, count, entryIds, file.Scores,
+                            runPrecFile, runPeptFile, rows.ApexRts.ToArray());
+                    }
+                    lane1.Stop(LANE1_FLUSH, t);
+                    return file;
                 }
 
-                // This file's run-scope output is COMPLETE here - score, run precursor q and run
-                // peptide q are all final, and none of them depends on another file. Hand it to
-                // the caller so it lands on disk now rather than one phase later, which is what
-                // makes an interrupted run lose one file instead of every file (see
-                // FileRunScopeSink). Skipped when the scores came off an existing sidecar: that
-                // file is already written, and rewriting an artifact a validity marker attests
-                // would replace it with a copy the marker no longer describes.
-                if (doneScores == null)
-                    flushFileRunScope?.Invoke(fileNames[f], f, count, fEntryIds, fScores, runPrecFile, runPeptFile, fApexRts);
+                // On this thread, in file order: merging the competition (a tie goes to the first-seen
+                // ordinal) and the contribution sums (floating-point, so row order IS the sum).
+                void ApplyScoredFile(int f, Pass1File file)
+                {
+                    long t = Stopwatch.GetTimestamp();
+                    RowBuffer rows = file.Rows;
+                    int count = rows.Count;
+                    if (count > 0)
+                        nonEmptyFiles++;
+                    // The lane's reduction is used only when its ordinals are the ones this walk has
+                    // reached. A file earlier in the cohort whose row count disagreed with pass 0 would
+                    // shift every later file's, and then those files are added row by row instead.
+                    bool merge = file.Competition != null && g1 == firstOrdinal[f];
+                    if (merge)
+                        streamingQ.MergeFile(file.Competition);
+                    for (int r = 0; r < count; r++)
+                    {
+                        bool isDecoy = rows.IsDecoys[r];
+                        if (!merge)
+                            streamingQ.Add(g1, file.Scores[r], rows.EntryIds[r], isDecoy, rows.Peptides[r]);
+                        // A resumed file has no standardized vectors: nothing was scored, so there
+                        // is nothing honest to contribute, and the report covers the files actually
+                        // scored.
+                        if (file.Standardized != null)
+                            contribAcc.AddSums(file.Standardized, r * nFeatures, isDecoy);
+                        g1++;
+                    }
+                    scoreProgress.Report(g1);
+                    contribAcc.MergeHistograms(file.Histograms);
+                    order1.Stop(ORDER1_COMPETITION, t);
+                }
+
+                OrderedFileLanes.Run(nFiles, fileLanes, ScoreFile, ApplyScoredFile);
             }
+            wall1.Stop();
+            // "run-q" here is the per-file sort pass 2 stopped doing. Read it against pass 2's
+            // own "run-q recompute" line below: this one is what that one used to cost.
+            log.LogInfo(LogTag.PATH,
+                @"{0} pass 1 cost over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, feature load {6:F1}s, score {7:F1}s, competition {8:F1}s, run-q sort {9:F1}s, clamp floors {10:F1}s, sidecar write {11:F1}s; in order competition merge + contribution sums {12:F1}s",
+                passLabel, n, LanesUsed(fileLanes, nFiles), wall1.Elapsed.TotalSeconds,
+                lane1.Seconds(LANE1_WALK), lane1.Seconds(LANE1_SIDECAR), lane1.Seconds(LANE1_FEATURES),
+                lane1.Seconds(LANE1_SCORE), lane1.Seconds(LANE1_COMPETITION), lane1.Seconds(LANE1_RUN_Q), lane1.Seconds(LANE1_FLOORS),
+                lane1.Seconds(LANE1_FLUSH), order1.Seconds(ORDER1_COMPETITION));
+            LogBlockReads(log, passLabel, @"pass 1");
 
             var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig);
             captureContributions?.Invoke(contributions);
@@ -1108,80 +1294,137 @@ namespace pwiz.Osprey.FDR
             // Built unconditionally -- see ScoreProjectionAndComputeFdrInPlace for why the
             // single-file shortcut does NOT apply to the aggregate.
             var expAggByEntryId = streamingQ.BuildExperimentAggregateScoreMap();
+            streamingQ.Release();
 
             // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
             // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
             // is not silent; byte-identical q-values and sink output.
+            // Every map the q-values are looked up in is final by now and only read, so a lane
+            // computes a whole file's five q-values; only the sink needs file order. Same [PATH]
+            // treatment as pass 1: lane buckets summed over lanes, per-file clock reads only.
+            var lane2 = new LaneCost(PASS2_LANE_BUCKETS);
+            // A sink that can do its order-free per-row work a file at a time does it on the lane
+            // that produced the file, leaving only the order-dependent rest in sequence.
+            var laneSink = sink as IFdrFileLaneSink;
+            var order2 = new LaneCost(PASS2_ORDER_BUCKETS);
+            var wall2 = Stopwatch.StartNew();
             int gEmit = 0;
             using (var emitProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n))
-            for (int f = 0; f < nFiles; f++)
             {
-                buffer.Clear();
-                // Still asks, though on this path nothing consumes it: the value goes to
-                // sink.Accept, and FdrStoringSink writes a record from it whenever it owns the
-                // write. It never does here - pass 1 marks every file it writes and the resume
-                // gate marks the rest - but that is an invariant maintained in another file, and
-                // the cost of being wrong is a fabricated retention time in a persisted artifact
-                // that no reader could distinguish from a measured one. Recovering this third
-                // walk needs the sink to be able to REFUSE a write it has no apex RT for, which
-                // is an interface change; until then the ~7% is the price of not relying on a
-                // distant invariant.
-                streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
-                int count = buffer.Count;
-                double[] doneScores2 = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
-                IReadOnlyList<double[]> rows = doneScores2 == null ? loadFileFeatures(fileNames[f]) : null;
-                var fScores = new double[count];
-                double[] knownScores2 = ScoresBeforeRowLoop(doneScores2, rows, buffer.CoelutionSums,
-                    gbtModels, standardizer, nFeatures, percConfig.NThreads, fScores);
-                var fLabels = new bool[count];
-                var fEntryIds = new uint[count];
-                var fPeptides = new string[count];
-                var fCharges = new byte[count];
-                for (int r = 0; r < count; r++)
+                Pass2File AssignFile(int f)
                 {
-                    fScores[r] = knownScores2 != null
-                        ? knownScores2[r]
-                        : ComputeStreamedScore(
-                            avgWeights, avgBias, standardizer, featureBuf, rows, r, buffer.CoelutionSums[r], nFeatures);
-                    fLabels[r] = buffer.IsDecoys[r];
-                    fEntryIds[r] = buffer.EntryIds[r];
-                    fPeptides[r] = buffer.Peptides[r];
-                    fCharges[r] = buffer.Charges[r];
+                    string fileName = fileNames[f];
+                    long t = Stopwatch.GetTimestamp();
+                    // Still asks, though on this path nothing consumes it: the value goes to
+                    // sink.Accept, and FdrStoringSink writes a record from it whenever it owns the
+                    // write. It never does here - pass 1 marks every file it writes and the resume
+                    // gate marks the rest - but that is an invariant maintained in another file, and
+                    // the cost of being wrong is a fabricated retention time in a persisted artifact
+                    // that no reader could distinguish from a measured one.
+                    // Without coelution_sum: only the rescore below uses it, and only for a file
+                    // with no sidecar, which re-reads its rows with the column. It is the one
+                    // walk column among the features, so leaving it out saves a disk read per
+                    // row group.
+                    RowBuffer rows = ReadFileRows(streamFileRows, fileName,
+                        StubColumns.ApexRt | StubColumns.SkipCoelutionSum, rowCounts[f]);
+                    t = lane2.Stop(LANE2_WALK, t);
+                    int count = rows.Count;
+                    // Pass 1's run q-values, read back off the sidecar with the scores. Recomputing
+                    // them would sort this file again to arrive at the same numbers: they are a
+                    // function of these same scores, and pass 1 computed and wrote all three
+                    // together.
+                    double[] scores = TryLoadCompletedScores(
+                        tryStreamCompletedScores, fileName, count, rows.EntryIds,
+                        out double[] runPrecFile, out double[] runPeptFile);
+                    t = lane2.Stop(LANE2_SIDECAR, t);
+                    // Only a file with no sidecar is scored and sorted here, which is also the only
+                    // file whose scores are computed in this pass. Keyed on the scores, which
+                    // TryLoadCompletedScores returns null exactly when it returns no q-values.
+                    if (scores == null)
+                    {
+                        rows = ReadFileRows(streamFileRows, fileName, StubColumns.ApexRt, rowCounts[f]);
+                        IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
+                        scores = new double[count];
+                        if (ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
+                                standardizer, nFeatures, percConfig.NThreads, scores) == null)
+                        {
+                            var featureBuf = new double[nFeatures];
+                            for (int r = 0; r < count; r++)
+                            {
+                                scores[r] = ComputeStreamedScore(avgWeights, avgBias, standardizer, featureBuf,
+                                    featureRows, r, rows.CoelutionSums[r], nFeatures);
+                            }
+                        }
+                        PercolatorQValues.ComputePerFileRunQvalues(
+                            scores, rows.IsDecoys.ToArray(), rows.EntryIds.ToArray(), rows.Peptides.ToArray(),
+                            0, count, out runPrecFile, out runPeptFile);
+                        t = lane2.Stop(LANE2_RESCORE, t);
+                    }
+                    var file = new Pass2File(rows, scores, runPrecFile, runPeptFile);
+                    for (int r = 0; r < count; r++)
+                    {
+                        uint entryId = rows.EntryIds[r];
+                        double ep = isSingleFile
+                            ? runPrecFile[r]
+                            : (expPrecByWinnerId.TryGetValue(entryId, out double epv) ? epv : 1.0);
+                        if (clampFloors.TryGetByEntryId(entryId, out double floorPrec) && floorPrec > ep)
+                            ep = floorPrec;
+
+                        string pept = rows.Peptides[r];
+                        double epe = isSingleFile
+                            ? runPeptFile[r]
+                            : (expPeptByPeptide.TryGetValue(pept, out double epev) ? epev : 1.0);
+                        if (!string.IsNullOrEmpty(pept) &&
+                            clampFloors.TryGetByPeptide((pept, rows.IsDecoys[r]), out double floorPept) && floorPept > epe)
+                            epe = floorPept;
+
+                        file.ExperimentPrecursorQ[r] = ep;
+                        file.ExperimentPeptideQ[r] = epe;
+                        file.Pep[r] = pepByEntryId.TryGetValue(entryId, out double pv) ? pv : 1.0;
+                        file.ExperimentAggregate[r] = expAggByEntryId.TryGetValue(entryId, out double eav)
+                            ? eav : scores[r];
+                    }
+                    t = lane2.Stop(LANE2_LOOKUPS, t);
+                    if (laneSink != null)
+                        file.Prepared = laneSink.PrepareFile(f, file.ToFileRows());
+                    lane2.Stop(LANE2_PREPARE, t);
+                    return file;
                 }
-                PercolatorQValues.ComputePerFileRunQvalues(
-                    fScores, fLabels, fEntryIds, fPeptides, 0, count,
-                    out double[] runPrecFile, out double[] runPeptFile);
-                for (int r = 0; r < count; r++)
+
+                // On this thread, in file order: the sink, which tallies, folds the diagnostics
+                // accumulator and collapses the experiment records in the order rows arrive.
+                void EmitFile(int f, Pass2File file)
                 {
-                    double rp = runPrecFile[r];
-                    double rpe = runPeptFile[r];
-
-                    double ep = isSingleFile
-                        ? rp
-                        : (expPrecByWinnerId.TryGetValue(fEntryIds[r], out double epv) ? epv : 1.0);
-                    if (minRunBothByEntryId.TryGetValue(fEntryIds[r], out double floorPrec) && floorPrec > ep)
-                        ep = floorPrec;
-
-                    string pept = fPeptides[r];
-                    double epe = isSingleFile
-                        ? rpe
-                        : (expPeptByPeptide.TryGetValue(pept, out double epev) ? epev : 1.0);
-                    if (!string.IsNullOrEmpty(pept) &&
-                        minRunBothByPeptide.TryGetValue((pept, fLabels[r]), out double floorPept) && floorPept > epe)
-                        epe = floorPept;
-
-                    double pep = pepByEntryId.TryGetValue(fEntryIds[r], out double pv) ? pv : 1.0;
-
-                    double ea = expAggByEntryId.TryGetValue(fEntryIds[r], out double eav)
-                        ? eav : fScores[r];
-
-                    sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r], ea,
-                        buffer.ApexRts[r],
-                        new FdrQValues(rp, rpe, ep, epe, pep));
-                    emitProgress.Report(gEmit + r + 1);
+                    long t = Stopwatch.GetTimestamp();
+                    if (laneSink != null)
+                        laneSink.AcceptPrepared(f, file.Prepared);
+                    t = order2.Stop(ORDER2_PREPARED, t);
+                    RowBuffer rows = file.Rows;
+                    int count = rows.Count;
+                    for (int r = 0; r < count; r++)
+                    {
+                        sink.Accept(f, r, rows.EntryIds[r], rows.IsDecoys[r], rows.Charges[r], rows.Peptides[r],
+                            file.Scores[r], file.ExperimentAggregate[r], rows.ApexRts[r],
+                            new FdrQValues(file.RunPrecursorQ[r], file.RunPeptideQ[r],
+                                file.ExperimentPrecursorQ[r], file.ExperimentPeptideQ[r], file.Pep[r]));
+                    }
+                    // Once per file: a report per row is a lock taken 4 million times a file on
+                    // the one thread every other lane is waiting on.
+                    gEmit += count;
+                    emitProgress.Report(gEmit);
+                    order2.Stop(ORDER2_SINK, t);
                 }
-                gEmit += count;
+
+                OrderedFileLanes.Run(nFiles, fileLanes, AssignFile, EmitFile);
             }
+            wall2.Stop();
+            log.LogInfo(LogTag.PATH,
+                @"{0} pass 2 cost over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, rescore + run-q recompute {6:F1}s, q-value lookups {7:F1}s, sink preparation {8:F1}s; in order prepared-file merge {9:F1}s, sink {10:F1}s",
+                passLabel, n, LanesUsed(fileLanes, nFiles), wall2.Elapsed.TotalSeconds,
+                lane2.Seconds(LANE2_WALK), lane2.Seconds(LANE2_SIDECAR), lane2.Seconds(LANE2_RESCORE),
+                lane2.Seconds(LANE2_LOOKUPS), lane2.Seconds(LANE2_PREPARE), order2.Seconds(ORDER2_PREPARED),
+                order2.Seconds(ORDER2_SINK));
+            LogBlockReads(log, passLabel, @"pass 2");
             sink.Finish(log);
             return false;
         }
@@ -1344,12 +1587,28 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         private sealed class RowBuffer
         {
-            public readonly List<uint> EntryIds = new List<uint>();
-            public readonly List<byte> Charges = new List<byte>();
-            public readonly List<bool> IsDecoys = new List<bool>();
-            public readonly List<double> CoelutionSums = new List<double>();
-            public readonly List<string> Peptides = new List<string>();
-            public readonly List<double> ApexRts = new List<double>();
+            public readonly List<uint> EntryIds;
+            public readonly List<byte> Charges;
+            public readonly List<bool> IsDecoys;
+            public readonly List<double> CoelutionSums;
+            public readonly List<string> Peptides;
+            public readonly List<double> ApexRts;
+
+            public RowBuffer() : this(0)
+            {
+            }
+
+            /// <param name="capacity">The file's row count when already known, so the lists are
+            /// sized once rather than grown by doubling through ~4M rows.</param>
+            public RowBuffer(int capacity)
+            {
+                EntryIds = new List<uint>(capacity);
+                Charges = new List<byte>(capacity);
+                IsDecoys = new List<bool>(capacity);
+                CoelutionSums = new List<double>(capacity);
+                Peptides = new List<string>(capacity);
+                ApexRts = new List<double>(capacity);
+            }
 
             public int Count => EntryIds.Count;
 
@@ -1377,6 +1636,168 @@ namespace pwiz.Osprey.FDR
                 // Dictionary<string,...> key in StreamingFdr.StreamingFirstPassQ / SubsampleByPeptideGroup and
                 // would group differently from the resident path's ""-normalized peptides.
                 Peptides.Add(peptide ?? string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// One file's rows, read into a buffer of its own so several files can be read at once.
+        /// </summary>
+        private static RowBuffer ReadFileRows(
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
+            string fileName, StubColumns columns, int capacity = 0)
+        {
+            var rows = new RowBuffer(capacity);
+            streamFileRows(fileName, columns, rows.Add);
+            return rows;
+        }
+
+        /// <summary>
+        /// Scores every row of a pass-1 file on its lane, keeping each row's standardized feature
+        /// vector for the in-order contribution sums and binning the order-free histograms here.
+        /// A tree ensemble scores the whole file first (<see cref="ScoresBeforeRowLoop"/>) and keeps
+        /// the vectors only when the report asked for its per-feature distributions
+        /// (<paramref name="accumulateTreeFeatures"/>); otherwise the file contributes nothing.
+        /// The linear model keeps them only when the report has a reader
+        /// (<paramref name="keepLinearVectors"/>) - 168 bytes a row, ~0.5 GB for a cohort file,
+        /// held until the consumer reaches the file. Returns the scores it also stores on
+        /// <paramref name="file"/>.
+        /// </summary>
+        private static double[] ScoreRows(Pass1File file, IReadOnlyList<double[]> featureRows,
+            IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
+            FeatureStandardizer standardizer, int nFeatures, bool collectHistograms,
+            bool accumulateTreeFeatures, bool keepLinearVectors, int nThreads)
+        {
+            RowBuffer rows = file.Rows;
+            int count = rows.Count;
+            var scores = new double[count];
+            bool linear = ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
+                standardizer, nFeatures, nThreads, scores) == null;
+            file.Scores = scores;
+            if (!linear && !accumulateTreeFeatures)
+                return scores;
+            // checked: one flat array per file, so a file past ~100M rows must fail loudly here
+            // rather than wrap the index and overwrite its own vectors.
+            var standardized = !linear || keepLinearVectors ? new double[checked(count * nFeatures)] : null;
+            var histograms = collectHistograms ? new FeatureContributions.Accumulator(nFeatures, true) : null;
+            var featureBuf = new double[nFeatures];
+            for (int r = 0; r < count; r++)
+            {
+                // Both leave featureBuf standardized - the vector the contribution report sums and
+                // bins. The trees already scored the row; the linear model scores it here.
+                if (linear)
+                {
+                    scores[r] = ComputeStreamedScore(
+                        avgWeights, avgBias, standardizer, featureBuf, featureRows, r, rows.CoelutionSums[r], nFeatures);
+                }
+                else
+                {
+                    StandardizeFeatureRow(standardizer, featureBuf, featureRows, (uint)r, rows.CoelutionSums[r], nFeatures);
+                }
+                if (standardized != null)
+                    Array.Copy(featureBuf, 0, standardized, r * nFeatures, nFeatures);
+                histograms?.AddHistogram(featureBuf, 0, rows.IsDecoys[r]);
+            }
+            file.Standardized = standardized;
+            file.Histograms = histograms;
+            return scores;
+        }
+
+        /// <summary>The lanes a pass actually runs: never more than the files it has.</summary>
+        private static int LanesUsed(int fileLanes, int nFiles)
+        {
+            return Math.Max(1, Math.Min(fileLanes, nFiles));
+        }
+
+        // Experimental block-read totals (OSPREY_BLOCK_READ_MB) at a phase boundary; silent when off.
+        private static void LogBlockReads(IOspreyLog log, string passLabel, string phase)
+        {
+            string text = BlockReadStats.Text();
+            if (text != null)
+                log.LogInfo(LogTag.PATH, @"{0} after {1}: {2}", passLabel, phase, text);
+        }
+
+        /// <summary>
+        /// What a pass-1 lane hands the in-order consumer for one file: the rows and their scores,
+        /// with the standardized vectors whose sums must be added in row order and the
+        /// histogram counts that need not be.
+        /// </summary>
+        private sealed class Pass1File
+        {
+            public RowBuffer Rows;
+            public double[] Scores;
+            // Row-major, nFeatures per row; null for a file whose scores came off its sidecar.
+            public double[] Standardized;
+            // Null unless histograms are collected and the file was scored here.
+            public FeatureContributions.Accumulator Histograms;
+            // This file's share of the competition, or null when the consumer adds its rows.
+            public StreamingFdr.StreamingFirstPassQ.FileReduction Competition;
+        }
+
+        /// <summary>
+        /// What a pass-2 lane hands the in-order sink for one file: every value
+        /// <see cref="IFdrOutputSink.Accept"/> takes, computed on the lane.
+        /// </summary>
+        private sealed class Pass2File
+        {
+            public Pass2File(RowBuffer rows, double[] scores, double[] runPrecursorQ, double[] runPeptideQ)
+            {
+                Rows = rows;
+                Scores = scores;
+                RunPrecursorQ = runPrecursorQ;
+                RunPeptideQ = runPeptideQ;
+                int count = rows.Count;
+                ExperimentPrecursorQ = new double[count];
+                ExperimentPeptideQ = new double[count];
+                Pep = new double[count];
+                ExperimentAggregate = new double[count];
+            }
+
+            public RowBuffer Rows { get; }
+            public double[] Scores { get; }
+            public double[] RunPrecursorQ { get; }
+            public double[] RunPeptideQ { get; }
+            public double[] ExperimentPrecursorQ { get; }
+            public double[] ExperimentPeptideQ { get; }
+            public double[] Pep { get; }
+            public double[] ExperimentAggregate { get; }
+
+            /// <summary>What <see cref="IFdrFileLaneSink.PrepareFile"/> returned for this file, if the
+            /// sink prepares files.</summary>
+            public object Prepared { get; set; }
+
+            public FdrFileRows ToFileRows()
+            {
+                return new FdrFileRows(Rows.EntryIds, Rows.IsDecoys, Rows.Charges, Rows.Peptides, Scores,
+                    RunPrecursorQ, RunPeptideQ, ExperimentPrecursorQ, ExperimentPeptideQ, Pep);
+            }
+        }
+
+        /// <summary>
+        /// Elapsed time per named bucket, safe to add to from several lanes at once. Callers read
+        /// the clock once per file and chain the timestamp, so a bucket costs two counter reads per
+        /// file however many rows it covers.
+        /// </summary>
+        private sealed class LaneCost
+        {
+            private readonly long[] _ticks;
+
+            public LaneCost(int buckets)
+            {
+                _ticks = new long[buckets];
+            }
+
+            /// <summary>Adds the time since <paramref name="start"/> to the bucket and returns
+            /// now, to start the next one.</summary>
+            public long Stop(int bucket, long start)
+            {
+                long now = Stopwatch.GetTimestamp();
+                Interlocked.Add(ref _ticks[bucket], now - start);
+                return now;
+            }
+
+            public double Seconds(int bucket)
+            {
+                return Interlocked.Read(ref _ticks[bucket]) / (double)Stopwatch.Frequency;
             }
         }
 

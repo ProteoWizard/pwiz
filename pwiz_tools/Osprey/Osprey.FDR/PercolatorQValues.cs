@@ -200,6 +200,106 @@ namespace pwiz.Osprey.FDR
                 minRunBothByPeptide[pkey] = runBoth;
         }
 
+        /// <summary>
+        /// The experiment-wide best-of-runs clamp floors of the streaming first pass: per entry
+        /// and per (peptide, label), the minimum over every run of max(run precursor q, run
+        /// peptide q). Files are folded in from several file lanes at once, each having reduced
+        /// its own rows with <see cref="UpdateExperimentQClampFloor"/>.
+        ///
+        /// <para>That needs no ordering, and so no in-order consumer: a floor is a minimum, which
+        /// does not depend on which file arrives first, and the floors are only ever looked up -
+        /// this type offers no enumeration - so the order keys enter them is not observable.
+        /// Merging into one big map is dominated by cache misses on random keys rather than by
+        /// row count, which made it the second-largest serial cost of the pass; sharding it lets
+        /// every lane do its own file's share, locking each shard once per file.</para>
+        ///
+        /// <para>Look-ups are lock-free and valid once every merge has returned, which is how the
+        /// pass uses it: all of pass 1 merges, then pass 2 only reads.</para>
+        /// </summary>
+        internal sealed class ExperimentQClampFloors
+        {
+            private const int SHARD_COUNT = 64;   // a power of two, for the mask below
+
+            private readonly Shards<uint> _byEntryId = new Shards<uint>();
+            private readonly Shards<(string, bool)> _byPeptide = new Shards<(string, bool)>();
+
+            /// <summary>Folds in one file's floors; safe to call from several lanes at once.</summary>
+            public void Merge(Dictionary<uint, double> fileByEntryId,
+                Dictionary<(string, bool), double> fileByPeptide)
+            {
+                _byEntryId.MergeMin(fileByEntryId);
+                _byPeptide.MergeMin(fileByPeptide);
+            }
+
+            public bool TryGetByEntryId(uint entryId, out double floor)
+            {
+                return _byEntryId.TryGetValue(entryId, out floor);
+            }
+
+            public bool TryGetByPeptide((string, bool) peptideAndLabel, out double floor)
+            {
+                return _byPeptide.TryGetValue(peptideAndLabel, out floor);
+            }
+
+            private sealed class Shards<TKey>
+            {
+                private readonly Dictionary<TKey, double>[] _shards = new Dictionary<TKey, double>[SHARD_COUNT];
+
+                public Shards()
+                {
+                    for (int s = 0; s < SHARD_COUNT; s++)
+                        _shards[s] = new Dictionary<TKey, double>();
+                }
+
+                public void MergeMin(Dictionary<TKey, double> file)
+                {
+                    // Bucketed by shard first, then each shard locked ONCE for its whole batch. A
+                    // lock per key bounced each shard's lock between cores on every update, which
+                    // on a loaded NUMA box cost several times the dictionary work it guarded.
+                    var batches = new List<KeyValuePair<TKey, double>>[SHARD_COUNT];
+                    foreach (var kv in file)
+                    {
+                        int s = ShardIndex(kv.Key);
+                        (batches[s] ?? (batches[s] = new List<KeyValuePair<TKey, double>>())).Add(kv);
+                    }
+                    for (int s = 0; s < SHARD_COUNT; s++)
+                    {
+                        var batch = batches[s];
+                        if (batch == null)
+                            continue;
+                        var shard = _shards[s];
+                        lock (shard)
+                        {
+                            foreach (var kv in batch)
+                            {
+                                if (!shard.TryGetValue(kv.Key, out double cur) || kv.Value < cur)
+                                    shard[kv.Key] = kv.Value;
+                            }
+                        }
+                    }
+                }
+
+                public bool TryGetValue(TKey key, out double value)
+                {
+                    return _shards[ShardIndex(key)].TryGetValue(key, out value);
+                }
+
+                private static int ShardIndex(TKey key)
+                {
+                    // Mixed before masking: a uint's hash is the value itself, and entry ids are
+                    // allocated in runs, so the low bits alone would crowd a few shards.
+                    unchecked
+                    {
+                        uint h = (uint)EqualityComparer<TKey>.Default.GetHashCode(key);
+                        h ^= h >> 16;
+                        h *= 0x45d9f3bu;
+                        h ^= h >> 16;
+                        return (int)(h & (SHARD_COUNT - 1));
+                    }
+                }
+            }
+        }
+
 
 
 

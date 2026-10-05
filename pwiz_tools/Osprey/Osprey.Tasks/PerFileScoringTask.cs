@@ -28,7 +28,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -340,11 +339,8 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 // Multiple files in parallel, bounded by the resolved
-                // concurrent-file count (see ResolveFileParallelism).
-                var parallelOpts = new ParallelOptions
-                {
-                    MaxDegreeOfParallelism = effectiveParallelism
-                };
+                // concurrent-file count (see ResolveFileParallelism), handed out one at a
+                // time in input order so a lane that finishes takes the next file.
                 string validityKey = ValidityKey(ctx);
                 var fileResults = new ConcurrentDictionary<int, string>();
                 // Legend mapping each aggregate-line slot to its input file, printed once
@@ -361,7 +357,7 @@ namespace pwiz.Osprey.Tasks
                 // with the other files' lines. Each file is one BeginFile scope; the
                 // PROCESS_FILE_SEGMENTS phases inside ProcessFile drive its percent.
                 var multi = new MultiProgressReporter();
-                Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
+                OrderedFileLanes.For(config.InputFiles.Count, effectiveParallelism, fileIdx =>
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);

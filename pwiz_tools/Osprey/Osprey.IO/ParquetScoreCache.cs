@@ -309,7 +309,7 @@ namespace pwiz.Osprey.IO
                 return false;
             try
             {
-                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var stream = BlockReadStream.OpenRead(path))
                 using (var reader = OpenReader(stream))
                 {
                     reader.CustomMetadata.TryGetValue(META_RECONCILED, out string marker);
@@ -336,7 +336,7 @@ namespace pwiz.Osprey.IO
         /// <summary>Whether a parquet's schema carries a column by this name.</summary>
         public static bool HasColumn(string path, string columnName)
         {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 foreach (var f in reader.Schema.GetDataFields())
@@ -952,10 +952,12 @@ namespace pwiz.Osprey.IO
         private sealed class SyncParquetReader : IDisposable
         {
             private readonly ParquetReader _reader;
+            private readonly BlockReadStream _blockStream;
 
-            public SyncParquetReader(ParquetReader reader)
+            public SyncParquetReader(ParquetReader reader, Stream stream)
             {
                 _reader = reader;
+                _blockStream = stream as BlockReadStream;
             }
 
             public ParquetSchema Schema => _reader.Schema;
@@ -965,6 +967,11 @@ namespace pwiz.Osprey.IO
 
             public ParquetRowGroupReader OpenRowGroupReader(int index)
             {
+                // A block-read stream plans its disk reads from the row group's chunk extents.
+                // Without a footer it has none to plan from and reads fixed blocks.
+                var metadata = _reader.Metadata;
+                if (metadata != null)
+                    _blockStream?.BeginRowGroup(metadata.RowGroups[index].Columns);
                 return _reader.OpenRowGroupReader(index);
             }
 
@@ -976,7 +983,7 @@ namespace pwiz.Osprey.IO
 
         private static SyncParquetReader OpenReader(Stream stream)
         {
-            return new SyncParquetReader(RunSync(ParquetReader.CreateAsync(stream)));
+            return new SyncParquetReader(RunSync(ParquetReader.CreateAsync(stream)), stream);
         }
 
         // Build a name -> DataField lookup from the reader's actual schema.
@@ -1078,6 +1085,22 @@ namespace pwiz.Osprey.IO
                 path, row, entryId, COLUMN_ENTRY_ID, rewriteTask, rowGroup));
         }
 
+        /// <summary>
+        /// <see cref="RequireCharge"/> over a row group whose charges are taken from the library
+        /// (OSPREY_STUB_IDENTITY=1). The library's charge is the right one, but a zero in the
+        /// file still marks a file from the write race, and the walks that take charges from
+        /// the library are the first to read it - left unchecked, the file would pass Stages 5
+        /// and 6 and fail hours later with a remedy that cannot work. One byte column, inside
+        /// the span the walk reads anyway.
+        /// </summary>
+        private static void RequireFileCharges(ParquetRowGroupReader groupReader,
+            IReadOnlyDictionary<string, DataField> fieldsByName, uint[] entryIdCol, int rowGroup, string path)
+        {
+            var chargeCol = ReadColumnByName<byte>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+            for (int row = 0; row < entryIdCol.Length; row++)
+                RequireCharge(chargeCol, rowGroup, row, entryIdCol[row], path);
+        }
+
         #endregion
 
         #region Load FDR Stubs
@@ -1141,6 +1164,21 @@ namespace pwiz.Osprey.IO
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path, Func<uint, bool> keepEntry,
             LibraryStringInterner sequencePool)
         {
+            return LoadFdrStubsFromParquet(path, keepEntry, sequencePool, null);
+        }
+
+        /// <summary>
+        /// <see cref="LoadFdrStubsFromParquet(string, Func{uint, bool}, LibraryStringInterner)"/>,
+        /// optionally taking each row's charge, decoy flag and peptide from the library entry its
+        /// entry_id names instead of decoding them (OSPREY_STUB_IDENTITY=1). A row group with any
+        /// row the library does not hold reads them from the file as before.
+        /// </summary>
+        public static List<FdrEntry> LoadFdrStubsFromParquet(string path, Func<uint, bool> keepEntry,
+            LibraryStringInterner sequencePool, LibraryIdentity identity)
+        {
+            int identityMode = identity != null ? OspreyEnvironment.StubIdentity : 0;
+            bool fromLibrary = identityMode == 1;
+            bool verifyIdentity = identityMode == 2;
             var stubs = new List<FdrEntry>();
             // Counted separately from stubs.Count, which no longer tracks it once rows are
             // dropped. Advanced only for rows actually decoded, so a row group skipped below
@@ -1148,19 +1186,48 @@ namespace pwiz.Osprey.IO
             // produced.
             uint rowIndex = 0;
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
+                // A file with no is_decoy column skips every row group below; read it the
+                // ordinary way so it skips them the same way.
+                if (!fieldsByName.ContainsKey(FIELD_IS_DECOY.Name))
+                    fromLibrary = false;
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
                         var entryIdCol = ReadColumnByName<uint>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        var isDecoyCol = ReadColumnByName<bool>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
-                        var chargeCol = ReadColumnByName<byte>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+                        bool groupFromLibrary = fromLibrary && entryIdCol != null && AllInLibrary(entryIdCol, identity);
+                        bool[] isDecoyCol;
+                        byte[] chargeCol;
+                        string[] modseqCol;
+                        if (groupFromLibrary)
+                        {
+                            // Charge, decoy flag and peptide come from the library entry each
+                            // entry_id names, exactly as the file would give them.
+                            RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
+                            isDecoyCol = new bool[entryIdCol.Length];
+                            chargeCol = new byte[entryIdCol.Length];
+                            modseqCol = new string[entryIdCol.Length];
+                            for (int row = 0; row < entryIdCol.Length; row++)
+                            {
+                                var entry = identity.Find(entryIdCol[row]);
+                                isDecoyCol[row] = (entryIdCol[row] & LibraryEntry.DECOY_ID_BIT) != 0;
+                                chargeCol[row] = entry.Charge;
+                                modseqCol[row] = entry.ModifiedSequence ?? string.Empty;
+                            }
+                        }
+                        else
+                        {
+                            isDecoyCol = ReadColumnByName<bool>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
+                            chargeCol = ReadColumnByName<byte>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+                            modseqCol = ReadStringColumnByName(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
+                            if (verifyIdentity && entryIdCol != null && isDecoyCol != null)
+                                VerifyLibraryIdentity(path, g, entryIdCol, isDecoyCol, chargeCol, modseqCol, identity);
+                        }
                         var scanCol = ReadColumnByName<uint>(groupReader, fieldsByName, FIELD_SCAN_NUMBER.Name);
-                        var modseqCol = ReadStringColumnByName(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
                         var apexCol = ReadColumnByName<double>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
                         var startCol = ReadColumnByName<double>(groupReader, fieldsByName, FIELD_START_RT.Name);
                         var endCol = ReadColumnByName<double>(groupReader, fieldsByName, FIELD_END_RT.Name);
@@ -1237,7 +1304,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static IEnumerable<uint> StreamEntryIds(string path)
         {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
@@ -1265,7 +1332,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// One file's <c>apex_rt</c> column, indexed by <c>FdrProjection.ParquetIndex</c> - the
-        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars"/> rather
+        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/> rather
         /// than opening the column directly, so the ordinal this array is keyed by and the
         /// ordinal the projection rows carry are produced by the same walk and the same
         /// row-group skip rule. A second reader with its own copy of that rule is how a join
@@ -1318,23 +1385,65 @@ namespace pwiz.Osprey.IO
         public static void ReadFdrStubScalars(string path,
             Action<uint, byte, bool, double, string, double> onRow, StubColumns columns)
         {
+            ReadFdrStubScalars(path, onRow, columns, null);
+        }
+
+        /// <summary>
+        /// <see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns)"/>,
+        /// optionally taking each row's charge, decoy flag and peptide from the library entry its
+        /// entry_id names instead of decoding them from the file (OSPREY_STUB_IDENTITY). A row
+        /// group with any row the library does not hold reads them from the file as before.
+        /// </summary>
+        public static void ReadFdrStubScalars(string path,
+            Action<uint, byte, bool, double, string, double> onRow, StubColumns columns,
+            LibraryIdentity identity)
+        {
             if (onRow == null)
                 throw new ArgumentNullException(nameof(onRow));
             bool wantApexRt = (columns & StubColumns.ApexRt) != 0;
+            bool wantCoelution = (columns & StubColumns.SkipCoelutionSum) == 0;
+            int identityMode = identity != null ? OspreyEnvironment.StubIdentity : 0;
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
+                // A file with no is_decoy column skips every row group below, so it is read the
+                // ordinary way and skips them the same way.
+                if (!fieldsByName.ContainsKey(FIELD_IS_DECOY.Name))
+                    identityMode = 0;
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
                     {
                         var entryIdCol = ReadColumnByName<uint>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                        if (identityMode == 1 && identity != null && entryIdCol != null &&
+                            AllInLibrary(entryIdCol, identity))
+                        {
+                            RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
+                            var coelution = wantCoelution
+                                ? ReadColumnByName<double>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name)
+                                : null;
+                            var apexRt = wantApexRt
+                                ? ReadColumnByName<double>(groupReader, fieldsByName, FIELD_APEX_RT.Name)
+                                : null;
+                            for (int row = 0; row < entryIdCol.Length; row++)
+                            {
+                                uint entryId = entryIdCol[row];
+                                var entry = identity.Find(entryId);
+                                onRow(entryId, entry.Charge, (entryId & LibraryEntry.DECOY_ID_BIT) != 0,
+                                    coelution != null ? coelution[row] : 0.0,
+                                    entry.ModifiedSequence ?? string.Empty,
+                                    apexRt != null ? apexRt[row] : double.NaN);
+                            }
+                            continue;
+                        }
                         var isDecoyCol = ReadColumnByName<bool>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
                         var chargeCol = ReadColumnByName<byte>(groupReader, fieldsByName, FIELD_CHARGE.Name);
                         var modseqCol = ReadStringColumnByName(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
-                        var coelutionCol = ReadColumnByName<double>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
+                        var coelutionCol = wantCoelution
+                            ? ReadColumnByName<double>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name)
+                            : null;
                         // Decoded only when the caller says it consumes the value. The parquet is
                         // Zstd-compressed, so a column is not 8 bytes per row of IO - it is a
                         // decompress, a page decode and a fresh large-object array per row group.
@@ -1348,6 +1457,8 @@ namespace pwiz.Osprey.IO
                             continue;
 
                         int rowCount = entryIdCol.Length;
+                        if (identityMode == 2)
+                            VerifyLibraryIdentity(path, g, entryIdCol, isDecoyCol, chargeCol, modseqCol, identity);
                         for (int row = 0; row < rowCount; row++)
                         {
                             onRow(
@@ -1368,6 +1479,45 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        private static bool AllInLibrary(uint[] entryIds, LibraryIdentity identity)
+        {
+            foreach (uint entryId in entryIds)
+            {
+                if (identity.Find(entryId) == null)
+                    return false;
+            }
+            return true;
+        }
+
+        // OSPREY_STUB_IDENTITY=2: proves the library and the file agree, row by row, before the
+        // library is trusted in their place. Diagnostic text, not user-facing.
+        private static void VerifyLibraryIdentity(string path, int g, uint[] entryIds, bool[] isDecoys,
+            byte[] charges, string[] modseqs, LibraryIdentity identity)
+        {
+            for (int row = 0; row < entryIds.Length; row++)
+            {
+                uint entryId = entryIds[row];
+                var entry = identity.Find(entryId);
+                if (entry == null)
+                    continue;
+                bool decoy = (entryId & LibraryEntry.DECOY_ID_BIT) != 0;
+                string fileModseq = modseqs != null ? modseqs[row] ?? string.Empty : string.Empty;
+                byte fileCharge = charges != null ? charges[row] : (byte)0;
+                // A zero charge is a damaged file, not a disagreement: RequireCharge reports it
+                // with the remedy, so leave it to that.
+                if (fileCharge == 0)
+                    continue;
+                if (decoy != isDecoys[row] || entry.Charge != fileCharge ||
+                    !string.Equals(entry.ModifiedSequence ?? string.Empty, fileModseq, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
+                        @"OSPREY_STUB_IDENTITY=2: {0} row group {1} row {2} entry_id {3}: file (decoy {4}, charge {5}, [{6}]) differs from library (decoy {7}, charge {8}, [{9}])",
+                        path, g, row, entryId, isDecoys[row], fileCharge, fileModseq, decoy, entry.Charge,
+                        entry.ModifiedSequence));
+                }
+            }
+        }
+
         /// <summary>
         /// Load only the <c>cwt_candidates</c> column from a Parquet cache,
         /// returning one <see cref="CwtCandidate"/> list per row in the same
@@ -1380,7 +1530,7 @@ namespace pwiz.Osprey.IO
         public static List<List<CwtCandidate>> LoadCwtCandidatesFromParquet(string path)
         {
             var allCandidates = new List<List<CwtCandidate>>();
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
@@ -1443,7 +1593,7 @@ namespace pwiz.Osprey.IO
             footer.TryGetValue(META_RECONCILED, out string marker);
             if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
                 return (false, 0L);
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 return (true, reader.Metadata?.NumRows ?? 0L);
@@ -1464,7 +1614,7 @@ namespace pwiz.Osprey.IO
         /// 1,342,686,095-row scalar scan that used to produce the same number.</para>
         ///
         /// <para><b>The schema test covers the columns that make the declared count TRUSTWORTHY,
-        /// not just the feature schema.</b> <see cref="ReadFdrStubScalars"/> skips a row group
+        /// not just the feature schema.</b> <see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/> skips a row group
         /// whose <c>entry_id</c> or <c>is_decoy</c> comes back null, and because the lookup is
         /// over the file-level schema that is all-or-nothing per file: such a parquet declares N
         /// rows in its footer and yields 0 on a read. While the count came from a scan the two
@@ -1477,7 +1627,7 @@ namespace pwiz.Osprey.IO
         {
             if (!File.Exists(path))
                 return (false, 0L);
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
@@ -1490,7 +1640,7 @@ namespace pwiz.Osprey.IO
 
         public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
         {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 long rowCount = reader.Metadata?.NumRows ?? 0L;
@@ -1504,7 +1654,7 @@ namespace pwiz.Osprey.IO
         /// Footer-only check that a scores parquet carries the PIN feature columns,
         /// reading the schema WITHOUT decoding any column data. The lean resume /
         /// HPC-merge paths stream only the scalar stub columns
-        /// (<see cref="ReadFdrStubScalars"/>) and never materialize the 21-float
+        /// (<see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/>) and never materialize the 21-float
         /// feature vectors, so they lose the fat path's implicit
         /// <c>features.Count == stubs.Count</c> corruption guard (which throws when
         /// <see cref="LoadPinFeaturesFromParquet"/> yields zero rows because the
@@ -1557,7 +1707,7 @@ namespace pwiz.Osprey.IO
         {
             var entries = new List<FdrEntry>();
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
@@ -1581,7 +1731,7 @@ namespace pwiz.Osprey.IO
         {
             var entries = new List<FdrEntry>();
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
@@ -1683,7 +1833,7 @@ namespace pwiz.Osprey.IO
             int origRowCount = 0;
             int nWritten = 0;
 
-            using (var readStream = new FileStream(originalPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var readStream = BlockReadStream.OpenRead(originalPath))
             using (var reader = OpenReader(readStream))
             using (var saver = new FileSaver(reconciledPath))
             {
@@ -1998,7 +2148,7 @@ namespace pwiz.Osprey.IO
         {
             var allFeatures = new List<double[]>();
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
@@ -2126,7 +2276,7 @@ namespace pwiz.Osprey.IO
 
             try
             {
-                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var stream = BlockReadStream.OpenRead(path))
                 using (var reader = OpenReader(stream))
                 {
                     // Parquet.Net types CustomMetadata as a non-null
@@ -2161,7 +2311,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static Dictionary<string, string> LoadFooterMetadata(string path)
         {
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = BlockReadStream.OpenRead(path))
             using (var reader = OpenReader(stream))
             {
                 // Parquet.Net's CustomMetadata is non-null
