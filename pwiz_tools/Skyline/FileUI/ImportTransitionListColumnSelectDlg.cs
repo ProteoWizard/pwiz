@@ -486,13 +486,6 @@ namespace pwiz.Skyline.FileUI
 
             // Set the table as the source for the DataGridView that the user sees.
             dataGrid.DataSource = table;
-            if (DpiUtil.GetFactor(this) > 1)
-            {
-                // Auto-generated columns default to 100 device px at any DPI, cropping the
-                // header-overlay dropdown text under the scaled font (issue #4599).
-                foreach (DataGridViewColumn column in dataGrid.Columns)
-                    column.Width = DpiUtil.Scale(this, column.Width);
-            }
 
             var headers = Importer.RowReader.Indices.Headers;
 

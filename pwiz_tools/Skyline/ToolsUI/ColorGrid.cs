@@ -47,6 +47,7 @@ namespace pwiz.Skyline.ToolsUI
             // column auto-sizing scales. Row height is NOT scaled here - WinForms derives
             // it from the font, so scaling it again makes these rows half again as tall as
             // every other grid's (issue #4599).
+            dataGridViewColors.ScaleDesignerColumnWidths = false;   // scaled right here instead
             colBtn.Width = colBtn.MinimumWidth = DpiUtil.Scale(this, colBtn.MinimumWidth);
             colorCol.Width = DpiUtil.Scale(this, colorCol.Width);
             rgbCol.MinimumWidth = DpiUtil.Scale(this, rgbCol.MinimumWidth);

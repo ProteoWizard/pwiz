@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -27,6 +28,46 @@ namespace pwiz.Skyline.Controls
 {
     public class DataGridViewEx : CommonDataGridView
     {
+        private bool _columnWidthsScaled;
+
+        /// <summary>
+        /// Column widths set in the designer are 96-DPI pixel values that auto-scaling
+        /// never touches: only a column left at the default width gets the DPI-dependent
+        /// default. True (the default) scales every other fixed-width column once, when
+        /// the handle is created. A grid that sizes its columns itself sets this false
+        /// (issue #4599).
+        /// </summary>
+        public bool ScaleDesignerColumnWidths { get; set; } = true;
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (_columnWidthsScaled || !ScaleDesignerColumnWidths)
+                return;
+            _columnWidthsScaled = true;
+            var factor = DpiUtil.GetFactor(this);
+            if (Math.Abs(factor - 1) < 0.01f)
+                return;
+            int defaultWidth = DpiUtil.Scale(this, 100);    // what an untouched column already has
+            foreach (DataGridViewColumn column in Columns)
+            {
+                var autoSize = column.InheritedAutoSizeMode;
+                if (autoSize != DataGridViewAutoSizeColumnMode.None && autoSize != DataGridViewAutoSizeColumnMode.NotSet)
+                    continue;   // width follows the content or the grid, not the designer
+                if (column.Width != defaultWidth)
+                    column.Width = DpiUtil.Scale(this, column.Width);
+                // The scaled text plus the sort-glyph reserve can still outgrow a width that
+                // fit at 96 DPI, which wraps the header; keep the header on one line.
+                // (GetPreferredWidth measures against the wrapped header height, so measure.)
+                var headerFont = ColumnHeadersDefaultCellStyle.Font ?? Font;
+                int headerWidth = TextRenderer.MeasureText(column.HeaderText ?? string.Empty, headerFont,
+                    System.Drawing.Size.Empty, TextFormatFlags.SingleLine).Width
+                    + DpiUtil.Scale(this, column.SortMode == DataGridViewColumnSortMode.NotSortable ? 16 : 36);
+                if (column.Width < headerWidth)
+                    column.Width = headerWidth;
+            }
+        }
+
         public string GetCopyText()
         {
             return string.Join(TextUtil.SEPARATOR_TSV_STR, Columns.OfType<DataGridViewColumn>().Where(col => col.Visible).Select(col => col.HeaderText))
