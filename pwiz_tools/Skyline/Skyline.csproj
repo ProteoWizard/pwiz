@@ -265,25 +265,17 @@
     <!-- Each tool folder is a complete app, so they share most of their files (pwiz-sharp, the
          vendor DLLs, the VC++ runtime), and all of them land in the same bin. Deploy each
          destination file once: not at all when one of this project's own None or Content items
-         already copies it there (the VC++ runtime from VendorNativeCrt.targets, which the SDK copies
-         after Content, so it was the copy that stayed), otherwise from the first tool that has it.
-         Writing a file again straight after writing it fails intermittently with MSB3021 "Access
-         denied", which Copy does not retry. The tools run side by side from that one folder, so
-         they already have to agree on these files. -->
+         with a Link already copies it there (the VC++ runtime from VendorNativeCrt.targets),
+         otherwise from the first tool that has it. The tools run side by side from that one folder,
+         so they already have to agree on these files. -->
     <ItemGroup>
       <_BundledToolFileByLink Include="@(_BundledToolFile->'%(RecursiveDir)%(Filename)%(Extension)')">
         <SourcePath>%(_BundledToolFile.FullPath)</SourcePath>
         <Link>%(_BundledToolFile.RecursiveDir)%(_BundledToolFile.Filename)%(_BundledToolFile.Extension)</Link>
       </_BundledToolFileByLink>
-      <_OwnCopiedLink Include="@(None->'%(Link)')" Condition="'%(None.Link)' != '' And '%(None.CopyToOutputDirectory)' != '' And '%(None.CopyToOutputDirectory)' != 'Never'" />
-      <_OwnCopiedLink Include="@(Content->'%(Link)')" Condition="'%(Content.Link)' != '' And '%(Content.CopyToOutputDirectory)' != '' And '%(Content.CopyToOutputDirectory)' != 'Never'" />
-      <_BundledToolFileByLink Remove="@(_OwnCopiedLink)" />
-    </ItemGroup>
-    <RemoveDuplicates Inputs="@(_BundledToolFileByLink)">
-      <Output TaskParameter="Filtered" ItemName="_UniqueBundledToolFile" />
-    </RemoveDuplicates>
-    <ItemGroup>
-      <Content Include="@(_UniqueBundledToolFile->'%(SourcePath)')" RemoveMetadata="SourcePath">
+      <_BundledToolFileByLink Remove="@(None->HasMetadata('CopyToOutputDirectory')->WithoutMetadataValue('CopyToOutputDirectory', 'Never'));@(Content->HasMetadata('CopyToOutputDirectory')->WithoutMetadataValue('CopyToOutputDirectory', 'Never'))"
+                              MatchOnMetadata="Link" MatchOnMetadataOptions="PathLike" />
+      <Content Include="@(_BundledToolFileByLink->Distinct()->'%(SourcePath)')" RemoveMetadata="SourcePath">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <Visible>false</Visible>
       </Content>
