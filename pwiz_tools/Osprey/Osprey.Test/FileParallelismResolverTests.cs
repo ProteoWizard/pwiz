@@ -96,5 +96,62 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(
                 new[] { @"C:\does\not\exist\a.mzML", @"C:\does\not\exist\b.mzML" }));
         }
+
+        /// <summary>
+        /// <see cref="FdrLaneResolver"/>: first-pass FDR lanes are the smallest of threads / 2,
+        /// the memory fit for the largest file, the maximum, and the file count - never
+        /// <c>--parallel-files</c> - and the override wins over all of them.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrLaneResolution()
+        {
+            const long chsRows = 3080000;   // CHS rows per file: ~4.6 GB per lane
+            const long seaAdRows = 4200000;
+
+            // A single file is always one lane, even when forced.
+            Assert.AreEqual(1, ResolveLanes(1, 32, chsRows, 256 * GB));
+            Assert.AreEqual(1, ResolveLanes(1, 32, chsRows, 256 * GB, overrideLanes: 4));
+
+            // The 64 GB i9 at 446 CHS files: 50 GB free x 0.5 / ~4.6 GB -> 5 by memory, under
+            // 30 threads / 2 = 15 and the maximum.
+            Assert.AreEqual(5, ResolveLanes(446, 30, chsRows, 50 * GB, expectLimit: OspreyCoreResources.FdrLaneResolver_Resolve_limit_memory));
+            // The 72-core, 512 GB box: neither threads nor memory bind, the maximum does.
+            Assert.AreEqual(FdrLaneResolver.MAX_LANES, ResolveLanes(82, 72, seaAdRows, 400 * GB, expectLimit: OspreyCoreResources.FdrLaneResolver_Resolve_limit_maximum));
+            // A small machine with plenty of memory: threads / 2.
+            Assert.AreEqual(2, ResolveLanes(10, 4, chsRows, 256 * GB, expectLimit: OspreyCoreResources.FdrLaneResolver_Resolve_limit_threads));
+            Assert.AreEqual(1, ResolveLanes(10, 1, chsRows, 256 * GB));
+            // Fewer files than any other limit: one lane per file.
+            Assert.AreEqual(3, ResolveLanes(3, 32, chsRows, 256 * GB, expectLimit: OspreyCoreResources.FdrLaneResolver_Resolve_limit_files));
+            // Memory too tight for even one lane still gives one.
+            Assert.AreEqual(1, ResolveLanes(446, 30, chsRows, 4 * GB));
+
+            // Unknown free memory, or no rows, leaves the other limits.
+            Assert.AreEqual(6, ResolveLanes(446, 12, chsRows, 0));
+            Assert.AreEqual(FdrLaneResolver.MAX_LANES, ResolveLanes(446, 30, 0, 50 * GB));
+
+            // The override wins over threads and memory, clamped only to the file count.
+            Assert.AreEqual(4, ResolveLanes(446, 2, chsRows, 4 * GB, overrideLanes: 4));
+            Assert.AreEqual(12, ResolveLanes(446, 30, chsRows, 50 * GB, overrideLanes: 12));
+            Assert.AreEqual(3, ResolveLanes(3, 30, chsRows, 50 * GB, overrideLanes: 12));
+        }
+
+        // Resolve with a captured log; when expectLimit is given, the one line must be the
+        // decision line naming it as the limit.
+        private static int ResolveLanes(int nFiles, int nThreads, long maxRowsPerFile, long availableBytes,
+            int overrideLanes = 0, string expectLimit = null)
+        {
+            string logged = null;
+            int lanes = FdrLaneResolver.Resolve(nFiles, nThreads, maxRowsPerFile, availableBytes, overrideLanes,
+                line => logged = line);
+            if (expectLimit != null)
+            {
+                string expected = string.Format(
+                    OspreyCoreResources.FdrLaneResolver_Resolve_First_pass_FDR_file_lanes___0___limited_by__1____2__threads___3__GB_free___4__GB_per_lane___5__files_,
+                    lanes, expectLimit, nThreads, availableBytes / (double)GB,
+                    maxRowsPerFile * FdrLaneResolver.BYTES_PER_ROW_PER_LANE / (double)GB, nFiles);
+                Assert.AreEqual(expected, logged);
+            }
+            return lanes;
+        }
     }
 }

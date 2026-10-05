@@ -265,6 +265,16 @@ file's result independently and SecondPassFDR re-imposes the canonical order
 (Step 8), so a run with `--parallel-files 8` and a sequential run produce
 identical blibs — which is exactly what the regression gate asserts.
 
+FirstPassFDR and its Stage 6 planning have their own file count, which does not
+come from `--parallel-files`: `FdrLaneResolver.Resolve`
+(`Osprey.Core/FdrLaneResolver.cs`) takes the smallest of `--threads` / 2, the free
+memory over what one lane holds for the largest file, a maximum of 8, and the file
+count, once the task knows its row counts. The lanes run each file's work
+(`OrderedFileLanes`) and hand the results to a consumer that applies every
+cross-file effect in file order, so the count changes wall clock and peak memory,
+never output. `SubsetPipelineTest` compares one lane against one per file, and the
+`FdrTest` streaming arms compare lanes against the plain loop.
+
 ## The determinism oracle — `regression.ps1` at 1e-9
 
 `regression.ps1` (repo root of the Osprey C# tree) is the standing determinism
@@ -304,6 +314,7 @@ changes the output, only scheduling or which order-sensitive algorithm runs.
 | `--threads <count>` | all cores | Inner per-file/per-window/per-fold thread budget. Results are place-by-index (Step 2) and sort-after-collect (Step 3), so thread count never changes the output. |
 | `--parallel-files [N]` | absent = Sequential | Outer across-files concurrency (`FileParallelism.cs:35-45`). Each file is scored independently; join stages sort by stable keys. Does not change output. |
 | `OSPREY_MAX_PARALLEL_FILES` | unset | Legacy back-compat cap on the outer file count when `--parallel-files` is absent (`FileParallelism.cs:153-165`). Scheduling only. |
+| `OSPREY_FDR_FILE_LANES` | unset | Forces the FirstPassFDR lane count instead of `FdrLaneResolver`'s choice (clamped to the file count). For measuring; scheduling only. |
 | Percolator `Seed` | `42` | Fixed PRNG seed for SVM shuffle + peptide-group subsample (`PercolatorConfig.cs:48,:132`). Not exposed as a CLI flag; the constant matches Rust's `seed=42`. |
 | `--shared-peptides {all\|razor\|unique}` | `all` | Selects the shared-peptide reassignment. `all` and `unique` are order-independent; `razor` runs the order-sensitive greedy in Step 9 (see divergence). |
 | `OSPREY_FDR_MODEL` | unset (linear SVM) | Unset / `svm` uses the seeded SVM (Steps 4-6). **Experimental** `gbdt` trains seeded gradient-boosted trees (`XorShift64`, the `GbtParams` seed) whose histogram sums are order-fixed as described above, so it is deterministic too. Replaced the removed `--fdr-method`, whose `simple` value (no PRNG) was deleted. |

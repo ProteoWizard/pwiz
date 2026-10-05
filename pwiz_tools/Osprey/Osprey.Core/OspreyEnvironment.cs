@@ -68,6 +68,14 @@ namespace pwiz.Osprey.Core
         public static readonly int MaxParallelFiles = ParseIntOrZero(@"OSPREY_MAX_PARALLEL_FILES");
 
         /// <summary>
+        /// OSPREY_FDR_FILE_LANES: forces how many files first-pass FDR works on at once,
+        /// bypassing <see cref="FdrLaneResolver"/>'s thread and memory limits (clamped to the
+        /// file count only). For measuring the lane curve, and for a test that needs a
+        /// one-lane oracle; 0 / unset lets the resolver choose.
+        /// </summary>
+        public static int FdrFileLanes => ParseIntOrZero(@"OSPREY_FDR_FILE_LANES");
+
+        /// <summary>
         /// OSPREY_BLOCK_READ_MB: score parquets are read in planned spans - the column chunks a
         /// reader touches in each row group, read together - and FDR score sidecars in blocks of
         /// this many MB, serving the reader's smaller reads from memory. Default 4. A cold parquet

@@ -244,7 +244,7 @@ namespace pwiz.Osprey.Tasks
                 // its parquet are the file's own work and run on the file lanes. Everything folded
                 // into the scan result is shared - the consensus accumulator and the passing sets
                 // keep insertion order - so it goes in on this thread, in file order.
-                OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FileLanes, i =>
+                OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FirstPassFdrLanes, i =>
                 {
                     var fileEntries = loadFileEntries(fileNames[i]);
                     var fileInvalid = new List<string>();
@@ -475,7 +475,7 @@ namespace pwiz.Osprey.Tasks
                     planProgress.Report(++done);
                 }
 
-                OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FileLanes, PlanOneFile, RecordFilePlan);
+                OrderedFileLanes.Run(fileNames.Count, _ctx.RunPlan.FirstPassFdrLanes, PlanOneFile, RecordFilePlan);
             }
 
             if (fileNames.Count > 1)

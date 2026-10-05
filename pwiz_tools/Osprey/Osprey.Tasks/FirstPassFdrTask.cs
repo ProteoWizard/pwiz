@@ -723,6 +723,8 @@ namespace pwiz.Osprey.Tasks
             }
             else
             {
+                ResolveFileLanes(ctx, perFileEntries.Count,
+                    perFileEntries.Count == 0 ? 0 : perFileEntries.Max(kv => kv.Value.Count));
                 var swFdr = Stopwatch.StartNew();
                 var featureContributions = RunPercolatorFdr(perFileEntries, config, ctx,
                     loadFileFeatures: loadFileFeatures);
@@ -1985,7 +1987,7 @@ namespace pwiz.Osprey.Tasks
                     // with first-seen ties (or streams per-run rows straight to the TSV), takes them
                     // here in file order.
                     var stubIdentity = StubIdentity(ctx);
-                    OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
+                    OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                     {
                         string runName = projections.PerFile[f].Key;
                         var rows = new List<FdrBenchInputWriter.Row>();
@@ -2057,7 +2059,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!produce(sink))
                     return false;
-                benchResult = sink.Commit(ctx.RunPlan.FileLanes);
+                benchResult = sink.Commit(ctx.RunPlan.FirstPassFdrLanes);
             }
             string manifestPath = benchPath + FdrBenchInputWriter.EXT_PAIRING;
             int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
@@ -3167,6 +3169,18 @@ namespace pwiz.Osprey.Tasks
         /// Returns <c>null</c> (with <see cref="PipelineContext.ExitCode"/> set) only
         /// on a StopAfterStage5 sidecar-write failure or a survivor-reload fault.
         /// </summary>
+        /// <summary>
+        /// Sets <see cref="RunPlan.FirstPassFdrLanes"/> for this stage's per-file phases, before
+        /// the first of them. Free memory is measured here, after Stage 1-4 state is loaded and
+        /// before the first pass grows its own.
+        /// </summary>
+        private static void ResolveFileLanes(PipelineContext ctx, int nFiles, long maxRowsPerFile)
+        {
+            ctx.RunPlan.FirstPassFdrLanes = FdrLaneResolver.Resolve(nFiles, ctx.Config.NThreads,
+                maxRowsPerFile, SystemMemory.AvailablePhysicalBytes(), OspreyEnvironment.FdrFileLanes,
+                ctx.LogInfo);
+        }
+
         private List<KeyValuePair<string, List<FdrEntry>>> RunFirstPassProjection(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -3187,6 +3201,10 @@ namespace pwiz.Osprey.Tasks
             // buffer is published as CompactedEntries.
             var projections = prebuiltProjections ??
                 FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
+            long maxRows = 0;
+            for (int f = 0; f < projections.PerFile.Count; f++)
+                maxRows = Math.Max(maxRows, projections.RowCount(f));
+            ResolveFileLanes(ctx, projections.PerFile.Count, maxRows);
             // long with TotalRows: this is the PRE-compaction cohort total, 1,342,686,095 at
             // 446 files. afterCount below is deliberately left int - it is the post-compaction
             // survivor count, ~289 M, a different magnitude with room to spare.
@@ -3569,7 +3587,7 @@ namespace pwiz.Osprey.Tasks
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                     config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                     @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                    pretrainedModel, flushFileRunScope, ctx.RunPlan.FileLanes);
+                    pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes);
                 // Says whether the pass-1 write actually engaged. Without it a run in which
                 // flushFileRunScope never fired would look identical from the outside - the
                 // sink would have written the same sidecars from pass 2, and the output would
@@ -4126,7 +4144,7 @@ namespace pwiz.Osprey.Tasks
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for_1_file,
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files), projections.PerFile.Count))
             {
-                OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
+                OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
                     var fileAccumulator = new FirstPassProteinFdrAccumulator(config.RunFdr);
                     string error = TryStreamFirstPassFileScores(projections.PerFile[f].Key, perFileParquetPaths, config, stubIdentity,
@@ -4175,7 +4193,7 @@ namespace pwiz.Osprey.Tasks
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file,
                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files), projections.PerFile.Count))
             {
-                OrderedFileLanes.Run(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
+                OrderedFileLanes.Run(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
                     string parquetPath = perFileParquetPaths[projections.PerFile[f].Key];  // present: pass 1 read it
                     var qByEntryId = new Dictionary<uint, double>();
@@ -4398,7 +4416,7 @@ namespace pwiz.Osprey.Tasks
                            projections.PerFile.Count),
                        projections.PerFile.Count))
             {
-                OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FileLanes, f =>
+                OrderedFileLanes.RunWhile(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
                 {
                     string fileName = projections.PerFile[f].Key;
                     var filePassing = new HashSet<uint>();
