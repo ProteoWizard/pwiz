@@ -291,4 +291,31 @@ INSERT INTO Modifications VALUES (2, 1, 7, 15.99);";
             catch (IOException) { }
         }
     }
+
+    /// <summary>
+    /// An extended-length prefix on a short path must be dropped before the path reaches SQLite,
+    /// and kept when it is load-bearing. SQLite's Windows VFS opens such a path on Windows but
+    /// not under Wine, where BlibBuild reports "Failed to create ..." instead of building.
+    /// </summary>
+    [TestMethod]
+    public void ExtendedLengthPrefix_DroppedOnlyWhenRedundant()
+    {
+        string longTail = new string('a', 300);
+        var cases = new[]
+        {
+            // (input, expected)
+            (@"C:\dir\lib.blib", @"C:\dir\lib.blib"),
+            (@"\\?\C:\dir\lib.blib", @"C:\dir\lib.blib"),
+            // Past MAX_PATH the prefix is what makes the path openable on Windows, so it stays.
+            (@"\\?\C:\" + longTail, @"\\?\C:\" + longTail),
+            // \\?\UNC\server\share names a different file with the prefix removed.
+            (@"\\?\UNC\server\share\lib.blib", @"\\?\UNC\server\share\lib.blib"),
+            (@"\\server\share\lib.blib", @"\\server\share\lib.blib"),
+        };
+
+        foreach (var (input, expected) in cases)
+        {
+            Assert.AreEqual(expected, SqliteRoutine.WithoutRedundantExtendedPrefix(input), input);
+        }
+    }
 }

@@ -9,7 +9,7 @@ pushd %PWIZ_ROOT%
 call %~dp0MakeResourcesDb.bat %WORKDIR%\ForExportLocalizationCsv.db
 popd
 pushd %WORKDIR%
-%RESORGANIZER% exportLocalizationCsv --db ForExportLocalizationCsv.db --language ja zh-CHS
+%RESORGANIZER% exportLocalizationCsv --db ForExportLocalizationCsv.db --language ja zh-Hans
 if %ERRORLEVEL% neq 0 (
     goto error
 )

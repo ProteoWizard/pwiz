@@ -84,11 +84,20 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_VSCROLL = 0x0115,
             WM_KEYDOWN = 0x0100,
             WM_KEYUP = 0x0101,
+            WM_SYSKEYDOWN = 0x0104,
+            WM_SYSKEYUP = 0x0105,
+            WM_SYSCHAR = 0x0106,
             WM_CHANGEUISTATE = 0x0127,
             WM_MOUSEMOVE = 0x0200,
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
             WM_MOUSELEAVE = 0x02A3,
+            LB_SETANCHORINDEX = 0x019C,
+            LB_SETCARETINDEX = 0x019E,
+            LVM_SETSELECTIONMARK = 0x1043,
+            WM_PRINT = 0x0317,
+            EM_SETSEL = 0x00B1,
+            EM_REPLACESEL = 0x00C2,
             BM_CLICK = 0x00F5
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
@@ -102,7 +111,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// <summary>
         /// Combined wParam for WM_CHANGEUISTATE to hide both focus rectangles and mnemonic underscores.
         /// </summary>
-        public static readonly IntPtr UISF_HIDEALL = (IntPtr)(UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
+        public static readonly IntPtr UISF_HIDEALL = (UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
         // ReSharper restore InconsistentNaming
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -147,6 +156,25 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
             public Point Point => new Point(x, y);
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        // ReSharper disable once InconsistentNaming
+        public struct MSG
+        {
+            public IntPtr hwnd;
+            public uint message;
+            public IntPtr wParam;
+            public IntPtr lParam;
+            public uint time;
+            public POINT pt;
+        }
+
+        // PeekMessage wRemoveMsg: remove the message from the queue.
+        public const uint PM_REMOVE = 0x0001;
+        // MapVirtualKey uMapType: virtual-key code to scan code.
+        public const uint MAPVK_VK_TO_VSC = 0;
+        // ToUnicode wFlags: leave the keyboard's dead-key state alone (Windows 10 1607 and later).
+        public const uint TOUNICODE_NO_STATE_CHANGE = 0x0004;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -293,11 +321,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         public static extern IntPtr GetParent(IntPtr hwnd);
 
-        /// <summary>Sets a window's text (a WM_SETTEXT send), e.g. to type a path into a native dialog's
-        /// file-name field. Blocks until the owning thread pumps it, so it is safe to call from any thread.</summary>
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetWindowText(IntPtr hwnd, string text);
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
@@ -397,6 +420,23 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool OpenClipboard(IntPtr hWndNewOwner);
 
         [DllImport("user32.dll")]
+        public static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        public static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpKeyState,
+            [Out] StringBuilder pwszBuff, int cchBuff, uint wFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax,
+            uint wRemoveMsg);
+
+        [DllImport("user32.dll")]
         public static extern bool PostMessageA(IntPtr hWnd, WinMessageType msgType, int wParam, int lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -410,6 +450,19 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, IntPtr lParam);
+
+        // Private: whether a message's lParam is a string, and how it is marshaled, depends on the message, so each
+        // message that takes one gets its own public method here rather than a caller choosing this overload.
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, string lParam);
+
+        /// <summary>Replaces the text in an edit box as if the user had typed it: selects everything, then replaces
+        /// the selection. Each send blocks until the box's owning thread pumps it, so this is safe from any thread.</summary>
+        public static void ReplaceEditText(IntPtr hwndEdit, string text)
+        {
+            SendMessage(hwndEdit, WinMessageType.EM_SETSEL, IntPtr.Zero, -1); // select all
+            SendMessage(hwndEdit, WinMessageType.EM_REPLACESEL, True, text); // undoable, as typing is
+        }
 
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);

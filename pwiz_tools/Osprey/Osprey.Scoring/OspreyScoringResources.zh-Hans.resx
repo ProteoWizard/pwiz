@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AbsMassAccuracyMeanCalc_DisplayName_Mass_error__abs_mean_" xml:space="preserve">
+    <value>质量误差（绝对值均值）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AbsRtDeviationCalc_DisplayName_Retention_time_difference__abs_" xml:space="preserve">
+    <value>保留时间差（绝对值）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationScorer_TrainLdaWithNonNegativeCv_all_cross_validation_folds_were_singular" xml:space="preserve">
+    <value>所有交叉验证折均为奇异</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationScorer_TrainLdaWithNonNegativeCv_converged__2_consecutive_non_improving_iterations_" xml:space="preserve">
+    <value>已收敛（连续 2 次迭代无改进）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationScorer_TrainLdaWithNonNegativeCv_reached_iteration_cap___0__" xml:space="preserve">
+    <value>达到迭代上限（{0}）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ContributionLines_Model_sanity_check___feature_share_of_target_decoy_separation__calibration_LDA__coefficients_in_normalized_feature_space__" xml:space="preserve">
+    <value>模型合理性检查 - 各特征在目标-诱饵区分中的占比（校准 LDA，系数位于归一化特征空间）：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ContributionLines_coefficient" xml:space="preserve">
+    <value>系数</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ContributionLines_feature" xml:space="preserve">
+    <value>特征</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ContributionLines_share____" xml:space="preserve">
+    <value>占比 (%)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_Calibration_LDA_model___0_____1__matches___2__target____3__decoy_" xml:space="preserve">
+    <value>校准 LDA 模型 [{0}]：{1:N0} 个匹配（{2:N0} 个目标 / {3:N0} 个诱饵）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines__new_best_" xml:space="preserve">
+    <value>（新的最佳）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines__unknown_" xml:space="preserve">
+    <value>（未知）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_calibrator_yield___0__targets___q__1____1_____q__0_1_" xml:space="preserve">
+    <value>校准物产出：q&lt;=1% 时 {0:N0} 个目标，q&lt;=0.1% 时 {1:N0} 个</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_iter__0___cutoff__1____positive_pool__2_____all_folds_singular" xml:space="preserve">
+    <value>迭代 {0}：截断值 {1:F1}%，正样本池 {2:N0} -&gt; 所有折均为奇异</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_iter__0___cutoff__1____positive_pool__2___passing__3__4_" xml:space="preserve">
+    <value>迭代 {0}：截断值 {1:F1}%，正样本池 {2:N0}，通过 {3:N0}{4}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_refinement__none__baseline_single_feature_kept_" xml:space="preserve">
+    <value>优化：无（保留基线单一特征）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_refinement_iterations_" xml:space="preserve">
+    <value>优化迭代：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_seed_feature___0_____1___FDR___2__targets_passing_" xml:space="preserve">
+    <value>种子特征：{0} @ {1:F1}% FDR（{2:N0} 个目标通过）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_stopped___1___1_iteration_run_" xml:space="preserve">
+    <value>停止：{1}（运行了 1 次迭代）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CalibrationTrainingReport_ToReportLines_stopped___1____0__iterations_run_" xml:space="preserve">
+    <value>停止：{1}（运行了 {0:N0} 次迭代）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ConsecutiveIonsCalc_DisplayName_Consecutive_ion_series" xml:space="preserve">
+    <value>连续离子系列</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DecoyGenerator_GenerateAllWithCollisionDetection_Generated__0__decoys_from__1__targets___2__excluded_due_to_collisions_" xml:space="preserve">
+    <value>已从 {1:N0} 个目标生成 {0:N0} 个诱饵（{2:N0} 个因冲突被排除）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DecoyGenerator_GenerateAllWithCollisionDetection_Generating__0__decoys___" xml:space="preserve">
+    <value>正在生成{0}诱饵…</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ExplainedIntensityCalc_DisplayName_Explained_intensity" xml:space="preserve">
+    <value>已解释强度</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FragmentCoelutionMaxCalc_DisplayName_Fragment_co_elution__max_" xml:space="preserve">
+    <value>碎片共洗脱（最大值）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FragmentCoelutionSumCalc_DisplayName_Fragment_co_elution__sum_" xml:space="preserve">
+    <value>碎片共洗脱（总和）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MassAccuracyMeanCalc_DisplayName_Mass_error__signed_mean_" xml:space="preserve">
+    <value>质量误差（带符号均值）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MedianPolishCosineCalc_DisplayName_Median_polish_cosine" xml:space="preserve">
+    <value>中位数平滑余弦</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MedianPolishMinFragmentR2Calc_DisplayName_Median_polish_min_fragment_R2" xml:space="preserve">
+    <value>中位数平滑最小碎片 R2</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MedianPolishResidualCorrelationCalc_DisplayName_Median_polish_residual_correlation" xml:space="preserve">
+    <value>中位数平滑残差相关</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="MedianPolishResidualRatioCalc_DisplayName_Median_polish_residual_ratio" xml:space="preserve">
+    <value>中位数平滑残差比</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Ms1IsotopeCosineCalc_DisplayName_MS1_isotope_dot_product" xml:space="preserve">
+    <value>MS1 同位素点积</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Ms1PrecursorCoelutionCalc_DisplayName_MS1_precursor_co_elution" xml:space="preserve">
+    <value>MS1 母离子共洗脱</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="NCoelutingFragmentsCalc_DisplayName_Co_eluting_fragment_count" xml:space="preserve">
+    <value>共洗脱碎片数</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeakApexCalc_DisplayName_Peak_apex_intensity__log10_" xml:space="preserve">
+    <value>峰顶点强度 (log10)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeakAreaCalc_DisplayName_Peak_area__log10_" xml:space="preserve">
+    <value>峰面积 (log10)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_" xml:space="preserve">
+    <value>峰锐度 (log10)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RtDeviationCalc_DisplayName_Retention_time_difference__signed_" xml:space="preserve">
+    <value>保留时间差（带符号）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_DeduplicateDoubleCounting_Removed__0__precursor_candidate_peaks___1__targets___2__decoys__already_claimed_by_a_" xml:space="preserve">
+    <value>已移除 {0:N0} 个母离子候选峰（{1:N0} 个目标，{2:N0} 个诱饵），它们已被同一分离窗口中更强的候选占用；剩余 {3:N0} 个。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_DeduplicatePairs_Deduplicated_precursor_candidates___0______1____2__removed_" xml:space="preserve">
+    <value>已去重母离子候选：{0:N0} -&gt; {1:N0}（移除 {2:N0} 个）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_" xml:space="preserve">
+    <value>正在应用 MS2 校准：平均误差 = {0:F4} {1} -&gt; 校正 {2:+0.0000;-0.0000;0} {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Coelution_search_RT_tolerance___0__min__3_MAD_1_4826__MAD__1___2__" xml:space="preserve">
+    <value>共洗脱搜索 RT 耐受性：{0:F2} 分钟（3*MAD*1.4826，MAD={1:F3} {2}）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_" xml:space="preserve">
+    <value>使用校准后的碎片耐受性进行共洗脱搜索：{0:F4} {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows" xml:space="preserve">
+    <value>正在对分离窗口评分</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_from_the__0__file" xml:space="preserve">
+    <value>来自 {0} 文件</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics" xml:space="preserve">
+    <value>来自校准统计信息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SgCosineCalc_DisplayName_SG_weighted_cosine" xml:space="preserve">
+    <value>SG 加权余弦</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SgXcorrCalc_DisplayName_SG_weighted_xcorr" xml:space="preserve">
+    <value>SG 加权 xcorr</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="XcorrCalc_DisplayName_Cross_correlation__xcorr_" xml:space="preserve">
+    <value>互相关 (xcorr)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

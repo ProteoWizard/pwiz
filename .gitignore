@@ -402,6 +402,9 @@ ASALocalRun/
 /pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data
 /pwiz/data/vendor_readers/UIMF/Reader_UIMF_Test.data
 
+# Conversions written next to the fixtures by scripts/container/tctest.sh
+/pwiz/data/vendor_readers/*/Reader*Test.data/output/
+
 # Skyline generated files
 /pwiz_tools/Skyline/ProtocolBuffers/GeneratedCode/*.cs
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/*.cs

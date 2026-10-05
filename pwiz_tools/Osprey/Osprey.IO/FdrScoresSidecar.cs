@@ -31,8 +31,9 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Reader / writer for the per-file <c>.&lt;phase&gt;-pass.fdr_scores.bin</c>
-    /// sidecar: the v5 binary format that persists the RUN-scope FDR statistics
-    /// for one OBSERVATION (SVM discriminant + the two run q-values + PEP). Used
+    /// sidecar: the v7 binary format that persists the RUN-scope FDR statistics
+    /// for one OBSERVATION (SVM discriminant, the two run q-values, the detection
+    /// apex RT). Used
     /// at the Stage 5 → Stage 6 boundary so a Stage 6 worker can run without
     /// re-running first-pass Percolator AND apply the same protein-rescue
     /// compaction predicate the in-process pipeline uses - the protein-rescue
@@ -46,10 +47,11 @@ namespace pwiz.Osprey.IO
     /// byte parity was verified by a separate harness script via the
     /// <c>OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT</c> test hook.
     ///
-    /// Format (32-byte header + N × 36-byte records, all little-endian):
+    /// Format (<see cref="HeaderLength"/>-byte header + N × <see cref="RecordLength"/>-byte
+    /// records, all little-endian):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 5)
+    ///   version       [8]      = u8 (= 7)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
@@ -59,7 +61,7 @@ namespace pwiz.Osprey.IO
     ///                            [4..12]  f64 svm_score
     ///                            [12..20] f64 run_precursor_qvalue
     ///                            [20..28] f64 run_peptide_qvalue
-    ///                            [28..36] f64 pep
+    ///                            [28..36] f64 apex_rt
     /// </code>
     /// Records are written pre-compaction at the Stage 5 → Stage 6
     /// boundary: every input entry contributes one record so q-values are
@@ -124,25 +126,61 @@ namespace pwiz.Osprey.IO
     /// issue #4486, so a per-file sidecar is written exactly once on both
     /// passes and no later stage reopens it.</item>
     /// </list>
-    /// No conversion path is written: pre-first-public-release, a v4 sidecar
+    ///
+    /// v5 → v6 (2026-09-05, issue #4486): dropped <c>pep</c>. It is one value per
+    /// base_id, computed over the single winning observation, so the column wrote
+    /// a real number on the winner and the sentinel 1.0 on every other observation
+    /// of the same precursor - a materialized left-outer-join, not a probability.
+    /// It moved to <see cref="FdrExperimentRecord.Pep"/>, which is also what let
+    /// the 2nd pass stop reopening every per-run sidecar to patch it.
+    ///
+    /// v6 → v7 (2026-09-13, issue #4522): appended <c>apex_rt</c>, the
+    /// observation's detection apex retention time. It is a RUN-scope
+    /// per-observation fact and so belongs here, but it was left out because the
+    /// streaming score path did not otherwise read it. The one consumer that
+    /// wanted it - the model-diagnostics peak co-assignment panel - therefore read
+    /// a whole <c>apex_rt</c> column out of each file's <c>.scores.parquet</c> and
+    /// joined it to this sidecar POSITIONALLY, asserting the alignment on entry_id
+    /// because neither format recorded the contract it depended on. That join was
+    /// 29 MB per file of large-object allocation against 4 MB for everything else
+    /// the panel did. Carrying the column costs 8 bytes per record - a 29% larger
+    /// file, read sequentially - and deletes the column read, the inferred join
+    /// and the assertion that policed it.
+    ///
+    /// No conversion path is written: pre-first-public-release, an older sidecar
     /// simply fails <see cref="IsCurrentFormat"/> and is recomputed, which
-    /// costs a re-run rather than risking a misread record.
+    /// costs a re-run rather than risking a misread record. A version bump is
+    /// therefore not free at cohort scale: <c>FormatVersion</c> is part of
+    /// FirstPassFDR's validity key, so every bed's Stage 5 output has to be
+    /// regenerated (5h11m for the 446-run CHS cohort).
     /// </summary>
     public static class FdrScoresSidecar
     {
+        /// <summary>File-name token of every first-pass artifact.</summary>
+        public const string LABEL_FIRST_PASS = @"1st-pass";
+        /// <summary>File-name token of every second-pass artifact.</summary>
+        public const string LABEL_SECOND_PASS = @"2nd-pass";
+        public const string EXT = @".fdr_scores.bin";
+        /// <summary>File-name ending of the first-pass FDR scores file: <c>.1st-pass.fdr_scores.bin</c>.</summary>
+        public const string EXT_FIRST_PASS = @"." + LABEL_FIRST_PASS + EXT;
+        /// <summary>File pattern of every first-pass artifact, for a message that tells the user to delete them.</summary>
+        public const string FIRST_PASS_FILE_PATTERN = @"*." + LABEL_FIRST_PASS + @".*";
+
         // 8-byte magic. ASCII "OSPRYFDR" — same as Rust.
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 6;
+        public const byte FormatVersion = 7;
         public const int HeaderLength = 32;
-        public const int RecordLength = 28;
+        public const int RecordLength = 36;
 
         /// <summary>
-        /// Records per buffered body read in <see cref="TryWalkRecords"/>. 2,048 x 28 B =
-        /// 57,344 B, comfortably under the 85,000-byte large-object threshold, so a reader
-        /// walks a 106 MB sidecar through one Gen0 buffer instead of allocating the whole
-        /// file on the LOH.
+        /// Records per buffered body read in <see cref="TryWalkRecords"/>. 2,048 x 36 B =
+        /// 73,728 B, still under the 85,000-byte large-object threshold at format v7's wider
+        /// record, so a reader walks a 137 MB sidecar through one Gen0 buffer instead of
+        /// allocating the whole file on the LOH. Any further column added here has to be
+        /// checked against that threshold: 2,048 x 42 B would cross it and put every sidecar
+        /// read back on the large object heap.
         /// </summary>
         private const int RECORDS_PER_CHUNK = 2048;
 
@@ -186,13 +224,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string Pass1Path(string inputPath)
         {
-            return ScoresPath(inputPath, "1st-pass");
+            return ScoresPath(inputPath, LABEL_FIRST_PASS);
         }
 
         /// <summary>Path for the second-pass FDR scores sidecar.</summary>
         public static string Pass2Path(string inputPath)
         {
-            return ScoresPath(inputPath, "2nd-pass");
+            return ScoresPath(inputPath, LABEL_SECOND_PASS);
         }
 
         /// <summary>
@@ -257,15 +295,23 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// <see cref="LABEL_FIRST_PASS"/> or <see cref="LABEL_SECOND_PASS"/>.
+        /// </summary>
+        public static string PassLabel(Pass pass)
+        {
+            return pass == Pass.FirstPass ? LABEL_FIRST_PASS : LABEL_SECOND_PASS;
+        }
+
         private static string ScoresPath(string inputPath, string passLabel)
         {
-            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
+            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
             // Route through ArtifactPaths so the sidecar follows the scores
             // parquet into --output-dir (default = the input's own directory).
             // Every caller -- straight-through writes, resume reads, and the
             // resume-check iterators -- shares this, so they stay consistent.
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = string.Format("{0}.{1}.fdr_scores.bin", stem, passLabel);
+            string filename = string.Format(@"{0}.{1}{2}", stem, passLabel, EXT);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
 
@@ -302,12 +348,12 @@ namespace pwiz.Osprey.IO
             if (selectRecord != null && selected == null)
                 throw new ArgumentNullException(nameof(selected));
             selected?.Clear();
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var fs = BlockReadStream.OpenRead(path))
             {
                 long len = fs.Length;
                 if (len < HeaderLength)
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar too short ({0} bytes): {1}", len, path));
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_, len, path));
                 // Reject a payload that is not a whole number of records instead of flooring.
                 // Flooring silently drops a trailing partial record, so a truncated sidecar
                 // returns fewer scalars than it has entries and reads as a short file rather
@@ -316,7 +362,7 @@ namespace pwiz.Osprey.IO
                 if (payload % RecordLength != 0)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar payload {0} bytes is not a multiple of the {1}-byte record: {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_,
                         payload, RecordLength, path));
                 }
                 int n = (int)(payload / RecordLength);
@@ -324,16 +370,16 @@ namespace pwiz.Osprey.IO
                 scores = new double[n];
                 var header = new byte[HeaderLength];
                 if (!ReadFully(fs, header, HeaderLength))
-                    throw new IOException("FdrScoresSidecar header truncated: " + path);
+                    throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___, path));
                 for (int i = 0; i < Magic.Length; i++)
                 {
                     if (header[i] != Magic[i])
-                        throw new IOException("FdrScoresSidecar bad magic: " + path);
+                        throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__, path));
                 }
                 if (header[8] != FormatVersion)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar version {0}, expected {1}: {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__,
                         header[8], FormatVersion, path));
                 }
                 // Every other reader here checks the pass byte; this one did not, so a 2nd-pass
@@ -343,7 +389,7 @@ namespace pwiz.Osprey.IO
                 if (header[9] != (byte)expectedPass)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar pass {0}, expected {1}: {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_,
                         header[9], (byte)expectedPass, path));
                 }
                 var rec = new byte[RecordLength];
@@ -351,7 +397,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (!ReadFully(fs, rec, RecordLength))
                         throw new IOException(string.Format(
-                            "FdrScoresSidecar truncated at record {0}: {1}", i, path));
+                            OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_, i, path));
                     entryIds[i] = BitConverter.ToUInt32(rec, 0);
                     scores[i] = BitConverter.ToDouble(rec, 4);
                     // Decoded only for the selected subset. The other ~82% of a file's records
@@ -386,7 +432,7 @@ namespace pwiz.Osprey.IO
                 foreach (var e in entries)
                 {
                     WriteRecord(bw, e.EntryId, e.Score,
-                        e.RunPrecursorQvalue, e.RunPeptideQvalue);
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue, e.ApexRt);
                 }
             });
         }
@@ -415,7 +461,7 @@ namespace pwiz.Osprey.IO
                 foreach (var r in records)
                 {
                     WriteRecord(bw, r.EntryId, r.Score,
-                        r.RunPrecursorQvalue, r.RunPeptideQvalue);
+                        r.RunPrecursorQvalue, r.RunPeptideQvalue, r.ApexRt);
                 }
             });
         }
@@ -489,8 +535,8 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Write one 36-byte record (entry_id + 4 f64s, little-endian) in the exact
-        /// v5 field order. Single-sourced so the FdrEntry and FdrProjection write
+        /// Write one <see cref="RecordLength"/>-byte record (entry_id + 4 f64s, little-endian)
+        /// in the exact v7 field order. Single-sourced so the FdrEntry and FdrProjection write
         /// paths cannot drift on byte layout.
         /// </summary>
         /// <summary>
@@ -510,10 +556,11 @@ namespace pwiz.Osprey.IO
         /// harness check on the HPC legs - those only see cross-TASK modification, and this
         /// catches a task rewriting its own output too.</para>
         ///
-        /// <para>Per PROCESS, keyed by full path. A resumed run is a new process and legitimately
-        /// rewrites what a previous one left; what is forbidden is producing the same artifact
-        /// twice inside one run, because only one of those writes can be the one that was
-        /// stamped.</para>
+        /// <para>Per RUN, keyed by full path. A resumed run legitimately rewrites what a previous
+        /// one left; what is forbidden is producing the same artifact twice inside one run,
+        /// because only one of those writes can be the one that was stamped. A run is one
+        /// command line, which starts with <see cref="BeginRun"/> - usually one per process, but
+        /// a test runs several in one.</para>
         /// </summary>
         private static void AssertNotWrittenAlready(string path)
         {
@@ -532,19 +579,32 @@ namespace pwiz.Osprey.IO
                 @"sidecar, not in a second pass over this one. See issue #4486.", key));
         }
 
-        // Full paths of every per-file sidecar written by this process. Never cleared: the
-        // question it answers is "twice in one run", and a run is a process.
+        // Full paths of every per-file sidecar written by this run. Cleared only when a new
+        // command line starts: the question it answers is "twice in one run".
         private static readonly HashSet<string> WrittenThisRun =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Start a new run for the write-once check: a sidecar a previous command line in this
+        /// process wrote may be written again. Called once per command line, before any work.
+        /// </summary>
+        public static void BeginRun()
+        {
+            lock (WrittenThisRun)
+            {
+                WrittenThisRun.Clear();
+            }
+        }
+
         private static void WriteRecord(
             BinaryWriter bw, uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue)
+            double runPrecursorQvalue, double runPeptideQvalue, double apexRt)
         {
             bw.Write(entryId);                          // [0..4]
             bw.Write(score);                            // [4..12]
             bw.Write(runPrecursorQvalue);               // [12..20]
             bw.Write(runPeptideQvalue);                 // [20..28]
+            bw.Write(apexRt);                           // [28..36]
         }
 
         /// <summary>
@@ -640,6 +700,12 @@ namespace pwiz.Osprey.IO
                 e.Score                       = BitConverter.ToDouble(chunk, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
+                // apex_rt (format v7) is deliberately NOT overlaid. Every caller of this
+                // overload builds its entries from a parquet that already carries the column,
+                // so the sidecar's copy is the same number arriving by a second route; writing
+                // it would only create a way for the two to disagree silently. The consumer
+                // that has no parquet row to start from reads records through
+                // <see cref="ReadRecords"/>, which does decode it.
                 // The EXPERIMENT-scope half, applied HERE so it reaches exactly the entries this
                 // sidecar has a record for and no others (format v5, issue #4486).
                 //
@@ -758,7 +824,7 @@ namespace pwiz.Osprey.IO
             // false return MEANS to the caller, not about how large the allocation was.
             try
             {
-                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var fs = BlockReadStream.OpenRead(path))
                 {
                     long len = fs.Length;
                     if (len < HeaderLength)
@@ -844,10 +910,7 @@ namespace pwiz.Osprey.IO
         private static bool ThrowPartialWalk(string path, long delivered, Exception inner = null)
         {
             string message = string.Format(
-                @"Reading the FDR sidecar '{0}' failed after {1} record(s) had already been " +
-                @"applied. Those entries now hold this file's values and the rest do not, which " +
-                @"no caller can detect or undo, so the run stops here rather than continuing " +
-                @"with a partly-overlaid pool.",
+                OspreyIOResources.Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_,
                 path, delivered);
             if (inner != null)
                 throw new IOException(message, inner);
@@ -876,7 +939,7 @@ namespace pwiz.Osprey.IO
 
             try
             {
-                using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var src = BlockReadStream.OpenRead(path))
                 {
                     if (src.Length < HeaderLength)
                         return false;
@@ -899,12 +962,19 @@ namespace pwiz.Osprey.IO
                     if (src.Length != expectedLen)
                         return false;
 
-                    var record = new byte[RecordLength];
-                    for (int rec = 0; rec < (int)headerCount; rec++)
+                    // Read in RECORDS_PER_CHUNK-record blocks, as TryWalkRecords does: one read call
+                    // per 36-byte record was most of what this reader cost, and it now serves
+                    // every per-file consumer of the first pass.
+                    var chunk = new byte[RECORDS_PER_CHUNK * RecordLength];
+                    int remaining = (int)headerCount;
+                    while (remaining > 0)
                     {
-                        if (!ReadFully(src, record, RecordLength))
+                        int take = Math.Min(RECORDS_PER_CHUNK, remaining);
+                        if (!ReadFully(src, chunk, take * RecordLength))
                             return false;
-                        onRecord(DecodeRecord(record));
+                        remaining -= take;
+                        for (int rec = 0; rec < take; rec++)
+                            onRecord(DecodeRecord(chunk, rec * RecordLength));
                     }
                 }
             }
@@ -921,17 +991,19 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Decode one 28-byte record into a <see cref="FdrScoreRecord"/>, reading the exact v6
-        /// field order <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the
-        /// writer so the read/write byte layout cannot drift.
+        /// Decode one <see cref="RecordLength"/>-byte record into a
+        /// <see cref="FdrScoreRecord"/>, reading the exact v7 field order
+        /// <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the writer so
+        /// the read/write byte layout cannot drift.
         /// </summary>
-        private static FdrScoreRecord DecodeRecord(byte[] rec)
+        private static FdrScoreRecord DecodeRecord(byte[] rec, int offset = 0)
         {
             return new FdrScoreRecord(
-                BitConverter.ToUInt32(rec, 0),    // [0..4]   entry_id
-                BitConverter.ToDouble(rec, 4),    // [4..12]  svm_score
-                BitConverter.ToDouble(rec, 12),   // [12..20] run_precursor_qvalue
-                BitConverter.ToDouble(rec, 20));  // [20..28] run_peptide_qvalue
+                BitConverter.ToUInt32(rec, offset),        // [0..4]   entry_id
+                BitConverter.ToDouble(rec, offset + 4),    // [4..12]  svm_score
+                BitConverter.ToDouble(rec, offset + 12),   // [12..20] run_precursor_qvalue
+                BitConverter.ToDouble(rec, offset + 20),   // [20..28] run_peptide_qvalue
+                BitConverter.ToDouble(rec, offset + 28));  // [28..36] apex_rt
         }
     }
 }

@@ -1,6 +1,7 @@
 /*
  * Original author: Brian Pratt <bspratt .at. proteinms dot net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2018 University of Washington - Seattle, WA
  * 
@@ -19,17 +20,16 @@
 
 
 //
-// Small wrapper program for SkylineNightly
-// Accepts same argmuments as SkylineNightly, but first updates local SkylineNightly.exe from GitHub artifacts before invoking it
-// 
+// Small wrapper program for SkylineNightly, which is what the scheduled task runs. It updates the local
+// SkylineNightly.exe (and itself) from the TeamCity artifacts, then starts a SkylineNightly run. What the
+// run is comes from SkylineNightly's saved settings, so any arguments the task passes are ignored.
+//
 
 // ReSharper disable LocalizableElement
 
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using Ionic.Zip;
 using SkylineNightly;
 
@@ -122,38 +122,33 @@ namespace SkylineNightlyShim
                 return;
             }
 
-            // Do our work in the SkylineNightly directory
-            var file = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
-            if (file.StartsWith(@"file:"))
-            {
-                file = file.Substring(5);
-            }
-            while (file.StartsWith(@"/"))
-            {
-                file = file.Substring(1);
-            }
-            var nightlyDirectory = Path.GetDirectoryName(file);
+            // Do our work in the SkylineNightly directory. AppContext.BaseDirectory replaces
+            // Assembly.CodeBase, which was a file: URL and needed the unescaping below; it is
+            // already a plain directory path, and unlike Assembly.Location it survives a
+            // single-file publish. It carries a trailing separator, which GetDirectoryName
+            // never produced, so trim it to keep the logged and combined paths as they were.
+            // TrimEndingDirectorySeparator rather than TrimEnd: it leaves a path root alone, so an
+            // install at a drive root stays "C:\" instead of becoming "C:", which Windows reads as
+            // drive-relative and would resolve the ZIP path and working directory against the
+            // drive's current directory rather than this one.
+            var nightlyDirectory = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
             if (!string.IsNullOrEmpty(nightlyDirectory))
                 Directory.SetCurrentDirectory(nightlyDirectory);
 
             try
             {
-                using (var client = new WebClient())
+                // Attempt to update SkylineNightly.exe
+                string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetSkylineNightlyBranchQuery(), false);
+                var fileName = Path.Combine(nightlyDirectory, SKYLINENIGHTLY_ZIP);
+                Log("Update " + nightlyDirectory + " with " + zipFileLink);
+                TeamCityNightlyAuth.DownloadArtifact(zipFileLink, fileName, teamCityToken);
+                using (var zipFile = new ZipFile(fileName))
                 {
-                    // Attempt to update SkylineNightly.exe
-                    TeamCityNightlyAuth.ConfigureClient(client, teamCityToken);
-                    string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, "?branch=master", false);
-                    var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
-                    Log("Update " + nightlyDirectory + " with " + zipFileLink);
-                    client.DownloadFile(zipFileLink, fileName);
-                    using (var zipFile = new ZipFile(fileName))
-                    {
-                        AttemptUpdate("SkylineNightly.exe", zipFile);
-                        AttemptUpdate("SkylineNightly.pdb", zipFile);
-                        AttemptUpdate("ProDotNetZip.dll", zipFile);
-                        AttemptUpdate("SkylineNightlyShim.exe", zipFile);
-                        AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
-                    }
+                    AttemptUpdate("SkylineNightly.exe", zipFile);
+                    AttemptUpdate("SkylineNightly.pdb", zipFile);
+                    AttemptUpdate("ProDotNetZip.dll", zipFile);
+                    AttemptUpdate("SkylineNightlyShim.exe", zipFile);
+                    AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
                 }
             }
             catch (Exception e)
@@ -162,7 +157,7 @@ namespace SkylineNightlyShim
                 Log("Trouble updating SkylineNightly.exe, proceeding with existing installation");
             }
 
-            // Invoke SkylineNightly with any args provided
+            // Start the run SkylineNightly's settings describe
             Process nightly = new Process
             {
                 StartInfo =
@@ -171,8 +166,8 @@ namespace SkylineNightlyShim
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     FileName = "SkylineNightly.exe",
-                    WorkingDirectory = nightlyDirectory ?? throw new InvalidOperationException(),
-                    Arguments = string.Join(" ", args.Select(arg => string.Format("\"{0}\"", arg))),
+                    WorkingDirectory = nightlyDirectory,
+                    Arguments = "run",
                     CreateNoWindow = true
                 }
             };

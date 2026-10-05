@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Pwiz.Vendor.Common;
 
 namespace Pwiz.Vendor.Mobilion;
 
@@ -16,6 +17,25 @@ namespace Pwiz.Vendor.Mobilion;
 internal static class MobilionShimNative
 {
     private const string DllName = "MobilionShim";
+
+    /// <summary>
+    /// Loads MBI_SDK before the first P/Invoke below can pull in <c>MobilionShim.dll</c>.
+    /// </summary>
+    /// <remarks>
+    /// MobilionShim is pwiz-sharp's own C wrapper and links <c>MBI_SDK.lib</c>, so MBI_SDK is a
+    /// STATIC import that the OS loader resolves — a path no <c>DllImportResolver</c> ever sees,
+    /// VendorSdkLoader's included. A dev or CI build gets away with it because both DLLs sit
+    /// beside the executable; an installed build keeps MBI_SDK in the vendor cache instead, and
+    /// the P/Invoke then fails as "Unable to load DLL 'MobilionShim' or one of its dependencies",
+    /// naming the wrapper rather than the dependency that is actually missing. Loading MBI_SDK by
+    /// full path first registers it under its module name, which the static import then binds to.
+    /// </remarks>
+    static MobilionShimNative()
+    {
+        if (File.Exists(Path.Combine(AppContext.BaseDirectory, "MBI_SDK.dll")))
+            return; // app-local; the ordinary search order finds it
+        NativeLibrary.Load(Path.Combine(VendorSdkLoader.EnsureExtracted("Mobilion"), "MBI_SDK.dll"));
+    }
 
     /* ---- Result codes ---------------------------------------------------- */
     public const int MBI_OK = 0;

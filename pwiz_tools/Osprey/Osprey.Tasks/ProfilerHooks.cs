@@ -25,6 +25,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -182,7 +183,7 @@ namespace pwiz.Osprey.Tasks
         ///   gc_heap_last_gc       - heap size, including fragmentation.
         ///   gc_fragmented_last_gc - free bytes stranded between live objects.
         /// </summary>
-        public static void LogMemoryStats(Action<string> log, string label)
+        public static void LogMemoryStats(IOspreyLog log, string label)
         {
             if (log == null)
                 return;
@@ -197,15 +198,13 @@ namespace pwiz.Osprey.Tasks
 #if NETCOREAPP || NET5_0_OR_GREATER
             var gcInfo = GC.GetGCMemoryInfo();
             gcDetail = string.Format(CultureInfo.InvariantCulture,
-                ", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
+                @", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
                 gcInfo.TotalCommittedBytes / gb,
                 gcInfo.HeapSizeBytes / gb,
                 gcInfo.FragmentedBytes / gb);
 #endif
 
-            log(string.Format(CultureInfo.InvariantCulture,
-                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}{7}",
-                label,
+            log.LogInfo(LogTag.Mem(label), @"working_set={0:F2} GB (peak={1:F2} GB), managed_heap={2:F2} GB, peak_paged={3:F2} GB, gen2_count={4}, loh_count={5}{6}",
                 curWs / gb,
                 peakWs / gb,
                 managed / gb,
@@ -214,22 +213,22 @@ namespace pwiz.Osprey.Tasks
                 // Large Object Heap collection count is same as gen-2 in
                 // standard GC; report it explicitly to document intent.
                 GC.CollectionCount(2),
-                gcDetail));
+                gcDetail);
         }
 
         /// <summary>
-        /// True when the OSPREY_LOG_MEMORY environment variable is set (any non-empty
-        /// value). Gates the per-stage [MEM ...] snapshots so ordinary runs stay quiet;
-        /// set it for a memory-profiling run (issue #4355).
+        /// True when OSPREY_LOG_MEMORY is set to anything but <c>0</c>. Gates the per-stage
+        /// [MEM ...] snapshots so ordinary runs stay quiet; set it for a memory-profiling run
+        /// (issue #4355). See <see cref="OspreyEnvironment.LogMemory"/> for why <c>0</c> has to
+        /// count as off here.
         /// </summary>
-        public static readonly bool MemoryLoggingEnabled =
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY"));
+        public static readonly bool MemoryLoggingEnabled = OspreyEnvironment.LogMemory;
 
         /// <summary>
         /// <see cref="LogMemoryStats"/> guarded by <see cref="MemoryLoggingEnabled"/> so
         /// stage-boundary probes can stay in the pipeline at zero cost when disabled.
         /// </summary>
-        public static void LogMemoryStatsIfEnabled(Action<string> log, string label)
+        public static void LogMemoryStatsIfEnabled(IOspreyLog log, string label)
         {
             if (MemoryLoggingEnabled)
                 LogMemoryStats(log, label);
@@ -251,16 +250,15 @@ namespace pwiz.Osprey.Tasks
         /// capture is a no-op when no profiler is attached, so the batch path is
         /// unchanged.
         /// </summary>
-        public static void LogManagedHeapAfterGcIfEnabled(Action<string> log, string label, string detail)
+        public static void LogManagedHeapAfterGcIfEnabled(IOspreyLog log, string label, string detail)
         {
             if (!MemoryLoggingEnabled || log == null)
                 return;
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
-            log(string.Format(CultureInfo.InvariantCulture,
-                "[MEM {0}] managed_heap={1:F2} GB {2}",
-                label, GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
+            log.LogInfo(LogTag.Mem(label), @"managed_heap={0:F2} GB {1}",
+                GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail);
             CaptureRetentionSnapshot(label);
         }
     }

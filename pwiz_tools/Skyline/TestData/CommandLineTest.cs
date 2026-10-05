@@ -477,11 +477,16 @@ namespace pwiz.SkylineTestData
             string fastaPath = TestFilesDirs[0].GetTestPath("sample.fasta");
             string protdbPath = TestFilesDirs[1].GetTestPath("AssociateProteinMatches.protdb");
 
+            // An enrichment other than the default, because a name that does not resolve falls back to the default
+            var testEnrichment = new IsotopeEnrichments("Test enrichment", IsotopeEnrichmentsList.DEFAULT.Enrichments);
+            Settings.Default.IsotopeEnrichmentsList.Add(testEnrichment);
+
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
             {
                 "--new=" + docPath,
                 "--full-scan-precursor-isotopes=Count",
+                "--full-scan-precursor-isotope-enrichment=" + testEnrichment.Name,
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-res=5",
                 "--full-scan-acquisition-method=DIA",
@@ -492,8 +497,9 @@ namespace pwiz.SkylineTestData
                 "--full-scan-rt-filter-tolerance=5",
                 "--tran-precursor-ion-charges=2,3,4",
                 "--tran-product-ion-charges=1,2",
-                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_1.Label,
-                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
+                // Invariant names, as sent by external tools (e.g. FragPipe), must work in any UI language.
+                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_1.Name,
+                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Name,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
                 "--pep-digest-enzyme=Chymotrypsin",
@@ -525,6 +531,7 @@ namespace pwiz.SkylineTestData
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            AssertEx.AreEqual(testEnrichment.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
             Assert.AreEqual(FullScanAcquisitionMethod.DIA, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
             Assert.AreEqual("All Ions", doc.Settings.TransitionSettings.FullScan.IsolationScheme.Name);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
@@ -638,6 +645,10 @@ namespace pwiz.SkylineTestData
                 "--full-scan-precursor-res=5",
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-isotopes=Count",
+                // Localized labels and display names must also continue to work.
+                "--full-scan-precursor-isotope-enrichment=" + Settings.Default.IsotopeEnrichmentsList.GetDisplayName(testEnrichment),
+                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_3.Label,
+                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.IONS_4.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-product-add-special-ion=TMT-127L",
                 "--tran-product-add-special-ion=TMT-127H"
@@ -646,10 +657,20 @@ namespace pwiz.SkylineTestData
             output = RunCommand(settings);
             StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
             doc = ResultsUtil.DeserializeDocument(docPath);
+            AssertEx.AreEqual(TransitionFilter.StartFragmentFinder.ION_3.Name, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Name);
+            AssertEx.AreEqual(TransitionFilter.EndFragmentFinder.IONS_4.Name, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Name);
+            AssertEx.AreEqual(testEnrichment.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
             Assert.AreEqual(2, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+
+            // Invariant names and localized labels must both work in a UI language where they differ.
+            LocalizationHelper.CallWithCulture(new CultureInfo("ja"), () =>
+            {
+                ValidateInvariantAndLocalizedValues(docPath);
+                return true;
+            });
 
             // test case insensitive enum parsing
             settings = new[]
@@ -697,6 +718,59 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual("protdb", doc.Settings.PeptideSettings.BackgroundProteome.Name);
 
             File.Delete(docPath);
+        }
+
+        private void ValidateInvariantAndLocalizedValues(string docPath)
+        {
+            var startIon = TransitionFilter.StartFragmentFinder.ION_3;
+            var endIon = TransitionFilter.EndFragmentFinder.IONS_4;
+            string enrichmentDisplayName = Settings.Default.IsotopeEnrichmentsList.GetDisplayName(IsotopeEnrichmentsList.DEFAULT);
+            AssertEx.AreNotEqual(startIon.Name, startIon.Label, "Test requires a translated label");
+            AssertEx.AreNotEqual(IsotopeEnrichmentsList.DEFAULT.Name, enrichmentDisplayName, "Test requires a translated display name");
+
+            // Invariant names in upper case, to verify case-insensitive matching, and localized labels.
+            ValidateFragmentFinderValues(docPath, startIon, endIon, startIon.Name.ToUpperInvariant(), endIon.Name.ToUpperInvariant());
+            ValidateFragmentFinderValues(docPath, startIon, endIon, startIon.Label, endIon.Label);
+
+            foreach (var enrichmentText in new[] { IsotopeEnrichmentsList.DEFAULT.Name, enrichmentDisplayName })
+            {
+                ValidateParsedKey(CommandArgs.ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT, enrichmentText,
+                    c => c.FullScanPrecursorIsotopeEnrichment, IsotopeEnrichmentsList.DEFAULT.Name);
+            }
+
+            // Unknown values are usage errors.
+            const string unknownValue = "bogus";
+            foreach (var arg in new[] { CommandArgs.ARG_TRAN_PRODUCT_START_ION, CommandArgs.ARG_TRAN_PRODUCT_END_ION })
+            {
+                RunCommandAndValidateError(new[] { arg.ArgumentText + "=" + unknownValue }, string.Format(
+                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    unknownValue, arg.ArgumentText, string.Join(@", ", arg.Values)));
+            }
+        }
+
+        private void ValidateFragmentFinderValues(string docPath, LabeledValues<string> startIon, LabeledValues<string> endIon,
+            string startIonText, string endIonText)
+        {
+            FileEx.SafeDelete(docPath);
+            string output = RunCommand("--new=" + docPath,
+                CommandArgs.ARG_TRAN_PRODUCT_START_ION.ArgumentText + "=" + startIonText,
+                CommandArgs.ARG_TRAN_PRODUCT_END_ION.ArgumentText + "=" + endIonText);
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+            var filter = ResultsUtil.DeserializeDocument(docPath).Settings.TransitionSettings.Filter;
+            AssertEx.AreEqual(startIon.Name, filter.StartFragmentFinderLabel.Name);
+            AssertEx.AreEqual(endIon.Name, filter.EndFragmentFinderLabel.Name);
+        }
+
+        /// <summary>
+        /// Parses a single argument and verifies the key it resolves to, which checks on the resulting
+        /// document cannot do when an unmatched name silently falls back to a default.
+        /// </summary>
+        public static void ValidateParsedKey(Argument arg, string value, Func<CommandArgs, string> getKey, string expectedKey)
+        {
+            var parseOutput = new StringWriter();
+            var commandArgs = new CommandArgs(new CommandStatusWriter(parseOutput), false);
+            commandArgs.ParseArgs(new[] { arg.ArgumentText + "=" + value });
+            AssertEx.AreEqual(expectedKey, getKey(commandArgs), parseOutput.ToString());
         }
 
         [TestMethod]
@@ -4145,6 +4219,74 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void ConsoleCultureArgumentTest()
+        {
+            // --culture runs the command line in a chosen language, which the Tools > Options > Language
+            // setting cannot do. The culture is saved in case a failure leaves it changed.
+            var currentCulture = LocalizationHelper.CurrentCulture;
+            var currentUiCulture = LocalizationHelper.CurrentUICulture;
+            try
+            {
+                // An unsupported language is a usage error, not a crash, including a supported one with an
+                // invisible character pasted into it (a soft hyphen).
+                var argCulture = CommandArgs.ARG_CULTURE;
+                foreach (var notALanguage in new[] { @"not-a-culture", "j\u00ADa" })
+                {
+                    string errorOutput = RunCommand(false, argCulture.ArgumentText + '=' + notALanguage);
+                    AssertEx.Contains(errorOutput, string.Format(
+                        CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                        notALanguage, argCulture.ArgumentText, string.Join(@", ", argCulture.Values)));
+                }
+
+                // A specific culture is accepted, not only the languages listed in help. Callers pass names
+                // like "en-US" (see SkylineCmdTest.GetProcessStartInfo), which must not be rejected.
+                string output = RunCommand(false, argCulture + CultureInfo.CurrentCulture.Name,
+                    CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(
+                    Resources.ValueMissingException_ValueMissingException_, CommandArgs.ARG_IN.ArgumentText));
+
+                // Other spellings of a known culture name are accepted too. Which spellings resolve depends on the
+                // version of Windows (e.g. "en_US" does not resolve on all of them), but a change of case always does.
+                string valueMissingEnglish = Resources.ResourceManager.GetString(
+                    @"ValueMissingException_ValueMissingException_", new CultureInfo(@"en-US"));
+                Assert.IsNotNull(valueMissingEnglish);
+                output = RunCommand(false, argCulture.ArgumentText + @"=EN-us", CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(valueMissingEnglish, CommandArgs.ARG_IN.ArgumentText));
+
+                // The message for a following argument comes back in the requested language. Arguments are
+                // processed in order, so --culture only affects what comes after it.
+                var japanese = new CultureInfo(@"ja");
+                string valueMissingJapanese = Resources.ResourceManager.GetString(
+                    @"ValueMissingException_ValueMissingException_", japanese);
+                Assert.IsNotNull(valueMissingJapanese);
+                output = RunCommand(false, argCulture.ArgumentText + @"=ja", CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(valueMissingJapanese, CommandArgs.ARG_IN.ArgumentText));
+
+                // The deprecated name for Simplified Chinese, which scripts written for .NET Framework pass, is still
+                // accepted where .NET no longer lists it, because its parent culture is known.
+                const string deprecatedChinese = @"zh-CHS";
+                string valueMissingChinese = Resources.ResourceManager.GetString(
+                    @"ValueMissingException_ValueMissingException_", new CultureInfo(deprecatedChinese));
+                Assert.IsNotNull(valueMissingChinese);
+                AssertEx.AreNotEqual(valueMissingEnglish, valueMissingChinese, "Test requires a translated message");
+                output = RunCommand(false, argCulture.ArgumentText + '=' + deprecatedChinese, CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(valueMissingChinese, CommandArgs.ARG_IN.ArgumentText));
+
+                // The culture applies only to its own command, so the in-process Skyline MCP and Immediate
+                // Window do not leave later commands running in it.
+                AssertEx.AreEqual(currentCulture, LocalizationHelper.CurrentCulture);
+                AssertEx.AreEqual(currentUiCulture, LocalizationHelper.CurrentUICulture);
+                AssertEx.AreEqual(currentUiCulture, Thread.CurrentThread.CurrentUICulture);
+            }
+            finally
+            {
+                LocalizationHelper.CurrentCulture = currentCulture;
+                LocalizationHelper.CurrentUICulture = currentUiCulture;
+                LocalizationHelper.InitThread(Thread.CurrentThread);
+            }
+        }
+
+        [TestMethod]
         public void SkylineRunnerErrorDetectionTest()
         {
             TestSkylineRunnerErrorDetection(null);
@@ -4162,8 +4304,6 @@ namespace pwiz.SkylineTestData
 
         /// <summary>
         /// Tests that "IsErrorLine" works when the commandline is invoked in a particular culture.
-        /// Note that this code uses LocalizationHelper.CallWithCulture instead of the "--culture" commandline
-        /// argument because the latter does not set the culture back to its original value.
         /// </summary>
         private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
         {

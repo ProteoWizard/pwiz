@@ -108,6 +108,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ActionResult ClickMainMenuItem(string menuPath) { return CallClient(c => c.ClickMainMenuItem(menuPath)); }
     public ActionResult DismissWithAcceptButton(string formId) { return CallClient(c => c.DismissWithAcceptButton(formId)); }
     public ActionResult DismissWithCancelButton(string formId) { return CallClient(c => c.DismissWithCancelButton(formId)); }
+    public WindowSize ResizeWindow(string formId, int width, int height) { return CallClient(c => c.ResizeWindow(formId, width, height)); }
     public ActionResult DismissWithButton(string formId, string button) { return CallClient(c => c.DismissWithButton(formId, button)); }
 
     // 2-arg methods

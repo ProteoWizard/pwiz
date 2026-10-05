@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__" xml:space="preserve">
+    <value>モデルの妥当性チェック - ターゲット-デコイ分離に対するフィーチャーの寄与率（トレーニング済み線形モデル、係数は標準化）：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FeatureContributions_ToReportLines__unexpected_direction_" xml:space="preserve">
+    <value>（予期しない方向）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FeatureContributions_ToReportLines_coefficient" xml:space="preserve">
+    <value>係数</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FeatureContributions_ToReportLines_feature" xml:space="preserve">
+    <value>フィーチャー</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="FeatureContributions_ToReportLines_share____" xml:space="preserve">
+    <value>寄与率 (%)</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel" xml:space="preserve">
+    <value>第2パスの診断パネルを1個構築中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels" xml:space="preserve">
+    <value>{0:N0}個の第2パスの診断パネルを構築中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files" xml:space="preserve">
+    <value>{0:N0}個のファイル全体で各プリカーサーの最良ピークを検索中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file" xml:space="preserve">
+    <value>1個のファイルで各プリカーサーの最良ピークを検索中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
+    <value>{1:N0}個のプリカーサー候補ピークに対して{0}Percolatorを実行中...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_PassDisplayName_First_pass" xml:space="preserve">
+    <value>第1パス</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
+    <value>{1:N0}個のプリカーサー候補ピークに対して{0}Percolatorを実行中...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR" xml:space="preserve">
+    <value>{0}Percolatorの結果：ターゲット{1:N0}個、デコイ{2:N0}個が{3:P1} FDRを通過</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_" xml:space="preserve">
+    <value>{0}：保存された第1パスモデルですべての{1:N0}個のプリカーサー候補ピークをスコアリングし（再トレーニングなし）、その後Q値とPEPのためにターゲット-デコイ競合を行います。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file" xml:space="preserve">
+    <value>1個のファイルからPercolatorトレーニングフィーチャーを読み込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from__0__files" xml:space="preserve">
+    <value>{0:N0}個のファイルからPercolatorトレーニングフィーチャーを読み込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorEngine_RunStreamingIntoProjection_Selecting_training_peaks_from__0__precursor_candidate_peaks___" xml:space="preserve">
+    <value>{0:N0}個のプリカーサー候補ピークからトレーニングピークを選択中...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorQValues_ComputeExperimentPeptideQMap_Experiment_peptide_q_values" xml:space="preserve">
+    <value>実験ペプチドQ値</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorQValues_ComputeExperimentPrecursorQMap_Experiment_precursor_q_values" xml:space="preserve">
+    <value>実験プリカーサーQ値</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorQValues_ComputePepWinnerMap_Population_target_decoy_competition" xml:space="preserve">
+    <value>母集団ターゲット/デコイ競合</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorQValues_ComputePerRunPeptideQvalues_Per_run_peptide_q_values" xml:space="preserve">
+    <value>ランごとのペプチドQ値</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorQValues_ComputePerRunPrecursorQvalues_Per_run_precursor_q_values" xml:space="preserve">
+    <value>ランごとのプリカーサーQ値</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>{0:N0}個のプリカーサー候補ピークにQ値を割り当て中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Ignoring_the_saved_first_pass_model__it_has__0__features_and_this_run_scores__1___" xml:space="preserve">
+    <value>保存された第1パスモデルを無視します：このモデルのフィーチャー数は{0:N0}ですが、今回の実行では{1:N0}個をスコアリングします。新しいモデルをトレーニングします。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file" xml:space="preserve">
+    <value>1個のファイルからPercolatorトレーニングフィーチャーを読み込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files" xml:space="preserve">
+    <value>{0:N0}個のファイルからPercolatorトレーニングフィーチャーを読み込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from_1_file" xml:space="preserve">
+    <value>1個のファイルからPercolator用のプリカーサー候補ピークを読み取り中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from__0__files" xml:space="preserve">
+    <value>{0:N0}個のファイルからPercolator用のプリカーサー候補ピークを読み取り中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Reusing_the_saved_first_pass_model_" xml:space="preserve">
+    <value>保存された第1パスモデルを再利用します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>{0:N0}個のプリカーサー候補ピークをスコアリング中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Per_run_q_value_floors" xml:space="preserve">
+    <value>ランごとのQ値下限</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>{0:N0}個のプリカーサー候補ピークをスコアリング中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_DescribeCSelection_most_regularized_within__0___of_the_best" xml:space="preserve">
+    <value>最良値の{0:G6}%以内で最も正則化が強いもの</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_DescribeCSelection_strict_maximum" xml:space="preserve">
+    <value>厳密な最大値</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels_Gradient_boosted_trees___0__trees__max_depth__1__learning_rate__2__subsample__3__colsample__4_" xml:space="preserve">
+    <value>勾配ブースティング木：木{0}本、最大深さ{1}、学習率{2}、subsample {3}、colsample {4}、lambda {5}、alpha {6}、gamma {7}、最小子ノード重み{8}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels_SVM_regularization_C__swept_over__0___chosen_by_cross_validation_per_fold__" xml:space="preserve">
+    <value>SVM正則化C（{0}の範囲で探索、フォールドごとに交差検証で選択、{1}）：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_" xml:space="preserve">
+    <value>{1:N0}個のトレーニングピーク（ターゲット{2:N0}個）で{0}分割交差検証</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels_fold__0___1___C____2_" xml:space="preserve">
+    <value>フォールド{0}/{1}：C = {2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_fold__0___1___iteration__2__of__3____4__of__5__targets___6____at__7__FDR_" xml:space="preserve">
+    <value>Percolatorフォールド{0}/{1}：反復{2}/{3}（ターゲット{5:N0}個中{4:N0}個、{7:P0} FDRで{6:F1}%）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_iteration__0__of__1____2____of_training_targets_at__3__FDR_" xml:space="preserve">
+    <value>Percolator反復{0}/{1}（{3:P0} FDRでトレーニングターゲットの{2:F1}%）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinFdrEngine_LogFirstPassSummary_First_pass_protein_FDR___0__target_groups_at__1__FDR" xml:space="preserve">
+    <value>第1パスのタンパク質FDR：{1:P1} FDRでターゲットグループ{0:N0}個</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinFdrEngine_RunSecondPass_Protein_parsimony___0__groups" xml:space="preserve">
+    <value>タンパク質パーシモニー：{0:N0}個のグループ</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinFdrEngine_RunSecondPass__0__of__1__scored_target_peptides_detected_at__2__experiment_level__3__FDR_" xml:space="preserve">
+    <value>スコアリングされたターゲットペプチド{1:N0}個のうち{0:N0}個が、{2:P1}の実験レベル{3}FDRで検出されました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProteinFdrEngine_RunSecondPass__0__protein_groups_pass__1__protein_FDR" xml:space="preserve">
+    <value>{0:N0}個のタンパク質グループが{1:P1}のタンパク質FDRを通過</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationPlanner_Plan_Planning_cross_run_reconciliation_across__0__files" xml:space="preserve">
+    <value>{0:N0}個のファイル全体でラン間整合を計画中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationPlanner_Plan_Planning_cross_run_reconciliation_for_1_file" xml:space="preserve">
+    <value>1個のファイルのラン間整合を計画中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

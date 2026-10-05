@@ -50,9 +50,10 @@ file, one LC-MS/MS acquisition. It is the unit the pipeline fans out over.
 
 The code spells this concept `file`, because a run arrives as a file and is keyed by
 its file stem. The two fan-out tasks are `PerFileScoring` and `PerFileRescoring` in the
-CLI and in the `.osprey.task` sidecar names; the `HpcTask` enum spells three of the four
-differently (`FirstPassFdr`, `PerFileRescore`, `SecondPassFdr`), so a name copied from the
-enum will not match a filename. Stage 6's canonical name is "Per-file rescore".
+CLI and in the `.osprey.task` sidecar names - each task's `Name`, the one spelling; the
+class names differ (`FirstPassFdrTask`, `PerFileRescoreTask`, `SecondPassFdrTask`), so a
+name copied from a class will not match a filename. Stage 6's canonical name is
+"Per-file rescore".
 **Proper names are quoted as they are spelled** -
 tasks, types, paths, stage names - and this document says **run** everywhere else,
 because "per-run versus experiment-wide" is the distinction that carries the
@@ -184,7 +185,7 @@ without violating any rule stated in terms of fan-out versus join alone.
 ### Four tasks over seven stages
 
 The pipeline is a fixed, four-element list, always in this order
-(`AnalysisPipeline.CanonicalPipeline()`). It alternates fan-out and join:
+(`OspreyTasks.Pipeline`). It alternates fan-out and join:
 
 | Task | Stages | Shape | Nodes | May hold resident |
 |---|---|---|---|---|
@@ -197,7 +198,7 @@ Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
 Stage 6 reconciliation plan. Stage 6 is the per-run rescore and gap-fill. Stage 7 is
 second-pass FDR, protein FDR, and the `.blib` write. The stage-to-document map is in
-[README.md](README.md); the task-name-to-enum-to-class map is in
+[README.md](README.md); the task-name-to-class map is in
 [15-hpc-scoring-split](15-hpc-scoring-split.md).
 
 A fan-out task's node count is free. One node per run, five runs per node, or all 500
@@ -205,12 +206,13 @@ in one process are the same computation, and the pipeline does not know which it
 doing. That freedom is the point of the whole design, and every principle in the next
 section exists to preserve it.
 
-### Two selectable tasks that are not pipeline tasks
+### Three selectable tasks that are not pipeline tasks
 
-The `HpcTask` enum has six members, but only the four above are pipeline stages.
-`AnalysisPipeline.CanonicalPipeline()` contains those four and nothing else; the other
-two are reachable only by naming them in `--task`, and neither participates in a run
-that does not:
+The task set (`OspreyTasks.Create()`) lists seven selectable tasks, but only the four above are
+pipeline stages. The canonical pipeline (`OspreyTasks.Pipeline`, an explicit ordered list
+the set declares beside `All`) contains those four and nothing else; the other three
+are reachable only by naming them in `--task`, and none of them participates in a run that
+does not:
 
 - **`--task SpectraCache`** builds each input's `.spectra.bin` and stops. It is the
   data-staging step *ahead* of the pipeline, not a node within it, which is why it needs
@@ -237,8 +239,29 @@ that does not:
   pool - asking a 446-run analysis to describe itself cost what running it did, and met the
   same memory wall.
 
-Both are appended after the four pipeline members so the existing ordinal values are
-undisturbed. Neither is a fan-out node, and neither belongs in an HPC relay plan.
+  It does not skip stages: it selects the whole pipeline, and each stage folds its own half
+  from its own artifacts: `FirstPassFDR` takes `FoldDiagnosticsOnly` and `SecondPassFDR`
+  takes `FoldPass2DiagnosticsOnly`, each when its diagnostics product is all it has
+  outstanding (`OnlyDiagnosticsProductOutstanding`).
+- **`--task TrainingExport`** asks for the per-run training export
+  ([22-training-export](22-training-export.md)), and means exactly what `--training-export`
+  without `--task` means. The export is a declared output of `PerFileRescoring`, not a stage,
+  so the selector selects the whole pipeline with the export on and sets no stop boundary.
+  On a finished analysis every other output is current: `PerFileScoring`, `FirstPassFDR` and
+  `SecondPassFDR` report `skipping (outputs valid)`, and `PerFileRescoring` takes its
+  export-only arm (`OnlyTrainingExportsOutstanding`), which writes each missing export from the
+  run's own artifacts and re-scores nothing. On an unfinished analysis the analysis runs, and
+  each run's export is written while its spectra are in hand. `--task ModelDiagnostics` never
+  writes one: a diagnostics-only render writes nothing but its report.
+
+  Like `ModelDiagnostics`, it is admitted to the per-run survivor loader (`HydratesPerRun`), so
+  walking a finished cohort does not fall to the all-runs bundle. Under any other `--task` the
+  flag is accepted, because an HPC wrapper hands every node the same options, and it is inert
+  except on the `PerFileRescoring` leg; the startup line says where the export is written.
+
+All three follow the four pipeline members in `All`. None is a fan-out node, and none
+belongs in an HPC relay plan: the training export's relay is `PerFileRescoring`'s, because
+that is the node that writes it.
 
 ### Scatter and barrier: what a join may hold
 
@@ -336,9 +359,12 @@ carrying an analysis-wide payload.** `<stem>.reconciliation.json` does this toda
 one of its N copies restates the same join-wide `first_pass_base_ids` array, which at 446
 runs is 2.79 GB of pure duplication inside 10.7 GB of envelopes that a fan-out worker then
 has to parse to rebuild a union it could have been handed. Replication is only benign when
-the payload is small and fixed, as the frozen model is; when it scales with the experiment
+the payload is fixed in size, as the frozen model is; when it scales with the experiment
 it belongs in one experiment-wide artifact, and the fan-out reads that instead. This is the
-P6 startup rule seen from the writer's side.
+P6 startup rule seen from the writer's side. Fixed is not the same as small: the linear
+model is a few hundred KB, but a tree model under `OSPREY_FDR_MODEL=gbdt` is about 3.4 MB per
+copy, 1.5 GB across 446 runs, so the writer serializes it once and writes that text beside
+every run, and `LoadFromAny` parses one copy rather than each in turn.
 
 Scope is not the same question as naming, and the two must not be conflated. Most
 per-run content is named for its run stem and most experiment-wide content is named for
@@ -417,8 +443,9 @@ per-file check read the parquet's stamp) four log lines later: 448 "skipping (ou
 valid)" lines, zero re-scores, and a .blib silently missing a run. Two notions of "done"
 is the defect, so the fix is one predicate, not a second check.
 
-The gate leg for this is mode 9 in `regression.ps1`, which cuts ONLY the later product and
-asserts the file is re-scored. Note why the pre-existing mode 8 could not catch it: it
+The test for this is `TestSubsetRescoreResume` in `SubsetPipelineTest` (formerly
+`regression.ps1` mode 9), which cuts ONLY the later product and asserts the file is
+re-scored. Note why the partial-rescore case before it (formerly mode 8) could not catch it: it
 amputates BOTH products, which puts the two checks back into agreement - an interruption
 test has to leave the state an interruption actually leaves, not a tidier one.
 
@@ -433,13 +460,72 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 [14-intermediate-files](14-intermediate-files.md) enumerates the call sites, and a new
 durable artifact that does not appear there is a defect.
 
-**Three artifacts do not yet obey this, and they are defects rather than exceptions.** The
-Stage-7 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` are written with a
-truncating `StreamWriter`, and both flags default on, so a kill during Stage 7 destroys the
-previous run's report and leaves a half-written one. `--write-pin` output is the third.
-None of them is in the contract table below - nothing in the pipeline reads them - but the
-"presence proves completeness" guarantee a *user* draws from a report file is exactly as
-strong as `FileSaver`, which is to say currently absent for these three.
+**"Durable artifact" is not narrowed to what the pipeline reads back.** The Stage-7
+reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on) commit
+through `FileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7 leaves the
+previous run's report or none, never a half-written one. Because nothing downstream reads
+them and the blib has not been written yet when they run, a report that cannot be written
+- the previous run's copy still open in Excel is the common case, which makes the
+commit's replace throw - is logged as a warning naming the path and skipped, not turned
+into a pipeline failure. `--write-pin`'s `<stem>.cs_features.tsv`
+(`PerFileScoringTask.WriteFeatureDump`) and most `-d` diagnostic dumps
+(`OspreyFileDiagnostics`'s one-shot dumps, `FdrDiagnostics.WriteCutoffs`,
+`PercolatorDiagnosticsDump`, `PickCandidateDump`, `PeakDataExtractor`'s search-XIC dump)
+commit the same way: nothing in the pipeline reads any of them back, but a bisection
+session - a human or a Claude session doing cross-impl debugging, since that is who
+actually opens these files - trusts presence to mean "this run wrote something," same as
+every other artifact, and a truncated dump that LOOKS complete is worse than a missing
+one - the exact hazard P8 exists to close, just for a file a reader interprets instead of
+a downstream task consumes.
+
+**A second class of exemption, alongside `--log-file` below: dumps whose whole value is
+showing how far processing got before a crash.** `FdrDiagnostics.CoAssignRowDump`'s row
+stream and `OspreyFileDiagnostics`'s four held-open streams (`cs_stage6_mp_inputs.tsv`,
+`cs_stage6_predict_rt.tsv` - unreachable today, no live caller - `cs_stage6_cwt_path.tsv`,
+`cs_stage6_calibration.tsv`) write directly to their final path, not through `FileSaver`.
+Each streams rows across a long loop - a multi-file cohort walk, a per-scan rescore loop -
+specifically so a bisection session can see whatever got through before an exception
+ended it; discarding that on a throw, `FileSaver`'s whole point for a downstream reader,
+would throw away the one thing these dumps exist to preserve. A session that turned on
+the dump's own env var and hit a crash should not also need to know a second flag
+(`KeepFailedWrites`, below) exists to recover what was written - these dumps just leave it
+at their documented name unconditionally. `CoAssignRowDump` additionally needs to claim a
+unique sequence number per rebuild (a directory can hold both a straight-through Stage 7
+run and a later `--task ModelDiagnostics` regeneration), which `FileMode.CreateNew` on the
+real path gives it directly - no separate reservation step, unlike the workaround
+`FileSaver`'s deferred-existence-until-`Commit` would otherwise require. The four
+`OspreyFileDiagnostics` streams still register `CloseAll` against process exit, but only
+to flush each writer's OS-buffered tail before `Environment.Exit` returns - not to commit
+anything, since the rows are already at their final path as they are written.
+
+This differs from `PeakDataExtractor`'s search-XIC dump, which DOES commit through
+`FileSaver` despite also accumulating across calls: two independent call sites write the
+same `cs_search_xic_entry_<id>.txt` for one candidate, so the hazard there is a
+lost-update race between writers, not a crash discarding partial rows - the
+read-existing/write-whole/commit pattern under `DiagnosticFileLock` is what keeps one
+writer's update from clobbering the other's, and gated call volume keeps the re-read cost
+small. A concurrent-writer hazard is answered by atomicity even when nothing downstream
+reads the file; a want-partial-progress hazard is answered by NOT wrapping it in
+atomicity. Same "nothing downstream reads this" starting point, opposite conclusion,
+because the failure being guarded against is different.
+
+**One exemption is structural rather than a gap: the `--log-file` stream**
+(`CommandStatusWriter` over `config.LogFilePath` in `Program.cs`). It is written
+incrementally for the life of the run specifically so it can be tailed while the run is
+still going - `ai/CLAUDE.md` directs sessions to use it for exactly that. `FileSaver`'s
+model makes the real path invisible until `Commit()` at the very end, which would break
+live tailing and leave nothing at all after a crash, the opposite of what a log is for.
+`ArtifactPaths.ProbeWritable`'s zero-byte, self-deleting writability check is not a
+content write in the first place, so the P8 contract does not apply to it.
+
+For forensic inspection of what an ARTIFACT-shaped write got through before an exception
+abandoned it - without weakening the guarantee for every normal reader - set
+`OspreyEnvironment.KeepFailedWrites` (`OSPREY_KEEP_FAILED_WRITES`): `FileSaver.Dispose()`
+leaves an uncommitted temp in place instead of deleting it. It never touches the real
+path, so presence still proves completeness there; only a developer who knows to look
+for the temp sees the partial write. It has no effect on the log-shaped dumps above, which
+need no such flag because they never wrapped the write in `FileSaver` to begin with.
+[14-intermediate-files](14-intermediate-files.md) enumerates every writer.
 
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
 and is the most easily confused point in the design. Because atomic placement already
@@ -525,13 +611,18 @@ user-supplied paths do reach it, both noted below. A completed run can therefore
 output directory and still be recognised as valid - the property external tooling relies
 on to adopt a prior run's Stage 1-4 artifacts instead of recomputing them for hours.
 
-**The exception is `--decoy-pairing-manifest`**, whose path goes into
-`SearchParameterHash` verbatim and unnormalised. It is the only path anywhere in artifact
-identity, so it is the only reason a move invalidates: relocate a cohort that was searched
-with a pairing manifest and every artifact invalidates, because the manifest is named from
-somewhere else now. Restoring the original path with a junction is the cheap fix. Anything
-that adds a second path to a hash removes relocatability for every run, not just
-entrapment ones.
+**There is no exception, and `--decoy-pairing-manifest` used to be one.** Its path went into
+`SearchParameterHash` verbatim and unnormalised - the only path anywhere in artifact identity,
+and so the only reason a move invalidated: relocate a cohort searched with a pairing manifest
+and every artifact invalidated, because the manifest was named from somewhere else now. Worse,
+the invalidation ran the wrong way round. EDITING a manifest in place changed neither its path
+nor the hash, so every scored parquet went on reading valid against a file that no longer said
+what it said - and the manifest decides decoy classification, target/decoy pairing and the
+protein accessions protein FDR runs on, which makes that a stale FDR answer rather than a stale
+cache. The manifest is now identified the way the library is, by file **name + size + mtime**
+(`SearchIdentity.DecoyPairingManifestTerm`), so moving one is free and editing one invalidates.
+Nothing left in artifact identity is a path. Anything that adds one back removes relocatability
+for every run, not just entrapment ones.
 
 **P16. A report is a DERIVED VIEW over the artifacts, never an output only its producing
 phase can make.** Everything the diagnostics report says about a pass is a reduction over
@@ -592,6 +683,64 @@ The test that proves P16 has two halves, and neither alone is sufficient:
   when the flag is passed up front. Any view that is present in one and absent in the other
   is a diagnostic that some phase is holding privately.
 
+**P17. An optional product is a declared output of the existing task that already holds its
+inputs, never a stage of its own.** P16 is this rule for the diagnostics report. The training
+export (`--training-export`, [22-training-export](22-training-export.md)) is the second
+instance, and the one that made the rule worth stating. The export reads each run's calibrated
+spectra, reconciled boundaries and run q-values, which is exactly what `PerFileRescoring`
+streams for that run. So `<stem>.training.parquet` is one of `PerFileRescoring`'s declared
+outputs when the flag is given, and the pipeline stays four stages.
+
+The export's first draft was an optional fifth stage: a fan-out appended after `SecondPassFDR`.
+Every cost of that shape comes from the stage being new, not from anything the export does:
+
+* **Another round of nodes.** An HPC orchestrator (NextFlow, a SLURM chain) schedules a
+  fan-out as its own scatter. Each run's library, parquet and `.spectra.bin` are then staged
+  and loaded a second time, on nodes that exist only to re-read what that run's
+  `PerFileRescoring` node already had in memory.
+* **It serializes behind the last join.** A stage after `SecondPassFDR` cannot start until the
+  whole cohort's final FDR is done. A product that depends only on one run's Stage 6 output
+  then waits for every run's Stage 7.
+* **It adds a concept.** An optional stage needs membership rules that no other stage needs:
+  which selections include it, when it is stamped, whether it is logged. Each rule is a place
+  where "absent" can be mistaken for "done".
+* **It changes the shape the rest of this document assumes.** Fan, join, fan, join is what
+  the relay checklist, the memory bands and the HPC split are written against. A fifth stage
+  is a new boundary each of them has to learn.
+
+The rule, stated so the next optional product lands in the right place:
+
+1. **Find the task that already holds the product's inputs.** A per-run product built from
+   per-run inputs belongs to a fan-out; a reduction across runs belongs to a join.
+2. **Declare the product as that task's output only when it is asked for.** The flag then
+   moves no other key: adding it to a finished analysis leaves every other output valid, and
+   the forward scan (P15) finds only the product outstanding.
+3. **Give that task an arm for "only my optional product is outstanding".** The arm writes the
+   product from the task's own durable artifacts and redoes none of the task's work:
+   `FirstPassFdrTask.FoldDiagnosticsOnly`, `SecondPassFdrTask.FoldPass2DiagnosticsOnly`, and
+   `PerFileRescoreTask`'s export-only arm (`OnlyTrainingExportsOutstanding`).
+4. **Key the product on what it reads.** Its key is the task key, which no option of the
+   product enters, plus the product's own settings and the identities of the artifacts it
+   reads (`OspreyTask.OutputValidityKey`). Changing one of those redoes the product and never
+   the analysis.
+5. **If a `--task` for the product is wanted, make it a selector, never a stage.**
+   `--task ModelDiagnostics` and `--task TrainingExport` both select the whole pipeline and
+   let each stage decide what is outstanding.
+
+**This refines P16's corollary rather than contradicting it.** The corollary says diagnostics
+work belongs in the FDR tasks, never in the fan-out tasks. That is rule 1 applied to the
+report: the report reduces across runs, and the tasks that hold every run's evidence are the
+joins. The training export reduces one run, and the task that holds one run's spectra is a
+fan-out. What the corollary forbids is the same in both cases: a product whose only source is
+a phase's memory.
+
+The export is built so that it has no such source. Written in flight, it still reads the
+reconciled parquet and the q-value sidecar back from disk. The spectra and calibration it uses
+are the contents of that run's `.spectra.bin` and `.calibration.json`. So the export-only arm,
+writing later from those artifacts, writes the same file. P16's two-part test applies
+unchanged: the pay-later leg must re-score nothing, and its parquet must be byte-identical to
+the one written with the flag up front.
+
 ---
 
 ## The sidecar file contract
@@ -626,9 +775,10 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
 | `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
-| `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm | with the run |
+| `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
-| `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR` | with the run |
+| `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR`; `PerFileRescoring`'s training export when the worker wrote it | with the run |
+| `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
 | `<blib-stem>.2nd-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `SecondPassFDR` (pass 2) | `--task ModelDiagnostics` | n/a |
@@ -889,9 +1039,12 @@ a cache from another build may carry different scoring.
 ### Resume is a forward scan
 
 The driver walks the four tasks in order and, for each one that is included, skips it when
-every declared output exists *and* carries a validity sidecar matching that task's current
+every declared output exists *and* carries a validity sidecar matching that output's current
 key (`PipelineContext.CanRehydrate`). Otherwise it runs the task and stamps sidecars over
-its outputs afterward.
+its outputs afterward. An output's key is its task's key (`OspreyTask.OutputValidityKey`),
+except for an optional product that keys on more (P17). Today that is only the training
+export: each run's export adds the export settings and the identities of that run's inputs
+to `PerFileRescoring`'s key.
 
 Two details are easy to get wrong:
 
@@ -1010,7 +1163,11 @@ Experiment-wide, to **every** node:
   Stage 6 planning ends. It is what makes this list one a single-run node can actually run
   on: without it a node would rebuild the union from every run's `reconciliation.json`,
   which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
-  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`
+  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`. Stage 7's
+  library-fragment release reads the same file (#4650); it used to fold every run's final
+  pool to rebuild the set instead, which is the identical O(runs) pre-pass in different
+  clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
+  625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
 - `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
@@ -1020,6 +1177,14 @@ Experiment-wide, to **every** node:
 This is the boundary where a missing experiment-wide file does the most damage, because
 the node can often proceed without it and produce a plausible wrong answer rather than
 failing. Ship the experiment-wide artifacts together or none of them.
+
+With `--training-export`, this node also writes each run's `<stem>.training.parquet` (P17), and
+needs nothing more to do it. The export's instrument and collision-energy footer keys come
+from the run's data file when that file is on the node. Without it those keys are empty and
+the node warns; the rule above against shipping the data file still holds. Each export also
+keys on the identities of its run's `.spectra.bin`, `.calibration.json` and
+`.1st-pass.fdr_scores.bin`, so relay those with mtimes preserved, as for the library. A copy
+with a fresh mtime is a new input, and the node redoes that run's export.
 
 ### Boundary 3 -> 4: `PerFileRescoring` to `SecondPassFDR`
 
@@ -1046,9 +1211,9 @@ Experiment-wide:
 A `SecondPassFDR` node rebuilds each run from these artifacts one at a time and drops it, so
 it needs every run's files present but never holds more than one run's rows. The relay list
 is therefore the whole cohort's, as it always was; what changed is the node's peak, not its
-inputs. The run log says which shape it took - "folding over N run(s), each rebuilt from its
-own artifacts and dropped" - and that line is the evidence, because a resident pool and a
-fold produce identical output and differ only in a memory profile.
+inputs. The run log says which shape it took - under `--perf-stats`, the route line
+`[PATH] second-pass-join: per-run runs=N` - and that line is the evidence, because a resident
+pool and a fold produce identical output and differ only in a memory profile.
 
 **One parquet per run, and it is the reconciled one.** `<stem>.scores.parquet` is not an
 input to this boundary in any form - not as a fallback, not for a run Stage 6 did no work on.
@@ -1120,12 +1285,18 @@ the text says so rather than describing the current shape as though it were the 
    `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
    goes when the resident one does.
 
-   `OSPREY_STAGE7_STREAM=0` is the Stage 7 sibling, and the same disposition applies - it
-   selects the resident second-pass join, where `RescoredEntries` holds every run's
-   survivors instead of rebuilding one run at a time through `StreamFiles`. Both arms are
-   required to produce identical bytes.
+   **Stage 7 had the same sibling switch and no longer does.** `OSPREY_STAGE7_STREAM=0`
+   selected the resident second-pass join, where `RescoredEntries` held every run's survivors
+   instead of rebuilding one run at a time through `StreamFiles`. It was removed on
+   2026-09-10 once its A/B was banked - the resident arm passed the whole regression against
+   the committed golden at 1e-9 and produced a byte-identical diagnostics report - and
+   `ResidentPaths.KNOWN_UNFIXED` shrank from 5 to 4 with it. Setting the name now fails at
+   startup. The streamed fold is the only arm an operator can select - the configurations
+   that still take the resident fold are named below and do so by their own declaration -
+   so "both arms produce identical bytes" is history rather than a standing requirement,
+   and the golden is what answers "did streaming change results?" from here on.
 
-   **It IS the in-place A/B its Stage 6 sibling is, and it did not used to be.**
+   Its removal was earned by first making it a real A/B, which it had not been.
    `CanStreamStage7Join` opened on `!config.ExpectReconciledInput`, a flag only
    `--task SecondPassFDR` sets, so on a straight-through run the switch changed nothing -
    while `SecondPassFdrTask.ValidityKey` appended `;stage7stream=0` regardless, forcing a
@@ -1134,7 +1305,7 @@ the text says so rather than describing the current shape as though it were the 
    the survivor-subset shape (`ScoringTaskShared.AllReconciledParquetsCurrent`). Asked of
    the disk, it is route-independent - a straight-through run's Stage 6 has just written
    those parquets - so the cold run, both resume arms and the `--task SecondPassFDR` merge
-   all fold run by run, and the switch compares two arms of whichever one you are running.
+   all fold run by run.
 
    The per-run source is not one implementation reached four ways: each arm hands the fold
    the per-file half of the whole-run loop it would otherwise have run
@@ -1144,13 +1315,17 @@ the text says so rather than describing the current shape as though it were the 
    an arm is a call-shape change rather than a second algorithm.
 
    One route still cannot stream: a pass-2 mode whose per-file half has no worker
-   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). Until
-   `TransferOneFile` moves into `Pass2PerFileWorker`, `Stage7ResidentGuardError` keeps its
-   `streamingAvailable` exemption - a run with no streamed alternative has no choice for a
-   token to record.
+   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). It is
+   `ScoringTaskShared.Stage7StreamAdmittedBeforeRescore` that declines there, on
+   `!OspreyEnvironment.Pass2ProteinCompact`, and no token records it - a run with no streamed
+   alternative has nothing for a token to admit. That is the one operator-chosen route into
+   the resident fold left standing, and it ends when `TransferOneFile` moves into
+   `Pass2PerFileWorker`; `SecondPassFdrTask.WarnResidentStage7Join` discloses it meanwhile.
+   The other routes in are `NeedsResidentPool`'s, which the first-pass guard names and
+   tokens.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
-   the marker line `Second-pass join: folding over N run(s)` rather than inferred -
+   the route line `[PATH] second-pass-join: per-run` rather than inferred -
    `regression.ps1` demands it per leg (the cold run, both resumes, and mode 3's phase 4),
    scoped to the configurations that can actually stream.
 

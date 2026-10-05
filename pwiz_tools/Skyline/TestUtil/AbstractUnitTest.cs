@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -26,6 +27,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -460,8 +462,6 @@ namespace pwiz.SkylineTestUtil
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
-            SecurityProtocolInitializer.Initialize(); // Enable maximum available HTTPS security level
-
 //            var log = new Log<AbstractUnitTest>();
 //            log.Info(TestContext.TestName + " started");
 
@@ -510,7 +510,9 @@ namespace pwiz.SkylineTestUtil
             // Prevent any weird interactions between tests on reused processes
             Program.UnitTest = Program.FunctionalTest = false;
             Program.TestName = null;
-
+            // Perf tests turn on real MsDataFileImpl performance timers and rely on this to turn
+            // them off again. Left on, a two-pass chromatogram import in a later test fails.
+            MsDataFileImpl.PerfUtilFactory.Reset();
         }
 
         /// <summary>

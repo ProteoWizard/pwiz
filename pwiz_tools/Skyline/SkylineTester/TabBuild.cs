@@ -128,7 +128,8 @@ namespace SkylineTester
             IList<int> architectures, 
             bool nukeBuild, 
             bool updateBuild,
-            bool runBuildTests)
+            bool runBuildTests,
+            bool withTutorialPerf = false)
         {
             var commandShell = MainWindow.CommandShell;
             var branchParts = branchUrl.Split('/');
@@ -239,9 +240,15 @@ namespace SkylineTester
             // "run build verification tests" option wants that -- the nightly and quality runs test
             // afterwards under their own duration budget and requeue logic, so letting build.bat
             // test as well would double the work.
+            // --with-tutorial-perf only for the nightly. build.bat always builds and stages
+            // TestTutorial and TestPerf; the flag only adds perftests=on to build.bat's own test
+            // run, which the nightly never uses (it passes --no-tests and runs its tests
+            // afterwards), so for the nightly it changes nothing. The Build tab leaves it off so
+            // "run build verification tests" does not add the perf suite.
             commandShell.Add("#@ Building Skyline...\n");
-            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses{1}",
+            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses{1}{2}",
                 Path.Combine(buildRoot, @"pwiz_tools\Skyline\build.bat").Quote(),
+                withTutorialPerf ? " --with-tutorial-perf" : string.Empty,
                 runBuildTests ? string.Empty : " --no-tests");
 
             commandShell.Add("# Build done.");

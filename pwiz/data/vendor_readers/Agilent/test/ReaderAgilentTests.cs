@@ -272,4 +272,50 @@ public class ReaderAgilentTests
         });
         ctx.Check();
     }
+
+    /// <summary>
+    /// Rewrites every Agilent reference mzML in this class from the current reader output.
+    ///
+    /// <para>The <c>[TestMethod]</c> attribute below is COMMENTED OUT deliberately. An
+    /// undiscovered test cannot run in "Run All Tests", and MSTest has no attribute that
+    /// excludes a test from a run-all while leaving it runnable on demand: <c>[Ignore]</c> is
+    /// skipped even when selected explicitly, and a runsettings <c>TestCaseFilter</c> removes it
+    /// from discovery altogether, so it never appears to click on. Commenting the attribute is
+    /// the only mechanism that gives both.</para>
+    ///
+    /// <para>To regenerate: uncomment the attribute, run this one test, then comment it back.
+    /// It ends in <c>Assert.Fail</c>, so a run that completes is never green and the message is
+    /// the reminder. That is NOT a CI guard: if this vendor's data is absent, <c>SetUp</c> throws
+    /// <c>Assert.Inconclusive</c>, which aborts before the <c>Assert.Fail</c> and reports Skipped -
+    /// and <c>dotnet test</c> exits 0 on skips. Afterwards run the suite again WITHOUT it - a
+    /// regenerated reference that
+    /// does not then compare equal means the generate and compare paths disagree, which is the
+    /// one failure this mode can hide.</para>
+    /// </summary>
+    //[TestMethod]
+    public void Regenerate_Agilent_References()
+    {
+        VendorReaderTestHarness.GenerateReferences = true;
+        try
+        {
+            Reader_Agilent_RS080806_APCI_PIscan_CE35();
+            Reader_Agilent_RS080906_MMI_PIscan_CE35_250ms();
+            Reader_Agilent_RS080806_NL_448_2_001();
+            Reader_Agilent_TOFsulfas_DADSpectra_UVSignal272_NoProfile();
+            Reader_Agilent_reserpine_MS2sim_010();
+            Reader_Agilent_MRM_Neg_C5();
+            Reader_Agilent_Thyrxox_5_TS_Diff_Scan_B();
+            Reader_Agilent_Neg_MS_002_1scan_ProfileOnlyVendorCentroid();
+            Reader_Agilent_ImsSynthAllIons();
+            Reader_Agilent_ImsSynthCCS();
+            Reader_Agilent_ImsSynth_Chrom();
+            Reader_Agilent_GFb_4Scan_TimeSegs_1530_100ng();
+        }
+        finally
+        {
+            VendorReaderTestHarness.GenerateReferences = false;
+        }
+
+        Assert.Fail("Reference mzMLs regenerated. Comment out this [TestMethod] and run the normal tests.");
+    }
 }

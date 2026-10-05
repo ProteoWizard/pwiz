@@ -47,17 +47,42 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class SpectraCacheTask : OspreyTask
     {
-        public override string Name => @"SpectraCache";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = OspreyTaskNames.SPECTRA_CACHE;
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Selected explicitly and never part of the canonical pipeline: a full run
-        /// reaches the identical caching code through
-        /// <see cref="PerFileScoringTask"/>, so including this task there would
-        /// double-index every input for nothing.
+        /// Sees one input at a time and never computes an experiment-wide score.
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public override bool IsPerFileWorker => true;
+
+        /// <summary>
+        /// Inputs in, <c>.spectra.bin</c> out. Deliberately does NOT require
+        /// <c>--library</c>: caching depends only on the input file, and demanding one
+        /// would make staging a dataset wait on a library that is often chosen later.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
         {
-            return ctx.Config.SelectedTask == HpcTask.SpectraCache;
+            if (!config.HasInputFiles)
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<file...>"));
+            return null;
+        }
+
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            // With --output-dir and no --cache-dir, ArtifactPaths.ResolveCacheDir writes beside each
+            // input only where that folder is writable, and into the output directory otherwise.
+            string perInput = config.InputFiles != null && config.InputFiles.Count > 1 &&
+                              string.IsNullOrEmpty(config.CacheDir) && !string.IsNullOrEmpty(config.OutputDir)
+                ? string.Format(OspreyTasksResources.SpectraCacheTask_DescribeOutput_a__spectra_bin_file_next_to_each_input__or_in__0__where_the_input_folder_is_read_only,
+                    config.OutputDir, SpectraCache.EXT)
+                : DescribePerInputOutput(config, SpectraCache.GetCachePath, SpectraCache.EXT, config.CacheDir);
+            return string.Format(OspreyTasksResources.SpectraCacheTask_DescribeOutput__0_____output_and___library_are_not_used_, perInput,
+                OspreyArgNames.Text(OspreyArgNames.OUTPUT), OspreyArgNames.Text(OspreyArgNames.LIBRARY));
         }
 
         public override IEnumerable<string> Inputs(PipelineContext ctx)
@@ -93,7 +118,7 @@ namespace pwiz.Osprey.Tasks
             for (int fileIdx = 0; fileIdx < nFiles; fileIdx++)
             {
                 string inputFile = config.InputFiles[fileIdx];
-                ctx.LogInfo(string.Format("Caching spectra {0}/{1}: {2}",
+                ctx.LogInfo(string.Format(OspreyTasksResources.SpectraCacheTask_Run_Caching_spectra__0___1____2_,
                     fileIdx + 1, nFiles, inputFile));
 
                 var swFile = Stopwatch.StartNew();
@@ -105,7 +130,7 @@ namespace pwiz.Osprey.Tasks
                     if (unsortedCount > 0)
                     {
                         ctx.LogWarning(string.Format(
-                            "{0}: {1} spectra had unsorted centroids (sorted before caching).",
+                            OspreyTasksResources.SpectraCacheTask_Run__0____1__spectra_had_unsorted_peaks_and_were_sorted_before_caching_,
                             Path.GetFileName(inputFile), unsortedCount));
                     }
                 }
@@ -115,7 +140,7 @@ namespace pwiz.Osprey.Tasks
                     // staging sweep, but it must still fail the run: a partially
                     // staged dataset that reports success would be discovered much
                     // later, in a scoring run that silently re-parses.
-                    ctx.LogError(string.Format("Failed to cache {0}: {1}", inputFile, ex.Message));
+                    ctx.LogError(string.Format(OspreyTasksResources.SpectraCacheTask_Run_Failed_to_cache__0____1_, inputFile, ex.Message));
                     ctx.ExitCode = 1;
                     continue;
                 }
@@ -131,23 +156,25 @@ namespace pwiz.Osprey.Tasks
                 if (index.Ms2Count == 0)
                 {
                     ctx.LogError(string.Format(
-                        "No MS2 spectra were read from {0}; refusing to stage an empty cache.", inputFile));
+                        OspreyTasksResources.SpectraCacheTask_Run_No_MS_MS_spectra_were_read_from__0___so_no_cache_is_written_, inputFile));
                     ctx.ExitCode = 1;
                     continue;
                 }
                 built++;
 
+                // The cache writer already said what it saved, in words; this is the per-file
+                // time for a measurement, not a second report of the same numbers.
                 string cachePath = SpectraCache.GetCachePath(inputFile);
                 var cacheInfo = new FileInfo(cachePath);
-                ctx.LogInfo(string.Format(
-                    "  {0}: ms2={1:N0} ms1={2:N0} {3:N2} GB in {4:N1}s",
+                ctx.LogInfo(LogTag.TIMING, @"Spectra cache {0}: ms2={1} ms1={2} {3:F2} GB in {4:F1}s",
                     Path.GetFileName(cachePath), index.Ms2Count, index.Ms1Spectra.Count,
-                    cacheInfo.Length / (1024.0 * 1024.0 * 1024.0), swFile.Elapsed.TotalSeconds));
+                    cacheInfo.Length / (1024.0 * 1024.0 * 1024.0), swFile.Elapsed.TotalSeconds);
             }
 
             swAll.Stop();
-            ctx.LogInfo(string.Format("Cached {0} of {1} file(s) in {2:N1}s",
-                built, nFiles, swAll.Elapsed.TotalSeconds));
+            ctx.LogInfo(nFiles == 1 && built == 1
+                ? string.Format(OspreyTasksResources.SpectraCacheTask_Run_Cached_1_file_in__0_s, swAll.Elapsed.TotalSeconds)
+                : string.Format(OspreyTasksResources.SpectraCacheTask_Run_Cached__0__of__1__files_in__2_s, built, nFiles, swAll.Elapsed.TotalSeconds));
             return ctx.ExitCode == 0;
         }
 

@@ -1,5 +1,7 @@
 using Clearcore2.Data;
 using Clearcore2.Data.AnalystDataProvider;
+using Clearcore2.Data.Client;
+using Clearcore2.Data.DataAccess;
 using Clearcore2.Data.DataAccess.SampleData;
 using Clearcore2.RawXYProcessing;
 using Pwiz.Data.Common.Params;
@@ -15,7 +17,12 @@ namespace Pwiz.Vendor.Sciex;
 /// </summary>
 internal sealed class WiffFile : AbstractWiffFile
 {
-    private readonly AnalystWiffDataProvider _provider;
+    // Built by DataProviderFactory, as pwiz cpp WiffFileImpl does - it has
+    // "provider = gcnew AnalystWiffDataProvider()" commented out beside this call. Samples
+    // then come off a Batch, because AnalystDataProviderFactory.CreateSample is typed to
+    // AnalystWiffDataProvider and will not take the base DataProvider.
+    private readonly DataProvider _provider;
+    private readonly Batch _batch;
     private readonly Sample _sample;
     private readonly MassSpectrometerSample _msSample;
     private readonly WiffExperiment[] _experiments;
@@ -118,7 +125,7 @@ internal sealed class WiffFile : AbstractWiffFile
         // than closing the file synchronously (see WiffFile.Dispose comments).
         // Sample names are passed through EXACTLY as the SDK reports them, commas and all, as
         // cpp does - see the note on the ctor's name resolution below.
-        var provider = new AnalystWiffDataProvider();
+        var provider = DataProviderFactory.CreateDataProvider("", true);
         var names = new List<string>();
         try
         {
@@ -143,7 +150,7 @@ internal sealed class WiffFile : AbstractWiffFile
         if (!File.Exists(wiffPath)) throw new FileNotFoundException("WIFF not found", wiffPath);
         WiffPath = wiffPath;
 
-        _provider = new AnalystWiffDataProvider();
+        _provider = DataProviderFactory.CreateDataProvider("", true);
         SampleCount = _provider.GetNumberOfSamples(wiffPath);
         if (SampleCount == 0) throw new InvalidDataException($"WIFF reports zero samples: {wiffPath}");
         if (sampleIndex0 < 0 || sampleIndex0 >= SampleCount)
@@ -151,8 +158,10 @@ internal sealed class WiffFile : AbstractWiffFile
                 $"sample index {sampleIndex0} out of [0, {SampleCount})");
         SampleNumber = sampleIndex0 + 1;
 
-        _sample = AnalystDataProviderFactory.CreateSample(wiffPath, sampleIndex0, _provider)
-            ?? throw new InvalidDataException($"AnalystDataProviderFactory.CreateSample returned null for {wiffPath}");
+        _batch = AnalystDataProviderFactory.CreateBatch(wiffPath, _provider)
+            ?? throw new InvalidDataException($"AnalystDataProviderFactory.CreateBatch returned null for {wiffPath}");
+        _sample = _batch.GetSample(sampleIndex0)
+            ?? throw new InvalidDataException($"Batch.GetSample returned null for {wiffPath} sample {sampleIndex0}");
         if (!_sample.HasMassSpectrometerData)
             throw new InvalidDataException($"WIFF sample {sampleIndex0} has no MS data: {wiffPath}");
         _msSample = _sample.MassSpectrometerSample;

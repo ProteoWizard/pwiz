@@ -19,6 +19,7 @@
  */
 
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.ToolsUI
     /// One open native Windows dialog (window class "#32770" -- a message box, or the common Open/Save/folder
     /// dialog), identified by its window handle. Not a WinForms form, so it is absent from FormUtil.OpenForms and
     /// none of the managed element model reaches it: it is driven entirely by Win32 (EnumChildWindows to find its
-    /// controls, WM_SETTEXT / BM_CLICK / WM_CLOSE to act on them). Those are window-manager calls, so a READ is safe
+    /// controls, EM_REPLACESEL / BM_CLICK / WM_CLOSE to act on them). Those are window-manager calls, so a READ is safe
     /// from any thread -- which matters, because the dialog's modal loop is running on the UI thread. A gesture that
     /// rides the dialog-watch (<see cref="NativeFileDialog.EnterPath"/>, the DismissWith... verbs) must run OFF that
     /// thread, which is where it is posting the work and waiting for it.
@@ -320,7 +321,10 @@ namespace pwiz.Skyline.ToolsUI
                 @"Setting values is not supported for native dialog {0}.", FormId));
         }
 
-        public override System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(Hwnd);
+        // A native dialog cannot be rendered off-screen the way a managed form can, so without a desktop to copy
+        // from there is no image.
+        public override System.Drawing.Bitmap CaptureImage() =>
+            ScreenCapture.IsDesktopAvailable() ? JsonUiService.CaptureNativeWindow(Hwnd) : null;
 
         private void VerifyNotBlocked()
         {

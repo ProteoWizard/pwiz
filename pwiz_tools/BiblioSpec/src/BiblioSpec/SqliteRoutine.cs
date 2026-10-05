@@ -36,7 +36,7 @@ public static class SqliteRoutine
 
         var csb = new SQLiteConnectionStringBuilder
         {
-            DataSource = path,
+            DataSource = WithoutRedundantExtendedPrefix(path),
             ReadOnly = readOnly,
             // Pooling=false matches UimfData.cs: pooled handles can outlive a `using`
             // block and surprise callers that delete the file afterward.
@@ -45,6 +45,35 @@ public static class SqliteRoutine
         var conn = new SQLiteConnection(csb.ConnectionString);
         conn.Open();
         return conn;
+    }
+
+    /// <summary>
+    /// Drops an extended-length prefix (<c>\\?\C:\...</c>) from a path short enough not to need
+    /// one, leaving longer paths and UNC forms untouched.
+    /// </summary>
+    /// <remarks>
+    /// Callers hand BlibBuild paths already run through Skyline's <c>PathEx.ToLongPath</c>, which
+    /// prefixes unconditionally. SQLite's Windows VFS opens such a path on Windows but not under
+    /// Wine, where the create fails outright and BlibBuild reports "Failed to create ...". The
+    /// prefix only buys anything past MAX_PATH, so below that it can go; at or above it, it is
+    /// load-bearing on Windows and is kept.
+    /// </remarks>
+    internal static string WithoutRedundantExtendedPrefix(string path)
+    {
+        const string extendedPrefix = @"\\?\";
+        const int maxPath = 260;
+
+        if (!path.StartsWith(extendedPrefix, StringComparison.Ordinal))
+            return path;
+
+        string bare = path.Substring(extendedPrefix.Length);
+
+        // \\?\UNC\server\share is not the same path with the prefix removed - the UNC token
+        // stands in for the leading "\\", so stripping it would name a different file.
+        if (bare.StartsWith(@"UNC\", StringComparison.OrdinalIgnoreCase))
+            return path;
+
+        return bare.Length < maxPath ? bare : path;
     }
 
     /// <summary>

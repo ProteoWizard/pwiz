@@ -161,4 +161,16 @@
   <data name="WatersConnectAccount_HandleAuthenticationException_waters_connect_server_returned_non_JSON_body__" xml:space="preserve">
     <value>waters_connect server returned non-JSON body. </value>
   </data>
+  <data name="WatersConnectUrl_FetchContents_Timed_out_waiting_for_the_remote_server_to_list___0__" xml:space="preserve">
+    <value>Timed out waiting for the remote server to list '{0}'.</value>
+  </data>
+  <data name="WatersConnectUrl_FindAccountByAlias_Multiple_waters_connect_accounts_match_the_alias_or_server___0___Use_a_unique_account_alias_" xml:space="preserve">
+    <value>Multiple waters_connect accounts match the alias or server '{0}'. Use a unique account alias.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__" xml:space="preserve">
+    <value>Could not find the injection '{0}' under the waters_connect path '{1}'.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveInjection_No_waters_connect_account_was_found_with_the_alias_or_server___0__" xml:space="preserve">
+    <value>No waters_connect account was found with the alias or server '{0}'.</value>
+  </data>
 </root>

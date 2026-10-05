@@ -74,10 +74,25 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class RetainedBaseIdSidecar
     {
+        public const string EXT = @".retained_base_ids.bin";
+
         // 8-byte magic. ASCII "OSPRYRET".
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'R', (byte)'E', (byte)'T' };
 
+        // BUMPING THIS OWES THREE MORE EDITS, because nothing in the resume machinery
+        // regenerates this file today: declare it in FirstPassFdrTask.Outputs, stamp it in
+        // FirstPassFdrTask.WriteRetainedBaseIdSummary, and add the version to that task's
+        // ValidityKey. Without them a field summary written by the old build is present but
+        // unreadable, the task reads as done, nothing rewrites it, and the resume falls to the
+        // all-runs reconciliation bundle - O(files x entries), with a warning as its only
+        // symptom.
+        //
+        // Deliberately not carried ahead of a bump. Declaring an output that has never been
+        // stamped makes every completed analysis on disk read as owing a first pass, so
+        // `--task ModelDiagnostics` on a finished cohort re-runs Stage 1-5 for hours instead of
+        // folding its report in seconds. That price is worth paying once, WITH the bump that
+        // makes those directories stale anyway - not before it, when it buys nothing.
         public const byte FormatVersion = 1;
         public const int HeaderLength = 32;
         public const int RecordLength = 4;
@@ -107,7 +122,7 @@ namespace pwiz.Osprey.IO
             string stem = Path.GetFileNameWithoutExtension(outputBlib);
             if (string.IsNullOrEmpty(stem))
                 return null;
-            string filename = string.Format("{0}.1st-pass.retained_base_ids.bin", stem);
+            string filename = string.Format(@"{0}.{1}{2}", stem, FdrScoresSidecar.LABEL_FIRST_PASS, EXT);
             string parent = ArtifactPaths.ResolveOutputDir(siblingArtifactPath);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }

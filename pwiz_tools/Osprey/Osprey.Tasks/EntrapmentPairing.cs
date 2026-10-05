@@ -79,20 +79,23 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>Log the dropped-orphan summary (a warning for anything unexplained).</summary>
-        public void LogSummary(Action<string> logInfo)
+        public void LogSummary(IOspreyLog log)
         {
             if (MetClipDroppedCount > 0)
-                logInfo(string.Format(
-                    @"[ENTRAPMENT] Dropped {0} unmatched entrapment peptides (N-terminal-Met-clip artifacts with no target pair); excluded from the FDRBench manifest, input, and diagnostics",
-                    MetClipDroppedCount));
+            {
+                log.LogInfo(LogTag.ENTRAPMENT, CountText.Format(MetClipDroppedCount,
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_,
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_));
+            }
             if (UnexplainedEntrapment.Count > 0)
             {
                 var examples = new List<string>();
                 for (int i = 0; i < UnexplainedEntrapment.Count && i < 3; i++)
                     examples.Add(UnexplainedEntrapment[i]);
-                logInfo(string.Format(
-                    @"[ENTRAPMENT] WARNING: {0} entrapment peptides have no target pair and no known explanation (e.g. {1}); excluded -- investigate",
-                    UnexplainedEntrapment.Count, string.Join(@", ", examples)));
+                log.LogInfo(LogTag.ENTRAPMENT, CountText.Format(UnexplainedEntrapment.Count,
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_,
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_,
+                    string.Join(@", ", examples)));
             }
         }
 

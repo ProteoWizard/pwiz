@@ -65,6 +65,7 @@ REM # Usage:
 REM #   clean.bat            Wipe build outputs, keep caches (default).
 REM #   clean.bat --all      Wipe caches too (TC-equivalent full reset).
 REM #   clean.bat -a         Short alias.
+REM #   clean.bat -all       Same, the C++-era root clean.bat's spelling.
 REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0
@@ -74,14 +75,16 @@ pushd "%SCRIPT_DIR%"
 set CLEAN_CACHE=0
 if /I "%1"=="--all" set CLEAN_CACHE=1
 if /I "%1"=="-a"    set CLEAN_CACHE=1
+if /I "%1"=="-all"  set CLEAN_CACHE=1
 
 echo Cleaning pwiz build artifacts...
 
 REM # Walk the pwiz subtrees for any dir named bin, obj or TestResults. /d limits the
 REM # walk to directories; /r bounds it to the named subtree. No tracked pwiz file lives
 REM # under a dir with any of these names, so the sweep is safe. pwiz_tools\Skyline,
-REM # Shared and Osprey are NOT swept here — pwiz_tools\clean-apps.bat handles those with
-REM # its git-aware CleanBinaries (Shared\Lib keeps tracked binaries under bin-like dirs).
+REM # Shared and Osprey are NOT swept here — pwiz_tools\clean-apps.bat handles those:
+REM # Skyline through Skyline\CleanSkyline.bat, Shared and Osprey with its git-aware
+REM # CleanBinaries (Shared\Lib keeps tracked binaries under bin-like dirs).
 for %%s in (pwiz build examples scripts pwiz_tools\BiblioSpec pwiz_tools\Commandline pwiz_tools\MSConvertGUI pwiz_tools\SeeMS pwiz_tools\BullseyeSharp) do (
     for /d /r "%SCRIPT_DIR%\%%s" %%d in (bin obj TestResults) do (
         if exist "%%d" rmdir /s /q "%%d" 2>nul

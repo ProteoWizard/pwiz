@@ -42,16 +42,23 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="MzCalibration.ApplyCalibration"/> is the same pure per-m/z function
     /// that a whole-list calibrate-copy applies. Because each window is a fresh decode,
     /// calibration is done in place (no extra copy) rather than into a new array.
+    ///
+    /// <para>With <c>serialBlockReads</c>, windows load through
+    /// <see cref="SpectraWindowIndex.LoadWindowSerialRead"/>, for a caller that reads every
+    /// window of a run from a cold disk.</para>
     /// </summary>
     public class StreamingWindowSpectraProvider : IWindowSpectraProvider
     {
         private readonly SpectraWindowIndex _index;
         private readonly MzCalibrationResult _ms2Calibration;
+        private readonly bool _serialBlockReads;
 
-        public StreamingWindowSpectraProvider(SpectraWindowIndex index, MzCalibrationResult ms2Calibration)
+        public StreamingWindowSpectraProvider(SpectraWindowIndex index, MzCalibrationResult ms2Calibration,
+            bool serialBlockReads = false)
         {
             _index = index;
             _ms2Calibration = ms2Calibration;
+            _serialBlockReads = serialBlockReads;
         }
 
         public IReadOnlyList<double> Ms2RetentionTimes { get { return _index.AllMs2Rts; } }
@@ -59,7 +66,7 @@ namespace pwiz.Osprey.Tasks
         public List<Spectrum> GetCalibratedWindow(int windowKey)
         {
             // Fresh, uncalibrated decode of this window's spectra from disk.
-            var windowSpectra = _index.LoadWindow(windowKey);
+            var windowSpectra = _serialBlockReads ? _index.LoadWindowSerialRead(windowKey) : _index.LoadWindow(windowKey);
             if (_ms2Calibration.Calibrated)
             {
                 // These arrays are freshly decoded and owned solely by this list,

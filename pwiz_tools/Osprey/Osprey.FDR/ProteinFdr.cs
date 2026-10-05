@@ -192,6 +192,36 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Folds in an accumulator that <see cref="Add"/> built over one file's rows alone - on a
+        /// file lane, while other files are read. Merged once per file in file order, this leaves
+        /// exactly the state <see cref="Add"/> would have reached row by row: the best score is a
+        /// maximum and the best q-value a minimum, which no grouping changes; a peptide keeps the
+        /// decoy flag of its first occurrence, which is in the earliest file that has it; and
+        /// both collections gain each peptide when its first file is merged, the order they
+        /// would have been inserted in. <paramref name="file"/> is consumed - its entries are
+        /// adopted, not copied - and must not be used again.
+        /// </summary>
+        public void Merge(FirstPassProteinFdrAccumulator file)
+        {
+            foreach (string peptide in file._detectedPeptides)
+                _detectedPeptides.Add(peptide);
+            foreach (var kv in file._bestScores)
+            {
+                if (_bestScores.TryGetValue(kv.Key, out PeptideScore ps))
+                {
+                    if (kv.Value.Score > ps.Score)
+                        ps.Score = kv.Value.Score;
+                    if (kv.Value.BestQvalue < ps.BestQvalue)
+                        ps.BestQvalue = kv.Value.BestQvalue;
+                }
+                else
+                {
+                    _bestScores[kv.Key] = kv.Value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Fold one row into the detected-peptide set (targets passing peptide-level run FDR,
         /// matching Rust pipeline.rs:4301) and the per-peptide best (max) score / best (min)
         /// run peptide q-value reduction (matching
@@ -280,7 +310,7 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public static class ProteinFdr
     {
-        private const string DECOY_PREFIX = "DECOY_";
+        private const string DECOY_PREFIX = @"DECOY_";
 
         /// <summary>
         /// Build protein parsimony from the spectral library.
@@ -333,7 +363,7 @@ namespace pwiz.Osprey.FDR
             {
                 var sortedPeptides = new List<string>(kvp.Value);
                 sortedPeptides.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical "|"-joined set key; equal peptide strings are byte-identical so tie order does not change the key
-                string key = string.Join("|", sortedPeptides);
+                string key = string.Join(@"|", sortedPeptides);
 
                 List<string> accessions;
                 if (!peptideSetToAccessions.TryGetValue(key, out accessions))
@@ -732,7 +762,7 @@ namespace pwiz.Osprey.FDR
                 // Stage 7 diagnostic dump).
                 var sortedAccs = new List<string>(group.Accessions);
                 sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical ";"-joined sortKey; equal accession strings are byte-identical so tie order does not change the key
-                string sortKey = string.Join(";", sortedAccs);
+                string sortKey = string.Join(@";", sortedAccs);
 
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);
                 bool hasD = decoyScore.TryGetValue(group.Id, out double d);

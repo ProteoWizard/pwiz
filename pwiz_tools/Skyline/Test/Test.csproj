@@ -175,8 +175,13 @@
   <Target Name="_DeploySkylineCmd"
           Condition="'$(TargetFramework)' == 'net10.0-windows'"
           AfterTargets="Build">
+    <!-- Same platform-dependent folder as Skyline.csproj's _DeploySkylineCmd -->
+    <PropertyGroup>
+      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">..\SkylineCmd\bin\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">..\SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
+    </PropertyGroup>
     <ItemGroup>
-      <_SkylineCmdOutput Include="..\SkylineCmd\bin\$(Configuration)\net10.0-windows\SkylineCmd.*" />
+      <_SkylineCmdOutput Include="$(_SkylineCmdBin)SkylineCmd.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_SkylineCmdOutput)"
           DestinationFolder="$(OutDir)"

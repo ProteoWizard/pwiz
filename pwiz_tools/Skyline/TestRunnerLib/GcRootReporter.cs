@@ -186,6 +186,9 @@ namespace TestRunnerLib
                 var method = runtime.GetMethodByInstructionPointer(methodPtr);
                 if (method == null)
                     return null;
+                // ClrMD annotates Type non-null, but this walks a process being dumped for a leak;
+                // an NRE here costs the root report it exists to produce
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 var declaring = method.Type == null ? string.Empty : SimpleName(method.Type.Name) + @".";
                 return declaring + method.Name;
             }

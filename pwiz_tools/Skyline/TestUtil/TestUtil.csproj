@@ -21,7 +21,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
   </ItemGroup>
 
@@ -65,14 +64,13 @@
          supplies CodePagesEncodingProvider, required to read legacy .xls (BIFF) files on net8. -->
     <PackageReference Include="ExcelDataReader" Version="3.7.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <!-- The on-disk ClrMD is the net40 build, assembly version 0.8.31, and it was carried into
          the net8 group unchanged when the other legacy DLLs here moved to packages. It has no
          GCRoot type at all, so it cannot answer "what is still rooting this object". 3.1.512801
          is the version SkylineNightly's net8 group already uses. -->
     <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="3.1.512801" />
     <Reference Include="DigitalRune.Windows.Docking">
-      <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
   </ItemGroup>
 

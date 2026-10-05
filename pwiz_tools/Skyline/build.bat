@@ -18,7 +18,7 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
-REM #             [--build-only]
+REM #             [--build-only] [--with-tutorial-perf]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -48,6 +48,15 @@ REM #       Compile only: skip staging, the distro zips and the whole test step.
 REM #       This is what the top-level bs.bat gives a developer - the same projects
 REM #       and properties TeamCity builds, without the staging copy or the hour of
 REM #       tests that follows. Implies --no-tests.
+REM #   --with-tutorial-perf
+REM #       Include the tutorial and perf tests in the run. Tutorial tests already run
+REM #       by default, so this adds perftests=on to the full-suite pass (only that pass:
+REM #       the ja/zh import pass selects by regex and would pick up perf tests in two
+REM #       more languages). TestTutorial and TestPerf are built either way.
+REM #   --skip-tutorial-tests
+REM #       Build and stage TestTutorial as usual, so it still ships in SkylineTester.zip,
+REM #       but leave its tests out of every TestRunner pass (skip=TestTutorial.dll).
+REM #       tcbuild.bat passes this unless it is given --with-tutorial-perf.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -70,11 +79,13 @@ REM #   SKYLINE_TEST_ARGS      extra args appended verbatim to the TestRunner
 REM #                          command (e.g. test=Foo,Bar for a smoke run).
 REM #
 REM # Scope:
-REM #   Builds + tests Skyline.csproj and the net8-ported test projects CommonTest,
-REM #   Test, TestData, TestFunctional, TestConnected (plus the TestRunner harness).
-REM #   TestConnected's network-service tests self-skip when their credentials
-REM #   aren't configured. TestPerf and TestTutorial are intentionally EXCLUDED
-REM #   from the standard build -- run those separately when needed.
+REM #   Builds + tests Skyline.csproj and every test project - CommonTest, Test,
+REM #   TestData, TestFunctional, TestConnected, TestTutorial and TestPerf - plus the
+REM #   TestRunner harness. All of them are built and staged so SkylineTester.zip
+REM #   carries every test DLL. TestConnected's network-service tests self-skip when
+REM #   their credentials aren't configured, and TestPerf's tests only run with
+REM #   perftests=on, which only --with-tutorial-perf sets. --skip-tutorial-tests
+REM #   keeps the tutorial tests out of the run without leaving them out of the build.
 REM #
 REM # NOTE: dotCover coverage (--coverage) is temporarily removed while the
 REM #   TestRunner path beds in; re-add it as a separate step once proven in CI.
@@ -92,6 +103,9 @@ set AUTOMATED=0
 set NOTESTS=0
 set SEQUENTIAL=1
 set BUILDONLY=0
+set WITHTUTORIALPERF=0
+set TEST_SKIP=
+set PERF_TESTS=
 set ERROR_TEXT=
 set ZIPS=
 
@@ -120,6 +134,8 @@ if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
+if /i "%~1"=="--with-tutorial-perf" (set WITHTUTORIALPERF=1) else ^
+if /i "%~1"=="--skip-tutorial-tests" (set "TEST_SKIP=skip=TestTutorial.dll") else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -138,6 +154,9 @@ REM # never reach the test step. Stating the implication keeps that true even if
 REM # exits below are ever reordered.
 if %BUILDONLY%==1 set NOTESTS=1
 
+REM # Perf tests only reach the full-suite pass; see --with-tutorial-perf above.
+if %WITHTUTORIALPERF%==1 set PERF_TESTS=perftests=on
+
 REM # A zip is produced after staging, which --build-only skips, so the two together are
 REM # contradictory. Say so rather than exiting 0 having quietly built no zip - that silent
 REM # drop is the defect this flag was split out to fix, and the top-level b.bat injects
@@ -154,7 +173,13 @@ if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     goto error
 )
 
-set MSBUILD_PROPS=-p:Configuration=%CONFIG%
+REM # x64, the platform Visual Studio and the code inspection build Skyline.sln with (the
+REM # solution defines no Any CPU). Building the same layout lets build.bat pick up where the
+REM # inspection step left off instead of building a second copy under bin\<Config>, and it
+REM # matches the x64-only vendor readers. Keep these properties in step with tcinspect.ps1's:
+REM # any difference - AutomatedBuild changes every assembly's version stamp - turns that
+REM # reuse into a full rebuild.
+set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 
@@ -168,12 +193,54 @@ REM # Build targets: Skyline.csproj pulls in every ProjectReference (BiblioSpec,
 REM # CommonMsData, ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp
 REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
 REM # and TestRunner is the harness that stages + runs them.
-set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestRunner\TestRunner.csproj
+REM # Every test project is built, so SkylineTester.zip carries every test DLL and a
+REM # nightly can select tutorial and perf tests at run time. Leaving one out does not
+REM # fail anything - TestRunner's stager only logs "Skipping TestTutorial - no output ...
+REM # (build it first)" - so a smaller set here silently drops those tests from every
+REM # consumer of the staged build. Keeping them out of a test RUN is --skip-tutorial-tests
+REM # (and perftests, for TestPerf), not a smaller build.
+set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestTutorial\TestTutorial.csproj TestPerf\TestPerf.csproj TestRunner\TestRunner.csproj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet not on PATH & goto error)
+
+REM # ------------------------------------------------------------------------
+REM # ProteoWizard version banner. SkylineNightly scrapes the run log for
+REM # "ProteoWizard 3.0.<revision>.<hash> ..." to fill the revision and git_hash it posts
+REM # to skyline.ms. The bjam build printed it; this build does not run bjam, so emit it
+REM # here or LabKey rejects every posted run (it parses revision as an integer, and the
+REM # GetRevision() fallback in Nightly.cs yields "unknownDate.<hash>").
+REM #
+REM # The scrape needs the line at column 0, and MSBuild indents Message output, so the
+REM # target writes the line to a file and we emit it with `type`. obj\ is gitignored, so
+REM # an interrupted build leaves nothing behind in `git status`.
+REM #
+REM # Delete the file FIRST and check the exit code. A build killed between the write and
+REM # the del leaves the file behind; without both guards a later run whose msbuild failed
+REM # would `type` the PREVIOUS commit's banner, and SkylineNightly would post that stale
+REM # revision and hash as this run's - silently wrong data, which is the failure class this
+REM # whole block exists to remove.
+REM #
+REM # Skipped for --build-only: nothing scrapes a developer compile, and the step costs an
+REM # SDK MSBuild start plus three git subprocesses.
+REM # ------------------------------------------------------------------------
+set PWIZ_BANNER_FILE=%SCRIPT_DIR%\obj\pwiz-version-banner.txt
+if %BUILDONLY%==0 (
+    if not exist obj mkdir obj
+    if exist "%PWIZ_BANNER_FILE%" del "%PWIZ_BANNER_FILE%"
+    dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner -nologo -v:q -p:PwizVersionBannerFile="%PWIZ_BANNER_FILE%"
+    if !ERRORLEVEL! NEQ 0 (
+        echo ##teamcity[message text='Version banner generation failed; SkylineNightly cannot scrape a revision from this log' status='WARNING']
+    )
+    if exist "%PWIZ_BANNER_FILE%" (
+        type "%PWIZ_BANNER_FILE%"
+        del "%PWIZ_BANNER_FILE%"
+    ) else (
+        echo ##teamcity[message text='No version banner was produced; SkylineNightly cannot scrape a revision from this log' status='WARNING']
+    )
+)
 
 REM # ------------------------------------------------------------------------
 REM # Native Hardklor.exe (C++). `dotnet build` (the .NET SDK MSBuild) cannot
@@ -303,7 +370,7 @@ set TESTS_FAILED=0
 set FAILED_PASSES=
 
 echo ##teamcity[progressMessage 'TestRunner full suite ^(English^)']
-call :run_tests %RUNNER_MODE% loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %TC_DECORATION%
+call :run_tests %RUNNER_MODE% loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %TC_DECORATION% %PERF_TESTS%
 if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_PASSES=%FAILED_PASSES% full-suite")
 
 echo ##teamcity[progressMessage 'TestRunner pass0 build check ^(CommonTest, Test, TestData^)']
@@ -323,7 +390,7 @@ if %TESTS_FAILED% NEQ 0 (set EXIT=1 & set "ERROR_TEXT=TestRunner reported failur
 goto tests_done
 
 :custom_run
-set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %SKYLINE_TEST_ARGS%
+set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %SKYLINE_TEST_ARGS% %PERF_TESTS%
 if defined TEAMCITY_VERSION set RUNNER_ARGS=%RUNNER_ARGS% teamcitytestdecoration=on
 if %SEQUENTIAL%==1 (
     set RUNNER_MODE=parallelmode=off
@@ -332,8 +399,8 @@ if %SEQUENTIAL%==1 (
     set RUNNER_MODE=parallelmode=server workercount=%SKYLINE_TEST_WORKERS%
     echo ##teamcity[progressMessage 'TestRunner ^(custom, parallel %SKYLINE_TEST_WORKERS% workers^)']
 )
-echo "%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
-"%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
+echo "%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS% %TEST_SKIP%
+"%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS% %TEST_SKIP%
 set EXIT=%ERRORLEVEL%
 popd
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
@@ -361,8 +428,8 @@ goto :eof
 REM # Run one TestRunner pass from the staging dir (cwd is already %STAGE_DIR%).
 REM # All args are forwarded verbatim via %*; sets EXIT to the runner's result.
 :run_tests
-echo "%STAGE_DIR%\TestRunner.exe" %*
-"%STAGE_DIR%\TestRunner.exe" %*
+echo "%STAGE_DIR%\TestRunner.exe" %* %TEST_SKIP%
+"%STAGE_DIR%\TestRunner.exe" %* %TEST_SKIP%
 if errorlevel 1 (set EXIT=1) else (set EXIT=0)
 goto :eof
 

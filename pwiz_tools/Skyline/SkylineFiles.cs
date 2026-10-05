@@ -72,7 +72,7 @@ namespace pwiz.Skyline
     {
         public static string GetViewFile(string fileName)
         {
-            return fileName + @".view";
+            return fileName + EXT_VIEW;
         }
 
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
@@ -1474,10 +1474,10 @@ namespace pwiz.Skyline
             }
         }
 
-        public const string EXT_SKY_VIEW = ".sky.view";
-        public static string FILTER_SKY_VIEW
+        public const string EXT_VIEW = ".view";
+        public static string FILTER_VIEW
         {
-            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_SKY_VIEW); }
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW); }
         }
 
         /// <summary>
@@ -1505,32 +1505,14 @@ namespace pwiz.Skyline
             using (var dlg = new SaveFileDialog())
             {
                 dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
-                dlg.SupportMultiDottedExtensions = true;
-                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
-                dlg.DefaultExt = EXT_SKY_VIEW;
+                dlg.DefaultExt = EXT_VIEW;
                 if (!string.IsNullOrEmpty(DocumentFilePath))
-                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath);
+                    dlg.FileName = Path.GetFileName(GetViewFile(DocumentFilePath));
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
-                var exportPath = dlg.FileName;
-                if (exportPath.EndsWith(EXT_SKY_VIEW + EXT_SKY_VIEW))
-                {
-                    // Offering ".view" as a second filter entry also stops the doubling, but is worse:
-                    // switching the file type back to ".sky.view" then swaps the last extension of
-                    // "Doc.sky.view" and offers "Doc.sky.sky.view".
-                    // If the path ends in ".sky.view.sky.view" strip off the last ".sky.view";
-                    var stripped = exportPath.Substring(0, exportPath.Length - EXT_SKY_VIEW.Length);
-                    // Only strip off the extension if neither form of the file existed.
-                    // If the stripped filename had exists, the dialog would not have added the extra extension, and
-                    // we also would need to prompt the user again to overwrite.
-                    // If the duplicated filename exists, the user was already prompted to overwrite so we should not change the name.
-                    if (!File.Exists(exportPath) && !File.Exists(stripped))
-                    {
-                        exportPath = stripped;
-                    }
-                }
-                ExportLayout(exportPath);
+                ExportLayout(dlg.FileName);
             }
         }
 
@@ -1558,7 +1540,7 @@ namespace pwiz.Skyline
             using (var dlg = new OpenFileDialog())
             {
                 dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
-                dlg.Filter = FILTER_SKY_VIEW;
+                dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
@@ -1701,7 +1683,7 @@ namespace pwiz.Skyline
 
         private DocumentFormat? GetFileFormatOnDisk()
         {
-            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
+            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : null;
         }
 
         public bool ShareDocument(string fileDest, ShareType shareType, bool useFileSaver = true, int zipFileMaxSegmentSize = 0)
@@ -4190,7 +4172,12 @@ namespace pwiz.Skyline
             }
 
             // Validate folder path matches
+            // EscapeDataString is NOT the replacement here: folderPath is a URI AbsolutePath, so its
+            // '/' separators have to survive escaping or the Contains match can never succeed.
+            // Retiring this properly means building the comparison from Uri parts.
+#pragma warning disable SYSLIB0013
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
+#pragma warning restore SYSLIB0013
                 return null; // Folder path mismatch
 
             // Validate upload permissions

@@ -34,16 +34,21 @@ namespace pwiz.Osprey.IO
     /// Osprey consumes, independent of where the peaks came from.
     ///
     /// This is the single definition of what a spectrum IS: peak sort order,
-    /// the isolation-window fail-fast, the precursor-m/z fallback. Both
-    /// <see cref="MzmlReader"/> and (on net472) the vendor-raw reader build
-    /// through it, so a cache written from a <c>.raw</c> and one written from the
-    /// mzML msconvert produced from that same <c>.raw</c> can differ only where
-    /// the two PARSERS genuinely disagree - never because two code paths
-    /// assembled equivalent data differently. That distinction is what makes a
-    /// raw-vs-mzML byte comparison a meaningful test (issue #4496).
+    /// the isolation-window fail-fast, the precursor-m/z fallback.
+    /// <see cref="SpectrumFileReader"/> builds every format through it, so a
+    /// cache written from a <c>.raw</c> and one written from the mzML msconvert
+    /// produced from that same <c>.raw</c> can differ only where ProteoWizard's
+    /// two READER paths genuinely disagree - never because two code paths
+    /// assembled equivalent data differently. That distinction is what made the
+    /// raw-vs-mzML byte comparison a meaningful test (issue #4496), back when
+    /// Osprey still had a second parser to compare against.
     /// </summary>
     internal static class SpectrumBuilder
     {
+        // PSI-MS accessions of the isolation window offsets, named in the error when one is missing.
+        private const string CV_ISOLATION_WINDOW_LOWER_OFFSET = @"MS:1000828";
+        private const string CV_ISOLATION_WINDOW_UPPER_OFFSET = @"MS:1000829";
+
         // Unsorted-centroid notices are per-process, not per-file: the cap keeps
         // a pathological file from flooding the log across parallel ProcessFile
         // calls. After the cap, we suppress further lines (the first ones
@@ -55,7 +60,7 @@ namespace pwiz.Osprey.IO
         /// Sort a spectrum's peaks by m/z if they are not already sorted,
         /// permuting the intensity array with them. Returns true when a sort was
         /// performed, which the callers accumulate into
-        /// <see cref="MzmlResult.UnsortedSpectrumCount"/>.
+        /// <see cref="SpectrumFileResult.UnsortedSpectrumCount"/>.
         ///
         /// Some producers emit peaks that are not strictly ascending in m/z
         /// (observed in a HeLa Astral 3 mz DIA file: ~0.07% of spectra have a
@@ -94,8 +99,7 @@ namespace pwiz.Osprey.IO
                 if (double.IsNaN(mzArray[i]))
                 {
                     throw new InvalidDataException(string.Format(
-                        "NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); " +
-                        "cannot sort or fragment-match a malformed centroid array.",
+                        OspreyIOResources.SpectrumBuilder_EnsureSorted_NaN_m_z_at_index__0__of_spectrum_index__1___n_peaks__2____cannot_sort_or_fragment_match_a_,
                         i, spectrumIndex, mzArray.Length));
                 }
                 if (i > 0 && mzArray[i] < mzArray[i - 1])
@@ -176,17 +180,17 @@ namespace pwiz.Osprey.IO
                 return null;
 
             if (isoLower <= 0)
+            {
                 throw new InvalidDataException(string.Format(
-                    "spectrum index {0}: no valid isolation-window lower offset " +
-                    "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
-                    "without true isolation windows.",
-                    spectrumIndex));
+                    OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_,
+                    spectrumIndex, CV_ISOLATION_WINDOW_LOWER_OFFSET));
+            }
             if (isoUpper <= 0)
+            {
                 throw new InvalidDataException(string.Format(
-                    "spectrum index {0}: no valid isolation-window upper offset " +
-                    "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
-                    "without true isolation windows.",
-                    spectrumIndex));
+                    OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_,
+                    spectrumIndex, CV_ISOLATION_WINDOW_UPPER_OFFSET));
+            }
 
             return new Spectrum
             {

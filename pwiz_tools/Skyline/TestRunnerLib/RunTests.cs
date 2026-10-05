@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -50,7 +51,6 @@ namespace TestRunnerLib
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
-        public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with Unicode (3rd party tool, mz5, etc), or the system does not support it
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
@@ -71,9 +71,6 @@ namespace TestRunnerLib
 
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
-
-            var noNightlyLeakTestAttr = RunTests.GetAttribute(testMethod, "NoLeakTestingAttribute");
-            DoNotLeakTest = noNightlyLeakTestAttr != null; // Running this multiple times would take too long
 
             var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
             SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
@@ -444,8 +441,11 @@ namespace TestRunnerLib
             var heapCounts = ReportSystemHeaps
                 ? MemoryManagement.GetProcessHeapSizes(heapOutput ? dmpDir : null)
                 : new MemoryManagement.HeapAllocationSizes[1];
-            var processBytes = heapCounts[0].Committed; // Process heap : useful for debugging - though included in committed bytes
-            var managedBytes = GC.GetTotalMemory(true); // Managed heap
+            // Collect right before sampling, so the numbers describe the floor the next test
+            // starts from rather than whatever the GC kept in reserve after the last one.
+            // FlushMemory above already collected once; this is the one pass that decommits.
+            MemoryManagement.CollectForMeasurement();
+            var managedBytes = GC.GetTotalMemory(false); // Managed heap
             var committedBytes = heapCounts.Sum(h => h.Committed);
             ManagedMemoryBytes = managedBytes;
             CommittedMemoryBytes = committedBytes;
@@ -493,18 +493,37 @@ namespace TestRunnerLib
                     for (int i = 0; i < heapCounts.Length; i++)
                     {
                         var heapCount = heapCounts[i];
-                        allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
-                            new Tuple<int, long, int>(i, p.Key, p.Value)));
-                        allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
-                            new Tuple<int, string, int>(i, p.Key, p.Value)));
+                        // CommittedSizes and StringCounts are filled in by a HeapWalk, which
+                        // GetProcessHeapSizes() does not perform on net8 - HeapLock/HeapWalk fault
+                        // with a non-catchable AccessViolation on a Windows Segment Heap - so both
+                        // stay null there and only the Committed/Reserved totals are available.
+                        if (heapCount.CommittedSizes != null)
+                        {
+                            allSizes.AddRange(heapCount.CommittedSizes.Take(sizeOutputs).Select(p =>
+                                new Tuple<int, long, int>(i, p.Key, p.Value)));
+                        }
+                        if (heapCount.StringCounts != null)
+                        {
+                            allStrings.AddRange(heapCount.StringCounts.Take(stringOutputs).Select(p =>
+                                new Tuple<int, string, int>(i, p.Key, p.Value)));
+                        }
                     }
 
-                    var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
-                        .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
-                    Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
-                    var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
-                        .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
-                    Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
+                    if (allSizes.Count == 0 && allStrings.Count == 0)
+                    {
+                        // Say so rather than logging two empty lists. Silence here previously
+                        // arrived as an ArgumentNullException that killed the whole run.
+                        Log("# HEAP DETAIL unavailable - per-block heap walking is net472-only\r\n");
+                    }
+                    else
+                    {
+                        var sizeText = allSizes.OrderByDescending(s => s.Item3).Take(sizeOutputs)
+                            .Select(s => string.Format("{0}:{1}:{2}", s.Item1, s.Item2, s.Item3));
+                        Log("# HEAP SIZES (top {0}) - {1}\r\n", sizeOutputs, string.Join(", ", sizeText));
+                        var stringText = allStrings.OrderByDescending(s => s.Item3).Take(stringOutputs)
+                            .Select(s => string.Format("{0}:\"{1}\":{2}", s.Item1, s.Item2, s.Item3));
+                        Log("# HEAP STRINGS (top {0}) - {1}\r\n", stringOutputs, string.Join(", ", stringText));
+                    }
                 }
 
                 TeamCityFinishTest(test, pass);
@@ -1128,8 +1147,43 @@ namespace TestRunnerLib
                 GC.Collect();
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 {
-                    SetProcessWorkingSetSize(Process.GetCurrentProcess().Handle, -1, -1);
+                    // Dispose the Process, or its handle stays open until a finalizer runs and
+                    // shows up as a +1 in the handle count sampled after this.
+                    using var current = Process.GetCurrentProcess();
+                    SetProcessWorkingSetSize(current.Handle, -1, -1);
                 }
+            }
+
+            /// <summary>
+            /// A full, compacting collection whose purpose is a quiet measurement point: after
+            /// it, private bytes should be what the process truly holds, not what the GC has
+            /// decided to keep on hand for the next allocations.
+            /// </summary>
+            /// <remarks>
+            /// <para>The regions-based GC (.NET 7+) retains a budget of free regions after an
+            /// ordinary full collection and decommits them only gradually, so a private-bytes
+            /// sample taken after <c>GC.Collect()</c> lags the live size by a variable amount.
+            /// In the .NET 10 nightly that showed as spikes of 400-900 MB on a ~350 MB floor
+            /// where the .NET Framework run of the same suite was smooth - noise that made the
+            /// private-bytes axis useless for leak detection. <c>GCCollectionMode.Aggressive</c>
+            /// is the mode the runtime provides for "the process is about to go idle": it
+            /// compacts every generation - on .NET 9+ the LOH included - and decommits as much
+            /// as it can. It is more expensive than a plain collection, which is why it is used
+            /// here in the test harness and not in Skyline.</para>
+            /// <para>A per-sample collection rather than a process-wide GC setting on purpose:
+            /// it leaves the GC every test runs under identical to production, and the one
+            /// setting measured against it (the segments GC, <c>DOTNET_GCName=clrgc.dll</c>)
+            /// was clearly worse. Measured on the twelve spikiest nightly tests (2026-09-16):
+            /// private bytes above managed + heaps went from a median of 355 MB (max 1.9 GB) to
+            /// a near-constant 31-33 MB; wall time unchanged within run-to-run noise on that
+            /// slice and on 179 TestData tests. The per-test seconds in the log stop before
+            /// this runs, so only whole-run time reflects its cost.</para>
+            /// </remarks>
+            public static void CollectForMeasurement()
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
             }
         }
 

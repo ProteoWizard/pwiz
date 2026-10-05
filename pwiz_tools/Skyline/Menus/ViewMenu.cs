@@ -30,7 +30,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -42,8 +41,8 @@ namespace pwiz.Skyline.Menus
 {
     public partial class ViewMenu : SkylineControl, IMenuControlImplementer
     {
-        private bool ProteomicsEnabled { get; set; }
-        private bool SmallMoleculesEnabled { get; set; }
+        private bool ProteomicsEnabled => DocumentUI.IsEmptyOrHasPeptides;
+        private bool SmallMoleculesEnabled => DocumentUI.HasSmallMolecules;
 
         public ViewMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
@@ -64,8 +63,6 @@ namespace pwiz.Skyline.Menus
             extraLargeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.XLRG_TEXT_FACTOR;
             defaultTextToolStripMenuItem.Checked =
                 !(largeToolStripMenuItem.Checked || extraLargeToolStripMenuItem.Checked);
-            ProteomicsEnabled = false;
-            SmallMoleculesEnabled = false;
         }
 
         public IEnumerable<ToolStripItem> DropDownItems { get; }
@@ -358,18 +355,6 @@ namespace pwiz.Skyline.Menus
                 case IonType.zhh: set.ShowZHHIons = check; break;
                 case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; break;
             }
-        }
-
-        public void EnableProteomicIons(bool visible)
-        {
-            ProteomicsEnabled = visible;
-            UpdateIonTypeMenu();
-        }
-
-        public void EnableSmallMoleculeIons(bool visible)
-        {
-            SmallMoleculesEnabled = visible;
-            UpdateIonTypeMenu();
         }
 
         private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)

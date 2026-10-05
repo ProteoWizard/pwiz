@@ -25,12 +25,13 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// One per-file <c>.fdr_scores.bin</c> record's payload: the RUN-scope statistics for one
-    /// OBSERVATION - entry_id + SVM score + the two run q-values + PEP. Decoupled from any
-    /// resident buffer (issue #4355 struct-shrink S0), because the lean <c>FdrProjection</c>
-    /// does not carry the q-value outputs, so the projection sidecar writers assemble records
+    /// OBSERVATION - entry_id + SVM score + the two run q-values + the detection apex RT.
+    /// Decoupled from any resident buffer (issue #4355 struct-shrink S0), because the lean
+    /// <c>FdrProjection</c> does not carry the q-value outputs, so the sidecar writers assemble
+    /// records
     /// of this shape and hand them to
     /// <see cref="FdrScoresSidecar.Write(string, System.Collections.Generic.IReadOnlyList{FdrScoreRecord}, FdrScoresSidecar.Pass)"/>.
-    /// The 36-byte byte layout stays single-sourced through <c>FdrScoresSidecar.WriteRecord</c>.
+    /// The 36-byte layout stays single-sourced through <c>FdrScoresSidecar.WriteRecord</c>.
     ///
     /// <para>The four EXPERIMENT-scope columns this struct used to carry -
     /// <c>experiment_precursor_qvalue</c>, <c>experiment_peptide_qvalue</c>,
@@ -55,6 +56,22 @@ namespace pwiz.Osprey.IO
         public readonly double RunPrecursorQvalue;
         public readonly double RunPeptideQvalue;
 
+        /// <summary>
+        /// This observation's detection apex retention time, in minutes - the same
+        /// <c>apex_rt</c> the file's <c>.scores.parquet</c> row carries (format v7, issue #4522).
+        ///
+        /// <para>It is here because it is a RUN-scope per-observation fact, which is what this
+        /// record is. The one consumer that wanted it had to go and get it from the parquet
+        /// instead: the model-diagnostics peak co-assignment panel read a whole <c>apex_rt</c>
+        /// column per file and joined it to this sidecar POSITIONALLY, asserting the alignment
+        /// on entry_id because nothing in either format recorded that contract. That join
+        /// allocated 29 MB per file against 4 MB for everything else the panel did, and the
+        /// 446-run cohort took private bytes from 10 to 26 GB across it. Carrying the column
+        /// costs 8 bytes per record of sequential IO - a 29% larger sidecar - and removes a
+        /// large-object column read, an inferred join and the assertion that policed it.</para>
+        /// </summary>
+        public readonly double ApexRt;
+
         // NO Pep COLUMN, on either pass (issue #4486). PEP is one value per base_id -
         // PepEstimator.PosteriorError over the single winning observation - and storing it here
         // meant writing that one fact into every observation of the precursor, real on the winner
@@ -72,12 +89,13 @@ namespace pwiz.Osprey.IO
 
         public FdrScoreRecord(
             uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue)
+            double runPrecursorQvalue, double runPeptideQvalue, double apexRt)
         {
             EntryId = entryId;
             Score = score;
             RunPrecursorQvalue = runPrecursorQvalue;
             RunPeptideQvalue = runPeptideQvalue;
+            ApexRt = apexRt;
         }
     }
 }

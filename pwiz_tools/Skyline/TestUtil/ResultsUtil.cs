@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  * 
@@ -272,6 +273,7 @@ namespace pwiz.SkylineTestUtil
 
         private const int SLEEP_INTERVAL = 10;
         public const int WAIT_TIME = 5 * 1000;    // 5 seconds
+        public const int WAIT_TIME_LIBRARIES = 60 * 1000;    // 60 seconds
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
         {
@@ -293,6 +295,34 @@ namespace pwiz.SkylineTestUtil
         public bool AnyProcessing
         {
             get { return BackgroundLoaders.Any(l => l.AnyProcessing()); }
+        }
+
+        /// <summary>
+        /// Waits for the document's spectral libraries to finish loading.
+        /// <see cref="AssertComplete"/> only inspects the chromatogram loader's progress, so it
+        /// can return while the library manager is still working. A caller that then reads
+        /// Settings.PeptideSettings.Libraries.IsLoaded sees false purely because it got there
+        /// first, and silently takes whatever path the code has for a library-less document.
+        /// A document with no libraries reports itself loaded, so this returns immediately.
+        /// </summary>
+        public void WaitForLibrariesLoaded(int millis = WAIT_TIME_LIBRARIES)
+        {
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                if (Document.Settings.PeptideSettings.Libraries.IsLoaded)
+                    return;
+                Thread.Sleep(SLEEP_INTERVAL);
+            }
+            // One last look: the loop sleeps after its final check, so the libraries may have
+            // finished during that sleep, and a timeout below SLEEP_INTERVAL yields no cycles
+            // at all and must still get one check rather than failing without ever looking.
+            if (Document.Settings.PeptideSettings.Libraries.IsLoaded)
+                return;
+
+            Assert.Fail("Libraries still not loaded after {0} seconds: {1}",
+                waitCycles*SLEEP_INTERVAL/1000,
+                Document.Settings.PeptideSettings.Libraries.IsNotLoadedExplained);
         }
 
         public void AssertComplete()
@@ -319,7 +349,7 @@ namespace pwiz.SkylineTestUtil
         /// status alone tells the two apart not at all. This is what turns an intermittent
         /// "Loader cancelled" into something diagnosable from a nightly log.
         /// </summary>
-        private string DescribeLoadState(IProgressStatus progress)
+        public string DescribeLoadState(IProgressStatus progress)
         {
             var lines = new List<string>();
             if (progress != null)
@@ -329,6 +359,8 @@ namespace pwiz.SkylineTestUtil
                     lines.Add("Message: " + progress.Message);
                 if (!string.IsNullOrEmpty(progress.WarningMessage))
                     lines.Add("Warning: " + progress.WarningMessage);
+                if (progress.ErrorException != null)
+                    lines.Add("Error: " + progress.ErrorException);
             }
 
             var document = Document;

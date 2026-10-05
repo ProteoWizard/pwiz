@@ -104,14 +104,21 @@ namespace pwiz.Osprey.IO
             return IsDirectoryWritable(inputDir) ? inputDir : OutputDir;
         }
 
+        /// <summary>
+        /// The input's directory, absolute and with the platform separator, so an input typed
+        /// as D:/data/run.mzML yields D:\data\run.spectra.bin rather than D:/data\run.spectra.bin.
+        /// Empty for a bare file name, which keeps the artifact relative to the working
+        /// directory exactly as before.
+        /// </summary>
         private static string InputDir(string inputPath)
         {
-            return Path.GetDirectoryName(inputPath) ?? string.Empty;
+            string dir = Path.GetDirectoryName(inputPath);
+            return string.IsNullOrEmpty(dir) ? string.Empty : Path.GetFullPath(dir);
         }
 
         private static bool IsDirectoryWritable(string dir)
         {
-            string key = string.IsNullOrEmpty(dir) ? "." : dir;
+            string key = string.IsNullOrEmpty(dir) ? @"." : dir;
             return _writable.GetOrAdd(key, ProbeWritable);
         }
 
@@ -121,7 +128,7 @@ namespace pwiz.Osprey.IO
             {
                 if (!Directory.Exists(dir))
                     return false;
-                string probe = Path.Combine(dir, "." + Guid.NewGuid().ToString("N") + ".osprey-wtest");
+                string probe = Path.Combine(dir, @"." + Guid.NewGuid().ToString(@"N") + @".osprey-wtest");
                 // DeleteOnClose keeps the probe self-cleaning even if disposal
                 // races with AV / permission edge cases -- no littered temp file.
                 using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write,

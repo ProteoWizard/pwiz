@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : (int?) null;
+                return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : null;
             }
             set
             {
@@ -3628,9 +3628,10 @@ namespace pwiz.Skyline.Controls.Graphs
             _stateProvider.BuildChromatogramMenu(sender, paneKey, menuStrip, GetChromFileInfoId());
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            base.OnFormClosed(e);
         }
 
         public static IList<Color> COLORS_GROUPS

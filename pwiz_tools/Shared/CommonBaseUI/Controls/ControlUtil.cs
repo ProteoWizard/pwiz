@@ -63,7 +63,7 @@ namespace pwiz.Common.Controls
 
             try
             {
-                control.BeginInvoke(new Action(() => CommonActionUtil.RunNow(action)));    // TIME-OF-USE
+                control.BeginInvoke(() => CommonActionUtil.RunNow(action));    // TIME-OF-USE
                 return true;
             }
             catch (Exception)

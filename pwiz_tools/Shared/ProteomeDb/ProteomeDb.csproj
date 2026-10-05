@@ -22,10 +22,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Forms/ contains a dev-only diagnostic UI not part of the legacy build
          (the legacy csproj enumerated 19 files; Forms/ProteomeDbForm.{cs,
          Designer.cs} were never in the list). Exclude to match. -->

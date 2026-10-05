@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
@@ -97,6 +98,72 @@ namespace pwiz.Osprey.FDR
     }
 
     /// <summary>
+    /// One file's complete score-pass output - every value <see cref="IFdrOutputSink.Accept"/>
+    /// receives for its rows - handed whole to <see cref="IFdrFileLaneSink.PrepareFile"/>.
+    /// </summary>
+    public sealed class FdrFileRows
+    {
+        private readonly double[] _runPrecursorQvalues;
+        private readonly double[] _runPeptideQvalues;
+        private readonly double[] _experimentPrecursorQvalues;
+        private readonly double[] _experimentPeptideQvalues;
+        private readonly double[] _peps;
+
+        public FdrFileRows(IReadOnlyList<uint> entryIds, IReadOnlyList<bool> isDecoys,
+            IReadOnlyList<byte> charges, IReadOnlyList<string> peptides, double[] scores,
+            double[] runPrecursorQvalues, double[] runPeptideQvalues,
+            double[] experimentPrecursorQvalues, double[] experimentPeptideQvalues, double[] peps)
+        {
+            EntryIds = entryIds;
+            IsDecoys = isDecoys;
+            Charges = charges;
+            Peptides = peptides;
+            Scores = scores;
+            _runPrecursorQvalues = runPrecursorQvalues;
+            _runPeptideQvalues = runPeptideQvalues;
+            _experimentPrecursorQvalues = experimentPrecursorQvalues;
+            _experimentPeptideQvalues = experimentPeptideQvalues;
+            _peps = peps;
+        }
+
+        public int Count => Scores.Length;
+        public IReadOnlyList<uint> EntryIds { get; }
+        public IReadOnlyList<bool> IsDecoys { get; }
+        public IReadOnlyList<byte> Charges { get; }
+        public IReadOnlyList<string> Peptides { get; }
+        public double[] Scores { get; }
+
+        /// <summary>The q-values Accept receives for row <paramref name="row"/>.</summary>
+        public FdrQValues QAt(int row)
+        {
+            return new FdrQValues(_runPrecursorQvalues[row], _runPeptideQvalues[row],
+                _experimentPrecursorQvalues[row], _experimentPeptideQvalues[row], _peps[row]);
+        }
+    }
+
+    /// <summary>
+    /// An <see cref="IFdrOutputSink"/> that can do the part of its per-row work that does not
+    /// depend on row ORDER for a whole file at once, on a file lane, while other files are being
+    /// produced - leaving <see cref="IFdrOutputSink.Accept"/>, which still sees every row in
+    /// (file, row) order, only the order-dependent rest.
+    /// </summary>
+    public interface IFdrFileLaneSink : IFdrOutputSink
+    {
+        /// <summary>
+        /// Called on a file lane with one file's complete output. Must touch no shared state:
+        /// the result is handed back to <see cref="AcceptPrepared"/> on the in-order thread.
+        /// </summary>
+        object PrepareFile(int fileIdx, FdrFileRows rows);
+
+        /// <summary>
+        /// Called in file order, before the file's first <see cref="IFdrOutputSink.Accept"/>,
+        /// with what <see cref="PrepareFile"/> returned for it. Accept then skips the work that
+        /// preparing the file already did.
+        /// </summary>
+        void AcceptPrepared(int fileIdx, object prepared);
+    }
+
+    /// <summary>
     /// Per-pass output sink for the projection score pass (issue #4355 step (b),
     /// FdrProjection struct-shrink S0 / increment C1). The lean
     /// <see cref="FdrProjection"/> no longer carries the six q-value outputs; the
@@ -135,25 +202,34 @@ namespace pwiz.Osprey.FDR
         /// than <see cref="FdrQValues"/> because it is a score, not a q-value, and rather than
         /// <see cref="FdrProjection"/> because that struct is deliberately lean (issue #4355
         /// S0/S1) and guarded against regrowth.</para>
+        ///
+        /// <para><paramref name="apexRt"/> is the row's detection apex retention time, carried
+        /// for the same reason and by the same route: it is persisted output (sidecar format
+        /// v7, issue #4522), not a scoring input, and the lean projection does not hold it. It
+        /// arrives already measured - from the parquet row the score was computed from - so a
+        /// sink never has to reconstruct it, which is exactly what the model-diagnostics
+        /// co-assignment panel used to do by re-reading every file's parquet.</para>
         /// </summary>
         void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
             byte charge, string peptide, double score, double experimentAggregateScore,
-            in FdrQValues q);
+            double apexRt, in FdrQValues q);
 
         /// <summary>
         /// Finalize the pass: emit the tail <c>[COUNT]</c> lines (per-file pass counts,
         /// total, unique precursors) and flush any deferred per-file output. Called once
         /// at the end of the score pass, replacing the former inline tail block.
         /// </summary>
-        void Finish(Action<string> logInfo);
+        void Finish(IOspreyLog log);
     }
 
     /// <summary>
     /// Hand one file's COMPLETE run-scope first-pass output to the caller, at the moment
-    /// pass 1 finishes that file. The four values are exactly what the per-file
-    /// <c>.1st-pass.fdr_scores.bin</c> stores, and pass 1 computes all four - the score from
-    /// the averaged fold model, the two run q-values from
-    /// <see cref="PercolatorQValues.ComputePerFileRunQvalues"/> over this file's own rows.
+    /// pass 1 finishes that file. The five values are exactly what the per-file
+    /// <c>.1st-pass.fdr_scores.bin</c> stores, and pass 1 has all five - the score from the
+    /// averaged fold model, the two run q-values from
+    /// <see cref="PercolatorQValues.ComputePerFileRunQvalues"/> over this file's own rows, and
+    /// <paramref name="apexRts"/> straight off the parquet row the score was computed from
+    /// (format v7, issue #4522 - it is not computed here, it is carried).
     ///
     /// <para><b>Why the write moved here.</b> The sidecar used to be assembled by the output
     /// sink during pass 2, one whole phase after the values existed. On a 446-file cohort pass
@@ -174,5 +250,33 @@ namespace pwiz.Osprey.FDR
     /// which is the projection's file order.</para>
     /// </summary>
     public delegate void FileRunScopeSink(string fileName, int fileIndex, int rowCount,
-        uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues);
+        uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
+        double[] apexRts);
+
+    /// <summary>
+    /// Streams one file's finished first-pass run-scope record back off the sidecar
+    /// <see cref="FileRunScopeSink"/> wrote: the entry id, the score, and BOTH run q-values.
+    /// Returns false when that file has nothing on disk, which leaves the caller to score it
+    /// normally.
+    ///
+    /// <para>The two q-values ride along with the score because the pass that reads this back
+    /// would otherwise recompute them, and recomputing them is a sort per file. The reason that
+    /// sort looks free is that it is normally weighed against loading the file's feature vectors
+    /// and re-running the dot product - but on the path that reads a sidecar neither of those
+    /// happens, so there is nothing left for it to hide behind and it becomes the dominant cost
+    /// of the pass.</para>
+    ///
+    /// <para>More than one path writes a 1st-pass sidecar - the streaming score pass's
+    /// <see cref="FileRunScopeSink"/>, the projection sink when the score pass leaves the write to
+    /// it (the resident path), and the resident task's own sidecar writer - and every one writes a
+    /// file's score and both run q-values together, computed from the same rows. What protects a
+    /// reader is therefore not who wrote the file but two checks the reader makes itself: the
+    /// record count must equal the file's parquet row count, and each record's entry_id must equal
+    /// its parquet row's, position by position. A file's entry ids are unique and ascending (one
+    /// row per precursor, written sorted), so together the two checks pin every record to its row.
+    /// Whether a sidecar is current for this build and these settings is the task-validity
+    /// stamp's question, not this reader's.</para>
+    /// </summary>
+    public delegate bool CompletedScoreStreamer(string fileName,
+        Action<uint, double, double, double> onRecord);
 }

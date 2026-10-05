@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/maccoss/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -21,11 +21,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -46,6 +48,19 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class FdrBenchInputWriter
     {
+        public const string EXT_PAIRING = @".pairing.tsv";
+
+        /// <summary>Heading of the score column FDRBench reads (<c>-score 'score:1'</c>).</summary>
+        public const string COLUMN_SCORE = @"score";
+        /// <summary>Heading of the run column a per-run file adds.</summary>
+        public const string COLUMN_RUN = @"run";
+
+        /// <summary>
+        /// How a truncated protein-ID list ends, as a user sees it in the file: the kept IDs,
+        /// then this with N the number dropped (see FormatProteinField).
+        /// </summary>
+        public const string TRUNCATION_MARKER_PATTERN = @";...+N_more";
+
         /// <summary>
         /// Mask for extracting the target-side base id from <see cref="FdrEntry.EntryId"/>.
         /// The high bit is set for decoys; clearing it yields the library entry id shared
@@ -94,12 +109,78 @@ namespace pwiz.Osprey.Tasks
             string dir = Path.GetDirectoryName(config.OutputFdrBench);
             string stem = Path.GetFileNameWithoutExtension(config.OutputFdrBench);
             string ext = Path.GetExtension(config.OutputFdrBench);
-            string name = stem + @".pass" + pass.ToString(CultureInfo.InvariantCulture) + ext;
+            string name = stem + PassSuffix(pass) + ext;
             return string.IsNullOrEmpty(dir) ? name : Path.Combine(dir, name);
         }
 
         /// <summary>
-        /// Write the FDRBench peptide / precursor-level input TSV to <paramref name="path"/>.
+        /// The stem suffix <see cref="PathForPass"/> adds when both passes are written:
+        /// <c>.pass1</c> or <c>.pass2</c>.
+        /// </summary>
+        public static string PassSuffix(int pass)
+        {
+            return @".pass" + pass.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// One target observation as the writer needs it, whichever pool it came from: the
+        /// resident <see cref="FdrEntry"/> list or the per-file sidecar joined to the parquet
+        /// scalars and the experiment-scope map. Carries BOTH q-values already reduced to the
+        /// effective level, so the producer does not have to know which mode the sink is in.
+        /// Targets only - a decoy is excluded by the producer, never carried and skipped.
+        /// </summary>
+        public readonly struct Row
+        {
+            public readonly uint EntryId;
+            public readonly string ModifiedSequence;
+            public readonly byte Charge;
+            public readonly double Score;
+            public readonly double RunQvalue;
+            public readonly double ExperimentQvalue;
+
+            public Row(uint entryId, string modifiedSequence, byte charge, double score,
+                double runQvalue, double experimentQvalue)
+            {
+                EntryId = entryId;
+                ModifiedSequence = modifiedSequence;
+                Charge = charge;
+                Score = score;
+                RunQvalue = runQvalue;
+                ExperimentQvalue = experimentQvalue;
+            }
+
+            /// <summary>The resident-pool view of an entry, q-values reduced to <paramref name="effectiveLevel"/>.</summary>
+            public static Row FromEntry(FdrEntry entry, FdrLevel effectiveLevel)
+            {
+                return new Row(entry.EntryId, entry.ModifiedSequence, entry.Charge, entry.Score,
+                    entry.EffectiveRunQvalue(effectiveLevel), entry.EffectiveExperimentQvalue(effectiveLevel));
+            }
+
+            /// <summary>
+            /// The streamed view of the same observation: the per-file sidecar record joined to
+            /// the parquet scalars (<paramref name="modifiedSequence"/>, <paramref name="charge"/>)
+            /// and the experiment-scope record. <paramref name="effectiveLevel"/> has already been
+            /// collapsed by the sink to Precursor or Peptide, so the two-way choice here is
+            /// exactly what the <c>IFdrRow</c> effective-q helpers return for those levels on a
+            /// resident entry - which is what <see cref="FromEntry"/> goes through, so the two
+            /// factories are the pair a test can hold against each other.
+            /// </summary>
+            public static Row FromSidecar(string modifiedSequence, byte charge,
+                in FdrScoreRecord record, in FdrExperimentRecord experiment, FdrLevel effectiveLevel)
+            {
+                bool peptideLevel = effectiveLevel == FdrLevel.Peptide;
+                return new Row(record.EntryId, modifiedSequence, charge, record.Score,
+                    peptideLevel ? record.RunPeptideQvalue : record.RunPrecursorQvalue,
+                    peptideLevel ? experiment.ExperimentPeptideQvalue : experiment.ExperimentPrecursorQvalue);
+            }
+        }
+
+        /// <summary>
+        /// Write the FDRBench peptide / precursor-level input TSV to <paramref name="path"/>
+        /// from resident per-file entry lists. An adapter over <see cref="PeptideInputSink"/>,
+        /// which is where the dedup, ordering and formatting live: the streamed pass-1 emitter
+        /// feeds the same sink one file at a time, so the two paths cannot format a row
+        /// differently.
         ///
         /// With <paramref name="perRun"/> = false, rows are deduplicated to one per precursor
         /// (level Precursor / Both) or one per peptide (level Peptide), keeping the minimum
@@ -122,85 +203,198 @@ namespace pwiz.Osprey.Tasks
             bool perRun,
             ICollection<string> skipEntrapmentSeqs = null)
         {
-            // Protein and Both collapse to precursor-level for this peptide-level writer.
-            FdrLevel effectiveLevel = fdrLevel == FdrLevel.Peptide ? FdrLevel.Peptide : FdrLevel.Precursor;
-
-            string dir = Path.GetDirectoryName(path);
-            if (!string.IsNullOrEmpty(dir))
-                Directory.CreateDirectory(dir);
-
-            var result = new Result();
-            using (var saver = new FileSaver(path))
+            using (var sink = new PeptideInputSink(path, libraryById, fdrLevel, perRun, skipEntrapmentSeqs))
             {
-                using (var writer = new StreamWriter(saver.SafeName, false))
+                foreach (var fileEntries in perFileEntries)
                 {
-                    writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
-                    writer.WriteLine(perRun
-                        ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
-                        : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
-
-                    if (perRun)
+                    foreach (var entry in fileEntries.Value)
                     {
-                        foreach (var fileEntries in perFileEntries)
-                        {
-                            string runName = fileEntries.Key;
-                            foreach (var entry in fileEntries.Value)
-                            {
-                                if (entry.IsDecoy)
-                                    continue;
-                                var lookup = ResolveLibrary(libraryById, entry.EntryId, ref result);
-                                if (skipEntrapmentSeqs != null && skipEntrapmentSeqs.Contains(lookup.Peptide))
-                                    continue; // excluded orphan entrapment (kept consistent with the manifest)
-                                double q = entry.EffectiveRunQvalue(effectiveLevel);
-                                writer.WriteLine(FormatRow(lookup.Peptide, entry.ModifiedSequence,
-                                    entry.Charge, q, entry.Score, lookup.Protein, runName));
-                                result.Rows++;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Dedup across files: keep best (min q-value, ties by max score) per dedup key.
-                        var best = new Dictionary<string, BestRow>();
-                        foreach (var fileEntries in perFileEntries)
-                        {
-                            foreach (var entry in fileEntries.Value)
-                            {
-                                if (entry.IsDecoy)
-                                    continue;
-                                double q = entry.EffectiveExperimentQvalue(effectiveLevel);
-                                string key = DedupKey(entry, effectiveLevel);
-                                BestRow cur;
-                                if (!best.TryGetValue(key, out cur)
-                                    || q < cur.QValue
-                                    || (q == cur.QValue && entry.Score > cur.Score))
-                                {
-                                    best[key] = new BestRow { QValue = q, Score = entry.Score, Entry = entry };
-                                }
-                            }
-                        }
-
-                        // Dictionary enumeration order is not guaranteed stable across runs / runtimes,
-                        // so sort by the dedup-key components (modified sequence, then charge) before
-                        // writing. The key is unique per surviving row, so this is a total order with no
-                        // ties -- deterministic, diff-friendly output. Ordinal compare avoids any
-                        // culture-dependent sequence ordering.
-                        foreach (var row in best.Values
-                            .OrderBy(r => r.Entry.ModifiedSequence, System.StringComparer.Ordinal)
-                            .ThenBy(r => r.Entry.Charge))
-                        {
-                            var lookup = ResolveLibrary(libraryById, row.Entry.EntryId, ref result);
-                            if (skipEntrapmentSeqs != null && skipEntrapmentSeqs.Contains(lookup.Peptide))
-                                continue; // excluded orphan entrapment (kept consistent with the manifest)
-                            writer.WriteLine(FormatRow(lookup.Peptide, row.Entry.ModifiedSequence,
-                                row.Entry.Charge, row.QValue, row.Entry.Score, lookup.Protein, null));
-                            result.Rows++;
-                        }
+                        if (entry.IsDecoy)
+                            continue;
+                        sink.Add(fileEntries.Key, Row.FromEntry(entry, sink.EffectiveLevel));
                     }
                 }
-                saver.Commit();
+                return sink.Commit();
             }
-            return result;
+        }
+
+        /// <summary>
+        /// The FDRBench peptide / precursor-level input TSV, fed one target observation at a
+        /// time through <see cref="Add"/> and finished by <see cref="Commit"/>. Push-based so a
+        /// producer that reads its pool from disk one file at a time - the pass-1 emitter on
+        /// the projection path - never has to buffer a file's rows to hand them over; per-run
+        /// mode writes each row as it arrives, per-precursor mode folds it into the
+        /// O(distinct precursors) best-row map and writes at <see cref="Commit"/>.
+        ///
+        /// <para>Row order matters in exactly one place and the producer owns it: an exact
+        /// q-value tie is broken by a STRICTLY greater score, so the first row seen keeps a tie.
+        /// The resident and streamed producers both walk files in run order and rows in
+        /// parquet-row order, which is what keeps their output byte-identical.</para>
+        ///
+        /// <para>Disposing without <see cref="Commit"/> discards the partial file (the
+        /// <see cref="FileSaver"/> cleans up its temporary), so an exception in the producer
+        /// leaves no half-written TSV behind.</para>
+        /// </summary>
+        public sealed class PeptideInputSink : IDisposable
+        {
+            // Rows per formatting block in Commit: large enough that a block's hand-off is
+            // noise beside formatting it, small enough to spread a few million rows over lanes.
+            private const int COMMIT_BLOCK_ROWS = 65536;
+
+            private readonly IReadOnlyDictionary<uint, LibraryEntry> _libraryById;
+            private readonly bool _perRun;
+            private readonly ICollection<string> _skipEntrapmentSeqs;
+            private readonly FileSaver _saver;
+            private readonly StreamWriter _writer;
+            // Per-precursor mode only: the best (min experiment q, then max score) row per
+            // dedup key. The row carries both keys of that comparison, so nothing is cached
+            // beside it.
+            private readonly Dictionary<string, Row> _best;
+            private Result _result;
+
+            /// <param name="path">Destination TSV path; parent directories are created.</param>
+            /// <param name="libraryById">Library entries indexed by id, for protein / sequence lookup.</param>
+            /// <param name="fdrLevel">Drives which q-value is emitted and the dedup key.
+            /// <see cref="FdrLevel.Both"/> collapses to precursor-level for output.</param>
+            /// <param name="perRun">If true, emit one row per (precursor, file); else dedup across runs.</param>
+            /// <param name="skipEntrapmentSeqs">Entrapment sequences to exclude (unmatched orphans); null to write all.</param>
+            public PeptideInputSink(
+                string path,
+                IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+                FdrLevel fdrLevel,
+                bool perRun,
+                ICollection<string> skipEntrapmentSeqs)
+            {
+                _libraryById = libraryById;
+                _perRun = perRun;
+                _skipEntrapmentSeqs = skipEntrapmentSeqs;
+                // Protein and Both collapse to precursor-level for this peptide-level writer.
+                EffectiveLevel = fdrLevel == FdrLevel.Peptide ? FdrLevel.Peptide : FdrLevel.Precursor;
+                if (!perRun)
+                    _best = new Dictionary<string, Row>();
+
+                string dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+                // The FileSaver has created its temp file by the time the writer is opened, so a
+                // failure opening the writer (a scanner holding the fresh temp, a full disk on
+                // the header) must release the saver here: no instance reaches the caller's
+                // using for Dispose to do it.
+                _saver = new FileSaver(path);
+                try
+                {
+                    _writer = new StreamWriter(_saver.SafeName, false);
+                    _writer.NewLine = TextUtil.LF; // emit '\n' line endings for the TSV body
+                    _writer.WriteLine(perRun
+                        ? new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", COLUMN_SCORE, @"protein", COLUMN_RUN }.ToDsvLine(TextUtil.SEPARATOR_TSV)
+                        : new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", COLUMN_SCORE, @"protein" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                }
+                catch
+                {
+                    _writer?.Dispose();
+                    _saver.Dispose();
+                    throw;
+                }
+            }
+
+            /// <summary>
+            /// The level the q-values must be reduced to before they reach <see cref="Add"/>:
+            /// what <see cref="Row.FromEntry"/> and <see cref="Row.FromSidecar"/> take.
+            /// </summary>
+            public FdrLevel EffectiveLevel { get; }
+
+            /// <summary>Fold one target observation from <paramref name="runName"/> in.</summary>
+            public void Add(string runName, in Row row)
+            {
+                if (_perRun)
+                {
+                    var lookup = ResolveLibrary(_libraryById, row.EntryId, ref _result);
+                    if (_skipEntrapmentSeqs != null && _skipEntrapmentSeqs.Contains(lookup.Peptide))
+                        return; // excluded orphan entrapment (kept consistent with the manifest)
+                    _writer.WriteLine(FormatRow(lookup.Peptide, row.ModifiedSequence,
+                        row.Charge, row.RunQvalue, row.Score, lookup.Protein, runName));
+                    _result.Rows++;
+                    return;
+                }
+
+                // Dedup across files: keep best (min q-value, ties by max score) per dedup key.
+                string key = DedupKey(row, EffectiveLevel);
+                Row cur;
+                if (!_best.TryGetValue(key, out cur)
+                    || row.ExperimentQvalue < cur.ExperimentQvalue
+                    || (row.ExperimentQvalue == cur.ExperimentQvalue && row.Score > cur.Score))
+                {
+                    _best[key] = row;
+                }
+            }
+
+            /// <summary>Write the per-precursor rows (if any), commit the file and return the
+            /// counts. <paramref name="lanes"/> threads format the sorted rows in blocks, which are
+            /// written in order, so the file is the same whatever the count.</summary>
+            public Result Commit(int lanes = 1)
+            {
+                if (!_perRun)
+                {
+                    // Dictionary enumeration order is not guaranteed stable across runs / runtimes,
+                    // so sort by the dedup-key components (modified sequence, then charge) before
+                    // writing. The key is unique per surviving row, so this is a total order with no
+                    // ties - deterministic, diff-friendly output. Ordinal compare avoids any
+                    // culture-dependent sequence ordering.
+                    var sorted = _best.Values
+                        .OrderBy(r => r.ModifiedSequence, StringComparer.Ordinal)
+                        .ThenBy(r => r.Charge)
+                        .ToArray();
+                    // Formatting - two E10 doubles and a protein list per row - is the cost, and each
+                    // row's text depends on that row alone, so blocks are formatted on lanes and
+                    // written here in sorted order; the counts are integers, summed the same way.
+                    int blocks = (sorted.Length + COMMIT_BLOCK_ROWS - 1) / COMMIT_BLOCK_ROWS;
+                    OrderedFileLanes.Run(blocks, lanes, b => FormatBlock(sorted, b), (b, block) =>
+                    {
+                        _writer.Write(block.Text);
+                        _result.Rows += block.Counts.Rows;
+                        _result.MissingLibrary += block.Counts.MissingLibrary;
+                        _result.TruncatedProtein += block.Counts.TruncatedProtein;
+                    });
+                }
+                _writer.Dispose();
+                _saver.Commit();
+                return _result;
+            }
+
+            private (string Text, Result Counts) FormatBlock(Row[] sorted, int block)
+            {
+                var counts = new Result();
+                var text = new StringWriter(CultureInfo.InvariantCulture) { NewLine = _writer.NewLine };
+                int end = Math.Min(sorted.Length, (block + 1) * COMMIT_BLOCK_ROWS);
+                for (int i = block * COMMIT_BLOCK_ROWS; i < end; i++)
+                {
+                    var best = sorted[i];
+                    var lookup = ResolveLibrary(_libraryById, best.EntryId, ref counts);
+                    if (_skipEntrapmentSeqs != null && _skipEntrapmentSeqs.Contains(lookup.Peptide))
+                        continue; // excluded orphan entrapment (kept consistent with the manifest)
+                    text.WriteLine(FormatRow(lookup.Peptide, best.ModifiedSequence,
+                        best.Charge, best.ExperimentQvalue, best.Score, lookup.Protein, null));
+                    counts.Rows++;
+                }
+                return (text.ToString(), counts);
+            }
+
+            public void Dispose()
+            {
+                // Both idempotent: after Commit the writer is already closed and the saver's
+                // temp is gone, so this only does work on the abandoned-producer path. The
+                // saver goes in a finally because a writer whose last flush failed (a full
+                // disk) throws again here, and the temp it would leave behind is the very
+                // artifact this method exists to remove.
+                try
+                {
+                    _writer.Dispose();
+                }
+                finally
+                {
+                    _saver.Dispose();
+                }
+            }
         }
 
         /// <summary>
@@ -230,7 +424,7 @@ namespace pwiz.Osprey.Tasks
         {
             // Distinct non-decoy peptides that have a pair index, in sequence order.
             // A peptide absent from PairIndexBySeq is an excluded orphan entrapment.
-            var rows = new SortedDictionary<string, LibraryEntry>(System.StringComparer.Ordinal);
+            var rows = new SortedDictionary<string, LibraryEntry>(StringComparer.Ordinal);
             foreach (var lib in libraryById.Values)
             {
                 if (lib == null || lib.Sequence == null)
@@ -251,22 +445,22 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {
-                    writer.NewLine = "\n";
-                    writer.WriteLine("sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index");
+                    writer.NewLine = TextUtil.LF;
+                    writer.WriteLine(new[] { @"sequence", @"decoy", @"proteins", @"peptide_type", @"peptide_pair_index" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var kv in rows)
                     {
                         var lib = kv.Value;
                         bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
                         uint pair = pairing.PairIndexBySeq[lib.Sequence];
                         string protein = FormatProteinField(lib.ProteinIds, out _);
-                        writer.WriteLine(string.Join("\t", new[]
+                        writer.WriteLine(new[]
                         {
                             lib.Sequence,
-                            "No",
+                            @"No",
                             protein,
-                            entrap ? "p_target" : "target",
+                            entrap ? @"p_target" : @"target",
                             pair.ToString(CultureInfo.InvariantCulture)
-                        }));
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                         written++;
                     }
                 }
@@ -279,7 +473,7 @@ namespace pwiz.Osprey.Tasks
         private static string FormatRow(string peptide, string modSeq, byte charge,
             double qValue, double score, string protein, string runName)
         {
-            string row = string.Join("\t", new[]
+            var fields = new List<string>
             {
                 peptide,
                 modSeq,
@@ -287,8 +481,10 @@ namespace pwiz.Osprey.Tasks
                 qValue.ToString(@"E10", CultureInfo.InvariantCulture),
                 score.ToString(@"E10", CultureInfo.InvariantCulture),
                 protein
-            });
-            return runName == null ? row : row + "\t" + runName;
+            };
+            if (runName != null)
+                fields.Add(runName);
+            return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
         /// <summary>Resolve an entry id to its (sequence, protein-field), updating warning counts.</summary>
@@ -325,7 +521,7 @@ namespace pwiz.Osprey.Tasks
 
             truncated = true;
             int markerReserve = (@";...+" + ids.Count.ToString(CultureInfo.InvariantCulture) + @"_more").Length;
-            int budget = System.Math.Max(0, MAX_PROTEIN_FIELD_CHARS - markerReserve);
+            int budget = Math.Max(0, MAX_PROTEIN_FIELD_CHARS - markerReserve);
 
             int kept = 0;
             int len = 0;
@@ -350,24 +546,17 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>Dedup key: modified sequence for peptide level, (modseq, charge) otherwise.</summary>
-        private static string DedupKey(FdrEntry entry, FdrLevel level)
+        private static string DedupKey(in Row row, FdrLevel level)
         {
             return level == FdrLevel.Peptide
-                ? entry.ModifiedSequence
-                : entry.ModifiedSequence + @"@" + entry.Charge.ToString(CultureInfo.InvariantCulture);
+                ? row.ModifiedSequence
+                : row.ModifiedSequence + @"@" + row.Charge.ToString(CultureInfo.InvariantCulture);
         }
 
         private struct LibLookup
         {
             public string Peptide;
             public string Protein;
-        }
-
-        private class BestRow
-        {
-            public double QValue;
-            public double Score;
-            public FdrEntry Entry;
         }
     }
 }

@@ -310,11 +310,61 @@ public static class VendorSdkLoader
             DownloadIfMissing(entry, archivePath);
             VerifyHash(entry, archivePath);
             ExtractArchive(archivePath, dest);
+            // Before the marker, so an interrupted stage is not recorded as a finished one.
+            StageNativeCrt(dest);
             File.WriteAllText(marker, $"extracted {DateTime.UtcNow:o}\nfrom {entry.Url}");
         }
 
         _vendorExtractDir[entry.Name] = dest;
         return dest;
+    }
+
+    /// <summary>Visual C++ runtime DLLs deployed app-local by the vendor projects.</summary>
+    private static readonly string[] NativeCrtPrefixes =
+        { "msvcr", "msvcp", "vcruntime", "concrt", "mfc" };
+
+    /// <summary>
+    /// Copies the app-local Visual C++ runtime in beside a freshly extracted SDK.
+    /// </summary>
+    /// <remarks>
+    /// Vendor natives in the cache are loaded by full path, and that puts the DLL's own
+    /// directory where the application directory would normally sit in the native search
+    /// order — so a CRT deployed beside the executable is invisible to them. Agilent's
+    /// <c>BaseTof.dll</c> is mixed-mode and imports MSVCR120/MSVCP120: without this it fails
+    /// with ERROR_MOD_NOT_FOUND, reported as the thoroughly misleading "The specified module
+    /// could not be found" — misleading because the module it names is present and the one
+    /// actually missing is not. A developer machine usually has the redistributable installed,
+    /// which is why it only appears on a clean build agent or in a container.
+    ///
+    /// Applied to every vendor rather than just the ones known to need it, so a vendor that
+    /// grows a native dependency does not have to be discovered the same way. Bruker's VC90
+    /// side-by-side assemblies need directory structure and a manifest, so they keep their own
+    /// path in CompassXtractActivationContext.StageVc90Runtime; this is the flat-DLL case.
+    /// </remarks>
+    private static void StageNativeCrt(string extractDir)
+    {
+        foreach (string source in Directory.GetFiles(AppContext.BaseDirectory, "*.dll"))
+        {
+            string name = Path.GetFileName(source);
+            bool isCrt = false;
+            foreach (string prefix in NativeCrtPrefixes)
+                if (name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) { isCrt = true; break; }
+            if (!isCrt) continue;
+
+            string destination = Path.Combine(extractDir, name);
+            if (File.Exists(destination)) continue;
+            try
+            {
+                File.Copy(source, destination);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // A per-machine cache root can be read-only for a standard user. Not fatal:
+                // the vendor still loads wherever the redistributable is installed.
+                Trace.TraceWarning(
+                    $"[VendorSdkLoader] could not stage {name} into {extractDir}: {ex.Message}");
+            }
+        }
     }
 
     private static string GetCacheRoot()

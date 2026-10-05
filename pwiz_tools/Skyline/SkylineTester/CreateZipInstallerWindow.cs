@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -21,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
@@ -31,6 +33,10 @@ namespace SkylineTester
 {
     public partial class CreateZipInstallerWindow : Form
     {
+        // Double-clicked from the root of an unzipped distro to start the copy in
+        // "SkylineTester Files" with that directory as its working directory.
+        private const string SKYLINE_TESTER_LAUNCHER = "SkylineTester.cmd";
+
         // Excluded files must be lower-case!
         private static readonly List<string> EXCLUDED_FILES = new List<string>
         {
@@ -69,7 +75,7 @@ namespace SkylineTester
             if (Regex.IsMatch(name, "^T(oo|öö)ls_", RegexOptions.IgnoreCase))
                 return true;
 
-            var extension = (Path.GetExtension(name) ?? string.Empty).ToLowerInvariant();
+            var extension = Path.GetExtension(name).ToLowerInvariant();
 
             // Per-test data archives. Shipping these is exactly what the 2023 change below
             // stopped doing; on net8 they arrive by a different route (staged into the bin
@@ -205,7 +211,7 @@ namespace SkylineTester
                 // (see http://stackoverflow.com/questions/15337186/dotnetzip-badreadexception-on-extract)
                 zipFile.ParallelDeflateThreshold = -1;
                 zipFile.AlternateEncodingUsage = ZipOption.Always;
-                zipFile.AlternateEncoding = System.Text.Encoding.UTF8;
+                zipFile.AlternateEncoding = Encoding.UTF8;
                 // The original zip format caps entry sizes and archive offsets at 4 GB; past
                 // that DotNetZip throws at Save() ("Compressed or Uncompressed size, or offset
                 // exceeds the maximum value"), after having already done all the compression.
@@ -313,9 +319,21 @@ namespace SkylineTester
 
                 else
                 {
-                    // Add SkylineTester at top level of zip file.
-                    Console.WriteLine("SkylineTester.exe");
-                    zipFile.AddFile("SkylineTester.exe");
+                    // Add a launcher at the top level of the zip file. This was a copy of
+                    // SkylineTester.exe, which Program.Main uses to relaunch the nested copy in
+                    // "SkylineTester Files" with that directory current. Under net472 the copy
+                    // was the assembly, so Main ran. Under the .NET SDK the .exe is only an
+                    // apphost and needs SkylineTester.dll, .runtimeconfig.json and .deps.json
+                    // beside it - all of which ship in "SkylineTester Files" - so a lone copy at
+                    // the root exits before Main is reached. A script needs no runtime of its own.
+                    // /D matters: the bootstrap it replaces set WorkingDirectory to the nested
+                    // directory, and without it the started process inherits the zip root.
+                    Console.WriteLine(SKYLINE_TESTER_LAUNCHER);
+                    zipFile.AddEntry(SKYLINE_TESTER_LAUNCHER, Encoding.ASCII.GetBytes(
+                        "@echo off\r\n" +
+                        "start \"\" /D \"%~dp0" + SkylineTesterWindow.SkylineTesterFiles + "\" " +
+                        "\"%~dp0" + SkylineTesterWindow.SkylineTesterFiles +
+                        "\\SkylineTester.exe\" %*\r\n"));
 
                     // Add .skytr files at top level of zip file.
                     var skytrDirectory = Path.Combine(solutionDirectory, @"SkylineTester\Run files");
@@ -327,7 +345,7 @@ namespace SkylineTester
                     {
                         if (Include(directory))
                         {
-                            var name = Path.GetFileName(directory) ?? "";
+                            var name = Path.GetFileName(directory);
                             Console.WriteLine(Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
                             zipFile.AddDirectory(directory, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
                         }

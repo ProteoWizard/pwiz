@@ -30,8 +30,9 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.CSharp;
-#nullable enable
 
+// Also linked into Test.csproj, whose layout implies pwiz.SkylineTest; this is the tool's namespace
+// ReSharper disable once CheckNamespace
 namespace AssortResources
 {
     /// <summary>
@@ -146,10 +147,10 @@ namespace AssortResources
 
                 if (count == 1)
                 {
-                    if (!uniqueReferences.TryGetValue(foundFolderPath!, out var list))
+                    if (!uniqueReferences.TryGetValue(foundFolderPath, out var list))
                     {
                         list = new List<string>();
-                        uniqueReferences.Add(foundFolderPath!, list);
+                        uniqueReferences.Add(foundFolderPath, list);
                     }
                     list.Add(resourceName);
                 }
@@ -178,6 +179,7 @@ namespace AssortResources
 
                 if (moves.Count > 0 && inspectionResults == null)
                 {
+                    // ReSharper disable once LocalizableElement
                     Console.WriteLine($"\nThis can be done with command:\n\"{Process.GetCurrentProcess().MainModule!.FileName}\" --resourcefile \"{ResourceFile.FilePath}\" --projectfile \"{CsProjFile.ProjFilePath}\" ");
                     Environment.ExitCode = moves.Count;
                 }
@@ -249,7 +251,7 @@ namespace AssortResources
                 moves.Add($"{resourceIdentifiers.Count} non-shared resource(s) should be moved from {ResourceFile.FilePath} into {resourceFilePath}:" );
                 foreach (var resourceIdentifier in resourceIdentifiers)
                 {
-                    moves.Add(resourceIdentifier ?? "?");
+                    moves.Add(resourceIdentifier);
                 }
                 return;
             }

@@ -50,6 +50,18 @@ namespace pwiz.Osprey.FDR
         /// <summary>Grid search C values for SVM cost parameter.</summary>
         public double[] CValues { get; set; }
 
+        /// <summary>
+        /// How close to the best inner-CV passing count a smaller C must come to be chosen
+        /// over it, as a fraction of that count (default: 0.01). The grid search takes the
+        /// most regularized C within this fraction of the best rather than the strict best:
+        /// on Stellar, C = 0.1, 1 and 10 are within 0.7% of each other's inner-CV targets, so
+        /// a strict maximum is decided by noise, and the weakly regularized C = 1 fit it then
+        /// often picks can split weight between correlated spectral features in a way that
+        /// the second pass, which reuses the frozen first-pass model on reconciled peaks,
+        /// handles much worse. 0 restores the strict maximum.
+        /// </summary>
+        public double CSelectionTolerance { get; set; }
+
         /// <summary>Maximum paired entries for SVM cross-validation (default: 300000).</summary>
         public int MaxTrainSize { get; set; }
 
@@ -97,7 +109,7 @@ namespace pwiz.Osprey.FDR
         public PercolatorDiagnosticsConfig Diagnostics { get; set; }
 
         /// <summary>
-        /// Train gradient-boosted decision trees (<c>--fdr-method gbdt</c>) instead
+        /// Train gradient-boosted decision trees (<c>OSPREY_FDR_MODEL=gbdt</c>) instead
         /// of the linear SVM. Everything else about the run is unchanged: the same
         /// best-per-precursor dedup, the same peptide-grouped CV folds, the same
         /// semi-supervised positive-set iteration, and the same target-decoy
@@ -131,6 +143,7 @@ namespace pwiz.Osprey.FDR
             NFolds = 3;
             Seed = 42;
             CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
+            CSelectionTolerance = OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE;
             MaxTrainSize = 300000;
             TrainOnly = false;
             UseGradientBoostedTrees = false;
@@ -144,9 +157,11 @@ namespace pwiz.Osprey.FDR
         /// train-the-fold-models pass over the subsampled training set. Copies every
         /// knob that selects HOW a model is trained -- including the classifier choice
         /// and its hyper-parameters -- so the training pass cannot silently diverge from
-        /// the scoring pass that consumes its output. (Both streaming paths previously
-        /// hand-copied this field list, which meant a new training knob had to be added
-        /// in two places or one path would quietly train the wrong model.)
+        /// the scoring pass that consumes its output. (The streaming paths each hand-copied
+        /// this field list, which meant a new training knob had to be added in every copy or
+        /// one path would quietly train the wrong model - and the lean first pass did: its
+        /// copy lacked the classifier choice, so it trained the SVM when
+        /// gbdt was selected.)
         ///
         /// <see cref="CollectFeatureHistograms"/> is deliberately NOT carried: the
         /// histograms are accumulated by the score pass over the full population, not
@@ -162,6 +177,7 @@ namespace pwiz.Osprey.FDR
                 NFolds = NFolds,
                 Seed = Seed,
                 CValues = CValues,
+                CSelectionTolerance = CSelectionTolerance,
                 MaxTrainSize = MaxTrainSize,
                 FeatureInfos = FeatureInfos,
                 UseGradientBoostedTrees = UseGradientBoostedTrees,
