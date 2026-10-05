@@ -45,6 +45,7 @@ namespace pwiz.SkylineTestFunctional
         private const string OTHER_INSTALLATION_ID = @"other-installation";
         private const string UNINSTALL_COMMAND = @"uninstall the other installation";
         private const string HANDOFF_UNINSTALL_COMMAND = @"uninstall the installing Skyline";
+        private const string HANDOFF_VALUE_NAME = @"ExampleProductName";
         private const string TOOL_TITLE = @"Imported Tool";
         private const string TOOL_FOLDER = @"ImportedTool";
         private const string TOOL_FILE = @"tool.bat";
@@ -119,12 +120,13 @@ namespace pwiz.SkylineTestFunctional
                     new XElement(@"value", HANDOFF_UNINSTALL_COMMAND)));
             document.Save(handoffConfigFile);
             using (var key = Registry.CurrentUser.CreateSubKey(HandoffKeyPath))
-                key.SetValue(FirstLaunchImport.IMPORT_SETTINGS_FROM, handoffConfigFile);
+                key.SetValue(HANDOFF_VALUE_NAME, handoffConfigFile);
 
             var uninstallsRun = new List<string>();
             var firstLaunchImport = new FirstLaunchImport
             {
                 HandoffKeyPath = HandoffKeyPath,
+                HandoffValueName = HANDOFF_VALUE_NAME,
                 FindInstallations = () => throw new AssertFailedException(@"Nothing to look for after a handoff"),
                 RunUninstall = uninstallsRun.Add
             };
@@ -140,8 +142,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(OTHER_INSTALLATION_ID, Settings.Default.InstallationId);
             CollectionAssert.AreEqual(new[] { HANDOFF_UNINSTALL_COMMAND }, uninstallsRun);
             Assert.IsTrue(Settings.Default.CheckedForSettingsToImport);
-            using (var key = Registry.CurrentUser.OpenSubKey(HandoffKeyPath))
-                Assert.IsNull(key?.GetValue(FirstLaunchImport.IMPORT_SETTINGS_FROM));
+            // Used up, and the key gone with it, since it held nothing else
+            Assert.IsNull(Registry.CurrentUser.OpenSubKey(HandoffKeyPath));
         }
 
         /// <summary>
@@ -154,6 +156,7 @@ namespace pwiz.SkylineTestFunctional
             var firstLaunchImport = new FirstLaunchImport
             {
                 HandoffKeyPath = HandoffKeyPath,
+                HandoffValueName = HANDOFF_VALUE_NAME,
                 FindInstallations = () =>
                 {
                     searches++;

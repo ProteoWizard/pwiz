@@ -34,10 +34,11 @@ namespace pwiz.Skyline.ToolsUI
     /// starts.
     ///
     /// An older Skyline that installs this one records the path to its own user.config in the
-    /// registry, under <see cref="HandoffKeyPath"/>, before starting the installer. When that
-    /// value is there, its settings are imported without asking: this installation takes over
-    /// the older one's installation id, and the older one is uninstalled with the command it
-    /// recorded in that user.config (see <see cref="SettingsImporter.ReadUninstallCommand"/>).
+    /// registry before starting the installer: under HKEY_CURRENT_USER\<see cref="HANDOFF_KEY_PATH"/>,
+    /// in a value named for the product, Skyline or Skyline-daily, so each takes only its own.
+    /// When that value is there, its settings are imported without asking: this installation
+    /// takes over the older one's installation id, and the older one is uninstalled with the
+    /// command it recorded in that user.config (see <see cref="SettingsImporter.ReadUninstallCommand"/>).
     ///
     /// Otherwise, if older installations of this product are found, the user is offered their
     /// settings in <see cref="ImportSettingsDlg"/>. Either way, the check is not repeated.
@@ -45,16 +46,21 @@ namespace pwiz.Skyline.ToolsUI
     public class FirstLaunchImport
     {
         /// <summary>
-        /// Name of the registry value holding the path to the older Skyline's user.config.
+        /// The registry key, under HKEY_CURRENT_USER, of the handoff. Not the key the installer
+        /// records an installation under, which its uninstaller deletes.
         /// </summary>
-        public const string IMPORT_SETTINGS_FROM = @"ImportSettingsFrom";
+        public const string HANDOFF_KEY_PATH = @"Software\MacCossLabUW\ImportSettingsFrom";
 
         /// <summary>
-        /// The key, under HKEY_CURRENT_USER, that holds <see cref="IMPORT_SETTINGS_FROM"/>.
-        /// Named for the product, Skyline or Skyline-daily, so each only takes its own handoff.
+        /// The key holding the handoff. A test uses one of its own.
         /// </summary>
-        public string HandoffKeyPath { get; set; } =
-            @"Software\MacCossLabUW\" + typeof(Program).Assembly.GetName().Name;
+        public string HandoffKeyPath { get; set; } = HANDOFF_KEY_PATH;
+
+        /// <summary>
+        /// The name of the value holding the path to the older Skyline's user.config: the
+        /// product's assembly name.
+        /// </summary>
+        public string HandoffValueName { get; set; } = typeof(Program).Assembly.GetName().Name;
 
         /// <summary>
         /// The installations to offer when there is no handoff. A test replaces this.
@@ -116,17 +122,26 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// The user.config the installing Skyline named, or null when there is none or it is
-        /// gone. The value is removed as it is read, so it is used once.
+        /// gone. The value is removed as it is read, so it is used once, and the key with it once
+        /// it holds no other product's.
         /// </summary>
         private string TakeHandoff()
         {
             try
             {
-                using var key = Registry.CurrentUser.OpenSubKey(HandoffKeyPath, true);
-                if (key == null)
-                    return null;
-                var configFile = key.GetValue(IMPORT_SETTINGS_FROM) as string;
-                key.DeleteValue(IMPORT_SETTINGS_FROM, false);
+                string configFile;
+                bool keyEmpty;
+                // Closed before the key itself can be deleted.
+                using (var key = Registry.CurrentUser.OpenSubKey(HandoffKeyPath, true))
+                {
+                    if (key == null)
+                        return null;
+                    configFile = key.GetValue(HandoffValueName) as string;
+                    key.DeleteValue(HandoffValueName, false);
+                    keyEmpty = key.ValueCount == 0 && key.SubKeyCount == 0;
+                }
+                if (keyEmpty)
+                    Registry.CurrentUser.DeleteSubKey(HandoffKeyPath, false);
                 return !string.IsNullOrEmpty(configFile) && File.Exists(configFile) ? configFile : null;
             }
             catch (Exception)

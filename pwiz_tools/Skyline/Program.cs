@@ -40,7 +40,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
