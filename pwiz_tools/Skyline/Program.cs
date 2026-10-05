@@ -155,9 +155,6 @@ namespace pwiz.Skyline
         public static bool MultiProcImport { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.
-        // Set when this run took its settings from a ClickOnce installation, so that once the UI
-        // is up the external tools those settings name can be brought across with progress shown.
-        private static bool _settingsMigratedFromClickOnce;
         [ThreadStatic] private static bool _uiExceptionHandlingInitialized;   // Per-THREAD, see InitUiThreadExceptionHandling
         private static string _name;                                // Program name.
 
@@ -350,17 +347,25 @@ namespace pwiz.Skyline
 
                 try
                 {
-                    if (_settingsMigratedFromClickOnce)
+                    if (Settings.Default.ToolsCopyPending)
                     {
                         // The settings brought over at the top of Main name external tools under
                         // the old installation's Tools folder. Bringing those across is the slow
-                        // half of the migration, and waits until here so it can show progress.
+                        // half of the migration, and waits until here so it can show progress. A
+                        // copy that is canceled or fails is tried again on the next start.
+                        bool toolsCopied = false;
                         using (var longWaitDlg = new LongWaitDlg())
                         {
                             longWaitDlg.Text = Name;
                             longWaitDlg.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
                             longWaitDlg.ProgressValue = 0;
-                            longWaitDlg.PerformWork(null, 1000*3, broker => new SettingsImporter(null).CopyTools(broker));
+                            longWaitDlg.PerformWork(null, 1000*3,
+                                broker => toolsCopied = new SettingsImporter(null).CopyTools(broker));
+                        }
+                        if (toolsCopied)
+                        {
+                            Settings.Default.ToolsCopyPending = false;
+                            Settings.Default.Save();
                         }
                     }
                     SharedSettingsMerger.ForSharedSettings()?.MergeIfChanged();
@@ -639,7 +644,8 @@ namespace pwiz.Skyline
         ///
         /// A missing user.config is what identifies a first run. Everything else the migration
         /// needs follows from the settings it brings over, including the tool lists that say
-        /// which external tools to bring along once the UI is up; see <see cref="_settingsMigratedFromClickOnce"/>.
+        /// which external tools to bring along once the UI is up. The settings say that copy is
+        /// still to be done until it succeeds; see <see cref="Settings.ToolsCopyPending"/>.
         /// </summary>
         private static void MigrateSettingsFromClickOnceInstallation()
         {
@@ -660,7 +666,8 @@ namespace pwiz.Skyline
                     return;
                 Directory.CreateDirectory(UserConfigSettingsProvider.GetDefaultConfigFolder());
                 File.Copy(candidate.UserConfigFile, configFile);
-                _settingsMigratedFromClickOnce = true;
+                Settings.Default.ToolsCopyPending = true;
+                Settings.Default.Save();
             }
             catch (Exception)
             {

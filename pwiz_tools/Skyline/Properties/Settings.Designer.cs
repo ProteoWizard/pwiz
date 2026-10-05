@@ -3782,5 +3782,17 @@ namespace pwiz.Skyline.Properties {
                 this["EnableMcpAutoConnect"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ToolsCopyPending {
+            get {
+                return ((bool)(this["ToolsCopyPending"]));
+            }
+            set {
+                this["ToolsCopyPending"] = value;
+            }
+        }
     }
 }
