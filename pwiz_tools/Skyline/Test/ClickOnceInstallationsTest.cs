@@ -21,7 +21,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -146,14 +145,12 @@ namespace pwiz.SkylineTest
 
         /// <summary>
         /// Installations found, by version. InstalledVersions is always supplied, so that no case falls
-        /// through to the registry of whatever machine the test is running on, and AssemblyName
-        /// too, so the assembly handed to the constructor does not matter here.
+        /// through to the registry of whatever machine the test is running on.
         /// </summary>
         private static IDictionary<string, SkylineInstallation> FindInstallations(string localAppData)
         {
-            var clickOnceInstallations = new StubClickOnceInstallations(typeof(ClickOnceInstallations).Assembly)
+            var clickOnceInstallations = new StubClickOnceInstallations
             {
-                AssemblyName = ASSEMBLY_NAME,
                 LocalApplicationDataFolder = localAppData,
                 InstalledVersions = new Dictionary<string, string> { { INSTALLED_VERSION, UNINSTALL_COMMAND } }
             };
@@ -199,7 +196,7 @@ namespace pwiz.SkylineTest
         /// </summary>
         private class StubClickOnceInstallations : ClickOnceInstallations
         {
-            public StubClickOnceInstallations(Assembly assembly) : base(assembly)
+            public StubClickOnceInstallations() : base(ASSEMBLY_NAME)
             {
             }
 

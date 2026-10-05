@@ -210,10 +210,6 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
-            // Must come before the first Settings.Default use on the next line. Every setting is
-            // read from the provider and cached the first time any one of them is touched, so a
-            // user.config put in place after that point would go unseen until a Reload.
-            MigrateSettingsFromClickOnceInstallation();
             SetDefaultFont();
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
@@ -347,27 +343,10 @@ namespace pwiz.Skyline
 
                 try
                 {
-                    if (Settings.Default.ToolsCopyPending)
-                    {
-                        // The settings brought over at the top of Main name external tools under
-                        // the old installation's Tools folder. Bringing those across is the slow
-                        // half of the migration, and waits until here so it can show progress. A
-                        // copy that is canceled or fails is tried again on the next start.
-                        bool toolsCopied = false;
-                        using (var longWaitDlg = new LongWaitDlg())
-                        {
-                            longWaitDlg.Text = Name;
-                            longWaitDlg.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
-                            longWaitDlg.ProgressValue = 0;
-                            longWaitDlg.PerformWork(null, 1000*3,
-                                broker => toolsCopied = new SettingsImporter(null).CopyTools(broker));
-                        }
-                        if (toolsCopied)
-                        {
-                            Settings.Default.ToolsCopyPending = false;
-                            Settings.Default.Save();
-                        }
-                    }
+                    // Tests run out of a build folder, and would otherwise be offered whatever the
+                    // developer happens to have installed.
+                    if (!UnitTest && !FunctionalTest)
+                        new FirstLaunchImport().Run(null);
                     SharedSettingsMerger.ForSharedSettings()?.MergeIfChanged();
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
@@ -632,74 +611,6 @@ namespace pwiz.Skyline
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
             MainToolService.SendDocumentChange();
-        }
-
-        /// <summary>
-        /// Gives a new installation the user settings of the ClickOnce installed Skyline it is
-        /// replacing. Only for the upgrade from 26.1 and earlier, which kept settings in a per
-        /// version folder under %LOCALAPPDATA%; from here on an installation reads the
-        /// user.config that <see cref="UserConfigSettingsProvider.GetDefaultConfigFolder"/> names,
-        /// and successive installations into the same folder find the settings already there
-        /// with nothing to look for.
-        ///
-        /// A missing user.config is what identifies a first run. Everything else the migration
-        /// needs follows from the settings it brings over, including the tool lists that say
-        /// which external tools to bring along once the UI is up. The settings say that copy is
-        /// still to be done until it succeeds; see <see cref="Settings.ToolsCopyPending"/>.
-        /// </summary>
-        private static void MigrateSettingsFromClickOnceInstallation()
-        {
-            // Tests run out of a build folder, and would otherwise inherit whatever the developer
-            // happens to have installed.
-            if (UnitTest || FunctionalTest)
-                return;
-            try
-            {
-                var configFile = Path.Combine(UserConfigSettingsProvider.GetDefaultConfigFolder(),
-                    UserConfigSettingsProvider.CONFIG_FILE_NAME);
-                if (File.Exists(configFile))
-                    return;
-                var candidate = ChooseClickOnceInstallation(
-                    new ClickOnceInstallations(typeof(Program).Assembly).ListCandidates()
-                        .Where(new SkylineInstallations().IsNoNewerThanThis));
-                if (candidate == null)
-                    return;
-                Directory.CreateDirectory(UserConfigSettingsProvider.GetDefaultConfigFolder());
-                File.Copy(candidate.UserConfigFile, configFile);
-                Settings.Default.ToolsCopyPending = true;
-                Settings.Default.Save();
-            }
-            catch (Exception)
-            {
-                // Starting on default settings beats not starting. The next run tries again,
-                // since a failed copy leaves no user.config behind.
-            }
-        }
-
-        /// <summary>
-        /// Which of the installations found gets to hand its settings on. The one Programs and
-        /// Features still lists is the one being replaced, so it wins; among installations that
-        /// are equally current, or equally not, the highest version is the most recent.
-        /// </summary>
-        private static SkylineInstallation ChooseClickOnceInstallation(IEnumerable<SkylineInstallation> candidates)
-        {
-            SkylineInstallation best = null;
-            foreach (var candidate in candidates)
-            {
-                if (best == null || IsBetterClickOnceInstallation(candidate, best))
-                    best = candidate;
-            }
-            return best;
-        }
-
-        private static bool IsBetterClickOnceInstallation(SkylineInstallation candidate, SkylineInstallation best)
-        {
-            if (candidate.IsCurrentlyInstalled != best.IsCurrentlyInstalled)
-                return candidate.IsCurrentlyInstalled;
-            // An unparsable version loses to one that reads as a version, and to nothing else.
-            if (!Version.TryParse(candidate.Version, out var candidateVersion))
-                return false;
-            return !Version.TryParse(best.Version, out var bestVersion) || candidateVersion > bestVersion;
         }
 
         /// <summary>

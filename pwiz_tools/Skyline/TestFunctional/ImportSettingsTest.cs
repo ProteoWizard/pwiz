@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -34,7 +35,8 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Tests Tools > Options > Miscellaneous > Import Settings, which replaces the settings
-    /// with those of another installed Skyline.
+    /// with those of another installed Skyline, and the import at the first start after an
+    /// installation (<see cref="FirstLaunchImport"/>).
     /// </summary>
     [TestClass]
     public class ImportSettingsTest : AbstractFunctionalTest
@@ -42,6 +44,7 @@ namespace pwiz.SkylineTestFunctional
         private const string OWN_INSTALLATION_ID = @"own-installation";
         private const string OTHER_INSTALLATION_ID = @"other-installation";
         private const string UNINSTALL_COMMAND = @"uninstall the other installation";
+        private const string HANDOFF_UNINSTALL_COMMAND = @"uninstall the installing Skyline";
         private const string TOOL_TITLE = @"Imported Tool";
         private const string TOOL_FOLDER = @"ImportedTool";
         private const string TOOL_FILE = @"tool.bat";
@@ -84,11 +87,95 @@ namespace pwiz.SkylineTestFunctional
                 TestCanceledImportIsUndone(other);
                 TestAdminChangesAreMergedIn(other);
                 TestImportAndUninstallTakesOverTheOtherInstallation(other);
+                TestInstallingSkylineIsImportedSilently(other);
+                TestOlderInstallationsAreOfferedOnce(other);
             }
             finally
             {
                 DirectoryEx.SafeDelete(_toolsDirectory);
+                Registry.CurrentUser.DeleteSubKeyTree(HandoffKeyPath, false);
             }
+        }
+
+        /// <summary>
+        /// A registry key of this test's own, standing in for the one an older Skyline writes
+        /// before it starts the installer of this one.
+        /// </summary>
+        private static string HandoffKeyPath => @"Software\MacCossLabUW\" + nameof(ImportSettingsTest);
+
+        /// <summary>
+        /// The first start after an older Skyline installed this one: the settings file it named
+        /// in the registry is imported without asking, this installation takes over its id, the
+        /// uninstall command it recorded in that file is run, and the registry value is used up.
+        /// </summary>
+        private void TestInstallingSkylineIsImportedSilently(SkylineInstallation other)
+        {
+            var handoffConfigFile = TestFilesDir.GetTestPath(@"handoff.user.config");
+            var document = XDocument.Load(other.UserConfigFile);
+            document.Descendants(@"pwiz.Skyline.Properties.Settings").First().Add(
+                new XElement(@"setting",
+                    new XAttribute(@"name", SettingsImporter.UNINSTALL_COMMAND_SETTING),
+                    new XAttribute(@"serializeAs", @"String"),
+                    new XElement(@"value", HANDOFF_UNINSTALL_COMMAND)));
+            document.Save(handoffConfigFile);
+            using (var key = Registry.CurrentUser.CreateSubKey(HandoffKeyPath))
+                key.SetValue(FirstLaunchImport.IMPORT_SETTINGS_FROM, handoffConfigFile);
+
+            var uninstallsRun = new List<string>();
+            var firstLaunchImport = new FirstLaunchImport
+            {
+                HandoffKeyPath = HandoffKeyPath,
+                FindInstallations = () => throw new AssertFailedException(@"Nothing to look for after a handoff"),
+                RunUninstall = uninstallsRun.Add
+            };
+            RunUI(() =>
+            {
+                Settings.Default.InstallationId = OWN_INSTALLATION_ID;
+                Settings.Default.AnnotationColor = OWN_ANNOTATION_COLOR;
+                Settings.Default.CheckedForSettingsToImport = false;
+                firstLaunchImport.Run(SkylineWindow);
+            });
+
+            Assert.AreEqual(ReadAnnotationColor(handoffConfigFile), Settings.Default.AnnotationColor);
+            Assert.AreEqual(OTHER_INSTALLATION_ID, Settings.Default.InstallationId);
+            CollectionAssert.AreEqual(new[] { HANDOFF_UNINSTALL_COMMAND }, uninstallsRun);
+            Assert.IsTrue(Settings.Default.CheckedForSettingsToImport);
+            using (var key = Registry.CurrentUser.OpenSubKey(HandoffKeyPath))
+                Assert.IsNull(key?.GetValue(FirstLaunchImport.IMPORT_SETTINGS_FROM));
+        }
+
+        /// <summary>
+        /// The first start with no handoff offers the older installations found, in the Import
+        /// Settings dialog. A later start offers nothing, even when the user chose nothing.
+        /// </summary>
+        private void TestOlderInstallationsAreOfferedOnce(SkylineInstallation other)
+        {
+            int searches = 0;
+            var firstLaunchImport = new FirstLaunchImport
+            {
+                HandoffKeyPath = HandoffKeyPath,
+                FindInstallations = () =>
+                {
+                    searches++;
+                    return new[] { other };
+                },
+                RunUninstall = command => throw new AssertFailedException(@"Nothing was to be uninstalled")
+            };
+            RunUI(() =>
+            {
+                Settings.Default.AnnotationColor = OWN_ANNOTATION_COLOR;
+                Settings.Default.CheckedForSettingsToImport = false;
+            });
+            RunDlg<ImportSettingsDlg>(() => firstLaunchImport.Run(SkylineWindow), importDlg =>
+            {
+                Assert.AreSame(other, importDlg.SelectedInstallation);
+                importDlg.OkDialog();
+            });
+            Assert.AreEqual(ReadAnnotationColor(other.UserConfigFile), Settings.Default.AnnotationColor);
+            Assert.IsTrue(Settings.Default.CheckedForSettingsToImport);
+
+            RunUI(() => firstLaunchImport.Run(SkylineWindow));
+            Assert.AreEqual(1, searches);
         }
 
         /// <summary>
@@ -271,6 +358,18 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.AnnotationColor = 0;
             Settings.Default.ToolList = new ToolList();
             Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// The annotation color in a settings file, which the steps above leave different from
+        /// <see cref="OWN_ANNOTATION_COLOR"/>, so that taking it on shows the file was imported.
+        /// </summary>
+        private static int ReadAnnotationColor(string configFile)
+        {
+            var settings = new Settings();
+            settings.UserConfigProvider.ConfigFilePath = configFile;
+            Assert.AreNotEqual(OWN_ANNOTATION_COLOR, settings.AnnotationColor);
+            return settings.AnnotationColor;
         }
 
         /// <summary>

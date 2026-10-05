@@ -3786,12 +3786,12 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ToolsCopyPending {
+        public bool CheckedForSettingsToImport {
             get {
-                return ((bool)(this["ToolsCopyPending"]));
+                return ((bool)(this["CheckedForSettingsToImport"]));
             }
             set {
-                this["ToolsCopyPending"] = value;
+                this["CheckedForSettingsToImport"] = value;
             }
         }
     }

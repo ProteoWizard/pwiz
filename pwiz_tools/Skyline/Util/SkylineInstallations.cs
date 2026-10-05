@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Whether the installation's version is known and no newer than this one's.
         /// </summary>
-        public bool IsNoNewerThanThis(SkylineInstallation installation)
+        private bool IsNoNewerThanThis(SkylineInstallation installation)
         {
             var version = ParseVersion(installation.Version);
             return version != null && (CurrentVersion == null || version <= CurrentVersion);

@@ -512,32 +512,7 @@ namespace pwiz.Skyline.ToolsUI
                 importer = dlg.Importer;
             }
             importer.RunUninstall = RunUninstall;
-            try
-            {
-                importer.ImportSettingsFile();
-                bool toolsCopied = false;
-                try
-                {
-                    using var longWaitDlg = new LongWaitDlg();
-                    longWaitDlg.Text = Program.Name;
-                    longWaitDlg.Message = ToolsUIResources.ToolOptionsUI_ImportSettings_Importing_settings;
-                    longWaitDlg.PerformWork(this, 800, broker => toolsCopied = importer.CopyTools(broker));
-                }
-                finally
-                {
-                    // Canceled or failed: nothing is imported, and nothing is uninstalled.
-                    if (!toolsCopied)
-                        importer.RevertImport();
-                }
-                if (toolsCopied)
-                    importer.FinishImport();
-            }
-            catch (Exception exception)
-            {
-                MessageDlg.ShowWithException(this,
-                    string.Format(ToolsUIResources.ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_,
-                        importer.SourceConfigFile), exception);
-            }
+            importer.Import(this);
             LoadSettings();
         }
 

@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using Microsoft.Win32;
 
 namespace pwiz.Skyline.Util
@@ -65,17 +64,7 @@ namespace pwiz.Skyline.Util
         private const string CLICK_ONCE_UNINSTALL_HANDLER = @"dfshim.dll";
         private const string CLICK_ONCE_STORE_FOLDER = @"Apps\2.0";
 
-        /// <param name="assembly">The product's own assembly, whose name is both what ClickOnce
-        /// named its deployment after and what the old settings folder was named after. Pass
-        /// typeof(Program).Assembly rather than the entry assembly: SkylineCmd.exe and
-        /// Skyline-daily.exe start different entry assemblies but are the same product, and all
-        /// of them should inherit that product's old settings.</param>
-        public ClickOnceInstallations(Assembly assembly) : this(assembly.GetName().Name)
-        {
-        }
-
-        /// <param name="assemblyName">See <see cref="AssemblyName"/>. For looking up a product
-        /// other than the running one, such as Skyline-daily from Skyline.</param>
+        /// <param name="assemblyName">See <see cref="AssemblyName"/>.</param>
         public ClickOnceInstallations(string assemblyName)
         {
             AssemblyName = assemblyName;

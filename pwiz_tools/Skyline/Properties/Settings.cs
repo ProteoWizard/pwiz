@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Properties
         private static readonly ISet<string> UNMERGED_SETTINGS = new HashSet<string>
         {
             nameof(InstallationId),
-            nameof(ToolsCopyPending)
+            nameof(CheckedForSettingsToImport)
         };
 
         /// <summary>
