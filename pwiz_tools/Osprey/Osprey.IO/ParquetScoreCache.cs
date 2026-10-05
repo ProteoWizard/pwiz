@@ -1503,6 +1503,10 @@ namespace pwiz.Osprey.IO
                 bool decoy = (entryId & LibraryEntry.DECOY_ID_BIT) != 0;
                 string fileModseq = modseqs != null ? modseqs[row] ?? string.Empty : string.Empty;
                 byte fileCharge = charges != null ? charges[row] : (byte)0;
+                // A zero charge is a damaged file, not a disagreement: RequireCharge reports it
+                // with the remedy, so leave it to that.
+                if (fileCharge == 0)
+                    continue;
                 if (decoy != isDecoys[row] || entry.Charge != fileCharge ||
                     !string.Equals(entry.ModifiedSequence ?? string.Empty, fileModseq, StringComparison.Ordinal))
                 {
