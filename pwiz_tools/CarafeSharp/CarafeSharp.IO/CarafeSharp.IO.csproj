@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.IO</RootNamespace>
+    <AssemblyName>CarafeSharp.IO</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Parquet.Net as Osprey takes it: the NuGet package for its runtime dependencies, compiled
+         against (and, via Directory.Build.targets, deployed as) pwiz's patched fork in
+         pwiz_tools/Shared/Lib/Parquet. Stock 4.25.0 cannot read the metadata newer writers
+         produce (pyarrow's Carafe outputs fail with "don't know how to skip type Set"). -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" ExcludeAssets="compile" />
+    <Reference Include="Parquet">
+      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
+    </Reference>
+    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier). Pinned to 1.3.1
+         because the range resolves to 1.1.6, which carries GHSA-pggp-6c3x-2xmx. -->
+    <PackageReference Include="Snappier" Version="1.3.1" />
+    <PackageReference Include="IronCompress" Version="1.5.2" />
+    <!-- 1.0.119 to match Osprey and pwiz-sharp. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <!-- Ionic.Zlib for stock-zlib-identical blib peak blobs, as Osprey and Skyline write them. -->
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+  </ItemGroup>
+
+</Project>

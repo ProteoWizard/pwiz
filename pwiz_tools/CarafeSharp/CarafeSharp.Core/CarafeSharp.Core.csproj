@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.Core</RootNamespace>
+    <AssemblyName>CarafeSharp.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- alphabase 1.2.1 const_files/modification.tsv (Apache-2.0), verbatim. -->
+    <EmbeddedResource Include="Resources\alphabase_modification.tsv" />
+  </ItemGroup>
+
+</Project>
