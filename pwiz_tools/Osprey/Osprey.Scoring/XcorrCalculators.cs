@@ -22,7 +22,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
@@ -172,21 +171,23 @@ namespace pwiz.Osprey.Scoring
         /// libPre and Sqrt(0)=0 to obsPre (asymmetric vector entry that drives the
         /// cosine down). Norm guard is the literal 1e-12 on the post-Sqrt norm.
         /// Sqrt is taken per term before the dot/norm accumulation, in insertion
-        /// order of in-range fragments.
+        /// order of in-range fragments. The sums are accumulated as each fragment is
+        /// matched, which is that same order, so no per-term lists are needed.
         /// </summary>
         private static double ComputeCosineAtScan(
             LibraryEntry candidate, Spectrum spectrum, OspreyConfig config)
         {
+            var mzs = spectrum.Mzs;
             if (candidate.Fragments == null || candidate.Fragments.Count == 0 ||
-                spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                mzs == null || mzs.Length == 0)
                 return 0.0;
 
-            double specMzMin = spectrum.Mzs[0];
-            double specMzMax = spectrum.Mzs[spectrum.Mzs.Length - 1];
+            double specMzMin = mzs[0];
+            double specMzMax = mzs[mzs.Length - 1];
+            var intensities = spectrum.Intensities;
 
-            var libPre = new List<double>();
-            var obsPre = new List<double>();
-
+            int nTerms = 0;
+            double libNorm = 0, obsNorm = 0, dot = 0;
             foreach (var frag in candidate.Fragments)
             {
                 // Skip fragments outside the spectrum's mass range
@@ -197,35 +198,33 @@ namespace pwiz.Osprey.Scoring
                 double lower = frag.Mz - tolDa;
                 double upper = frag.Mz + tolDa;
 
-                int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
+                // The binary search's lower bound, through the spectrum's m/z bucket index.
+                int lo = spectrum.MzLowerBound(lower);
                 double bestIntensity = 0.0;
                 double bestDiff = double.MaxValue;
 
-                for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
+                for (int k = lo; k < mzs.Length && mzs[k] <= upper; k++)
                 {
-                    double diff = Math.Abs(spectrum.Mzs[k] - frag.Mz);
+                    double diff = Math.Abs(mzs[k] - frag.Mz);
                     if (diff < bestDiff)
                     {
                         bestDiff = diff;
-                        bestIntensity = spectrum.Intensities[k];
+                        bestIntensity = intensities[k];
                     }
                 }
 
-                libPre.Add(Math.Sqrt(frag.RelativeIntensity));
-                obsPre.Add(Math.Sqrt(bestIntensity));
+                double libTerm = Math.Sqrt(frag.RelativeIntensity);
+                double obsTerm = Math.Sqrt(bestIntensity);
+                libNorm += libTerm * libTerm;
+                obsNorm += obsTerm * obsTerm;
+                dot += libTerm * obsTerm;
+                nTerms++;
             }
 
-            if (libPre.Count == 0)
+            if (nTerms == 0)
                 return 0.0;
 
             // L2 normalize and dot product
-            double libNorm = 0, obsNorm = 0, dot = 0;
-            for (int i = 0; i < libPre.Count; i++)
-            {
-                libNorm += libPre[i] * libPre[i];
-                obsNorm += obsPre[i] * obsPre[i];
-                dot += libPre[i] * obsPre[i];
-            }
             libNorm = Math.Sqrt(libNorm);
             obsNorm = Math.Sqrt(obsNorm);
             if (libNorm < 1e-12 || obsNorm < 1e-12)
