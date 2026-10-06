@@ -295,8 +295,9 @@ with a Savitzky-Golay filter; Osprey's XICs are unsmoothed - see Risks).
 | `osprey.ddc.tolerance`, `osprey.ddc.tolerance_unit`, `osprey.ddc.rt_neighborhood` | The double-counting dedup's tolerance and RT neighborhood for this run |
 | `osprey.ms2_scan_window` | `lower,upper`: the union of every isolation window's measured m/z range (`IN_SCAN_RANGE` uses each window's own), or empty when no window has peaks |
 | `osprey.instrument_vendor`, `osprey.instrument_model` | From the run's data file (see Source metadata), or empty without it |
-| `osprey.source_ms2_sampled` | MS2 spectra the two histograms below were counted over; `0` without the data file |
-| `osprey.dissociation_methods`, `osprey.collision_energies` | JSON histograms (method or energy -> MS2 spectrum count) over the sampled spectra, or empty without the data file |
+| `osprey.source_ms2_sampled` | MS2 spectra the three histograms below were counted over; `0` without the data file |
+| `osprey.dissociation_methods`, `osprey.collision_energies` | JSON histograms (method or energy -> MS2 spectrum count) over the sampled spectra, or empty without the data file. The methods are pwiz's short names: `HCD` for beam-type CID, and `CID` for collision-induced dissociation, which on a Thermo instrument is resonance CID |
+| `osprey.ms2_mass_analyzers` | JSON histogram (the mass analyzers of each sampled MS2 spectrum's scan configuration -> MS2 spectrum count), or empty without the data file. The key is pwiz's: the configuration's analyzers in component order, joined with `/`, such as a Stellar's `radial ejection linear ion trap` or an Astral's MS2 `quadrupole/asymmetric track lossless time-of-flight analyzer`. A Tribrid reads MS2 out in its Orbitrap or ion trap; a consumer such as CarafeSharp trains ion trap, Orbitrap and time-of-flight spectra as different analyzers |
 
 Collision energy is exported as the file reports it, which differs by vendor (normalized for
 Thermo, eV for Sciex, stepped HCD as several values), hence a histogram rather than a number.
@@ -392,9 +393,10 @@ broader measure.
 
 The instrument and fragmentation facts in the footer come from the run's data file, read only
 when an export asks for them (`SpectrumFileReader.TryReadSourceMetadata`, into
-`Osprey.IO/SourceRunMetadata.cs`): the instrument vendor and model, and the dissociation method
-and collision energy of the first 200 MS2 spectra (`SourceRunMetadata.MAX_MS2_SPECTRA`) - enough
-to see every method and energy of a DIA cycle without reading the run. Nothing is cached and
+`Osprey.IO/SourceRunMetadata.cs`): the instrument vendor and model, and the dissociation method,
+collision energy and mass analyzers of the first 200 MS2 spectra
+(`SourceRunMetadata.MAX_MS2_SPECTRA`) - enough to see every method, energy and analyzer of a DIA
+cycle without reading the run. Nothing is cached and
 nothing is read during the search, so a run whose `.spectra.bin` was built before the export
 existed describes itself as well as a new one, and a search without the flag pays nothing.
 

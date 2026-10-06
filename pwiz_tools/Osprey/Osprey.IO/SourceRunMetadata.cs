@@ -27,7 +27,7 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// What a run's source file says about its acquisition - instrument vendor and model, and
-    /// the dissociation methods and collision energies of its first MS2 spectra - for the
+    /// the dissociation methods, collision energies and mass analyzers of its first MS2 spectra - for the
     /// training export's footer. Read by <see cref="SpectrumFileReader.TryReadSourceMetadata"/>
     /// only when an export asks for it, never during the search's own parse, so a run cached
     /// before the export existed describes itself just as well and the search pays nothing.
@@ -36,7 +36,8 @@ namespace pwiz.Osprey.IO
     {
         /// <summary>
         /// MS2 spectra sampled from the start of the file: enough to see every dissociation
-        /// method and collision energy of a DIA cycle, not a reason to read the whole run.
+        /// method, collision energy and mass analyzer of a DIA cycle, not a reason to read the
+        /// whole run.
         /// </summary>
         public const int MAX_MS2_SPECTRA = 200;
 
@@ -52,6 +53,16 @@ namespace pwiz.Osprey.IO
 
         /// <summary>Dissociation method name, counted over the sampled MS2 spectra.</summary>
         public SortedDictionary<string, int> DissociationMethods { get; } =
+            new SortedDictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// The mass analyzers of each sampled MS2 spectrum's scan configuration, counted. The key is
+        /// pwiz's: the configuration's analyzers in component order, joined with "/", such as a
+        /// Stellar's "radial ejection linear ion trap" or an Astral's MS2
+        /// "quadrupole/asymmetric track lossless time-of-flight analyzer". A Tribrid reads MS2 out
+        /// in its Orbitrap or ion trap, and a spectral library model treats them differently.
+        /// </summary>
+        public SortedDictionary<string, int> MassAnalyzers { get; } =
             new SortedDictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>Collision energy (round-trip text), counted over the sampled MS2 spectra.</summary>
@@ -78,7 +89,7 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        /// <summary>One MS2 spectrum's instrument, dissociation method and collision energy.</summary>
+        /// <summary>One MS2 spectrum's instrument, dissociation method, collision energy and mass analyzers.</summary>
         internal void ObserveMs2(MsDataSpectrum spectrum, MsPrecursor precursor)
         {
             if (NMs2Sampled == 0)
@@ -90,6 +101,8 @@ namespace pwiz.Osprey.IO
             }
             NMs2Sampled++;
             Count(DissociationMethods, string.IsNullOrEmpty(precursor.DissociationMethod) ? NONE_KEY : precursor.DissociationMethod);
+            string analyzer = spectrum.InstrumentInfo?.Analyzer;
+            Count(MassAnalyzers, string.IsNullOrEmpty(analyzer) ? NONE_KEY : analyzer);
             double? energy = precursor.PrecursorCollisionEnergy;
             Count(CollisionEnergies, energy.HasValue ? energy.Value.ToString(@"R", CultureInfo.InvariantCulture) : NONE_KEY);
         }
