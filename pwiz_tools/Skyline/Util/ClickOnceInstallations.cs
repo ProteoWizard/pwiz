@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Util
         {
             foreach (var settingsFolder in EnumerateSettingsFolders())
             {
-                var configFile = Path.Combine(settingsFolder, version, UserConfigSettingsProvider.CONFIG_FILE_NAME);
+                var configFile = Path.Combine(settingsFolder, version, PortableSettingsProvider.CONFIG_FILE_NAME);
                 if (File.Exists(configFile))
                     return configFile;
             }

@@ -104,10 +104,8 @@ namespace pwiz.Skyline.Util
                         var buttons = FindButtons();
                         if (buttons != null)
                         {
-                            // Posted, so that nothing here waits on the service, and in order: Remove is
-                            // chosen before OK is clicked. Restore is the choice when there is a
-                            // previous version, so Remove is clicked even though it is often already
-                            // chosen.
+                            // Restore is the choice when there is a previous version, so Remove is
+                            // clicked even though it is often already chosen.
                             Click(buttons[REMOVE_BUTTON]);
                             Click(buttons[OK_BUTTON]);
                             return;
@@ -150,6 +148,10 @@ namespace pwiz.Skyline.Util
             return null;
         }
 
+        /// <summary>
+        /// Posts the click, so that nothing here waits on the ClickOnce service. Clicks posted to
+        /// the same dialog are handled in the order they were posted.
+        /// </summary>
         private static void Click(IntPtr button)
         {
             User32.PostMessageA(button, User32.WinMessageType.BM_CLICK, 0, 0);

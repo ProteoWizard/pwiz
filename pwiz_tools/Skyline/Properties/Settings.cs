@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Drawing;
@@ -63,14 +64,7 @@ namespace pwiz.Skyline.Properties
     //  The PropertyChanged event is raised after a setting's value is changed.
     //  The SettingsLoaded event is raised after the setting values are loaded.
     //  The SettingsSaving event is raised before the setting values are saved.
-    //
-    // The SettingsProvider attribute is here, on the hand written half of the partial class,
-    // rather than in Settings.Designer.cs, so that regenerating the designer file does not
-    // discard it. It puts user scoped settings in one user.config per installation, beside the
-    // executable for a user who owns the installation folder, rather than in a per version
-    // folder under %LOCALAPPDATA%, which means Skyline.exe, Skyline-daily.exe and SkylineCmd.exe
-    // in one installation folder all share their settings.
-    [SettingsProvider(typeof(UserConfigSettingsProvider))]
+    [SettingsProvider(typeof(PortableSettingsProvider))]
     public sealed partial class Settings
     {
         /// <devdoc>
@@ -136,12 +130,12 @@ namespace pwiz.Skyline.Properties
 
         /// <summary>
         /// The provider that reads and writes the user scoped settings. Point its
-        /// <see cref="UserConfigSettingsProvider.ConfigFilePath"/> at another file to read or
+        /// <see cref="PortableSettingsProvider.ConfigFilePath"/> at another file to read or
         /// write the settings of another installation.
         /// </summary>
-        public UserConfigSettingsProvider UserConfigProvider
+        public PortableSettingsProvider PortableProvider
         {
-            get { return Providers.OfType<UserConfigSettingsProvider>().First(); }
+            get { return Providers.OfType<PortableSettingsProvider>().First(); }
         }
 
         /// <summary>
@@ -151,7 +145,7 @@ namespace pwiz.Skyline.Properties
         /// </summary>
         public string SettingsFilePath
         {
-            get { return UserConfigProvider.ConfigFilePath; }
+            get { return PortableProvider.ConfigFilePath; }
         }
 
         /// <summary>
@@ -251,7 +245,7 @@ namespace pwiz.Skyline.Properties
                         continue;
                     var localValue = propertyInfo.GetValue(this);
                     if (localValue is IMergeableList mergeableList)
-                        this[property.Name] = mergeableList.MergeChanges(baseValue, sourceValue);
+                        this[property.Name] = mergeableList.MergeChanges((IEnumerable) baseValue, (IEnumerable) sourceValue);
                     else if (Equals(baseSerialized, GetSerializedValue(property.Name, localValue)))
                         this[property.Name] = sourceValue;
                 }

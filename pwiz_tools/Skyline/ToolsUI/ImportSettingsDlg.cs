@@ -74,7 +74,6 @@ namespace pwiz.Skyline.ToolsUI
             bool uninstall = UninstallSelected && installation.CanUninstall;
             Importer = new SettingsImporter(installation.UserConfigFile)
             {
-                // An installation that is going away hands its identity on.
                 KeepInstallationId = !uninstall,
                 UninstallCommand = uninstall ? installation.UninstallCommand : null
             };

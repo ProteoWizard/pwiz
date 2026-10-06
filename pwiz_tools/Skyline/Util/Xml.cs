@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -46,7 +48,7 @@ namespace pwiz.Skyline.Util
         /// those of <paramref name="sourceList"/>. An item changed both here and in the source
         /// keeps the change made here.
         /// </summary>
-        object MergeChanges(object baseList, object sourceList);
+        object MergeChanges(IEnumerable baseItems, IEnumerable sourceItems);
     }
 
     /// <summary>
@@ -67,33 +69,30 @@ namespace pwiz.Skyline.Util
 
         #region IMergeableList Members
 
-        public object MergeChanges(object baseList, object sourceList)
-        {
-            return MergeChanges((XmlMappedList<TKey, TValue>) baseList, (XmlMappedList<TKey, TValue>) sourceList);
-        }
-
         /// <summary>
         /// Items match by key. One added, changed or removed here stays that way; one left alone
         /// here follows the source, including being removed from it; and one the source added is
         /// added, after the items already here.
         /// </summary>
-        public XmlMappedList<TKey, TValue> MergeChanges(XmlMappedList<TKey, TValue> baseList,
-            XmlMappedList<TKey, TValue> sourceList)
+        public object MergeChanges(IEnumerable baseItems, IEnumerable sourceItems)
         {
+            var baseByKey = baseItems.Cast<TValue>().ToDictionary(item => item.GetKey());
+            var sourceList = sourceItems.Cast<TValue>().ToList();
+            var sourceByKey = sourceList.ToDictionary(item => item.GetKey());
             var merged = (XmlMappedList<TKey, TValue>) Activator.CreateInstance(GetType());
             merged.RevisionIndex = RevisionIndex;
             foreach (var item in this)
             {
                 var key = item.GetKey();
-                if (!baseList.TryGetValue(key, out var baseItem) || !IsSameItem(item, baseItem))
+                if (!baseByKey.TryGetValue(key, out var baseItem) || !IsSameItem(item, baseItem))
                     merged.Add(item);
-                else if (sourceList.TryGetValue(key, out var sourceItem))
+                else if (sourceByKey.TryGetValue(key, out var sourceItem))
                     merged.Add(sourceItem);
             }
             foreach (var sourceItem in sourceList)
             {
                 var key = sourceItem.GetKey();
-                if (!baseList.ContainsKey(key) && !merged.ContainsKey(key))
+                if (!baseByKey.ContainsKey(key) && !merged.ContainsKey(key))
                     merged.Add(sourceItem);
             }
             return merged;

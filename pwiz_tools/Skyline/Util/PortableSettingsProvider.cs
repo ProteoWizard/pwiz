@@ -31,9 +31,11 @@ using System.Xml.Linq;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
-    /// Keeps user scoped settings in a "user.config" file whose folder this class chooses,
-    /// instead of the per user, per version folder under %LOCALAPPDATA% that
-    /// <see cref="LocalFileSettingsProvider"/> generates a name for.
+    /// Keeps user scoped settings in a "user.config" file beside the executable, so that they
+    /// belong to the installation, instead of the per user, per version folder under
+    /// %LOCALAPPDATA% that <see cref="LocalFileSettingsProvider"/> generates a name for. A user
+    /// who does not own the installation folder gets a personal file elsewhere; see
+    /// <see cref="GetConfigFolder"/>.
     ///
     /// The file format is the same one <see cref="LocalFileSettingsProvider"/> writes, so an
     /// existing user.config can be copied into place and read by this provider. Each settings
@@ -44,7 +46,7 @@ namespace pwiz.Skyline.Util
     /// beside the executable, by handing those properties to a <see cref="LocalFileSettingsProvider"/>.
     ///
     /// Attach this to a settings class with
-    /// <code>[SettingsProvider(typeof(UserConfigSettingsProvider))]</code>. On a class generated
+    /// <code>[SettingsProvider(typeof(PortableSettingsProvider))]</code>. On a class generated
     /// by the settings designer, put the attribute on the hand written half of the partial class
     /// so that regenerating the designer file does not discard it.
     ///
@@ -53,7 +55,7 @@ namespace pwiz.Skyline.Util
     /// ever sees them: BinaryFormatter no longer has an implementation to call. String and Xml,
     /// which is everything Skyline uses, are what this reads and writes.
     /// </summary>
-    public class UserConfigSettingsProvider : SettingsProvider, IApplicationSettingsProvider
+    public class PortableSettingsProvider : SettingsProvider, IApplicationSettingsProvider
     {
         public const string CONFIG_FILE_NAME = @"user.config";
 

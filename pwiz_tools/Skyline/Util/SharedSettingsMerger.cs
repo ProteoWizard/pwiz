@@ -48,13 +48,13 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static SharedSettingsMerger ForSharedSettings()
         {
-            var sharedConfigFile = UserConfigSettingsProvider.GetSharedConfigFile();
+            var sharedConfigFile = PortableSettingsProvider.GetSharedConfigFile();
             if (sharedConfigFile == null)
                 return null;
             return new SharedSettingsMerger
             {
                 SourcePath = sharedConfigFile,
-                BaseConfigFilePath = Path.Combine(UserConfigSettingsProvider.GetDefaultConfigFolder(),
+                BaseConfigFilePath = Path.Combine(PortableSettingsProvider.GetDefaultConfigFolder(),
                     SHARED_BASE_CONFIG_FILE_NAME)
             };
         }
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Util
         private static Settings ReadSettings(string configFilePath)
         {
             var settings = new Settings();
-            settings.UserConfigProvider.ConfigFilePath = configFilePath;
+            settings.PortableProvider.ConfigFilePath = configFilePath;
             return settings;
         }
     }

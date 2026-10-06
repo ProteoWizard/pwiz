@@ -95,7 +95,6 @@ namespace pwiz.Skyline.ToolsUI
         {
             var importer = new SettingsImporter(configFile)
             {
-                // The older installation is going away, and this one carries on its identity.
                 KeepInstallationId = false,
                 UninstallCommand = SettingsImporter.ReadUninstallCommand(configFile),
                 RunUninstall = RunUninstall

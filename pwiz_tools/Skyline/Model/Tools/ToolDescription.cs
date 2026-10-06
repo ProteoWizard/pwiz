@@ -339,6 +339,8 @@ namespace pwiz.Skyline.Model.Tools
 
         public bool Equals(ToolDescription tool)
         {
+            if (ReferenceEquals(null, tool)) return false;
+            if (ReferenceEquals(this, tool)) return true;
             return (Equals(Title, tool.Title) &&
                     Equals(Command, tool.Command) &&
                     Equals(Arguments, tool.Arguments) &&
@@ -353,24 +355,27 @@ namespace pwiz.Skyline.Model.Tools
                     Equals(PackageName, tool.PackageName);
         }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ToolDescription);
+        }
+
         public override int GetHashCode()
         {
-            unchecked
-            {
-                int result = Title.GetHashCode();
-                result = (result * 397) ^ Command.GetHashCode();
-                result = (result * 397) ^ Arguments.GetHashCode();
-                result = (result * 397) ^ InitialDirectory.GetHashCode();
-                result = (result * 397) ^ OutputToImmediateWindow.GetHashCode();
-                result = (result * 397) ^ ReportTitle.GetHashCode();
-                result = (result * 397) ^ ArgsCollectorDllPath.GetHashCode();
-                result = (result * 397) ^ ArgsCollectorClassName.GetHashCode();
-                result = (result * 397) ^ ToolDirPath.GetHashCode();
-                result = (result * 397) ^ (PackageVersion == null ? 0 : PackageVersion.GetHashCode());
-                result = (result * 397) ^ (PackageIdentifier == null ? 0 : PackageIdentifier.GetHashCode());
-                result = (result * 397) ^ (PackageName == null ? 0 : PackageName.GetHashCode());
-                return result;
-            }
+            var hashCode = new HashCode();
+            hashCode.Add(Title);
+            hashCode.Add(Command);
+            hashCode.Add(Arguments);
+            hashCode.Add(InitialDirectory);
+            hashCode.Add(OutputToImmediateWindow);
+            hashCode.Add(ReportTitle);
+            hashCode.Add(ArgsCollectorDllPath);
+            hashCode.Add(ArgsCollectorClassName);
+            hashCode.Add(ToolDirPath);
+            hashCode.Add(PackageVersion);
+            hashCode.Add(PackageIdentifier);
+            hashCode.Add(PackageName);
+            return hashCode.ToHashCode();
         }
 
         #endregion
@@ -480,7 +485,7 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         public static string GetToolsDirectory()
         {
-            var skylineDirPath = UserConfigSettingsProvider.GetDefaultConfigFolder();
+            var skylineDirPath = PortableSettingsProvider.GetDefaultConfigFolder();
             // Use a unique tools path when running tests to allow tests to run in parallel
             // ReSharper disable once AssignNullToNotNullAttribute
             var tools = GetToolsDirectoryBasis(); // Helps catch Unicode path issues on Windows

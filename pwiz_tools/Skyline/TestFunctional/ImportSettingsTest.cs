@@ -260,7 +260,7 @@ namespace pwiz.SkylineTestFunctional
                     new ToolDescription(OWN_TOOL_TITLE, @"own.exe", string.Empty)));
 
                 var source = new Settings();
-                source.UserConfigProvider.ConfigFilePath = other.UserConfigFile;
+                source.PortableProvider.ConfigFilePath = other.UserConfigFile;
                 source.AnnotationColor = SOURCE_ANNOTATION_COLOR;
                 source.LibraryDirectory = SOURCE_LIBRARY_DIRECTORY;
                 source.ToolList = ToolList.CopyTools(source.ToolList.Append(
@@ -337,7 +337,7 @@ namespace pwiz.SkylineTestFunctional
             File.WriteAllText(toolPath, @"@echo off");
 
             var otherSettings = new Settings();
-            otherSettings.UserConfigProvider.ConfigFilePath = Path.Combine(otherFolder, UserConfigSettingsProvider.CONFIG_FILE_NAME);
+            otherSettings.PortableProvider.ConfigFilePath = Path.Combine(otherFolder, PortableSettingsProvider.CONFIG_FILE_NAME);
             otherSettings.InstallationId = OTHER_INSTALLATION_ID;
             otherSettings.AnnotationColor = OTHER_ANNOTATION_COLOR;
             var tool = new ToolDescription(TOOL_TITLE, toolPath, string.Empty) { ToolDirPath = toolDir };
@@ -370,7 +370,7 @@ namespace pwiz.SkylineTestFunctional
         private static int ReadAnnotationColor(string configFile)
         {
             var settings = new Settings();
-            settings.UserConfigProvider.ConfigFilePath = configFile;
+            settings.PortableProvider.ConfigFilePath = configFile;
             Assert.AreNotEqual(OWN_ANNOTATION_COLOR, settings.AnnotationColor);
             return settings.AnnotationColor;
         }

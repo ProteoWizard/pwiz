@@ -47,10 +47,10 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// The running program's own settings file, which is the one installation never worth
-        /// offering. Defaults to where <see cref="UserConfigSettingsProvider"/> keeps it.
+        /// offering. Defaults to where <see cref="PortableSettingsProvider"/> keeps it.
         /// </summary>
         public string OwnUserConfigFile { get; set; } = Path.Combine(
-            UserConfigSettingsProvider.GetDefaultConfigFolder(), UserConfigSettingsProvider.CONFIG_FILE_NAME);
+            PortableSettingsProvider.GetDefaultConfigFolder(), PortableSettingsProvider.CONFIG_FILE_NAME);
 
         /// <summary>
         /// The installations on offer, the ones Programs and Features lists first, then the
@@ -75,9 +75,8 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Every installation of <see cref="ProductName"/> with settings, this one included.
-        /// Overridable so a test can say what is installed.
         /// </summary>
-        protected virtual IEnumerable<SkylineInstallation> FindInstallations()
+        private IEnumerable<SkylineInstallation> FindInstallations()
         {
             return new ClickOnceInstallations(ProductName).ListCandidates()
                 .Concat(new RegisteredInstallations(ProductName).ListInstallations());
