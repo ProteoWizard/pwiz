@@ -35,10 +35,19 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public partial class ImportSettingsDlg : FormEx
     {
-        public ImportSettingsDlg(IEnumerable<SkylineInstallation> installations)
+        /// <param name="installations">The installations to offer.</param>
+        /// <param name="userInitiated">True when the user chose Import Settings; false when
+        /// Skyline offers the import unasked at its first start, and the dialog asks whether to
+        /// import at all.</param>
+        public ImportSettingsDlg(IEnumerable<SkylineInstallation> installations, bool userInitiated)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
+            if (!userInitiated)
+            {
+                labelInstallations.Text = ToolsUIResources.ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_;
+                btnCancel.Text = ToolsUIResources.ImportSettingsDlg_ImportSettingsDlg_Don_t_Import;
+            }
             foreach (var installation in installations)
                 listInstallations.Items.Add(installation);
             if (listInstallations.Items.Count > 0)
@@ -47,7 +56,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// What to do once the user clicks OK, or null while the dialog is still open.
+        /// What to do once the user clicks Import, or null while the dialog is still open.
         /// </summary>
         public SettingsImporter Importer { get; private set; }
 

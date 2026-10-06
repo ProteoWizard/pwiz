@@ -214,7 +214,7 @@
     <value>3</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
-    <value>OK</value>
+    <value>Import</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>

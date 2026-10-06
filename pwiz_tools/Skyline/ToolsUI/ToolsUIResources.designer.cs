@@ -588,6 +588,24 @@ namespace pwiz.Skyline.ToolsUI {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Do you want to import settings from one of these previous versions?.
+        /// </summary>
+        public static string ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_ {
+            get {
+                return ResourceManager.GetString("ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t Import.
+        /// </summary>
+        public static string ImportSettingsDlg_ImportSettingsDlg_Don_t_Import {
+            get {
+                return ResourceManager.GetString("ImportSettingsDlg_ImportSettingsDlg_Don_t_Import", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Choose the installation to import settings from..
         /// </summary>
         public static string ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_ {

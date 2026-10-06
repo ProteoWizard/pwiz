@@ -447,6 +447,12 @@ To enable, install the following items:
   <data name="ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_" xml:space="preserve">
     <value>Choose the installation to import settings from.</value>
   </data>
+  <data name="ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_" xml:space="preserve">
+    <value>&amp;Do you want to import settings from one of these previous versions?</value>
+  </data>
+  <data name="ImportSettingsDlg_ImportSettingsDlg_Don_t_Import" xml:space="preserve">
+    <value>Don't Import</value>
+  </data>
   <data name="ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_" xml:space="preserve">
     <value>Failed to import settings from {0}</value>
   </data>
