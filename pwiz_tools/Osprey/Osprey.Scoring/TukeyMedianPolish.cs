@@ -150,10 +150,14 @@ namespace pwiz.Osprey.Scoring
             bool converged = false;
             int nIter = 0;
 
-            var oldRow = new double[nScans];
             var colBuf = new double[nFrags];
             var rowMedians = new double[nFrags];
             var colMedians = new double[nScans];
+            // Working copy for NanMedian, which reorders it; sized for a row or a column.
+            var medianScratch = new double[Math.Max(nFrags, nScans)];
+            var oldResiduals = new double[nFrags][];
+            for (int f = 0; f < nFrags; f++)
+                oldResiduals[f] = new double[nScans];
 
             for (int iteration = 0; iteration < maxIter; iteration++)
             {
@@ -162,16 +166,12 @@ namespace pwiz.Osprey.Scoring
                 // Save old residuals for convergence check (matches Rust).
                 // Rust checks max|new - old| AFTER both sweeps complete,
                 // not incrementally during each sweep.
-                double[][] oldResiduals = new double[nFrags][];
                 for (int f = 0; f < nFrags; f++)
-                {
-                    oldResiduals[f] = new double[nScans];
                     Array.Copy(residuals[f], oldResiduals[f], nScans);
-                }
 
                 // Row sweep: subtract nanmedian of each row
                 for (int f = 0; f < nFrags; f++)
-                    rowMedians[f] = NanMedian(residuals[f]);
+                    rowMedians[f] = NanMedian(residuals[f], medianScratch);
 
                 for (int f = 0; f < nFrags; f++)
                 {
@@ -185,7 +185,7 @@ namespace pwiz.Osprey.Scoring
                     }
                 }
 
-                double medianOfRowMedians = NanMedian(rowMedians);
+                double medianOfRowMedians = NanMedian(rowMedians, medianScratch);
                 if (IsFinite(medianOfRowMedians))
                 {
                     for (int f = 0; f < nFrags; f++)
@@ -201,7 +201,7 @@ namespace pwiz.Osprey.Scoring
                 {
                     for (int f = 0; f < nFrags; f++)
                         colBuf[f] = residuals[f][s];
-                    colMedians[s] = NanMedian(colBuf);
+                    colMedians[s] = NanMedian(colBuf, medianScratch);
                 }
 
                 for (int f = 0; f < nFrags; f++)
@@ -215,7 +215,7 @@ namespace pwiz.Osprey.Scoring
                     }
                 }
 
-                double medianOfColMedians = NanMedian(colMedians);
+                double medianOfColMedians = NanMedian(colMedians, medianScratch);
                 if (IsFinite(medianOfColMedians))
                 {
                     for (int s = 0; s < nScans; s++)
@@ -512,23 +512,22 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Median of a slice, skipping NaN values. Returns NaN if no finite values.
+        /// Median of a slice, skipping non-finite values. Returns NaN if no finite values.
+        /// The finite values are copied into <paramref name="scratch"/> (at least as long as
+        /// <paramref name="values"/>) and the median selected there (<see cref="MedianMath"/>), leaving
+        /// <paramref name="values"/> untouched. The selection returns the value a sort would:
+        /// equal doubles differ only in the sign of zero, and the residuals start as the ln of
+        /// a positive value and change only by subtraction, where x - x gives +0.0.
         /// </summary>
-        private static double NanMedian(double[] values)
+        private static double NanMedian(double[] values, double[] scratch)
         {
-            var finite = new List<double>(values.Length);
+            int count = 0;
             for (int i = 0; i < values.Length; i++)
             {
                 if (IsFinite(values[i]))
-                    finite.Add(values[i]);
+                    scratch[count++] = values[i];
             }
-            if (finite.Count == 0)
-                return double.NaN;
-            finite.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant since tied values are equal
-            int mid = finite.Count / 2;
-            if (finite.Count % 2 == 0)
-                return 0.5 * (finite[mid - 1] + finite[mid]);
-            return finite[mid];
+            return MedianMath.MedianInPlace(new Span<double>(scratch, 0, count));
         }
 
         private static double CosineAngle(List<double> a, List<double> b)
