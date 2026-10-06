@@ -76,6 +76,7 @@ namespace pwiz.Skyline.Menus
             this.arrangeColumnMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arrangeRowMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arrangedTabbedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.arrangeTabbedByGroupMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.chromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,6 +84,9 @@ namespace pwiz.Skyline.Menus
             this.toolStripSeparatorReplicates = new System.Windows.Forms.ToolStripSeparator();
             this.previousReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nextReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparatorTabs = new System.Windows.Forms.ToolStripSeparator();
+            this.firstTabsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.nextTabsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator44 = new System.Windows.Forms.ToolStripSeparator();
             this.closeChromatogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeAllChromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -480,6 +484,7 @@ namespace pwiz.Skyline.Menus
             this.arrangeColumnMenuItem,
             this.arrangeRowMenuItem,
             this.arrangedTabbedMenuItem,
+            this.arrangeTabbedByGroupMenuItem,
             this.groupedMenuItem});
             this.arrangeGraphsToolStripMenuItem.Name = "arrangeGraphsToolStripMenuItem";
             resources.ApplyResources(this.arrangeGraphsToolStripMenuItem, "arrangeGraphsToolStripMenuItem");
@@ -507,7 +512,13 @@ namespace pwiz.Skyline.Menus
             this.arrangedTabbedMenuItem.Name = "arrangedTabbedMenuItem";
             resources.ApplyResources(this.arrangedTabbedMenuItem, "arrangedTabbedMenuItem");
             this.arrangedTabbedMenuItem.Click += new System.EventHandler(this.arrangeTabbedMenuItem_Click);
-            // 
+            //
+            // arrangeTabbedByGroupMenuItem
+            //
+            this.arrangeTabbedByGroupMenuItem.Name = "arrangeTabbedByGroupMenuItem";
+            resources.ApplyResources(this.arrangeTabbedByGroupMenuItem, "arrangeTabbedByGroupMenuItem");
+            this.arrangeTabbedByGroupMenuItem.Click += new System.EventHandler(this.arrangeTabbedByGroupMenuItem_Click);
+            //
             // groupedMenuItem
             // 
             this.groupedMenuItem.Name = "groupedMenuItem";
@@ -526,6 +537,9 @@ namespace pwiz.Skyline.Menus
             this.toolStripSeparatorReplicates,
             this.previousReplicateMenuItem,
             this.nextReplicateMenuItem,
+            this.toolStripSeparatorTabs,
+            this.firstTabsMenuItem,
+            this.nextTabsMenuItem,
             this.toolStripSeparator44,
             this.closeChromatogramMenuItem,
             this.closeAllChromatogramsMenuItem});
@@ -554,7 +568,24 @@ namespace pwiz.Skyline.Menus
             this.nextReplicateMenuItem.Name = "nextReplicateMenuItem";
             resources.ApplyResources(this.nextReplicateMenuItem, "nextReplicateMenuItem");
             this.nextReplicateMenuItem.Click += new System.EventHandler(this.nextReplicateMenuItem_Click);
-            // 
+            //
+            // toolStripSeparatorTabs
+            //
+            this.toolStripSeparatorTabs.Name = "toolStripSeparatorTabs";
+            resources.ApplyResources(this.toolStripSeparatorTabs, "toolStripSeparatorTabs");
+            //
+            // firstTabsMenuItem
+            //
+            this.firstTabsMenuItem.Name = "firstTabsMenuItem";
+            resources.ApplyResources(this.firstTabsMenuItem, "firstTabsMenuItem");
+            this.firstTabsMenuItem.Click += new System.EventHandler(this.firstTabsMenuItem_Click);
+            //
+            // nextTabsMenuItem
+            //
+            this.nextTabsMenuItem.Name = "nextTabsMenuItem";
+            resources.ApplyResources(this.nextTabsMenuItem, "nextTabsMenuItem");
+            this.nextTabsMenuItem.Click += new System.EventHandler(this.nextTabsMenuItem_Click);
+            //
             // toolStripSeparator44
             // 
             this.toolStripSeparator44.Name = "toolStripSeparator44";
@@ -970,6 +1001,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem arrangeColumnMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arrangeRowMenuItem;
         private System.Windows.Forms.ToolStripMenuItem arrangedTabbedMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem arrangeTabbedByGroupMenuItem;
         private System.Windows.Forms.ToolStripMenuItem groupedMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator39;
         private System.Windows.Forms.ToolStripMenuItem libraryMatchToolStripMenuItem;
@@ -985,6 +1017,9 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorReplicates;
         private System.Windows.Forms.ToolStripMenuItem previousReplicateMenuItem;
         private System.Windows.Forms.ToolStripMenuItem nextReplicateMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorTabs;
+        private System.Windows.Forms.ToolStripMenuItem firstTabsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem nextTabsMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator44;
         private System.Windows.Forms.ToolStripMenuItem closeChromatogramMenuItem;
         private System.Windows.Forms.ToolStripMenuItem closeAllChromatogramsMenuItem;

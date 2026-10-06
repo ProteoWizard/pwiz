@@ -4007,12 +4007,145 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ArrangeGraphsTabbedByGroup()
+        {
+            if (!DocumentUI.Settings.HasResults)
+                return;
+            using (var dlg = new ArrangeGraphsTabbedByGroupDlg(DocumentUI))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                    ArrangeGraphsTabbedByGroup(dlg.ReplicateValue);
+            }
+        }
+
+        /// <summary>
+        /// Arranges the chromatogram graphs into tiled panes whose nth tab holds a replicate with the
+        /// nth most common value of <paramref name="replicateValue"/>, so that selecting the nth tab
+        /// in every pane shows all the replicates with that value. The values are ordered by how many
+        /// replicates have them, most first, which is what lets every replicate with the same value land
+        /// on the same tab. A null <paramref name="replicateValue"/> groups by replicate, which tabs all
+        /// the chromatogram graphs in one pane. Graphs of replicates with no value are closed.
+        /// </summary>
+        public void ArrangeGraphsTabbedByGroup(ReplicateValue replicateValue)
+        {
+            var document = DocumentUI;
+            if (!document.Settings.HasResults)
+                return;
+            var graphsByName = GetArrangeableGraphs().OfType<GraphChromatogram>()
+                .ToDictionary(graphChrom => graphChrom.NameSet);
+            var annotationCalculator = new AnnotationCalculator(document);
+            var groupsByValue = new Dictionary<object, List<DockableForm>>();
+            var groups = new List<List<DockableForm>>();
+            var graphsToClose = new List<GraphChromatogram>();
+            foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
+            {
+                if (!graphsByName.TryGetValue(chromatogramSet.Name, out var graphChrom))
+                    continue;
+                var value = replicateValue == null
+                    ? chromatogramSet
+                    : replicateValue.GetValue(annotationCalculator, chromatogramSet);
+                if (value == null)
+                {
+                    graphsToClose.Add(graphChrom);
+                    continue;
+                }
+                if (!groupsByValue.TryGetValue(value, out var group))
+                {
+                    group = new List<DockableForm>();
+                    groupsByValue.Add(value, group);
+                    groups.Add(group);
+                }
+                group.Add(graphChrom);
+            }
+            foreach (var graphChrom in graphsToClose)
+                graphChrom.Hide();
+            if (groups.Count == 0)
+                return;
+
+            // A stable sort, so values with the same count stay in replicate order
+            groups = groups.OrderByDescending(group => group.Count).ToList();
+            var paneGroups = Enumerable.Range(0, groups[0].Count)
+                .Select(iPane => groups.Where(group => group.Count > iPane).Select(group => group[iPane]).ToList())
+                .ToList();
+            using (new DockPanelLayoutLock(dockPanel, true))
+            {
+                SeparateFromOtherGraphs(paneGroups[0][0], groups.SelectMany(group => group).ToHashSet<IDockableForm>());
+                ArrangeGraphPanes(paneGroups, DisplayGraphsType.Tiled);
+            }
+            SelectFirstTabs();
+        }
+
+        /// <summary>
+        /// Selects the first tab in each document pane.
+        /// </summary>
+        public void SelectFirstTabs()
+        {
+            foreach (var pane in GetDocumentPanes().Where(pane => pane.DisplayingContents.Count > 0))
+                pane.ActiveContent = pane.DisplayingContents[0];
+        }
+
+        /// <summary>
+        /// Selects the tab after the selected one in each document pane, leaving a pane
+        /// alone when its last tab is selected.
+        /// </summary>
+        public void SelectNextTabs()
+        {
+            foreach (var pane in GetDocumentPanes())
+            {
+                int iNext = pane.DisplayingContents.IndexOf(pane.ActiveContent) + 1;
+                if (iNext < pane.DisplayingContents.Count)
+                    pane.ActiveContent = pane.DisplayingContents[iNext];
+            }
+        }
+
+        /// <summary>
+        /// Moves a form into a new pane beside its current one when that pane also holds forms
+        /// outside the set being arranged, so that the arrangement starts from a pane of its own.
+        /// </summary>
+        private void SeparateFromOtherGraphs(DockableForm form, ICollection<IDockableForm> arrangedForms)
+        {
+            var pane = FindPane(form);
+            if (pane.DisplayingContents.Any(content => !arrangedForms.Contains(content)))
+                form.Show(pane, DockPaneAlignment.Right, 0.5);
+        }
+
         private void ArrangeGraphsGrouped(IList<DockableForm> listGraphs, int groups, GroupGraphsType groupType, DisplayGraphsType displayType)
         {
+            var paneGroups = Enumerable.Range(0, groups).Select(iGroup => new List<DockableForm>()).ToList();
+            if (groupType == GroupGraphsType.distributed)
+            {
+                // As if dealing a card deck over the groups
+                for (int iForm = 0; iForm < listGraphs.Count; iForm++)
+                    paneGroups[iForm % groups].Add(listGraphs[iForm]);
+            }
+            else
+            {
+                // Filling each group before continuing to the next
+                int count = listGraphs.Count;
+                int longGroups = count % groups;
+                int tabsShort = count / groups;
+                for (int iGroup = 0, iForm = 0; iGroup < groups; iGroup++)
+                {
+                    int tabs = tabsShort + (iGroup < longGroups ? 1 : 0);
+                    for (int iTab = 0; iTab < tabs; iTab++)
+                        paneGroups[iGroup].Add(listGraphs[iForm++]);
+                }
+            }
+            ArrangeGraphPanes(paneGroups.Where(group => group.Count > 0).ToList(), displayType);
+        }
+
+        /// <summary>
+        /// Places each list of forms as the tabs of its own pane, with the panes laid out in rows and
+        /// columns according to <paramref name="displayType"/> and filled in row order.
+        /// </summary>
+        private void ArrangeGraphPanes(IList<List<DockableForm>> paneGroups, DisplayGraphsType displayType)
+        {
             // First just arrange everything into a single pane
+            var listGraphs = paneGroups.SelectMany(group => group).ToList();
             ArrangeGraphsTabbed(listGraphs);
 
             // Figure out how to distribute the panes into rows and columns
+            int groups = paneGroups.Count;
             var documentPane = FindPane(listGraphs[0]);
             double width = documentPane.Width;
             double height = documentPane.Height;
@@ -4036,53 +4169,13 @@ namespace pwiz.Skyline
             int longRows = groups%rows;
             int columnsShort = groups/rows;
 
-            // Distribute the forms into lists representing rows, columns, and groups
+            // Distribute the groups into lists representing rows and columns
             var listTiles = new List<List<List<DockableForm>>>();
-            if (groupType == GroupGraphsType.distributed)
+            for (int iRow = 0, iGroup = 0; iRow < rows; iRow++)
             {
-                // As if dealing a card deck over the groups
-                int iForm = 0;
-                int forms = listGraphs.Count;
-                while (iForm < listGraphs.Count)
-                {
-                    for (int iRow = 0; iRow < rows; iRow++)
-                    {
-                        if (listTiles.Count <= iRow)
-                            listTiles.Add(new List<List<DockableForm>>());
-                        var rowTiles = listTiles[iRow];
-                        int columns = columnsShort + (iRow < longRows ? 1 : 0);
-                        for (int iCol = 0; iCol < columns && iForm < forms; iCol++)
-                        {
-                            if (rowTiles.Count <= iCol)
-                                rowTiles.Add(new List<DockableForm>());
-                            var tabbedForms = rowTiles[iCol];
-                            tabbedForms.Add(listGraphs[iForm++]);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Filling each group before continuing to the next
-                int count = listGraphs.Count;
-                int longGroups = count % groups;
-                int tabsShort = count / groups;
-                for (int iRow = 0, iGroup = 0, iForm = 0; iRow < rows; iRow++)
-                {
-                    var rowTiles = new List<List<DockableForm>>();
-                    listTiles.Add(rowTiles);
-                    int columns = columnsShort + (iRow < longRows ? 1 : 0);
-                    for (int iCol = 0; iCol < columns; iCol++)
-                    {
-                        var tabbedForms = new List<DockableForm>();
-                        rowTiles.Add(tabbedForms);
-                        int tabs = tabsShort + (iGroup++ < longGroups ? 1 : 0);
-                        for (int iTab = 0; iTab < tabs; iTab++)
-                        {
-                            tabbedForms.Add(listGraphs[iForm++]);                            
-                        }
-                    }
-                }                
+                int columns = columnsShort + (iRow < longRows ? 1 : 0);
+                listTiles.Add(paneGroups.Skip(iGroup).Take(columns).ToList());
+                iGroup += columns;
             }
 
             // Place the forms in the dock panel
@@ -4141,9 +4234,7 @@ namespace pwiz.Skyline
 
         private List<DockableForm> GetArrangeableGraphs(GroupGraphsOrder order, bool reversed)
         {
-            List<DockPane> listPanes = dockPanel.Panes
-                .Where(pane => !pane.IsHidden && pane.DockState == DockState.Document)
-                .ToList();
+            List<DockPane> listPanes = GetDocumentPanes().ToList();
             if (order == GroupGraphsOrder.Position)
             {
                 listPanes.Sort((p1, p2) =>
@@ -4225,6 +4316,11 @@ namespace pwiz.Skyline
                     listGraphs.Reverse();
             }
             return listGraphs;
+        }
+
+        private IEnumerable<DockPane> GetDocumentPanes()
+        {
+            return dockPanel.Panes.Where(pane => !pane.IsHidden && pane.DockState == DockState.Document);
         }
 
         public DateTime? GetRunStartTime(ChromatogramSet chromatogramSet)

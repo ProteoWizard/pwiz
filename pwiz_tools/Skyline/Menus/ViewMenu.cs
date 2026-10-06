@@ -204,6 +204,10 @@ namespace pwiz.Skyline.Menus
         {
             SkylineWindow.ArrangeGraphsTabbed();
         }
+        private void arrangeTabbedByGroupMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ArrangeGraphsTabbedByGroup();
+        }
         private void arrangeGroupedMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ArrangeGraphsGrouped();
@@ -492,6 +496,16 @@ namespace pwiz.Skyline.Menus
         private void nextReplicateMenuItem_Click(object sender, EventArgs e)
         {
             SelectedResultsIndex++;
+        }
+
+        private void firstTabsMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.SelectFirstTabs();
+        }
+
+        private void nextTabsMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.SelectNextTabs();
         }
 
         private void previousReplicateMenuItem_Click(object sender, EventArgs e)

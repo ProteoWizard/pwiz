@@ -435,6 +435,12 @@
   <data name="arrangedTabbedMenuItem.Text" xml:space="preserve">
     <value>T&amp;abbed</value>
   </data>
+  <data name="arrangeTabbedByGroupMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>184, 22</value>
+  </data>
+  <data name="arrangeTabbedByGroupMenuItem.Text" xml:space="preserve">
+    <value>Tabbed &amp;by Group...</value>
+  </data>
   <data name="groupedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>184, 22</value>
   </data>
@@ -476,6 +482,21 @@
   </data>
   <data name="nextReplicateMenuItem.Text" xml:space="preserve">
     <value>Ne&amp;xt Replicate</value>
+  </data>
+  <data name="toolStripSeparatorTabs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>216, 6</value>
+  </data>
+  <data name="firstTabsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>219, 22</value>
+  </data>
+  <data name="firstTabsMenuItem.Text" xml:space="preserve">
+    <value>&amp;First Tabs</value>
+  </data>
+  <data name="nextTabsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>219, 22</value>
+  </data>
+  <data name="nextTabsMenuItem.Text" xml:space="preserve">
+    <value>Next &amp;Tabs</value>
   </data>
   <data name="toolStripSeparator44.Size" type="System.Drawing.Size, System.Drawing">
     <value>216, 6</value>
@@ -1209,6 +1230,12 @@
   <data name="&gt;&gt;arrangedTabbedMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;arrangeTabbedByGroupMenuItem.Name" xml:space="preserve">
+    <value>arrangeTabbedByGroupMenuItem</value>
+  </data>
+  <data name="&gt;&gt;arrangeTabbedByGroupMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupedMenuItem.Name" xml:space="preserve">
     <value>groupedMenuItem</value>
   </data>
@@ -1249,6 +1276,24 @@
     <value>nextReplicateMenuItem</value>
   </data>
   <data name="&gt;&gt;nextReplicateMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorTabs.Name" xml:space="preserve">
+    <value>toolStripSeparatorTabs</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorTabs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;firstTabsMenuItem.Name" xml:space="preserve">
+    <value>firstTabsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;firstTabsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;nextTabsMenuItem.Name" xml:space="preserve">
+    <value>nextTabsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;nextTabsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator44.Name" xml:space="preserve">
