@@ -221,13 +221,13 @@ To avoid per-call LOH allocation of the `NBins` f64 work buffers (`Binned`,
 (`XcorrScratchPool.cs:72`) rents/returns `XcorrScratch` sets. `Return` re-zeros
 only the two accumulator buffers (`Binned`, `VisitedBins`); the fully-overwritten
 buffers are left dirty. This pool is threaded into `ScoreXcorr` and is the
-subject of the performance gate (`XcorrCalc` doc comment, `XcorrCalculators.cs:48`).
+subject of the performance gate (`XcorrCalc` doc comment, `XcorrCalculators.cs:47`).
 
 ---
 
 ## Step 4: Feature calculators (`XcorrCalculators.cs`)
 
-### Feature 6 — `xcorr` (`XcorrCalc`, `XcorrCalculators.cs:53`)
+### Feature 6 — `xcorr` (`XcorrCalc`, `XcorrCalculators.cs:52`)
 
 A single apex-spectrum XCorr, delegated straight to the resolution strategy:
 
@@ -240,14 +240,14 @@ return context.Resolution.ScoreXcorr(
 The cache is indexed at the **window-global apex index**
 (`peakData.ApexGlobalIndex = WindowStartIndex + candidate-local apex`), a
 different index space from the SG sweep (documented as an "INDEX TRAP" at
-`XcorrCalculators.cs:37`). Higher is better (`IsReversedScore == false`).
+`XcorrCalculators.cs:36`). Higher is better (`IsReversedScore == false`).
 
-### Feature 17 — `sg_weighted_xcorr` (`SgXcorrCalc` / `SgWeightedSweep`, `XcorrCalculators.cs:104`)
+### Feature 17 — `sg_weighted_xcorr` (`SgXcorrCalc` / `SgWeightedSweep`, `XcorrCalculators.cs:103`)
 
 A Savitzky-Golay quadratic-smoothed XCorr over the apex ±2 spectra. Weights are
-`[-3/35, 12/35, 17/35, 12/35, -3/35]` (`XcorrCalculators.cs:109`, matching Rust
+`[-3/35, 12/35, 17/35, 12/35, -3/35]` (`XcorrCalculators.cs:108`, matching Rust
 `sg_weights`). The sweep runs offsets −2..+2 strictly left-to-right, calling
-`ScoreXcorr` per offset (`XcorrCalculators.cs:152`):
+`ScoreXcorr` per offset (`XcorrCalculators.cs:151`):
 
 ```csharp
 for (int offset = -2; offset <= 2; offset++)

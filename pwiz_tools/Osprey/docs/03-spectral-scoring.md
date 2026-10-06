@@ -172,7 +172,7 @@ explicitly (`CoelutionScorer.cs:248-268`). The names match
 | 3 | `peak_apex` | Peak shape (detailed) | higher | `PeakApexCalc` (PeakShapeCalculators.cs:116) |
 | 4 | `peak_area` | Peak shape | higher | `PeakAreaCalc` (:136) |
 | 5 | `peak_sharpness` | Peak shape | higher | `PeakSharpnessCalc` (:168) |
-| 6 | `xcorr` | Apex spectrum | higher | `XcorrCalc` (XcorrCalculators.cs:53) |
+| 6 | `xcorr` | Apex spectrum | higher | `XcorrCalc` (XcorrCalculators.cs:52) |
 | 7 | `consecutive_ions` | Apex spectrum | higher | `ConsecutiveIonsCalc` (ApexMatchCalculators.cs:146) |
 | 8 | `explained_intensity` | Apex spectrum | higher | `ExplainedIntensityCalc` (:218) |
 | 9 | `mass_accuracy_deviation_mean` | Apex spectrum | (signed; false by convention) | `MassAccuracyMeanCalc` (:240) |
@@ -183,8 +183,8 @@ explicitly (`CoelutionScorer.cs:248-268`). The names match
 | 14 | `ms1_isotope_cosine` | MS1 (detailed) | higher | `Ms1IsotopeCosineCalc` (:71) |
 | 15 | `median_polish_cosine` | Median polish | higher | `MedianPolishCosineCalc` (MedianPolishCalculators.cs:56) |
 | 16 | `median_polish_residual_ratio` | Median polish | lower | `MedianPolishResidualRatioCalc` (:73) |
-| 17 | `sg_weighted_xcorr` | Apex ±2 spectra | higher | `SgXcorrCalc` (XcorrCalculators.cs:245) |
-| 18 | `sg_weighted_cosine` | Apex ±2 spectra | higher | `SgCosineCalc` (:267) |
+| 17 | `sg_weighted_xcorr` | Apex ±2 spectra | higher | `SgXcorrCalc` (XcorrCalculators.cs:233) |
+| 18 | `sg_weighted_cosine` | Apex ±2 spectra | higher | `SgCosineCalc` (:255) |
 | 19 | `median_polish_min_fragment_r2` | Median polish | higher | `MedianPolishMinFragmentR2Calc` (MedianPolishCalculators.cs:92) |
 | 20 | `median_polish_residual_correlation` | Median polish | lower | `MedianPolishResidualCorrelationCalc` (:109) |
 
@@ -216,7 +216,7 @@ model becomes an intensity ranker (measured on SEA-AD as an entrapment FDP colla
 fixed in #4412/#4418). Per-run normalization and a scale-free sharpness are tracked as
 #4466.
 
-**xcorr (6)** — `XcorrCalc.Calculate` (`XcorrCalculators.cs:61`) routes through
+**xcorr (6)** — `XcorrCalc.Calculate` (`XcorrCalculators.cs:60`) routes through
 `context.Resolution.ScoreXcorr` at the **window-global** apex index
 (`ApexGlobalIndex`). Unit reads the f64 dense cache; HRAM reads the sparse cache
 (`SparseXcorrSpectrum.CenteredAt`, bit-identical to the old dense f32 cache — issue
@@ -252,7 +252,7 @@ cropped to the peak range (`peakLen >= 3`) first. The four calculators read the
 `cosine` → 0.0, `residual_ratio` → **1.0** (NOT 0.0), `min_fragment_r2` → 0.0,
 `residual_correlation` → 0.0 (`MedianPolishCalculators.cs:56-123`).
 
-**SG-weighted (17,18)** — `SgWeightedSweep.Compute` (`XcorrCalculators.cs:130`) sweeps
+**SG-weighted (17,18)** — `SgWeightedSweep.Compute` (`XcorrCalculators.cs:129`) sweeps
 offsets `-2..+2` with Savitzky-Golay quadratic weights `[-3,12,17,12,-3]/35`. Out-of-
 range offsets at window edges are **skipped, not zero-filled, and not renormalized**
 (matches Rust). `sg_weighted_xcorr` accumulates per-scan `ScoreXcorr × weight`;
