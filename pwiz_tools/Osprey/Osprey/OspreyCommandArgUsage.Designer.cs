@@ -259,14 +259,41 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}..
+        ///   Looks up a localized string similar to Input files run concurrently by each per-file stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}..
         /// </summary>
         public static string _parallel_files {
             get {
                 return ResourceManager.GetString("_parallel_files", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Files whose spectra are cached concurrently ({1}), overriding {0} for that stage only, in the same forms. Each decode runs on one thread, so this can exceed the scoring count..
+        /// </summary>
+        public static string _parallel_files_caching {
+            get {
+                return ResourceManager.GetString("_parallel_files_caching", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Files re-scored concurrently ({1}, and the second-pass per-file phases), overriding {0} for that stage only, in the same forms..
+        /// </summary>
+        public static string _parallel_files_rescoring {
+            get {
+                return ResourceManager.GetString("_parallel_files_rescoring", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Files scored concurrently ({1}), overriding {0} for that stage only, in the same forms..
+        /// </summary>
+        public static string _parallel_files_scoring {
+            get {
+                return ResourceManager.GetString("_parallel_files_scoring", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Emit the machine-parseable {0} lines that scripts and performance tools read (off by default).
         /// </summary>

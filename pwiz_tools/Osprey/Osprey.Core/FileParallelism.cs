@@ -81,12 +81,27 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The per-file stages whose concurrent-file count can be set on its own, with
+    /// <c>--parallel-files-caching</c>, <c>--parallel-files-scoring</c> and
+    /// <c>--parallel-files-rescoring</c>; each falls back to the shared <c>--parallel-files</c>.
+    /// They do not scale alike: caching is bound by a single-threaded vendor decode, scoring
+    /// by CPU and its large per-file working set, re-scoring by a much smaller one.
+    /// </summary>
+    public enum FileStage
+    {
+        Caching,
+        Scoring,
+        Rescoring
+    }
+
+    /// <summary>
     /// Resolves the parsed <see cref="FileParallelism"/> request into the actual
-    /// number of input files to score concurrently for one run -- the single
+    /// number of input files one per-file stage runs concurrently -- the single
     /// place that owns the precedence between the CLI argument, the
     /// <c>OSPREY_MAX_PARALLEL_FILES</c> back-compat cap, free RAM, and the core
-    /// count. <c>PerFileScoringTask</c> calls it once per invocation and stores
-    /// the result on <c>RunPlan.EffectiveFileParallelism</c>.
+    /// count. Each <see cref="FileStage"/> calls it once, with the request
+    /// <see cref="OspreyConfig.GetFileParallelism"/> chose for it: the stage's own
+    /// flag when given, otherwise the shared <c>--parallel-files</c>.
     ///
     /// Precedence (highest first):
     ///   1. explicit <c>--parallel-files N</c>  -> N, clamped to file count only
@@ -121,13 +136,16 @@ namespace pwiz.Osprey.Core
         /// mode, so the common (sequential / explicit) paths do no I/O or system
         /// probing. <paramref name="log"/> (optional) receives a one-line summary
         /// of the chosen N and the reason; pass null on the bookkeeping-only paths
-        /// that never actually parallelize.
+        /// that never actually parallelize. <paramref name="argName"/> is the argument the
+        /// request came from - a stage's own flag or the shared <c>--parallel-files</c> - so
+        /// the summary says which one decided.
         /// </summary>
         public static int Resolve(
             FileParallelism request, int nFiles, int envCap, int processorCount,
             Func<long> availableBytesProbe, Func<long> perFileBytesEstimate,
-            Action<string> log = null)
+            Action<string> log = null, string argName = OspreyArgNames.PARALLEL_FILES)
         {
+            string argText = OspreyArgNames.Text(argName);
             if (nFiles <= 1)
                 return 1;
 
@@ -144,12 +162,12 @@ namespace pwiz.Osprey.Core
                     int explicitN = Math.Max(1, Math.Min(request.Count, nFiles));
                     log?.Invoke(string.Format(
                         OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_,
-                        explicitN, nFiles, OspreyArgNames.Text(OspreyArgNames.PARALLEL_FILES)));
+                        explicitN, nFiles, argText));
                     return explicitN;
 
                 case FileParallelismMode.Auto:
                     return ResolveAuto(nFiles, cores, cpuCap,
-                        availableBytesProbe, perFileBytesEstimate, log);
+                        availableBytesProbe, perFileBytesEstimate, log, argText);
 
                 default:
                     // Sequential default -- unless the legacy env cap is set, in
@@ -168,8 +186,8 @@ namespace pwiz.Osprey.Core
                         return capped;
                     }
                     log?.Invoke(string.Format(
-                        OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_,
-                        nFiles, OspreyArgNames.Text(OspreyArgNames.PARALLEL_FILES)));
+                        OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass__1__to_run__0__files_at_once_,
+                        nFiles, argText));
                     return 1;
             }
         }
@@ -209,7 +227,7 @@ namespace pwiz.Osprey.Core
         private static int ResolveAuto(
             int nFiles, int cores, int cpuCap,
             Func<long> availableBytesProbe, Func<long> perFileBytesEstimate,
-            Action<string> log)
+            Action<string> log, string argText)
         {
             long availableBytes = availableBytesProbe?.Invoke() ?? 0;
             long perFileBytes = perFileBytesEstimate?.Invoke() ?? 0;
@@ -220,7 +238,7 @@ namespace pwiz.Osprey.Core
                 // guessing. Still safer than the old unbounded default.
                 log?.Invoke(string.Format(
                     OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_,
-                    cpuCap, cores, nFiles));
+                    cpuCap, cores, nFiles, argText));
                 return cpuCap;
             }
 
@@ -233,7 +251,7 @@ namespace pwiz.Osprey.Core
             log?.Invoke(string.Format(
                 OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__,
                 chosen, availableBytes / (double)BYTES_PER_GB, RAM_BUDGET_FRACTION,
-                perFileBytes / (double)BYTES_PER_GB, memFit, cores, nFiles));
+                perFileBytes / (double)BYTES_PER_GB, memFit, cores, nFiles, argText));
             return chosen;
         }
 

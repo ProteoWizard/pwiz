@@ -218,6 +218,38 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(FileParallelismMode.Auto, autoThenInput.FileParallelism.Mode);
             CollectionAssert.AreEqual(new[] { @"a.mzML" }, autoThenInput.InputFiles.ToArray());
 
+            // Per-stage overrides take the same three forms. Precedence per stage: its own flag,
+            // else --parallel-files, else the sequential default - and the request names the
+            // argument that decided it, for the stage's log line.
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML"),
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES));
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_PARALLEL_FILES + 4),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES));
+            // A stage flag alone leaves the others on the default; a bare one is auto and does
+            // not swallow the positional input after it.
+            var stageOnly = Parse(OspreyCommandArgs.ARG_PARALLEL_FILES_SCORING + 3,
+                OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING, OspreyCommandArgs.ARG_INPUT + @"a.mzML");
+            AssertStageRequests(stageOnly,
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Explicit, 3, OspreyArgNames.PARALLEL_FILES_SCORING),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES_RESCORING));
+            CollectionAssert.AreEqual(new[] { @"a.mzML" }, stageOnly.InputFiles.ToArray());
+            // Stage flags override the shared one in either order, and 0 is sequential for a
+            // stage too - an override, not a fall-through to the shared count.
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING + 16, OspreyCommandArgs.ARG_PARALLEL_FILES + 4,
+                    OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING + 0),
+                (FileParallelismMode.Explicit, 16, OspreyArgNames.PARALLEL_FILES_CACHING),
+                (FileParallelismMode.Explicit, 4, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Sequential, 0, OspreyArgNames.PARALLEL_FILES_RESCORING));
+            AssertStageRequests(Parse(OspreyCommandArgs.ARG_PARALLEL_FILES, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING + 8),
+                (FileParallelismMode.Explicit, 8, OspreyArgNames.PARALLEL_FILES_CACHING),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES),
+                (FileParallelismMode.Auto, 0, OspreyArgNames.PARALLEL_FILES));
+
             // Diagnostics. --task is resolved in Main, so ParseArgs alone leaves SelectedTask null
             // but must accept both --task forms without throwing.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DIAGNOSTICS).Diagnostics);
@@ -666,6 +698,25 @@ namespace pwiz.Osprey.Test
             }
             throw new InvalidOperationException(
                 @"Could not locate Osprey source root from test assembly location.");
+        }
+
+        /// <summary>
+        /// Checks the request each per-file stage resolves from, in stage order (caching,
+        /// scoring, re-scoring): its mode, explicit count, and the argument that decided it.
+        /// </summary>
+        private static void AssertStageRequests(OspreyConfig config,
+            params (FileParallelismMode Mode, int Count, string ArgName)[] expectedByStage)
+        {
+            var stages = new[] { FileStage.Caching, FileStage.Scoring, FileStage.Rescoring };
+            Assert.AreEqual(stages.Length, expectedByStage.Length);
+            for (int i = 0; i < stages.Length; i++)
+            {
+                var request = config.GetFileParallelism(stages[i], out string argName);
+                string stageText = stages[i].ToString();
+                Assert.AreEqual(expectedByStage[i].Mode, request.Mode, stageText);
+                Assert.AreEqual(expectedByStage[i].Count, request.Count, stageText);
+                Assert.AreEqual(expectedByStage[i].ArgName, argName, stageText);
+            }
         }
     }
 }

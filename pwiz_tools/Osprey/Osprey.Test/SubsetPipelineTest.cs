@@ -420,6 +420,19 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
 
+            // Each per-file stage resolves its own count: scoring and re-scoring on different lane
+            // counts, over a shared --parallel-files they both override, still give the sequential
+            // answer, and each stage's decision line names the flag that set it.
+            string stagesDir = CreateDir(@"parallel-files-stages");
+            int rescoringLanes = RUN_NAMES.Length - 1;
+            string stagesLog = RunAnalysis(stagesDir, DataInputs(), FdrLanes(1),
+                OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, @"1",
+                OspreyCommandArgs.ARG_PARALLEL_FILES_SCORING.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture),
+                OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING.ArgumentText, rescoringLanes.ToString(CultureInfo.InvariantCulture));
+            AssertBlibsEqual(baseBlib, Path.Combine(stagesDir, BLIB_FILE));
+            StringAssert.Contains(stagesLog, ExplicitParallelismLine(RUN_NAMES.Length, OspreyArgNames.PARALLEL_FILES_SCORING));
+            StringAssert.Contains(stagesLog, ExplicitParallelismLine(rescoringLanes, OspreyArgNames.PARALLEL_FILES_RESCORING));
+
             // --diagnostics writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
             // It also sets every OSPREY_DUMP_* variable in the process environment, which would turn
@@ -756,6 +769,17 @@ namespace pwiz.Osprey.Test
             var match = Regex.Match(log, @"Calibration pass 1 matches scored \[[^\]]*\]: (\d+)");
             Assert.IsTrue(match.Success, @"no calibration match count in the log");
             return int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// The decision line a per-file stage logs when <paramref name="argName"/> set its count to
+        /// <paramref name="lanes"/> over the subset's runs.
+        /// </summary>
+        private static string ExplicitParallelismLine(int lanes, string argName)
+        {
+            return string.Format(
+                OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_,
+                lanes, RUN_NAMES.Length, OspreyArgNames.Text(argName));
         }
 
         /// <summary>

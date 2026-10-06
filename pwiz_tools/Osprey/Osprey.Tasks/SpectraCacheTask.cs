@@ -117,9 +117,10 @@ namespace pwiz.Osprey.Tasks
             // through ScoringTaskShared.s_mzmlReadGate: a vendor decode is bound by its own
             // thread far more than by the disk (measured: ~20 MB/s per Thermo file against an
             // SSD array sitting 43% idle), so gating it would put the lanes back in single file.
-            // The lane count comes from --parallel-files like the scoring stage's, so a lane's
-            // parse buffer is budgeted the same way; one lane is the plain loop.
-            int lanes = PerFileScoringTask.ResolveFileParallelism(config, nFiles, ctx.LogInfo);
+            // The lane count is this stage's own (--parallel-files-caching, else --parallel-files),
+            // resolved like every other per-file stage's; one lane is the plain loop. --threads is
+            // not divided by it: a decode runs on its own thread.
+            int lanes = PerFileScoringTask.ResolveFileParallelism(config, FileStage.Caching, nFiles, ctx.LogInfo);
             if (lanes <= 1)
             {
                 for (int fileIdx = 0; fileIdx < nFiles; fileIdx++)

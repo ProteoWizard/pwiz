@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
@@ -72,6 +73,11 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2, Resolve(FileParallelism.Explicit(2), 5, envCap: 1)); // env cap ignored when arg present
             Assert.AreEqual(1, Resolve(FileParallelism.Explicit(0), 5)); // floored at 1
 
+            // The decision line names the argument that set the request - a stage's own flag
+            // when it was given - and the shared --parallel-files by default.
+            AssertDecisionNames(OspreyArgNames.PARALLEL_FILES_CACHING);
+            AssertDecisionNames(null);
+
             // Auto, RAM-bound: budget = 80% of free RAM; N = budget / per-file,
             // then capped by cores and file count.
             //   51.2 GB budget / 18 GB per file -> 2, capped to min(3 files, 32 cores).
@@ -104,6 +110,33 @@ namespace pwiz.Osprey.Test
                 new[] { @"C:\does\not\exist\a.mzML", @"C:\does\not\exist\b.mzML" }, null));
 
             AssertCacheOnlySizing();
+        }
+
+        /// <summary>
+        /// Every decision line - explicit, sequential default, and both auto forms - names
+        /// <paramref name="argName"/>, or <c>--parallel-files</c> when it is null (the default).
+        /// </summary>
+        private static void AssertDecisionNames(string argName)
+        {
+            string argText = OspreyArgNames.Text(argName ?? OspreyArgNames.PARALLEL_FILES);
+            var requests = new[]
+            {
+                (FileParallelism.Explicit(2), 0L),
+                (FileParallelism.Sequential, 0L),
+                (FileParallelism.Auto, 0L),
+                (FileParallelism.Auto, GB)
+            };
+            foreach (var (request, perFileBytes) in requests)
+            {
+                string logged = null;
+                Action<string> log = line => logged = line;
+                if (argName == null)
+                    FileParallelismResolver.Resolve(request, 5, 0, 8, () => 64 * GB, () => perFileBytes, log);
+                else
+                    FileParallelismResolver.Resolve(request, 5, 0, 8, () => 64 * GB, () => perFileBytes, log, argName);
+                Assert.IsNotNull(logged, request.Mode.ToString());
+                StringAssert.Contains(logged, argText);
+            }
         }
 
         /// <summary>
