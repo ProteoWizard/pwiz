@@ -76,7 +76,7 @@ namespace pwiz.Osprey.Scoring
                 for (int scanIdx = 0; scanIdx < nScans; scanIdx++)
                 {
                     var spectrum = candidateSpectra[scanIdx];
-                    int best = FindClosestPeakInWindow(spectrum.Mzs, fragment.Mz, lower, upper);
+                    int best = FindClosestPeakInWindow(spectrum, fragment.Mz, lower, upper);
                     if (best >= 0)
                         intensities[scanIdx] = spectrum.Intensities[best];
                 }
@@ -129,7 +129,7 @@ namespace pwiz.Osprey.Scoring
                 for (int scanIdx = 0; scanIdx < rangeLen; scanIdx++)
                 {
                     var spectrum = windowSpectra[startScan + scanIdx];
-                    int best = FindClosestPeakInWindow(spectrum.Mzs, fragment.Mz, lower, upper);
+                    int best = FindClosestPeakInWindow(spectrum, fragment.Mz, lower, upper);
                     if (best >= 0)
                         intensities[scanIdx] = spectrum.Intensities[best];
                 }
@@ -215,7 +215,25 @@ namespace pwiz.Osprey.Scoring
         {
             if (mzs == null || mzs.Length == 0)
                 return -1;
-            int lo = ScoringMath.BinarySearchLowerBound(mzs, lower);
+            return ClosestPeakFrom(mzs, ScoringMath.BinarySearchLowerBound(mzs, lower), targetMz, upper);
+        }
+
+        /// <summary>
+        /// <see cref="FindClosestPeakInWindow(double[], double, double, double)"/> through the
+        /// spectrum's m/z bucket index (<see cref="Spectrum.MzLowerBound"/>): the same lower
+        /// bound, found in O(1). The XIC extraction hot path.
+        /// </summary>
+        public static int FindClosestPeakInWindow(
+            Spectrum spectrum, double targetMz, double lower, double upper)
+        {
+            var mzs = spectrum.Mzs;
+            if (mzs == null || mzs.Length == 0)
+                return -1;
+            return ClosestPeakFrom(mzs, spectrum.MzLowerBound(lower), targetMz, upper);
+        }
+
+        private static int ClosestPeakFrom(double[] mzs, int lo, double targetMz, double upper)
+        {
             if (lo >= mzs.Length || mzs[lo] > upper)
                 return -1;
             int best = lo;

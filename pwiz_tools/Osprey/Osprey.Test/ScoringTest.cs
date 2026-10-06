@@ -40,6 +40,11 @@ namespace pwiz.Osprey.Test
     {
         private const double TOLERANCE = 1e-6;
 
+        // FragmentMath memoizes top-6 m/z by entry Id in a process-wide cache, so every entry
+        // handed to HasTopNFragmentMatch needs a unique Id. A high base, clear of
+        // FragmentSelectionTest's.
+        private const uint MZ_INDEX_ID_BASE = 910000u;
+
         #region DecoyGenerator Tests
 
         [TestMethod]
@@ -1550,6 +1555,163 @@ namespace pwiz.Osprey.Test
             // 10 ppm of 500 = 0.005 Da
             Assert.IsTrue(SpectralScorer.HasMatch(500.002, spectrumMzs, ppmTolerance));
             Assert.IsFalse(SpectralScorer.HasMatch(500.01, spectrumMzs, ppmTolerance));
+        }
+
+        #endregion
+
+        #region m/z bucket index
+
+        /// <summary>
+        /// <see cref="MzBucketIndex"/> must return exactly the binary search's lower bound for
+        /// every query - it replaces that search in the scoring hot paths, so any difference
+        /// would silently move a peak match. Checks clustered, duplicate, single-peak, all-equal,
+        /// bucket-edge and irregular (unsorted, non-finite, overflowing span) spectra against
+        /// queries at, between, below, above every peak, at every bucket edge and 1 ulp either
+        /// side, and NaN, then the two scoring entry points through a <see cref="Spectrum"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestMzBucketIndexMatchesBinarySearch()
+        {
+            var random = new Random(4768);
+            var spectra = new List<double[]>
+            {
+                new[] { 500.0 },
+                new[] { 500.0, 500.0, 500.0 },
+                new[] { 100.0, 100.0, 100.5, 200.0, 200.0, 1999.9 },
+                new[] { 150.0, 150.0000001, 150.0000002, 1800.0 },   // a dense cluster, then a gap
+                // More peaks in one bucket than the linear scan takes: binary searched.
+                Enumerable.Range(0, 20).Select(i => 500.0 + i * 1e-9).Concat(new[] { 1500.0 }).ToArray(),
+                Enumerable.Repeat(500.0, 30).Concat(new[] { 600.0 }).ToArray(),
+                // Arrays the buckets cannot describe: the index falls back to the binary search.
+                new[] { 300.0, 200.0, 400.0 },
+                new[] { 100.0, double.NaN, 300.0 },
+                new[] { double.NegativeInfinity, 200.0, 300.0 },
+                new[] { 100.0, 200.0, double.PositiveInfinity },
+                new[] { 0.0, double.Epsilon, 2 * double.Epsilon },   // n / span overflows
+                new[] { -1e308, 0.0, 1e308 },                        // span overflows
+            };
+            // Interior peaks exactly on the bucket edges, and 1 ulp below and above them.
+            foreach (int n in new[] { 3, 7, 100, 1001 })
+            {
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, mz => mz));
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, Math.BitDecrement));
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, Math.BitIncrement));
+            }
+            for (int s = 0; s < 20; s++)
+            {
+                int n = 1 + random.Next(3000);
+                var mzs = new double[n];
+                double mz = 150 + random.NextDouble() * 10;
+                for (int i = 0; i < n; i++)
+                {
+                    // Mostly fine steps, occasional duplicates and large gaps.
+                    double r = random.NextDouble();
+                    mz += r < 0.05 ? 0 : r < 0.1 ? random.NextDouble() * 200 : random.NextDouble() * 0.5;
+                    mzs[i] = mz;
+                }
+                spectra.Add(mzs);
+            }
+
+            foreach (var mzs in spectra)
+            {
+                var index = new MzBucketIndex(mzs);
+                var queries = new List<double> { double.NaN, double.NegativeInfinity, double.PositiveInfinity,
+                    mzs[0] - 1, mzs[0], mzs[mzs.Length - 1], mzs[mzs.Length - 1] + 1 };
+                foreach (double peak in mzs)
+                {
+                    queries.Add(peak);
+                    queries.Add(peak - 1e-9);
+                    queries.Add(peak + 1e-9);
+                    queries.Add(peak + random.NextDouble());
+                }
+                double first = mzs[0], span = mzs[mzs.Length - 1] - first;
+                for (int b = 0; b <= mzs.Length; b++)
+                {
+                    double edge = first + b * span / mzs.Length;
+                    queries.Add(edge);
+                    queries.Add(Math.BitDecrement(edge));
+                    queries.Add(Math.BitIncrement(edge));
+                }
+                foreach (double q in queries)
+                {
+                    Assert.AreEqual(ScoringMath.BinarySearchLowerBound(mzs, q), index.LowerBound(q),
+                        string.Format("Lower bound of {0:R} in a {1}-peak spectrum", q, mzs.Length));
+                }
+            }
+            Assert.AreEqual(0, new MzBucketIndex(new double[0]).LowerBound(500.0));
+            Assert.AreEqual(0, new MzBucketIndex(null).LowerBound(500.0));
+            Assert.AreEqual(0, new Spectrum().MzLowerBound(500.0));
+
+            // The scoring entry points through a Spectrum agree with the binary search. Each
+            // entry has a unique Id (the top-6 memo is keyed by it) and 0-3 of its 6 fragments
+            // on a peak, the rest at m/z 10-15, where no spectrum has a peak, so both outcomes
+            // occur.
+            var tolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm };
+            bool sawMatch = false, sawNoMatch = false;
+            for (int s = 0; s < spectra.Count; s++)
+            {
+                var mzs = spectra[s];
+                var spectrum = new Spectrum { Mzs = mzs, Intensities = new float[mzs.Length] };
+                for (int k = 0; k < 50; k++)
+                {
+                    double target = mzs[random.Next(mzs.Length)] + (random.NextDouble() - 0.5) * 0.02;
+                    double tolDa = tolerance.ToleranceDa(target);
+                    Assert.AreEqual(
+                        TopFragmentExtractor.FindClosestPeakInWindow(mzs, target, target - tolDa, target + tolDa),
+                        TopFragmentExtractor.FindClosestPeakInWindow(spectrum, target, target - tolDa, target + tolDa));
+                }
+                var entry = new LibraryEntry(MZ_INDEX_ID_BASE + (uint)s, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+                int onPeak = s % 4;
+                var fragMzs = new double[6];
+                for (int f = 0; f < fragMzs.Length; f++)
+                    fragMzs[f] = f < onPeak ? mzs[random.Next(mzs.Length)] : 10.0 + f;
+                entry.Fragments = fragMzs.Select((mz, f) => new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f + f }).ToList();
+                bool expected = ExpectedTopNFragmentMatch(fragMzs, mzs, tolerance);
+                Assert.AreEqual(expected, FragmentMath.HasTopNFragmentMatch(entry, spectrum, tolerance));
+                Assert.AreEqual(expected, FragmentMath.HasTopNFragmentMatch(entry, mzs, tolerance));
+                sawMatch |= expected;
+                sawNoMatch |= !expected;
+            }
+            Assert.IsTrue(sawMatch);
+            Assert.IsTrue(sawNoMatch);
+
+            // A new m/z array replaces the index.
+            var reassigned = new Spectrum { Mzs = new[] { 100.0, 200.0 } };
+            Assert.AreEqual(1, reassigned.MzLowerBound(150.0));
+            reassigned.Mzs = new[] { 160.0, 170.0, 180.0 };
+            Assert.AreEqual(0, reassigned.MzLowerBound(150.0));
+        }
+
+        /// <summary>
+        /// An ascending spectrum of n peaks from <paramref name="first"/> to
+        /// <paramref name="last"/> whose interior peaks are the edges of the index's n buckets,
+        /// each passed through <paramref name="shift"/> (identity, or 1 ulp down or up).
+        /// </summary>
+        private static double[] BucketEdgeSpectrum(double first, double last, int n, Func<double, double> shift)
+        {
+            var mzs = new double[n];
+            mzs[0] = first;
+            for (int k = 1; k < n - 1; k++)
+                mzs[k] = shift(first + k * (last - first) / n);
+            mzs[n - 1] = last;
+            return mzs;
+        }
+
+        /// <summary>
+        /// HasTopNFragmentMatch's rule for 6 fragments, by the plain binary search: at least 2
+        /// fragments with a peak inside their tolerance window.
+        /// </summary>
+        private static bool ExpectedTopNFragmentMatch(double[] fragMzs, double[] mzs, FragmentToleranceConfig tolerance)
+        {
+            int matches = 0;
+            foreach (double mz in fragMzs)
+            {
+                double tolDa = tolerance.ToleranceDa(mz);
+                int lo = ScoringMath.BinarySearchLowerBound(mzs, mz - tolDa);
+                if (lo < mzs.Length && mzs[lo] <= mz + tolDa)
+                    matches++;
+            }
+            return matches >= 2;
         }
 
         #endregion
