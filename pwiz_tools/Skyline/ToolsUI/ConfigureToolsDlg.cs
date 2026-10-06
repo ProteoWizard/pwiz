@@ -88,7 +88,7 @@ namespace pwiz.Skyline.ToolsUI
             else
             {
                 listTools.SelectedIndex = selectEnd ? ToolList.Count - 1 : 0;
-                btnRemove.Enabled = true;
+                UpdateEditable();
             }
             Unsaved = false;
         }
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.ToolsUI
             RefreshListBox();
             PreviouslySelectedIndex = -1;
             listTools.SelectedIndex = ToolList.Count - 1;
-            btnRemove.Enabled = true;            
+            UpdateEditable();
         }
 
         public void listTools_SelectedIndexChanged(object sender, EventArgs e)
@@ -232,7 +232,17 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 btnMoveUp.Enabled = (listTools.SelectedIndex != 0);
                 btnMoveDown.Enabled = (listTools.SelectedIndex != ToolList.Count - 1);
-            }            
+                UpdateEditable();
+            }
+        }
+
+        /// <summary>
+        /// Enables Remove, and with it the fields of <see cref="btnRemove_EnabledChanged"/>, only
+        /// for a selected tool the user may change. See <see cref="ToolDescription.IsReadOnly"/>.
+        /// </summary>
+        private void UpdateEditable()
+        {
+            btnRemove.Enabled = listTools.SelectedIndex != -1 && !SelectedTool.IsReadOnly;
         }
 
         /// <summary>
@@ -389,29 +399,16 @@ namespace pwiz.Skyline.ToolsUI
                     labelCommand.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged_U_RL_;
                     labelArguments.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged__Query_params_;
                     if (textInitialDirectory.Enabled)
-                    {
-                        textInitialDirectory.Enabled = false;
                         textInitialDirectory.Text = string.Empty;
-                        cbOutputImmediateWindow.Enabled = false;
-                        btnFindCommand.Enabled = false;
-                        btnInitialDirectory.Enabled = false;
-                        btnInitialDirectoryMacros.Enabled = false;
-                    }
                 }
                 else
                 {
                     labelCommand.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged__Command_;
                     labelArguments.Text = ToolsUIResources.ConfigureToolsDlg_textCommand_TextChanged_A_rguments_;
                     if (!textInitialDirectory.Enabled)
-                    {
-                        textInitialDirectory.Enabled = true;
                         textInitialDirectory.Text = ToolList[spot].InitialDirectory;
-                        cbOutputImmediateWindow.Enabled = true;
-                        btnFindCommand.Enabled = true;
-                        btnInitialDirectory.Enabled = true;
-                        btnInitialDirectoryMacros.Enabled = true;                    
-                    }
                 }
+                UpdateFieldsEnabled();
             }
         }
 
@@ -500,7 +497,6 @@ namespace pwiz.Skyline.ToolsUI
                 textCommand.Text = string.Empty;
                 textArguments.Text = string.Empty;
                 textInitialDirectory.Text = string.Empty;
-                btnRemove.Enabled = false;
                 PreviouslySelectedIndex = -1;
                 cbOutputImmediateWindow.CheckState = CheckState.Unchecked;
                 comboReport.SelectedItem = string.Empty;
@@ -527,6 +523,7 @@ namespace pwiz.Skyline.ToolsUI
                                ? highlighted.ReportTitle
                                : string.Empty;
             }
+            UpdateEditable();
         }
 
         private void btnMoveUp_Click(object sender, EventArgs e)
@@ -659,17 +656,27 @@ namespace pwiz.Skyline.ToolsUI
 
         private void btnRemove_EnabledChanged(object sender, EventArgs e)
         {
+            UpdateFieldsEnabled();
+        }
+
+        /// <summary>
+        /// The fields can be edited exactly when Remove is enabled, that is, when a tool the user
+        /// may change is selected. The fields that only apply to a program, not a web page, are
+        /// also disabled while the command is a URL.
+        /// </summary>
+        private void UpdateFieldsEnabled()
+        {
+            bool editable = btnRemove.Enabled;
             textTitle.Enabled =
                 textCommand.Enabled =
-                textCommand.Enabled =
                 textArguments.Enabled =
-                textInitialDirectory.Enabled =
+                btnArguments.Enabled =
+                comboReport.Enabled = editable;
+            textInitialDirectory.Enabled =
                 btnFindCommand.Enabled =
                 btnInitialDirectory.Enabled =
-                btnArguments.Enabled =
                 btnInitialDirectoryMacros.Enabled =
-                cbOutputImmediateWindow.Enabled =
-                comboReport.Enabled = btnRemove.Enabled;
+                cbOutputImmediateWindow.Enabled = editable && !ToolDescription.IsWebPageCommand(textCommand.Text);
         }
 
         // Cannot test methods below because of common dialogs

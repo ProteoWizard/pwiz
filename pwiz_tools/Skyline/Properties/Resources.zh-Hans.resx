@@ -1417,9 +1417,6 @@
   <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
     <value>请为每个目标输入一个有效的大于 0 的诱饵数字。</value>
   </data>
-  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
-    <value>尝试升级失败。</value>
-  </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range" xml:space="preserve">
     <value>分离窗口边距在仪器范围的极端覆盖整个分离窗口。</value>
   </data>
