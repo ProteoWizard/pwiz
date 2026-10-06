@@ -41,6 +41,12 @@ namespace pwiz.Osprey.Core
     public static class FragmentMath
     {
         /// <summary>
+        /// Values <see cref="GetTopNFragmentWindows"/> writes at most: a lower and an upper
+        /// bound for each of the top 6 fragments.
+        /// </summary>
+        public const int TOP_N_WINDOW_VALUES = 12;
+
+        /// <summary>
         /// Cached top-6 fragment m/z values for an entry. Computed once,
         /// reused across all prefilter calls for the same entry. Thread-safe
         /// via ConcurrentDictionary.
@@ -107,32 +113,65 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// <see cref="HasTopNFragmentMatch(LibraryEntry, double[], FragmentToleranceConfig)"/>
         /// for a spectrum, through its m/z bucket index (<see cref="Spectrum.MzLowerBound"/>):
-        /// the binary search's lower bound, found in O(1). The scoring prefilter's hot path, and
-        /// the one implementation.
+        /// the binary search's lower bound, found in O(1). Computes the entry's windows on every
+        /// call; the scan-major passes, which match one entry against many spectra, compute them
+        /// once with <see cref="GetTopNFragmentWindows"/> and call the
+        /// <see cref="HasTopNFragmentMatch(ReadOnlySpan{double}, Spectrum)"/> overload, the hot
+        /// path and the one implementation.
         /// </summary>
         public static bool HasTopNFragmentMatch(
             LibraryEntry entry, Spectrum spectrum, FragmentToleranceConfig fragTol)
         {
-            var spectrumMzs = spectrum.Mzs;
-            var frags = entry.Fragments;
-            if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
-                return true;
+            Span<double> windows = stackalloc double[TOP_N_WINDOW_VALUES];
+            int nValues = GetTopNFragmentWindows(entry, fragTol, windows);
+            return HasTopNFragmentMatch(windows.Slice(0, nValues), spectrum);
+        }
 
-            double[] top6Mzs = GetTop6FragmentMzs(entry);
-            int nTop = top6Mzs.Length;
-            int requiredMatches = nTop <= 1 ? 1 : 2;
-            int matchCount = 0;
+        /// <summary>
+        /// Write the m/z windows <see cref="HasTopNFragmentMatch(LibraryEntry, Spectrum, FragmentToleranceConfig)"/>
+        /// tests for the entry's top-6 fragments into <paramref name="windows"/>, packed
+        /// lower0, upper0, lower1, upper1, ..., and return how many values were written (none
+        /// when the entry has no fragments, which matches every spectrum). Lets a caller that
+        /// matches one entry against many spectra compute them once.
+        /// </summary>
+        public static int GetTopNFragmentWindows(
+            LibraryEntry entry, FragmentToleranceConfig fragTol, Span<double> windows)
+        {
+            var frags = entry.Fragments;
+            if (frags == null || frags.Count == 0)
+                return 0;
 
             // Per-fragment tolerance: in ppm mode, each fragment's Da window
             // depends on its own m/z. Matches Rust has_topn_fragment_match.
-            for (int t = 0; t < nTop; t++)
+            double[] top6Mzs = GetTop6FragmentMzs(entry);
+            for (int t = 0; t < top6Mzs.Length; t++)
             {
                 double mz = top6Mzs[t];
                 double tolDa = fragTol.ToleranceDa(mz);
-                double lower = mz - tolDa;
-                double upper = mz + tolDa;
-                int lo = spectrum.MzLowerBound(lower);
-                if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
+                windows[2 * t] = mz - tolDa;
+                windows[2 * t + 1] = mz + tolDa;
+            }
+            return 2 * top6Mzs.Length;
+        }
+
+        /// <summary>
+        /// <see cref="HasTopNFragmentMatch(LibraryEntry, Spectrum, FragmentToleranceConfig)"/>
+        /// over windows from <see cref="GetTopNFragmentWindows"/>: at least 2 of them (1 when
+        /// there is only one) hold a spectrum peak. True for no windows or an empty spectrum.
+        /// </summary>
+        public static bool HasTopNFragmentMatch(ReadOnlySpan<double> fragmentWindows, Spectrum spectrum)
+        {
+            var spectrumMzs = spectrum.Mzs;
+            if (fragmentWindows.Length == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
+                return true;
+
+            int nTop = fragmentWindows.Length / 2;
+            int requiredMatches = nTop <= 1 ? 1 : 2;
+            int matchCount = 0;
+            for (int t = 0; t < nTop; t++)
+            {
+                int lo = spectrum.MzLowerBound(fragmentWindows[2 * t]);
+                if (lo < spectrumMzs.Length && spectrumMzs[lo] <= fragmentWindows[2 * t + 1])
                 {
                     matchCount++;
                     if (matchCount >= requiredMatches)

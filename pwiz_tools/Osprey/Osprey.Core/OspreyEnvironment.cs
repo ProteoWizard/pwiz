@@ -465,6 +465,55 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool PickLda = IsNotZero(@"OSPREY_PICK_LDA");
 
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_PREFILTER: evaluate the first-pass signal prefilter for all of a
+        /// window's candidates at once, scan by scan, so each spectrum is visited once while its
+        /// arrays are in cache. DEFAULT ON; set OSPREY_SCAN_MAJOR_PREFILTER=0 for the original
+        /// candidate-by-candidate loop, the A/B arm for timing. Output is the same either way:
+        /// the prefilter verdict is a pure function of the candidate, its scan range and the
+        /// spectra.
+        /// </summary>
+        public static readonly bool ScanMajorPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_PREFILTER");
+
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_XIC: extract the fragment XICs of the candidates that pass the
+        /// scan-major prefilter scan by scan too, a block of candidates at a time, instead of
+        /// one candidate's whole scan range after another. DEFAULT ON (takes effect only with
+        /// <see cref="ScanMajorPrefilter"/>); set OSPREY_SCAN_MAJOR_XIC=0 for the
+        /// candidate-by-candidate extraction, the A/B arm for timing. Output is the same either
+        /// way: each XIC value comes from the same peak lookup in the same spectrum.
+        /// </summary>
+        public static readonly bool ScanMajorXic = IsNotZero(@"OSPREY_SCAN_MAJOR_XIC");
+
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_CAL_PREFILTER: evaluate the calibration top-6 fragment prefilter
+        /// for all of a window's calibration entries at once, scan by scan, so each spectrum is
+        /// visited once while its arrays are in cache. DEFAULT ON; set
+        /// OSPREY_SCAN_MAJOR_CAL_PREFILTER=0 for the original entry-by-entry loop, the A/B arm
+        /// for timing. Output is the same either way: each entry gets the same candidate spectra
+        /// in the same order.
+        /// </summary>
+        public static readonly bool ScanMajorCalPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_CAL_PREFILTER");
+
+        /// <summary>
+        /// The log line naming the OSPREY_SCAN_MAJOR_* switches set to 0, so a timing run records
+        /// which arm it was; null at the defaults, leaving a default run's log unchanged.
+        /// </summary>
+        public static string DescribeScanMajorSwitches()
+        {
+            var off = new List<string>();
+            if (!ScanMajorPrefilter)
+                off.Add(@"OSPREY_SCAN_MAJOR_PREFILTER=0");
+            if (!ScanMajorXic)
+                off.Add(@"OSPREY_SCAN_MAJOR_XIC=0");
+            if (!ScanMajorCalPrefilter)
+                off.Add(@"OSPREY_SCAN_MAJOR_CAL_PREFILTER=0");
+            if (off.Count == 0)
+                return null;
+            return string.Format(@"Scan-major passes (DIAGNOSTIC): candidate-major for {0}",
+                string.Join(@", ", off));
+        }
+
         /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
         /// sweep script can name both arms explicitly rather than unsetting the variable for
         /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and

@@ -106,40 +106,68 @@ namespace pwiz.Osprey.Scoring
             //   3. Always include all selected fragments, even all-zero XICs
             //      (dropping all-zero fragments biases decoys to higher R^2)
             int rangeLen = endScan - startScan + 1;
-            var xics = new List<XicData>();
+            Span<double> mzs = stackalloc double[CAL_TOP_N_FRAGMENTS];
+            Span<double> lowers = stackalloc double[CAL_TOP_N_FRAGMENTS];
+            Span<double> uppers = stackalloc double[CAL_TOP_N_FRAGMENTS];
+            var xics = CreateFragmentXics(candidate, windowRts, startScan, endScan,
+                config.FragmentTolerance, mzs, lowers, uppers);
+
+            for (int t = 0; t < xics.Count; t++)
+            {
+                double[] intensities = xics[t].Intensities;
+                for (int scanIdx = 0; scanIdx < rangeLen; scanIdx++)
+                {
+                    var spectrum = windowSpectra[startScan + scanIdx];
+                    int best = FindClosestPeakInWindow(spectrum, mzs[t], lowers[t], uppers[t]);
+                    if (best >= 0)
+                        intensities[scanIdx] = spectrum.Intensities[best];
+                }
+            }
+
+            return xics;
+        }
+
+        /// <summary>
+        /// The per-candidate setup of a fragment XIC extraction, shared by
+        /// <see cref="ExtractFragmentXics"/> and the scan-major
+        /// <c>PeakDataExtractor.ExtractXicsScanMajor</c>: the candidate's top
+        /// <see cref="CAL_TOP_N_FRAGMENTS"/> fragments by relative intensity, each with a zeroed
+        /// XIC over [<paramref name="startScan"/>, <paramref name="endScan"/>] on one shared RT
+        /// array, and its m/z and tolerance window written to <paramref name="mzs"/>,
+        /// <paramref name="lowers"/> and <paramref name="uppers"/> at the XIC's index. Empty for a
+        /// candidate without fragments.
+        /// </summary>
+        internal static List<XicData> CreateFragmentXics(
+            LibraryEntry candidate,
+            double[] windowRts,
+            int startScan, int endScan,
+            FragmentToleranceConfig fragmentTolerance,
+            Span<double> mzs, Span<double> lowers, Span<double> uppers)
+        {
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
-                return xics;
+                return new List<XicData>();
 
             int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, CAL_TOP_N_FRAGMENTS);
 
             // Build shared RT array for this range
+            int rangeLen = endScan - startScan + 1;
             double[] rangeRts = new double[rangeLen];
-            for (int i = 0; i < rangeLen; i++)
-                rangeRts[i] = windowRts[startScan + i];
+            Array.Copy(windowRts, startScan, rangeRts, 0, rangeLen);
 
-            foreach (int fragIdx in topIndices)
+            var xics = new List<XicData>(topIndices.Length);
+            for (int t = 0; t < topIndices.Length; t++)
             {
-                var fragment = candidate.Fragments[fragIdx];
-                double tolDa = config.FragmentTolerance.ToleranceDa(fragment.Mz);
-                double lower = fragment.Mz - tolDa;
-                double upper = fragment.Mz + tolDa;
-
-                double[] intensities = new double[rangeLen];
-
-                for (int scanIdx = 0; scanIdx < rangeLen; scanIdx++)
-                {
-                    var spectrum = windowSpectra[startScan + scanIdx];
-                    int best = FindClosestPeakInWindow(spectrum, fragment.Mz, lower, upper);
-                    if (best >= 0)
-                        intensities[scanIdx] = spectrum.Intensities[best];
-                }
+                var fragment = candidate.Fragments[topIndices[t]];
+                double tolDa = fragmentTolerance.ToleranceDa(fragment.Mz);
+                mzs[t] = fragment.Mz;
+                lowers[t] = fragment.Mz - tolDa;
+                uppers[t] = fragment.Mz + tolDa;
 
                 // Always include the fragment XIC, even if all zero. Zero intensities
                 // are valid data (no centroided peak found) and dropping all-zero
                 // fragments biases decoys to higher R^2. Matches Rust behavior.
-                xics.Add(new XicData(fragIdx, rangeRts, intensities));
+                xics.Add(new XicData(topIndices[t], rangeRts, new double[rangeLen]));
             }
-
             return xics;
         }
 
