@@ -163,16 +163,17 @@ namespace pwiz.Osprey.Scoring
         /// candidate fragments and one spectrum. This is the sg_weighted_cosine
         /// per-scan kernel -- a DIFFERENT function from SpectralScorer.LibCosine
         /// (used for the unrelated libCosine path); do not conflate them.
-        /// Relocated verbatim from AbstractScoringTask.cs.
+        /// Originally relocated from AbstractScoringTask.cs; the peak lookup now goes
+        /// through the spectrum's m/z bucket index and the sums accumulate as each
+        /// fragment is matched, with the arithmetic in the same order.
         ///
-        /// TIE-BREAK: strict <c>diff &lt; bestDiff</c> keeps the first/closest peak
-        /// scanning ascending m/z. bestIntensity seeds 0.0 so an in-range fragment
-        /// with NO peak inside [lower, upper] still pushes Sqrt(relIntensity) to
-        /// libPre and Sqrt(0)=0 to obsPre (asymmetric vector entry that drives the
-        /// cosine down). Norm guard is the literal 1e-12 on the post-Sqrt norm.
-        /// Sqrt is taken per term before the dot/norm accumulation, in insertion
-        /// order of in-range fragments. The sums are accumulated as each fragment is
-        /// matched, which is that same order, so no per-term lists are needed.
+        /// TIE-BREAK: the closest peak in [lower, upper], the first on ties
+        /// (<see cref="TopFragmentExtractor.FindClosestPeakInWindow(Spectrum, double, double, double)"/>).
+        /// An in-range fragment with NO peak in the window still adds
+        /// Sqrt(relIntensity) to the library vector and Sqrt(0)=0 to the observed one
+        /// (an asymmetric entry that drives the cosine down). Norm guard is the
+        /// literal 1e-12 on the post-Sqrt norm. Sqrt is taken per term before the
+        /// dot/norm accumulation, in the order of the in-range fragments.
         /// </summary>
         private static double ComputeCosineAtScan(
             LibraryEntry candidate, Spectrum spectrum, OspreyConfig config)
@@ -198,20 +199,8 @@ namespace pwiz.Osprey.Scoring
                 double lower = frag.Mz - tolDa;
                 double upper = frag.Mz + tolDa;
 
-                // The binary search's lower bound, through the spectrum's m/z bucket index.
-                int lo = spectrum.MzLowerBound(lower);
-                double bestIntensity = 0.0;
-                double bestDiff = double.MaxValue;
-
-                for (int k = lo; k < mzs.Length && mzs[k] <= upper; k++)
-                {
-                    double diff = Math.Abs(mzs[k] - frag.Mz);
-                    if (diff < bestDiff)
-                    {
-                        bestDiff = diff;
-                        bestIntensity = intensities[k];
-                    }
-                }
+                int best = TopFragmentExtractor.FindClosestPeakInWindow(spectrum, frag.Mz, lower, upper);
+                double bestIntensity = best >= 0 ? intensities[best] : 0.0;
 
                 double libTerm = Math.Sqrt(frag.RelativeIntensity);
                 double obsTerm = Math.Sqrt(bestIntensity);

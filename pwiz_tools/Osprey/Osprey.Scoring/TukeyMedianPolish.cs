@@ -150,7 +150,6 @@ namespace pwiz.Osprey.Scoring
             bool converged = false;
             int nIter = 0;
 
-            var oldRow = new double[nScans];
             var colBuf = new double[nFrags];
             var rowMedians = new double[nFrags];
             var colMedians = new double[nScans];
@@ -515,7 +514,7 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// Median of a slice, skipping non-finite values. Returns NaN if no finite values.
         /// The finite values are copied into <paramref name="scratch"/> (at least as long as
-        /// <paramref name="values"/>) and the median selected there in linear time, leaving
+        /// <paramref name="values"/>) and the median selected there (<see cref="MedianMath"/>), leaving
         /// <paramref name="values"/> untouched. The selection returns the value a sort would:
         /// equal doubles differ only in the sign of zero, and the residuals start as the ln of
         /// a positive value and change only by subtraction, where x - x gives +0.0.

@@ -23,15 +23,21 @@ using System;
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// Linear-time medians by selection rather than sorting: Hoare's FIND, as in Skyline's
+    /// Medians by selection rather than sorting: Hoare's FIND, as in Skyline's
     /// <c>QNthItem</c> (pwiz.Skyline.Util), specialized for doubles in a span.
+    ///
+    /// <para>The pivot is the value at the target index, so the time is linear on average for
+    /// values in random order but can grow toward quadratic for adversarial orderings (a
+    /// single peak with a long, higher tail, for one). On the short rows and columns of a
+    /// median polish it is still well ahead of a sort.</para>
     ///
     /// <para>The median is a value, not a position, so it equals the median a full sort
     /// would give for the same values - the order the selection leaves them in does not
     /// matter. The one way two equal-comparing doubles can differ is the sign of zero; a
     /// caller whose values may hold both -0.0 and +0.0 could see either back.</para>
     ///
-    /// <para>The values must not contain NaN, which no ordering can place.</para>
+    /// <para>The comparisons are IEEE <c>&lt;</c>, which cannot place NaN: the result is
+    /// undefined if the values contain one, so callers filter NaN out first.</para>
     /// </summary>
     public static class MedianMath
     {
