@@ -504,7 +504,7 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
             SettingsImporter importer;
-            using (var dlg = new ImportSettingsDlg(installations))
+            using (var dlg = new ImportSettingsDlg(installations, true))
             {
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;

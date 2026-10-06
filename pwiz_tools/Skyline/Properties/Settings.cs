@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Drawing;
@@ -211,8 +210,8 @@ namespace pwiz.Skyline.Properties
         /// <summary>
         /// Brings across what changed in <paramref name="sourceSettings"/> since it was the same
         /// as <paramref name="baseSettings"/>. A setting changed only in the source takes the
-        /// source's value. One changed here as well keeps its value here, except for a settings
-        /// list, which is merged item by item; see <see cref="IMergeableList"/>.
+        /// source's value. One changed here as well keeps its value here, unless its value can be
+        /// merged part by part; see <see cref="IMergeable"/>.
         /// </summary>
         public void MergeChanges(Settings baseSettings, Settings sourceSettings)
         {
@@ -244,8 +243,8 @@ namespace pwiz.Skyline.Properties
                     if (Equals(baseSerialized, GetSerializedValue(property.Name, sourceValue)))
                         continue;
                     var localValue = propertyInfo.GetValue(this);
-                    if (localValue is IMergeableList mergeableList)
-                        this[property.Name] = mergeableList.MergeChanges((IEnumerable) baseValue, (IEnumerable) sourceValue);
+                    if (localValue is IMergeable mergeable)
+                        this[property.Name] = mergeable.ThreeWayMerge(baseValue, sourceValue);
                     else if (Equals(baseSerialized, GetSerializedValue(property.Name, localValue)))
                         this[property.Name] = sourceValue;
                 }

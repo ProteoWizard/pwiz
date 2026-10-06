@@ -38,17 +38,17 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
-    /// A settings list that can be merged item by item when two copies of the settings have
-    /// each changed it since they were the same.
+    /// A setting value that can be merged part by part, rather than taken whole, when two copies
+    /// of the settings have each changed it since they were the same.
     /// </summary>
-    public interface IMergeableList
+    public interface IMergeable
     {
         /// <summary>
-        /// A new list holding this one's changes since <paramref name="baseList"/> along with
-        /// those of <paramref name="sourceList"/>. An item changed both here and in the source
-        /// keeps the change made here.
+        /// A new value holding this one's changes since <paramref name="baseValue"/> along with
+        /// those of <paramref name="sourceValue"/>. A part changed both here and in the source
+        /// keeps the change made here. Both arguments are values of the same setting as this one.
         /// </summary>
-        object MergeChanges(IEnumerable baseItems, IEnumerable sourceItems);
+        object ThreeWayMerge(object baseValue, object sourceValue);
     }
 
     /// <summary>
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Util
     /// <typeparam name="TKey">Type of the key used in the map</typeparam>
     /// <typeparam name="TValue">Type stored in the collection</typeparam>
     public class XmlMappedList<TKey, TValue>
-        : MappedList<TKey, TValue>, IXmlSerializable, IMergeableList
+        : MappedList<TKey, TValue>, IXmlSerializable, IMergeable
         where TValue : IKeyContainer<TKey>, IXmlSerializable
     {
         /// <summary>
@@ -67,17 +67,17 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public int RevisionIndex { get; set; }
 
-        #region IMergeableList Members
+        #region IMergeable Members
 
         /// <summary>
         /// Items match by key. One added, changed or removed here stays that way; one left alone
         /// here follows the source, including being removed from it; and one the source added is
         /// added, after the items already here.
         /// </summary>
-        public object MergeChanges(IEnumerable baseItems, IEnumerable sourceItems)
+        public virtual object ThreeWayMerge(object baseValue, object sourceValue)
         {
-            var baseByKey = baseItems.Cast<TValue>().ToDictionary(item => item.GetKey());
-            var sourceList = sourceItems.Cast<TValue>().ToList();
+            var baseByKey = ((IEnumerable) baseValue).Cast<TValue>().ToDictionary(item => item.GetKey());
+            var sourceList = ((IEnumerable) sourceValue).Cast<TValue>().ToList();
             var sourceByKey = sourceList.ToDictionary(item => item.GetKey());
             var merged = (XmlMappedList<TKey, TValue>) Activator.CreateInstance(GetType());
             merged.RevisionIndex = RevisionIndex;

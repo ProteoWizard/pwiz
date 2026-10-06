@@ -108,7 +108,7 @@ namespace pwiz.Skyline.ToolsUI
             if (installations.Count == 0)
                 return;
             SettingsImporter importer;
-            using (var dlg = new ImportSettingsDlg(installations))
+            using (var dlg = new ImportSettingsDlg(installations, false))
             {
                 var result = parent == null ? dlg.ShowParentlessDialog() : dlg.ShowDialog(parent);
                 if (result != DialogResult.OK)

@@ -21,6 +21,8 @@
 ;     and the MCP server to find the install.
 ;   - The .NET Desktop Runtime prerequisite is bundled (default) or checked
 ;     for (NoNetRuntime variant); see pwiz-sharp\installer\common\.
+;   - /LAUNCH starts Skyline at the end of a silent (/SILENT or /VERYSILENT)
+;     install, which has no finish page to offer it.
 ;
 ; build.ps1 stages the Skyline build output and invokes ISCC with:
 ;   /DSkylineAppName=Skyline|Skyline-daily   (the channel; from the staged exe)
@@ -239,6 +241,10 @@ Root: HKA; Subkey: "Software\Classes\.skyp\OpenWithProgids"; ValueType: string; 
 ; checked-by-default finish-page option.
 Filename: "{app}\{#MyAppExe}"; Description: "Launch {#ProductName}"; \
     Flags: nowait postinstall skipifsilent
+; A silent install has no finish page, so /LAUNCH asks for the same launch. The
+; .NET Framework Skyline passes it when it hands itself over to this installer.
+Filename: "{app}\{#MyAppExe}"; Flags: nowait runasoriginaluser; \
+    Check: WizardSilent and LaunchRequested
 
 ; The WiX admin .msi (UpgradeCodes from Product-template.wxs, 64-bit) installed
 ; into the same %ProgramFiles% folder; refuse a per-machine install over it.
@@ -256,6 +262,18 @@ const
   { The AppId as Inno writes it into the key name: a GUID keeps its braces, and the
     doubled brace that escaped it in [Setup] is not part of the value. }
   UninstallKeyOfThisProduct = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#StringChange(MyAppId, "{{", "{")}_is1';
+
+{ Whether /LAUNCH is on the command line. Inno ignores switches it does not know, so
+  an older installer given /LAUNCH installs without launching. }
+function LaunchRequested(): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if CompareText(ParamStr(I), '/LAUNCH') = 0 then
+      Result := True;
+end;
 
 { Refuse to overlay the legacy .msi, and warn when the product is already installed
   in the other mode: the mode is asked every run (UsePreviousPrivileges=no), so a
