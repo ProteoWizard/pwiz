@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -232,6 +233,13 @@ namespace pwiz.Osprey.IO
         /// PerFileRescoring), holding <c>"false"</c>, <c>"true"</c> or <see cref="RECONCILED_SURVIVORS"/>.
         /// </summary>
         public const string META_RECONCILED = @"osprey.reconciled";
+
+        // Score parquets whose charge column a library-identity walk has already checked
+        // (RequireFileCharges) in this process. The check costs a seek per row group on a
+        // spinning disk, and first-pass FDR walks each file six or more times, so each file is
+        // checked on its first walk only. A file never changes under a running task.
+        private static readonly ConcurrentDictionary<string, bool> _chargesChecked =
+            new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// True when <paramref name="path"/> is a reconciled parquet holding the survivor
@@ -1090,8 +1098,9 @@ namespace pwiz.Osprey.IO
         /// (OSPREY_STUB_IDENTITY=1). The library's charge is the right one, but a zero in the
         /// file still marks a file from the write race, and the walks that take charges from
         /// the library are the first to read it - left unchecked, the file would pass Stages 5
-        /// and 6 and fail hours later with a remedy that cannot work. One byte column, inside
-        /// the span the walk reads anyway.
+        /// and 6 and fail hours later with a remedy that cannot work. One byte column, but not
+        /// inside the span the identity walk otherwise reads, so it costs a seek per row group
+        /// on a spinning disk: callers check a file once per process (<see cref="_chargesChecked"/>).
         /// </summary>
         private static void RequireFileCharges(ParquetRowGroupReader groupReader,
             IReadOnlyDictionary<string, DataField> fieldsByName, uint[] entryIdCol, int rowGroup, string path)
@@ -1179,6 +1188,7 @@ namespace pwiz.Osprey.IO
             int identityMode = identity != null ? OspreyEnvironment.StubIdentity : 0;
             bool fromLibrary = identityMode == 1;
             bool verifyIdentity = identityMode == 2;
+            bool checkCharges = fromLibrary && !_chargesChecked.ContainsKey(path);
             var stubs = new List<FdrEntry>();
             // Counted separately from stubs.Count, which no longer tracks it once rows are
             // dropped. Advanced only for rows actually decoded, so a row group skipped below
@@ -1207,7 +1217,8 @@ namespace pwiz.Osprey.IO
                         {
                             // Charge, decoy flag and peptide come from the library entry each
                             // entry_id names, exactly as the file would give them.
-                            RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
+                            if (checkCharges)
+                                RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
                             isDecoyCol = new bool[entryIdCol.Length];
                             chargeCol = new byte[entryIdCol.Length];
                             modseqCol = new string[entryIdCol.Length];
@@ -1269,6 +1280,9 @@ namespace pwiz.Osprey.IO
                     }
                 }
             }
+            // Only after a walk that reached the end: a file that threw was not checked.
+            if (checkCharges)
+                _chargesChecked.TryAdd(path, true);
 
             return stubs;
         }
@@ -1412,6 +1426,7 @@ namespace pwiz.Osprey.IO
                 // ordinary way and skips them the same way.
                 if (!fieldsByName.ContainsKey(FIELD_IS_DECOY.Name))
                     identityMode = 0;
+                bool checkCharges = identityMode == 1 && !_chargesChecked.ContainsKey(path);
                 for (int g = 0; g < reader.RowGroupCount; g++)
                 {
                     using (var groupReader = reader.OpenRowGroupReader(g))
@@ -1420,7 +1435,8 @@ namespace pwiz.Osprey.IO
                         if (identityMode == 1 && identity != null && entryIdCol != null &&
                             AllInLibrary(entryIdCol, identity))
                         {
-                            RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
+                            if (checkCharges)
+                                RequireFileCharges(groupReader, fieldsByName, entryIdCol, g, path);
                             var coelution = wantCoelution
                                 ? ReadColumnByName<double>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name)
                                 : null;
@@ -1476,6 +1492,9 @@ namespace pwiz.Osprey.IO
                         }
                     }
                 }
+                // Only after a walk that reached the end: a file that threw was not checked.
+                if (checkCharges)
+                    _chargesChecked.TryAdd(path, true);
             }
         }
 
