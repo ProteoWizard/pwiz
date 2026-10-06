@@ -61,7 +61,7 @@ namespace pwiz.SkylineTest
                 Tool(@"ChangedInBoth", @"source.exe"),
                 Tool(@"AddedToSource", @"source.exe"));
 
-            var merged = (ToolList) localList.MergeChanges(baseList, sourceList);
+            var merged = (ToolList) localList.ThreeWayMerge(baseList, sourceList);
 
             Assert.AreEqual(string.Join(@", ", @"Untouched", @"ChangedInSource", @"ChangedHere", @"ChangedInBoth",
                     @"ChangedHereRemovedFromSource", @"AddedHere", @"AddedToSource"),
