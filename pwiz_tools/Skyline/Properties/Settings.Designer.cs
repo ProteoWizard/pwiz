@@ -3785,13 +3785,13 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ImportedSettingsPath {
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CheckedForSettingsToImport {
             get {
-                return ((string)(this["ImportedSettingsPath"]));
+                return ((bool)(this["CheckedForSettingsToImport"]));
             }
             set {
-                this["ImportedSettingsPath"] = value;
+                this["CheckedForSettingsToImport"] = value;
             }
         }
     }
