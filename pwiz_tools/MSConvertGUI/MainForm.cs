@@ -305,10 +305,16 @@ namespace MSConvertGUI
                    !String.IsNullOrEmpty(IdentifySource(dataSource));
         }
 
+        /// <summary>The path the file box stands for: a browsed file is shown by name only.</summary>
+        private string FileBoxPath => FileBox.Tag is MsDataFilePath msDataFilePath ? msDataFilePath.FilePath : FileBox.Text;
+
         private void FileBox_TextChanged(object sender, EventArgs e)
         {
             string fileBoxText = FileBox.Text.Trim();
-            if (FileBox.Tag == null || FileBox.Tag is string) FileBox.Tag = fileBoxText;
+            // a browsed or listed source stays the Tag only while the box still shows it; once the
+            // text is cleared or edited, the text is the source
+            string shownText = FileBox.Tag is MsDataFileUri msDataFileUri ? msDataFileUri.GetFileName() : FileBox.Tag?.ToString();
+            if (FileBox.Tag == null || FileBox.Tag is string || fileBoxText != shownText) FileBox.Tag = fileBoxText;
             AddFileButton.Enabled = IsValidSource(FileBox.Tag);
         }
 
@@ -319,7 +325,7 @@ namespace MSConvertGUI
                 if (String.IsNullOrEmpty(OutputBox.Text))
                 {
                     if (!IsNetworkSource(FileBox.Tag))
-                        OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
+                        OutputBox.Text = Path.GetDirectoryName(FileBoxPath);
                     else
                         OutputBox.Text = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                 }
@@ -361,7 +367,7 @@ namespace MSConvertGUI
         {
             using (var browseToFileDialog = new MSConvertOpenDataSourceDialog())
             {
-                string initialDir = String.IsNullOrEmpty(FileBox.Text) ? lastFileboxText : FileBox.Text;
+                string initialDir = String.IsNullOrEmpty(FileBox.Text) ? lastFileboxText : FileBoxPath;
                 if (!String.IsNullOrEmpty(initialDir) && (File.Exists(initialDir) || Directory.Exists(initialDir)))
                     browseToFileDialog.InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(initialDir) ?? initialDir);
 
@@ -876,14 +882,14 @@ namespace MSConvertGUI
 
                 filesToProcess.AddRange(from object item in FileListBox.Items select item);
             }
-            else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBox.Text))
+            else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBoxPath))
             {
                 MessageBox.Show("No files to process");
                 return;
             }
             else
             {
-                filesToProcess.Add(String.Format("--filelist|\"{0}\"", FileBox.Text));
+                filesToProcess.Add(String.Format("--filelist|\"{0}\"", FileBoxPath));
             }
 
             string outputFolder = String.IsNullOrEmpty(OutputBox.Text) ? Application.StartupPath
