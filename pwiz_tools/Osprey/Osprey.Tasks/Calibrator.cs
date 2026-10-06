@@ -2000,7 +2000,7 @@ namespace pwiz.Osprey.Tasks
                 var spec = windowSpectra[si];
                 if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
                     continue;
-                if (!FragmentMath.HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
+                if (!FragmentMath.HasTopNFragmentMatch(entry, spec, config.FragmentTolerance))
                     continue;
                 candidateSpectra.Add(spec);
                 candidateWindowIndices.Add(si);
@@ -2308,7 +2308,7 @@ namespace pwiz.Osprey.Tasks
                 double upper = frag.Mz + tolDa;
 
                 int best = TopFragmentExtractor.FindClosestPeakInWindow(
-                    apexSpectrum.Mzs, frag.Mz, lower, upper);
+                    apexSpectrum, frag.Mz, lower, upper);
                 if (best >= 0)
                     ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, apexSpectrum.Mzs[best]));
             }
