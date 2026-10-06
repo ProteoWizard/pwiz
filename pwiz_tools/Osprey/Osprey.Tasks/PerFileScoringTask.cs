@@ -1078,9 +1078,19 @@ namespace pwiz.Osprey.Tasks
                 config.FileParallelism, nFiles, OspreyEnvironment.MaxParallelFiles,
                 Environment.ProcessorCount,
                 SystemMemory.AvailablePhysicalBytes,
-                () => FileParallelismResolver.EstimatePerFileBytes(
-                    config.InputFiles, SpectraCache.GetCachePath),
+                () => EstimateInputBytes(config.InputFiles),
                 log);
+        }
+
+        /// <summary>
+        /// The per-file footprint estimate auto mode budgets RAM with: each input's size,
+        /// or, for an input whose source is gone or empty, its spectra cache's - wherever
+        /// <see cref="ArtifactPaths"/> puts caches for this run, including a separate
+        /// <c>--cache-dir</c>.
+        /// </summary>
+        internal static long EstimateInputBytes(IEnumerable<string> inputFiles)
+        {
+            return FileParallelismResolver.EstimatePerFileBytes(inputFiles, SpectraCache.GetCachePath);
         }
 
         /// <summary>

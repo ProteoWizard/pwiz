@@ -99,11 +99,15 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class FileParallelismResolver
     {
-        // Per-file peak working-set estimate = largest input mzML x this factor.
+        // Per-file peak working-set estimate = largest input x this factor.
         // Grounded in the 2026-06-11 Astral (hram) observation: a ~6 GB on-disk
         // mzML drove a ~14.6 GB per-file working set (~2.4x), rounded up to bias
         // AUTO toward FEWER concurrent files (over-estimating footprint is the
-        // safe error -- it avoids the OOM this argument exists to prevent).
+        // safe error - it avoids the OOM this argument exists to prevent).
+        // It also scales a .spectra.bin size when a cache-only input is sized
+        // from its cache (EstimatePerFileBytes); a cache-only run never pays the
+        // source parse this was calibrated against, so recalibrating from mzML
+        // parses keeps that case conservative too.
         // Coarse by design; explicit --parallel-files N bypasses it entirely.
         private const double FOOTPRINT_MULTIPLIER = 3.0;
 
@@ -171,30 +175,28 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Largest input footprint estimate in bytes (max input file size x
-        /// <see cref="FOOTPRINT_MULTIPLIER"/>), or 0 when no file size can be
-        /// read. Uses the max rather than the mean because the concurrent peak is
-        /// bounded by the biggest files running together.
+        /// Largest input footprint estimate in bytes (max input size x
+        /// <see cref="FOOTPRINT_MULTIPLIER"/>), or 0 when no size can be read. Uses
+        /// the max rather than the mean because the concurrent peak is bounded by
+        /// the biggest files running together.
         ///
-        /// <paramref name="cachePathResolver"/> maps an input path to its
-        /// <c>.spectra.bin</c> cache and is consulted only when the source itself
-        /// is gone. A staged cohort deletes its sources once cached (pwiz #4616),
-        /// so on exactly the large runs this budget exists to protect, every source
-        /// would otherwise size to 0, the whole estimate would come back 0, and
-        /// auto mode would drop its memory budget entirely and run at the core
-        /// count. Sizing from the cache keeps the budget real; it also errs safe,
-        /// since a cache-only run never pays the source parse the multiplier was
-        /// calibrated against.
+        /// An input that measures 0 - its source deleted once cached (pwiz #4616),
+        /// or truncated - is sized from the <c>.spectra.bin</c> that
+        /// <paramref name="cachePathResolver"/> locates for it (null skips this, for
+        /// callers with no caches). Without that, a staged cohort sizes 0 throughout
+        /// and auto mode loses its memory budget on exactly the largest runs.
         /// </summary>
         public static long EstimatePerFileBytes(IEnumerable<string> inputFiles,
-            Func<string, string> cachePathResolver = null)
+            Func<string, string> cachePathResolver)
         {
             long maxBytes = 0;
             if (inputFiles != null)
             {
                 foreach (var file in inputFiles)
                 {
-                    long len = SafeFileLength(file, cachePathResolver);
+                    long len = SafeFileLength(file);
+                    if (len == 0 && cachePathResolver != null)
+                        len = SafeFileLength(SafeResolve(cachePathResolver, file));
                     if (len > maxBytes)
                         maxBytes = len;
                 }
@@ -212,18 +214,21 @@ namespace pwiz.Osprey.Core
             long availableBytes = availableBytesProbe?.Invoke() ?? 0;
             long perFileBytes = perFileBytesEstimate?.Invoke() ?? 0;
 
-            if (availableBytes <= 0 || perFileBytes <= 0)
+            if (perFileBytes <= 0)
             {
-                // No usable memory signal -- fall back to a CPU-bound cap rather
-                // than guessing. Still safer than the old unbounded default.
+                // No per-file estimate - fall back to a CPU-bound cap rather than
+                // guessing. Still safer than the old unbounded default.
                 log?.Invoke(string.Format(
                     OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_,
                     cpuCap, cores, nFiles));
                 return cpuCap;
             }
 
-            long budget = (long)(availableBytes * RAM_BUDGET_FRACTION);
-            int memFit = (int)Math.Max(1, budget / perFileBytes);
+            // Zero free memory is exhausted (a cgroup or heap limit at its ceiling),
+            // or unreadable; either way the budget below comes to one file at a time,
+            // as FdrLaneResolver reads it, never the CPU cap.
+            long budget = (long)(Math.Max(0, availableBytes) * RAM_BUDGET_FRACTION);
+            int memFit = (int)Math.Max(1, Math.Min(int.MaxValue, budget / perFileBytes));
             int chosen = Math.Max(1, Math.Min(cpuCap, memFit));
             log?.Invoke(string.Format(
                 OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__,
@@ -232,40 +237,58 @@ namespace pwiz.Osprey.Core
             return chosen;
         }
 
-        private static long SafeFileLength(string path, Func<string, string> cachePathResolver)
+        private static long SafeFileLength(string path)
         {
             try
             {
                 if (string.IsNullOrEmpty(path))
                     return 0;
                 if (File.Exists(path))
-                    return new FileInfo(path).Length;
+                    return TargetLength(path);
                 // A vendor bundle is a DIRECTORY (Agilent .d, Bruker .d, Waters .raw).
                 // Sizing it at 0 does not merely lose precision: EstimatePerFileBytes
                 // returns 0 for the whole set, ResolveAuto takes its no-signal branch
-                // and runs at the full core count with NO memory budget at all. That is
-                // the opposite of conservative on exactly the largest inputs.
+                // and runs at min(file count, cores) with NO memory budget at all.
+                // That is the opposite of conservative on exactly the largest inputs.
                 var dir = new DirectoryInfo(path);
-                if (dir.Exists)
-                {
-                    long total = 0;
-                    foreach (var f in dir.EnumerateFiles(@"*", SearchOption.AllDirectories))
-                        total += f.Length;
-                    return total;
-                }
-                // Neither a file nor a bundle: a staged cohort whose sources were
-                // deleted after caching. The cache IS the input here, so size from
-                // it rather than reporting the unknown that costs the memory budget.
-                string cachePath = cachePathResolver?.Invoke(path);
-                if (!string.IsNullOrEmpty(cachePath) && File.Exists(cachePath))
-                    return new FileInfo(cachePath).Length;
+                if (!dir.Exists)
+                    return 0;
+                long total = 0;
+                foreach (var f in dir.EnumerateFiles(@"*", SearchOption.AllDirectories))
+                    total += f.Length;
+                return total;
             }
             catch (Exception)
             {
                 // Unreadable path - treat as unknown size (0), never throw from a
                 // sizing hint.
+                return 0;
             }
-            return 0;
+        }
+
+        // Through a handle, so a symbolic link reports the size of its target:
+        // FileInfo.Length measures the link itself (0 on Windows, the length of the
+        // stored target path on Unix). A dangling link throws, which reads as 0.
+        private static long TargetLength(string path)
+        {
+            using (var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read,
+                       FileShare.ReadWrite | FileShare.Delete))
+            {
+                return RandomAccess.GetLength(handle);
+            }
+        }
+
+        private static string SafeResolve(Func<string, string> cachePathResolver, string inputPath)
+        {
+            try
+            {
+                return cachePathResolver(inputPath);
+            }
+            catch (Exception)
+            {
+                // A sizing hint never throws; an unresolvable cache is an unknown size.
+                return null;
+            }
         }
 
         private const long BYTES_PER_GB = 1024L * 1024L * 1024L;
