@@ -125,7 +125,7 @@ namespace pwiz.Osprey.Scoring
                 for (int i = startScan; i <= endScan; i++)
                 {
                     bool passes = FragmentMath.HasTopNFragmentMatch(
-                        candidate, windowSpectra[i].Mzs, config.FragmentTolerance);
+                        candidate, windowSpectra[i], config.FragmentTolerance);
                     int slot = (i - startScan) % WIN;
                     if (window[slot])
                         winSum--;
