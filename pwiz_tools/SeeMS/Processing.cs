@@ -119,19 +119,16 @@ namespace Pwiz.SeeMS
         Panel panel = processingPanels.smootherPanel;
         private ISmoother algorithm;
         private int polynomialOrder, windowSize;
-        private double lambda;
 
         public SmoothingProcessor()
         {
             polynomialOrder = 2;
             windowSize = 15;
-            lambda = 2.0;
             algorithm = new SavitzkyGolaySmoother( polynomialOrder, windowSize );
 
             processingPanels.smootherAlgorithmComboBox.SelectedIndexChanged += new EventHandler( optionsChanged );
             processingPanels.smootherSavitzkyGolayPolynomialOrderTrackBar.ValueChanged += new EventHandler( optionsChanged );
             processingPanels.smootherSavitzkyGolayWindowSizeTrackBar.ValueChanged += new EventHandler( optionsChanged );
-            processingPanels.smootherWhittakerLambdaTextBox.TextChanged += new EventHandler( optionsChanged );
         }
 
         void optionsChanged( object sender, EventArgs e )
@@ -163,10 +160,6 @@ namespace Pwiz.SeeMS
                     }
                     algorithm = new SavitzkyGolaySmoother( polynomialOrder, windowSize );
                     break;
-                case 1:
-                    lambda = Convert.ToDouble( processingPanels.smootherWhittakerLambdaTextBox.Text );
-                    algorithm = new WhittakerSmoother( lambda );
-                    break;
             }
             OnOptionsChanged( sender, e );
         }
@@ -175,8 +168,6 @@ namespace Pwiz.SeeMS
         {
             if( algorithm is SavitzkyGolaySmoother )
                 return "Smoother (Savitzky-Golay)";
-            else if( algorithm is WhittakerSmoother )
-                return "Smoother (Whittaker)";
             else
                 throw new Exception( "Invalid smoothing algorithm!" );
         }
@@ -186,8 +177,6 @@ namespace Pwiz.SeeMS
             ProcessingMethod pm = new ProcessingMethod();
             if( algorithm is SavitzkyGolaySmoother )
                 pm.UserParams.Add( new UserParam( "algorithm", "Savitzky-Golay", "SeeMS" ) );
-            else if( algorithm is WhittakerSmoother )
-                pm.UserParams.Add( new UserParam( "algorithm", "Whittaker", "SeeMS" ) );
             return pm;
         }
 
@@ -207,17 +196,11 @@ namespace Pwiz.SeeMS
             {
                 panel.Tag = null;
 
-                if( algorithm is SavitzkyGolaySmoother )
-                    processingPanels.smootherAlgorithmComboBox.SelectedIndex = 0;
-                else
-                    processingPanels.smootherAlgorithmComboBox.SelectedIndex = 1;
-
-                processingPanels.smootherSavitzkyGolayParameters.Visible = algorithm is SavitzkyGolaySmoother;
-                processingPanels.smootherWhittakerParameters.Visible = algorithm is WhittakerSmoother;
+                processingPanels.smootherAlgorithmComboBox.SelectedIndex = 0;
+                processingPanels.smootherSavitzkyGolayParameters.Visible = true;
 
                 processingPanels.smootherSavitzkyGolayPolynomialOrderTrackBar.Value = polynomialOrder;
                 processingPanels.smootherSavitzkyGolayWindowSizeTrackBar.Value = windowSize;
-                processingPanels.smootherWhittakerLambdaTextBox.Text = lambda.ToString();
                 panel.Tag = this;
 
                 return panel;

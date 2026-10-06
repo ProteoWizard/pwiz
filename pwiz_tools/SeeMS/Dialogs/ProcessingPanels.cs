@@ -48,10 +48,8 @@ namespace Pwiz.SeeMS
             thresholderOrientationComboBox.Items.Add( "Least Intense" );
 
             smootherAlgorithmComboBox.Items.Add( "Savitzky-Golay" );
-            //smootherAlgorithmComboBox.Items.Add( "Whittaker" );
 
             smootherSavitzkyGolayParameters.Location = smootherParametersGroupBox.Location;
-            smootherWhittakerParameters.Location = smootherParametersGroupBox.Location;
 
             // initialize labels
             smootherSavitzkyGolayTrackBar_ValueChanged( null, null );
