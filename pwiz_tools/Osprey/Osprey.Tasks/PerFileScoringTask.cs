@@ -288,6 +288,11 @@ namespace pwiz.Osprey.Tasks
             int effectiveParallelism = ResolveFileParallelism(config, FileStage.Scoring, nFiles, ctx.LogInfo);
             ctx.RunPlan.ScoringFileParallelism = effectiveParallelism;
 
+            // A scoped profile (Profile-Osprey.ps1 -ScopeToMainSearch) collects from here to
+            // the end of the per-file loop: every file's spectra load, calibration, scoring and
+            // parquet write, but not the library load and decoy generation above, which a
+            // process pays once however many files it scores. A no-op without a profiler.
+            ProfilerHooks.StartMeasure();
             var swAllFiles = Stopwatch.StartNew();
             if (nFiles == 1)
             {
@@ -379,6 +384,7 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             swAllFiles.Stop();
+            ProfilerHooks.SaveAndStopMeasure();
             ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds);
 
