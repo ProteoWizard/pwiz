@@ -1056,16 +1056,20 @@ namespace pwiz.Osprey.Tasks
         /// too), so a stage's count can never be derived differently from another's.
         /// The memory probe and per-file footprint estimate are evaluated
         /// lazily (auto mode only), so the common sequential / explicit paths do no
-        /// I/O. <paramref name="log"/> is null on the disk-load bookkeeping paths
-        /// that never actually parallelize, so they compute the same number without
-        /// emitting a misleading decision line.
+        /// I/O. <paramref name="log"/> is null where the count is resolved without the
+        /// stage doing its per-file work (a rehydrate), so no decision line is emitted.
+        ///
+        /// The <c>OSPREY_MAX_PARALLEL_FILES</c> cap does not apply to caching: it predates
+        /// caching on lanes and was sized for scoring's memory, and harnesses that set it to
+        /// match scoring (Test-PerfGate) must not find staging turned parallel by it.
         /// </summary>
         internal static int ResolveFileParallelism(OspreyConfig config, FileStage stage, int nFiles,
             Action<string> log)
         {
             var request = config.GetFileParallelism(stage, out string argName);
+            int envCap = stage == FileStage.Caching ? 0 : OspreyEnvironment.MaxParallelFiles;
             return FileParallelismResolver.Resolve(
-                request, nFiles, OspreyEnvironment.MaxParallelFiles,
+                request, nFiles, envCap,
                 Environment.ProcessorCount,
                 SystemMemory.AvailablePhysicalBytes,
                 () => EstimateInputBytes(config.InputFiles),

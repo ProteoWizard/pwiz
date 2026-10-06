@@ -136,6 +136,16 @@ namespace pwiz.Osprey.Test
                     FileParallelismResolver.Resolve(request, 5, 0, 8, () => 64 * GB, () => perFileBytes, log, argName);
                 Assert.IsNotNull(logged, request.Mode.ToString());
                 StringAssert.Contains(logged, argText);
+                // The shared flag's text is a prefix of every stage flag's, so the default case
+                // must also name none of them.
+                if (argName == null)
+                {
+                    foreach (var stageArg in new[] { OspreyArgNames.PARALLEL_FILES_CACHING,
+                                 OspreyArgNames.PARALLEL_FILES_SCORING, OspreyArgNames.PARALLEL_FILES_RESCORING })
+                    {
+                        Assert.IsFalse(logged.Contains(OspreyArgNames.Text(stageArg)), logged);
+                    }
+                }
             }
         }
 

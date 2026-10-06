@@ -70,7 +70,7 @@ a { color: #1565c0; }
 <table>
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>並列にスコアリングする入力ファイル数（OUTER）。指定なし：1ファイルずつ（デフォルト）。値なし：空きRAMとコア数から自動。&lt;N&gt;：RAM/コア数に関係なく正確にN。<nobr>--threadsとは別の設定です</nobr>。</td></tr>
-<tr><td><nobr>--parallel-files-caching</nobr>&nbsp;[&lt;N&gt;]</td><td>Files whose spectra are cached concurrently (SpectraCache), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms. Each decode runs on one thread, so this can exceed the scoring count.</td></tr>
+<tr><td><nobr>--parallel-files-caching</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>--task</nobr> SpectraCache caches concurrently, overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time.</td></tr>
 <tr><td><nobr>--parallel-files-scoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files scored concurrently (PerFileScoring), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
 <tr><td><nobr>--parallel-files-rescoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>re-scored</nobr> concurrently (PerFileRescoring, and the <nobr>second-pass</nobr> <nobr>per-file</nobr> phases), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
 <tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td>ファイルごとのメイン検索スレッド数（INNER。デフォルト：全コア）。<nobr>--parallel-filesで並行実行されるファイル間で分割されます</nobr></td></tr>

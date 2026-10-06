@@ -268,7 +268,7 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Files whose spectra are cached concurrently ({1}), overriding {0} for that stage only, in the same forms. Each decode runs on one thread, so this can exceed the scoring count..
+        ///   Looks up a localized string similar to Files {1} caches concurrently, overriding {0} for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time..
         /// </summary>
         public static string _parallel_files_caching {
             get {
@@ -367,7 +367,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by {0}.
+        ///   Looks up a localized string similar to Per-file main-search threads (INNER; default: all cores), divided across the files a scoring or re-scoring stage runs concurrently ({0} or its per-stage forms).
         /// </summary>
         public static string _threads {
             get {

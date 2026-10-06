@@ -273,7 +273,7 @@ namespace pwiz.Osprey
         // applies to its stage only and falls back to --parallel-files when absent.
         public static readonly OspreyArgument ARG_PARALLEL_FILES_CACHING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_CACHING,
             () => @"[<N>]", (c, p) => c._config.CachingFileParallelism = ParseFileParallelism(p))
-            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, SpectraCacheTask.TASK_NAME } };
+            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME) } };
         public static readonly OspreyArgument ARG_PARALLEL_FILES_SCORING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_SCORING,
             () => @"[<N>]", (c, p) => c._config.ScoringFileParallelism = ParseFileParallelism(p))
             { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileScoringTask.TASK_NAME } };
@@ -815,16 +815,16 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// The request a <c>--parallel-files</c>-style argument carries: no value is auto, <c>0</c>
-        /// is sequential (the value a user most naturally types to mean "off", so it must not
-        /// silently fall through to auto), and a positive N is an explicit concurrent-file count.
+        /// The request a <c>--parallel-files</c>-style argument carries: no value is auto, and a
+        /// count is explicit. <c>0</c> - the value a user most naturally types to mean "off" -
+        /// is an explicit ONE file at a time, not the sequential default: the default yields to
+        /// the <c>OSPREY_MAX_PARALLEL_FILES</c> cap, and a stage the user turned off must not.
         /// </summary>
         private static FileParallelism ParseFileParallelism(NameValuePair p)
         {
             if (string.IsNullOrEmpty(p.Value))
                 return FileParallelism.Auto;
-            int n = ParseInt(p);
-            return n <= 0 ? FileParallelism.Sequential : FileParallelism.Explicit(n);
+            return FileParallelism.Explicit(Math.Max(1, ParseInt(p)));
         }
 
         /// <summary>

@@ -328,8 +328,8 @@ variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
   `run_search`. C# keeps that window-level parallelism but additionally runs whole
   files concurrently under `--parallel-files-rescoring` / `RescoringFileParallelism`, with
   a per-file GC drop skipped in the parallel case. Output is byte-identical
-  (regression.ps1-gated); this is an added performance option, not an algorithm
-  change. Evidence: `Osprey.Tasks/PerFileRescoreTask.cs:547-584`, `:809-810`.
+  (SubsetPipelineTest-gated); this is an added performance option, not an algorithm
+  change. Evidence: `ExecuteRescore` and `ResolveRescoringLanes` in `Osprey.Tasks/PerFileRescoreTask.cs`.
   Severity: minor.
 
 - **[STALE-RUST-DOC] Gap-fill two-pass not covered by the boundary-override

@@ -1087,6 +1087,17 @@ namespace pwiz.Osprey.Tasks
         private static void ResolveRescoringLanes(PipelineContext ctx, Action<string> log)
         {
             var config = ctx.Config;
+            // Auto, after scoring ran on lanes in this process: keep scoring's count. A fresh probe
+            // here sees the library and FirstPassFDR's products resident, and budgets with
+            // scoring's per-file estimate - many times what a re-scored file holds - so it would
+            // give re-scoring FEWER lanes than scoring had. Until re-scoring has a footprint
+            // estimate of its own, the count that fit scoring is the better bound.
+            if (config.GetFileParallelism(FileStage.Rescoring, out _).Mode == FileParallelismMode.Auto &&
+                ctx.RunPlan.ScoringFileParallelism > 1)
+            {
+                ctx.RunPlan.RescoringFileParallelism = ctx.RunPlan.ScoringFileParallelism;
+                return;
+            }
             ctx.RunPlan.RescoringFileParallelism = PerFileScoringTask.ResolveFileParallelism(
                 config, FileStage.Rescoring, config.InputFiles?.Count ?? 0, log);
         }

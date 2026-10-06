@@ -387,10 +387,12 @@ namespace pwiz.Osprey.Core
                     stageRequest = ScoringFileParallelism;
                     argName = OspreyArgNames.PARALLEL_FILES_SCORING;
                     break;
-                default:
+                case FileStage.Rescoring:
                     stageRequest = RescoringFileParallelism;
                     argName = OspreyArgNames.PARALLEL_FILES_RESCORING;
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
             }
             if (stageRequest.HasValue)
                 return stageRequest.Value;

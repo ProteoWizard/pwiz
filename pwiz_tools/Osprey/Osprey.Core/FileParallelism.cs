@@ -96,20 +96,21 @@ namespace pwiz.Osprey.Core
 
     /// <summary>
     /// Resolves the parsed <see cref="FileParallelism"/> request into the actual
-    /// number of input files one per-file stage runs concurrently -- the single
+    /// number of input files one per-file stage runs concurrently - the single
     /// place that owns the precedence between the CLI argument, the
     /// <c>OSPREY_MAX_PARALLEL_FILES</c> back-compat cap, free RAM, and the core
     /// count. Each <see cref="FileStage"/> calls it once, with the request
     /// <see cref="OspreyConfig.GetFileParallelism"/> chose for it: the stage's own
     /// flag when given, otherwise the shared <c>--parallel-files</c>.
     ///
-    /// Precedence (highest first):
-    ///   1. explicit <c>--parallel-files N</c>  -> N, clamped to file count only
-    ///                                             (a 500 GB box can force more).
-    ///   2. <c>--parallel-files</c> (auto)      -> RAM/CPU-aware estimate.
-    ///   3. <c>OSPREY_MAX_PARALLEL_FILES</c>    -> legacy cap (only when the
-    ///                                             argument is absent).
-    ///   4. otherwise                           -> 1 (sequential default).
+    /// Precedence (highest first), where "the argument" is the stage's own flag
+    /// or, absent that, <c>--parallel-files</c>:
+    ///   1. explicit count (<c>0</c> means 1) -> N, clamped to file count only
+    ///                                           (a 500 GB box can force more).
+    ///   2. the argument with no value        -> RAM/CPU-aware estimate (auto).
+    ///   3. <c>OSPREY_MAX_PARALLEL_FILES</c>  -> legacy cap (only when no argument
+    ///                                           applies; the caller passes 0 for caching).
+    ///   4. otherwise                         -> 1 (sequential default).
     /// The argument wins over the env var when both are set.
     /// </summary>
     public static class FileParallelismResolver
@@ -135,8 +136,8 @@ namespace pwiz.Osprey.Core
         /// and <paramref name="perFileBytesEstimate"/> are only invoked in auto
         /// mode, so the common (sequential / explicit) paths do no I/O or system
         /// probing. <paramref name="log"/> (optional) receives a one-line summary
-        /// of the chosen N and the reason; pass null on the bookkeeping-only paths
-        /// that never actually parallelize. <paramref name="argName"/> is the argument the
+        /// of the chosen N and the reason; pass null where the count is resolved without
+        /// the stage's per-file work running. <paramref name="argName"/> is the argument the
         /// request came from - a stage's own flag or the shared <c>--parallel-files</c> - so
         /// the summary says which one decided.
         /// </summary>
