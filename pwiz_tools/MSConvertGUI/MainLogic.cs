@@ -34,6 +34,8 @@ using CustomProgressCell;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Encoding;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using System.Text.RegularExpressions;
 
 namespace MSConvertGUI
@@ -146,7 +148,7 @@ namespace MSConvertGUI
             var precision32 = false;
             var precision64 = false;
             var noindex = false;
-            var zlib = false;
+            var zlib = true; // match msconvert.exe default
             var gzip = false;
 
             var commandList = argv.Split('|');
@@ -217,6 +219,9 @@ namespace MSConvertGUI
                     case "--zlib":
                     case "-z":
                         zlib = true;
+                        break;
+                    case "--zlib=off":
+                        zlib = false;
                         break;
                     case "--gzip":
                     case "-g":
@@ -326,7 +331,16 @@ namespace MSConvertGUI
                             break;
                         case "--zlib":
                         case "-z":
-                            zlib = true;
+                            // This loop pre-replaces '=' with ' ', so --zlib=off arrives as two tokens
+                            // ["--zlib", "off"]; peek and consume an explicit off/false value.
+                            if (x + 1 < commandList.Length &&
+                                (commandList[x + 1] == "off" || commandList[x + 1] == "false"))
+                            {
+                                zlib = false;
+                                x++;
+                            }
+                            else
+                                zlib = true;
                             break;
                         case "--gzip":
                         case "-g":
@@ -494,8 +508,24 @@ namespace MSConvertGUI
             }
         }
 
+        private static string ResolveRemoteFilename(string filename)
+        {
+            // A friendly path (waters_connect:<alias>/Path/To/Injection) or a serialized waters_connect URL
+            // without an injection id is navigated on the server (via the saved account) to a concrete
+            // injection; the authenticated URL is what the native reader consumes.
+            if (WatersConnectUrl.IsFriendlyUrl(filename))
+                return WatersConnectUrl.ParseFriendly(filename).ResolveInjection().GetAuthenticatedUrl();
+            if (filename.StartsWith(WatersConnectUrl.UrlPrefix, StringComparison.InvariantCultureIgnoreCase))
+                return ((WatersConnectUrl) MsDataFileUri.Parse(filename)).ResolveInjection().GetAuthenticatedUrl();
+            return filename;
+        }
+
         void processFile(string filename, Config config, ReaderList readers, Map<string, int> usedOutputFilenames)
         {
+            // A friendly or serialized waters_connect path is resolved here, on the worker thread, to the
+            // authenticated URL the native reader understands; all other paths pass through unchanged.
+            filename = ResolveRemoteFilename(filename);
+
             // read in data file
             using (var msdList = new MSDataList())
             {

@@ -36,6 +36,7 @@ using Pwiz.Data.MsData.Mzml;
 using Pwiz.Analysis;
 using Pwiz.Analysis.PeakPicking;
 using ExtensionMethods;
+using pwiz.Common.Collections;
 
 
 namespace Pwiz.SeeMS

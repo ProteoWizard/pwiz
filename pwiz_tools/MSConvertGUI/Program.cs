@@ -61,6 +61,7 @@ namespace MSConvertGUI
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                MSConvertRemoteAccountServices.Initialize();
                 var singleInstanceArgs = e.Args.ToList();
                 MainWindow = new MainForm(singleInstanceArgs);
                 Application.Run(MainWindow);

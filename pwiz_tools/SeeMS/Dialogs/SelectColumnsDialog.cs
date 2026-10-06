@@ -33,12 +33,12 @@ namespace Pwiz.SeeMS
     public class SelectColumnsDialog : DockableForm
     {
         private DataGridView dataGridView;
-        private Dictionary<string, CheckBox> columnToCheckboxMap;
+        private Map<string, CheckBox> columnToCheckboxMap;
 
         public SelectColumnsDialog( DataGridView dgv )
         {
             dataGridView = dgv;
-            columnToCheckboxMap = new Dictionary<string, CheckBox>();
+            columnToCheckboxMap = new Map<string, CheckBox>();
 
             this.Name = "SelectColumnsDialog";
             this.Text = "Select Columns";
@@ -89,7 +89,7 @@ namespace Pwiz.SeeMS
 
         void okButton_Click( object sender, EventArgs e )
         {
-            foreach( Dictionary<string, CheckBox>.MapPair itr in columnToCheckboxMap )
+            foreach( Map<string, CheckBox>.MapPair itr in columnToCheckboxMap )
             {
                 dataGridView.Columns[itr.Key].Visible = itr.Value.Checked;
             }

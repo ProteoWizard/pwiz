@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>MSConvertGUI</RootNamespace>
     <AssemblyName>MSConvertGUI-sharp</AssemblyName>
-    <Description>Port of pwiz_tools/MSConvertGUI to pwiz-sharp. WinForms front-end on top of pwiz-sharp's MsConvert pipeline.</Description>
+    <Description>WinForms front-end on top of the msconvert pipeline.</Description>
 
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
@@ -30,23 +30,20 @@
     <ProjectReference Include="..\Commandline\MsConvert\src\MsConvert.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz_tools\Shared\StlContainers\StlContainers.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Common\Vendor.Common.csproj" />
-    <ProjectReference Include="CustomDataSourceDialog\CustomDataSourceDialog.csproj" />
   </ItemGroup>
 
-
-  <!-- CustomDataSourceDialog has its own .csproj (so its embedded resources are named
-       "CustomDataSourceDialog.Properties.Resources.resources" rather than getting the
-       MSConvertGUI namespace prefix). Exclude its files from this project's default globs. -->
+  <!-- The open-data-source dialog (local files plus waters_connect / UNIFI / Ardia browsing)
+       and the remote account types are Skyline's, shared through pwiz_tools/Shared. -->
   <ItemGroup>
-    <Compile Remove="CustomDataSourceDialog\**\*.cs" />
-    <EmbeddedResource Remove="CustomDataSourceDialog\**\*.resx" />
-    <None Remove="CustomDataSourceDialog\**\*.settings" />
+    <ProjectReference Include="$(PwizToolsRoot)\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
+    <ProjectReference Include="$(PwizToolsRoot)\Shared\CommonMsData\CommonMsData.csproj" />
   </ItemGroup>
 
-  <!-- Test/ is the MsConvertGUI.Tests project (legacy MSConvertGUI layout), not part of the app. -->
+  <!-- Test/ and TestConnected/ are the MsConvertGUI.Tests and MsConvertGUI.TestConnected projects
+       (legacy MSConvertGUI layout), not part of the app. -->
   <ItemGroup>
-    <Compile Remove="Test\**" />
-    <None Remove="Test\**" />
+    <Compile Remove="Test\**;TestConnected\**" />
+    <None Remove="Test\**;TestConnected\**" />
   </ItemGroup>
 
   <!-- Vendor support is opt-in (mirrors MsConvert.csproj). Without -p:IAgreeToVendorLicenses=true,
@@ -61,20 +58,6 @@
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UIMF\UIMF.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UNIFI\UNIFI.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Mobilion\Mobilion.csproj" />
-  </ItemGroup>
-
-  <!-- First-pass shell: exclude UNIFI auth dialogs that need IdentityModel + Newtonsoft.Json
-       NuGet packages we haven't pulled in yet. The Credentials nested type that MainForm.cs
-       references is stubbed by Compat.cs. Re-enable these when UNIFI auth ports to pwiz-sharp.
-  -->
-  <ItemGroup>
-    <Compile Remove="LoginForm.cs" />
-    <Compile Remove="LoginForm.Designer.cs" />
-    <EmbeddedResource Remove="LoginForm.resx" />
-
-    <Compile Remove="UnifiBrowserForm.cs" />
-    <Compile Remove="UnifiBrowserForm.Designer.cs" />
-    <EmbeddedResource Remove="UnifiBrowserForm.resx" />
   </ItemGroup>
 
 </Project>

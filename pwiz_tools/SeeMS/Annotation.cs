@@ -27,6 +27,7 @@ using System.Drawing;
 using System.Linq;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Mzml;
@@ -34,6 +35,7 @@ using Pwiz.Util.Proteome;
 using Pwiz.Util.Chemistry;
 
 using ZedGraph;
+using pwiz.Common.Collections;
 
 namespace Pwiz.SeeMS
 {
@@ -159,7 +161,7 @@ namespace Pwiz.SeeMS
             All = a | b | c | x | y | z | zRadical | Immonium
         }
 
-        Dictionary<CVID, IonSeries> ionSeriesByDissociationMethod = new Dictionary<CVID, IonSeries>
+        Map<CVID, IonSeries> ionSeriesByDissociationMethod = new Map<CVID, IonSeries>
         {
             {CVID.MS_collision_induced_dissociation, IonSeries.b | IonSeries.y},
             {CVID.MS_beam_type_collision_induced_dissociation, IonSeries.b | IonSeries.y | IonSeries.Immonium}, // HCD
@@ -170,7 +172,7 @@ namespace Pwiz.SeeMS
         };
 
         // the most specific analyzer types should be listed first, i.e. a special type of TOF or ion trap
-        Dictionary<CVID, MZTolerance> mzToleranceByAnalyzer = new Dictionary<CVID, MZTolerance>
+        Map<CVID, MZTolerance> mzToleranceByAnalyzer = new Map<CVID, MZTolerance>
         {
             {CVID.MS_ion_trap, new MZTolerance(0.5)},
             {CVID.MS_quadrupole, new MZTolerance(0.5)},
@@ -179,22 +181,22 @@ namespace Pwiz.SeeMS
             {CVID.MS_TOF, new MZTolerance(25, MZToleranceUnits.Ppm)},
         };
 
-        static Dictionary<char, double> immoniumIonByResidue;
+        static Map<char, double> immoniumIonByResidue;
         static PeptideFragmentationAnnotation ()
         {
-            immoniumIonByResidue = new Dictionary<char, double>();
+            immoniumIonByResidue = new Map<char, double>();
             var immoniumMod = new Formula("C-1O-1H1");
             foreach (AminoAcid aa in Enum.GetValues(typeof(AminoAcid)))
             {
                 var record = AminoAcidInfo.Record(aa);
-                immoniumIonByResidue[record.Symbol] = (record.ResidueFormula + immoniumMod).MonoisotopicMass();
+                immoniumIonByResidue[record.Symbol] = (record.ResidueFormula + immoniumMod).MonoisotopicMass;
             }
         }
 
         Panel panel = annotationPanels.peptideFragmentationPanel;
         string sequence;
         int min, max;
-        MZTolerance manualTolerance;
+        MZTolerance? manualTolerance;
         MZTolerance tolerance;
         int precursorMassType; // 0=mono, 1=avg
         int fragmentMassType; // 0=mono, 1=avg
@@ -210,7 +212,7 @@ namespace Pwiz.SeeMS
             sequence = "PEPTIDE";
             min = 1;
             max = 1;
-            tolerance = manualTolerance = new MZTolerance(0.5);
+            manualTolerance = tolerance = new MZTolerance(0.5);
             precursorMassType = 0;
             fragmentMassType = 0;
             showLadders = true;
@@ -270,14 +272,14 @@ namespace Pwiz.SeeMS
 
         public PeptideFragmentationAnnotation (string sequence,
                                                int minCharge, int maxCharge,
-                                               MZTolerance tolerance,
+                                               MZTolerance? tolerance,
                                                IonSeries ionSeries,
                                                bool showFragmentationLadders,
                                                bool showMissedFragments,
                                                bool showLabels,
                                                bool showFragmentationSummary)
         {
-            this.Sequence = sequence;
+            this.sequence = sequence;
             this.min = minCharge;
             this.max = maxCharge;
             this.manualTolerance = tolerance;
@@ -292,8 +294,8 @@ namespace Pwiz.SeeMS
             annotationPanels.precursorMassTypeComboBox.SelectedIndex = 0;
             annotationPanels.fragmentMassTypeComboBox.SelectedIndex = 0;
 
-            if (!ReferenceEquals(tolerance, null))
-                annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex = (int) tolerance.Units;
+            if (tolerance != null)
+                annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex = (int) tolerance.Value.Units;
             else
                 annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex = 0;
 
@@ -357,8 +359,8 @@ namespace Pwiz.SeeMS
             if (panel.Tag != this)
                 return;
 
-            min = annotationPanels.minChargeUpDown.ValueAs<int>();
-            max = annotationPanels.maxChargeUpDown.ValueAs<int>();
+            min = (int) annotationPanels.minChargeUpDown.Value;
+            max = (int) annotationPanels.maxChargeUpDown.Value;
 
             precursorMassType = annotationPanels.precursorMassTypeComboBox.SelectedIndex;
             fragmentMassType = annotationPanels.fragmentMassTypeComboBox.SelectedIndex;
@@ -428,9 +430,8 @@ namespace Pwiz.SeeMS
                 manualTolerance = null;
             else
             {
-                manualTolerance = new MZTolerance();
-                manualTolerance.Value = Convert.ToDouble(annotationPanels.fragmentToleranceTextBox.Text);
-                manualTolerance.Units = (MZToleranceUnits) annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex;
+                manualTolerance = new MZTolerance(Convert.ToDouble(annotationPanels.fragmentToleranceTextBox.Text),
+                                                  (MZToleranceUnits) annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex);
             }
 
             OnOptionsChanged(this, EventArgs.Empty);
@@ -647,7 +648,7 @@ namespace Pwiz.SeeMS
                 StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
 
                 // Figure out if any mods are there on this amino acid
-                double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+                double deltaMass = modifications[i - 1].MonoisotopicDeltaMass;
 
                 // Round the mod mass and append it to the amino acid as a string
                 if (deltaMass > 0.0)
@@ -785,7 +786,7 @@ namespace Pwiz.SeeMS
                     // Add a text box in the middle of the left and right mz boundaries
                     StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
                     // Figure out if any mods are there on this amino acid
-                    double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+                    double deltaMass = modifications[i - 1].MonoisotopicDeltaMass;
                     // Round the mod mass and append it to the amino acid as a string
                     if (deltaMass > 0.0)
                     {
@@ -848,7 +849,7 @@ namespace Pwiz.SeeMS
                     // Add the text label containing the amino acid
                     StringBuilder label = new StringBuilder(sequence[sequence.Length - i].ToString());
                     // Figure out if any mods are there on this amino acid
-                    double deltaMass = modifications[sequence.Length - i].monoisotopicDeltaMass();
+                    double deltaMass = modifications[sequence.Length - i].MonoisotopicDeltaMass;
                     // Round the mod mass and append it to the amino acid as a string
                     if (deltaMass > 0.0)
                     {
@@ -903,15 +904,15 @@ namespace Pwiz.SeeMS
                 foreach (var scan in spectrum.ScanList.Scans.Where(o => o.InstrumentConfiguration != null))
                 {
                     // assume the last analyzer of the instrument configuration is responsible for the resolution
-                    if (scan.InstrumentConfiguration.ComponentList.Count(o => o.Type == ComponentType.ComponentType_Analyzer) == 0)
+                    if (scan.InstrumentConfiguration.ComponentList.Count(o => o.Type == ComponentType.Analyzer) == 0)
                         continue;
-                    var analyzer = scan.InstrumentConfiguration.ComponentList.Last(o => o.Type == ComponentType.ComponentType_Analyzer).CvParamChild(CVID.MS_mass_analyzer_type);
+                    var analyzer = scan.InstrumentConfiguration.ComponentList.Last(o => o.Type == ComponentType.Analyzer).CvParamChild(CVID.MS_mass_analyzer_type);
                     if (analyzer.Cvid == CVID.CVID_Unknown)
                         continue;
 
-                    MZTolerance analyzerTolerance = null;
+                    MZTolerance? analyzerTolerance = null;
                     foreach (var kvp in mzToleranceByAnalyzer)
-                        if (CV.cvIsA(analyzer.Cvid, kvp.Key))
+                        if (CvLookup.CvIsA(analyzer.Cvid, kvp.Key))
                         {
                             analyzerTolerance = kvp.Value;
                             break;
@@ -920,18 +921,18 @@ namespace Pwiz.SeeMS
                     if (analyzerTolerance == null)
                         continue;
 
-                    if (maxTolerance.Units == analyzerTolerance.Units)
+                    if (maxTolerance.Units == analyzerTolerance.Value.Units)
                     {
-                        if (maxTolerance.Value < analyzerTolerance.Value)
-                            maxTolerance = analyzerTolerance;
+                        if (maxTolerance.Value < analyzerTolerance.Value.Value)
+                            maxTolerance = analyzerTolerance.Value;
                     }
-                    else if (analyzerTolerance.Units == MZToleranceUnits.Ppm)
-                        maxTolerance = analyzerTolerance;
+                    else if (analyzerTolerance.Value.Units == MZToleranceUnits.Ppm)
+                        maxTolerance = analyzerTolerance.Value;
                 }
                 tolerance = maxTolerance;
             }
             else
-                tolerance = manualTolerance;
+                tolerance = manualTolerance.Value;
 
             if (ionSeriesIsEnabled(IonSeries.Auto))
                 foreach (var precursor in spectrum.Precursors)
@@ -993,11 +994,11 @@ namespace Pwiz.SeeMS
 
             if (spectrum.Precursors.Count > 0 &&
                 spectrum.Precursors[0].SelectedIons.Count > 0 &&
-                spectrum.Precursors[0].SelectedIons[0].hasCVParam(CVID.MS_selected_ion_m_z) &&
-                spectrum.Precursors[0].SelectedIons[0].hasCVParam(CVID.MS_charge_state))
+                spectrum.Precursors[0].SelectedIons[0].Params.HasCVParam(CVID.MS_selected_ion_m_z) &&
+                spectrum.Precursors[0].SelectedIons[0].Params.HasCVParam(CVID.MS_charge_state))
             {
-                double selectedMz = spectrum.Precursors[0].SelectedIons[0].cvParam(CVID.MS_selected_ion_m_z).ValueAs<double>();
-                int chargeState = spectrum.Precursors[0].SelectedIons[0].cvParam(CVID.MS_charge_state).ValueAs<int>();
+                double selectedMz = spectrum.Precursors[0].SelectedIons[0].Params.CvParam(CVID.MS_selected_ion_m_z).ValueAs<double>();
+                int chargeState = spectrum.Precursors[0].SelectedIons[0].Params.CvParam(CVID.MS_charge_state).ValueAs<int>();
                 double calculatedMass = (precursorMassType == 0 ? peptide.MonoisotopicMass(chargeState) : peptide.MolecularWeight(chargeState)) * chargeState;
                 double observedMass = selectedMz * chargeState;
                 annotationPanels.peptideInfoGridView.Rows.Add("Calculated mass:", calculatedMass, "Mass error (daltons):", observedMass - calculatedMass);
@@ -1130,7 +1131,7 @@ namespace Pwiz.SeeMS
                     if (!(cell.Value is double))
                         continue;
 
-                    double mz = cell.ValueAs<double>();
+                    double mz = (double) cell.Value;
 
                     if (findPointWithTolerance(points, mz, tolerance) > -1)
                         cell.Style.Font = new Font(annotationPanels.fragmentInfoGridView.Font, FontStyle.Bold);

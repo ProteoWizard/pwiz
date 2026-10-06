@@ -37,6 +37,7 @@ using Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Analysis;
+using Pwiz.Analysis.PeakFilters;
 using Pwiz.Analysis.PeakPicking;
 
 using pwiz.MSGraph;
@@ -52,7 +53,7 @@ namespace Pwiz.SeeMS
 	/// Maps the filepath of a data source to its associated ManagedDataSource object
 	/// </summary>
 	using DataSourceMap = Dictionary<string, ManagedDataSource>;
-	using GraphInfoMap = Dictionary<GraphItem, List<RefPair<DataGridViewRow, GraphForm>>>;
+	using GraphInfoMap = Map<GraphItem, List<RefPair<DataGridViewRow, GraphForm>>>;
 	using GraphInfoList = List<RefPair<DataGridViewRow, GraphForm>>;
 	using GraphInfo = RefPair<DataGridViewRow, GraphForm>;
 
@@ -1108,12 +1109,18 @@ namespace Pwiz.SeeMS
         /// </summary>
         MassSpectrum getPrecursorSpectrum(MassSpectrum g)
         {
-            // pwiz-sharp doesn't yet expose Pwiz.Analysis IsolationWindowFilter +
-            // SpectrumList_PeakFilter as a public API the way the cpp/CLI version did. Until
-            // those are surfaced, the "show precursor spectrum overlay" context-menu action
-            // throws — the rest of Manager.cs (open file / list / graph) doesn't depend on it.
-            throw new NotImplementedException(
-                "getPrecursorSpectrum: IsolationWindowFilter / SpectrumList_PeakFilter not yet ported to pwiz-sharp.");
+            var precursor = g.Element.Precursors[0];
+            string precursorId = precursor.SpectrumId;
+            if (String.IsNullOrEmpty(precursorId))
+                throw new Exception("spectrum " + g.Id + " has a precursor but it does not have a spectrumID");
+            int precursorIndex = g.SpectrumList.Find(precursorId);
+            if (precursorIndex == g.SpectrumList.Count)
+                throw new Exception("spectrum " + g.Id + " has a precursor spectrumID (" + precursorId + ") but it is not present in the source file");
+
+            var filter = new IsolationWindowFilter(5, precursor.IsolationWindow);
+            var filteredList = new SpectrumListPeakFilter(g.SpectrumList, filter);
+
+            return g.Source.GetMassSpectrum(precursorIndex, filteredList);
         }
 
         void graphListForm_showPrecursorSpectrumOverlayOnCurrentGraph(object sender, EventArgs e)
@@ -1470,13 +1477,8 @@ namespace Pwiz.SeeMS
 
         private void startWritePreviewMzML( object threadArg )
         {
-            // pwiz-sharp doesn't have a static MSDataFile type yet; use MzmlWriter directly.
-            // The cpp/CLI MSDataFile.write was a thin wrapper that picked an output format
-            // by extension; mirroring that would mean adding an MSDataFile.Write helper to
-            // pwiz-sharp's MsData project. For now, write mzML.
             var sourcePair = (KeyValuePair<string, Pwiz.Data.MsData.MSData>) threadArg;
-            using var output = System.IO.File.Create(sourcePair.Key);
-            new Pwiz.Data.MsData.Mzml.MzmlWriter().Write(sourcePair.Value, output);
+            MSDataFile.Write( sourcePair.Value, sourcePair.Key );
         }
 	}
 }

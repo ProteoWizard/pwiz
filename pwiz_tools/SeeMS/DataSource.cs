@@ -33,9 +33,9 @@ using Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Mzml;
 
-using ChromatogramData = System.Collections.Generic.Dictionary<double, double>;
-using FragmentToChromatogramMap = System.Collections.Generic.Dictionary<double, System.Collections.Generic.Map<double, double>>;
-using ParentToFragmentMap = System.Collections.Generic.Dictionary<double, System.Collections.Generic.Map<double, System.Collections.Generic.Map<double, double>>>;
+using ChromatogramData = System.Collections.Generic.Map<double, double>;
+using FragmentToChromatogramMap = System.Collections.Generic.Map<double, System.Collections.Generic.Map<double, double>>;
+using ParentToFragmentMap = System.Collections.Generic.Map<double, System.Collections.Generic.Map<double, System.Collections.Generic.Map<double, double>>>;
 
 namespace Pwiz.SeeMS
 {
@@ -135,7 +135,7 @@ namespace Pwiz.SeeMS
 			// create empty data source
 		}
 
-        // Full reader list: mzML + MGF (built-in) plus Thermo + Bruker + Waters + Agilent + Sciex.
+        // Full reader list: the built-in formats plus every vendor reader, as MSConvertGUI has.
         // Constructed once and reused; same shape MsConvert.Converter uses.
         private static readonly ReaderList s_fullReaderList = BuildFullReaderList();
         public static ReaderList FullReaderList => s_fullReaderList;
@@ -150,6 +150,10 @@ namespace Pwiz.SeeMS
             list.Add(new Pwiz.Vendor.Waters.Reader_Waters());
             list.Add(new Pwiz.Vendor.Agilent.Reader_Agilent());
             list.Add(new Pwiz.Vendor.Sciex.Reader_Sciex());
+            list.Add(new Pwiz.Vendor.Shimadzu.Reader_Shimadzu());
+            list.Add(new Pwiz.Vendor.UIMF.Reader_UIMF());
+            list.Add(new Pwiz.Vendor.UNIFI.Reader_UNIFI());
+            list.Add(new Pwiz.Vendor.Mobilion.Reader_Mobilion());
             return list;
         }
 
@@ -173,8 +177,8 @@ namespace Pwiz.SeeMS
 
 		    MSDataFile = new MSData();
             // pwiz-sharp ReaderList.Read takes (path, msd, config); the cpp/CLI runIndex
-            // round-trips through ReaderConfig.RunIndex. Use the full reader list (mzML +
-            // MGF + Thermo + Bruker + Waters + Agilent + Sciex) so vendor files identify.
+            // round-trips through ReaderConfig.RunIndex. Use the full reader list so vendor
+            // files identify.
             var readerConfig = GetReaderConfig();
             readerConfig.RunIndex = filepath.RunIndex;
             FullReaderList.Read(filepath.Filepath, MSDataFile, readerConfig);

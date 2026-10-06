@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSConvertGUI;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Diff;
+using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Tools.MsConvert;
 
@@ -132,6 +133,25 @@ public class MainLogicTest
         string diff = MSDataDiff.Describe(msdA, msdB);
         Assert.AreEqual(string.Empty, diff,
             $"CLI vs GUI mzXML differ:\n  cli: {cliOut}\n  gui: {guiOut}\n\n{diff}");
+    }
+
+    /// <summary>msconvert compresses binary arrays with zlib unless told <c>--zlib=off</c>, and the
+    /// command line the GUI builds has to say the same thing in both directions: an unchecked box
+    /// emits <c>--zlib=off</c>, which must not read back as compression on.</summary>
+    [TestMethod]
+    public void ParseCommandLine_ZlibDefaultsOnAndOffTurnsItOff()
+    {
+        var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), calculateSHA1Mutex: new object());
+        foreach (var (args, expected) in new[]
+                 {
+                     ("input.mzML", BinaryCompression.Zlib),
+                     ("--zlib|input.mzML", BinaryCompression.Zlib),
+                     ("--zlib=off|input.mzML", BinaryCompression.None),
+                 })
+        {
+            var config = logic.ParseCommandLine(_tempDir, args);
+            Assert.AreEqual(expected, config.WriteConfig.EncoderConfig.Compression, args);
+        }
     }
 
     /// <summary>mzML→MGF: GUI and CLI should emit the same byte stream (MGF is line-oriented

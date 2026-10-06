@@ -33,8 +33,10 @@ using Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Analysis;
+using Pwiz.Analysis.PeakFilters;
 using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.MsData.Processing;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.SeeMS
 {
@@ -304,7 +306,7 @@ namespace Pwiz.SeeMS
         public virtual ProcessingMethod ToProcessingMethod()
         {
             ProcessingMethod pm = new ProcessingMethod();
-            pm.set( CVID );
+            pm.Set( CVID );
             return pm;
         }
 
@@ -350,20 +352,28 @@ namespace Pwiz.SeeMS
 
         public override ISpectrumList ProcessList( ISpectrumList list )
         {
-            return new SpectrumList_Smoother( list, null, new int[] { 1, 2, 3, 4, 5, 6 } );
+            return new SpectrumList_Smoother( list, null, new IntegerSet( 1, 6 ) );
         }
     }
 
     public class SpectrumList_ECD_ETD_PrecursorFilter : SpectrumListWrapper
     {
+        private readonly DataProcessing dataProcessing;
+
         public SpectrumList_ECD_ETD_PrecursorFilter( ISpectrumList inner )
             : base(inner)
         {
+            // add the processing method to a copy of the inner list's data processing
+            dataProcessing = new DataProcessing( inner.DataProcessing?.Id ?? "pwiz_Reader_conversion" );
+            if( inner.DataProcessing != null )
+                dataProcessing.ProcessingMethods.AddRange( inner.DataProcessing.ProcessingMethods );
             ProcessingMethod method = new ProcessingMethod();
-            method.Order = this.dataProcessing().ProcessingMethods.Count;
+            method.Order = dataProcessing.ProcessingMethods.Count;
             method.Params.Set(CVID.MS_charge_stripping );
-            this.dataProcessing().ProcessingMethods.Add( method );
+            dataProcessing.ProcessingMethods.Add( method );
         }
+
+        public override DataProcessing DataProcessing => dataProcessing;
 
         public override Spectrum GetSpectrum( int index, bool getBinaryData )
         {
@@ -377,7 +387,7 @@ namespace Pwiz.SeeMS
                 return s;
             }
 
-            PrecursorList pl = s.Precursors;
+            var pl = s.Precursors;
 
             IList<double> mzArray = s.GetMZArray().Data;
             IList<double> intensityArray = s.GetIntensityArray().Data;
@@ -435,11 +445,11 @@ namespace Pwiz.SeeMS
                     mzArray.Add( pair.Key );
                     intensityArray.Add( pair.Value );
                 }
-                s.DefaultArrayLength = (ulong) mzArray.Count;
+                s.DefaultArrayLength = mzArray.Count;
             } else
             {
                 s.BinaryDataArrays.Clear();
-                s.DefaultArrayLength -= (ulong) pointsToRemove.Count;
+                s.DefaultArrayLength -= pointsToRemove.Count;
             }
 
             return s;
@@ -498,8 +508,8 @@ namespace Pwiz.SeeMS
 
         private void initializeComponents()
         {
-            KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type> nameTypePair;
-            KeyValuePair<string, ThresholdFilter.ThresholdingOrientation> nameOrientationPair;
+            KeyValuePair<string, ThresholdingBy> nameTypePair;
+            KeyValuePair<string, ThresholdingOrientation> nameOrientationPair;
 
             thresholdingTypeComboBox = new ComboBox();
             thresholdingTypeComboBox.DisplayMember = "Key";
@@ -515,22 +525,22 @@ namespace Pwiz.SeeMS
             thresholdTextBox.TextChanged += new EventHandler( OnOptionsChangedHandler );
 
             // apply the threshold with this method
-            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Count", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count );
+            nameTypePair = new KeyValuePair<string, ThresholdingBy>( "Count", ThresholdingBy.Count );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Absolute Intensity", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity );
+            nameTypePair = new KeyValuePair<string, ThresholdingBy>( "Absolute Intensity", ThresholdingBy.AbsoluteIntensity );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Fraction of TIC", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity );
+            nameTypePair = new KeyValuePair<string, ThresholdingBy>( "Fraction of TIC", ThresholdingBy.FractionOfTotalIntensity );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Fraction of BPI", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity );
+            nameTypePair = new KeyValuePair<string, ThresholdingBy>( "Fraction of BPI", ThresholdingBy.FractionOfBasePeakIntensity );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
-            nameTypePair = new KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>( "Fraction cutoff of TIC", ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff );
+            nameTypePair = new KeyValuePair<string, ThresholdingBy>( "Fraction cutoff of TIC", ThresholdingBy.FractionOfTotalIntensityCutoff );
             thresholdingTypeComboBox.Items.Add( nameTypePair );
             thresholdingTypeComboBox.SelectedIndex = 0;
 
             // apply the threshold according to this orientation
-            nameOrientationPair = new KeyValuePair<string, ThresholdFilter.ThresholdingOrientation>( "Most Intense", ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense );
+            nameOrientationPair = new KeyValuePair<string, ThresholdingOrientation>( "Most Intense", ThresholdingOrientation.MostIntense );
             thresholdingOrientationComboBox.Items.Add( nameOrientationPair );
-            nameOrientationPair = new KeyValuePair<string, ThresholdFilter.ThresholdingOrientation>( "Least Intense", ThresholdFilter.ThresholdingOrientation.Orientation_LeastIntense );
+            nameOrientationPair = new KeyValuePair<string, ThresholdingOrientation>( "Least Intense", ThresholdingOrientation.LeastIntense );
             thresholdingOrientationComboBox.Items.Add( nameOrientationPair );
             thresholdingOrientationComboBox.SelectedIndex = 0;
 
@@ -561,11 +571,11 @@ namespace Pwiz.SeeMS
             if( !Double.TryParse( thresholdTextBox.Text, out threshold ) )
                 threshold = 0;
 
-            return new SpectrumList_PeakFilter(
+            return new SpectrumListPeakFilter(
                 list, new ThresholdFilter(
-                ( (KeyValuePair<string, ThresholdFilter.ThresholdingBy_Type>) thresholdingTypeComboBox.SelectedItem ).Value,
+                ( (KeyValuePair<string, ThresholdingBy>) thresholdingTypeComboBox.SelectedItem ).Value,
                 threshold,
-                ( (KeyValuePair<string, ThresholdFilter.ThresholdingOrientation>) thresholdingOrientationComboBox.SelectedItem ).Value ) );
+                ( (KeyValuePair<string, ThresholdingOrientation>) thresholdingOrientationComboBox.SelectedItem ).Value ) );
         }
     }
 

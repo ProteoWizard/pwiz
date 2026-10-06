@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CustomDataSourceDialog.Properties {
+namespace Pwiz.SeeMS.Properties {
     using System;
     
     
@@ -19,7 +19,7 @@ namespace CustomDataSourceDialog.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -39,7 +39,7 @@ namespace CustomDataSourceDialog.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CustomDataSourceDialog.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Pwiz.SeeMS.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -63,9 +63,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Arrow_Active {
+        internal static System.Drawing.Bitmap Annotation {
             get {
-                object obj = ResourceManager.GetObject("Arrow_Active", resourceCulture);
+                object obj = ResourceManager.GetObject("Annotation", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Arrow_Faded {
+        internal static System.Drawing.Bitmap back {
             get {
-                object obj = ResourceManager.GetObject("Arrow_Faded", resourceCulture);
+                object obj = ResourceManager.GetObject("back", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,49 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Arrow_Lit {
+        internal static System.Drawing.Bitmap Centroider {
             get {
-                object obj = ResourceManager.GetObject("Arrow_Lit", resourceCulture);
+                object obj = ResourceManager.GetObject("Centroider", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon CentroiderIcon {
+            get {
+                object obj = ResourceManager.GetObject("CentroiderIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap DataProcessing {
+            get {
+                object obj = ResourceManager.GetObject("DataProcessing", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon DataProcessingIcon {
+            get {
+                object obj = ResourceManager.GetObject("DataProcessingIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Desktop {
+            get {
+                object obj = ResourceManager.GetObject("Desktop", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,29 +133,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Back_Active {
+        internal static System.Drawing.Bitmap file {
             get {
-                object obj = ResourceManager.GetObject("Back_Active", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap Back_Faded {
-            get {
-                object obj = ResourceManager.GetObject("Back_Faded", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap Back_Lit {
-            get {
-                object obj = ResourceManager.GetObject("Back_Lit", resourceCulture);
+                object obj = ResourceManager.GetObject("file", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -133,9 +153,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Forward_Active {
+        internal static System.Drawing.Bitmap LocalDrive {
             get {
-                object obj = ResourceManager.GetObject("Forward_Active", resourceCulture);
+                object obj = ResourceManager.GetObject("LocalDrive", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -143,9 +163,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Forward_Faded {
+        internal static System.Drawing.Bitmap MyComputer {
             get {
-                object obj = ResourceManager.GetObject("Forward_Faded", resourceCulture);
+                object obj = ResourceManager.GetObject("MyComputer", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -153,9 +173,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Forward_Lit {
+        internal static System.Drawing.Bitmap MyDocuments {
             get {
-                object obj = ResourceManager.GetObject("Forward_Lit", resourceCulture);
+                object obj = ResourceManager.GetObject("MyDocuments", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -163,9 +183,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Left_Arrow {
+        internal static System.Drawing.Bitmap MyNetworkPlaces {
             get {
-                object obj = ResourceManager.GetObject("Left_Arrow", resourceCulture);
+                object obj = ResourceManager.GetObject("MyNetworkPlaces", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -173,9 +193,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Right_Arrow {
+        internal static System.Drawing.Bitmap NetworkDrive {
             get {
-                object obj = ResourceManager.GetObject("Right_Arrow", resourceCulture);
+                object obj = ResourceManager.GetObject("NetworkDrive", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -183,9 +203,9 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap SearchButton {
+        internal static System.Drawing.Bitmap OpticalDrive {
             get {
-                object obj = ResourceManager.GetObject("SearchButton", resourceCulture);
+                object obj = ResourceManager.GetObject("OpticalDrive", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -193,9 +213,79 @@ namespace CustomDataSourceDialog.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap SearchButtonLit {
+        internal static System.Drawing.Bitmap PeakIntegral {
             get {
-                object obj = ResourceManager.GetObject("SearchButtonLit", resourceCulture);
+                object obj = ResourceManager.GetObject("PeakIntegral", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PeakIntegralActive {
+            get {
+                object obj = ResourceManager.GetObject("PeakIntegralActive", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap RecentDocuments {
+            get {
+                object obj = ResourceManager.GetObject("RecentDocuments", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Smoother {
+            get {
+                object obj = ResourceManager.GetObject("Smoother", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon SmootherIcon {
+            get {
+                object obj = ResourceManager.GetObject("SmootherIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Thresholder {
+            get {
+                object obj = ResourceManager.GetObject("Thresholder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap up {
+            get {
+                object obj = ResourceManager.GetObject("up", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap views {
+            get {
+                object obj = ResourceManager.GetObject("views", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
