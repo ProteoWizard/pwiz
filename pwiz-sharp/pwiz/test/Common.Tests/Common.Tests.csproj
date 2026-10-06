@@ -14,6 +14,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Common\Common.csproj" />
+    <!-- CvGen: the CVID enum generator, for the test that proves CVID.generated.cs is
+         current for the checked-in OBO files. -->
+    <ProjectReference Include="..\..\..\build\CvGen\CvGen.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Source-linked rather than a TestHarness ProjectReference: PwizSharpPaths is a
+         self-contained static class over System.IO, while TestHarness itself pulls MsData +
+         the HDF5 natives, Analysis, IdentData and (with vendor licences) Waters and its 7z
+         extraction step - 39 MB and a vendor-archive dependency for a unit-test project that
+         otherwise needs only Common. -->
+    <Compile Include="..\..\src\TestHarness\PwizSharpPaths.cs" Link="PwizSharpPaths.cs" />
   </ItemGroup>
 
 </Project>

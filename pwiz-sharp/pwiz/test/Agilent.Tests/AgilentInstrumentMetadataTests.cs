@@ -26,13 +26,13 @@ public class AgilentInstrumentMetadataTests
             (DeviceType.Quadrupole,             false, CVID.MS_quadrupole),
             (DeviceType.IonTrap,                false, CVID.MS_ion_trap),
             (DeviceType.TimeOfFlight,           false, CVID.MS_time_of_flight),
-            (DeviceType.TandemQuadrupole,       false, CVID.MS_triple_quadrupole),
-            (DeviceType.QuadrupoleTimeOfFlight, false, CVID.MS_quadrupole_time_of_flight),
+            (DeviceType.TandemQuadrupole,       false, CVID.MS_triple_quadrupole_instrument),
+            (DeviceType.QuadrupoleTimeOfFlight, false, CVID.MS_quadrupole_time_of_flight_instrument),
 
             // Ion mobility wins over the device type, and is the only way to reach Q-IMS-TOF:
             // MIDAC exposes no device table, so cpp reports DeviceType_Unknown for these files.
-            (DeviceType.Unknown,                true,  CVID.MS_quadrupole_ion_mobility_time_of_flight),
-            (DeviceType.QuadrupoleTimeOfFlight, true,  CVID.MS_quadrupole_ion_mobility_time_of_flight),
+            (DeviceType.Unknown,                true,  CVID.MS_quadrupole_ion_mobility_time_of_flight_instrument),
+            (DeviceType.QuadrupoleTimeOfFlight, true,  CVID.MS_quadrupole_ion_mobility_time_of_flight_instrument),
 
             // Non-MS devices and unclassifiable ones contribute nothing.
             (DeviceType.Unknown,                false, CVID.CVID_Unknown),
@@ -55,9 +55,9 @@ public class AgilentInstrumentMetadataTests
         // MIDAC's FileInfo.InstrumentName is a different SOURCE from the MassSpec SDK's
         // GetDeviceName, not a different spelling of one - hence the IM case.
         AssertInstrumentParams("ImsSynthCCS.d",
-            CVID.MS_quadrupole_ion_mobility_time_of_flight, "IM-MS QTOF");
+            CVID.MS_quadrupole_ion_mobility_time_of_flight_instrument, "IM-MS QTOF");
         AssertInstrumentParams("GFb_4Scan_TimeSegs_1530_100ng.d",
-            CVID.MS_triple_quadrupole, "TandemQuadrupole");
+            CVID.MS_triple_quadrupole_instrument, "TandemQuadrupole");
     }
 
     private static void AssertInstrumentParams(string fixtureDirName, CVID expectedClass,

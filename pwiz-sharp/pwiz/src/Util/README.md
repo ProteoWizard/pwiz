@@ -71,7 +71,7 @@ Skipping these ports because the BCL does the same job better/safer:
 ## Generators
 
 - `Chemistry/generate_elements.py` — rebuilds `ElementData.generated.cs` from `pwiz/utility/chemistry/ChemistryData.cpp`. Re-run after any edit to the upstream C++ file.
-- Upstream `Pwiz.Data.Common/Cv/generate_cvid.py` rebuilds the CVID enum from `cv.hpp`; it's in the other project but follows the same convention.
+- `pwiz-sharp/build/CvGen` (`dotnet run --project pwiz-sharp/build/CvGen`) rebuilds `Common/CVID.generated.cs` straight from the OBO files; Common.Tests fails when it is stale.
 
 ## Testing
 
