@@ -198,6 +198,8 @@ namespace MSConvertGUI
                     workItem = wcUrl.GetAuthenticatedUrl();
                 else if (item is MsDataFilePath msDataFilePath)
                     workItem = msDataFilePath.FilePath;
+                else if (item is CredentialUrl credentialUrl)
+                    workItem = credentialUrl.Url;
                 else
                     workItem = item.ToString();
 

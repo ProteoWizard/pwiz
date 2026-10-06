@@ -166,4 +166,27 @@ public class MainLogicTest
                         File.ReadAllText(guiOut, System.Text.Encoding.UTF8),
                         "MGF byte streams differ between CLI and GUI");
     }
+
+    /// <summary>A multi-sample WIFF converts to one file per sample, each named for its run.</summary>
+    [TestMethod]
+    public void Wiff_ConvertsEverySample()
+    {
+        string sciexData = null;
+        for (string dir = AppContext.BaseDirectory; !string.IsNullOrEmpty(dir) && sciexData == null; dir = Path.GetDirectoryName(dir))
+        {
+            string candidate = Path.Combine(dir, "pwiz", "data", "vendor_readers", "Sciex", "Reader_Sciex_Test.data");
+            if (Directory.Exists(candidate))
+                sciexData = candidate;
+        }
+        Assert.IsNotNull(sciexData, "Reader_Sciex_Test.data not found above " + AppContext.BaseDirectory);
+
+        string outDir = Path.Combine(_tempDir, "gui");
+        Directory.CreateDirectory(outDir);
+        var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), calculateSHA1Mutex: new object());
+        logic.QueueWork(logic.ParseCommandLine(outDir, Path.Combine(sciexData, "Enolase_repeats_AQv1.4.2.wiff")));
+        MainLogic.Work();
+
+        var expected = Enumerable.Range(1, 10).Select(i => $"Enolase_repeats_AQv1.4.2-20070918_En_{i:00}.mzML");
+        CollectionAssert.AreEquivalent(expected.ToArray(), Directory.GetFiles(outDir).Select(Path.GetFileName).ToArray());
+    }
 }

@@ -101,11 +101,10 @@ namespace MSConvertGUI
             catch { return string.Empty; }
         }
 
+        /// <summary>Every run of the file, one per sample of a multi-sample WIFF, as cpp/CLI read it.</summary>
         public void read(string filename, MSDataList result, ReaderConfig config)
         {
-            var msd = new PwizMsd.MSData();
-            _inner.Read(filename, msd, config?.ToPwizSharp());
-            result.Add(msd);
+            _inner.Read(filename, result, config?.ToPwizSharp());
         }
 
         /// <summary>cpp/CLI exposes file-extension grouping for the open-data-source dialog.
@@ -121,13 +120,7 @@ namespace MSConvertGUI
             return map;
         }
 
-        public static string[] readIds(string path)
-        {
-            // cpp/CLI returned the list of sample/run ids inside multi-sample formats.
-            // pwiz-sharp doesn't expose this yet — return the filename itself so the
-            // GUI's "Add" path treats every input as a single-run file.
-            return new[] { Path.GetFileNameWithoutExtension(path) ?? path };
-        }
+        public static string[] readIds(string path) => FullReaderList._inner.ReadIds(path);
     }
 
     // ------------------------------------------------------------------------------------

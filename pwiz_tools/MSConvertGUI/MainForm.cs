@@ -133,6 +133,11 @@ namespace MSConvertGUI
                 FileBox.Tag = msDataFileUri;
                 FileBox.Text = msDataFileUri.GetFileName();
             }
+            else if (item is CredentialUrl)
+            {
+                FileBox.Tag = item;
+                FileBox.Text = text;
+            }
             else if (text.Count(o => "?*".Contains(o)) > 0)
             {
                 string directory = Path.GetDirectoryName(text);
@@ -147,8 +152,9 @@ namespace MSConvertGUI
             }
             else if (IsNetworkSource(text))
             {
-                FileBox.Tag = text;
-                FileBox.Text = text;
+                // NB: set Tag first because setting Text triggers FileBox_TextChanged
+                FileBox.Tag = (object) CredentialUrl.TryCreate(text) ?? text;
+                FileBox.Text = FileBox.Tag.ToString();
             }
             else
             {
@@ -274,6 +280,8 @@ namespace MSConvertGUI
                 return DataSourceUtil.TYPE_WATERS_RAW; // remote sources are Waters data
             if (dataSource is MsDataFilePath msDataFilePath)
                 return ReaderList.FullReaderList.identify(msDataFilePath.FilePath);
+            if (dataSource is CredentialUrl credentialUrl)
+                return ReaderList.FullReaderList.identify(credentialUrl.Url);
             if (dataSource.ToString().StartsWith(WatersConnectUrl.UrlPrefix, StringComparison.InvariantCultureIgnoreCase))
                 return DataSourceUtil.TYPE_WATERS_RAW; // a typed waters_connect path, resolved at conversion time
             return ReaderList.FullReaderList.identify(dataSource.ToString());
@@ -321,7 +329,8 @@ namespace MSConvertGUI
                 presetSetDefaultButton.Text = "Save as defaults for " + SetDefaultsDataType + " data";
                 //setToolTip(presetSetDefaultButton, "Saves the current settings and uses them as the defaults next time you open " + SetDefaultsDataType + " data with MSConvertGUI.");
                 // and add to the list
-                FileListBox.Items.Add(FileBox.Tag);
+                // a typed URL with credentials is listed without them
+                FileListBox.Items.Add(FileBox.Tag is string typed ? (object) CredentialUrl.TryCreate(typed) ?? typed : FileBox.Tag);
                 FileBox.Clear();
                 RemoveFileButton.Enabled = true;
             }

@@ -288,6 +288,7 @@ namespace Pwiz.SeeMS
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_SingleValue;
             else if ((s.Id.Contains("frame=") && s.Id.Contains("scan=")) ||
                      s.Id.Contains("block=") ||
+                     s.Id.StartsWith("merged=") || // combined; rows come from metadata-only spectra, which carry no arrays
                      s.GetIonMobilityArray() != null)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_Array;
 
@@ -298,13 +299,20 @@ namespace Pwiz.SeeMS
             row.DpId = ( dp == null || dp.Id.Length == 0 ? "unknown" : dp.Id );
         }
 
+        /// <summary>
+        /// The rows in grid order and through the grid's filter. Reads the bound data: indexing the grid's
+        /// rows unshares them, cloning every cell of every row, which a per-scan ion mobility file has millions of.
+        /// </summary>
+        public IEnumerable<SpectrumDataSet.SpectrumTableRow> GetRows()
+        {
+            foreach (DataRowView rowView in spectraSource.List)
+                yield return (SpectrumDataSet.SpectrumTableRow) rowView.Row;
+        }
+
         public IEnumerable<SpectrumDataSet.SpectrumTableRow> GetIonMobilityRows()
         {
-            var dgv = GridView;
-
-            foreach (DataGridViewRow row in dgv.Rows)
+            foreach (var spectrumRow in GetRows())
             {
-                var spectrumRow = (SpectrumDataSet.SpectrumTableRow)((DataRowView)row.DataBoundItem).Row;
                 if (spectrumRow.IonMobilityType == SpectrumDataSet.IonMobilityType_None ||
                     spectrumRow.IonMobilityType == SpectrumDataSet.IonMobilityType_CompensationVoltage)
                     continue;

@@ -225,6 +225,7 @@ namespace Pwiz.Data.MsData
             // Materialize to double[] so callers' indexing/loop-counting works unchanged.
             var d = s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_mean_ion_mobility_drift_time_array)?.Data ??
                     s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_mean_inverse_reduced_ion_mobility_array)?.Data ??
+                    s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_mean_ion_mobility_array)?.Data ??
                     s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_raw_ion_mobility_array)?.Data ??
                     s.GetArrayByCvid(Pwiz.Data.Common.Cv.CVID.MS_raw_inverse_reduced_ion_mobility_array)?.Data;
             return d is null ? null : System.Linq.Enumerable.ToArray(d);

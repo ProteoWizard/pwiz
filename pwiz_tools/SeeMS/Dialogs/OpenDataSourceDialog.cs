@@ -276,7 +276,7 @@ namespace Pwiz.SeeMS
             var directoriesPassingFilter = new List<DirectoryInfo>();
             var filesPassingFilter = new List<FileInfo>();
 
-            for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
+            for( int i = 0; i < workerArgs.SourceDirectories.Count && !worker.CancellationPending; ++i )
             {
                 try
                 {
@@ -298,7 +298,7 @@ namespace Pwiz.SeeMS
                 }
             }
 
-            for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
+            for( int i = 0; i < workerArgs.SourceFiles.Count && !worker.CancellationPending; ++i )
             {
                 SourceInfo[] sourceInfo = getSourceInfo( workerArgs.SourceFiles[i], false );
                 if( sourceInfo == null ||
@@ -313,10 +313,10 @@ namespace Pwiz.SeeMS
 
             if( workerArgs.GetDetails )
             {
-                for( int i = 0; i < directoriesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                for( int i = 0; i < directoriesPassingFilter.Count && !worker.CancellationPending; ++i )
                     worker.ReportProgress( 0, (object) getSourceInfo( directoriesPassingFilter[i], true ) );
 
-                for( int i = 0; i < filesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                for( int i = 0; i < filesPassingFilter.Count && !worker.CancellationPending; ++i )
                     worker.ReportProgress( 0, (object) getSourceInfo( filesPassingFilter[i], true ) );
             }
 
@@ -327,6 +327,12 @@ namespace Pwiz.SeeMS
         {
             CurrentDirectory = initialDirectory;
             return base.ShowDialog();
+        }
+
+        protected override void OnFormClosed( FormClosedEventArgs e )
+        {
+            backgroundSourceLoader?.CancelAsync();
+            base.OnFormClosed( e );
         }
 
         private Stack<string> previousDirectories = new Stack<string>();
@@ -717,7 +723,7 @@ namespace Pwiz.SeeMS
                         ++driveCount;
                         pathNode = pathNode.Nodes.Add( branches[i], branches[i], 8, 8 );
                         pathNode.Tag = String.Join( Path.DirectorySeparatorChar.ToString(),
-                                                    branches.GetRange( 0, i ).ToArray() );
+                                                    branches.GetRange( 0, i + 1 ).ToArray() );
                         lookInComboBox.Items.Insert( 3 + driveCount, pathNode );
                     }
                     lookInComboBox.SelectedIndex = 3 + driveCount;
@@ -901,7 +907,7 @@ namespace Pwiz.SeeMS
             {
                 using (MSData msd = new MSData())
                 {
-                    ReaderList.Default.Read(sourcePath, msd, runIndex, SpectrumSource.GetReaderConfig());
+                    SpectrumSource.FullReaderList.Read(sourcePath, msd, runIndex, SpectrumSource.GetReaderConfig());
                     using (IChromatogramList cl = msd.Run.ChromatogramList)
                     {
                         if( cl != null && !cl.IsEmpty && cl.Find( "TIC" ) != cl.Count )
@@ -1134,7 +1140,9 @@ namespace Pwiz.SeeMS
                 case "My Network Places":
                     break;
                 default:
-                    if( driveReadiness[location] )
+                    // drives and the folders on the path to the current directory
+                    string root = Path.GetPathRoot( location );
+                    if( root != null && driveReadiness.Contains( root ) && driveReadiness[root] )
                         CurrentDirectory = location;
                     else
                         CurrentDirectory = currentDirectory;

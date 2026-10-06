@@ -74,16 +74,19 @@ namespace Pwiz.SeeMS
             else if (e.ColumnIndex == 1)
                 e.Value = pointList[e.RowIndex].Y;
             else
-                e.Value = mobilityArray[e.RowIndex];
+                e.Value = mobilityArray?[e.RowIndex];
         }
 
         private void RefreshData()
         {
             if (item.Id.StartsWith("merged="))
             {
+                // both from the processed spectrum, so each mobility stays with its point
                 pointList = spectrum.GetPointList(false);
-                var s = item.Source.Source.MSDataFile.Run.SpectrumList.GetSpectrum(spectrum.Index, getBinaryData: true);
+                var s = spectrum.SpectrumList.GetSpectrum(spectrum.Index, getBinaryData: true);
                 mobilityArray = s.GetIonMobilityArray();
+                if (mobilityArray != null && mobilityArray.Length != pointList.Count)
+                    mobilityArray = null; // processing that does not carry the array along
             }
             else
             {

@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Remove="Test\**;TestConnected\**" />
     <None Remove="Test\**;TestConnected\**" />
+    <InternalsVisibleTo Include="MsConvertGUI.Tests" />
   </ItemGroup>
 
   <!-- Vendor support is opt-in (mirrors MsConvert.csproj). Without -p:IAgreeToVendorLicenses=true,

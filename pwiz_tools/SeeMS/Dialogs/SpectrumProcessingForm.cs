@@ -76,7 +76,7 @@ namespace Pwiz.SeeMS
             Replace
         }
 
-        private OverrideMode globalOverrideMode;
+        private OverrideMode globalOverrideMode = OverrideMode.Replace; // the designer checks Replace
         public OverrideMode GlobalOverrideMode
         {
             get { return globalOverrideMode; }
@@ -101,6 +101,9 @@ namespace Pwiz.SeeMS
                 OnProcessingChanged(this, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
             }
         }
+
+        // without a global override the list holds only the spectrum's own processing, which Before lays out as-is
+        private OverrideMode listedOverrideMode => globalProcessingListOverride.Any() ? globalOverrideMode : OverrideMode.Before;
 
         private readonly Dictionary<ManagedDataSource, IList<IProcessing>> processingListOverrideBySource;
 
@@ -161,11 +164,11 @@ namespace Pwiz.SeeMS
             IList<IProcessing> usedProcessingList = spectrum.ProcessingList.ToList();
             if (globalProcessingListOverride.Any())
             {
-                if (replaceToolStripMenuItem.Checked)
+                if (globalOverrideMode == OverrideMode.Replace)
                     usedProcessingList = globalProcessingListOverride;
-                else if (beforeToolStripMenuItem.Checked)
+                else if (globalOverrideMode == OverrideMode.Before)
                     usedProcessingList.InsertRange(0, globalProcessingListOverride);
-                else if (afterToolStripMenuItem.Checked)
+                else if (globalOverrideMode == OverrideMode.After)
                     usedProcessingList.AddRange(globalProcessingListOverride);
             }
             else if (processingListOverrideBySource.ContainsKey(spectrum.Source))
@@ -207,7 +210,7 @@ namespace Pwiz.SeeMS
         public void UpdateProcessing( MassSpectrum spectrum )
         {
             int newVirtualSize = spectrum.ProcessingList.Count;
-            if (globalOverrideMode == OverrideMode.Replace)
+            if (listedOverrideMode == OverrideMode.Replace)
                 newVirtualSize = globalProcessingListOverride.Count;
             else
                 newVirtualSize += globalProcessingListOverride.Count;
@@ -246,6 +249,8 @@ namespace Pwiz.SeeMS
                 splitContainer.Panel2.Controls.Add( lastSelectedProcessing.OptionsPanel );
                 lastSelectedProcessing.OptionsChanged += new EventHandler( OnProcessingChanged );
 
+                // spectrum rows precede override rows in After mode and follow them in Before mode
+                removeProcessingButton.Enabled = firstSpectrumIndex >= 0 || lastSpectrumIndex >= 0;
                 moveUpProcessingButton.Enabled = firstSpectrumIndex > 0;
                 moveDownProcessingButton.Enabled = lastSpectrumIndex >= 0 && lastSpectrumIndex < processingListView.Items.Count - 1;
             } else
@@ -268,19 +273,19 @@ namespace Pwiz.SeeMS
         // returns -1 if the virtual index does not correspond with a spectrum index
         int virtualIndexToSpectrumIndex(int index)
         {
-            if (globalOverrideMode == OverrideMode.Replace)
+            if (listedOverrideMode == OverrideMode.Replace)
             {
                 return -1;
             }
 
-            if (globalOverrideMode == OverrideMode.Before)
+            if (listedOverrideMode == OverrideMode.Before)
             {
                 if (index < globalProcessingListOverride.Count)
                     return -1;
                 return index - globalProcessingListOverride.Count;
             }
 
-            if (globalOverrideMode == OverrideMode.After)
+            if (listedOverrideMode == OverrideMode.After)
             {
                 if (index >= currentSpectrum.ProcessingList.Count)
                     return -1;
@@ -292,13 +297,18 @@ namespace Pwiz.SeeMS
 
         private void removeProcessingButton_Click( object sender, EventArgs e )
         {
-            int start = virtualIndexToSpectrumIndex(processingListView.SelectedIndices[0]);
-            if (start < 0)
+            // global override rows are not the spectrum's to remove
+            var spectrumIndices = processingListView.SelectedIndices.Cast<int>()
+                                                    .Select(virtualIndexToSpectrumIndex)
+                                                    .Where(i => i >= 0)
+                                                    .OrderByDescending(i => i)
+                                                    .ToList();
+            if (spectrumIndices.Count == 0)
                 return;
-            int count = Math.Min(currentSpectrum.ProcessingList.Count, processingListView.SelectedIndices.Count);
-            for (int i = start, end = start + count; i < end; ++i)
-                currentSpectrum.ProcessingList.RemoveAt(i);
-            processingListView.VirtualListSize -= count;
+            foreach (int index in spectrumIndices)
+                currentSpectrum.ProcessingList.RemoveAt(index);
+            processingListView.SelectedIndices.Clear();
+            processingListView.VirtualListSize -= spectrumIndices.Count;
             processingListView_SelectedIndexChanged( sender, e );
             if (processingListView.VirtualListSize == 0)
                 globalOverrideToolStripButton.Enabled = runOverrideToolStripButton.Enabled = false;
@@ -359,10 +369,7 @@ namespace Pwiz.SeeMS
 
         void ContextMenuStrip_Opening( object sender, CancelEventArgs e )
         {
-            if( processingListView.SelectedIndices.Count > 0 )
-                removeToolStripMenuItem.Enabled = true;
-            else
-                removeToolStripMenuItem.Enabled = false;
+            removeToolStripMenuItem.Enabled = removeProcessingButton.Enabled;
         }
 
         private IProcessing getProcessingAtIndex(int index)
@@ -370,21 +377,21 @@ namespace Pwiz.SeeMS
             if (currentSpectrum.ProcessingList.Count + globalProcessingListOverride.Count <= index)
                 return null;
 
-            if (globalOverrideMode == OverrideMode.Replace)
+            if (listedOverrideMode == OverrideMode.Replace)
             {
                 if (globalProcessingListOverride.Count <= index)
                     return null;
                 return globalProcessingListOverride[index];
             }
 
-            if (globalOverrideMode == OverrideMode.Before)
+            if (listedOverrideMode == OverrideMode.Before)
             {
                 if (index < globalProcessingListOverride.Count)
                     return globalProcessingListOverride[index];
                 return currentSpectrum.ProcessingList[index - globalProcessingListOverride.Count];
             }
 
-            if (globalOverrideMode == OverrideMode.After)
+            if (listedOverrideMode == OverrideMode.After)
             {
                 if (index >= currentSpectrum.ProcessingList.Count)
                     return globalProcessingListOverride[index - currentSpectrum.ProcessingList.Count];
@@ -485,7 +492,8 @@ namespace Pwiz.SeeMS
 
         private void global_withAllListedProcessorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            globalProcessingListOverride = ProcessingList;
+            // a copy, so clearing the override leaves the spectrum's own processing alone
+            globalProcessingListOverride = new List<IProcessing>(ProcessingList);
             clearGlobalOverrideToolStripMenuItem.Enabled = true;
             OnProcessingChanged(sender, new ProcessingChangedEventArgs(ProcessingChangedEventArgs.Scope.Global, CurrentSpectrum));
         }

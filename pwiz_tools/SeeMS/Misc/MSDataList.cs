@@ -32,15 +32,7 @@ public sealed class MSDataList : List<MSData>, IDisposable
         var result = new MSDataList();
         try
         {
-            int runCount = readers.IdentifyReader(path, null) is IMultiSampleReader multiSample
-                ? Math.Max(1, multiSample.EnumerateSampleNames(path).Length)
-                : 1;
-            for (int run = 0; run < runCount; ++run)
-            {
-                var msd = new MSData();
-                result.Add(msd);
-                readers.Read(path, msd, run, config);
-            }
+            readers.Read(path, result, config);
             return result;
         }
         catch
