@@ -479,9 +479,11 @@ namespace pwiz.Skyline
                     }
                     var handoff = new InstallerHandoff();
                     handoff.Record(handoff.FindClickOnceUninstallCommand());
-                    // For the current user only, as the ClickOnce installation was, and without
-                    // asking: the installer otherwise offers to install for everyone.
-                    Process.Start(new ProcessStartInfo(installerPath, @"/CURRENTUSER") { UseShellExecute = true });
+                    // For the current user only, as the ClickOnce installation was, with no
+                    // questions: /SILENT shows only the installer's progress, and /LAUNCH starts
+                    // the new Skyline when it is done, since a silent install has no finish page.
+                    Process.Start(new ProcessStartInfo(installerPath,
+                        @"/SILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /LAUNCH") { UseShellExecute = true });
                 }
                 catch (Exception ex)
                 {
