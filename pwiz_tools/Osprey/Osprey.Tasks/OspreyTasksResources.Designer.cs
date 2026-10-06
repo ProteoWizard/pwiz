@@ -4556,6 +4556,15 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Caching {0:N0} files, {1:N0} at a time:.
+        /// </summary>
+        public static string SpectraCacheTask_Run_Caching__0__files___1__at_a_time_ {
+            get {
+                return ResourceManager.GetString("SpectraCacheTask_Run_Caching__0__files___1__at_a_time_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Caching spectra {0}/{1}: {2}.
         /// </summary>
         public static string SpectraCacheTask_Run_Caching_spectra__0___1____2_ {

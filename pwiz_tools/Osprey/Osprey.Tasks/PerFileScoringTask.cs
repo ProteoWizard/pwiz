@@ -1072,7 +1072,7 @@ namespace pwiz.Osprey.Tasks
         /// that never actually parallelize, so they compute the same number without
         /// emitting a misleading decision line.
         /// </summary>
-        private static int ResolveFileParallelism(OspreyConfig config, int nFiles, Action<string> log)
+        internal static int ResolveFileParallelism(OspreyConfig config, int nFiles, Action<string> log)
         {
             return FileParallelismResolver.Resolve(
                 config.FileParallelism, nFiles, OspreyEnvironment.MaxParallelFiles,

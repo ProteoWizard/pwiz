@@ -547,6 +547,21 @@ namespace pwiz.Osprey.Test
                 SpectraCacheTask.TASK_NAME);
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(cacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length);
             Assert.IsFalse(File.Exists(Path.Combine(cacheDir, BLIB_FILE)));
+
+            // With --parallel-files the runs cache on lanes at once, and every cache is
+            // byte-identical to the one-lane result: a file's cache depends only on its input.
+            string laneCacheDir = CreateDir(@"spectra-cache-lanes");
+            string laneLog = RunAnalysis(laneCacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
+                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
+                RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
+            StringAssert.Contains(laneLog, string.Format(OspreyTasksResources.SpectraCacheTask_Run_Caching__0__files___1__at_a_time_,
+                RUN_NAMES.Length, RUN_NAMES.Length));
+            foreach (string run in RUN_NAMES)
+            {
+                CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(cacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    File.ReadAllBytes(Path.Combine(laneCacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    @"a cache built on a lane differs from the one-lane cache: " + run);
+            }
         }
 
         /// <summary>
