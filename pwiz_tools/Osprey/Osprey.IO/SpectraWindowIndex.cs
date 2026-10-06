@@ -49,7 +49,7 @@ namespace pwiz.Osprey.IO
     /// Thread-safety: <see cref="LoadWindow"/> opens its own <see cref="FileStream"/>
     /// per call and shares no mutable state, so windows load concurrently (scoring
     /// runs one Parallel.For body per window). <see cref="AllMs2Rts"/> and the
-    /// offset map are immutable after <see cref="BuildFromCache(string,string)"/>.
+    /// offset map are immutable after <see cref="BuildFromCache(string,string,string)"/>.
     /// </summary>
     public sealed class SpectraWindowIndex
     {
@@ -89,11 +89,11 @@ namespace pwiz.Osprey.IO
         public IReadOnlyList<MS1Spectrum> Ms1Spectra { get; }
 
         /// <summary>
-        /// The first DIA cycle's isolation windows, deduplicated on the rounded center key
-        /// and sorted by center -- reconstructed byte-identically to
-        /// <c>ScoringTaskShared.ExtractIsolationWindows</c> (same first-appearance dedup,
-        /// same <c>Center</c> sort) from the index, so scoring's window fan-out is
-        /// unchanged without materializing the full MS2 list.
+        /// Every distinct isolation window in the run, deduplicated on the rounded center key
+        /// (each as the window of its first record in file order) and sorted by center,
+        /// rebuilt from the index without materializing the full MS2 list. For ordinary DIA
+        /// this is the first cycle's windows; for a demultiplexed or randomized run it also
+        /// includes windows that first appear after a key has repeated.
         /// </summary>
         public IReadOnlyList<IsolationWindow> IsolationWindows { get; }
 
@@ -132,26 +132,34 @@ namespace pwiz.Osprey.IO
         public int Ms2Count { get { return AllMs2Rts.Count; } }
 
         /// <summary>
+        /// The cache file this index reads: the <c>.spectra.bin</c>, or the
+        /// <c>.demux.spectra.bin</c> when the run was demultiplexed.
+        /// </summary>
+        public string CachePath { get { return _cachePath; } }
+
+        /// <summary>
         /// Build the index from a <c>.spectra.bin</c> cache. Returns null when the
         /// file is absent or its header fails validation (bad magic/version, or the
         /// source fingerprint no longer matches) -- the SAME rejection rules as
         /// <see cref="SpectraCache.LoadSpectraCache"/>, so a caller can fall back to
         /// a full resident load when the index cannot be built.
         /// </summary>
-        public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath = null)
+        public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath = null,
+            string demuxDescriptor = null)
         {
-            return BuildFromCache(cachePath, sourcePath, out _);
+            return BuildFromCache(cachePath, sourcePath, out _, demuxDescriptor);
         }
 
         /// <summary>
         /// Same, reporting WHICH validation rule refused the cache. A caller that recovers by
         /// re-parsing the mzML has no use for the distinction and takes the overload above; a
-        /// caller that FAILS needs it, because the six refusals have different remedies.
+        /// caller that FAILS needs it, because the refusals have different remedies. A non-null
+        /// <paramref name="demuxDescriptor"/> expects a demultiplexed cache with that descriptor.
         /// </summary>
         public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath,
-            out SpectraCacheRejection reason)
+            out SpectraCacheRejection reason, string demuxDescriptor = null)
         {
-            return BuildFromCache(cachePath, sourcePath, true, out reason);
+            return BuildFromCache(cachePath, sourcePath, true, out reason, demuxDescriptor);
         }
 
         /// <summary>
@@ -161,7 +169,7 @@ namespace pwiz.Osprey.IO
         /// built identically.
         /// </summary>
         public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath,
-            bool loadMs1, out SpectraCacheRejection reason)
+            bool loadMs1, out SpectraCacheRejection reason, string demuxDescriptor = null)
         {
             reason = SpectraCacheRejection.None;
             if (string.IsNullOrEmpty(cachePath) || !File.Exists(cachePath))
@@ -174,7 +182,8 @@ namespace pwiz.Osprey.IO
             using (var r = new BinaryReader(fs))
             {
                 // Validate + read counts identically to LoadSpectraCache.
-                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1, out reason))
+                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1, out reason,
+                        demuxDescriptor))
                     return null;
 
                 // Read the acquisition-order index in one compact contiguous EOF
@@ -188,14 +197,6 @@ namespace pwiz.Osprey.IO
                 var windowKeyToFirstIso = new Dictionary<int, IsolationWindow>();
                 var windowKeysInFileOrder = new List<int>();
                 var allMs2Rts = new double[nMs2];
-
-                // First DIA cycle's isolation windows, reproducing
-                // ScoringTaskShared.ExtractIsolationWindows: add each distinct rounded-center
-                // key's window in first-appearance order until a key repeats (the cycle
-                // wraps), then sort by center below.
-                var firstCycleWindows = new List<IsolationWindow>();
-                var firstCycleSeen = new HashSet<int>();
-                bool firstCycleDone = false;
 
                 for (uint i = 0; i < nMs2; i++)
                 {
@@ -215,19 +216,22 @@ namespace pwiz.Osprey.IO
                         windowKeyToFirstIso[key] = new IsolationWindow(isoCenter, isoLower, isoUpper);
                         windowKeysInFileOrder.Add(key);
                     }
-                    // First-cycle windows: add on first sight of a key, stop once one repeats.
-                    if (!firstCycleDone)
-                    {
-                        if (!firstCycleSeen.Add(key))
-                            firstCycleDone = true;
-                        else
-                            firstCycleWindows.Add(new IsolationWindow(isoCenter, isoLower, isoUpper));
-                    }
                     offsets.Add(index.RecordOffsets[i]);
                 }
 
-                // Reproduce ExtractIsolationWindows' final sort by center.
-                firstCycleWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties (mirror of ExtractIsolationWindows)
+                // Every distinct window, each as its first record's window. This used to be
+                // the FIRST CYCLE's windows only (keys up to the first repeat), which is the
+                // same set for ordinary DIA but silently drops windows from a demultiplexed
+                // run: a parent window's bins appear as soon as it is acquired, so the bin
+                // only the offset set covers first appears after other bins have repeated.
+                // Searching msconvert-demultiplexed Eclipse data that way left the top bin,
+                // [1000.70, 1006.70), unscored. Randomized MSX order breaks it the same way.
+                var isolationWindows = new List<IsolationWindow>(windowKeysInFileOrder.Count);
+                foreach (int key in windowKeysInFileOrder)
+                    isolationWindows.Add(windowKeyToFirstIso[key]);
+
+                // Sorted by center, as ExtractIsolationWindows sorted the first cycle.
+                isolationWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties
 
                 // MS1 in full from the recorded section offset (small in DIA and needed
                 // resident for the global precursor RT search) -- so streaming Stages 1-4
@@ -242,7 +246,7 @@ namespace pwiz.Osprey.IO
                 }
 
                 return new SpectraWindowIndex(cachePath, windowKeyToOffsets, allMs2Rts,
-                    windowKeyToFirstIso, windowKeysInFileOrder, index.Ms1SectionOffset, ms1Spectra, firstCycleWindows);
+                    windowKeyToFirstIso, windowKeysInFileOrder, index.Ms1SectionOffset, ms1Spectra, isolationWindows);
             }
         }
 

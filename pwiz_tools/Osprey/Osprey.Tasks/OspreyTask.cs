@@ -211,13 +211,18 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <see cref="BLIB_READER_TERM"/> is here for the same reason: it changes what every
         /// task reads from a blib library.
+        ///
+        /// The demultiplexing settings are here for the same reason: they
+        /// decide the spectra every task's output is computed from. See
+        /// <see cref="DemuxCacheBuilder.ValidityKeySuffix(OspreyConfig)"/>.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}{3}",
+            @"search={0};library={1}{2}{3}{4}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
-            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty);
+            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty,
+            DemuxCacheBuilder.ValidityKeySuffix(ctx.Config));
 
         /// <summary>
         /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>

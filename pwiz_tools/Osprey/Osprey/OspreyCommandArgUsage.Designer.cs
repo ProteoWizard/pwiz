@@ -88,6 +88,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: {0}).
+        /// </summary>
+        public static string _demux {
+            get {
+                return ResourceManager.GetString("_demux", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Write developer diagnostic dump files, for comparison with the Rust implementation.
         /// </summary>
         public static string _diagnostics {
