@@ -3767,7 +3767,7 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://skyline.ms/_webdav/home/software/Skyline/daily/@files/Skyline-daily")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://skyline.ms/_webdav/home/software/Skyline/daily/@files/")]
         public string InstallUrl {
             get {
                 return ((string)(this["InstallUrl"]));
