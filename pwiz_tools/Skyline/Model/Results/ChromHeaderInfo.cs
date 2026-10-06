@@ -1254,7 +1254,7 @@ namespace pwiz.Skyline.Model.Results
                     apexIndex = i;
                 }
             }
-            return apexIndex >= 0 ? observedIonMobilities[apexIndex] : (float?)null;
+            return apexIndex >= 0 ? observedIonMobilities[apexIndex] : null;
         }
 
         public float RetentionTime { get { return _retentionTime; } }

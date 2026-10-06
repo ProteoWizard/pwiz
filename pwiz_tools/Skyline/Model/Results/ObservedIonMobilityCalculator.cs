@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Results
                 weightedSum += value.Value * weight;
                 totalWeight += weight;
             }
-            return totalWeight > 0 ? weightedSum / totalWeight : (double?) null;
+            return totalWeight > 0 ? weightedSum / totalWeight : null;
         }
     }
 }
