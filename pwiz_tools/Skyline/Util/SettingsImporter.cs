@@ -48,12 +48,16 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Runs a command line the way Programs and Features would, through the shell so that an
-        /// uninstaller needing elevation gets to ask for it.
+        /// uninstaller needing elevation gets to ask for it. A ClickOnce uninstall is answered
+        /// with Remove, since that is what the user asked for in choosing to uninstall.
         /// </summary>
         public static void RunCommand(string commandLine)
         {
             SplitCommandLine(commandLine, out var fileName, out var arguments);
             Process.Start(new ProcessStartInfo(fileName, arguments) { UseShellExecute = true });
+            var deploymentName = ClickOnceMaintenanceDialog.GetDeploymentName(commandLine);
+            if (deploymentName != null)
+                new ClickOnceMaintenanceDialog(deploymentName).ChooseRemoveWhenShown();
         }
 
         /// <summary>
