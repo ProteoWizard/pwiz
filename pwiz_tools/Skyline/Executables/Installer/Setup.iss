@@ -49,7 +49,7 @@
 #ifndef MyAppInformationalVersion
   #define MyAppInformationalVersion MyAppVersion
 #endif
-#define MyAppPublisher "MacCoss Lab, University of Washington"
+#define MyAppPublisher "MacCoss Lab, UW"
 #define MyAppURL "https://skyline.ms/"
 #define MyAppGroup "MacCoss Lab, UW"
 #define MyAppExe SkylineAppName + ".exe"
@@ -269,9 +269,13 @@ begin
   Result := True;
   if IsAdminInstallMode then
   begin
+#if ProductName == SkylineAppName
+    { Only the channel product shares the .msi's %ProgramFiles% folder; another
+      product installs into a folder of its own. }
     Result := LegacyMsiAbortIfInstalled('{#ProductName}', ['{#LegacyMsiUpgradeCode}']);
     if not Result then
       Exit;
+#endif
     OtherRoot := HKCU;
   end
   else

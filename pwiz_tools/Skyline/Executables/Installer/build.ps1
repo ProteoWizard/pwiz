@@ -18,7 +18,8 @@ Release x64 from Visual Studio):
      version's installer. Write the manifest and name the bundled installer
      accordingly.
   4. Zip the stage as <ProductName>-<version>.zip, the installed tree under a
-     <ProductName> folder, for running Skyline without installing it.
+     <ProductName> folder, for running Skyline without installing it, and copy
+     DownloadPage.html beside it as <ProductName>.html.
   5. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
      the pwiz-sharp installer under pwiz-sharp\installer\cache\).
   6. Compile Setup.iss twice: the default variant bundling the runtime and the
@@ -177,8 +178,9 @@ if ($installUrl -notmatch '^https?://.+/$') {
     throw "InstallUrl '$installUrl' must be an http(s) folder URL ending in /."
 }
 if (-not $productName) { $productName = $appName }
-$manifestUrl = "$installUrl$productName.json"
-$installerUrl = "$installUrl$productName-Setup-$appVersion.exe"
+# Escaped as one path segment, the same as UpdateChecker and the download page do.
+$manifestUrl = $installUrl + [uri]::EscapeDataString("$productName.json")
+$installerUrl = $installUrl + [uri]::EscapeDataString("$productName-Setup-$appVersion.exe")
 $manifestPath = Join-Path $OutputDir "$productName.json"
 if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory $OutputDir -Force | Out-Null }
 Set-Content -Path $manifestPath -Value (@{ version = $appVersion } | ConvertTo-Json)
@@ -203,6 +205,11 @@ try {
 }
 finally { $zip.Dispose() }
 Write-Host "    $zipPath"
+# The download page works out the product from its own name and the version from the
+# manifest beside it, so the same file serves every product and version unedited.
+$downloadPagePath = Join-Path $OutputDir "$productName.html"
+Copy-Item (Join-Path $installerDir 'DownloadPage.html') $downloadPagePath
+Write-Host "    $downloadPagePath"
 
 # 5. The .NET 10 desktop runtime EXE, cached beside the pwiz-sharp installer so the two
 #    products share one download. The aka.ms URL redirects to the latest 10.0.x.
@@ -281,4 +288,6 @@ Write-Host "    $manifestPath"
 Write-Host "        as $manifestUrl"
 Write-Host "    $(Join-Path $OutputDir "$bundledName.exe")"
 Write-Host "        as $installerUrl"
-Write-Host "and, if wanted, the NoNetRuntime installer and the zip beside it."
+Write-Host "and, if wanted, the NoNetRuntime installer, the zip and the download page"
+Write-Host "    $downloadPagePath"
+Write-Host "beside them."

@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -317,7 +316,7 @@ namespace TestPerf
                 // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
                 // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
                 // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
-                SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+                SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
                 var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                 if (downloaderDlg != null)
@@ -343,11 +342,13 @@ namespace TestPerf
                 // register each one we delete in its persistent dir's PotentialMissingPersistentFileSet so
                 // the persistent-dir modification check tolerates the deletion and stays in sync with the
                 // glob (same pattern as DeleteFilesForScreenshots in DiaSwathTutorialTest).
+                // No dot after -diaumpire: the search also writes <file>-diaumpire_pin.tsv here, and one
+                // orphan left in the persistent dir fails CheckForModifiedPersistentFilesDir at cleanup.
                 var testFilesDir = TestFilesDirs[0];
                 foreach (var searchFile in searchFiles)
                 {
                     var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
-                    foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
+                    foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire*"))
                     {
                         testFilesDir.PotentialMissingPersistentFileSet ??= new HashSet<string>();
                         testFilesDir.PotentialMissingPersistentFileSet.Add(

@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__" xml:space="preserve">
+    <value>Model sanity check - feature share of target-decoy separation (trained linear model, coefficients standardized):</value>
+  </data>
+  <data name="FeatureContributions_ToReportLines__unexpected_direction_" xml:space="preserve">
+    <value>(unexpected direction)</value>
+  </data>
+  <data name="FeatureContributions_ToReportLines_coefficient" xml:space="preserve">
+    <value>coefficient</value>
+  </data>
+  <data name="FeatureContributions_ToReportLines_feature" xml:space="preserve">
+    <value>feature</value>
+  </data>
+  <data name="FeatureContributions_ToReportLines_share____" xml:space="preserve">
+    <value>share (%)</value>
+  </data>
+  <data name="ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel" xml:space="preserve">
+    <value>Building 1 second-pass diagnostics panel</value>
+  </data>
+  <data name="ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels" xml:space="preserve">
+    <value>Building {0:N0} second-pass diagnostics panels</value>
+  </data>
+  <data name="ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files" xml:space="preserve">
+    <value>Finding the best peak of each precursor across {0:N0} files</value>
+  </data>
+  <data name="ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file" xml:space="preserve">
+    <value>Finding the best peak of each precursor in 1 file</value>
+  </data>
+  <data name="PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
+    <value>Running {0} Percolator on {1:N0} precursor candidate peaks...</value>
+  </data>
+  <data name="PercolatorEngine_PassDisplayName_First_pass" xml:space="preserve">
+    <value>First-pass</value>
+  </data>
+  <data name="PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
+    <value>Running {0} Percolator on {1:N0} precursor candidate peaks...</value>
+  </data>
+  <data name="PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR" xml:space="preserve">
+    <value>{0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR</value>
+  </data>
+  <data name="PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_" xml:space="preserve">
+    <value>{0}: scoring all {1:N0} precursor candidate peaks with the saved first-pass model (no retraining), then target-decoy competition for q-values and PEP.</value>
+  </data>
+  <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file" xml:space="preserve">
+    <value>Loading Percolator training features from 1 file</value>
+  </data>
+  <data name="PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from__0__files" xml:space="preserve">
+    <value>Loading Percolator training features from {0:N0} files</value>
+  </data>
+  <data name="PercolatorEngine_RunStreamingIntoProjection_Selecting_training_peaks_from__0__precursor_candidate_peaks___" xml:space="preserve">
+    <value>Selecting training peaks from {0:N0} precursor candidate peaks...</value>
+  </data>
+  <data name="PercolatorQValues_ComputeExperimentPeptideQMap_Experiment_peptide_q_values" xml:space="preserve">
+    <value>Experiment peptide q-values</value>
+  </data>
+  <data name="PercolatorQValues_ComputeExperimentPrecursorQMap_Experiment_precursor_q_values" xml:space="preserve">
+    <value>Experiment precursor q-values</value>
+  </data>
+  <data name="PercolatorQValues_ComputePepWinnerMap_Population_target_decoy_competition" xml:space="preserve">
+    <value>Population target/decoy competition</value>
+  </data>
+  <data name="PercolatorQValues_ComputePerRunPeptideQvalues_Per_run_peptide_q_values" xml:space="preserve">
+    <value>Per-run peptide q-values</value>
+  </data>
+  <data name="PercolatorQValues_ComputePerRunPrecursorQvalues_Per_run_precursor_q_values" xml:space="preserve">
+    <value>Per-run precursor q-values</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>Assigning q-values to {0:N0} precursor candidate peaks</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Ignoring_the_saved_first_pass_model__it_has__0__features_and_this_run_scores__1___" xml:space="preserve">
+    <value>Ignoring the saved first-pass model: it has {0:N0} features and this run scores {1:N0}. Training a new model.</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file" xml:space="preserve">
+    <value>Loading Percolator training features from 1 file</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files" xml:space="preserve">
+    <value>Loading Percolator training features from {0:N0} files</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from_1_file" xml:space="preserve">
+    <value>Reading precursor candidate peaks for Percolator from 1 file</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from__0__files" xml:space="preserve">
+    <value>Reading precursor candidate peaks for Percolator from {0:N0} files</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Reusing_the_saved_first_pass_model_" xml:space="preserve">
+    <value>Reusing the saved first-pass model.</value>
+  </data>
+  <data name="PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>Scoring {0:N0} precursor candidate peaks</value>
+  </data>
+  <data name="PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Per_run_q_value_floors" xml:space="preserve">
+    <value>Per-run q-value floors</value>
+  </data>
+  <data name="PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>Scoring {0:N0} precursor candidate peaks</value>
+  </data>
+  <data name="PercolatorTrainer_DescribeCSelection_most_regularized_within__0___of_the_best" xml:space="preserve">
+    <value>most regularized within {0:G6}% of the best</value>
+  </data>
+  <data name="PercolatorTrainer_DescribeCSelection_strict_maximum" xml:space="preserve">
+    <value>strict maximum</value>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels_Gradient_boosted_trees___0__trees__max_depth__1__learning_rate__2__subsample__3__colsample__4_" xml:space="preserve">
+    <value>Gradient-boosted trees: {0} trees, max depth {1}, learning rate {2}, subsample {3}, colsample {4}, lambda {5}, alpha {6}, gamma {7}, min child weight {8}</value>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels_SVM_regularization_C__swept_over__0___chosen_by_cross_validation_per_fold__" xml:space="preserve">
+    <value>SVM regularization C (swept over {0}, chosen by cross-validation per fold, {1}):</value>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_" xml:space="preserve">
+    <value>{0}-fold cross-validation on {1:N0} training peaks ({2:N0} targets)</value>
+  </data>
+  <data name="PercolatorTrainer_TrainFoldModels_fold__0___1___C____2_" xml:space="preserve">
+    <value>fold {0}/{1}: C = {2}</value>
+  </data>
+  <data name="PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_fold__0___1___iteration__2__of__3____4__of__5__targets___6____at__7__FDR_" xml:space="preserve">
+    <value>Percolator fold {0}/{1}: iteration {2} of {3} ({4:N0} of {5:N0} targets, {6:F1}% at {7:P0} FDR)</value>
+  </data>
+  <data name="PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_iteration__0__of__1____2____of_training_targets_at__3__FDR_" xml:space="preserve">
+    <value>Percolator iteration {0} of {1} ({2:F1}% of training targets at {3:P0} FDR)</value>
+  </data>
+  <data name="ProteinFdrEngine_LogFirstPassSummary_First_pass_protein_FDR___0__target_groups_at__1__FDR" xml:space="preserve">
+    <value>First-pass protein FDR: {0:N0} target groups at {1:P1} FDR</value>
+  </data>
+  <data name="ProteinFdrEngine_RunSecondPass_Protein_parsimony___0__groups" xml:space="preserve">
+    <value>Protein parsimony: {0:N0} groups</value>
+  </data>
+  <data name="ProteinFdrEngine_RunSecondPass__0__of__1__scored_target_peptides_detected_at__2__experiment_level__3__FDR_" xml:space="preserve">
+    <value>{0:N0} of {1:N0} scored target peptides detected at {2:P1} experiment-level {3} FDR.</value>
+  </data>
+  <data name="ProteinFdrEngine_RunSecondPass__0__protein_groups_pass__1__protein_FDR" xml:space="preserve">
+    <value>{0:N0} protein groups pass {1:P1} protein FDR</value>
+  </data>
+  <data name="ReconciliationPlanner_Plan_Planning_cross_run_reconciliation_across__0__files" xml:space="preserve">
+    <value>Planning cross-run reconciliation across {0:N0} files</value>
+  </data>
+  <data name="ReconciliationPlanner_Plan_Planning_cross_run_reconciliation_for_1_file" xml:space="preserve">
+    <value>Planning cross-run reconciliation for 1 file</value>
+  </data>
+</root>

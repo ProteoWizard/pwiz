@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model
         {
             return Matches.TryGetValue(key, out var match)
                 ? match
-                : (AAModMatch?)null;
+                : null;
         }
 
         public bool HasMatches { get { return Matches != null; } }

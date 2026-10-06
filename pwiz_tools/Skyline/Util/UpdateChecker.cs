@@ -83,10 +83,14 @@ namespace pwiz.Skyline.Util
             return GetPublishedUri(ProductName + INSTALLER_INFIX + version + INSTALLER_EXTENSION);
         }
 
+        /// <summary>
+        /// The file name is escaped as one path segment, since a product name can hold
+        /// characters such as '#' and '%' that mean something else in a URL.
+        /// </summary>
         private Uri GetPublishedUri(string fileName)
         {
             string folderUrl = InstallUrl.EndsWith(@"/") ? InstallUrl : InstallUrl + @"/";
-            return new Uri(folderUrl + fileName);
+            return new Uri(folderUrl + Uri.EscapeDataString(fileName));
         }
 
         /// <summary>

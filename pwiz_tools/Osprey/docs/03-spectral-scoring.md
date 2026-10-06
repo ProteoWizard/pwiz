@@ -161,7 +161,7 @@ prefilter and CWT and maps the supplied `(apex, start, end)` RTs to scan indices
 `OspreyFeatureCalculators` (`Osprey.Scoring/OspreyFeatureCalculators.cs:41`) holds the
 ordered calculator array; **the array index IS the PIN feature index** and the parquet
 column order. `CoelutionScorer.ScoreCandidate` invokes `Get(0..20).Calculate(...)`
-explicitly (`CoelutionScorer.cs:254-274`). The names match
+explicitly (`CoelutionScorer.cs:248-268`). The names match
 `ParquetScoreCache.PIN_FEATURE_NAMES` (`Osprey.IO/ParquetScoreCache.cs:51`).
 
 | # | PIN name | Family / tier | Direction (`IsReversedScore`) | C# calculator (file) |
@@ -237,7 +237,7 @@ does ONE closest-peak-by-mz pass over the apex MS2 spectrum:
 
 **MS1 (13–14)** — HRAM-only. The producer (`PeakDataExtractor`) emits the MS1
 precursor XIC / reference XIC and the apex isotope envelope only when the resolution
-strategy reports `HasMs1Features` (`ResolutionStrategy.cs:163` HRAM=true, `:112`
+strategy reports `HasMs1Features` (`ResolutionStrategy.cs:184` HRAM=true, `:133`
 Unit=false). `ms1_precursor_coelution` is the Pearson correlation of the two MS1
 chromatograms (`< 3` samples → 0.0; NaN → 0.0, `Ms1Calculators.cs:52-57`).
 `ms1_isotope_cosine` gates on the M0 peak (`envelope[1] > 0`) then calls
@@ -269,11 +269,11 @@ from feature 6 (documented as an "INDEX TRAP" in the source).
 producer publish an intermediate (coelution stats, peak-shape reference, apex-match
 set, SG sweep, median-polish fit) that its sibling calculators read. The context is
 reused across candidates with `ClearByproducts` between them
-(`CoelutionScorer.cs:208`).
+(`CoelutionScorer.cs:202`).
 
 ### B.6 FdrEntry assembly & post-scoring dedup
 
-`BuildFdrEntry` (`CoelutionScorer.cs:395`) sets both `CoelutionSum` and `Score` to
+`BuildFdrEntry` (`CoelutionScorer.cs:389`) sets both `CoelutionSum` and `Score` to
 `features[0]` (the raw coelution sum is the pre-SVM ranking score), serializes the full
 library fragment list and the reference-XIC slice, and stores the top-N CWT candidates
 for Stage-6 reconciliation. After scoring, `ScoringPipeline` runs two dedup passes:
@@ -291,14 +291,14 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 
 | Flag / field | Default | Effect on scoring |
 |--------------|---------|-------------------|
-| `--resolution {unit\|hram\|auto}` | `auto` | Selects `UnitStrategy` vs `HramStrategy` (`ResolutionStrategy.cs:97`). Unit = 2000 f64 bins, no MS1 features; HRAM = ~100K sparse bins, MS1 features 13/14 active. **Calibration always uses unit bins regardless.** |
+| `--resolution {unit\|hram\|auto}` | `auto` | Selects `UnitStrategy` vs `HramStrategy` (`ResolutionStrategy.cs:118`). Unit = 2000 f64 bins, no MS1 features; HRAM = ~100K sparse bins, MS1 features 13/14 active. **Calibration always uses unit bins regardless.** |
 | `--fragment-tolerance <v>` | resolution-dependent | Fragment match window for apex-match, cosine, prefilter, LibCosine. |
 | `--fragment-unit {ppm\|mz}` | `ppm` (unit-res forces `mz` 0.5) | Tolerance unit; also the reporting unit for mass-error features 9/10. |
 | `--no-prefilter` (`PrefilterEnabled`) | `true` (prefilter ON) | When set, disables the 2-of-top-6-in-3-of-4-scans signal prefilter (`PeakDataExtractor.cs:117`). Prefilter is always skipped for boundary-override rescoring. |
 | `--threads <count>` | all cores | INNER parallelism: `MaxDegreeOfParallelism` over isolation windows (`ScoringPipeline.cs:271`). Affects speed only, not results. |
 | `--parallel-files [N]` | off (sequential) | OUTER parallelism across files; no effect on per-candidate feature values. |
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
-| `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:328`). |
+| `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
 
 Diagnostic env vars for this stage (shared with Rust for cross-impl bisection):
 
@@ -344,7 +344,7 @@ presence rather than a CLI flag.
   fields still exist on `CoelutionFeatureSet` but are never populated by the scoring
   pass.
   Evidence: `OspreyFeatureCalculators.cs:36-44` ("Scores the Rust engine computes but
-  excludes from the 21 PIN features are intentionally NOT here"); `CoelutionScorer.cs:253-274`
+  excludes from the 21 PIN features are intentionally NOT here"); `CoelutionScorer.cs:247-268`
   builds only a `double[21]`; `Osprey.Core/CoelutionFeatureSet.cs:30-128` still declares
   the unused fields. The Rust doc itself notes "21 PIN features (out of ~47 computed)",
   so this is a deliberate port simplification, not a behavioral output difference.
@@ -355,7 +355,7 @@ presence rather than a CLI flag.
   scans exist. In C# they are strictly HRAM-only: `UnitStrategy.HasMs1Features` is
   `false` so the producer emits no MS1 chromatogram/envelope and features 13/14 are
   exactly 0.0.
-  Evidence: `ResolutionStrategy.cs:112` (Unit false) vs `:163` (HRAM true);
+  Evidence: `ResolutionStrategy.cs:133` (Unit false) vs `:184` (HRAM true);
   `Ms1Calculators.cs:37-38` ("HRAM-only"). This matches the Rust engine's behavior;
   the doc simply doesn't foreground the resolution gate. Severity: info.
 

@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -28,7 +27,6 @@ using Grpc.Core;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -325,15 +323,15 @@ namespace pwiz.Skyline.ToolsUI
             _driverRemoteAccounts.EditList();
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            base.OnClosing(e);
+            base.OnFormClosing(e);
 
             if (!e.Cancel)
                 _pingRequest?.Cancel();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             if (DialogResult == DialogResult.OK)
             {
@@ -359,7 +357,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (koinaSettingsValidBefore != KoinaHelpers.KoinaSettingsValid)
                     Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         public void OkDialog()
@@ -499,54 +497,23 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public void ImportSettings()
         {
-            IsImportingSettings = true;
-            try
+            var installations = FindInstallations().ToList();
+            if (installations.Count == 0)
             {
-                var installations = FindInstallations().ToList();
-                if (installations.Count == 0)
-                {
-                    MessageDlg.Show(this, ToolsUIResources.ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_);
+                MessageDlg.Show(this, ToolsUIResources.ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_);
+                return;
+            }
+            SettingsImporter importer;
+            using (var dlg = new ImportSettingsDlg(installations))
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
-                }
-                SettingsImporter importer;
-                using (var dlg = new ImportSettingsDlg(installations))
-                {
-                    if (dlg.ShowDialog(this) != DialogResult.OK)
-                        return;
-                    importer = dlg.Importer;
-                }
-                importer.RunUninstall = RunUninstall;
-                try
-                {
-                    importer.ImportSettingsFile();
-                    using (var longWaitDlg = new LongWaitDlg())
-                    {
-                        longWaitDlg.Text = Program.Name;
-                        longWaitDlg.Message = ToolsUIResources.ToolOptionsUI_ImportSettings_Importing_settings;
-                        longWaitDlg.PerformWork(this, 800, importer.CopyTools);
-                    }
-                    importer.FinishImport();
-                }
-                catch (Exception exception)
-                {
-                    MessageDlg.ShowWithException(this,
-                        string.Format(ToolsUIResources.ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_,
-                            importer.SourceConfigFile), exception);
-                }
-                LoadSettings();
+                importer = dlg.Importer;
             }
-            finally
-            {
-                IsImportingSettings = false;
-            }
+            importer.RunUninstall = RunUninstall;
+            importer.Import(this);
+            LoadSettings();
         }
-
-        /// <summary>
-        /// True from the moment <see cref="ImportSettings"/> starts until its dialogs are gone
-        /// and the controls show the imported values. The import runs with a message pump, so a
-        /// test that has dismissed the dialog waits on this rather than on a value it expects.
-        /// </summary>
-        public bool IsImportingSettings { get; private set; }
 
         private void koinaDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {

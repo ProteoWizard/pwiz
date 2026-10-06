@@ -24,13 +24,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Win32;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {
     /// <summary>
     /// Finds the Skyline installations that an installer, rather than ClickOnce, put on the
-    /// machine. Those keep their settings in a user.config beside the executable, and Programs
+    /// machine. Those keep their settings in a user.config whose folder follows from where the
+    /// executable is (see <see cref="PortableSettingsProvider.GetConfigFolder"/>), and Programs
     /// and Features records where the executable is, so the registry's Uninstall entries are the
     /// whole search. See <see cref="ClickOnceInstallations"/> for the older kind.
     /// </summary>
@@ -44,9 +44,9 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// What one Uninstall registry entry says, which is all this class needs from the
-        /// registry. A test hands these in directly.
+        /// registry.
         /// </summary>
-        public class UninstallEntry
+        private class UninstallEntry
         {
             public string DisplayVersion { get; set; }
             public string InstallLocation { get; set; }
@@ -82,7 +82,8 @@ namespace pwiz.Skyline.Util
                 if (folder == null || !foldersSeen.Add(folder))
                     continue;
                 var executable = Path.Combine(folder, ProductName + @".exe");
-                var userConfigFile = Path.Combine(folder, UserConfigSettingsProvider.CONFIG_FILE_NAME);
+                var userConfigFile = Path.Combine(PortableSettingsProvider.GetConfigFolder(folder),
+                    PortableSettingsProvider.CONFIG_FILE_NAME);
                 if (!File.Exists(executable) || !File.Exists(userConfigFile))
                     continue;
                 yield return new SkylineInstallation
@@ -110,10 +111,9 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// The Uninstall entries of every program on the machine, from both hives and both
-        /// registry views, since an installer can register in any of them. Overridable so a test
-        /// can say what is installed without touching the registry.
+        /// registry views, since an installer can register in any of them.
         /// </summary>
-        protected virtual IEnumerable<UninstallEntry> ReadUninstallEntries()
+        private static IEnumerable<UninstallEntry> ReadUninstallEntries()
         {
             var entries = new List<UninstallEntry>();
             foreach (var hive in new[] { RegistryHive.CurrentUser, RegistryHive.LocalMachine })

@@ -301,7 +301,7 @@ model and loader (`crates/osprey/src/pick_lda.rs`), kept in lock-step for parity
 
 After the winning peak is chosen, `CoelutionScorer.ScoreCandidate` crops the XICs
 to `[start..end]` and runs `TukeyMedianPolish.Compute(peakXics, peakRts,
-maxIter = 10, tol = 0.01)` (`CoelutionScorer.cs:242`).
+maxIter = 10, tol = 0.01)` (`CoelutionScorer.cs:236`).
 
 `TukeyMedianPolish.Compute` (`TukeyMedianPolish.cs:103`) decomposes the
 `fragment × scan` matrix in ln space into `overall + rowEffects + colEffects +
@@ -311,7 +311,7 @@ iteration does a row sweep then a column sweep, updating `overall`, and checks
 linear-space elution profile is `exp(overall + colEffects[s])`.
 
 Four PIN features are derived from the decomposition (indices per
-`CoelutionScorer.cs:269-273`, computed by the `OspreyFeatureCalculators`):
+`CoelutionScorer.cs:263-267`, computed by the `OspreyFeatureCalculators`):
 
 - `median_polish_cosine` — `LibCosine` (`TukeyMedianPolish.cs:291`): sqrt-space
   cosine of row effects vs library fragment intensities.
@@ -330,14 +330,14 @@ divergences).
 
 ## Step 7: Building the FdrEntry (boundaries, area, S/N, candidates)
 
-`CoelutionScorer.BuildFdrEntry` (`CoelutionScorer.cs:395`) assembles the
+`CoelutionScorer.BuildFdrEntry` (`CoelutionScorer.cs:389`) assembles the
 `FdrEntry` from the winning peak:
 
 - `StartRt` / `EndRt` = `windowRts[startScan + bestPeak.Start/EndIndex]`
-  (`CoelutionScorer.cs:462-463`) — i.e. the **CWT/detected peak boundaries**.
+  (`CoelutionScorer.cs:456-457`) — i.e. the **CWT/detected peak boundaries**.
 - `ApexRt` / `ScanNumber` = the apex spectrum's RT and scan.
 - `BoundsArea` = `bestPeak.Area`, `BoundsSnr` = `bestPeak.SignalToNoise`
-  (`CoelutionScorer.cs:473-474`).
+  (`CoelutionScorer.cs:467-468`).
 - `CoelutionSum` and `Score` are seeded from feature 0 (mean pairwise coelution).
 - `FragmentMzs` / `FragmentIntensities` serialize the **full** library fragment
   list, and `ReferenceXic{Rts,Intensities}` slice the reference XIC across
@@ -345,7 +345,7 @@ divergences).
 
 ### Stage 6 CWT-candidate capture
 
-`CoelutionScorer.CaptureCwtCandidates` (`CoelutionScorer.cs:321`) keeps the
+`CoelutionScorer.CaptureCwtCandidates` (`CoelutionScorer.cs:315`) keeps the
 top-`N` peaks (`ReconciliationConfig.TopNPeaks`, default 5;
 `ReconciliationConfig.cs:36`) ranked by penalized `rankScore`, each with its
 apex/area/SNR recomputed over the reference-XIC slice, storing the **raw**
@@ -392,7 +392,7 @@ unit-resolution runs no MS1 data is produced and both features evaluate to 0.0
 | `--resolution {unit\|hram\|auto}` | `auto` | Selects the resolution strategy; HRAM enables the MS1 chromatogram/isotope features produced here, unit resolution disables them. |
 | `MinRtTolerance` / `MaxRtTolerance` (`RTCalibrationConfig`) | `0.5` / `3.0` min | Clamp on the scan-window `rtTolerance = 3*MAD*1.4826` (`RTCalibration.SearchWindowHalfWidth`). The XIC extraction half-width is `rtTolerance + max(rtTolerance, 0.1)`; the apex-acceptance filter uses `rtTolerance`. The RT-penalty sigma (`5*MAD*1.4826`, floor 0.1) is deliberately **not** clamped. |
 | `FallbackRtTolerance` (`RTCalibrationConfig`) | used when no RT calibration | Sets both `rtTolerance` and `rtSigma` when calibration is absent (`ScoringPipeline.cs:185-186`). |
-| `ReconciliationConfig.TopNPeaks` | `5` | Number of CWT candidates captured per entry for reconciliation (`CoelutionScorer.cs:328`). `0` captures none. |
+| `ReconciliationConfig.TopNPeaks` | `5` | Number of CWT candidates captured per entry for reconciliation (`CoelutionScorer.cs:322`). `0` captures none. |
 | `--task PerFileRescoring` (Stage 6) | off | Activates the boundary-override path: detection skipped, bounds taken from the supplied triple (`see 11-boundary-overrides.md`). |
 | `OSPREY_PICK_LDA` | **on** (learned pick) | The hardcoded resolution-keyed learned linear model (`PickLdaModel.ForResolution`) is the default pick. Set `OSPREY_PICK_LDA=0` for the legacy product form, which is how the A/B stays available. |
 | `OSPREY_PICK_LDA_MODEL` | unset | Path to a frozen JSON pick model that overrides the built-in model; its `features` order is validated on load. See [peak-model-training.md](peak-model-training.md). |
@@ -459,7 +459,7 @@ the reference datasets.
   (i.e. the Rust code was changed and the doc's 20 / 1e-4 is the old
   default). The `Compute` method's own XML default is still documented as
   20 / 1e-4, but the actual call overrides it. Evidence:
-  `Osprey.Scoring/CoelutionScorer.cs:242`; defaults at
+  `Osprey.Scoring/CoelutionScorer.cs:236`; defaults at
   `Osprey.Scoring/TukeyMedianPolish.cs:100-101`. Severity: minor.
 
 - **[UNVERIFIED] Blib peak boundaries come from the CWT/detected peak, not
@@ -468,8 +468,8 @@ the reference datasets.
   CWT boundaries are the fallback. In the C# scoring path the `FdrEntry.StartRt /
   EndRt` written for output are the CWT/detected `bestPeak` boundaries; median
   polish is consumed only for the four scoring features, never for output bounds.
-  Evidence: `Osprey.Scoring/CoelutionScorer.cs:462-463` (bounds from `bestPeak`);
-  median-polish use confined to `CoelutionScorer.cs:242,269-273`. Because the
+  Evidence: `Osprey.Scoring/CoelutionScorer.cs:456-457` (bounds from `bestPeak`);
+  median-polish use confined to `CoelutionScorer.cs:236,263-267`. Because the
   README asserts the .blib is cross-impl bit-identical, the Rust code most likely
   also writes CWT bounds (making the doc stale), but the C# BLIB writer
   (`Osprey.IO/BlibWriter.cs`) was not read here to confirm no median-polish

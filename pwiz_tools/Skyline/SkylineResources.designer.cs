@@ -1831,6 +1831,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Parquet.dll at {0} is not the version {1} requires. Reinstall {1}..
+        /// </summary>
+        public static string Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__ {
+            get {
+                return ResourceManager.GetString("Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to You are attempting to run a 64-bit version of {0} on a 32-bit OS. Please install the 32-bit version..
         /// </summary>
         public static string Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version {

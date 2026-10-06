@@ -25,7 +25,8 @@ using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -33,12 +34,12 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
+using Parquet;
 using pwiz.Common;
 using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -153,9 +154,6 @@ namespace pwiz.Skyline
         public static bool MultiProcImport { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.
-        // Set when this run took its settings from a ClickOnce installation, so that once the UI
-        // is up the external tools those settings name can be brought across with progress shown.
-        private static bool _settingsMigratedFromClickOnce;
         [ThreadStatic] private static bool _uiExceptionHandlingInitialized;   // Per-THREAD, see InitUiThreadExceptionHandling
         private static string _name;                                // Program name.
 
@@ -199,13 +197,18 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// True if the loaded Parquet.dll is pwiz's patched build of Parquet.Net, identified by
+        /// a method the NuGet release does not have. Both have the same assembly identity.
+        /// </summary>
+        private static bool IsPatchedParquetNet()
+        {
+            return typeof(ParquetRowGroupWriter).GetMethod(nameof(ParquetRowGroupWriter.PrepareColumnAsync)) != null;
+        }
+
         [STAThread]
         public static int Main(string[] args = null)
         {
-            // Must come before the first Settings.Default use on the next line. Every setting is
-            // read from the provider and cached the first time any one of them is touched, so a
-            // user.config put in place after that point would go unseen until a Reload.
-            MigrateSettingsFromClickOnceInstallation();
             SetDefaultFont();
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
@@ -223,11 +226,16 @@ namespace pwiz.Skyline
                 return 1;
             }
 
+            if (!IsPatchedParquetNet())
+            {
+                MessageDlg.Show(null, string.Format(SkylineResources.Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__,
+                    typeof(ParquetRowGroupWriter).Assembly.Location, Name));
+            }
+
             CommonApplicationSettings.ProgramName = Name;
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
             CommonActionUtil.ExceptionReporter = ReportException;
             SkylineRemoteAccountServices.Initialize();
-            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface.
             // Scan every arg, not just args[0], so --opendoc composes order-independently
@@ -334,23 +342,11 @@ namespace pwiz.Skyline
 
                 try
                 {
-                    if (_settingsMigratedFromClickOnce)
-                    {
-                        // The settings brought over at the top of Main name external tools under
-                        // the old installation's Tools folder. Bringing those across is the slow
-                        // half of the migration, and waits until here so it can show progress.
-                        using (var longWaitDlg = new LongWaitDlg())
-                        {
-                            longWaitDlg.Text = Name;
-                            longWaitDlg.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
-                            longWaitDlg.ProgressValue = 0;
-                            longWaitDlg.PerformWork(null, 1000*3, broker => new SettingsImporter(null).CopyTools(broker));
-                        }
-                    }
-                    else
-                    {
-                        new ImportedSettingsUpdater().UpdateIfChanged();
-                    }
+                    // Tests run out of a build folder, and would otherwise be offered whatever the
+                    // developer happens to have installed.
+                    if (!UnitTest && !FunctionalTest)
+                        new FirstLaunchImport().Run(null);
+                    SharedSettingsMerger.ForSharedSettings()?.MergeIfChanged();
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -506,7 +502,6 @@ namespace pwiz.Skyline
                 {
                     try
                     {
-                        SendAnalyticsHit();
                         SendGa4AnalyticsHit();
                     }
                     catch (Exception ex)
@@ -515,39 +510,6 @@ namespace pwiz.Skyline
                     }
                 });
             }
-        }
-
-        private static void SendAnalyticsHit()
-        {
-            // ReSharper disable LocalizableElement
-            var postData = "v=1"; // Version 
-            postData += "&t=event"; // Event hit type
-            postData += "&tid=UA-9194399-1"; // Tracking Id 
-            postData += "&cid=" + Settings.Default.InstallationId; // Anonymous Client Id
-            postData += "&ec=Instance"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString(Install.Version + "-" +
-                                                      (Install.Is64Bit ? "64bit" : "32bit")); // Event Action
-            postData += "&el=" + Install.Type; // Event Label
-            postData += "&p=" + "Instance"; // Page
-
-            var data = Encoding.UTF8.GetBytes(postData);
-            var request = (HttpWebRequest) WebRequest.Create("http://www.google-analytics.com/collect");
-            request.UserAgent = Install.GetUserAgentString();
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = data.Length;
-            using (Stream stream = request.GetRequestStream())
-            {
-                stream.Write(data, 0, data.Length);
-            }
-
-            var response = (HttpWebResponse) request.GetResponse();
-            var responseStream = response.GetResponseStream();
-            if (null != responseStream)
-            {
-                new StreamReader(responseStream).ReadToEnd();
-            }
-            // ReSharper restore LocalizableElement
         }
 
         /// <summary>
@@ -586,22 +548,14 @@ namespace pwiz.Skyline
             if (useDebugUrl)
                 postData += "&_dbg=true";
 
-            var request = (HttpWebRequest)WebRequest.Create("https://www.google-analytics.com/g/collect?" + postData);
-            request.UserAgent = Install.GetUserAgentString();
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = 0;
+            using var httpClient = new HttpClientWithProgress();
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://www.google-analytics.com/g/collect?" + postData);
+            request.Headers.TryAddWithoutValidation("User-Agent", Install.GetUserAgentString());
+            request.Content = new ByteArrayContent(Array.Empty<byte>());
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
-            var response = (HttpWebResponse)request.GetResponse();
-            var responseStream = response.GetResponseStream();
-            if (null != responseStream)
-            {
-                var responseReader = new StreamReader(responseStream);
-                responseStr = responseReader.ReadToEnd();
-            }
-            else
-                responseStr = string.Empty;
-
+            using var response = httpClient.SendRequest(request);
+            responseStr = response.Content.ReadAsStringAsync().Result;
             return (int) response.StatusCode;
             // ReSharper restore LocalizableElement
         }
@@ -656,69 +610,6 @@ namespace pwiz.Skyline
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
             MainToolService.SendDocumentChange();
-        }
-
-        /// <summary>
-        /// Gives a new installation the user settings of the ClickOnce installed Skyline it is
-        /// replacing. Only for the upgrade from 26.1 and earlier, which kept settings in a per
-        /// version folder under %LOCALAPPDATA%; from here on an installation reads the
-        /// user.config beside its own executable, and successive installations into the same
-        /// folder find the settings already there with nothing to look for.
-        ///
-        /// A missing user.config is what identifies a first run. Everything else the migration
-        /// needs follows from the settings it brings over, including the tool lists that say
-        /// which external tools to bring along once the UI is up; see <see cref="_settingsMigratedFromClickOnce"/>.
-        /// </summary>
-        private static void MigrateSettingsFromClickOnceInstallation()
-        {
-            // Tests run out of a build folder, and would otherwise inherit whatever the developer
-            // happens to have installed.
-            if (UnitTest || FunctionalTest)
-                return;
-            try
-            {
-                var configFile = Path.Combine(UserConfigSettingsProvider.GetDefaultConfigFolder(),
-                    UserConfigSettingsProvider.CONFIG_FILE_NAME);
-                if (File.Exists(configFile))
-                    return;
-                var candidate = ChooseClickOnceInstallation(
-                    new ClickOnceInstallations(typeof(Program).Assembly).ListCandidates());
-                if (candidate == null)
-                    return;
-                File.Copy(candidate.UserConfigFile, configFile);
-                _settingsMigratedFromClickOnce = true;
-            }
-            catch (Exception)
-            {
-                // Starting on default settings beats not starting. The next run tries again,
-                // since a failed copy leaves no user.config behind.
-            }
-        }
-
-        /// <summary>
-        /// Which of the installations found gets to hand its settings on. The one Programs and
-        /// Features still lists is the one being replaced, so it wins; among installations that
-        /// are equally current, or equally not, the highest version is the most recent.
-        /// </summary>
-        private static SkylineInstallation ChooseClickOnceInstallation(IEnumerable<SkylineInstallation> candidates)
-        {
-            SkylineInstallation best = null;
-            foreach (var candidate in candidates)
-            {
-                if (best == null || IsBetterClickOnceInstallation(candidate, best))
-                    best = candidate;
-            }
-            return best;
-        }
-
-        private static bool IsBetterClickOnceInstallation(SkylineInstallation candidate, SkylineInstallation best)
-        {
-            if (candidate.IsCurrentlyInstalled != best.IsCurrentlyInstalled)
-                return candidate.IsCurrentlyInstalled;
-            // An unparsable version loses to one that reads as a version, and to nothing else.
-            if (!Version.TryParse(candidate.Version, out var candidateVersion))
-                return false;
-            return !Version.TryParse(best.Version, out var bestVersion) || candidateVersion > bestVersion;
         }
 
         /// <summary>
@@ -851,7 +742,7 @@ namespace pwiz.Skyline
         {
             if (MainWindow != null && !MainWindow.IsDisposed)
             {
-                MainWindow.Invoke(new Action(MainWindow.Close));
+                MainWindow.Invoke(MainWindow.Close);
             }
         }
 

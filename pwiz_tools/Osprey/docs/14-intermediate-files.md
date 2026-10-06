@@ -33,12 +33,13 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary v1 | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
 | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
-| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v1**, 32-byte header + 4-byte records | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Seven read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x2, one of them the streamed Stage 7 join) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
-| `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (weights, biases, normalization). The protein-compact stratum is NOT in it - see the next row |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v1**, 32-byte header + 4-byte records | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
+| `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB). Serialized once and written identically beside every run whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row |
 | `<stem>.1st-pass.stratum.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides. Absent under every mode but protein-compact. A SECOND file rather than a member of the model sidecar because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadFromAny` merges the two on read, and still falls back to a pre-split model sidecar's embedded copy |
 | `<output>.<TaskName>.osprey.task` | its artifact's | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
+| `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `Osprey.IO/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
 
 All artifact paths resolve their directory through `ArtifactPaths`
 (`Osprey.IO/ArtifactPaths.cs`), so `--output-dir` / `--cache-dir` / `--work-dir`
@@ -79,6 +80,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `FirstPassModelIO` (2 sites) | `<stem>.1st-pass.model.json`, `<stem>.1st-pass.stratum.json` |
 | `TaskValiditySidecar` | `<output>.<TaskName>.osprey.task` |
 | `BlibOutputWriter` | `<output>.blib` |
+| `TrainingExportParquet` | `<stem>.training.parquet` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
@@ -594,7 +596,7 @@ output file itself to exist - a sidecar can outlive its output.
 
 The base key every task carries is search parameters, library identity, and the peak-pick
 arm (`OspreyTask.ValidityKey`). Tasks with extra state append to it; `FirstPassFDR` adds
-six components, and each one is in the key because leaving it out produced a specific
+seven components, and each one is in the key because leaving it out produced a specific
 wrong answer:
 
 | Component | Without it |
@@ -605,15 +607,39 @@ wrong answer:
 | pass-2 q-value mode | a sidecar written under `transfer` carries no stratum, so a `protein-compact` re-run adopts an artifact that cannot answer its question |
 | training-sample settings | a resume adopts maximum-trained scores as though the reservoir had produced them |
 | library-fragment release | the retained-fragment arm differs and the outputs are not interchangeable |
+| classifier and tree settings (`OSPREY_FDR_MODEL=gbdt` only, the `;fdrmodel=gbdt` term) | a percolator directory re-run as gbdt, a gbdt directory written while the lean first pass still trained the SVM, or one `OSPREY_GBT_*` sweep point re-run as the next reports "skipping (outputs valid)" and hands back the other arm's results. Empty for the linear SVM, so no existing directory is invalidated (`PercolatorEngine.GbdtValidityKeySuffix`) |
 
 `PerFileRescoring` appends its own set for the same reasons - the reconciliation hash and
-sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, and
-the survivor-streaming switch, whose two paths must not adopt each other's output.
+sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, the
+survivor-streaming switch, whose two paths must not adopt each other's output, and the
+classifier term, because its competition scores with the first-pass model. `SecondPassFDR`
+carries the classifier term for the same reason.
+
+One output is stamped with more than its task's key: `PerFileRescoring`'s training export
+(`--training-export`). Each run's `<stem>.training.parquet` carries `PerFileRescoring`'s key
+plus the export's format version and settings (`;trainexport=2;maxq=;claimq=;xics=`) and the
+identities (name + size + mtime, `SearchIdentity.FileIdentityTerm`) of that run's reconciled
+parquet, the q-value sidecar the export selects on, its calibration and its spectra cache
+(`OspreyTask.OutputValidityKey`, which every other output leaves equal to its task key). None
+of that enters `PerFileRescoring`'s own key, so adding the flag to a finished analysis leaves
+every other output valid and only the exports outstanding (P17 in
+[00](00-pipeline-architecture.md)). The key names no cohort and no leg (P4); see
+[22-training-export](22-training-export.md).
 
 The peak-pick arm sits in the *base* rather than in the overrides because it is the one
 lever that reaches every task: the pick decides which peak a precursor's row describes,
 back in Stage 4, and everything downstream inherits that choice. Putting it in the base
 also means a task added later carries it without having to know.
+
+`;blibreader=2` sits in the base for the same reason, on every search of a blib library: the
+reader types every peak from m/z and reads modification text residue- and precision-aware
+([13](13-blib-output-schema.md)), so a blib's entries carry ion types and masses they did not
+before, and those reach every stage. It carries `BlibLoader.READER_VERSION`, as the `.libcache`
+composition term `blib_reader:` does (with the fragment tolerance the cached types were computed
+within), so one edit moves the key term and the cache term together. The tolerance itself needs
+no key term: it is in the search hash. A DIA-NN TSV search keys as before; its `.libcache`
+carries `tsv_reader:2`, so a cache written before the reader refused invalid lines is re-read
+once.
 
 Read that table as a worked example of P15's asymmetry. Every row was added after an
 under-inclusive key reused something it should not have, and none of them cost more than
@@ -641,6 +667,24 @@ HPC relay lists - see 00.
 
 ---
 
+## 9. Training export parquet (`<stem>.training.parquet`)
+
+**C# source**: `Osprey.IO/TrainingExportParquet.cs`; written by `PerFileRescoreTask` through
+`TrainingExportWriter`. Path: `TrainingExportParquet.PathFor` = `<stem>.training.parquet` in
+`ArtifactPaths.ResolveOutputDir(inputFile)`. Written only under `--training-export`, and never
+by a diagnostics-only render.
+
+ZSTD parquet, row groups of 20,000 rows, per-ion arrays as little-endian typed `byte[]` blobs
+with no length prefix and a NULL cell for an empty array - the same convention as the scores
+parquet's blobs, and the same encoders (`ParquetBlobCodec`, moved out of `ParquetScoreCache`
+unchanged). A run with nothing to export gets a zero-row file with its footer. The schema, the
+slot order and every footer key are [22-training-export](22-training-export.md), which is the
+contract; `TrainingExportParquetTest` fails when the writer emits a column that document does not
+name (it checks names only - not types, and not a documented column the writer lacks). Footer
+`osprey.training_export.format_version` is 2.
+
+---
+
 ## Cleanup
 
 Every intermediate file except the spectra cache is safe to delete and is recreated on the next
@@ -657,6 +701,9 @@ run:
 - `<stem>.calibration.json` — small; worth keeping across runs with the same LC-MS setup, but in
   C# recalibration is triggered by the task sidecar, not by this file's presence.
 - `<output>.<TaskName>.osprey.task` — deleting forces the task to re-run.
+- `<stem>.training.parquet` - recreated by `--training-export` (or `--task TrainingExport`)
+  alone: on a finished analysis `PerFileRescoring` writes the missing exports and re-scores
+  nothing.
 
 ---
 

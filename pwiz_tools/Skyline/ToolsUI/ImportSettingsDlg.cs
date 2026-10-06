@@ -63,12 +63,6 @@ namespace pwiz.Skyline.ToolsUI
             set { cbUninstall.Checked = value; }
         }
 
-        public bool TrackChanges
-        {
-            get { return cbTrackChanges.Checked; }
-            set { cbTrackChanges.Checked = value; }
-        }
-
         public void OkDialog()
         {
             var installation = SelectedInstallation;
@@ -80,9 +74,7 @@ namespace pwiz.Skyline.ToolsUI
             bool uninstall = UninstallSelected && installation.CanUninstall;
             Importer = new SettingsImporter(installation.UserConfigFile)
             {
-                // An installation that is going away hands its identity on.
                 KeepInstallationId = !uninstall,
-                TrackChanges = TrackChanges,
                 UninstallCommand = uninstall ? installation.UninstallCommand : null
             };
             DialogResult = DialogResult.OK;
@@ -95,19 +87,10 @@ namespace pwiz.Skyline.ToolsUI
             cbUninstall.Enabled = canUninstall;
             if (!canUninstall)
                 cbUninstall.Checked = false;
-            // Uninstalling the source is the end of keeping up with it.
-            cbTrackChanges.Enabled = installation != null && !cbUninstall.Checked;
-            if (!cbTrackChanges.Enabled)
-                cbTrackChanges.Checked = false;
             btnOk.Enabled = installation != null;
         }
 
         private void listInstallations_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateControls();
-        }
-
-        private void cbUninstall_CheckedChanged(object sender, EventArgs e)
         {
             UpdateControls();
         }
@@ -127,11 +110,6 @@ namespace pwiz.Skyline.ToolsUI
         public bool UninstallEnabled
         {
             get { return cbUninstall.Enabled; }
-        }
-
-        public bool TrackChangesEnabled
-        {
-            get { return cbTrackChanges.Enabled; }
         }
 
         #endregion

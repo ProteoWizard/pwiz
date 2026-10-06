@@ -21,9 +21,15 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using System.Xml.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 
 namespace pwiz.Skyline.Util
 {
@@ -38,28 +44,46 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class SettingsImporter
     {
-        /// <summary>
-        /// Name of the copy of the imported file kept beside user.config when the import is to
-        /// be kept up to date. <see cref="ImportedSettingsUpdater"/> compares the source
-        /// against it to see whether anything changed.
-        /// </summary>
-        public const string BASE_CONFIG_FILE_NAME = @"base.user.config";
-
         private const string INSTALLING_SUFFIX = @"_installing";
-
-        public static string GetBaseConfigPath(string configFilePath)
-        {
-            return Path.Combine(Path.GetDirectoryName(configFilePath) ?? string.Empty, BASE_CONFIG_FILE_NAME);
-        }
 
         /// <summary>
         /// Runs a command line the way Programs and Features would, through the shell so that an
-        /// uninstaller needing elevation gets to ask for it.
+        /// uninstaller needing elevation gets to ask for it. A ClickOnce uninstall is answered
+        /// with Remove, since that is what the user asked for in choosing to uninstall.
         /// </summary>
         public static void RunCommand(string commandLine)
         {
             SplitCommandLine(commandLine, out var fileName, out var arguments);
             Process.Start(new ProcessStartInfo(fileName, arguments) { UseShellExecute = true });
+            var deploymentName = ClickOnceMaintenanceDialog.GetDeploymentName(commandLine);
+            if (deploymentName != null)
+                new ClickOnceMaintenanceDialog(deploymentName).ChooseRemoveWhenShown();
+        }
+
+        /// <summary>
+        /// Name of the user setting in which a Skyline that installs a newer one records how to
+        /// uninstall itself, so that the newer one can do that once it has taken the settings.
+        /// </summary>
+        public const string UNINSTALL_COMMAND_SETTING = @"UninstallCommand";
+
+        /// <summary>
+        /// The command <paramref name="configFile"/> records for uninstalling the installation
+        /// that wrote it, or null when it records none or cannot be read.
+        /// </summary>
+        public static string ReadUninstallCommand(string configFile)
+        {
+            try
+            {
+                var command = XDocument.Load(configFile).Descendants(@"setting")
+                    .Where(setting => (string) setting.Attribute(@"name") == UNINSTALL_COMMAND_SETTING)
+                    .Select(setting => (string) setting.Element(@"value"))
+                    .FirstOrDefault();
+                return string.IsNullOrEmpty(command) ? null : command;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public SettingsImporter(string sourceConfigFile)
@@ -79,12 +103,6 @@ namespace pwiz.Skyline.Util
         public bool KeepInstallationId { get; set; } = true;
 
         /// <summary>
-        /// Whether to remember where the settings came from, so that later changes to that file
-        /// can be brought across at startup.
-        /// </summary>
-        public bool TrackChanges { get; set; }
-
-        /// <summary>
         /// Command to run after importing to uninstall the other installation, or null to leave
         /// it in place.
         /// </summary>
@@ -97,21 +115,19 @@ namespace pwiz.Skyline.Util
         public Action<string> RunUninstall { get; set; }
 
         /// <summary>
-        /// The whole import, for a caller with no UI to show progress in. A caller with one runs
-        /// the three steps itself, with <see cref="CopyTools"/> in the background and the other
-        /// two on the UI thread: reloading the settings raises PropertyChanged for every setting,
-        /// and the graphs that listen for those expect to hear about them on the UI thread.
+        /// The settings file as it was before <see cref="ImportSettingsFile"/> replaced it, or
+        /// null when there was none, so that <see cref="RevertImport"/> can put it back.
         /// </summary>
-        public void Import(ILongWaitBroker broker)
-        {
-            ImportSettingsFile();
-            CopyTools(broker);
-            FinishImport();
-        }
+        private byte[] _originalConfigBytes;
+
+        private bool _settingsFileReplaced;
 
         /// <summary>
         /// Replaces the settings file with the source and reads it in, keeping this program's
-        /// own installation id unless the source's is to be taken over.
+        /// own installation id unless the source's is to be taken over. The import then runs
+        /// <see cref="CopyTools"/> in the background and <see cref="FinishImport"/> back on the
+        /// UI thread, since reloading the settings raises PropertyChanged for every setting and
+        /// the graphs that listen for those expect to hear about them on the UI thread.
         /// </summary>
         public void ImportSettingsFile()
         {
@@ -121,7 +137,11 @@ namespace pwiz.Skyline.Util
             var configFolder = Path.GetDirectoryName(configFile);
             if (!string.IsNullOrEmpty(configFolder))
                 Directory.CreateDirectory(configFolder);
+            // Saved first, so that what a revert puts back includes this session's changes.
+            settings.Save();
+            _originalConfigBytes = File.Exists(configFile) ? File.ReadAllBytes(configFile) : null;
             File.Copy(SourceConfigFile, configFile, true);
+            _settingsFileReplaced = true;
             settings.Reload();
 
             // An imported file with no id of its own has nothing to take over.
@@ -133,44 +153,89 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Records where the settings came from, saves everything, and uninstalls the other
-        /// installation when that was asked for.
+        /// The whole import, with progress shown: replaces the settings file, copies the tools the
+        /// imported settings name, and finishes; or, when the copy is canceled or anything fails,
+        /// puts the settings back as they were. Returns whether the import finished.
+        /// </summary>
+        public bool Import(Control parent)
+        {
+            try
+            {
+                ImportSettingsFile();
+                bool toolsCopied = false;
+                try
+                {
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.Text = Program.Name;
+                    longWaitDlg.Message = ToolsUIResources.ToolOptionsUI_ImportSettings_Importing_settings;
+                    longWaitDlg.PerformWork(parent, 800, broker => toolsCopied = CopyTools(broker));
+                }
+                finally
+                {
+                    // Canceled or failed: nothing is imported, and nothing is uninstalled.
+                    if (!toolsCopied)
+                        RevertImport();
+                }
+                if (!toolsCopied)
+                    return false;
+                FinishImport();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                MessageDlg.ShowWithException(parent,
+                    string.Format(ToolsUIResources.ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_,
+                        SourceConfigFile), exception);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Saves everything, and uninstalls the other installation when that was asked for.
+        /// Settings once imported are not offered again at the next start, even though the file
+        /// they came from, written by an older Skyline, says nothing about that.
         /// </summary>
         public void FinishImport()
         {
-            var settings = Settings.Default;
-            var baseConfigFile = GetBaseConfigPath(settings.SettingsFilePath);
-            if (TrackChanges)
-            {
-                File.Copy(SourceConfigFile, baseConfigFile, true);
-                settings.ImportedSettingsPath = SourceConfigFile;
-            }
-            else
-            {
-                // Whatever the imported file itself was tracking is not this program's business.
-                settings.ImportedSettingsPath = string.Empty;
-                FileEx.SafeDelete(baseConfigFile, true);
-            }
-            settings.Save();
+            Settings.Default.CheckedForSettingsToImport = true;
+            Settings.Default.Save();
 
             if (!string.IsNullOrEmpty(UninstallCommand))
                 RunUninstall(UninstallCommand);
         }
 
         /// <summary>
+        /// Puts back the settings file that <see cref="ImportSettingsFile"/> replaced, for an
+        /// import that was canceled or failed before <see cref="FinishImport"/>. Tool folders
+        /// already copied stay in the Tools folder, where nothing names them.
+        /// </summary>
+        public void RevertImport()
+        {
+            if (!_settingsFileReplaced)
+                return;
+            var settings = Settings.Default;
+            string configFile = settings.SettingsFilePath;
+            if (_originalConfigBytes == null)
+                FileEx.SafeDelete(configFile, true);
+            else
+                File.WriteAllBytes(configFile, _originalConfigBytes);
+            _settingsFileReplaced = false;
+            settings.Reload();
+        }
+
+        /// <summary>
         /// Brings the external tools the current settings name into this installation's Tools
         /// folder, and points the settings at the copies. Tools already there are left alone.
-        /// Public because the ClickOnce migration at startup copies the settings file itself,
-        /// before anything has read the settings, and then needs just this part.
+        /// Returns false when the user canceled before every tool was copied.
         /// </summary>
-        public void CopyTools(ILongWaitBroker broker)
+        public bool CopyTools(ILongWaitBroker broker)
         {
             var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
             var toolList = Settings.Default.ToolList;
             var searchToolList = Settings.Default.SearchToolList;
             int numTools = toolList.Count + searchToolList.Count;
             if (numTools == 0)
-                return;
+                return true;
             if (broker != null)
                 broker.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
             int increment = 100 / (numTools + 1);
@@ -194,7 +259,7 @@ namespace pwiz.Skyline.Util
             // Assigning the lists is what marks them changed, so that the new paths get saved.
             Settings.Default.ToolList = ToolList.CopyTools(toolList);
             if (canceled)
-                return;
+                return false;
 
             foreach (var tool in searchToolList)
             {
@@ -208,9 +273,13 @@ namespace pwiz.Skyline.Util
                     tool.Path = tool.Path?.Replace(oldDir, newDir);
                 }
                 if (!AdvanceProgress(broker, increment))
+                {
+                    canceled = true;
                     break;
+                }
             }
             Settings.Default.SearchToolList = SearchToolList.CopyTools(searchToolList);
+            return !canceled;
         }
 
         /// <summary>

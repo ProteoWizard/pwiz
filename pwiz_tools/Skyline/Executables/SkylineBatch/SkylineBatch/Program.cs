@@ -1,6 +1,8 @@
 /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
  * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,10 +25,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using log4net.Config;
@@ -99,8 +98,6 @@ namespace SkylineBatch
                     return;
                 }
 
-                InitializeSecurityProtocol();
-                
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
@@ -143,7 +140,6 @@ namespace SkylineBatch
 
                 if (!restart)
                 {
-                    if (!FunctionalTest) SendAnalyticsHit();
                     if (!InitSkylineSettings()) return;
                     Settings.Default.UpdateIfNecessary();
                     RInstallations.FindRDirectory();
@@ -267,48 +263,6 @@ namespace SkylineBatch
             }
         }
 
-        // ReSharper disable once UnusedMember.Local
-        private static void SendAnalyticsHit()
-        {
-            // ReSharper disable LocalizableElement
-            var postData = "v=1"; // Version 
-            postData += "&t=event"; // Event hit type
-            postData += "&tid=UA-9194399-1"; // Tracking Id 
-            postData += "&cid=" + SharedBatch.Properties.Settings.Default.InstallationId; // Anonymous Client Id
-            postData += "&ec=InstanceBatch"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString((_version.Length > 0 ? _version : "Version unspecified") + "batch"); // version should never be unspecified
-            var dailyRegex = new Regex(@"[0-9]+\.[0-9]+\.[19]\.[0-9]+");
-            postData += "&el=" + (dailyRegex.IsMatch(_version) ? "batch-daily" : "batch-release");
-            postData += "&p=" + "Instance"; // Page
-
-            var data = Encoding.UTF8.GetBytes(postData);
-            var analyticsUrl = "http://www.google-analytics.com/collect";
-            var request = (HttpWebRequest)WebRequest.Create(analyticsUrl);
-
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = data.Length;
-            try
-            {
-                using (Stream stream = request.GetRequestStream())
-                {
-                    stream.Write(data, 0, data.Length);
-                }
-            } catch (Exception e)
-            {
-                ProgramLog.Error(string.Format(Resources.Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_, analyticsUrl), e);
-                return;
-            }
-
-            var response = (HttpWebResponse)request.GetResponse();
-            var responseStream = response.GetResponseStream();
-            if (null != responseStream)
-            {
-                new StreamReader(responseStream).ReadToEnd();
-            }
-            // ReSharper restore LocalizableElement
-        }
-
         public static string Version()
         {
             return $"{AppName()} {_version}";
@@ -322,12 +276,6 @@ namespace SkylineBatch
         public static Icon Icon()
         {
             return System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        }
-
-        private static void InitializeSecurityProtocol()
-        {
-            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
         }
 
         public static void AddTestException(Exception exception)

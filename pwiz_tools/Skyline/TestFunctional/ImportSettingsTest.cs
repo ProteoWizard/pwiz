@@ -18,12 +18,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
+using Microsoft.Win32;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -34,7 +35,8 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Tests Tools > Options > Miscellaneous > Import Settings, which replaces the settings
-    /// with those of another installed Skyline.
+    /// with those of another installed Skyline, and the import at the first start after an
+    /// installation (<see cref="FirstLaunchImport"/>).
     /// </summary>
     [TestClass]
     public class ImportSettingsTest : AbstractFunctionalTest
@@ -42,10 +44,18 @@ namespace pwiz.SkylineTestFunctional
         private const string OWN_INSTALLATION_ID = @"own-installation";
         private const string OTHER_INSTALLATION_ID = @"other-installation";
         private const string UNINSTALL_COMMAND = @"uninstall the other installation";
+        private const string HANDOFF_UNINSTALL_COMMAND = @"uninstall the installing Skyline";
+        private const string HANDOFF_VALUE_NAME = @"ExampleProductName";
         private const string TOOL_TITLE = @"Imported Tool";
         private const string TOOL_FOLDER = @"ImportedTool";
         private const string TOOL_FILE = @"tool.bat";
         private const int OTHER_ANNOTATION_COLOR = 7;
+        private const int OWN_ANNOTATION_COLOR = 2;
+        private const int SOURCE_ANNOTATION_COLOR = 3;
+        private const string OWN_TOOL_TITLE = @"Own Tool";
+        private const string SOURCE_TOOL_TITLE = @"Tool Added To Source";
+        private const string OWN_LIBRARY_DIRECTORY = @"C:\OwnLibraries";
+        private const string SOURCE_LIBRARY_DIRECTORY = @"C:\SourceLibraries";
 
         private string _toolsDirectory;
 
@@ -58,63 +68,138 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var provider = Settings.Default.UserConfigProvider;
-            string originalConfigFolder = provider.ConfigFolder;
             _toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
             DirectoryEx.SafeDelete(_toolsDirectory);
             try
             {
-                var other = WriteOtherInstallation(provider);
+                var other = WriteOtherInstallation();
                 // Also an installation that is no longer in Programs and Features, whose
                 // settings can be imported but which cannot be uninstalled
                 var stale = new SkylineInstallation
                 {
-                    ProductName = @"Skyline-daily",
+                    ProductName = @"ExampleProductName",
                     Version = @"25.1.1.100",
                     ExecutableFolder = Path.GetDirectoryName(other.ExecutableFolder),
                     UserConfigFile = other.UserConfigFile
                 };
-                WriteOwnSettings(provider, TestFilesDir.GetTestPath(@"Own"));
+                WriteOwnSettings();
 
-                TestImportKeepingOwnIdentity(other, stale);
-                TestSourceChangeDetection(other);
-                TestImportWithUninstall(other);
+                TestImportReplacesSettingsAndCopiesTools(other, stale);
+                TestCanceledImportIsUndone(other);
+                TestAdminChangesAreMergedIn(other);
+                TestImportAndUninstallTakesOverTheOtherInstallation(other);
+                TestInstallingSkylineIsImportedSilently(other);
+                TestOlderInstallationsAreOfferedOnce(other);
             }
             finally
             {
-                provider.ConfigFolder = originalConfigFolder;
                 DirectoryEx.SafeDelete(_toolsDirectory);
+                Registry.CurrentUser.DeleteSubKeyTree(HandoffKeyPath, false);
             }
         }
 
         /// <summary>
-        /// The default import: the other installation's settings replace this one's, its tools
-        /// are copied into this installation's Tools folder, this installation keeps its own id,
-        /// and, on request, a copy of the imported file is kept so that later changes to it can
-        /// be noticed.
+        /// A registry key of this test's own, standing in for the one an older Skyline writes
+        /// before it starts the installer of this one.
         /// </summary>
-        private void TestImportKeepingOwnIdentity(SkylineInstallation other, SkylineInstallation stale)
+        private static string HandoffKeyPath => @"Software\MacCossLabUW\" + nameof(ImportSettingsTest);
+
+        /// <summary>
+        /// The first start after an older Skyline installed this one: the settings file it named
+        /// in the registry is imported without asking, this installation takes over its id, the
+        /// uninstall command it recorded in that file is run, and the registry value is used up.
+        /// </summary>
+        private void TestInstallingSkylineIsImportedSilently(SkylineInstallation other)
         {
-            var toolsOptions = ShowToolOptions(new[] { other, stale }, out var uninstallsRun);
-            var importDlg = ShowDialog<ImportSettingsDlg>(toolsOptions.ImportSettings);
+            var handoffConfigFile = TestFilesDir.GetTestPath(@"handoff.user.config");
+            var document = XDocument.Load(other.UserConfigFile);
+            document.Descendants(@"pwiz.Skyline.Properties.Settings").First().Add(
+                new XElement(@"setting",
+                    new XAttribute(@"name", SettingsImporter.UNINSTALL_COMMAND_SETTING),
+                    new XAttribute(@"serializeAs", @"String"),
+                    new XElement(@"value", HANDOFF_UNINSTALL_COMMAND)));
+            document.Save(handoffConfigFile);
+            using (var key = Registry.CurrentUser.CreateSubKey(HandoffKeyPath))
+                key.SetValue(HANDOFF_VALUE_NAME, handoffConfigFile);
+
+            var uninstallsRun = new List<string>();
+            var firstLaunchImport = new FirstLaunchImport
+            {
+                HandoffKeyPath = HandoffKeyPath,
+                HandoffValueName = HANDOFF_VALUE_NAME,
+                FindInstallations = () => throw new AssertFailedException(@"Nothing to look for after a handoff"),
+                RunUninstall = uninstallsRun.Add
+            };
             RunUI(() =>
+            {
+                Settings.Default.InstallationId = OWN_INSTALLATION_ID;
+                Settings.Default.AnnotationColor = OWN_ANNOTATION_COLOR;
+                Settings.Default.CheckedForSettingsToImport = false;
+                firstLaunchImport.Run(SkylineWindow);
+            });
+
+            Assert.AreEqual(ReadAnnotationColor(handoffConfigFile), Settings.Default.AnnotationColor);
+            Assert.AreEqual(OTHER_INSTALLATION_ID, Settings.Default.InstallationId);
+            CollectionAssert.AreEqual(new[] { HANDOFF_UNINSTALL_COMMAND }, uninstallsRun);
+            Assert.IsTrue(Settings.Default.CheckedForSettingsToImport);
+            // Used up, and the key gone with it, since it held nothing else
+            Assert.IsNull(Registry.CurrentUser.OpenSubKey(HandoffKeyPath));
+        }
+
+        /// <summary>
+        /// The first start with no handoff offers the older installations found, in the Import
+        /// Settings dialog. A later start offers nothing, even when the user chose nothing.
+        /// </summary>
+        private void TestOlderInstallationsAreOfferedOnce(SkylineInstallation other)
+        {
+            int searches = 0;
+            var firstLaunchImport = new FirstLaunchImport
+            {
+                HandoffKeyPath = HandoffKeyPath,
+                HandoffValueName = HANDOFF_VALUE_NAME,
+                FindInstallations = () =>
+                {
+                    searches++;
+                    return new[] { other };
+                },
+                RunUninstall = command => throw new AssertFailedException(@"Nothing was to be uninstalled")
+            };
+            RunUI(() =>
+            {
+                Settings.Default.AnnotationColor = OWN_ANNOTATION_COLOR;
+                Settings.Default.CheckedForSettingsToImport = false;
+            });
+            RunDlg<ImportSettingsDlg>(() => firstLaunchImport.Run(SkylineWindow), importDlg =>
+            {
+                Assert.AreSame(other, importDlg.SelectedInstallation);
+                importDlg.OkDialog();
+            });
+            Assert.AreEqual(ReadAnnotationColor(other.UserConfigFile), Settings.Default.AnnotationColor);
+            Assert.IsTrue(Settings.Default.CheckedForSettingsToImport);
+
+            RunUI(() => firstLaunchImport.Run(SkylineWindow));
+            Assert.AreEqual(1, searches);
+        }
+
+        /// <summary>
+        /// The default import: the other installation's settings replace this one's, its tools
+        /// are copied into this installation's Tools folder, and this installation keeps its own
+        /// id.
+        /// </summary>
+        private void TestImportReplacesSettingsAndCopiesTools(SkylineInstallation other, SkylineInstallation stale)
+        {
+            var uninstallsRun = ImportFromToolOptions(new[] { other, stale }, importDlg =>
             {
                 Assert.AreEqual(2, importDlg.Installations.Count);
                 Assert.AreSame(other, importDlg.SelectedInstallation);
                 Assert.IsTrue(importDlg.UninstallEnabled);
-                Assert.IsTrue(importDlg.TrackChangesEnabled);
 
                 // Nothing to uninstall for an installation Programs and Features no longer lists
                 importDlg.SelectedInstallation = stale;
                 Assert.IsFalse(importDlg.UninstallEnabled);
-                Assert.IsTrue(importDlg.TrackChangesEnabled);
 
                 importDlg.SelectedInstallation = other;
-                importDlg.TrackChanges = true;
             });
-            OkDialog(importDlg, importDlg.OkDialog);
-            WaitForImport(toolsOptions);
-            OkDialog(toolsOptions, toolsOptions.OkDialog);
 
             Assert.AreEqual(0, uninstallsRun.Count);
             Assert.AreEqual(OTHER_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
@@ -126,89 +211,124 @@ namespace pwiz.SkylineTestFunctional
             string expectedToolDir = Path.Combine(_toolsDirectory, TOOL_FOLDER);
             Assert.AreEqual(expectedToolDir, tool.ToolDirPath);
             AssertEx.FileExists(Path.Combine(expectedToolDir, TOOL_FILE));
-
-            // Tracking: the source is remembered, along with a copy of what it held
-            Assert.AreEqual(other.UserConfigFile, Settings.Default.ImportedSettingsPath);
-            string baseConfigFile = SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath);
-            AssertEx.FileExists(baseConfigFile);
-            Assert.IsTrue(File.ReadAllBytes(baseConfigFile).SequenceEqual(File.ReadAllBytes(other.UserConfigFile)));
         }
 
         /// <summary>
-        /// The startup check notices when the tracked file changes, and does not when it has not.
+        /// An import canceled or failed partway is undone, down to a change made in this session
+        /// and not yet saved.
         /// </summary>
-        private void TestSourceChangeDetection(SkylineInstallation other)
+        private void TestCanceledImportIsUndone(SkylineInstallation other)
         {
-            var updater = new ImportedSettingsUpdater();
-            Assert.IsTrue(updater.IsTracking);
-            Assert.AreEqual(other.UserConfigFile, updater.SourcePath);
-            Assert.IsFalse(updater.HasSourceChanged());
-            updater.UpdateIfChanged();
+            RunUI(() =>
+            {
+                Settings.Default.AnnotationColor = OWN_ANNOTATION_COLOR;
+                var importer = new SettingsImporter(other.UserConfigFile);
+                importer.ImportSettingsFile();
+                Assert.AreEqual(OTHER_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
+                importer.RevertImport();
+                Assert.AreEqual(OWN_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
 
-            File.AppendAllText(other.UserConfigFile, @"<!-- changed since the import -->");
-            Assert.IsTrue(updater.HasSourceChanged());
-            // The merge is not written yet, so this only has to leave things as they are
-            updater.UpdateIfChanged();
-            Assert.IsTrue(updater.HasSourceChanged());
+                // Back to what was imported, for the merge that follows
+                Settings.Default.AnnotationColor = OTHER_ANNOTATION_COLOR;
+            });
+        }
+
+        /// <summary>
+        /// What an ordinary user of an installation made for all users gets at startup, with the
+        /// other installation's user.config standing in for the administrator's shared one, and
+        /// the settings just imported from it for the user's own. Changes the administrator made
+        /// since the last merge are brought across without undoing the user's: a setting changed
+        /// only by the administrator takes the new value, one changed by both keeps the user's,
+        /// the tool list gains the tools added on each side, and the user keeps their own
+        /// installation id.
+        /// </summary>
+        private void TestAdminChangesAreMergedIn(SkylineInstallation other)
+        {
+            var baseConfigFile = TestFilesDir.GetTestPath(SharedSettingsMerger.SHARED_BASE_CONFIG_FILE_NAME);
+            File.Copy(other.UserConfigFile, baseConfigFile, true);
+            var merger = new SharedSettingsMerger
+            {
+                SourcePath = other.UserConfigFile,
+                BaseConfigFilePath = baseConfigFile
+            };
+            Assert.IsFalse(merger.HasSourceChanged());
+
+            RunUI(() =>
+            {
+                Settings.Default.LibraryDirectory = OWN_LIBRARY_DIRECTORY;
+                Settings.Default.ToolList = ToolList.CopyTools(Settings.Default.ToolList.Append(
+                    new ToolDescription(OWN_TOOL_TITLE, @"own.exe", string.Empty)));
+
+                var source = new Settings();
+                source.PortableProvider.ConfigFilePath = other.UserConfigFile;
+                source.AnnotationColor = SOURCE_ANNOTATION_COLOR;
+                source.LibraryDirectory = SOURCE_LIBRARY_DIRECTORY;
+                source.ToolList = ToolList.CopyTools(source.ToolList.Append(
+                    new ToolDescription(SOURCE_TOOL_TITLE, @"source.exe", string.Empty)));
+                source.Save();
+            });
+            Assert.IsTrue(merger.HasSourceChanged());
+
+            RunUI(merger.MergeIfChanged);
+
+            Assert.AreEqual(SOURCE_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
+            Assert.AreEqual(OWN_LIBRARY_DIRECTORY, Settings.Default.LibraryDirectory);
+            Assert.AreEqual(OWN_INSTALLATION_ID, Settings.Default.InstallationId);
+            CollectionAssert.AreEquivalent(new[] { TOOL_TITLE, OWN_TOOL_TITLE, SOURCE_TOOL_TITLE },
+                Settings.Default.ToolList.Select(tool => tool.Title).ToArray());
+            // The copy brought into this installation's Tools folder is still the one used
+            Assert.AreEqual(Path.Combine(_toolsDirectory, TOOL_FOLDER),
+                Settings.Default.ToolList.Single(tool => tool.Title == TOOL_TITLE).ToolDirPath);
+            // The base copy was refreshed, so the next start has nothing to bring across
+            Assert.IsFalse(merger.HasSourceChanged());
         }
 
         /// <summary>
         /// Importing and uninstalling the other installation: this installation takes over the
-        /// other's id, the uninstall command is run, and there is no source left to track.
+        /// other's id, and the uninstall command is run.
         /// </summary>
-        private void TestImportWithUninstall(SkylineInstallation other)
+        private void TestImportAndUninstallTakesOverTheOtherInstallation(SkylineInstallation other)
         {
-            var toolsOptions = ShowToolOptions(new[] { other }, out var uninstallsRun);
-            var importDlg = ShowDialog<ImportSettingsDlg>(toolsOptions.ImportSettings);
-            RunUI(() =>
-            {
-                importDlg.TrackChanges = true;
-                importDlg.UninstallSelected = true;
-                // Nothing to keep up with once the source is gone
-                Assert.IsFalse(importDlg.TrackChangesEnabled);
-                Assert.IsFalse(importDlg.TrackChanges);
-            });
-            OkDialog(importDlg, importDlg.OkDialog);
-            WaitForImport(toolsOptions);
-            OkDialog(toolsOptions, toolsOptions.OkDialog);
+            var uninstallsRun = ImportFromToolOptions(new[] { other },
+                importDlg => importDlg.UninstallSelected = true);
 
             Assert.AreEqual(1, uninstallsRun.Count);
             Assert.AreEqual(UNINSTALL_COMMAND, uninstallsRun[0]);
             Assert.AreEqual(OTHER_INSTALLATION_ID, Settings.Default.InstallationId);
             Assert.AreEqual(OTHER_INSTALLATION_ID, ReadSavedInstallationId());
-            Assert.AreEqual(string.Empty, Settings.Default.ImportedSettingsPath);
-            Assert.IsFalse(File.Exists(SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath)));
-        }
-
-        private ToolOptionsUI ShowToolOptions(SkylineInstallation[] installations, out List<string> uninstallsRun)
-        {
-            var commandsRun = new List<string>();
-            uninstallsRun = commandsRun;
-            var toolsOptions = ShowDialog<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI);
-            RunUI(() =>
-            {
-                toolsOptions.SelectedTab = ToolOptionsUI.TABS.Miscellaneous;
-                toolsOptions.FindInstallations = () => installations;
-                toolsOptions.RunUninstall = commandsRun.Add;
-            });
-            return toolsOptions;
         }
 
         /// <summary>
-        /// The import pumps messages while it runs, so dismissing the dialog is not the end of
-        /// it. The options dialog says when it is done.
+        /// Clicks Import Settings in Tools > Options, offering the given installations, makes the
+        /// choices in the Import Settings dialog, which runs on the UI thread, and accepts both
+        /// dialogs. Returns once the whole import is done. The uninstall commands it would have
+        /// run are returned instead of being run.
         /// </summary>
-        private static void WaitForImport(ToolOptionsUI toolsOptions)
+        private List<string> ImportFromToolOptions(SkylineInstallation[] installations, Action<ImportSettingsDlg> chooseImport)
         {
-            WaitForConditionUI(() => !toolsOptions.IsImportingSettings);
+            var uninstallsRun = new List<string>();
+            RunLongDlg<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI, toolsOptions =>
+            {
+                RunUI(() =>
+                {
+                    toolsOptions.SelectedTab = ToolOptionsUI.TABS.Miscellaneous;
+                    toolsOptions.FindInstallations = () => installations;
+                    toolsOptions.RunUninstall = uninstallsRun.Add;
+                });
+                RunDlg<ImportSettingsDlg>(toolsOptions.ImportSettings, importDlg =>
+                {
+                    chooseImport(importDlg);
+                    importDlg.OkDialog();
+                });
+            }, toolsOptions => toolsOptions.OkDialog());
+            return uninstallsRun;
         }
 
         /// <summary>
         /// Writes the settings file of the other installation, along with the external tool it
-        /// names under its own Tools folder, by pointing the settings provider at that folder
-        /// for the duration.
+        /// names under its own Tools folder.
         /// </summary>
-        private SkylineInstallation WriteOtherInstallation(UserConfigSettingsProvider provider)
+        private SkylineInstallation WriteOtherInstallation()
         {
             string otherFolder = TestFilesDir.GetTestPath(@"Other");
             string toolDir = Path.Combine(otherFolder, @"Tools", TOOL_FOLDER);
@@ -216,31 +336,43 @@ namespace pwiz.SkylineTestFunctional
             string toolPath = Path.Combine(toolDir, TOOL_FILE);
             File.WriteAllText(toolPath, @"@echo off");
 
-            provider.ConfigFolder = otherFolder;
-            Settings.Default.InstallationId = OTHER_INSTALLATION_ID;
-            Settings.Default.AnnotationColor = OTHER_ANNOTATION_COLOR;
+            var otherSettings = new Settings();
+            otherSettings.PortableProvider.ConfigFilePath = Path.Combine(otherFolder, PortableSettingsProvider.CONFIG_FILE_NAME);
+            otherSettings.InstallationId = OTHER_INSTALLATION_ID;
+            otherSettings.AnnotationColor = OTHER_ANNOTATION_COLOR;
             var tool = new ToolDescription(TOOL_TITLE, toolPath, string.Empty) { ToolDirPath = toolDir };
-            Settings.Default.ToolList = ToolList.CopyTools(new[] { tool });
-            Settings.Default.Save();
+            otherSettings.ToolList = ToolList.CopyTools(new[] { tool });
+            otherSettings.Save();
 
             return new SkylineInstallation
             {
-                ProductName = @"Skyline-daily",
+                ProductName = @"ExampleProductName",
                 Version = @"26.1.1.209",
                 ExecutableFolder = otherFolder,
-                UserConfigFile = provider.ConfigFilePath,
+                UserConfigFile = otherSettings.SettingsFilePath,
                 IsCurrentlyInstalled = true,
                 UninstallCommand = UNINSTALL_COMMAND
             };
         }
 
-        private static void WriteOwnSettings(UserConfigSettingsProvider provider, string ownFolder)
+        private static void WriteOwnSettings()
         {
-            provider.ConfigFolder = ownFolder;
             Settings.Default.InstallationId = OWN_INSTALLATION_ID;
             Settings.Default.AnnotationColor = 0;
             Settings.Default.ToolList = new ToolList();
             Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// The annotation color in a settings file, which the steps above leave different from
+        /// <see cref="OWN_ANNOTATION_COLOR"/>, so that taking it on shows the file was imported.
+        /// </summary>
+        private static int ReadAnnotationColor(string configFile)
+        {
+            var settings = new Settings();
+            settings.PortableProvider.ConfigFilePath = configFile;
+            Assert.AreNotEqual(OWN_ANNOTATION_COLOR, settings.AnnotationColor);
+            return settings.AnnotationColor;
         }
 
         /// <summary>

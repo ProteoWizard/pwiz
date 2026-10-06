@@ -49,6 +49,12 @@ namespace pwiz.Osprey.Core
         public string OutputReport { get; set; }
 
         /// <summary>
+        /// Optional: write the loaded spectral library to this path as a .blib, with fragment ion
+        /// annotations, and exit without searching. No input files are needed.
+        /// </summary>
+        public string ExportLibraryBlib { get; set; }
+
+        /// <summary>
         /// Optional: write an FDRBench-compatible input TSV to this path. Includes every reported
         /// (compaction-surviving) target, i.e. the peptides actually written to the output, regardless
         /// of q-value, with the raw SVM discriminant as <c>score</c>. The level
@@ -153,6 +159,16 @@ namespace pwiz.Osprey.Core
         public bool DecoysInLibrary { get; set; }
 
         /// <summary>
+        /// Whether the library supplies its own decoys, so the load must mark and pair them and
+        /// Osprey generates none: <see cref="DecoysInLibrary"/>, or its synonym
+        /// <see cref="DecoyMethod.FromLibrary"/>. Treating the two as one is what fixed
+        /// library-decoy mode silently falling through to Reverse generation. The one
+        /// definition: the load, scoring and the argument checks all ask it here, so they
+        /// cannot disagree about which searches generate.
+        /// </summary>
+        public bool LibrarySuppliesDecoys => DecoysInLibrary || DecoyMethod == DecoyMethod.FromLibrary;
+
+        /// <summary>
         /// Protein-accession prefixes that identify decoys when the
         /// library already contains them (case-insensitive). Default
         /// covers the three common conventions: Osprey's own
@@ -188,8 +204,10 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string DecoyPairingManifestPath { get; set; }
 
-        /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
-        public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
+        /// <summary>The classifier first-pass Percolator trains: the linear SVM (default) or
+        /// gradient-boosted trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the
+        /// command line is parsed; nothing else reads OSPREY_FDR_MODEL.</summary>
+        public FdrClassifier FdrClassifier { get; set; } = FdrClassifier.LinearSvm;
 
         /// <summary>
         /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
@@ -257,9 +275,10 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
-        /// --perf-stats: emit the machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for
-        /// the perf tools (Test-PerfGate.ps1, Measure-Pipeline.ps1). Off by default so the
-        /// human log stays clean. Runtime-only.
+        /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
+        /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
+        /// tools and regression.ps1 read. Off by default so the human log stays clean.
+        /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
 
@@ -272,6 +291,12 @@ namespace pwiz.Osprey.Core
 
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
+
+        /// <summary>
+        /// The optional training export (<c>--training-export</c>), a PerFileRescoring output.
+        /// Off by default, and in no identity hash: off, it is not declared at all.
+        /// </summary>
+        public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
 
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
@@ -466,6 +491,31 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The user-facing name of a <see cref="DecoyMethod"/>, as it reads in "Generating {0}
+    /// decoys". Skyline's <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class DecoyMethodExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_reverse_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_shuffled_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_library_supplied
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this DecoyMethod val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
+
+    /// <summary>
     /// Level at which FDR is controlled.
     /// Maps to osprey-core/src/types.rs FdrLevel.
     /// </summary>
@@ -477,45 +527,56 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
-    /// Statistical method for FDR estimation.
-    /// Maps to osprey-core/src/types.rs FdrMethod.
+    /// The user-facing name of an <see cref="FdrLevel"/>, as it reads in "at 1.0% experiment-level
+    /// {0} FDR". Skyline's <c>GetLocalizedString</c> pattern.
     /// </summary>
-    public enum FdrMethod
+    public static class FdrLevelExtension
     {
-        Percolator,
-        Mokapot,
-        Simple,
-        /// <summary>Gradient-boosted decision trees (non-linear alternative to the linear
-        /// Percolator SVM); implemented by Osprey.ML GradientBoostedTrees. Selected by
-        /// <c>--fdr-method gbdt</c> (the legacy alias <c>fasttree</c> still parses).</summary>
-        Gbdt
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_peptide,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor_and_peptide
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this FdrLevel val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
     }
 
-    public static class FdrMethodExtensions
+    /// <summary>
+    /// The classifier the semi-supervised Percolator framework trains for FDR estimation.
+    /// Both values run the same framework - best-per-precursor dedup, peptide-grouped CV
+    /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
+    /// projection / streaming plumbing around all of it - and differ ONLY in the model
+    /// trained per fold. Selected by the OSPREY_FDR_MODEL environment variable
+    /// (<see cref="OspreyEnvironment.FdrModel"/>), not by a command-line argument.
+    ///
+    /// <para>"Percolator" names that framework, not a classifier, so no value here is called
+    /// Percolator. The framework is also not the original Percolator tool: it cross-validates
+    /// during the SVM training iterations and assigns q-values by target-decoy competition
+    /// rather than Storey-Tibshirani. The linear SVM is the classifier the original tool used,
+    /// and it is the default and the production path.</para>
+    ///
+    /// <para>Rust's FdrMethod (osprey-core/src/config.rs) is Percolator, Mokapot and Simple,
+    /// and has no trees. Osprey dropped the other two: Mokapot was never reachable here, and
+    /// the simple target-decoy competition was removed (#4543).</para>
+    /// </summary>
+    public enum FdrClassifier
     {
-        /// <summary>
-        /// True for the methods driven by the shared semi-supervised target-decoy
-        /// framework: <see cref="FdrMethod.Percolator"/> (linear SVM) and
-        /// <see cref="FdrMethod.Gbdt"/> (gradient-boosted trees). The two differ ONLY
-        /// in the classifier -- identical best-per-precursor dedup, peptide-grouped CV
-        /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
-        /// identical projection / streaming plumbing around all of it.
-        ///
-        /// Use this ANYWHERE the question is "is this the Percolator pipeline?" rather
-        /// than a raw <c>== FdrMethod.Percolator</c>. Those gates are scattered across the
-        /// Tasks layer -- FirstPassFDR's projection gate, the 2nd-pass projection gate,
-        /// <c>NeedsResidentPool</c>, the Stage 5 log header -- and each one that compares
-        /// against Percolator alone silently routes Gbdt down the resident
-        /// <c>FdrEntry</c> path instead of the streaming projection. That fails quietly:
-        /// same q-values, but the whole-run pool goes resident, which is exactly what
-        /// OOM'd the 82-file join.
-        ///
-        /// Mokapot / Simple are NOT part of this framework and must stay excluded.
-        /// </summary>
-        public static bool UsesPercolatorFramework(this FdrMethod method)
-        {
-            return method == FdrMethod.Percolator || method == FdrMethod.Gbdt;
-        }
+        /// <summary>The linear SVM, the default and the production classifier.</summary>
+        LinearSvm,
+        /// <summary>Gradient-boosted decision trees in place of the linear SVM; implemented by
+        /// Osprey.ML GradientBoostedTrees. EXPERIMENTAL, selected by
+        /// <c>OSPREY_FDR_MODEL=gbdt</c>.</summary>
+        Gbdt
     }
 
     /// <summary>
@@ -527,6 +588,32 @@ namespace pwiz.Osprey.Core
         Auto,
         UnitResolution,
         HRAM
+    }
+
+    /// <summary>
+    /// The user-facing name of a <see cref="ResolutionMode"/>, echoing the <c>--resolution</c>
+    /// values rather than the enum identifier. Skyline's <c>GetLocalizedString</c> pattern, so the
+    /// move to resource strings replaces only the array contents.
+    /// </summary>
+    public static class ResolutionModeExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_auto,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_unit,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_HRAM
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this ResolutionMode val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
     }
 
     /// <summary>

@@ -22,9 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using Microsoft.Win32;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {
@@ -66,43 +64,7 @@ namespace pwiz.Skyline.Util
         private const string CLICK_ONCE_UNINSTALL_HANDLER = @"dfshim.dll";
         private const string CLICK_ONCE_STORE_FOLDER = @"Apps\2.0";
 
-        /// <summary>
-        /// The deployment manifest name in a ClickOnce uninstall command, for example
-        /// "Skyline-daily.application" out of:
-        ///
-        ///     rundll32.exe dfshim.dll,ShArpMaintain Skyline-daily.application, Culture=neutral, ...
-        ///
-        /// Null for anything that is not a ClickOnce uninstall. ClickOnce names the deployment
-        /// after the assembly, which is what makes this the field to match on.
-        /// </summary>
-        public static string GetDeploymentName(string uninstallString)
-        {
-            if (uninstallString == null)
-                return null;
-            var parts = uninstallString.Split(',');
-            if (parts.Length < 2 ||
-                parts[0].IndexOf(CLICK_ONCE_UNINSTALL_HANDLER, StringComparison.OrdinalIgnoreCase) < 0)
-            {
-                return null;
-            }
-            // The maintenance verb and the name are separated by a space, as in
-            // "ShArpMaintain Skyline-daily.application".
-            var maintenanceCommand = parts[1].Trim();
-            int nameStart = maintenanceCommand.LastIndexOf(' ');
-            return nameStart < 0 ? null : maintenanceCommand.Substring(nameStart + 1);
-        }
-
-        /// <param name="assembly">The product's own assembly, whose name is both what ClickOnce
-        /// named its deployment after and what the old settings folder was named after. Pass
-        /// typeof(Program).Assembly rather than the entry assembly: SkylineCmd.exe and
-        /// Skyline-daily.exe start different entry assemblies but are the same product, and all
-        /// of them should inherit that product's old settings.</param>
-        public ClickOnceInstallations(Assembly assembly) : this(assembly.GetName().Name)
-        {
-        }
-
-        /// <param name="assemblyName">See <see cref="AssemblyName"/>. For looking up a product
-        /// other than the running one, such as Skyline-daily from Skyline.</param>
+        /// <param name="assemblyName">See <see cref="AssemblyName"/>.</param>
         public ClickOnceInstallations(string assemblyName)
         {
             AssemblyName = assemblyName;
@@ -220,7 +182,7 @@ namespace pwiz.Skyline.Util
         {
             foreach (var settingsFolder in EnumerateSettingsFolders())
             {
-                var configFile = Path.Combine(settingsFolder, version, UserConfigSettingsProvider.CONFIG_FILE_NAME);
+                var configFile = Path.Combine(settingsFolder, version, PortableSettingsProvider.CONFIG_FILE_NAME);
                 if (File.Exists(configFile))
                     return configFile;
             }
@@ -272,6 +234,30 @@ namespace pwiz.Skyline.Util
                 if (version != null)
                     versions[version] = uninstallString;
             }
+        }
+
+        /// <summary>
+        /// The deployment manifest name in a ClickOnce uninstall command, for example
+        /// "Skyline-daily.application" out of:
+        ///
+        ///     rundll32.exe dfshim.dll,ShArpMaintain Skyline-daily.application, Culture=neutral, ...
+        ///
+        /// Null for anything that is not a ClickOnce uninstall. ClickOnce names the deployment
+        /// after the assembly, which is what makes this the field to match on.
+        /// </summary>
+        private static string GetDeploymentName(string uninstallString)
+        {
+            var parts = uninstallString.Split(',');
+            if (parts.Length < 2 ||
+                parts[0].IndexOf(CLICK_ONCE_UNINSTALL_HANDLER, StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return null;
+            }
+            // The maintenance verb and the name are separated by a space, as in
+            // "ShArpMaintain Skyline-daily.application".
+            var maintenanceCommand = parts[1].Trim();
+            int nameStart = maintenanceCommand.LastIndexOf(' ');
+            return nameStart < 0 ? null : maintenanceCommand.Substring(nameStart + 1);
         }
 
         private static IEnumerable<string> SafeEnumerateDirectories(string folder)

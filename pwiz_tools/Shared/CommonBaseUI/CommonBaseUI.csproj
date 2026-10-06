@@ -35,15 +35,12 @@
          which reads as a build mix-up during an incident. pwiz-sharp suppresses the same
          thing in its Directory.Build.props for the same reason. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <!-- Images.resx embeds Bitmaps; non-string .resx resources need both the
-         System.Resources.Extensions package and this flag to serialize on net472
-         (otherwise MSB3822/MSB3823). Same pattern as CommonUtil.csproj. -->
+    <!-- Images.resx embeds Bitmaps; non-string .resx resources need this flag plus a
+         reference to System.Resources.Extensions (otherwise MSB3822/MSB3823). The
+         reference comes from the Windows Desktop framework (UseWindowsForms), so unlike
+         CommonUtil.csproj this project needs no package for it. -->
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommonUtil\CommonUtil.csproj" />

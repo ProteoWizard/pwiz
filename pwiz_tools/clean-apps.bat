@@ -8,11 +8,13 @@ set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd %PWIZ_ROOT%
 
 echo   Cleaning .NET applications...
+REM # Skyline is not swept here: Skyline\CleanSkyline.bat (called below) sweeps its own
+REM # tree, so that running it on its own cleans Skyline completely.
 call :CleanBinaries Shared
-call :CleanBinaries Skyline
 call :CleanBinaries SeeMS
 call :CleanBinaries MSConvertGUI
 call :CleanBinaries Bumbershoot
+call :CleanBinaries Osprey
 
 IF EXIST Shared\CommonTest rmdir /s/q Shared\CommonTest
 

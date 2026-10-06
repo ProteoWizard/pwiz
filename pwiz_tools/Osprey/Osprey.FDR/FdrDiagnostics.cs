@@ -162,9 +162,12 @@ namespace pwiz.Osprey.FDR
                 // _seq - the exact collision NextSequence's own doc comment exists to avoid.
                 // Fails loudly if two instances still race this line.
                 _rows = new StreamWriter(new FileStream(rowsPath, FileMode.CreateNew, FileAccess.Write, FileShare.None));
-                _rows.WriteLine(
-                    "file_idx\tfile\tentry_id\tbase_id\tis_decoy\tclass\tscore\texp_agg_score\t" +
-                    "run_q\texp_q\tapex_rt\tcharge\tincluded\tmodified_sequence");
+                _rows.WriteLine(new[]
+                {
+                    @"file_idx", @"file", @"entry_id", @"base_id", @"is_decoy", @"class", @"score",
+                    @"exp_agg_score", @"run_q", @"exp_q", @"apex_rt", @"charge", @"included",
+                    @"modified_sequence"
+                }.ToDsvLine(TextUtil.SEPARATOR_TSV));
             }
 
             /// <summary>
@@ -178,16 +181,17 @@ namespace pwiz.Osprey.FDR
                 bool included, string modifiedSequence)
             {
                 var inv = CultureInfo.InvariantCulture;
-                _rows.WriteLine(string.Format(inv,
-                    "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}\t{10}\t{11}\t{12}\t{13}",
-                    fileIdx, fileName, entryId, baseId,
-                    isDecoy ? "true" : "false", entrapmentClass,
+                _rows.WriteLine(new[]
+                {
+                    fileIdx.ToString(inv), fileName, entryId.ToString(inv), baseId.ToString(inv),
+                    isDecoy.ToLowerText(), entrapmentClass,
                     Diagnostics.FormatF64Roundtrip(score),
                     Diagnostics.FormatF64Roundtrip(experimentAggregateScore),
                     Diagnostics.FormatF64Roundtrip(runQvalue),
                     Diagnostics.FormatF64Roundtrip(experimentQvalue),
                     Diagnostics.FormatF64Roundtrip(apexRt),
-                    charge, included ? "true" : "false", modifiedSequence));
+                    charge.ToString(inv), included.ToLowerText(), modifiedSequence
+                }.ToDsvLine(TextUtil.SEPARATOR_TSV));
             }
 
             /// <summary>
@@ -204,20 +208,19 @@ namespace pwiz.Osprey.FDR
                 {
                     using (var sw = new StreamWriter(saver.SafeName))
                     {
-                        sw.WriteLine("scope\tfile_idx\tfile\tvalue");
+                        sw.WriteLine(new[] { @"scope", @"file_idx", @"file", @"value" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                         for (int f = 0; f < runNames.Length; f++)
                         {
-                            sw.WriteLine(string.Format(inv, "run\t{0}\t{1}\t{2}",
-                                f, runNames[f], Diagnostics.FormatF64Roundtrip(runCutoffByFile(f))));
+                            sw.WriteLine(new[]
+                            {
+                                @"run", f.ToString(inv), runNames[f], Diagnostics.FormatF64Roundtrip(runCutoffByFile(f))
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                         }
-                        sw.WriteLine(string.Format(inv, "experiment\t-1\t-\t{0}",
-                            Diagnostics.FormatF64Roundtrip(experimentCutoff)));
-                        sw.WriteLine(string.Format(inv, "experimentInStratum\t-1\t-\t{0}",
-                            Diagnostics.FormatF64Roundtrip(experimentCutoffInStratum)));
-                        sw.WriteLine(string.Format(inv, "experimentOffStratum\t-1\t-\t{0}",
-                            Diagnostics.FormatF64Roundtrip(experimentCutoffOffStratum)));
-                        sw.WriteLine(string.Format(inv, "acceptedInStratum\t-1\t-\t{0}", acceptedInStratum));
-                        sw.WriteLine(string.Format(inv, "acceptedOffStratum\t-1\t-\t{0}", acceptedOffStratum));
+                        WriteExperimentCutoff(sw, @"experiment", Diagnostics.FormatF64Roundtrip(experimentCutoff));
+                        WriteExperimentCutoff(sw, @"experimentInStratum", Diagnostics.FormatF64Roundtrip(experimentCutoffInStratum));
+                        WriteExperimentCutoff(sw, @"experimentOffStratum", Diagnostics.FormatF64Roundtrip(experimentCutoffOffStratum));
+                        WriteExperimentCutoff(sw, @"acceptedInStratum", acceptedInStratum.ToString(inv));
+                        WriteExperimentCutoff(sw, @"acceptedOffStratum", acceptedOffStratum.ToString(inv));
                     }
                     saver.Commit();
                 }
@@ -241,6 +244,11 @@ namespace pwiz.Osprey.FDR
                 {
                 }
             }
+
+            private static void WriteExperimentCutoff(TextWriter sw, string scope, string value)
+            {
+                sw.WriteLine(new[] { scope, @"-1", @"-", value }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+            }
         }
 
         /// <summary>
@@ -260,15 +268,20 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.WriteLine("rank\tscore\tis_decoy\traw_qvalue\tmonotonic_qvalue");
+                    sw.WriteLine(new[]
+                    {
+                        @"rank", @"score", @"is_decoy", @"raw_qvalue", @"monotonic_qvalue"
+                    }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     for (int i = 0; i < winners.Count; i++)
                     {
-                        sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}\t{4}",
-                            i,
+                        sw.WriteLine(new[]
+                        {
+                            i.ToString(inv),
                             Diagnostics.FormatF64Roundtrip(winners[i].Score),
-                            winners[i].IsDecoy ? "true" : "false",
+                            winners[i].IsDecoy.ToLowerText(),
                             Diagnostics.FormatF64Roundtrip(rawQvalues[i]),
-                            Diagnostics.FormatF64Roundtrip(monotonicQvalues[i])));
+                            Diagnostics.FormatF64Roundtrip(monotonicQvalues[i])
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     }
                 }
                 saver.Commit();
@@ -289,15 +302,20 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.WriteLine("modified_sequence\tscore\tis_decoy\tbest_qvalue");
+                    sw.WriteLine(new[]
+                    {
+                        @"modified_sequence", @"score", @"is_decoy", @"best_qvalue"
+                    }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var seq in keys)
                     {
                         var ps = best[seq];
-                        sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}",
+                        sw.WriteLine(new[]
+                        {
                             seq,
                             Diagnostics.FormatF64Roundtrip(ps.Score),
-                            ps.IsDecoy ? "true" : "false",
-                            Diagnostics.FormatF64Roundtrip(ps.BestQvalue)));
+                            ps.IsDecoy.ToLowerText(),
+                            Diagnostics.FormatF64Roundtrip(ps.BestQvalue)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     }
                 }
                 saver.Commit();

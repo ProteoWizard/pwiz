@@ -9,7 +9,7 @@ always unit-resolution bins) and the apex-spectrum feature calculators
 (`Osprey.Scoring/XcorrCalculators.cs`, feature 6 `xcorr` and feature 17
 `sg_weighted_xcorr`). The arithmetic matches Comet's fast-XCorr exactly; the
 port's only real differences are infrastructure (managed scalar loops instead of
-BLAS, and a sparse HRAM cache instead of a dense `float[]`).
+BLAS, and a sparse HRAM cache, filled on demand, instead of a dense `float[]`).
 
 The scoring form is the same as Comet's: **the experimental spectrum is
 preprocessed (bin + sqrt + windowing + flanking subtraction); the theoretical
@@ -159,23 +159,36 @@ every overload. Matches Comet.
 
 ## Step 3: Per-window preprocessing cache (`ResolutionStrategy.cs`)
 
-During the search, all spectra in a DIA window are preprocessed **once** and
-reused across every candidate, exactly as the Rust doc's per-window optimization
+During the search, each spectrum in a DIA window is preprocessed **at most once**
+and reused across every candidate, as the Rust doc's per-window optimization
 describes. The C# port routes this through `IResolutionStrategy`
-(`ResolutionStrategy.cs:66`) so pipeline code never branches on resolution:
+(`ResolutionStrategy.cs:83`) so pipeline code never branches on resolution:
 
-- **`UnitStrategy.PreprocessWindowSpectra`** (`ResolutionStrategy.cs:119`):
-  preprocesses each spectrum with `PreprocessSpectrumForXcorrF32`, then widens
-  the `float[]` losslessly into a `double[]` (`WindowXcorrCache.Doubles`). The
-  comment notes this pure-f32 preprocess matches Rust upstream.
-- **`HramStrategy.PreprocessWindowSpectra`** (`ResolutionStrategy.cs:170`):
-  stores each spectrum as a `SparseXcorrSpectrum` (`WindowXcorrCache.Sparse`)
-  rather than a dense `float[NBins]`.
+- **`UnitStrategy.PreprocessWindowSpectra`** (`ResolutionStrategy.cs:140`):
+  preprocesses every spectrum up front with `PreprocessSpectrumForXcorrF32`, then
+  widens the `float[]` losslessly into a `double[]` (`WindowXcorrCache.Doubles`).
+  The comment notes this pure-f32 preprocess matches Rust upstream.
+- **`HramStrategy.PreprocessWindowSpectra`** (`ResolutionStrategy.cs:191`):
+  preprocesses nothing. It returns a `WindowXcorrCache` holding the window's
+  spectra, the scorer and a scratch rented for the window's lifetime, with an
+  empty `Sparse` array. `ScoreXcorr` fills `Sparse[i]` (a `SparseXcorrSpectrum`
+  rather than a dense `float[NBins]`) the first time a candidate asks for spectrum
+  `i`. Xcorr reads only each scored candidate's apex and apex +/-2, so a window
+  with few candidates needs few of its spectra: on 3 Astral files, Stage 6's
+  gap-fill passes used 2.5-5% of them, its re-score 64%, first-pass scoring 91%.
+  Rust preprocesses every spectrum; output is identical because a fill reads only
+  its own spectrum and clears the scratch buffers it uses before using them (it
+  leaves them dirty, so that scratch is for fills only). A cache serves one window on one thread
+  (candidates are scored in sequence), so the fill needs no lock.
+  `ReleaseWindowCache` returns the scratch to the pool.
 
-`ScoreXcorr` (`ResolutionStrategy.cs:143` / `:192`) dispatches on the cache type:
-unit reads `preprocessed.Doubles[i]` via `XcorrFromPreprocessed`; HRAM reads
-`preprocessed.Sparse[i]` via `XcorrFromSparse`, falling back to a live
-`XcorrAtScan` with a rented scratch when no cache row exists.
+`ScoreXcorr` (`ResolutionStrategy.cs:164` / `:212`) dispatches on the cache type:
+unit reads `preprocessed.Doubles[i]` via `XcorrFromPreprocessed`; HRAM fills
+`preprocessed.Sparse[i]` if it is empty and the window still holds its scratch,
+then reads it via `XcorrFromSparse`. A row filled before `ReleaseWindowCache` is
+still served after it. With no cache (no scratch pool) or an unfilled row after
+release, it falls back to a live `XcorrAtScan` (with a rented scratch when there is
+a pool).
 
 ### Sparse HRAM cache (`SparseXcorrSpectrum.cs`, issue #4398)
 
@@ -322,7 +335,16 @@ threshold) are compile-time and match Comet/Rust.
   final `(float)` narrowing that reproduces the dense cache). This is C#-side
   issue #4398, not described in the Rust doc. Evidence:
   `Osprey.Scoring/SparseXcorrSpectrum.cs:55`, `:93`;
-  `Osprey.Scoring/ResolutionStrategy.cs:170`. Severity: info.
+  `Osprey.Scoring/ResolutionStrategy.cs:191`. Severity: info.
+
+- **[INTENTIONAL-CSHARP-DESIGN] HRAM cache filled on demand** — The Rust doc
+  preprocesses all spectra of a window once at the start of the per-window loop.
+  The C# HRAM cache preprocesses a spectrum the first time a candidate's xcorr
+  reads it (its apex or apex +/-2), and keeps it for the rest of the window, so a
+  window with few candidates preprocesses few spectra (Stage 6 gap-fill: 2.5-5%).
+  Values are identical: each fill reads only its own spectrum and clears the
+  scratch buffers it uses first. Evidence:
+  `Osprey.Scoring/ResolutionStrategy.cs:191`, `:212`. Severity: info.
 
 - **[STALE-RUST-DOC] Simplified O(n_fragments) snippet omits fragment-bin dedup**
   — The Rust doc's "feature extraction" pseudocode sums `preprocessed[bin]` for
@@ -340,7 +362,7 @@ threshold) are compile-time and match Comet/Rust.
   (mirroring the Rust HRAM code's f32 cache, not spelled out in the doc). The
   narrowing is required for parity with the Rust HRAM path, so behavior matches
   the Rust *code*; the doc simply does not discuss the precision boundary.
-  Evidence: `Osprey.Scoring/ResolutionStrategy.cs:119` (f64 unit) vs
+  Evidence: `Osprey.Scoring/ResolutionStrategy.cs:140` (f64 unit) vs
   `Osprey.Scoring/SparseXcorrSpectrum.cs:113` (f32 HRAM). Severity: info.
 
 Everything else verified to match the Rust documentation step for step: Comet
@@ -349,7 +371,8 @@ in-bin accumulation, 10-window/`50.0`/5%-threshold windowing normalization
 (`SpectralScorer.cs:522`), offset-75 prefix-sum flanking subtraction with norm
 `1/150` (`SpectralScorer.cs:573`), the `0.005` scaling (`SpectralScorer.cs:37`),
 the theoretical-spectrum-not-preprocessed lookup form, per-window preprocess-once
-optimization (`ResolutionStrategy.cs:119`/`:170`), and calibration always using
+optimization (`ResolutionStrategy.cs:140`/`:191` - preprocessed at most once, and
+for HRAM on demand rather than up front; see the divergence above), and calibration always using
 unit-resolution bins (`Calibrator.cs:72`).
 
 See `03-spectral-scoring.md` for the surrounding 21 PIN features,

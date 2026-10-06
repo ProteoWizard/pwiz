@@ -25,6 +25,10 @@ WiX admin .msi (per-machine) of the .NET Framework build:
     InstallDir record, and no update check; the .NET 10 Desktop Runtime must
     already be installed. Downloaded zips should be unblocked (Properties >
     Unblock) before extracting.
+  * A download page <channel>.html beside them (a copy of DownloadPage.html),
+    for unofficial builds: it reads the version from the manifest in its own
+    folder and links to that version's installer and zip. The product is the
+    page's own name, or the folder's name when it is uploaded as index.html.
 
 Build:
   1. Build Skyline Release x64 (pwiz_tools\Skyline\build.bat --build-only, or
