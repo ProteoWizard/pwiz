@@ -43,7 +43,14 @@ namespace pwiz.SkylineTest
     public class PercolatorPepXmlTest : AbstractUnitTest
     {
         [TestMethod]
-        public void TestCometPercolatorQValueAnnotation()
+        public void TestPercolatorQValueAnnotation()
+        {
+            VerifyCometAnnotation();
+            VerifyTideAnnotation();
+            VerifyMsFraggerAnnotation();
+        }
+
+        private static void VerifyCometAnnotation()
         {
             var hits = new[]
             {
@@ -58,8 +65,7 @@ namespace pwiz.SkylineTest
                 qvalueScore => AssertEx.AreEqual(@"expect", ScoreName(qvalueScore.ElementsBeforeSelf().Last())));
         }
 
-        [TestMethod]
-        public void TestTidePercolatorQValueAnnotation()
+        private static void VerifyTideAnnotation()
         {
             var hits = new[]
             {
@@ -74,8 +80,7 @@ namespace pwiz.SkylineTest
                 qvalueScore => Assert.IsFalse(qvalueScore.ElementsAfterSelf().Any()));
         }
 
-        [TestMethod]
-        public void TestMsFraggerPercolatorQValueAnnotation()
+        private static void VerifyMsFraggerAnnotation()
         {
             var hits = new[]
             {
