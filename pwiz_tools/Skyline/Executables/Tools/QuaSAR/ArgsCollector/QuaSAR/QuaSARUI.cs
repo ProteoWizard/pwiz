@@ -46,9 +46,26 @@ namespace QuaSAR
 
         private void QuaSAR_Load(object sender, EventArgs e)
         {
+            FitTabPagesToContent();
             InitializeHelpTip();
             PopulateAnalyteAndStandard();
             RestorePreviousValues();
+        }
+
+        /// <summary>
+        /// At high DPI the font autoscaling grows the tab-page contents more than the dialog's
+        /// client area, which cut off the bottom of the pages; grow the dialog by the shortfall.
+        /// </summary>
+        private void FitTabPagesToContent()
+        {
+            int shortfall = 0;
+            foreach (TabPage page in tabControl.TabPages)
+            {
+                int contentBottom = page.Controls.Cast<Control>().Select(c => c.Bottom + c.Margin.Bottom).DefaultIfEmpty(0).Max();
+                shortfall = Math.Max(shortfall, contentBottom + page.Padding.Bottom - page.ClientSize.Height);
+            }
+            if (shortfall > 0)
+                Height += shortfall;
         }
 
         private void InitializeHelpTip()
