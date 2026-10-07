@@ -32,8 +32,10 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -895,6 +897,7 @@ namespace pwiz.SkylineTestFunctional
                 .ExportSpectralLibrary(exported, progress);
             var refSpectra = GetRefSpectra(exported);
             AssertEx.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
+            AssertHighEnergyOffsetFromSpectralLibrary(exported);
 
             // Now simulate user tinkering with IMS library values - make sure they persist
             transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
@@ -938,6 +941,38 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(driftTimePredictorDoomedDlg, driftTimePredictorDoomedDlg.CancelDialog);
             OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
+        }
+
+        /// <summary>
+        /// Reports put MS2 observed IM back in the precursor frame with the high-energy IM offset
+        /// extraction applied. When that offset comes from a spectral library rather than an ion
+        /// mobility library, reports must find it there too. Undone afterward, so the ion mobility
+        /// library stays in place for the rest of the test.
+        /// </summary>
+        private void AssertHighEnergyOffsetFromSpectralLibrary(string libraryPath)
+        {
+            var docBefore = SkylineWindow.Document;
+            RunUI(() => SkylineWindow.ModifyDocument(@"Spectral library ion mobility", doc => doc.ChangeSettings(doc.Settings
+                .ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(new[] { new BiblioSpecLiteSpec(@"exported", libraryPath) }))
+                .ChangeTransitionIonMobilityFiltering(f => f.ChangeLibrary(IonMobilityLibrary.NONE)
+                    .ChangeUseSpectralLibraryIonMobilityValues(true)))));
+            var docLibrary = WaitForDocumentChangeLoaded(docBefore);
+            var filePath = docLibrary.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath;
+            var libraryIonMobilities = docLibrary.Settings.GetIonMobilities(docLibrary.MoleculeLibKeys.ToArray(), filePath);
+            int withOffset = 0;
+            foreach (var pair in docLibrary.MoleculePrecursorPairs)
+            {
+                // As extraction looks it up (SpectrumFilter), with the file's IM range
+                double expected = docLibrary.Settings.GetIonMobilityFilter(pair.NodePep, pair.NodeGroup, null,
+                    libraryIonMobilities, null, 1000).HighEnergyIonMobilityOffset ?? 0;
+                if (expected != 0)
+                    withOffset++;
+                AssertEx.AreEqual(expected, ObservedIonMobilityCalculator.GetPrecursorHighEnergyOffset(
+                    docLibrary.Settings, pair.NodePep, pair.NodeGroup, filePath), pair.NodeGroup.ToString());
+            }
+            AssertEx.IsTrue(withOffset > 0, @"Expected a high-energy ion mobility offset from the spectral library");
+            RunUI(SkylineWindow.Undo);
+            WaitForDocumentChangeLoaded(docLibrary);
         }
 
         private static void AssertExtractedObservedIonMobilityAndCcsPopulated(SrmDocument doc)

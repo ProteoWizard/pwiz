@@ -18,7 +18,9 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results
@@ -30,6 +32,11 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public static class ObservedIonMobilityCalculator
     {
+        // Extraction passes the file's maximum IM, which only a linear range window's width uses.
+        // The offset lookup discards the width, and the raw file may not be available, so any
+        // nonzero value will do.
+        private const double ION_MOBILITY_MAX_FOR_UNUSED_WIDTH = 1;
+
         // One observed-IM contribution: an MS1 isotope channel (weighted by predicted
         // abundance) or an MS2 fragment channel (weighted by area, carrying the fragment's
         // high-energy IM offset from the precursor).
@@ -108,6 +115,29 @@ namespace pwiz.Skyline.Model.Results
                 Aggregate(channels),
                 WeightedMean(channels.Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))),
                 ms1Target ?? highEnergyTarget);
+        }
+
+        /// <summary>
+        /// The high-energy IM offset chromatogram extraction applied to a precursor's MS2
+        /// transitions in the given file, looked up from the same sources extraction used,
+        /// including spectral library ion mobilities.
+        /// </summary>
+        public static double GetPrecursorHighEnergyOffset(SrmSettings settings, PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup, MsDataFileUri filePath)
+        {
+            var libraryIonMobilities = settings.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues
+                ? settings.GetIonMobilities(new[] { nodeGroup.GetLibKey(settings, nodePep) }, filePath)
+                : null;
+            try
+            {
+                return settings.GetIonMobilityFilter(nodePep, nodeGroup, null, libraryIonMobilities, null, ION_MOBILITY_MAX_FOR_UNUSED_WIDTH)
+                    .HighEnergyIonMobilityOffset ?? 0;
+            }
+            catch (InvalidDataException)
+            {
+                // Explicit ion mobility without units, which also prevented IM filtered extraction
+                return 0;
+            }
         }
 
         /// <summary>

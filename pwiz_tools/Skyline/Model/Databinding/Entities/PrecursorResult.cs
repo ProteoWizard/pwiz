@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -138,26 +137,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             bool ms1Extracted = settings.TransitionSettings.FullScan.IsEnabledMs;
             var nodeGroup = Precursor.DocNode;
             double precursorHighEnergyOffset = nodeGroup.Transitions.Any(t => !(t.IsMs1 && ms1Extracted))
-                ? GetPrecursorHighEnergyOffset(settings)
+                ? ObservedIonMobilityCalculator.GetPrecursorHighEnergyOffset(settings, Precursor.Peptide.DocNode,
+                    nodeGroup, resultFile.ChromFileInfo.FilePath)
                 : 0;
             return ObservedIonMobilityCalculator.Calculate(
                 nodeGroup.Transitions.Select(t => (t, resultFile.FindChromInfo(t.Results))),
                 ms1Extracted, precursorHighEnergyOffset);
-        }
-
-        // The high-energy IM offset chromatogram extraction applied to this precursor's MS2 transitions
-        private double GetPrecursorHighEnergyOffset(SrmSettings settings)
-        {
-            try
-            {
-                return settings.GetIonMobilityFilter(Precursor.Peptide.DocNode, Precursor.DocNode, null, null, null, 0)
-                    .HighEnergyIonMobilityOffset ?? 0;
-            }
-            catch (InvalidDataException)
-            {
-                // Explicit ion mobility without units, which also prevented IM filtered extraction
-                return 0;
-            }
         }
 
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
