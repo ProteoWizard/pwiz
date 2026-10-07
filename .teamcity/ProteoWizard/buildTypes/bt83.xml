@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="7f7aba59-248d-4f06-bd79-6d3b16bc1182" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Windows x86_64</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_WindowsBase" />
+      <ref id="ProteoWizard_WindowsCoreRelease" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_RemoteAccountTestParameters" />
+    </inherits>
+    <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_139, Set_PWIZ_VERSION_variable, RUNNER_73, RUNNER_85">
+      <runner id="Set_PWIZ_VERSION_variable" name="Set PWIZ_VERSION variable" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content"><![CDATA[REM Read version from build directory into PWIZ_VERSION
+set /p PWIZ_VERSION=<build-nt-x86\VERSION
+
+REM Replace spaces with periods
+set PWIZ_VERSION=%%PWIZ_VERSION: =.%%
+
+REM Pass the value to TeamCity
+echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_73" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="build-nt-x86/*.msi,build-nt-x86/*.tar.bz2,build-nt-x86/VERSION" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_85" name="Send build status update for pwiz artifacts" type="ProteoWizard_SendBuildStatusToGitHub">
+        <parameters>
+          <param name="GitHubAuthToken" value="credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2" />
+          <param name="buildStatusUpdateContext" value="artifacts - ProteoWizard" />
+          <param name="buildStatusUpdateDescription" value="Includes msconvert/SeeMS" />
+          <param name="buildStatusUpdateState" value="success" />
+          <param name="buildStatusUpdateTargetUrl" value="https://mc-tca-01.s3.us-west-2.amazonaws.com/ProteoWizard/%system.teamcity.buildType.id%/%teamcity.build.id%/pwiz-setup-%env.PWIZ_VERSION%-x86_64.msi" />
+          <param name="teamcity.step.mode" value="execute_if_failed" />
+          <param name="teamcity.step.phase" value="" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <build-extensions>
+      <extension id="BUILD_EXT_539" type="BuildFailureOnMetric">
+        <parameters>
+          <param name="anchorBuild" value="lastSuccessful" />
+          <param name="metricKey" value="buildTestCount" />
+          <param name="metricThreshold" value="50" />
+          <param name="metricUnits" value="metricUnitsDefault" />
+          <param name="moreOrLess" value="less" />
+          <param name="withBuildAnchor" value="true" />
+        </parameters>
+      </extension>
+    </build-extensions>
+  </settings>
+</build-type>
+

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="471ebc98-4810-43ea-9260-ec033a68418d" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Linux x86_64 subset</name>
+  <description>Builds the subset source tarball</description>
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_LinuxCore" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+    </inherits>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_336" />
+      <setting-ref ref="RUNNER_simpleRunner_122" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <build-runners order="RUNNER_simpleRunner_122, RUNNER_336, RUNNER_2155">
+      <runner id="RUNNER_2155" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="/bin/bash" />
+          <param name="command.parameters" value="scripts/misc/tcbuild-subset.sh -j%env.NUMBER_OF_CORES% --automated toolset=%env.toolset_property% --prefix=build-linux-x86_64/usr  %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --msparser-path=%env.MSPARSER_HOME% pwiz-bin.tar.bz2" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <build-triggers>
+      <build-trigger id="TRIGGER_1024" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter" value="-:Skyline/skyline_*" />
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+          <param name="triggerRules"><![CDATA[+:.
+-:pwiz_tools/Skyline/**
+-:pwiz_tools/Topograph/**
+-:pwiz_tools/Shared/**
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/BiblioSpec/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <artifact-dependencies>
+      <dependency id="ARTIFACT_DEPENDENCY_929" sourceBuildTypeId="bt81" cleanDestination="false">
+        <revisionRule name="sameChainOrLastFinished" revision="latest.sameChainOrLastFinished" />
+        <artifact sourcePath="*-src-without-tv-*.tar.bz2=&gt;." />
+      </dependency>
+    </artifact-dependencies>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt81">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+
