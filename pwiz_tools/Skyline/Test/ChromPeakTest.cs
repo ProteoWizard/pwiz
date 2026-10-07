@@ -345,6 +345,29 @@ namespace pwiz.SkylineTest
             Assert.IsNull(ChromCacheBuilder.GetObservedCcs(new FakeCcsConverter(() => double.NaN), im, 500, 2, null));
             Assert.IsNull(ChromCacheBuilder.GetObservedCcs(
                 new FakeCcsConverter(() => throw new InvalidOperationException(@"vendor library error")), im, 500, 2, null));
+
+            // Rescore converts peaks it cannot match to a previous one with the raw file, opened once
+            // on first need. A raw file that cannot be found or opened leaves those peaks without CCS.
+            const eIonMobilityUnits units = eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
+            int openCount = 0;
+            using (var missingRawFile = new RawFileCcsConverter(units, () =>
+                   {
+                       openCount++;
+                       return null;
+                   }))
+            {
+                Assert.AreEqual(0, openCount);
+                Assert.IsTrue(double.IsNaN(missingRawFile.CCSFromIonMobility(
+                    IonMobilityValue.GetIonMobilityValue(0.9700f, units), 500.25, 2, null)));
+                Assert.IsTrue(double.IsNaN(missingRawFile.CCSFromIonMobility(
+                    IonMobilityValue.GetIonMobilityValue(0.9682f, units), 600.25, 2, null)));
+                Assert.AreEqual(1, openCount);
+            }
+            using (var unopenable = new RawFileCcsConverter(units, () => throw new IOException(@"raw file locked")))
+            {
+                Assert.IsTrue(double.IsNaN(unopenable.CCSFromIonMobility(
+                    IonMobilityValue.GetIonMobilityValue(0.9700f, units), 500.25, 2, null)));
+            }
         }
 
         [TestMethod]

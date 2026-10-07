@@ -1060,22 +1060,5 @@ namespace pwiz.SkylineTestFunctional
             var reopened = WaitForDocumentLoaded();
             AssertEx.AreEqualDeep(expected, GetObservedIonMobilityValues(reopened));
         }
-
-        private void RescoreResults()
-        {
-            var docBefore = SkylineWindow.Document;
-            var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
-            RunDlg<RescoreResultsDlg>(manageResultsDlg.Rescore, dlg => dlg.Rescore(false));
-            WaitForDocumentChangeLoaded(docBefore);
-            WaitForClosedForm<AllChromatogramsGraph>();
-        }
-
-        private static IList<Tuple<float?, float?>> GetObservedIonMobilityValues(SrmDocument doc)
-        {
-            return doc.MoleculeTransitions.Where(transition => transition.Results != null)
-                .SelectMany(transition => transition.Results.SelectMany(chromInfos => chromInfos))
-                .Select(chromInfo => Tuple.Create(chromInfo.ObservedIonMobility, chromInfo.ObservedCcs))
-                .ToList();
-        }
     }
 }

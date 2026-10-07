@@ -64,6 +64,8 @@ namespace pwiz.Skyline.Model.Results
         // used inside _writeLock to compute per-peak % CCS error from the
         // observed IM centroid stored on each ChromPeak.
         private IIonMobilityFunctionsProvider _ionMobilityConverter;
+        // Observed CCS already computed for peaks picked again unchanged from cached chromatograms
+        private ChromDataProvider _previousObservedCcsProvider;
 
         // The data reader's native ion mobility units, captured from the provider.
         // Always available when IM data is present, independent of whether a CCS
@@ -244,7 +246,7 @@ namespace pwiz.Skyline.Model.Results
                     // Read and write the mass spec data)
                     if (dataFilePathRecalc != null)
                     {
-                        provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
+                        provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo, msDataFilePath);
                         if (allChromData != null)
                         {
                             allChromData.MaxIntensity = (float) (provider.MaxIntensity ?? 0);
@@ -270,6 +272,7 @@ namespace pwiz.Skyline.Model.Results
                     _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
                     _currentFileInfo.IsSrm = provider.IsSrm;
                     _ionMobilityConverter = provider.IonMobilityFunctionsProvider;
+                    _previousObservedCcsProvider = provider;
                     _ionMobilityUnits = provider.IonMobilityUnits;
 
                     // Start multiple threads to perform peak scoring.
@@ -1261,7 +1264,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private ChromDataProvider CreateChromatogramRecalcProvider(MsDataFileUri dataFilePathRecalc, ChromFileInfo fileInfo)
+        private ChromDataProvider CreateChromatogramRecalcProvider(MsDataFileUri dataFilePathRecalc, ChromFileInfo fileInfo,
+            MsDataFilePath rawFilePath)
         {
             return new CachedChromatogramDataProvider(_cacheRecalc,
                                                       _document,
@@ -1271,7 +1275,23 @@ namespace pwiz.Skyline.Model.Results
                                                       _status,
                                                       0,
                                                       100,
-                                                      _loader);
+                                                      _loader,
+                                                      rawFilePath == null ? null : () => OpenRawFileForCcs(rawFilePath));
+        }
+
+        /// <summary>
+        /// The raw file behind recalculated chromatograms, opened only for its vendor IM to CCS
+        /// conversion, or null when it can no longer be found.
+        /// </summary>
+        private MsDataFileImpl OpenRawFileForCcs(MsDataFilePath rawFilePath)
+        {
+            var existingPath = ChromatogramSet.GetExistingDataFilePath(CachePath, rawFilePath);
+            if (existingPath == null)
+                return null;
+            return existingPath.OpenMsDataFile(new OpenMsDataFileParams
+            {
+                DownloadPath = Path.GetDirectoryName(CachePath) ?? Directory.GetCurrentDirectory()
+            });
         }
 
         private bool? IsSingleMatchMzFile
@@ -1450,7 +1470,8 @@ namespace pwiz.Skyline.Model.Results
                 if (!observedIm.HasValue)
                     continue;
                 var imValue = IonMobilityValue.GetIonMobilityValue(observedIm.Value, imUnits);
-                var observedCcs = GetObservedCcs(_ionMobilityConverter, imValue, mz, charge, nodeGroup);
+                var observedCcs = _previousObservedCcsProvider?.GetPreviousObservedCcs(chromData.ProviderId, peak)
+                                  ?? GetObservedCcs(_ionMobilityConverter, imValue, mz, charge, nodeGroup);
                 if (observedCcs.HasValue)
                     chromData.Peaks[i] = peak.WithObservedCcs(observedCcs);
             }
