@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="5d3e020e-1f04-4747-a970-6c21c5f230f4" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Bumbershoot IDPicker Website</name>
+  <description>Updates the idpicker.org website</description>
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="60" />
+    </options>
+    <parameters>
+      <param name="sf_ssh_key" value="credentialsJSON:48437673-24ad-4da8-b1ed-3597cffae850" spec="password label='SSH key' display='hidden'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_679" name="" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[cat << EOF > sourceforge.key
+%secure:teamcity.password.sf_ssh_key%
+EOF
+chmod 700 sourceforge.key
+
+SSH_OPTIONS="ssh -i sourceforge.key -o StrictHostKeyChecking=no"
+SOURCE=pwiz_tools/Bumbershoot/idpicker/Website/*
+TARGET=/home/project-web/proteowizard/htdocs/idpicker
+
+rsync -Carhzv -e "$SSH_OPTIONS" $SOURCE chambm@web.sf.net:$TARGET
+shred -u sourceforge.key]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs">
+        <checkout-rule rule="+:pwiz_tools/Bumbershoot/idpicker/Website" />
+      </vcs-entry-ref>
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_313" name="teamcity.agent.jvm.os.name" value="Linux" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="15" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+          <param name="triggerRules" value="+:pwiz_tools/Bumbershoot/idpicker/Website/**" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="365" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

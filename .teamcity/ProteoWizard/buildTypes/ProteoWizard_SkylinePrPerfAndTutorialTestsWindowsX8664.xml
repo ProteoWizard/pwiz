@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="b1528a40-7d1b-487c-9747-274606e09706" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Skyline PR Perf and Tutorial tests (Windows x86_64)</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_GitHubMasterPrTrigger" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+      <ref id="ProteoWizard_RemoteAccountTestParameters" />
+    </inherits>
+    <options>
+      <option name="artifactRules" value="pwiz_tools/Skyline/TestResults/*.trx&#xA;**/ScreenshotDiffs/**/*.png" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="%WINDOWS_CHECKOUT_DIR%" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="320" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_65" />
+      <setting-ref ref="TRIGGER_46" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.UNIFI_PASSWORD" value="credentialsJSON:fb87899b-cab8-41e9-904d-f0794e8738c3" spec="password label='UNIFI password' display='hidden'" />
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.address_model_short" value="64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_104, RUNNER_simpleRunner_131, simpleRunner, RUNNER_46, RUNNER_65, enableLockScreen">
+      <runner id="RUNNER_104" name="Create PrositConfig file" type="MRPP_CreateTextFile">
+        <parameters>
+          <param name="content" value="%prositconfig_production_xml%" />
+          <param name="system.dest.file" value="pwiz_tools/Skyline/Model/Prosit/Config/PrositConfig_production.xml" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_simpleRunner_131" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="pwiz_tools\Skyline//Skyline.exe --i-agree-to-the-vendor-licenses -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --without-compassxtract --teamcity-test-decoration --automated --official" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="simpleRunner" name="Unlock screen for screenshots" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="IF &quot;%%USERNAME%%&quot; equ &quot;maccoss-teamcity&quot; schtasks /run /tn &quot;Start screenshot mode&quot;" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_46" name="Run most TestPerf and TestTutorial tests (some long running perftests are excluded)" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts\misc\tc-perftests.bat" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_65" name="Run perf and tutorial tests" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll test=TestSmallMoleculeLibrariesTutorial language=en pause=-4 loop=1 perftests=on offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="enableLockScreen" name="Enable lock screen" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="IF &quot;%%USERNAME%%&quot; equ &quot;maccoss-teamcity&quot; schtasks /run /tn &quot;End screenshot mode&quot;" />
+          <param name="teamcity.step.mode" value="execute_always" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements>
+      <contains id="RQ_902" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <not-exists id="RQ_903" name="VS2013" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="45" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+      <build-trigger id="TRIGGER_46" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter" value="+:*" />
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="promoteWatchedBuild" value="true" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="revisionRuleBuildBranch" value="&lt;default&gt;" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**
+-:pwiz_tools/Skyline/Executables/SkylineBatch/**
+-:pwiz_tools/Skyline/Executables/SharedBatch/**
+-:pwiz_tools/Skyline/Executables/Installer/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_687" type="BuildFailureOnMetric">
+        <parameters>
+          <param name="anchorBuild" value="lastSuccessful" />
+          <param name="metricKey" value="InspectionStatsW" />
+          <param name="metricThreshold" value="400" />
+          <param name="metricUnits" value="metricUnitsDefault" />
+          <param name="moreOrLess" value="more" />
+          <param name="withBuildAnchor" value="false" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_543" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="Failed screenshots" />
+          <param name="buildFailureOnMessage.reportOnlyFirstMatch" value="false" />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="4" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

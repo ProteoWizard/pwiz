@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="48f62a02-4229-409b-a42a-039cb6eda542" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Windows x86_64 link=shared debug</name>
+  <description />
+  <settings>
+    <options>
+      <option name="artifactRules" value="build-nt-x86/*.tar.bz2&#xA;build-nt-x86/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="30" />
+    </options>
+    <parameters>
+      <param name="env.VS90COMNTOOLS" value="C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\Tools\" />
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="link=shared" />
+      <param name="env.toolset_property" value="toolset=msvc-9.0" />
+      <param name="env.variant_property" value="debug" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_simpleRunner_157" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="pwiz-bin.tar.bz2 pwiz pwiz_aux pwiz_tools -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizardAtSourceForge" />
+    </vcs-settings>
+    <requirements>
+      <exists id="RQ_425" name="env.VS90COMNTOOLS" />
+      <contains id="RQ_426" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <exists id="RQ_427" name="VS2008" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="-1" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+        </parameters>
+      </build-trigger>
+      <build-trigger id="TRIGGER_87" type="schedulingTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt77">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+          <option name="take-successful-builds-only" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+
