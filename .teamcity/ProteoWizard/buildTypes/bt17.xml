@@ -17,7 +17,7 @@
     <build-runners order="RUNNER_simpleRunner_139">
       <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
         <parameters>
-          <param name="command.executable" value="pwiz-sharp/tcbuild.sh" />
+          <param name="command.executable" value="tcbuild.sh" />
           <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated --require-vendor-support" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
