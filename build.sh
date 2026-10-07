@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ------------------------------------------------------------------------
 # pwiz-sharp build entry point for Linux. Analogue of build.bat; TeamCity
-# calls it from tcbuild.sh (ProteoWizard_CoreLinuxNet). Runs locally too.
+# calls it from tcbuild.sh (Core Linux x86_64, bt17). Runs locally too.
 #
 # Usage:
 #   ./build.sh [Debug|Release] [--i-agree-to-the-vendor-licenses]

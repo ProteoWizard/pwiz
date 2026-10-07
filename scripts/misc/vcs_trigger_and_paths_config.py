@@ -2,12 +2,11 @@ targets = {}
 
 # Retired C++ build configurations. The C++ tree lives in ProteoWizard/pwiz-cpp now and these
 # configurations build from that repo; nothing in this repo may trigger them. Kept here,
-# commented out, so the ids stay findable when the TeamCity side is re-pointed.
-#targets['CoreWindows'] = {'master': {"bt83": "Core Windows x86_64", "bt36": "Core Windows x86", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
+# commented out, so the ids stay findable when the TeamCity side is re-pointed. bt83, bt17 and
+# bt209 are not among them: they took over the .NET builds below.
+#targets['CoreWindows'] = {'master': {"bt36": "Core Windows x86", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
 #targets['CoreWindowsDebug'] = {'master': {"bt84": "Core Windows x86_64 debug", "bt75": "Core Windows debug"}}
-#targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
-#targets['SkylineRelease'] = {'master': {"bt209": "Skyline master and PRs (Windows x86_64)",
-#                                        "ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection",
+#targets['SkylineRelease'] = {'master': {"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection",
 #                                        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"},
 #                             'release': {"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64",
 #                                         "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection",
@@ -23,27 +22,30 @@ targets = {}
 # dotnet restore + build + test). Both platforms build the same C# sources from the same
 # tree, so any change that warrants a Windows .NET build warrants the Linux one too —
 # otherwise a cross-platform regression (a hardcoded 7za.exe, a backslash path, a
-# Windows-only vendor reference) only surfaces on the next unrelated Linux trigger.
-targets['CoreWindowsNet'] = {'master': {"ProteoWizard_CoreWindowsNet": "Core Windows .NET"}}
-targets['CoreLinuxNet'] = {'master': {"ProteoWizard_CoreLinuxNet": "Core Linux .NET"}}
+# Windows-only vendor reference) only surfaces on the next unrelated Linux trigger. These are the
+# historic Core x86_64 configs, which took over the steps of the temporary Core Windows/Linux
+# .NET configs in Versioned Configs.
+targets['CoreWindowsNet'] = {'master': {"bt83": "Core Windows x86_64"}}
+targets['CoreLinuxNet'] = {'master': {"bt17": "Core Linux x86_64"}}
 targets['CoreNet'] = merge(targets['CoreWindowsNet'], targets['CoreLinuxNet'])
 
-# Skyline builds and tests run via pwiz_tools/Skyline/build.bat (dotnet build + TestRunner).
+# Skyline builds and tests run via pwiz_tools/Skyline/build.bat (dotnet build + TestRunner), in
+# bt209, which took over the steps of the temporary Skyline Windows .NET config.
 # Both inspections run in-build too: the custom CodeInspectionTest as a test inside
 # Test.csproj, and ReSharper as the tcinspect.ps1 build step that replaces the standalone
 # "Skyline Code Inspection" config. Skyline release branches that predate the .NET port
 # (skyline_26_1 and older) live in ProteoWizard/pwiz-cpp, so there is no 'release' target
 # here yet: add one when the first .NET-based release branch is cut.
-targets['SkylineWindowsNet'] = {'master': {"ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"}}
+targets['SkylineWindowsNet'] = {'master': {"bt209": "Skyline master and PRs (Windows x86_64)"}}
 targets['Skyline'] = targets['SkylineWindowsNet']
 
-# Configs that report more than one GitHub status, keyed by config id. Skyline Windows .NET
+# Configs that report more than one GitHub status, keyed by config id. bt209
 # runs ReSharper as a build step and publishes that verdict under the context the standalone
 # inspection config publishes, so when this script skips the build it has to report the paired
 # context as well. Otherwise the check is simply absent on commits that do not rebuild Skyline,
 # and a PR sits with one green check and one that never arrives.
 #
-# This does nothing YET. ProteoWizard_SkylineWindowsNet is nested under 'master' above, and a
+# This does nothing YET. bt209 is nested under 'master' above, and a
 # target reachable only through a merge()'d matchPaths entry never enters
 # notBuildingDueToChangedFiles at all - it is dropped silently, so today the build status and
 # the inspection status are consistently absent together. Un-nesting it starts reporting the
@@ -58,18 +60,18 @@ targets['Skyline'] = targets['SkylineWindowsNet']
 # checks on GitHub; nothing here changes that for the standalone config.)
 extraStatuses = \
 {
-    "ProteoWizard_SkylineWindowsNet": ["Skyline code inspection"]
+    "bt209": ["Skyline code inspection"]
 }
 
 targets['SkylineWithTestConnected'] = \
 {
     'master':
     {
-        # TestConnected tests still run through the retired cpp/MSVC chain
-        # (ProteoWizard_SkylineMasterAndPRsTestConnectedTests depends on bt209); re-enable
-        # once a .NET TestConnected config exists.
+        # TestConnected tests are not triggered: their config
+        # (ProteoWizard_SkylineMasterAndPRsTestConnectedTests, which depends on bt209) still has
+        # its cpp/MSVC steps. Re-enable once it runs the .NET tests.
         #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"
-        "ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"
+        "bt209": "Skyline master and PRs (Windows x86_64)"
     }
 }
 

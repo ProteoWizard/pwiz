@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="ca663540-2c69-43d8-bcb5-88902d82385c" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>ProteoWizard and Skyline Docker container (Wine x86_64)</name>
+  <description>Builds the container from the latest binary snapshots</description>
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="artifactRules" value="**/*.log =&gt; logs.tar.gz&#xA;**/*.diff =&gt; diffs.tar.gz&#xA;pwiz-skyline-i-agree-to-the-vendor-licenses.*&#xA;/tmp/pwiz-skyline-i-agree-to-the-vendor-licenses.*&#xA;%system.teamcity.build.tempDir%/*pwiz-skyline-i-agree-to-the-vendor-licenses_x64*.simg&#xA;-:**/duration.log&#xA;-:**/AcqData&#xA;-:**/method.log&#xA;-:TestRunner*.log&#xA;-:pwiz_tools/Skyline/**/*.log" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number.ProteoWizard_PwizGithubMasterWithPRs%)" />
+      <option name="checkoutDirectory" value="pwiz-container" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="60" />
+      <option name="showDependenciesChanges" value="true" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_385" />
+      <setting-ref ref="TRIGGER_1024" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.MSPARSER_HOME" value="" />
+      <param name="env.address_model_property" value="" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.variant_property" value="release" />
+      <param name="system.build.vcs.number" value="%system.build.vcs.number.ProteoWizard_GithubContainer%" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_2155" name="Build container" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[rm -f *.tar.bz2 *.zip
+mv artifacts/* .
+/usr/bin/docker system prune --all --force --volumes
+df -h
+/usr/bin/docker build -t chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 .]]></param>
+          <param name="teamcity.build.workingDir" value="container" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_337" name="Run ProteoWizard tests" type="simpleRunner">
+        <parameters>
+          <param name="plugin.docker.imageId" value="chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64" />
+          <param name="plugin.docker.imagePlatform" value="linux" />
+          <param name="plugin.docker.run.parameters" value="--rm -e WINEDEBUG=-all" />
+          <param name="script.content"><![CDATA[#!/bin/bash
+
+#set -x
+#set -v
+
+export DEBIAN_FRONTEND="noninteractive"
+apt-get -qq update
+apt-get -qq install bzip2 time
+
+declare -a arr=("ABI" "Agilent" "Bruker" "Mobilion" "Shimadzu" "Thermo" "UIMF" "Waters")
+declare -a ext=(".d" ".lcd" ".mbi" ".raw" ".wiff" ".wiff2" ".uimf")
+
+TC=##teamcity
+
+echo " ${TC}[testSuiteStarted name='ProteoWizard msconvert']"
+
+for i in "${arr[@]}"; do
+  pushd pwiz/data/vendor_readers/"$i"
+  if [ -e Reader_"$i"_Test.data.tar.bz2 ]; then
+    tar xkjf Reader_"$i"_Test.data.tar.bz2
+  fi
+  cd Reader_"$i"_Test.data
+  for j in "${ext[@]}"; do
+    if ls *"$j" > /dev/null 2>&1; then
+      for k in *"$j"; do
+        TESTNAME="Convert $k"
+        echo " ${TC}[testStarted name='$TESTNAME' captureStandardOutput='true']"
+        fn=$(basename "$k" "$j")
+        if ! [ -e "$k/Analysis.yep" ] && [ "$k" != "diaPASEF.d" ]; then
+          if [ "$fn" == "swath.api" ]; then
+            /usr/bin/time -f '%E' -o duration.log mywine msconvert -z "$k" --noindex -o "output/$fn" --outfile "swath.api-sample-centroid.mzML" --filter "peakPicking true 1-"
+          else
+            /usr/bin/time -f '%E' -o duration.log mywine msconvert -z "$k" --noindex -o "output/$fn"
+          fi
+        fi
+        if [ -e "output/$fn/$fn.mzML" ]; then
+          mywine msdiff -p 1e-5 "$fn.mzML" "output/$fn/$fn.mzML" > "output/$fn/$fn.diff"
+        elif [ "$fn" == "swath.api.wiff2" ]; then
+          mywine msdiff "$fn-sample-centroid.mzML" "output/$fn/$fn.mzML" > "output/$fn/$fn.diff"
+        elif ( [ "$j" == ".wiff" ] || [ "$j" == ".wiff2" ] ); then
+          for mzml in output/$fn/*.mzML; do
+            refMzML=$(basename "$mzml")
+            if [ -e "$refMzML" ]; then
+              mywine msdiff "$refMzML" "$mzml" >> "output/$fn/$fn.diff"
+            elif [ -e $(basename "$mzml" .mzML)-centroid.mzML ]; then
+              mywine msdiff $(basename "$mzml" .mzML)-centroid.mzML "$mzml" >> "output/$fn/$fn.diff"
+            fi
+          done
+        elif ( [ "$k" == "diaPASEF.d" ] ); then
+          echo " Skipping diaPASEF test because it is not tested in non-filtered mode (diaPASEF.mzML)."
+        else
+          #cat "output/$fn/$k.log"
+          echo " ${TC}[testFailed name='$TESTNAME' message='Expected output file |'output/$fn/$fn.mzML|' does not exist.']"
+        fi
+
+        diffFile="output/$fn/$fn.diff"
+        if [ -e "$diffFile" ]; then
+          if grep -q "0 spectra" "$diffFile" && \
+            grep -q "0 chromatograms" "$diffFile"; then
+            duration=$(<duration.log)
+            rm "output/$fn/$fn.diff"
+          else
+            #cat "output/$fn/$k.log"
+            echo " ${TC}[testFailed name='$TESTNAME']"
+          fi
+        fi
+
+        echo " ${TC}[testFinished name='$TESTNAME' duration='$duration']"
+      done
+    fi
+  done
+  popd
+done
+echo " ${TC}[testSuiteFinished name='ProteoWizard msconvert']"]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_334" name="Run Skyline tests" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="plugin.docker.imageId" value="chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64" />
+          <param name="script.content"><![CDATA[TC=##teamcity
+
+echo " ${TC}[testSuiteStarted name='Skyline Test.dll']"
+wine TestRunner test=Test.dll skip=CodeInspection language=en loop=1 runsmallmoleculeversions=1 teamcitytestdecoration=1
+echo " ${TC}[testSuiteFinished name='Skyline Test.dll']"
+
+echo " ${TC}[testSuiteStarted name='Skyline TestData.dll']"
+wine TestRunner test=TestData.dll skip=TestInstallFromZip language=en loop=1 runsmallmoleculeversions=1 teamcitytestdecoration=1
+echo " ${TC}[testSuiteFinished name='Skyline TestData.dll']"
+
+# args previously passed to docker run
+# -v %teamcity.build.checkoutDir%/pwiz_tools/Skyline:/wineprefix64/drive_c/pwiz/skyline/TestZipFiles]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_343" name="Save Docker tarball" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content" value="/usr/bin/docker save chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 | pigz -c &gt; /tmp/pwiz-skyline-i-agree-to-the-vendor-licenses.tbz2" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_385" name="Convert Docker image to Singularity" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="plugin.docker.imageId" value="singularityware/docker2singularity:v2.5" />
+          <param name="plugin.docker.imagePlatform" value="linux" />
+          <param name="plugin.docker.run.parameters" value="-v /var/run/docker.sock:/var/run/docker.sock -v %system.teamcity.build.tempDir%:/output --privileged -t" />
+          <param name="script.content"><![CDATA[rm -f /%system.teamcity.build.tempDir%/*.simg
+docker-entrypoint.sh /docker2singularity.sh chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_75" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="pwiz-skyline-i-agree-to-the-vendor-licenses.*,/tmp/pwiz-skyline-i-agree-to-the-vendor-licenses.*,%system.teamcity.build.tempDir%/*pwiz-skyline-i-agree-to-the-vendor-licenses_x64*.simg" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_GithubContainer">
+        <checkout-rule rule="+:. =&gt; container" />
+      </vcs-entry-ref>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_471" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <does-not-equal id="RQ_473" name="teamcity.agent.jvm.os.arch" value="i386" />
+      <exists id="RQ_2033" name="docker.version" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="TRIGGER_1024" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter" value="-:Skyline/skyline_*" />
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+          <param name="triggerRules"><![CDATA[+:.
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="branchFilter"><![CDATA[+:*
+-:Skyline/skyline_*]]></param>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriodMode" value="DO_NOT_USE" />
+          <param name="triggerRules" value="+:container/Dockerfile" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_21" type="teamcity.github.status">
+        <parameters>
+          <param name="github_report_on" value="on start and finish" />
+          <param name="guthub_authentication_type" value="token" />
+          <param name="guthub_context" value="teamcity - %system.teamcity.buildConfName%" />
+          <param name="guthub_host" value="https://api.github.com" />
+          <param name="guthub_owner" value="ProteoWizard" />
+          <param name="guthub_repo" value="container" />
+          <param name="secure:github_access_token" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_13" type="teamcity.github.status">
+        <parameters>
+          <param name="github_report_on" value="on start and finish" />
+          <param name="guthub_authentication_type" value="token" />
+          <param name="guthub_context" value="teamcity - %system.teamcity.buildConfName%" />
+          <param name="guthub_host" value="https://api.github.com" />
+          <param name="guthub_owner" value="ProteoWizard" />
+          <param name="guthub_repo" value="pwiz" />
+          <param name="secure:github_access_token" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <artifact-dependencies>
+      <dependency id="ARTIFACT_DEPENDENCY_2279" sourceBuildTypeId="bt83" cleanDestination="true">
+        <revisionRule name="sameChainOrLastFinished" revision="latest.sameChainOrLastFinished" />
+        <artifact sourcePath="pwiz-bin-windows-*.tar.bz2 =&gt; container/artifacts" />
+      </dependency>
+      <dependency id="ARTIFACT_DEPENDENCY_2278" sourceBuildTypeId="bt209" cleanDestination="false">
+        <revisionRule name="sameChainOrLastFinished" revision="latest.sameChainOrLastFinished" />
+        <artifact sourcePath="SkylineTester.zip =&gt; container/artifacts" />
+      </dependency>
+    </artifact-dependencies>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt209">
+        <options>
+          <option name="run-build-if-dependency-failed" value="RUN_ADD_PROBLEM" />
+          <option name="run-build-if-dependency-failed-to-start" value="CANCEL" />
+          <option name="take-started-build-with-same-revisions" value="true" />
+        </options>
+      </depend-on>
+      <depend-on sourceBuildTypeId="bt83">
+        <options>
+          <option name="run-build-if-dependency-failed" value="RUN_ADD_PROBLEM" />
+          <option name="run-build-if-dependency-failed-to-start" value="CANCEL" />
+          <option name="sync-revisions" value="false" />
+          <option name="take-started-build-with-same-revisions" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+    <cleanup>
+      <policy type="days" cleanup-level="HISTORY_ENTRY">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="30" />
+        </parameters>
+      </policy>
+      <policy type="daysAndBuilds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns"><![CDATA[*.tbz2
+*.simg]]></param>
+          <param name="keepBuilds.count" value="1" />
+          <param name="keepDays.count" value="7" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

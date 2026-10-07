@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Create Text File">
+  <description>Creates text file with specified content</description>
+  <settings>
+    <parameters>
+      <param name="content" value="" spec="text display='normal' label='File content:' validationMode='any'" />
+      <param name="system.dest.file" value="" spec="text display='normal' label='Destination file:' validationMode='not_empty'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="Ant">
+        <parameters>
+          <param name="build-file">&lt;project name="Create file"&gt;
+
+&lt;target name="echo"&gt;
+&lt;echo file="${dest.file}"&gt;&lt;![CDATA[%content%]]&gt;&lt;/echo&gt;
+&lt;/target&gt;
+
+&lt;/project&gt;</param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="echo" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+

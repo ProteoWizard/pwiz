@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ------------------------------------------------------------------------
 # tcbuild.sh — single TeamCity entry point for pwiz-sharp on Linux
-# (ProteoWizard_CoreLinuxNet). Analogue of tcbuild.bat.
+# (Core Linux x86_64, bt17). Analogue of tcbuild.bat.
 #
 # Sequence (mirrors tcbuild.bat, minus the Windows-only steps):
 #   1. dotnet --version (logs which SDK got picked, after global.json pinning).

@@ -16,7 +16,7 @@
 #
 # Agent prerequisites are bootstrapped here rather than assumed, because the Linux agents
 # carry neither:
-#   * .NET SDK - via scripts/ensure-dotnet.sh, the same helper Core Linux .NET
+#   * .NET SDK - via scripts/ensure-dotnet.sh, the same helper Core Linux x86_64
 #     uses from the root tcbuild.sh. It resolves an existing dotnet and installs one
 #     satisfying the repo-root global.json if none does. Reusing it rather than repeating
 #     it keeps one bootstrap for both Linux configs; build.ps1 already reaches across to
