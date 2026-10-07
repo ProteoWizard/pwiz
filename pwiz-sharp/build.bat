@@ -2,8 +2,8 @@
 setlocal enabledelayedexpansion
 
 REM # ------------------------------------------------------------------------
-REM # pwiz-sharp build entry point. TeamCity calls this from the
-REM # ProteoWizard_CoreWindowsNet config; runs locally too.
+REM # pwiz-sharp build entry point. TeamCity calls this from tcbuild.bat in the
+REM # Core Windows x86_64 config (bt83); runs locally too.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
