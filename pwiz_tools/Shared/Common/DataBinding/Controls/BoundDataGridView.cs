@@ -130,6 +130,7 @@ namespace pwiz.Common.DataBinding.Controls
                         var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
                         if (null != column)
                         {
+                            ScaleFormatWidth(column, propertyDescriptor);
                             newColumns.Add(column);
                             if (columnsToHide.Contains(propertyDescriptor.Name))
                             {
@@ -220,11 +221,38 @@ namespace pwiz.Common.DataBinding.Controls
             if (columnId != null)
             {
                 var columnFormat = _bindingListSource.ColumnFormats.GetFormat(columnId);
-                columnFormat = columnFormat.ChangeWidth(e.Column.Width);
+                columnFormat = columnFormat.ChangeWidth(ToLayoutWidth(e.Column.Width));
                 _bindingListSource.ColumnFormats.SetFormat(columnId, columnFormat);
             }
         }
 
+        /// <summary>
+        /// View layouts store column widths in 96-DPI pixels, so a layout saved at one display
+        /// scale lays out the same at another. The grid works in device pixels (issue #4599).
+        /// </summary>
+        private float DpiFactor => DeviceDpi / 96f;
+
+        /// <summary>
+        /// A width from a <see cref="FormatAttribute"/> is a 96-DPI design value that the view
+        /// context applied as raw pixels.
+        /// </summary>
+        private void ScaleFormatWidth(DataGridViewColumn column, PropertyDescriptor propertyDescriptor)
+        {
+            var format = (FormatAttribute) propertyDescriptor.Attributes[typeof(FormatAttribute)];
+            if (format != null && format.Width != 0)
+            {
+                column.Width = ToDeviceWidth(format.Width);
+            }
+        }
+        private int ToDeviceWidth(int layoutWidth)
+        {
+            return (int) Math.Round(layoutWidth * DpiFactor);
+        }
+
+        private int ToLayoutWidth(int deviceWidth)
+        {
+            return (int) Math.Round(deviceWidth / DpiFactor);
+        }
         protected void UpdateColumnFormats(bool restoreDefaultFormats)
         {
             var bindingListSource = DataSource as BindingListSource;
@@ -280,7 +308,7 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 if (columnFormat.Width.HasValue)
                 {
-                    column.Width = columnFormat.Width.Value;
+                    column.Width = ToDeviceWidth(columnFormat.Width.Value);
                 }
             }
         }
