@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Osprey.Core;
@@ -293,6 +294,7 @@ namespace pwiz.Osprey.IO
             long start = offsets[0];
             long end = BlockEnd(start);
             byte[] block;
+            int length;
             // Buffer size 1 turns off FileStream's own buffer: one read straight into the block.
             using (var fs = new FileStream(_cachePath, FileMode.Open, FileAccess.Read, FileShare.Read, 1))
             {
@@ -305,25 +307,37 @@ namespace pwiz.Osprey.IO
                 }
                 if (end - start > Array.MaxLength)
                     return LoadWindow(windowKey);
-                // Allocated before taking the lock, so no other thread's read waits on it.
-                block = new byte[end - start];
+                // Rented before taking the lock, so no other thread's read waits on it. A pooled
+                // block's pages are already resident; a fresh one's would fault in during the read,
+                // inside the lock that every reader of this index waits on (about a fifth of the
+                // time the lock is held, measured on Astral).
+                length = (int)(end - start);
+                block = ArrayPool<byte>.Shared.Rent(length);
                 lock (OspreyEnvironment.SerialReadsProcessWide ? PROCESS_BLOCK_READ_LOCK : _blockReadLock)
                 {
                     fs.Seek(start, SeekOrigin.Begin);
-                    fs.ReadExactly(block);
+                    fs.ReadExactly(block, 0, length);
                 }
             }
-            using (var r = new BinaryReader(new MemoryStream(block, false)))
+            try
             {
-                var result = ReadRecords(r, offsets, start);
-                // The records must fill the block exactly: one that ends early or late was cut
-                // at the wrong place.
-                if (r.BaseStream.Position != block.Length)
+                using (var r = new BinaryReader(new MemoryStream(block, 0, length, false)))
                 {
-                    throw new InvalidDataException(string.Format(
-                        OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, end, start + r.BaseStream.Position));
+                    var result = ReadRecords(r, offsets, start);
+                    // The records must fill the block exactly: one that ends early or late was cut
+                    // at the wrong place.
+                    if (r.BaseStream.Position != length)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, end, start + r.BaseStream.Position));
+                    }
+                    return result;
                 }
-                return result;
+            }
+            finally
+            {
+                // ReadRecords copies every value out of the block, so nothing still refers to it.
+                ArrayPool<byte>.Shared.Return(block);
             }
         }
 
