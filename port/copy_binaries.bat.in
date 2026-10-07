@@ -1,0 +1,7 @@
+xcopy build-nt-x86\msvc-debug-x86_64\*.dll "@CURRENT_PACKAGES_DIR@\debug\bin\pwiz\" /sy
+xcopy build-nt-x86\msvc-debug-x86_64\*.exe "@CURRENT_PACKAGES_DIR@\debug\bin\pwiz\" /sy
+xcopy build-nt-x86\msvc-debug-x86_64\*.lib "@CURRENT_PACKAGES_DIR@\debug\lib\pwiz\" /sy
+
+xcopy build-nt-x86\msvc-release-x86_64\*.dll "@CURRENT_PACKAGES_DIR@\bin\pwiz\" /sy
+xcopy build-nt-x86\msvc-release-x86_64\*.exe "@CURRENT_PACKAGES_DIR@\bin\pwiz\" /sy
+xcopy build-nt-x86\msvc-release-x86_64\*.lib "@CURRENT_PACKAGES_DIR@\lib\pwiz\" /sy

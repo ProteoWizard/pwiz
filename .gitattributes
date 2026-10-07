@@ -5,3 +5,4 @@
 *.mzxml binary
 
 *.sh text eol=lf
+*.jam text eol=lf
