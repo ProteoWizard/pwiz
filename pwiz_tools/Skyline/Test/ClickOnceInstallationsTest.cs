@@ -36,38 +36,26 @@ namespace pwiz.SkylineTest
     {
         private const string TEST_ZIP_PATH = @"Test\ClickOnceInstallationsTest.zip";
         private const string ASSEMBLY_NAME = @"ExampleProductName";
-        private const string COMPANY_FOLDER = @"University_of_Washington";
         private const string INSTALLED_VERSION = @"26.1.1.209";
         private const string UNINSTALLED_VERSION = @"26.1.1.231";
         private const string UNINSTALL_COMMAND = @"rundll32.exe dfshim.dll,ShArpMaintain " + ASSEMBLY_NAME +
             @".application, Culture=neutral, PublicKeyToken=9286511f3362df93, processorArchitecture=msil";
 
+        /// <summary>
+        /// A ClickOnce installation's settings are in the data store folder named like its
+        /// installation folder. With two installations on disk, each must be found with its own
+        /// installation folder (where its Tools are) and its own user.config. The one Programs
+        /// and Features no longer lists is still offered, but has nothing to uninstall.
+        /// </summary>
         [TestMethod]
-        public void TestClickOnceInstallations()
+        public void TestInstallationsArePairedWithTheirOwnSettings()
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
-            VerifyTwoInstallationsArePairedWithTheirOwnSettings();
-            VerifyDeveloperBuildSettingsAreNotOffered();
-            VerifyNeverRunInstallationIsNotOffered();
-            VerifySettingsUnderAnyCompanyFolderAreFound();
-            VerifyOtherProductsAreNotOffered();
-        }
-
-        /// <summary>
-        /// A ClickOnce installation's program folder (where its Tools are) and its settings folder
-        /// are in unrelated places, matched up by version. With two installations on disk, each
-        /// must be found with its own program folder and its own user.config. The one Programs and
-        /// Features no longer lists is still offered, but has nothing to uninstall.
-        /// </summary>
-        private void VerifyTwoInstallationsArePairedWithTheirOwnSettings()
-        {
             var localAppData = CreateLocalAppData(@"TwoInstallations");
             var currentFolder = WriteInstallation(localAppData, INSTALLED_VERSION);
-            var currentConfig = WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_current",
-                INSTALLED_VERSION);
+            var currentConfig = WriteConfig(localAppData, currentFolder, INSTALLED_VERSION);
             var removedFolder = WriteInstallation(localAppData, UNINSTALLED_VERSION);
-            var removedConfig = WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_removed",
-                UNINSTALLED_VERSION);
+            var removedConfig = WriteConfig(localAppData, removedFolder, UNINSTALLED_VERSION);
 
             var installations = FindInstallations(localAppData);
             Assert.AreEqual(2, installations.Count);
@@ -89,15 +77,22 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// A developer machine collects a settings folder for every folder Skyline has ever run
-        /// from, hundreds of them, with versions higher than any installation's. None belongs to an
-        /// installation, so none is offered.
+        /// Skyline run from a build folder keeps its settings in a per version folder under
+        /// %LOCALAPPDATA%\(company), and a developer build can have the same version as an
+        /// installation. Those settings are not the installation's, so the installation, having
+        /// no settings of its own, is not offered.
         /// </summary>
-        private void VerifyDeveloperBuildSettingsAreNotOffered()
+        [TestMethod]
+        public void TestDeveloperBuildSettingsAreNotOffered()
         {
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             var localAppData = CreateLocalAppData(@"DeveloperBuilds");
-            WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_developerbuild", @"26.1.1.238");
-            WriteConfig(localAppData, COMPANY_FOLDER, ASSEMBLY_NAME + @".exe_Url_olderbuild", @"25.1.1.401");
+            WriteInstallation(localAppData, INSTALLED_VERSION);
+            var buildSettingsFolder = Path.Combine(localAppData, @"University_of_Washington",
+                ASSEMBLY_NAME + @".exe_Url_developerbuild", INSTALLED_VERSION);
+            Directory.CreateDirectory(buildSettingsFolder);
+            File.WriteAllText(Path.Combine(buildSettingsFolder, @"user.config"),
+                @"<configuration><userSettings /></configuration>");
 
             Assert.AreEqual(0, FindInstallations(localAppData).Count);
         }
@@ -105,8 +100,10 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// An installation that was never run wrote no settings, so there is nothing to import.
         /// </summary>
-        private void VerifyNeverRunInstallationIsNotOffered()
+        [TestMethod]
+        public void TestNeverRunInstallationIsNotOffered()
         {
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             var localAppData = CreateLocalAppData(@"NeverRun");
             WriteInstallation(localAppData, INSTALLED_VERSION);
 
@@ -114,31 +111,19 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// The settings folder sits under a folder named for the assembly's company, which is not
-        /// the same for every build.
-        /// </summary>
-        private void VerifySettingsUnderAnyCompanyFolderAreFound()
-        {
-            var localAppData = CreateLocalAppData(@"OtherCompany");
-            WriteInstallation(localAppData, INSTALLED_VERSION);
-            var expected = WriteConfig(localAppData, @"Some_Other_Company", ASSEMBLY_NAME + @".exe_Url_current",
-                INSTALLED_VERSION);
-
-            Assert.AreEqual(expected, FindInstallations(localAppData)[INSTALLED_VERSION].UserConfigFile);
-        }
-
-        /// <summary>
         /// Includes a product whose name is the start of this one's, as the release channel's
         /// name is the start of the daily channel's.
         /// </summary>
-        private void VerifyOtherProductsAreNotOffered()
+        [TestMethod]
+        public void TestOtherProductsAreNotOffered()
         {
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             const string prefixName = @"Example";
             var localAppData = CreateLocalAppData(@"OtherApplication");
-            WriteInstallation(localAppData, INSTALLED_VERSION, prefixName);
-            WriteInstallation(localAppData, INSTALLED_VERSION, @"AutoQC");
-            WriteConfig(localAppData, COMPANY_FOLDER, prefixName + @".exe_Url_current", INSTALLED_VERSION);
-            WriteConfig(localAppData, COMPANY_FOLDER, @"AutoQC.exe_Url_current", INSTALLED_VERSION);
+            WriteConfig(localAppData, WriteInstallation(localAppData, INSTALLED_VERSION, prefixName),
+                INSTALLED_VERSION);
+            WriteConfig(localAppData, WriteInstallation(localAppData, INSTALLED_VERSION, @"AutoQC"),
+                INSTALLED_VERSION);
 
             Assert.AreEqual(0, FindInstallations(localAppData).Count);
         }
@@ -180,10 +165,14 @@ namespace pwiz.SkylineTest
             return folder;
         }
 
-        private static string WriteConfig(string localAppData, string companyFolder, string settingsFolder,
-            string version)
+        /// <summary>
+        /// The user.config ClickOnce keeps for the installation, in the data store folder named
+        /// like the installation folder.
+        /// </summary>
+        private static string WriteConfig(string localAppData, string installationFolder, string version)
         {
-            var folder = Path.Combine(localAppData, companyFolder, settingsFolder, version);
+            var folder = Path.Combine(localAppData, @"Apps\2.0\Data", @"WXYZABCD.EFG", @"HIJKLMNO.PQR",
+                Path.GetFileName(installationFolder), @"Data", version);
             Directory.CreateDirectory(folder);
             var configFile = Path.Combine(folder, @"user.config");
             File.WriteAllText(configFile, @"<configuration><userSettings /></configuration>");
