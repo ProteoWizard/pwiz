@@ -13,7 +13,7 @@ REM   * .NET 10 SDK
 REM   (dotCover is restored from .config\dotnet-tools.json by the build, so it
 REM   needs no agent provisioning.)
 REM   Inno Setup 6 (for the Setup.exe) is self-provisioned by package.ps1 through
-REM   pwiz-sharp/installer/Ensure-InnoSetup.ps1 if absent, so no manual agent step
+REM   scripts/installer/Ensure-InnoSetup.ps1 if absent, so no manual agent step
 REM   is needed.
 REM
 REM Outputs consumed by TeamCity:

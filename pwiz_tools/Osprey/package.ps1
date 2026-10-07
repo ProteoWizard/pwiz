@@ -42,7 +42,7 @@
 
 .PARAMETER Setup
     Also build the win-x64 Setup.exe (requires Inno Setup 6, bootstrapped by
-    pwiz-sharp/installer/Ensure-InnoSetup.ps1 if absent, and that win-x64 is
+    scripts/installer/Ensure-InnoSetup.ps1 if absent, and that win-x64 is
     among -Rid). See Installer/Setup.iss.
 
 .PARAMETER NoZip
@@ -296,7 +296,7 @@ function New-OspreySetup {
 
     # Inno Setup 6 is a per-user install of ~10 MB; Ensure-InnoSetup.ps1 fetches it
     # when the machine lacks it and prints the ISCC.exe path either way.
-    $ensure = Join-Path $repoRoot 'pwiz-sharp\installer\Ensure-InnoSetup.ps1'
+    $ensure = Join-Path $repoRoot 'scripts\installer\Ensure-InnoSetup.ps1'
     $iscc = & pwsh -NoProfile -File $ensure -PassThru | Select-Object -Last 1
     if ($LASTEXITCODE -ne 0 -or -not $iscc -or -not (Test-Path $iscc)) {
         Write-Error "Inno Setup (ISCC.exe) is not available; cannot build the Setup.exe."

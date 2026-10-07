@@ -16,8 +16,8 @@
     should gate its import per-TFM (as Skyline.csproj does) so the git-date
     computation runs only on the net8 pass.
   -->
-  <Import Project="..\..\pwiz-sharp\build\PwizVersion.targets"
-          Condition="Exists('..\..\pwiz-sharp\build\PwizVersion.targets')" />
+  <Import Project="..\..\build\PwizVersion.targets"
+          Condition="Exists('..\..\build\PwizVersion.targets')" />
 
   <PropertyGroup>
     <SkylineVersionYear>26</SkylineVersionYear>

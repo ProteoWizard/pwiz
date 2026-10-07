@@ -10,7 +10,7 @@
       <ref id="ProteoWizard_RemoteAccountTestParameters" />
     </inherits>
     <options>
-      <option name="artifactRules" value="pwiz-sharp/installer/build/ProteoWizard-*.exe&#xA;**/*.blib.observed" />
+      <option name="artifactRules" value="scripts/installer/build/ProteoWizard-*.exe&#xA;**/*.blib.observed" />
     </options>
     <disabled-settings>
       <setting-ref ref="RUNNER_73" />
@@ -19,7 +19,7 @@
     <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_139, Set_PWIZ_VERSION_variable, RUNNER_73, RUNNER_85">
       <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
         <parameters>
-          <param name="command.executable" value="pwiz-sharp/tcbuild.bat" />
+          <param name="command.executable" value="tcbuild.bat" />
           <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated --require-vendor-support" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
