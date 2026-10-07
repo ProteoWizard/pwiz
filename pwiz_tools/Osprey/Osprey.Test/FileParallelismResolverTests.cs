@@ -18,8 +18,11 @@
  * limitations under the License.
  */
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -80,21 +83,100 @@ namespace pwiz.Osprey.Test
             // Tight RAM still yields at least 1 (never 0).
             Assert.AreEqual(1, Resolve(FileParallelism.Auto, 4, cores: 16, availableBytes: 4 * GB, perFileBytes: 30 * GB));
 
-            // Auto with no usable memory signal falls back to the CPU/file cap
+            // Auto with no per-file estimate falls back to the CPU/file cap
             // (still bounded, unlike the old unbounded default).
-            Assert.AreEqual(3, Resolve(FileParallelism.Auto, 3, cores: 8, availableBytes: 0, perFileBytes: 6 * GB));
             Assert.AreEqual(4, Resolve(FileParallelism.Auto, 4, cores: 8, availableBytes: 64 * GB, perFileBytes: 0));
             Assert.AreEqual(8, Resolve(FileParallelism.Auto, 10, cores: 8, availableBytes: 0, perFileBytes: 0));
+            // Zero free memory with a known estimate is exhausted memory (a cgroup or
+            // heap limit at its ceiling), not a missing signal: one file at a time.
+            Assert.AreEqual(1, Resolve(FileParallelism.Auto, 3, cores: 8, availableBytes: 0, perFileBytes: 6 * GB));
+            // A tiny estimate against a large budget must not overflow the RAM fit.
+            Assert.AreEqual(8, Resolve(FileParallelism.Auto, 10, cores: 8, availableBytes: 512 * GB, perFileBytes: 1));
 
             // Auto ignores the env cap entirely (the argument wins when both set).
             Assert.AreEqual(3, Resolve(FileParallelism.Auto, 3, envCap: 1, cores: 8, availableBytes: 512 * GB, perFileBytes: GB));
 
             // Footprint estimate: null / empty / unreadable paths -> 0 (unknown),
             // which routes auto mode to the CPU/file cap rather than throwing.
-            Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(null));
-            Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(new string[0]));
+            Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(null, null));
+            Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(new string[0], null));
             Assert.AreEqual(0, FileParallelismResolver.EstimatePerFileBytes(
-                new[] { @"C:\does\not\exist\a.mzML", @"C:\does\not\exist\b.mzML" }));
+                new[] { @"C:\does\not\exist\a.mzML", @"C:\does\not\exist\b.mzML" }, null));
+
+            AssertCacheOnlySizing();
+        }
+
+        /// <summary>
+        /// Inputs whose source is gone or empty but whose <c>.spectra.bin</c> exists are
+        /// sized from the cache through the production wiring
+        /// (<see cref="PerFileScoringTask.EstimateInputBytes"/>), both beside the data and
+        /// in a separate cache directory, and auto mode then budgets RAM instead of taking
+        /// the CPU/file cap.
+        /// </summary>
+        private static void AssertCacheOnlySizing()
+        {
+            const int cacheBytes = 4096;
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_fp_" + Path.GetRandomFileName());
+            string cacheDir = Path.Combine(dir, @"cache");
+            Directory.CreateDirectory(cacheDir);
+            try
+            {
+                // run1's source was deleted after caching; run2's was truncated to 0 bytes.
+                string deleted = Path.Combine(dir, @"run1.mzML");
+                string truncated = Path.Combine(dir, @"run2.mzML");
+                File.WriteAllBytes(truncated, new byte[0]);
+                var inputs = new[] { deleted, truncated };
+                string cache1 = WriteCache(dir, deleted, cacheBytes);
+                WriteCache(dir, truncated, cacheBytes);
+
+                // Without a resolver both size 0, and so does the set.
+                Assert.AreEqual(0L, FileParallelismResolver.EstimatePerFileBytes(inputs, null));
+
+                // Production wiring, caches beside the data: a cache-only input sizes
+                // exactly like its cache, multiplier applied.
+                long cacheEstimate = FileParallelismResolver.EstimatePerFileBytes(new[] { cache1 }, null);
+                Assert.IsTrue(cacheEstimate > cacheBytes);
+                Assert.AreEqual(cacheEstimate, PerFileScoringTask.EstimateInputBytes(inputs));
+
+                // Auto mode budgets RAM from it: free memory below one file's estimate
+                // gives 1, where an unknown estimate would take the CPU/file cap (2).
+                Assert.AreEqual(1, FileParallelismResolver.Resolve(FileParallelism.Auto, inputs.Length, 0, 8,
+                    () => cacheEstimate / 2, () => PerFileScoringTask.EstimateInputBytes(inputs)));
+
+                // A separate --cache-dir is honored, and an empty one sizes to the unknown 0.
+                string emptyCacheDir = Path.Combine(dir, @"empty");
+                Directory.CreateDirectory(emptyCacheDir);
+                WriteCache(cacheDir, deleted, cacheBytes);
+                ArtifactPathsTest.WithArtifactDirs(null, cacheDir, () =>
+                    Assert.AreEqual(cacheEstimate, PerFileScoringTask.EstimateInputBytes(new[] { deleted })));
+                ArtifactPathsTest.WithArtifactDirs(null, emptyCacheDir, () =>
+                    Assert.AreEqual(0L, PerFileScoringTask.EstimateInputBytes(new[] { deleted })));
+
+                // A resolver that finds nothing, or throws, reports the unknown 0 rather
+                // than inventing a size or failing the run.
+                Assert.AreEqual(0L, FileParallelismResolver.EstimatePerFileBytes(
+                    inputs, p => Path.Combine(dir, @"absent.spectra.bin")));
+                Assert.AreEqual(0L, FileParallelismResolver.EstimatePerFileBytes(
+                    inputs, p => throw new IOException()));
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(dir, true);
+                }
+                catch (IOException)
+                {
+                    // A scanner holding a just-written file must not mask the assertion.
+                }
+            }
+        }
+
+        private static string WriteCache(string dir, string inputPath, int bytes)
+        {
+            string cachePath = Path.Combine(dir, Path.GetFileNameWithoutExtension(inputPath) + SpectraCache.EXT);
+            File.WriteAllBytes(cachePath, new byte[bytes]);
+            return cachePath;
         }
 
         /// <summary>

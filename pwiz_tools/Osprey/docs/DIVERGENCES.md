@@ -89,7 +89,7 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 - **Doc:** [06-peak-detection.md](06-peak-detection.md)
 - **Rust says:** Rust doc gives a blib-boundary priority list where Tukey median-polish FWHM (apex ± 1.96σ) is priority 1 and CWT boundaries are fallback.
 - **C# does:** `FdrEntry.StartRt/EndRt` written for output are the CWT/detected `bestPeak` boundaries; median polish is consumed only for four scoring features. README asserts blib is bit-identical cross-impl, so Rust likely also writes CWT bounds (doc stale) — but `Osprey.IO/BlibWriter.cs` was not read to confirm no downstream re-derivation.
-- **C# evidence:** `Osprey.Scoring/CoelutionScorer.cs:462`
+- **C# evidence:** `Osprey.Scoring/CoelutionScorer.cs:456`
 - **Recommended action:** Read `BlibWriter.cs` and confirm boundaries are written straight from the CWT peak with no median-polish re-derivation. Given the byte-identical blib gate this is almost certainly doc-staleness, not a port error.
 
 #### U4. Simple FDR scores on `coelution_sum`, not a ROC-AUC-selected best feature — minor - **resolved: Simple was deleted**
@@ -175,25 +175,26 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 |---|---|---|---|---|---|
 | UNVER | E-value not computed (**U2**) | Comet E-value from XCorr survival fn, stored (unused for FDR) | No `evalue` field, no survival fn; only LDA drives competition | `CalibrationScorer.cs:34-56` | info |
 | STALE | Unit-res bin count is 2000, not 2001 | 2001 bins (1.0005 m/z) | `UnitResolution()` = 2000 bins; confirmed by test comment | `BinConfig.cs:42-59`; `ScoringTest.cs:1087` | info |
-| INTENT | Only the 21 PIN features computed | ~47 scores incl hyperscore, dot_product variants, etc. | Exactly the 21 PIN features; unused fields never populated | `OspreyFeatureCalculators.cs:36-44`; `CoelutionScorer.cs:253-274` | minor |
-| INTENT | MS1 features gated by resolution, not MS1 presence | MS1 scoring available when MS1 present | Features 13/14 HRAM-only; `UnitStrategy.HasMs1Features=false` → exactly 0.0 at unit res | `ResolutionStrategy.cs:112/163`; `Ms1Calculators.cs:37-38` | info |
+| INTENT | Only the 21 PIN features computed | ~47 scores incl hyperscore, dot_product variants, etc. | Exactly the 21 PIN features; unused fields never populated | `OspreyFeatureCalculators.cs:36-44`; `CoelutionScorer.cs:247-268` | minor |
+| INTENT | MS1 features gated by resolution, not MS1 presence | MS1 scoring available when MS1 present | Features 13/14 HRAM-only; `UnitStrategy.HasMs1Features=false` → exactly 0.0 at unit res | `ResolutionStrategy.cs:133/184`; `Ms1Calculators.cs:37-38` | info |
 
 ### [02-xcorr-scoring.md](02-xcorr-scoring.md) — matches-with-notes
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
 | INTENT | Managed scalar loops, no BLAS/SIMD, no dense vector | XCorr via BLAS `sdot`; calibration forms dense theoretical vector | Managed scalar loop; `O(n_fragments)` sum-at-bins form; bit-identical | `SpectralScorer.cs:186,273`; `Calibrator.cs:1189` | info |
-| INTENT | Sparse HRAM cache instead of dense `Vec<Vec<f32>>` | Dense `float[NBins]` (~391 KB) per window | `SparseXcorrSpectrum` (~20 B/peak), recovers flanking-subtracted value on demand, bit-identical (issue #4398) | `SparseXcorrSpectrum.cs:55,93`; `ResolutionStrategy.cs:170` | info |
+| INTENT | Sparse HRAM cache instead of dense `Vec<Vec<f32>>` | Dense `float[NBins]` (~391 KB) per window | `SparseXcorrSpectrum` (~20 B/peak), recovers flanking-subtracted value on demand, bit-identical (issue #4398) | `SparseXcorrSpectrum.cs:55,93`; `ResolutionStrategy.cs:226` | info |
+| INTENT | HRAM cache filled on demand | Every spectrum of a window preprocessed before scoring | `ScoreXcorr` preprocesses a spectrum the first time a candidate needs it (apex +/-2 only); identical values, 2.5-91% of the spectra depending on the pass | `ResolutionStrategy.cs:191,212` | info |
 | STALE | Simplified snippet omits fragment-bin dedup | Pseudocode sums per-fragment with no dedup (would double-count) | Dedups via `visitedBins`; matches dense semantics. Covered by `TestXcorrFragmentBinDedup` | `SpectralScorer.cs:198`; `ScoringTest.cs:382` | minor |
-| INTENT | Precision split: unit-res f64, HRAM f32-narrowed | Doc silent on precision boundary | Unit/calibration cache f64; HRAM narrows to float, mirroring Rust HRAM f32 cache | `ResolutionStrategy.cs:119`; `SparseXcorrSpectrum.cs:113` | info |
+| INTENT | Precision split: unit-res f64, HRAM f32-narrowed | Doc silent on precision boundary | Unit/calibration cache f64; HRAM narrows to float, mirroring Rust HRAM f32 cache | `ResolutionStrategy.cs:140`; `SparseXcorrSpectrum.cs:113` | info |
 
 ### [06-peak-detection.md](06-peak-detection.md) — matches-with-notes
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
 | STALE | Peak selection uses RT-penalized rank score | Highest mean pairwise fragment correlation | `coelution * exp(-dt²/2σ²) * ln(1+apex)` — Gaussian RT penalty + log-intensity tiebreak (both impls have penalty; doc behind) | `PeakDataExtractor.cs:289` | minor |
-| STALE | Median-polish 10 iters / tol 0.01 | 20 iters / 1e-4 | Call site `maxIter=10, tol=0.01` (matches current Rust `pipeline.rs`; doc's 20/1e-4 is old default) | `CoelutionScorer.cs:242` | minor |
-| UNVER | Blib boundaries from CWT peak, not median-polish FWHM (**U3**) | Median-polish FWHM priority 1, CWT fallback | `StartRt/EndRt` = CWT `bestPeak` bounds; median polish only for 4 features; `BlibWriter.cs` not read to confirm | `CoelutionScorer.cs:462` | minor |
+| STALE | Median-polish 10 iters / tol 0.01 | 20 iters / 1e-4 | Call site `maxIter=10, tol=0.01` (matches current Rust `pipeline.rs`; doc's 20/1e-4 is old default) | `CoelutionScorer.cs:236` | minor |
+| UNVER | Blib boundaries from CWT peak, not median-polish FWHM (**U3**) | Median-polish FWHM priority 1, CWT fallback | `StartRt/EndRt` = CWT `bestPeak` bounds; median polish only for 4 features; `BlibWriter.cs` not read to confirm | `CoelutionScorer.cs:456` | minor |
 | STALE | Scale-space/ridge-tracking is aspirational | Loop over scales [2,4,8,16] w/ ridge tracking, S/N<3 | Single data-driven scale from median FWHM, `minConsensusHeight=0.0`; only the old plan is aspirational | `CwtPeakDetector.cs:161` | info |
 | STALE | No linear-baseline background subtraction | Trapezoidal AUC minus linear baseline (plan §4.4) | Plain trapezoidal integral, no baseline (area is relative, not for quant) | `PeakDetector.cs:178` | info |
 | STALE | Consensus aggregation is median, not sum | Plan §4.3 sums per-transition CWTs | Pointwise `ConsensusMedianCwt` (matches production doc) | `CwtPeakDetector.cs:265` | info |

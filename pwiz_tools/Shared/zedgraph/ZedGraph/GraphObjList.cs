@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright ï¿½ 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -289,7 +289,9 @@ namespace ZedGraph
             // the same ZOrder value.
 			for ( int i=0; i<Count; i++ )
 			{
-				if ( this[i].PointInBox( mousePt, pane, g, scaleFactor ) )
+				// Skip hidden objects so an invisible object (e.g. a sampled-out or pruned
+				// label left in the list) cannot screen a visible one during hit-testing.
+				if ( this[i].IsVisible && this[i].PointInBox( mousePt, pane, g, scaleFactor ) )
 				{
 					if ( ( index >= 0 && this[i].ZOrder > this[index].ZOrder ) || index < 0 )
 						index = i;
