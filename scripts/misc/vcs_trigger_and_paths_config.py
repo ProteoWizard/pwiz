@@ -2,8 +2,8 @@ targets = {}
 
 # Retired C++ build configurations. The C++ tree lives in ProteoWizard/pwiz-cpp now and these
 # configurations build from that repo; nothing in this repo may trigger them. Kept here,
-# commented out, so the ids stay findable when the TeamCity side is re-pointed. bt83, bt17 and
-# bt209 are not among them: they took over the .NET builds below.
+# commented out, so the ids stay findable when the TeamCity side is re-pointed. bt83, bt17,
+# bt209 and the master Wine container are not among them: they took over the .NET builds below.
 #targets['CoreWindows'] = {'master': {"bt36": "Core Windows x86", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
 #targets['CoreWindowsDebug'] = {'master': {"bt84": "Core Windows x86_64 debug", "bt75": "Core Windows debug"}}
 #targets['SkylineRelease'] = {'master': {"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection",
@@ -12,8 +12,7 @@ targets = {}
 #                                         "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection",
 #                                         "ProteoWizard_SkylineReleaseTestConnectedTests": "Skyline release TestConnected tests"}}
 #targets['SkylineDebug'] = {'master': {"bt210": "Skyline master and PRs (Windows x86_64 debug)"}}
-#targets['ContainerWine'] = {'master': {"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"},
-#                            'release': {"ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"}}
+#targets['ContainerWine'] = {'release': {"ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"}}
 #targets['Bumbershoot'] = {'master': {"Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64",
 #                                     "ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86",
 #                                     "ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
@@ -80,12 +79,13 @@ targets['Container'] = \
     'master':
     {
         # The .NET container. It takes the payload from this chain: snapshot + artifact
-        # dependencies on Core Windows .NET (ProteoWizard-WithVendorSdks-Setup*.exe) and
-        # Skyline Windows .NET (SkylineTester.zip), so it validates the artifacts this repo
-        # actually produces. Note the id carries the ProteoWizard_ prefix while the retired
-        # cpp one above does not - both are as TeamCity has them, and smartBuildTrigger.py
-        # POSTs the key verbatim as <buildType id="...">.
-        "ProteoWizard_ProteoWizardAndSkylineDockerContainerNetWineX8664": "ProteoWizard and Skyline Docker container .NET (Wine x86_64)"
+        # dependencies on Core Windows x86_64 (bt83, ProteoWizard-WithVendorSdks-Setup*.exe)
+        # and Skyline master and PRs (bt209, SkylineTester.zip), so it validates the artifacts
+        # this repo actually produces. It took over the steps of the temporary Docker
+        # container .NET config in Versioned Configs. Note the id has no ProteoWizard_ prefix -
+        # that is how TeamCity has it, and smartBuildTrigger.py POSTs the key verbatim as
+        # <buildType id="...">.
+        "ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
     }
 }
 
