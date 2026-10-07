@@ -122,14 +122,13 @@ targets['Container'] = \
     'master':
     {
         # The net10 container. It takes the payload from this chain: snapshot + artifact
-        # dependencies on Core Windows .NET (ProteoWizard-WithVendorSdks-Setup*.exe) and
-        # Skyline Windows .NET (SkylineTester.zip), so it validates the artifacts this branch
-        # actually produces. Note the id here carries the ProteoWizard_ prefix while the cpp
-        # one below does not - both are as TeamCity has them, and smartBuildTrigger.py POSTs
-        # the key verbatim as <buildType id="...">.
-        "ProteoWizard_ProteoWizardAndSkylineDockerContainerNetWineX8664": "ProteoWizard and Skyline Docker container .NET (Wine x86_64)"
-        # NET8-PORT TEMP (restore before merge): don't trigger the Wine x86_64 container during net8 iteration
-        #,"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
+        # dependencies on Core Windows x86_64 (bt83, ProteoWizard-WithVendorSdks-Setup*.exe)
+        # and Skyline master and PRs (bt209, SkylineTester.zip), so it validates the artifacts
+        # this branch actually produces. It took over the steps of the temporary Docker
+        # container .NET config in Versioned Configs. Note the id has no ProteoWizard_ prefix -
+        # that is how TeamCity has it, and smartBuildTrigger.py POSTs the key verbatim as
+        # <buildType id="...">.
+        "ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
     },
     'release':
     {
@@ -203,8 +202,8 @@ matchPaths = [
     # don't trigger the cpp Core/Skyline/Bumbershoot chain.
     #
     # Container IS included: the net10 container's payload is pwiz-sharp's own installer, so a
-    # pwiz-sharp change is exactly what needs validating there. Only the net10 container is in
-    # targets['Container']['master'], so this does not pull in the cpp one.
+    # pwiz-sharp change is exactly what needs validating there. The release-branch container
+    # is under targets['Container']['release'], so a master PR does not pull it in.
     ("pwiz-sharp/.*", merge(targets['CoreNet'], targets['Container'])),
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
