@@ -393,6 +393,11 @@ namespace pwiz.Common.SystemUtil
             return text;
         }
 
+        // Matches an ampersand that does NOT begin a predefined XML entity or a complete decimal
+        // or hexadecimal character reference ([0-9] rather than \d, which matches non-ASCII digits)
+        private static readonly Regex REGEX_BARE_AMPERSAND =
+            new Regex(@"&(?!(?:apos|quot|[gl]t|amp);|#[0-9]+;|#x[0-9A-Fa-f]+;)", RegexOptions.Compiled);
+
         // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
         // Return a suitably escaped version of the string
         public static string EscapePathForXML(string path)
@@ -400,7 +405,7 @@ namespace pwiz.Common.SystemUtil
             if (path.Contains(@"&")) // Valid windows filename character, may need escaping
             {
                 // But it may also be in use as an escape character - don't mess with &quot; etc
-                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
+                path = REGEX_BARE_AMPERSAND.Replace(path, @"&amp;");
             }
             return path;
         }

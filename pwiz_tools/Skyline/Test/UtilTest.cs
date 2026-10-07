@@ -501,6 +501,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&amp;oops")); // Already escaped
             Assert.AreEqual("&amp;oops &amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops &amp;oops")); // Mix of escaped and unescaped
             Assert.AreEqual("&amp;oops &amp;oops &apos;oops", PathEx.EscapePathForXML("&oops &oops &apos;oops")); // Use of & to escape apostrophe
+            Assert.AreEqual("&#38;oops &#x26;oops", PathEx.EscapePathForXML("&#38;oops &#x26;oops")); // Character references
+            Assert.AreEqual("R&amp;#D", PathEx.EscapePathForXML("R&#D")); // '#' without a complete reference
+            Assert.AreEqual("&amp;#;oops", PathEx.EscapePathForXML("&#;oops")); // Empty reference
+            Assert.AreEqual("&amp;#X41;oops", PathEx.EscapePathForXML("&#X41;oops")); // XML requires lowercase 'x'
+            const char arabicIndicThree = (char) 0x0663; // Non-ASCII digit, which Regex \d would match
+            Assert.AreEqual("&amp;#" + arabicIndicThree + ";oops", PathEx.EscapePathForXML("&#" + arabicIndicThree + ";oops"));
         }
 
         [TestMethod]

@@ -355,7 +355,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
                         string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
                         _intermediateFiles.Add(msfraggerPepXmlFilepath);
-                        FixPercolatorPepXml(msfraggerPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId, this);
+                        PERCOLATOR_PEPXML_ANNOTATOR.AddQValues(msfraggerPepXmlFilepath, finalOutputFilepath, qvalueByPsmId, () => IsCanceled);
                     }
 
                     DeleteIntermediateFiles();
@@ -488,51 +488,16 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        // Add Percolator score to MSFragger pepXML
-        private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename, Dictionary<string, double> qvalueByPsmId, IProgressMonitor monitor)
+        private static readonly Regex REGEX_SPECTRUM_QUERY =
+            new Regex(@".* assumed_charge=""(\d+)"" spectrum=""([^""]+?)\.\d+"" .*", RegexOptions.Compiled);
+
+        // Adds each hit's Percolator q-value to the MSFragger pepXML, before its hyperscore.
+        internal static readonly PercolatorPepXmlAnnotator PERCOLATOR_PEPXML_ANNOTATOR =
+            new PercolatorPepXmlAnnotator(GetPercolatorSpectrumId, @"_", @"<search_score name=""hyperscore""", true);
+
+        private static string GetPercolatorSpectrumId(string spectrumQueryLine)
         {
-            //bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
-            var lastPsmIdRegex = new Regex(@".* assumed_charge=""(\d+)"" spectrum=""([^""]+?)\.\d+"" .*", RegexOptions.Compiled);
-            var hitRankRegex = new Regex(@".* hit_rank=""(\d+)"".*", RegexOptions.Compiled);
-
-            using (var pepXmlFile = new StreamReader(cruxOutputFilepath))
-            using (var fixedPepXmlFile = new StreamWriter(finalOutputFilepath))
-            {
-                string line;
-                string lastPsmId = "";
-                string lastPsmIdAndRank = "";
-                while ((line = pepXmlFile.ReadLine()) != null)
-                {
-                    line = EscapeBareAmpersands(line);
-                    if (line.Contains(@"<spectrum_query"))
-                    {
-                        lastPsmId = lastPsmIdRegex.Replace(line, "$2.$1");
-                    }
-                    else if (line.Contains(@"<search_hit"))
-                    {
-                        lastPsmIdAndRank = lastPsmId + hitRankRegex.Replace(line, @"_$1");
-                    }
-                    else if (line.Contains(@"<search_score name=""hyperscore"""))
-                    {
-                        if (qvalueByPsmId.TryGetValue(lastPsmIdAndRank, out var qvalue))
-                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""{0}"" />", qvalue.ToString(CultureInfo.InvariantCulture));
-                        // MCC: This happens when percolator's text tables drops a PSM that is in pepXML; I'm not sure why it happens though.
-                        else
-                        {
-                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""1"" />");
-                            //Console.WriteLine($"{lastPsmId} not found in percolator scores.");
-                        }
-                    }
-                    else if (line.Contains(@"</search_summary>"))
-                    {
-                        fixedPepXmlFile.WriteLine(@"<parameter name=""post-processor"" value=""percolator"" />");
-                    }
-                    fixedPepXmlFile.WriteLine(line);
-
-                    if (monitor.IsCanceled)
-                        return;
-                }
-            }
+            return REGEX_SPECTRUM_QUERY.Replace(spectrumQueryLine, "$2.$1");
         }
 
         // Fix (TODO: remove these hacks when it's fixed in Crux and/or MSFragger):

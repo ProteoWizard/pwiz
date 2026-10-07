@@ -439,7 +439,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // We have only one percolator output file
                 _finalOutputFilepath = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : @".") + @"percolator.pep.xml");
-                FixPercolatorPepXml(TidePepXmlFilepath, _finalOutputFilepath, qvalueByPsmId);
+                PERCOLATOR_PEPXML_ANNOTATOR.AddQValues(TidePepXmlFilepath, _finalOutputFilepath, qvalueByPsmId);
 
                 DeleteIntermediateFiles();
 
@@ -501,53 +501,19 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        // Add Percolator score to Tide pepXML
-        private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, Dictionary<string, double> qvalueByPsmId)
-        {
-            using (var pepXmlFile = new StreamReader(cruxOutputFilepath))
-            using (var fixedPepXmlFile = new StreamWriter(finalOutputFilepath))
-            {
-                string line;
-                string lastPsmId = "";
-                string lastRank = "";
-                while ((line = pepXmlFile.ReadLine()) != null)
-                {
-                    line = EscapeBareAmpersands(line);
-                    if (line.Contains(@"<spectrum_query"))
-                    {
-                        lastPsmId = Regex.Replace(line, @".* spectrum=""([^""]+)"" start_scan.*", "$1");
+        // Adds each hit's Percolator q-value to the Tide pepXML, as the hit's last score.
+        internal static readonly PercolatorPepXmlAnnotator PERCOLATOR_PEPXML_ANNOTATOR =
+            new PercolatorPepXmlAnnotator(GetPercolatorSpectrumId, @".", @"</search_hit", true);
 
-                        // Remove the leading 0s of the scan ids. E.g. 04614 ==> 4614
-                        string[] psmIdParts = lastPsmId.Split('.');
-                        int.TryParse(psmIdParts[1], out int num);
-                        string numStr = num.ToString();
-                        lastPsmId = string.Join(@".", psmIdParts[0], numStr, numStr, psmIdParts[3]);
-                    }
-                    else if (line.Contains(@"<search_hit"))
-                    {
-                        lastRank = Regex.Replace(line, @".* hit_rank=""(\d+)"" .*", "$1");
-                    }
-                    else if (line.Contains(@"</search_hit"))
-                    {
-                        string psmIdAndRank = $@"{lastPsmId}.{lastRank}";
-                        if (qvalueByPsmId.TryGetValue(psmIdAndRank, out var qvalue))
-                            fixedPepXmlFile.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""{0}"" />", qvalue.ToString(CultureInfo.InvariantCulture));
-                        else
-                            // Percolator dropped this PSM from its output tables. Without a percolator_qvalue,
-                            // BiblioSpec's PepXMLreader treats the hit as q-value 0 and admits it to the library
-                            // unfiltered; emit a failing q-value (1) so it is excluded, matching the MSFragger
-                            // and Comet integrations.
-                            fixedPepXmlFile.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""1"" />");
-                        fixedPepXmlFile.WriteLine(line);
-                        continue;
-                    }
-                    else if (line.Contains(@"</search_summary>"))
-                    {
-                        fixedPepXmlFile.WriteLine(@"<parameter name=""post-processor"" value=""percolator"" />");
-                    }
-                    fixedPepXmlFile.WriteLine(line);
-                }
-            }
+        private static string GetPercolatorSpectrumId(string spectrumQueryLine)
+        {
+            string spectrum = Regex.Replace(spectrumQueryLine, @".* spectrum=""([^""]+)"" start_scan.*", "$1");
+
+            // Remove the leading 0s of the scan ids. E.g. 04614 ==> 4614
+            string[] psmIdParts = spectrum.Split('.');
+            int.TryParse(psmIdParts[1], out int num);
+            string numStr = num.ToString();
+            return string.Join(@".", psmIdParts[0], numStr, numStr, psmIdParts[3]);
         }
 
         // Fix (TODO: remove these hacks when it's fixed in Crux and/or Tide):
