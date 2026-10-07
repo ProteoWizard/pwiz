@@ -6,8 +6,9 @@ targets['CoreWindowsRelease'] = \
     {
         # NET8-PORT TEMP (restore before merge): don't trigger the cpp Core x86_64
         # builds during net8 iteration; they fan out from any pwiz_tools/ edit via All.
-        #"bt83": "Core Windows x86_64"
-        #,"bt36": "Core Windows x86"
+        # bt83 is not one of them any more: it runs the pwiz-sharp build and is
+        # triggered through targets['CoreWindowsNet'] below.
+        #"bt36": "Core Windows x86"
         #,"bt143": "Core Windows x86_64 (no vendor DLLs)"
     },
     'release':
@@ -22,16 +23,16 @@ targets['CoreWindowsRelease'] = \
 #}
 #targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
 targets['CoreWindows'] = targets['CoreWindowsRelease']
-# NET8-PORT TEMP (restore before merge): don't trigger cpp Core Linux x86_64 during net8 iteration
-#targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
+# bt17 runs the pwiz-sharp build now and is triggered through targets['CoreLinuxNet'] below.
 targets['CoreLinux'] = {'master': {}}
 
-# pwiz-sharp is the .NET 8 C# port; the corresponding TeamCity builds run
-# `pwiz-sharp/build.bat` on Windows and `pwiz-sharp/build.sh` on Linux (dotnet restore +
+# pwiz-sharp is the .NET C# port; the corresponding TeamCity builds run
+# `pwiz-sharp/tcbuild.bat` on Windows and `pwiz-sharp/tcbuild.sh` on Linux (dotnet restore +
 # build + test). Independent from the cpp build configs above — only files under
-# pwiz-sharp/ should trigger them.
-targets['CoreWindowsNet'] = {'master': {"ProteoWizard_CoreWindowsNet": "Core Windows .NET"}}
-targets['CoreLinuxNet'] = {'master': {"ProteoWizard_CoreLinuxNet": "Core Linux .NET"}}
+# pwiz-sharp/ should trigger them. These are the historic Core x86_64 configs, which took
+# over the steps of the temporary Core Windows/Linux .NET configs in Versioned Configs.
+targets['CoreWindowsNet'] = {'master': {"bt83": "Core Windows x86_64"}}
+targets['CoreLinuxNet'] = {'master': {"bt17": "Core Linux x86_64"}}
 # Both platforms build the same C# sources from the same tree, so any change that warrants a
 # Windows .NET build warrants the Linux one too — otherwise a cross-platform regression (a
 # hardcoded 7za.exe, a backslash path, a Windows-only vendor reference) only surfaces on the
@@ -61,21 +62,22 @@ targets['SkylineRelease'] = \
 #}
 #targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
 
-# On the .NET 8 port branch, Skyline builds and tests run via pwiz_tools/Skyline/build.bat
-# (dotnet restore + build + test), not the old cpp/MSVC "bt209" config. Both inspections run
-# in-build too: the custom CodeInspectionTest as a test inside Test.csproj, and ReSharper as
+# Skyline builds and tests run via pwiz_tools/Skyline/tcbuild.bat (dotnet restore + build +
+# test), which bt209 took over from the temporary Skyline Windows .NET config. Both inspections
+# run in-build too: the custom CodeInspectionTest as a test inside Test.csproj, and ReSharper as
 # the tcinspect.ps1 build step that replaces the standalone "Skyline Code Inspection" config.
-# Point plain Skyline triggers at the net8 build config instead.
-targets['SkylineWindowsNet'] = {'master': {"ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"}}
+# So bt209 is triggered directly, rather than through that config's snapshot dependency as in
+# targets['SkylineRelease'] above.
+targets['SkylineWindowsNet'] = {'master': {"bt209": "Skyline master and PRs (Windows x86_64)"}}
 targets['Skyline'] = targets['SkylineWindowsNet']
 
-# Configs that report more than one GitHub status, keyed by config id. Skyline Windows .NET
-# runs ReSharper as a build step and publishes that verdict under the context the standalone
-# inspection config publishes, so when this script skips the build it has to report the paired
-# context as well. Otherwise the check is simply absent on commits that do not rebuild Skyline,
-# and a PR sits with one green check and one that never arrives.
+# Configs that report more than one GitHub status, keyed by config id. bt209 runs ReSharper as
+# a build step and publishes that verdict under the context the standalone inspection config
+# publishes, so when this script skips the build it has to report the paired context as well.
+# Otherwise the check is simply absent on commits that do not rebuild Skyline, and a PR sits
+# with one green check and one that never arrives.
 #
-# This does nothing YET. ProteoWizard_SkylineWindowsNet is nested under 'master' above, and a
+# This does nothing YET. bt209 is nested under 'master' above, and a
 # target reachable only through a merge()'d matchPaths entry never enters
 # notBuildingDueToChangedFiles at all - it is dropped silently, so today the build status and
 # the inspection status are consistently absent together. Un-nesting it (which the NET8-PORT
@@ -91,7 +93,7 @@ targets['Skyline'] = targets['SkylineWindowsNet']
 # checks on GitHub; nothing here changes that for the standalone config.)
 extraStatuses = \
 {
-    "ProteoWizard_SkylineWindowsNet": ["Skyline code inspection"]
+    "bt209": ["Skyline code inspection"]
 }
 
 targets['SkylineWithTestConnected'] = \
@@ -102,13 +104,10 @@ targets['SkylineWithTestConnected'] = \
         # code inspection from the net8 port PR (the net8 build runs inspection in-build).
         #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
         #,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        # bt209 was the last cpp/MSVC config still reachable on master. Commented out with the
-        # rest of them: this branch builds Skyline through pwiz_tools/Skyline/build.bat, so a
-        # cpp Skyline build here only reports a status for work the branch does not do.
-        # The native shims are unaffected - MobilionShim and MascotShim live under pwiz-sharp/
-        # and are built by their own csproj/CMake inside Core Windows .NET, not by any cpp
-        # config, and the pwiz-sharp/.* rule already covers their sources.
-        #"bt209": "Skyline master and PRs (Windows x86_64)"
+        # bt209 runs the .NET Skyline build now and is triggered through targets['Skyline'],
+        # so it is not repeated here. The native shims are unaffected - MobilionShim and
+        # MascotShim live under pwiz-sharp/ and are built by their own csproj/CMake inside
+        # Core Windows x86_64 (bt83), and the pwiz-sharp/.* rule already covers their sources.
     },
     'release':
     {
