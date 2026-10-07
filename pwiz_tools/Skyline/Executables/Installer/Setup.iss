@@ -20,7 +20,7 @@
 ;     registry record of the install location for SkylineRunner, SkylineBatch
 ;     and the MCP server to find the install.
 ;   - The .NET Desktop Runtime prerequisite is bundled (default) or checked
-;     for (NoNetRuntime variant); see pwiz-sharp\installer\common\.
+;     for (NoNetRuntime variant); see scripts\installer\common\.
 ;   - /LAUNCH starts Skyline at the end of a silent (/SILENT or /VERYSILENT)
 ;     install, which has no finish page to offer it.
 ;
@@ -234,7 +234,7 @@ Root: HKA; Subkey: "Software\Classes\.skyp\OpenWithProgids"; ValueType: string; 
 ; Included here so its [Run] entry precedes the launch entry below.
 #define DotNetMajor "10"
 #define ProductDisplayName ProductName
-#include "..\..\..\..\pwiz-sharp\installer\common\DotNetDesktopRuntime.iss"
+#include "..\..\..\..\scripts\installer\common\DotNetDesktopRuntime.iss"
 
 [Run]
 ; ClickOnce launched Skyline as soon as the install finished; keep that as the
@@ -248,7 +248,7 @@ Filename: "{app}\{#MyAppExe}"; Flags: nowait runasoriginaluser; \
 
 ; The WiX admin .msi (UpgradeCodes from Product-template.wxs, 64-bit) installed
 ; into the same %ProgramFiles% folder; refuse a per-machine install over it.
-#include "..\..\..\..\pwiz-sharp\installer\common\LegacyMsi.iss"
+#include "..\..\..\..\scripts\installer\common\LegacyMsi.iss"
 
 [Code]
 #if SkylineAppName == "Skyline"

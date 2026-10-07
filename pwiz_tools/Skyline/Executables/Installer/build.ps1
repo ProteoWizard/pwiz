@@ -21,7 +21,7 @@ Release x64 from Visual Studio):
      <ProductName> folder, for running Skyline without installing it, and copy
      DownloadPage.html beside it as <ProductName>.html.
   5. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
-     the pwiz-sharp installer under pwiz-sharp\installer\cache\).
+     the ProteoWizard installer under scripts\installer\cache\).
   6. Compile Setup.iss twice: the default variant bundling the runtime and the
      NoNetRuntime variant that only checks for it.
   7. Report, including the two URLs to upload the manifest and the installer to.
@@ -64,7 +64,7 @@ $ErrorActionPreference = 'Stop'
 $installerDir = $PSScriptRoot
 $skylineDir   = (Resolve-Path (Join-Path $installerDir '..\..')).Path
 $repoRoot     = (Resolve-Path (Join-Path $skylineDir '..\..')).Path
-$pwizSharpInstaller = Join-Path $repoRoot 'pwiz-sharp\installer'
+$pwizSharpInstaller = Join-Path $repoRoot 'scripts\installer'
 if (-not $OutputDir) { $OutputDir = Join-Path $skylineDir 'bin\installer' }
 # Absolute, because it is handed to ISCC, which resolves relative paths against the script.
 $OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
@@ -211,7 +211,7 @@ $downloadPagePath = Join-Path $OutputDir "$productName.html"
 Copy-Item (Join-Path $installerDir 'DownloadPage.html') $downloadPagePath
 Write-Host "    $downloadPagePath"
 
-# 5. The .NET 10 desktop runtime EXE, cached beside the pwiz-sharp installer so the two
+# 5. The .NET 10 desktop runtime EXE, cached beside the ProteoWizard installer so the two
 #    products share one download. The aka.ms URL redirects to the latest 10.0.x.
 $dotnetRuntimeUrl = 'https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe'
 $dotnetExe = Join-Path $cacheDir 'windowsdesktop-runtime-10.0-win-x64.exe'

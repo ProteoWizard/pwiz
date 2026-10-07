@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="897de176-8864-4069-a11e-4045b453f068" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>ProteoWizard Website</name>
+  <description>Updates the ProteoWizard website: www.proteowizard.org</description>
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="web" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="60" />
+    </options>
+    <parameters>
+      <param name="sf_ssh_key" value="credentialsJSON:ec5e7613-a626-4db4-a3eb-240fb4238758" spec="password label='SSH key' display='hidden'" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_2160" name="" type="simpleRunner">
+        <parameters>
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="script.content"><![CDATA[#!/bin/bash
+
+cat << EOF > sourceforge.key
+%sf_ssh_key%%
+EOF
+chmod 700 sourceforge.key
+
+SSH_OPTIONS="ssh -i sourceforge.key -o StrictHostKeyChecking=no"
+SOURCE=./*
+ls $SOURCE
+if [ "%teamcity.build.branch%" = "master" ]; then
+  TARGET=/home/project-web/proteowizard/htdocs
+else
+#  TARGET=/home/project-web/proteowizard/htdocs/%teamcity.build.branch%
+  TARGET=/home/project-web/proteowizard/htdocs/develop
+fi
+
+rsync -Carhzv -e "$SSH_OPTIONS" $SOURCE chambm@web.sf.net:$TARGET]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_2161" name="" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="shred -u sourceforge.key" />
+          <param name="teamcity.step.mode" value="execute_always" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_GitHubWeb" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_29" name="teamcity.agent.jvm.os.name" value="Linux" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="branchFilter" value="+:master" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="15" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_13" type="teamcity.github.status">
+        <parameters>
+          <param name="github_report_on" value="on start and finish" />
+          <param name="guthub_authentication_type" value="token" />
+          <param name="guthub_context" value="teamcity - %system.teamcity.buildConfName%" />
+          <param name="guthub_guest" value="true" />
+          <param name="guthub_host" value="https://api.github.com" />
+          <param name="guthub_owner" value="ProteoWizard" />
+          <param name="guthub_repo" value="web" />
+          <param name="secure:github_access_token" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="365" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

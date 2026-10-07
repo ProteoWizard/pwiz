@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Pwiz.SeeMS</RootNamespace>
+    <AssemblyName>seems-sharp</AssemblyName>
+    <Description>Spectrum and chromatogram viewer for mass spec data files.</Description>
+
+    <!-- WinForms is required to reference DigitalRune.Windows.Docking, which derives from
+         WinForms types (Form, Panel, etc.). Setting UseWindowsForms=true + the `-windows`
+         TFM suffix pulls in the WinForms reference assemblies during compile. Override the
+         root Directory.Build.props's net10.0 TFM for this project specifically. -->
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <!-- Vendor SDKs (specifically Thermo) need en-US culture; matching MsConvert.csproj. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+
+    <!-- This project is a near-verbatim port of legacy SeeMS WinForms code (pre-nullable C#).
+         The pwiz-sharp Directory.Build.props turns nullable + analyzer rules on as errors;
+         that's the right policy for new code, but for the SeeMS port it would generate
+         thousands of errors. Match the ZedGraph/MSGraph wrapper projects. -->
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0618;CS1591;CS8981;CA1416;CA1822;CA1031;CA1051;CA1715;CA2200;CA1825;NU1701;SYSLIB0003;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>none</AnalysisLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- DigitalRune.Windows.Docking 1.3.5 ships as two binaries under
+         pwiz_tools/Shared/Lib/DigitalRune: net472/ is the .NET Framework original that
+         Skyline's net472 build uses, net10/ is rebuilt for .NET 10 with the GDI+ fix (on
+         .NET 10, Control.Region leaks ~976 bytes per assignment). This project targets
+         net10.0-windows, so it takes the net10 build: the unrecompiled net472 DLL also loads
+         on .NET 10, but it would carry the leak. -->
+    <Reference Include="DigitalRune.Windows.Docking">
+      <HintPath>$(PwizToolsRoot)\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\utility\Util.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\common\Common.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\msdata\MsData.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\analysis\Analysis.csproj" />
+    <ProjectReference Include="$(PwizToolsRoot)\Shared\zedgraph\ZedGraph.csproj" />
+    <ProjectReference Include="$(PwizToolsRoot)\Shared\MSGraph\MSGraph.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz_tools\Shared\StlContainers\StlContainers.csproj" />
+    <ProjectReference Include="$(PwizToolsRoot)\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Common\Vendor.Common.csproj" />
+  </ItemGroup>
+
+  <!-- Vendor support is opt-in (mirrors MsConvert.csproj). Without -p:IAgreeToVendorLicenses=true,
+       vendor projects compile in NO_VENDOR_SUPPORT mode and Reader.Read throws clearly. -->
+  <ItemGroup>
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Thermo\Thermo.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Bruker\Bruker.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Waters\Waters.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Agilent\Agilent.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UIMF\UIMF.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Mobilion\Mobilion.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Sciex\Wiff2\Sciex.Wiff2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>
