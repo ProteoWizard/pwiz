@@ -34,6 +34,7 @@ using System.Threading;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Mzml;
@@ -149,7 +150,7 @@ namespace Pwiz.SeeMS
             DialogResult = DialogResult.Cancel;
 
             var sourceTypes = new List<string>();
-            foreach (var typeExtsPair in ReaderList.Default.getFileExtensionsByType())
+            foreach (var typeExtsPair in SpectrumSource.FullReaderList.FileExtensionsByType())
                 if (typeExtsPair.Value.Count > 0) // e.g. exclude UNIFI
                     sourceTypes.Add(typeExtsPair.Key);
             sourceTypes.Sort();
@@ -275,7 +276,7 @@ namespace Pwiz.SeeMS
             var directoriesPassingFilter = new List<DirectoryInfo>();
             var filesPassingFilter = new List<FileInfo>();
 
-            for( int i = 0; i < workerArgs.SourceDirectories.Count && !backgroundSourceLoader.CancellationPending; ++i )
+            for( int i = 0; i < workerArgs.SourceDirectories.Count && !worker.CancellationPending; ++i )
             {
                 try
                 {
@@ -297,7 +298,7 @@ namespace Pwiz.SeeMS
                 }
             }
 
-            for( int i = 0; i < workerArgs.SourceFiles.Count && !backgroundSourceLoader.CancellationPending; ++i )
+            for( int i = 0; i < workerArgs.SourceFiles.Count && !worker.CancellationPending; ++i )
             {
                 SourceInfo[] sourceInfo = getSourceInfo( workerArgs.SourceFiles[i], false );
                 if( sourceInfo == null ||
@@ -312,10 +313,10 @@ namespace Pwiz.SeeMS
 
             if( workerArgs.GetDetails )
             {
-                for( int i = 0; i < directoriesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                for( int i = 0; i < directoriesPassingFilter.Count && !worker.CancellationPending; ++i )
                     worker.ReportProgress( 0, (object) getSourceInfo( directoriesPassingFilter[i], true ) );
 
-                for( int i = 0; i < filesPassingFilter.Count && !backgroundSourceLoader.CancellationPending; ++i )
+                for( int i = 0; i < filesPassingFilter.Count && !worker.CancellationPending; ++i )
                     worker.ReportProgress( 0, (object) getSourceInfo( filesPassingFilter[i], true ) );
             }
 
@@ -326,6 +327,12 @@ namespace Pwiz.SeeMS
         {
             CurrentDirectory = initialDirectory;
             return base.ShowDialog();
+        }
+
+        protected override void OnFormClosed( FormClosedEventArgs e )
+        {
+            backgroundSourceLoader?.CancelAsync();
+            base.OnFormClosed( e );
         }
 
         private Stack<string> previousDirectories = new Stack<string>();
@@ -383,27 +390,27 @@ namespace Pwiz.SeeMS
                 hasDetails = true;
                 spectra = msInfo.Run.SpectrumList == null ? 0 : msInfo.Run.SpectrumList.Count;
                 ionSource = analyzer = detector = "";
-                foreach( InstrumentConfiguration ic in msInfo.instrumentConfigurationList )
+                foreach( InstrumentConfiguration ic in msInfo.InstrumentConfigurations )
                 {
                     SortedDictionary<int, string> ionSources = new SortedDictionary<int, string>();
                     SortedDictionary<int, string> analyzers = new SortedDictionary<int, string>();
                     SortedDictionary<int, string> detectors = new SortedDictionary<int, string>();
-                    foreach( Pwiz.Data.MsData.Component c in ic.ComponentList )
+                    foreach( Pwiz.Data.MsData.Instruments.Component c in ic.ComponentList )
                     {
                         CVParam term;
                         switch( c.Type )
                         {
-                            case ComponentType.ComponentType_Source:
+                            case ComponentType.Source:
                                 term = c.Params.CvParamChild( CVID.MS_ionization_type );
                                 if( !term.IsEmpty )
                                     ionSources.Add( c.Order, term.Name );
                                 break;
-                            case ComponentType.ComponentType_Analyzer:
+                            case ComponentType.Analyzer:
                                 term = c.Params.CvParamChild( CVID.MS_mass_analyzer_type );
                                 if( !term.IsEmpty )
                                     analyzers.Add( c.Order, term.Name );
                                 break;
-                            case ComponentType.ComponentType_Detector:
+                            case ComponentType.Detector:
                                 term = c.Params.CvParamChild( CVID.MS_detector_type );
                                 if( !term.IsEmpty )
                                     detectors.Add( c.Order, term.Name );
@@ -425,7 +432,7 @@ namespace Pwiz.SeeMS
                 }
 
                 System.Collections.Generic.Set<string> contentTypes = new System.Collections.Generic.Set<string>();
-                CVParamList cvParams = msInfo.FileDescription.FileContent.CVParams;
+                var cvParams = msInfo.FileDescription.FileContent.CVParams;
                 if( cvParams.Count > 0 )
                 {
                     foreach( CVParam term in msInfo.FileDescription.FileContent.CVParams )
@@ -440,8 +447,8 @@ namespace Pwiz.SeeMS
                 {
                     return new string[]
                     {
-                        name,
-                        type,
+                        Name,
+                        Type,
                         "",
                         "",
                         String.Format( "{0} {1}", dateModified.ToShortDateString(),
@@ -455,8 +462,8 @@ namespace Pwiz.SeeMS
                 {
                     return new string[]
                     {
-                        name,
-                        type,
+                        Name,
+                        Type,
                         spectra.ToString(),
                         String.Format( new FileSizeFormatProvider(), "{0:fs}", size ),
                         String.Format( "{0} {1}", dateModified.ToShortDateString(),
@@ -492,7 +499,7 @@ namespace Pwiz.SeeMS
         {
             try
             {
-                string type = ReaderList.Default.identify( dirInfo.FullName );
+                string type = SpectrumSource.FullReaderList.IdentifyType( dirInfo.FullName, null );
                 if( type == String.Empty )
                     return "File Folder";
                 return type;
@@ -506,7 +513,7 @@ namespace Pwiz.SeeMS
         {
             try
             {
-                return ReaderList.Default.identify( fileInfo.FullName );
+                return SpectrumSource.FullReaderList.IdentifyType( fileInfo.FullName, null );
             } catch (Exception)
             {
                 return "";
@@ -533,8 +540,11 @@ namespace Pwiz.SeeMS
             {
                 try
                 {
-                    MSDataFile msInfo = new MSDataFile( dirInfo.FullName );
-                    sourceInfoList[0].populateFromMSData( msInfo );
+                    using( var msInfo = new MSData() )
+                    {
+                        SpectrumSource.FullReaderList.Read( dirInfo.FullName, msInfo );
+                        sourceInfoList[0].populateFromMSData( msInfo );
+                    }
 
                 } catch( ThreadAbortException )
                 {
@@ -575,7 +585,7 @@ namespace Pwiz.SeeMS
 
                 try
                 {
-                    ReaderList readerList = ReaderList.Default;
+                    ReaderList readerList = SpectrumSource.FullReaderList;
                     var readerConfig = new ReaderConfig
                     {
                         SimAsSpectra = Pwiz.SeeMS.Settings.Default.SimAsSpectra,
@@ -586,8 +596,7 @@ namespace Pwiz.SeeMS
                         AllowMsMsWithoutPrecursor = false
                     };
 
-                    MSDataList msInfo = new MSDataList();
-                    readerList.Read( fileInfo.FullName, msInfo, readerConfig );
+                    using MSDataList msInfo = MSDataList.Read( readerList, fileInfo.FullName, readerConfig );
 
                     foreach( MSData msData in msInfo )
                     {
@@ -714,7 +723,7 @@ namespace Pwiz.SeeMS
                         ++driveCount;
                         pathNode = pathNode.Nodes.Add( branches[i], branches[i], 8, 8 );
                         pathNode.Tag = String.Join( Path.DirectorySeparatorChar.ToString(),
-                                                    branches.GetRange( 0, i ).ToArray() );
+                                                    branches.GetRange( 0, i + 1 ).ToArray() );
                         lookInComboBox.Items.Insert( 3 + driveCount, pathNode );
                     }
                     lookInComboBox.SelectedIndex = 3 + driveCount;
@@ -898,14 +907,14 @@ namespace Pwiz.SeeMS
             {
                 using (MSData msd = new MSData())
                 {
-                    ReaderList.Default.Read(sourcePath, msd, runIndex, SpectrumSource.GetReaderConfig());
+                    SpectrumSource.FullReaderList.Read(sourcePath, msd, runIndex, SpectrumSource.GetReaderConfig());
                     using (IChromatogramList cl = msd.Run.ChromatogramList)
                     {
                         if( cl != null && !cl.IsEmpty && cl.Find( "TIC" ) != cl.Count )
                         {
                             ticGraphControl.Visible = true;
                             Pwiz.Data.MsData.Spectra.Chromatogram tic = cl.GetChromatogram(cl.Find( "TIC"), true );
-                            Dictionary<double, double> sortedFullPointList = new Dictionary<double, double>();
+                            Map<double, double> sortedFullPointList = new Map<double, double>();
                             IList<double> timeList = tic.BinaryDataArrays[0].Data;
                             IList<double> intensityList = tic.BinaryDataArrays[1].Data;
                             int arrayLength = timeList.Count;
@@ -1063,7 +1072,7 @@ namespace Pwiz.SeeMS
 
 
         #region Look-In ComboBox handlers
-        System.Collections.Generic.Dictionary<string, bool> driveReadiness = new System.Collections.Generic.Dictionary<string, bool>();
+        System.Collections.Generic.Map<string, bool> driveReadiness = new System.Collections.Generic.Map<string, bool>();
         private void lookInComboBox_DropDown( object sender, EventArgs e )
         {
             
@@ -1131,7 +1140,9 @@ namespace Pwiz.SeeMS
                 case "My Network Places":
                     break;
                 default:
-                    if( driveReadiness[location] )
+                    // drives and the folders on the path to the current directory
+                    string root = Path.GetPathRoot( location );
+                    if( root != null && driveReadiness.Contains( root ) && driveReadiness[root] )
                         CurrentDirectory = location;
                     else
                         CurrentDirectory = currentDirectory;

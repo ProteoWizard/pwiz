@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 
-namespace CustomDataSourceDialog
+namespace MSConvertGUI
 {
     // https://stackoverflow.com/a/27173509/638445
     public class SplitButton : Button

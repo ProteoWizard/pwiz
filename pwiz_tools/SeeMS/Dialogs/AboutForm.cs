@@ -79,7 +79,7 @@ namespace Pwiz.SeeMS
 
         public static DateTime GetAssemblyLastModified( AssemblyName assembly )
         {
-            return File.GetLastWriteTime( Assembly.ReflectionOnlyLoad( assembly.FullName ).Location );
+            return File.GetLastWriteTime( Assembly.Load( assembly ).Location );
         }
     }
 }

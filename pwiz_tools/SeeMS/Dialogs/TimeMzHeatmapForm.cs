@@ -36,6 +36,10 @@ using System.Diagnostics;
 using System.Linq;
 
 using SpyTools;
+using pwiz.Common.Collections;
+using Pwiz.Analysis;
+using Pwiz.Analysis.PeakPicking;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.SeeMS
 {
@@ -140,15 +144,15 @@ namespace Pwiz.SeeMS
 
             var msLevels = new Set<int>();
             for (int i = 0; i < dgv.RowCount; ++i)
-                msLevels.Add(dgv[msLevelColumn.Index, i].ValueAs<int>() - 1);
+                msLevels.Add((int) dgv[msLevelColumn.Index, i].Value - 1);
 
             while (heatmapPointsByMsLevel.Count <= msLevels.Max)
                 heatmapPointsByMsLevel.Add(new List<Point3D>());
 
-            var peakPicker = new pwiz.CLI.analysis.SpectrumList_PeakPicker(Source.Source.MSDataFile.Run.SpectrumList, new pwiz.CLI.analysis.CwtPeakDetector(1, 0.5), true, new int[]{1});
+            var peakPicker = new SpectrumList_PeakPicker(Source.Source.MSDataFile.Run.SpectrumList, new CwtPeakDetector(1, 0, 0.5), true, new IntegerSet(1));
             for (int i = 0; i < dgv.RowCount; ++i)
             {
-                int msLevel = dgv[msLevelColumn.Index, i].ValueAs<int>() - 1;
+                int msLevel = (int) dgv[msLevelColumn.Index, i].Value - 1;
                 var heatmapGraphPane = heatmapGraphPaneByMsLevel[msLevel];
                 var heatmapPoints = heatmapPointsByMsLevel[msLevel];
 
@@ -162,7 +166,7 @@ namespace Pwiz.SeeMS
 
                 var bounds = heatmapBoundsByMsLevel[msLevel];
                 var spectrum = Source.GetMassSpectrum(Source.Source.Spectra[i].Index, peakPicker);
-                double scanTime = dgv[scanTimeColumn.Index, i].ValueAs<double>();
+                double scanTime = (double) dgv[scanTimeColumn.Index, i].Value;
                 var points = spectrum.Points;
                 for (int j = 0; j < points.Count; ++j)
                 {
@@ -213,7 +217,7 @@ namespace Pwiz.SeeMS
 
             for (int i = 0; i < dgv.RowCount; ++i)
             {
-                int msLevel = dgv[msLevelColumn.Index, i].ValueAs<int>() - 1;
+                int msLevel = (int) dgv[msLevelColumn.Index, i].Value - 1;
                 while (heatmapGraphPaneByMsLevel.Count <= msLevel)
                 {
                     heatmapBoundsByMsLevel.Add(new BoundingBox { MinX = Double.MaxValue, MaxX = Double.MinValue, MinY = Double.MaxValue, MaxY = Double.MinValue });

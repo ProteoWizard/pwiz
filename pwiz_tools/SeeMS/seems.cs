@@ -316,7 +316,7 @@ namespace Pwiz.SeeMS
 			if( browseToFileDialog.ShowDialog() == DialogResult.OK )
 			{
                 foreach( var dataSource in browseToFileDialog.DataSources )
-                    openFile( new OpenDataSourceDialog.MSDataRunPath(dataSource) );
+                    openFile( dataSource );
 
 			    Pwiz.SeeMS.Settings.Default.LastBrowseToFileLocation = browseToFileDialog.CurrentDirectory;
 			    Pwiz.SeeMS.Settings.Default.Save();

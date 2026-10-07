@@ -90,4 +90,78 @@ public class ReaderListTests
         }
         finally { File.Delete(tmpFile); }
     }
+
+    [TestMethod]
+    public void Read_EveryRun_OnePerSampleSkippingOneThatFails()
+    {
+        string multiFile = Path.Combine(Path.GetTempPath(), "reader_list_multi.fake");
+        string singleFile = Path.Combine(Path.GetTempPath(), "reader_list_single.fake1");
+        File.WriteAllText(multiFile, "samples");
+        File.WriteAllText(singleFile, "sample");
+        try
+        {
+            var list = new ReaderList();
+            list.Add(new FakeMultiSampleReader(".fake", sampleCount: 3, failingRun: 1));
+            list.Add(new FakeReader(".fake1", failingRun: 0));
+
+            // multi-sample: one MSData per sample, the failing one skipped, the caller's RunIndex kept
+            var results = new List<MSData>();
+            var config = new ReaderConfig { RunIndex = 7 };
+            list.Read(multiFile, results, config);
+            CollectionAssert.AreEqual(new[] { "run0", "run2" }, results.Select(m => m.Id).ToArray());
+            Assert.AreEqual(7, config.RunIndex);
+
+            // single-run: its failure propagates and nothing is added
+            var single = new List<MSData>();
+            Assert.ThrowsException<InvalidOperationException>(() => list.Read(singleFile, single));
+            Assert.AreEqual(0, single.Count);
+        }
+        finally
+        {
+            File.Delete(multiFile);
+            File.Delete(singleFile);
+        }
+    }
+
+    /// <summary>Names each MSData after its run and throws for <c>failingRun</c>.</summary>
+    private class FakeReader : IReader
+    {
+        private readonly string _extension;
+        private readonly int _failingRun;
+
+        public FakeReader(string extension, int failingRun)
+        {
+            _extension = extension;
+            _failingRun = failingRun;
+        }
+
+        public string TypeName => "fake" + _extension;
+        public CVID CvType => CVID.MS_mzML_format;
+        public IReadOnlyList<string> FileExtensions => new[] { _extension };
+
+        public CVID Identify(string filename, string? head) =>
+            Path.GetExtension(filename) == _extension ? CvType : CVID.CVID_Unknown;
+
+        public void Read(string filename, MSData result, ReaderConfig? config = null)
+        {
+            int run = config?.RunIndex ?? 0;
+            if (run == _failingRun)
+                throw new InvalidOperationException("unreadable run " + run);
+            result.Id = "run" + run;
+        }
+    }
+
+    private sealed class FakeMultiSampleReader : FakeReader, IMultiSampleReader
+    {
+        private readonly int _sampleCount;
+
+        public FakeMultiSampleReader(string extension, int sampleCount, int failingRun)
+            : base(extension, failingRun)
+        {
+            _sampleCount = sampleCount;
+        }
+
+        public string[] EnumerateSampleNames(string filename) =>
+            Enumerable.Range(0, _sampleCount).Select(i => "sample" + i).ToArray();
+    }
 }

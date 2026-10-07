@@ -134,6 +134,52 @@ public sealed class ReaderList : IReader
         Read(filename, result, effective);
     }
 
+    /// <summary>
+    /// Reads every run of <paramref name="filename"/> into <paramref name="results"/>: one
+    /// <see cref="MSData"/> per sample of a multi-sample container such as a WIFF, otherwise one.
+    /// A sample that fails to open is reported on stderr and skipped, as cpp's Reader_ABI does.
+    /// Port of cpp <c>ReaderList::read(filename, vector&lt;MSDataPtr&gt;&amp;, config)</c>.
+    /// </summary>
+    public void Read(string filename, IList<MSData> results, ReaderConfig? config = null)
+    {
+        ArgumentNullException.ThrowIfNull(filename);
+        ArgumentNullException.ThrowIfNull(results);
+
+        if (IdentifyReader(filename, null) is not IMultiSampleReader multiSample)
+        {
+            var msd = new MSData();
+            try { Read(filename, msd, config); }
+            catch { msd.Dispose(); throw; }
+            results.Add(msd);
+            return;
+        }
+
+        var effective = config ?? new ReaderConfig();
+        int originalRunIndex = effective.RunIndex;
+        try
+        {
+            int sampleCount = multiSample.EnumerateSampleNames(filename).Length;
+            for (int i = 0; i < sampleCount; ++i)
+            {
+                var msd = new MSData();
+                try
+                {
+                    Read(filename, msd, i, effective);
+                    results.Add(msd);
+                }
+                catch (Exception e)
+                {
+                    msd.Dispose();
+                    Console.Error.WriteLine($"[ReaderList.Read] Error opening run {i + 1} in {Path.GetFileName(filename)}:\n{e.Message}");
+                }
+            }
+        }
+        finally
+        {
+            effective.RunIndex = originalRunIndex;
+        }
+    }
+
     /// <inheritdoc/>
     public void Read(string filename, MSData result, ReaderConfig? config = null)
     {

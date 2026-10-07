@@ -101,11 +101,10 @@ namespace MSConvertGUI
             catch { return string.Empty; }
         }
 
+        /// <summary>Every run of the file, one per sample of a multi-sample WIFF, as cpp/CLI read it.</summary>
         public void read(string filename, MSDataList result, ReaderConfig config)
         {
-            var msd = new PwizMsd.MSData();
-            _inner.Read(filename, msd, config?.ToPwizSharp());
-            result.Add(msd);
+            _inner.Read(filename, result, config?.ToPwizSharp());
         }
 
         /// <summary>cpp/CLI exposes file-extension grouping for the open-data-source dialog.
@@ -121,13 +120,7 @@ namespace MSConvertGUI
             return map;
         }
 
-        public static string[] readIds(string path)
-        {
-            // cpp/CLI returned the list of sample/run ids inside multi-sample formats.
-            // pwiz-sharp doesn't expose this yet — return the filename itself so the
-            // GUI's "Add" path treats every input as a single-run file.
-            return new[] { Path.GetFileNameWithoutExtension(path) ?? path };
-        }
+        public static string[] readIds(string path) => FullReaderList._inner.ReadIds(path);
     }
 
     // ------------------------------------------------------------------------------------
@@ -190,74 +183,6 @@ namespace MSConvertGUI
     // pwiz.Common.Collections.Map<K,V> — supplied by the StlContainers project as
     // System.Collections.Generic.Map<K,V> (same RBTree-backed shape as the cpp/CLI binding).
     // No shim here; MainLogic / MainForm pick it up via `using System.Collections.Generic`.
-
-    // ------------------------------------------------------------------------------------
-    // pwiz.Common.SystemUtil — single helper UnifiBrowserForm used. UnifiBrowserForm is
-    // excluded from this port's compile; we still need the Credentials nested type that
-    // MainForm dereferences.
-    // ------------------------------------------------------------------------------------
-
-    /// <summary>Stub stand-in for the UNIFI browser dialog. The original opens a network
-    /// browser bound to UNIFI's HTTP API + OAuth (IdentityModel + Newtonsoft.Json + threading);
-    /// we exclude that file from compile. The stub <see cref="ShowDialog"/> returns
-    /// <c>DialogResult.Cancel</c>, leaving the UI feature visible but inert. UNIFI auth is
-    /// going to be replaced with Skyline-shared code as a follow-up; restore real behavior
-    /// then.</summary>
-    public partial class UnifiBrowserForm : System.Windows.Forms.Form
-    {
-        public UnifiBrowserForm() { }
-        public UnifiBrowserForm(string lastUsedHost, Credentials lastUsedCredentials)
-        {
-            _ = lastUsedHost; _ = lastUsedCredentials;
-        }
-
-        public string SelectedHost { get; } = string.Empty;
-        public Credentials SelectedCredentials { get; } = null;
-        public System.Collections.Generic.IEnumerable<UnifiSampleResult> SelectedSampleResults { get; } =
-            System.Array.Empty<UnifiSampleResult>();
-
-        public new System.Windows.Forms.DialogResult ShowDialog()
-        {
-            System.Windows.Forms.MessageBox.Show(
-                "UNIFI browsing is temporarily disabled in this pwiz-sharp port. " +
-                "Re-enable when UNIFI auth ports over from the Skyline shared codebase.",
-                "UNIFI not yet wired",
-                System.Windows.Forms.MessageBoxButtons.OK,
-                System.Windows.Forms.MessageBoxIcon.Information);
-            return System.Windows.Forms.DialogResult.Cancel;
-        }
-
-        public sealed class Credentials
-        {
-            public string Username { get; set; }
-            public string Password { get; set; }
-            public string IdentityServer { get; set; }
-            public string ClientScope { get; set; }
-            public string ClientSecret { get; set; }
-
-            public string GetUrlWithAuthentication(string url)
-            {
-                if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password)) return url;
-                return url.Replace("://", $"://{Username}:{Password}@") +
-                       $"?identity={IdentityServer}&scope={ClientScope}&secret={ClientSecret}";
-            }
-
-            public static Tuple<string, Credentials> ParseUrlWithAuthentication(string url)
-            {
-                var uri = new Uri(url);
-                var c = new Credentials();
-                if (uri.UserInfo.Contains(':'))
-                {
-                    c.Username = uri.UserInfo.Split(':')[0];
-                    c.Password = uri.UserInfo.Split(':')[1];
-                }
-                c.IdentityServer = System.Text.RegularExpressions.Regex.Match(uri.Query, "identity=([^&]+)").Groups[1].Value;
-                c.ClientScope = System.Text.RegularExpressions.Regex.Match(uri.Query, "scope=([^&]+)").Groups[1].Value;
-                c.ClientSecret = System.Text.RegularExpressions.Regex.Match(uri.Query, "secret=([^&]+)").Groups[1].Value;
-                return new Tuple<string, Credentials>(uri.Authority, c);
-            }
-        }
-    }
 }
 
 #pragma warning restore CS1591

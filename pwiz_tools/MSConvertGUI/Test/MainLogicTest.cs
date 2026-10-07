@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSConvertGUI;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Diff;
+using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Tools.MsConvert;
 
@@ -134,6 +135,25 @@ public class MainLogicTest
             $"CLI vs GUI mzXML differ:\n  cli: {cliOut}\n  gui: {guiOut}\n\n{diff}");
     }
 
+    /// <summary>msconvert compresses binary arrays with zlib unless told <c>--zlib=off</c>, and the
+    /// command line the GUI builds has to say the same thing in both directions: an unchecked box
+    /// emits <c>--zlib=off</c>, which must not read back as compression on.</summary>
+    [TestMethod]
+    public void ParseCommandLine_ZlibDefaultsOnAndOffTurnsItOff()
+    {
+        var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), calculateSHA1Mutex: new object());
+        foreach (var (args, expected) in new[]
+                 {
+                     ("input.mzML", BinaryCompression.Zlib),
+                     ("--zlib|input.mzML", BinaryCompression.Zlib),
+                     ("--zlib=off|input.mzML", BinaryCompression.None),
+                 })
+        {
+            var config = logic.ParseCommandLine(_tempDir, args);
+            Assert.AreEqual(expected, config.WriteConfig.EncoderConfig.Compression, args);
+        }
+    }
+
     /// <summary>mzML→MGF: GUI and CLI should emit the same byte stream (MGF is line-oriented
     /// text; no XML re-shuffling between the two paths).</summary>
     [TestMethod]
@@ -145,5 +165,28 @@ public class MainLogicTest
         Assert.AreEqual(File.ReadAllText(cliOut, System.Text.Encoding.UTF8),
                         File.ReadAllText(guiOut, System.Text.Encoding.UTF8),
                         "MGF byte streams differ between CLI and GUI");
+    }
+
+    /// <summary>A multi-sample WIFF converts to one file per sample, each named for its run.</summary>
+    [TestMethod]
+    public void Wiff_ConvertsEverySample()
+    {
+        string sciexData = null;
+        for (string dir = AppContext.BaseDirectory; !string.IsNullOrEmpty(dir) && sciexData == null; dir = Path.GetDirectoryName(dir))
+        {
+            string candidate = Path.Combine(dir, "pwiz", "data", "vendor_readers", "Sciex", "Reader_Sciex_Test.data");
+            if (Directory.Exists(candidate))
+                sciexData = candidate;
+        }
+        Assert.IsNotNull(sciexData, "Reader_Sciex_Test.data not found above " + AppContext.BaseDirectory);
+
+        string outDir = Path.Combine(_tempDir, "gui");
+        Directory.CreateDirectory(outDir);
+        var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), calculateSHA1Mutex: new object());
+        logic.QueueWork(logic.ParseCommandLine(outDir, Path.Combine(sciexData, "Enolase_repeats_AQv1.4.2.wiff")));
+        MainLogic.Work();
+
+        var expected = Enumerable.Range(1, 10).Select(i => $"Enolase_repeats_AQv1.4.2-20070918_En_{i:00}.mzML");
+        CollectionAssert.AreEquivalent(expected.ToArray(), Directory.GetFiles(outDir).Select(Path.GetFileName).ToArray());
     }
 }

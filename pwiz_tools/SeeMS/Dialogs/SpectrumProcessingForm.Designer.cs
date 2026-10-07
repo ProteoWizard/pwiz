@@ -228,6 +228,7 @@ namespace Pwiz.SeeMS
             this.removeToolStripMenuItem.Name = "removeToolStripMenuItem";
             this.removeToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
             this.removeToolStripMenuItem.Text = "Remove";
+            this.removeToolStripMenuItem.Click += new System.EventHandler(this.removeProcessingButton_Click);
             // 
             // toolStrip
             // 

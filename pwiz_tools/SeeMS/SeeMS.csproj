@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>Pwiz.SeeMS</RootNamespace>
     <AssemblyName>seems-sharp</AssemblyName>
-    <Description>Port of pwiz_tools/SeeMS to pwiz-sharp. Data layer only (no WinForms UI).</Description>
+    <Description>Spectrum and chromatogram viewer for mass spec data files.</Description>
 
     <!-- WinForms is required to reference DigitalRune.Windows.Docking, which derives from
          WinForms types (Form, Panel, etc.). Setting UseWindowsForms=true + the `-windows`
@@ -33,9 +33,8 @@
          pwiz_tools/Shared/Lib/DigitalRune: net472/ is the .NET Framework original that
          Skyline's net472 build uses, net10/ is rebuilt for .NET 10 with the GDI+ fix (on
          .NET 10, Control.Region leaks ~976 bytes per assignment). This project targets
-         net10.0-windows, so it takes the net10 build. The earlier experiment of loading
-         the unrecompiled net472 DLL on .NET 8 is recorded in PORT-NOTES.md - it worked,
-         but it would carry the leak. -->
+         net10.0-windows, so it takes the net10 build: the unrecompiled net472 DLL also loads
+         on .NET 10, but it would carry the leak. -->
     <Reference Include="DigitalRune.Windows.Docking">
       <HintPath>$(PwizToolsRoot)\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
       <Private>true</Private>
@@ -50,6 +49,7 @@
     <ProjectReference Include="$(PwizToolsRoot)\Shared\zedgraph\ZedGraph.csproj" />
     <ProjectReference Include="$(PwizToolsRoot)\Shared\MSGraph\MSGraph.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz_tools\Shared\StlContainers\StlContainers.csproj" />
+    <ProjectReference Include="$(PwizToolsRoot)\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
@@ -61,63 +61,15 @@
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Waters\Waters.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Agilent\Agilent.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UIMF\UIMF.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Mobilion\Mobilion.csproj" />
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Sciex\Wiff2\Sciex.Wiff2.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Content</OutputItemType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ProjectReference>
-  </ItemGroup>
-
-  <!-- Excluded for the first-pass shell: dialogs / panels that depend on cpp/CLI types or
-       .NET-Framework-era features we haven't ported yet (typed-dataset annotation panels,
-       MemoryCache.GetOrAdd, Properties.Resources image bundling, etc.). These come back as
-       individual ports land. The core open-file → spectrum-list → chromatogram-list → graph
-       flow ships without them.
-  -->
-  <ItemGroup>
-    <Compile Remove="Dialogs\OpenDataSourceDialog.cs" />
-    <Compile Remove="Dialogs\OpenDataSourceDialog.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\OpenDataSourceDialog.resx" />
-
-    <Compile Remove="Dialogs\HeatmapForm.cs" />
-    <Compile Remove="Dialogs\HeatmapForm.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\HeatmapForm.resx" />
-    <Compile Remove="Dialogs\TimeMzHeatmapForm.cs" />
-    <Compile Remove="Dialogs\TimeMzHeatmapForm.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\TimeMzHeatmapForm.resx" />
-
-    <Compile Remove="Dialogs\AnnotationPanels.cs" />
-    <Compile Remove="Dialogs\AnnotationPanels.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\AnnotationPanels.resx" />
-    <Compile Remove="Dialogs\ProcessingPanels.cs" />
-    <Compile Remove="Dialogs\ProcessingPanels.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\ProcessingPanels.resx" />
-
-    <Compile Remove="Dialogs\SpectrumAnnotationForm.cs" />
-    <Compile Remove="Dialogs\SpectrumAnnotationForm.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\SpectrumAnnotationForm.resx" />
-    <Compile Remove="Dialogs\SpectrumProcessingForm.cs" />
-    <Compile Remove="Dialogs\SpectrumProcessingForm.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\SpectrumProcessingForm.resx" />
-
-    <Compile Remove="Dialogs\ProcessingListView.cs" />
-    <EmbeddedResource Remove="Dialogs\ProcessingListView.resx" />
-
-    <Compile Remove="Dialogs\DataPointTableForm.cs" />
-    <Compile Remove="Dialogs\DataPointTableForm.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\DataPointTableForm.resx" />
-
-    <Compile Remove="Dialogs\AboutForm.cs" />
-    <Compile Remove="Dialogs\AboutForm.Designer.cs" />
-    <EmbeddedResource Remove="Dialogs\AboutForm.resx" />
-
-    <Compile Remove="Dialogs\SelectColumnsDialog.cs" />
-
-    <!-- Annotation.cs and Processing.cs implementations bind heavily to AnnotationPanels /
-         ProcessingPanels. We provide minimal IAnnotation / IProcessing interfaces below
-         (Stubs.Annotation.cs / Stubs.Processing.cs) instead. -->
-    <Compile Remove="Annotation.cs" />
-    <Compile Remove="Processing.cs" />
   </ItemGroup>
 
 </Project>

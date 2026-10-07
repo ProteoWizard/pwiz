@@ -31,8 +31,10 @@ using Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Analysis;
+using Pwiz.Analysis.PeakFilters;
 using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.MsData.Processing;
+using Pwiz.Util.Misc;
 
 namespace Pwiz.SeeMS
 {
@@ -115,21 +117,18 @@ namespace Pwiz.SeeMS
     public class SmoothingProcessor : ProcessingBase
     {
         Panel panel = processingPanels.smootherPanel;
-        private Smoother algorithm;
+        private ISmoother algorithm;
         private int polynomialOrder, windowSize;
-        private double lambda;
 
         public SmoothingProcessor()
         {
             polynomialOrder = 2;
             windowSize = 15;
-            lambda = 2.0;
             algorithm = new SavitzkyGolaySmoother( polynomialOrder, windowSize );
 
             processingPanels.smootherAlgorithmComboBox.SelectedIndexChanged += new EventHandler( optionsChanged );
             processingPanels.smootherSavitzkyGolayPolynomialOrderTrackBar.ValueChanged += new EventHandler( optionsChanged );
             processingPanels.smootherSavitzkyGolayWindowSizeTrackBar.ValueChanged += new EventHandler( optionsChanged );
-            processingPanels.smootherWhittakerLambdaTextBox.TextChanged += new EventHandler( optionsChanged );
         }
 
         void optionsChanged( object sender, EventArgs e )
@@ -161,10 +160,6 @@ namespace Pwiz.SeeMS
                     }
                     algorithm = new SavitzkyGolaySmoother( polynomialOrder, windowSize );
                     break;
-                case 1:
-                    lambda = Convert.ToDouble( processingPanels.smootherWhittakerLambdaTextBox.Text );
-                    algorithm = new WhittakerSmoother( lambda );
-                    break;
             }
             OnOptionsChanged( sender, e );
         }
@@ -173,8 +168,6 @@ namespace Pwiz.SeeMS
         {
             if( algorithm is SavitzkyGolaySmoother )
                 return "Smoother (Savitzky-Golay)";
-            else if( algorithm is WhittakerSmoother )
-                return "Smoother (Whittaker)";
             else
                 throw new Exception( "Invalid smoothing algorithm!" );
         }
@@ -184,8 +177,6 @@ namespace Pwiz.SeeMS
             ProcessingMethod pm = new ProcessingMethod();
             if( algorithm is SavitzkyGolaySmoother )
                 pm.UserParams.Add( new UserParam( "algorithm", "Savitzky-Golay", "SeeMS" ) );
-            else if( algorithm is WhittakerSmoother )
-                pm.UserParams.Add( new UserParam( "algorithm", "Whittaker", "SeeMS" ) );
             return pm;
         }
 
@@ -194,7 +185,7 @@ namespace Pwiz.SeeMS
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
             if( innerList is ISpectrumList )
-                return new SpectrumList_Smoother( innerList as ISpectrumList, algorithm, new int[] { 1, 2, 3, 4, 5, 6 } ) as ProcessableListType;
+                return new SpectrumList_Smoother( innerList as ISpectrumList, algorithm, new IntegerSet( 1, 6 ) ) as ProcessableListType;
             else //if( innerList is IChromatogramList )
                 return innerList;
         }
@@ -205,17 +196,11 @@ namespace Pwiz.SeeMS
             {
                 panel.Tag = null;
 
-                if( algorithm is SavitzkyGolaySmoother )
-                    processingPanels.smootherAlgorithmComboBox.SelectedIndex = 0;
-                else
-                    processingPanels.smootherAlgorithmComboBox.SelectedIndex = 1;
-
-                processingPanels.smootherSavitzkyGolayParameters.Visible = algorithm is SavitzkyGolaySmoother;
-                processingPanels.smootherWhittakerParameters.Visible = algorithm is WhittakerSmoother;
+                processingPanels.smootherAlgorithmComboBox.SelectedIndex = 0;
+                processingPanels.smootherSavitzkyGolayParameters.Visible = true;
 
                 processingPanels.smootherSavitzkyGolayPolynomialOrderTrackBar.Value = polynomialOrder;
                 processingPanels.smootherSavitzkyGolayWindowSizeTrackBar.Value = windowSize;
-                processingPanels.smootherWhittakerLambdaTextBox.Text = lambda.ToString();
                 panel.Tag = this;
 
                 return panel;
@@ -226,7 +211,7 @@ namespace Pwiz.SeeMS
     public class PeakPickingProcessor : ProcessingBase
     {
         Panel panel = processingPanels.peakPickerPanel;
-        private PeakDetector algorithm;
+        private IPeakDetector algorithm;
         private bool preferVendorPeakPicking;
         private uint localMaximumWindowSize;
         private double minSNR;
@@ -238,7 +223,7 @@ namespace Pwiz.SeeMS
             localMaximumWindowSize = 3;
             minSNR = 1;
             minPeakSpace = 0.1;
-            algorithm = new CwtPeakDetector(minSNR, minPeakSpace);
+            algorithm = new CwtPeakDetector(minSNR, 0, minPeakSpace);
 
             processingPanels.peakPickerPreferVendorCentroidingCheckbox.CheckedChanged += optionsChanged;
             processingPanels.peakPickerAlgorithmComboBox.SelectedIndexChanged += optionsChanged;
@@ -257,12 +242,12 @@ namespace Pwiz.SeeMS
             {
                 case 0:
                     localMaximumWindowSize = (uint) processingPanels.peakPickerLocalMaximumWindowSizeTrackBar.Value;
-                    algorithm = new LocalMaximumPeakDetector( localMaximumWindowSize );
+                    algorithm = new LocalMaximumPeakDetector( (int) localMaximumWindowSize );
                     break;
                 case 1:
                     minSNR = Convert.ToDouble(processingPanels.peakPickerCantWaitMinSNRTextBox.Text);
                     minPeakSpace = Convert.ToDouble(processingPanels.peakPickerCantWaitMinPeakSpaceTextBox.Text);
-                    algorithm = new CwtPeakDetector( minSNR, minPeakSpace );
+                    algorithm = new CwtPeakDetector( minSNR, 0, minPeakSpace );
                     break;
             }
 
@@ -297,7 +282,7 @@ namespace Pwiz.SeeMS
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
             if( innerList is ISpectrumList )
-                return new SpectrumList_PeakPicker( innerList as ISpectrumList, algorithm, preferVendorPeakPicking, new int[] { 1, 2, 3, 4, 5, 6 } ) as ProcessableListType;
+                return new SpectrumList_PeakPicker( innerList as ISpectrumList, algorithm, preferVendorPeakPicking, new IntegerSet( 1, 6 ) ) as ProcessableListType;
             else //if( innerList is IChromatogramList )
                 return innerList;
         }
@@ -330,8 +315,8 @@ namespace Pwiz.SeeMS
     public class ThresholdingProcessor : ProcessingBase
     {
         Panel panel = processingPanels.thresholderPanel;
-        private ThresholdFilter.ThresholdingBy_Type type;
-        private ThresholdFilter.ThresholdingOrientation orientation;
+        private ThresholdingBy type;
+        private ThresholdingOrientation orientation;
         private double threshold;
 
         public double Threshold
@@ -344,7 +329,7 @@ namespace Pwiz.SeeMS
             }
         }
 
-        public ThresholdFilter.ThresholdingOrientation Orientation
+        public ThresholdingOrientation Orientation
         {
             get { return orientation; }
             set
@@ -354,7 +339,7 @@ namespace Pwiz.SeeMS
             }
         }
 
-        public ThresholdFilter.ThresholdingBy_Type Type
+        public ThresholdingBy Type
         {
             get { return Type; }
             set
@@ -364,29 +349,29 @@ namespace Pwiz.SeeMS
             }
         }
 
-        private double defaultThreshold(ThresholdFilter.ThresholdingBy_Type type)
+        private double defaultThreshold(ThresholdingBy type)
         {
             switch (type)
             {
                 default:
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count:
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_CountAfterTies:
+                case ThresholdingBy.Count:
+                case ThresholdingBy.CountAfterTies:
                     return 100;
 
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity:
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity:
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity:
+                case ThresholdingBy.AbsoluteIntensity:
+                case ThresholdingBy.FractionOfBasePeakIntensity:
+                case ThresholdingBy.FractionOfTotalIntensity:
                     return 0;
 
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff:
+                case ThresholdingBy.FractionOfTotalIntensityCutoff:
                     return 1;
             }
         }
 
         public ThresholdingProcessor()
         {
-            Type = ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count;
-            orientation = ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense;
+            Type = ThresholdingBy.Count;
+            orientation = ThresholdingOrientation.MostIntense;
             threshold = defaultThreshold(type);
 
             processingPanels.thresholderValueTextBox.TextChanged += new EventHandler( optionsChanged );
@@ -403,11 +388,11 @@ namespace Pwiz.SeeMS
 
             param = method.Params.UserParam( "type" );
             if( param.Type == "SeeMS" )
-                type = (ThresholdFilter.ThresholdingBy_Type) param.ValueAs<int>();
+                type = (ThresholdingBy) param.ValueAs<int>();
 
             param = method.Params.UserParam( "orientation" );
             if( param.Type == "SeeMS" )
-                orientation = (ThresholdFilter.ThresholdingOrientation) param.ValueAs<int>();
+                orientation = (ThresholdingOrientation) param.ValueAs<int>();
         }
 
         void optionsChanged( object sender, EventArgs e )
@@ -415,8 +400,8 @@ namespace Pwiz.SeeMS
             if( panel.Tag != this )
                 return;
 
-            type = (ThresholdFilter.ThresholdingBy_Type) processingPanels.thresholderTypeComboBox.SelectedIndex;
-            orientation = (ThresholdFilter.ThresholdingOrientation)processingPanels.thresholderOrientationComboBox.SelectedIndex;
+            type = (ThresholdingBy) processingPanels.thresholderTypeComboBox.SelectedIndex;
+            orientation = (ThresholdingOrientation)processingPanels.thresholderOrientationComboBox.SelectedIndex;
 
             if (!Double.TryParse(processingPanels.thresholderValueTextBox.Text, out threshold))
                 threshold = defaultThreshold(type);
@@ -429,31 +414,31 @@ namespace Pwiz.SeeMS
             switch( type )
             {
                 default:
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count:
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_CountAfterTies:
+                case ThresholdingBy.Count:
+                case ThresholdingBy.CountAfterTies:
                     return String.Format( "Thresholder (keeping {0} {1} points)",
                                           threshold,
-                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "most intense" : "least intense" );
+                                          orientation == ThresholdingOrientation.MostIntense ? "most intense" : "least intense" );
 
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_AbsoluteIntensity:
+                case ThresholdingBy.AbsoluteIntensity:
                     return String.Format( "Thresholder (keeping points {1} than {0})",
                                           threshold,
-                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
+                                          orientation == ThresholdingOrientation.MostIntense ? "more intense" : "less intense" );
 
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfBasePeakIntensity:
+                case ThresholdingBy.FractionOfBasePeakIntensity:
                     return String.Format( "Thresholder (keeping points {1} than {0}% of BPI)",
                                           threshold * 100,
-                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
+                                          orientation == ThresholdingOrientation.MostIntense ? "more intense" : "less intense" );
 
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensity:
+                case ThresholdingBy.FractionOfTotalIntensity:
                     return String.Format( "Thresholder (keeping points {1} than {0}% of TIC)",
                                           threshold * 100,
-                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "more intense" : "less intense" );
+                                          orientation == ThresholdingOrientation.MostIntense ? "more intense" : "less intense" );
 
-                case ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_FractionOfTotalIntensityCutoff:
+                case ThresholdingBy.FractionOfTotalIntensityCutoff:
                     return String.Format( "Thresholder (keeping points that make up the {1} {0}% of TIC)",
                                           threshold * 100,
-                                          orientation == ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense ? "most intense" : "least intense" );
+                                          orientation == ThresholdingOrientation.MostIntense ? "most intense" : "least intense" );
             }
         }
 
@@ -471,7 +456,7 @@ namespace Pwiz.SeeMS
         public override ProcessableListType ProcessList<ProcessableListType>( ProcessableListType innerList )
         {
             if( innerList is ISpectrumList )
-                return new SpectrumList_PeakFilter( innerList as ISpectrumList, new ThresholdFilter(type, threshold, orientation) ) as ProcessableListType;
+                return new SpectrumListPeakFilter( innerList as ISpectrumList, new ThresholdFilter(type, threshold, orientation) ) as ProcessableListType;
             else //if( innerList is IChromatogramList )
                 return innerList;
         }
@@ -521,8 +506,8 @@ namespace Pwiz.SeeMS
                 threshold = 0.9;
 
             overrideExistingCharge = processingPanels.chargeStateCalculatorOverrideExistingCheckBox.Checked;
-            minCharge = processingPanels.chargeStateCalculatorMinChargeUpDown.ValueAs<int>();
-            maxCharge = processingPanels.chargeStateCalculatorMaxChargeUpDown.ValueAs<int>();
+            minCharge = (int) processingPanels.chargeStateCalculatorMinChargeUpDown.Value;
+            maxCharge = (int) processingPanels.chargeStateCalculatorMaxChargeUpDown.Value;
 
             OnOptionsChanged( sender, e );
         }

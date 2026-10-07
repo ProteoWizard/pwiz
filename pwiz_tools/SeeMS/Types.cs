@@ -658,7 +658,7 @@ namespace Pwiz.SeeMS
     {
         public AnnotationSettings()
         {
-            labelToAliasAndColorMap = new Dictionary<string, Pair<string, Color>>();
+            labelToAliasAndColorMap = new Map<string, Pair<string, Color>>();
             pointAnnotations = new PointDataMap<SeemsPointAnnotation>();
             pointFontSpec = new ZedGraph.FontSpec( "Arial", 10, Color.Gray, false, false, false );
             pointFontSpec.Border.IsVisible = false;
@@ -729,8 +729,8 @@ namespace Pwiz.SeeMS
             set { matchToleranceUnit = value; }
         }
 
-        private Dictionary<string, Pair<string, Color>> labelToAliasAndColorMap;
-        public Dictionary<string, Pair<string, Color>> LabelToAliasAndColorMap
+        private Map<string, Pair<string, Color>> labelToAliasAndColorMap;
+        public Map<string, Pair<string, Color>> LabelToAliasAndColorMap
         {
             get { return labelToAliasAndColorMap; }
         }

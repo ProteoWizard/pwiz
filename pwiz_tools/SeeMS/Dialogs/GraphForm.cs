@@ -249,9 +249,8 @@ namespace Pwiz.SeeMS
                 menuStrip.Items.Add( syncMenuItem );
             }
 
-            // Properties.Resources (image bundling) not yet ported; menu items run without icons.
-            menuStrip.Items.Add(new ToolStripMenuItem("Show Data Processing", null, GraphForm_ShowDataProcessing));
-            menuStrip.Items.Add(new ToolStripMenuItem("Show Annotation", null, GraphForm_ShowAnnotation));
+            menuStrip.Items.Add(new ToolStripMenuItem("Show Data Processing", Properties.Resources.DataProcessing, GraphForm_ShowDataProcessing));
+            menuStrip.Items.Add(new ToolStripMenuItem("Show Annotation", Properties.Resources.Annotation, GraphForm_ShowAnnotation));
         }
 
         void GraphForm_StackLayoutSingleColumn( object sender, EventArgs e )
