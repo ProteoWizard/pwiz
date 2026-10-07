@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Alerts
 
             Icon = Resources.Skyline;
 
+            // A fixed-height header keeps the 96-DPI default while its text scales.
+            libraryGridView.ColumnHeadersHeight = DpiUtil.Scale(this, libraryGridView.ColumnHeadersHeight);
             libraryGridView.AutoGenerateColumns = false;
             libraryGridView.DataSource = new SortableBindingList<Row>();
 
@@ -68,7 +70,8 @@ namespace pwiz.Skyline.Alerts
                 libraryGridView.Hide();
             }
 
-            Height = labelLibInfo.Height + linkSpecLibLinks.Height + dataGridViewHeight + btnOk.Height + 70;
+            // The other terms are already DPI-scaled; the 70 (margins and window frame) is not.
+            Height = labelLibInfo.Height + linkSpecLibLinks.Height + dataGridViewHeight + btnOk.Height + DpiUtil.Scale(this, 70);
         }
 
         private BindingList<Row> Rows => libraryGridView.DataSource as BindingList<Row>;

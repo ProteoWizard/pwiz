@@ -59,7 +59,20 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
 
-            Size = SizeAll;
+            // The fixed popup size, the owner-drawn row height and the toolbar glyphs are
+            // 96-DPI designs that AutoScaleMode.Font does not touch (issue #4599).
+            Size = DpiUtil.ScaleSize(this, SizeAll);
+            pickListMulti.ItemHeight = DpiUtil.Scale(this, pickListMulti.ItemHeight);
+            // IntegralHeight snaps the list to whole rows once its handle exists, after the
+            // popup height is fixed. The 96-DPI design holds exactly 12 rows; at other DPIs
+            // the scaled height is not a whole number of scaled rows and the snap would
+            // leave a blank band under the list. Keep the row count and grow the popup by
+            // the remainder instead.
+            int rowsVisible = (int) Math.Round((double) pickListMulti.ClientSize.Height / pickListMulti.ItemHeight);
+            int listHeight = rowsVisible * pickListMulti.ItemHeight +
+                             pickListMulti.Height - pickListMulti.ClientSize.Height;
+            Height += listHeight - pickListMulti.Height;
+            DpiUtil.ScaleToolStripImages(toolStrip1);
 
             cbItems.Text = childHeading;
 
@@ -108,7 +121,7 @@ namespace pwiz.Skyline.Controls
                 // Resize to hide space for the checkbox
                 var anchorList = pickListMulti.Anchor;
                 pickListMulti.Anchor = anchorList & ~AnchorStyles.Bottom;
-                Height = pickListMulti.Bottom + 8;
+                Height = pickListMulti.Bottom + DpiUtil.Scale(this, 8);
                 pickListMulti.Anchor = anchorList;
             }
             else
@@ -541,13 +554,13 @@ namespace pwiz.Skyline.Controls
             var imgPeak = _picker.GetPickPeakImage(choice.Choice);
             if (imgPeak != null)
             {
-                g.DrawImageUnscaled(imgPeak, bounds.Left, bounds.Top, imgPeak.Width, bounds.Height);
+                DpiUtil.DrawImageCentered(g, imgPeak, bounds.Left, bounds.Top, bounds.Height);
                 bounds.X += imgPeak.Width + MARGIN_RIGHT_IMAGE;
                 bounds.Width -= imgPeak.Width + MARGIN_RIGHT_IMAGE;                
             }
             
             var imgType = _picker.GetPickTypeImage(choice.Choice);
-            g.DrawImageUnscaled(imgType, bounds.Left, bounds.Top, imgType.Width, bounds.Height);
+            DpiUtil.DrawImageCentered(g, imgType, bounds.Left, bounds.Top, bounds.Height);
             bounds.X += imgType.Width + MARGIN_RIGHT_IMAGE;
             bounds.Width -= imgType.Width + MARGIN_RIGHT_IMAGE;
 
