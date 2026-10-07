@@ -335,6 +335,16 @@ namespace pwiz.SkylineTest
 
             peak = peak.WithObservedCcs(null);
             Assert.IsNull(peak.ObservedCcs);
+
+            // The vendor IM->CCS conversion behind ApplyObservedCcs: a value passes through, while
+            // no value (0 or NaN) or a failure leaves the peak without CCS - a failure must not
+            // fail the import of the whole file.
+            var im = IonMobilityValue.GetIonMobilityValue(1.05, eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
+            Assert.AreEqual(345.67, ChromCacheBuilder.GetObservedCcs(new FakeCcsConverter(() => 345.67), im, 500, 2, null));
+            Assert.IsNull(ChromCacheBuilder.GetObservedCcs(new FakeCcsConverter(() => 0), im, 500, 2, null));
+            Assert.IsNull(ChromCacheBuilder.GetObservedCcs(new FakeCcsConverter(() => double.NaN), im, 500, 2, null));
+            Assert.IsNull(ChromCacheBuilder.GetObservedCcs(
+                new FakeCcsConverter(() => throw new InvalidOperationException(@"vendor library error")), im, 500, 2, null));
         }
 
         [TestMethod]
@@ -672,12 +682,18 @@ namespace pwiz.SkylineTest
                 t1MissingMassErrors,
                 new ChromTransition(0, 0, 0, 0, ChromSource.fragment, 0)
             };
-            var legacyResult = InterpolatedTimeIntensities.ReadFromStream(new MemoryStream(legacyBytes),
-                legacyHeader, legacyTransitions).TransitionTimeIntensities;
+            var legacyGroup = InterpolatedTimeIntensities.ReadFromStream(new MemoryStream(legacyBytes),
+                legacyHeader, legacyTransitions);
+            var legacyResult = legacyGroup.TransitionTimeIntensities;
             AssertFloatsEqual(ti0.MassErrors, legacyResult[0].MassErrors);
             AssertFloatsEqual(ti2.MassErrors, legacyResult[2].MassErrors);
             foreach (var timeIntensities in legacyResult)
                 AssertEx.AreEqualDeep(scanIds[(int)ChromSource.fragment], timeIntensities.ScanIds.ToArray());
+            // Minimizing re-writes such a group, under the same flags, and older Skyline versions
+            // read it with a mass-error slot per transition, so the rewrite must keep every slot.
+            var rewritten = new MemoryStream();
+            legacyGroup.WriteToStream(rewritten);
+            AssertEx.AreEqualDeep(legacyBytes, rewritten.ToArray());
 
             // Cache formats before v20 have no has_observed_ion_mobilities flag, so an interpolated
             // group written for them must not carry the observed IM section, or readers take it for
@@ -745,6 +761,26 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(observedIms[i], decodedIms[i], tolerance,
                     $@"IM at index {i} ({observedIms[i]}) decoded to {decodedIms[i]}, tolerance {tolerance}");
             }
+        }
+
+        // A vendor IM->CCS converter whose conversion result (or failure) a test controls
+        private class FakeCcsConverter : IIonMobilityFunctionsProvider
+        {
+            private readonly Func<double> _ccs;
+
+            public FakeCcsConverter(Func<double> ccs)
+            {
+                _ccs = ccs;
+            }
+
+            public bool ProvidesCollisionalCrossSectionConverter => true;
+            public eIonMobilityUnits IonMobilityUnits => eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
+            public bool HasCombinedIonMobility => true;
+            public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj) => IonMobilityValue.EMPTY;
+            public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj) => _ccs();
+            public bool IsWatersSonarData => false;
+            public Tuple<int, int> SonarMzToBinRange(double mz, double tolerance) => null;
+            public bool IsValidDiaPasefPoint(int windowGroup, double im, double isoMzLow, double isoMzHigh) => true;
         }
     }
 }

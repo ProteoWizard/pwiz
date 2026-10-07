@@ -250,12 +250,10 @@ namespace pwiz.Skyline.Model.Results
                     // The per-transition MissingMassErrors flag records exactly those skips, so a
                     // mixed group (group flag set, but missing on some transitions - e.g. from a
                     // cache merge) round-trips without desyncing the stream.
-                    if (chromTransitions[i].MissingMassErrors)
-                    {
-                        if (hasMassErrorSlotPerTransition)
-                            ReadScaledShortErrors(stream, numPoints);
+                    // In the Skyline 3.6 layout the missing transition's slot is kept (zero-filled),
+                    // so a rewrite (e.g. when minimizing) keeps the layout older versions read.
+                    if (chromTransitions[i].MissingMassErrors && !hasMassErrorSlotPerTransition)
                         continue;
-                    }
                     transitionMassErrors[i] = ReadScaledShortErrors(stream, numPoints);
                 }
             }

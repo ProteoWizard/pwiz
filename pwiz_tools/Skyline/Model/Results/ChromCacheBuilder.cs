@@ -1450,11 +1450,36 @@ namespace pwiz.Skyline.Model.Results
                 if (!observedIm.HasValue)
                     continue;
                 var imValue = IonMobilityValue.GetIonMobilityValue(observedIm.Value, imUnits);
-                double observedCcs = _ionMobilityConverter.CCSFromIonMobility(imValue, mz, charge, nodeGroup);
-                if (observedCcs == 0 || double.IsNaN(observedCcs))
-                    continue;
-                chromData.Peaks[i] = peak.WithObservedCcs(observedCcs);
+                var observedCcs = GetObservedCcs(_ionMobilityConverter, imValue, mz, charge, nodeGroup);
+                if (observedCcs.HasValue)
+                    chromData.Peaks[i] = peak.WithObservedCcs(observedCcs);
             }
+        }
+
+        /// <summary>
+        /// Observed CCS for an observed IM, from the vendor-supplied conversion, or null when the
+        /// conversion gives no value or fails. Observed CCS is supplementary, and the conversion is
+        /// a vendor black box whose failures (e.g. a MassLynx status error surfaces as an
+        /// InvalidOperationException) say nothing about the extracted chromatograms, so any failure
+        /// leaves the peak without CCS rather than failing the import of the whole file.
+        /// </summary>
+        internal static double? GetObservedCcs(IIonMobilityFunctionsProvider converter, IonMobilityValue ionMobility,
+            double mz, int charge, object obj)
+        {
+            double ccs;
+            try
+            {
+                ccs = converter.CCSFromIonMobility(ionMobility, mz, charge, obj);
+            }
+            catch (Exception)
+            {
+                Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion,
+                    obj, ionMobility, mz, charge);
+                return null;
+            }
+            if (ccs == 0 || double.IsNaN(ccs))
+                return null;
+            return ccs;
         }
     }
 
