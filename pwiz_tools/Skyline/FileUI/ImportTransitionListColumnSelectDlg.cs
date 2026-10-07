@@ -213,6 +213,14 @@ namespace pwiz.Skyline.FileUI
             IgnoreAllEmptyCols();
             //dataGrid.Update();
             ResizeComboBoxes();
+            // A DataSource set before the grid has a handle is bound, and its rows created, only
+            // when the handle is created, after the layout above ran; the placeholder row then
+            // has to be fitted to the combo overlay again (issue #4599).
+            dataGrid.DataBindingComplete += (sender, args) =>
+            {
+                if (ComboBoxes != null && ComboBoxes.Count >= dataGrid.Columns.Count)
+                    ResizeComboBoxes();
+            };
         }
 
         public Rectangle ScreenRect
@@ -833,8 +841,13 @@ namespace pwiz.Skyline.FileUI
                 // outgrows the auto-sized row and a sliver of the first REAL row showed
                 // through. MinimumHeight is respected by AllCells auto-sizing, so the
                 // placeholder row tracks the overlay height and the boundary stays on a
-                // row edge (issue #4599).
-                dataGrid.Rows[0].MinimumHeight = height;
+                // row edge (issue #4599). Where auto-sizing does not honor the minimum, pad the
+                // placeholder's cells to the same effect, because it does count the padding.
+                var placeholderRow = dataGrid.Rows[0];
+                placeholderRow.MinimumHeight = height;
+                int shortfall = height - placeholderRow.Height;
+                if (shortfall > 0)
+                    placeholderRow.DefaultCellStyle.Padding = new Padding(0, 0, 0, shortfall);
             }
         }
 

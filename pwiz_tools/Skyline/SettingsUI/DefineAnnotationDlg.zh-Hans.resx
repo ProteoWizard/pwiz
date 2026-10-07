@@ -223,7 +223,7 @@
     <value>0</value>
   </data>
   <data name="tbxValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+    <value>Top, Left, Right</value>
   </data>
   <data name="tbxValues.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -280,7 +280,7 @@
     <value>2</value>
   </data>
   <data name="checkedListBoxAppliesTo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
+    <value>Top, Left, Right</value>
   </data>
   <data name="checkedListBoxAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 190</value>
@@ -358,7 +358,7 @@
     <value>4</value>
   </data>
   <data name="lblAppliesTo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+    <value>Top, Left</value>
   </data>
   <data name="lblAppliesTo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -421,7 +421,7 @@
     <value>0</value>
   </data>
   <data name="lblAggregateOperation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+    <value>Top, Left</value>
   </data>
   <data name="lblAggregateOperation.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -451,7 +451,7 @@
     <value>0</value>
   </data>
   <data name="comboAggregateOperation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
+    <value>Top, Left, Right</value>
   </data>
   <data name="comboAggregateOperation.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 309</value>
@@ -475,7 +475,7 @@
     <value>1</value>
   </data>
   <data name="availableFieldsTree1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+    <value>Top, Left, Right</value>
   </data>
   <data name="availableFieldsTree1.ImageIndex" type="System.Int32, mscorlib">
     <value>0</value>

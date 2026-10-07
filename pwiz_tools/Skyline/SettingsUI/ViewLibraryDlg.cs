@@ -155,6 +155,9 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
+            // The owner-drawn peptide list keeps its 96-DPI row height; WinForms scales only
+            // the font (issue #4599).
+            listPeptide.ItemHeight = DpiUtil.Scale(this, listPeptide.ItemHeight);
 
             _graphHelper = GraphHelper.Attach(GraphControl);
             GraphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;

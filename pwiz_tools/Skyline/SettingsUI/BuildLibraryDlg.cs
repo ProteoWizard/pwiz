@@ -110,6 +110,10 @@ namespace pwiz.Skyline.SettingsUI
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+            // On .NET a control anchored to the bottom of a TabPage comes out short at high DPI
+            // (issue #4599): dock the grid below its label and left of the buttons instead.
+            tabFiles.Padding = new Padding(gridInputFiles.Left, gridInputFiles.Top, tabFiles.Width - gridInputFiles.Right, 0);
+            gridInputFiles.Dock = DockStyle.Fill;
 
             Icon = Resources.Skyline;
 
