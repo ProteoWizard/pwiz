@@ -23,9 +23,9 @@ Boost.Build tree) lives on with its full history in [ProteoWizard/pwiz-cpp](http
 
 | Build | Status |
 | ------- | ------ |
-| Core Windows .NET | ![Windows status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizard_CoreWindowsNet.svg?label=Windows) |
-| Core Linux .NET | ![Linux status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizard_CoreLinuxNet.svg?label=Linux) |
-| Skyline Windows .NET | ![Skyline status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizard_SkylineWindowsNet.svg?label=Skyline) |
+| Core Windows x86_64 | ![Windows status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/bt83.svg?label=Windows) |
+| Core Linux x86_64 | ![Linux status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/bt17.svg?label=Linux) |
+| Skyline master and PRs | ![Skyline status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/bt209.svg?label=Skyline) |
 
 Click [here](https://proteowizard.sourceforge.io/download.html) to visit the official download page.
 

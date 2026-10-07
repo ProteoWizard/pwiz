@@ -25,6 +25,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -168,6 +169,7 @@ namespace pwiz.Osprey.Test
                     run + @": without its data file the node exported other rows");
                 Assert.AreEqual(string.Empty, footer[@"osprey.instrument_model"]);
                 Assert.AreEqual(@"0", footer[@"osprey.source_ms2_sampled"]);
+                Assert.AreEqual(string.Empty, footer[@"osprey.ms2_mass_analyzers"]);
             }
         }
 
@@ -342,9 +344,26 @@ namespace pwiz.Osprey.Test
                     footer[@"osprey.training_export.mp_cosine_parity_fitted"],
                     run + @": the export did not reproduce the scored median polish cosine");
                 Assert.AreNotEqual(@"0", footer[@"osprey.source_ms2_sampled"], run + @": the data file was not read");
+                AssertMassAnalyzers(footer, run);
                 hashes[run] = HashFile(path);
             }
             return hashes;
+        }
+
+        /// <summary>
+        /// The footer's MS2 mass analyzers: every sampled spectrum counted under its instrument's MS2
+        /// analyzers as pwiz joins them, a Stellar's ion trap or an Astral's quadrupole and Astral analyzer.
+        /// </summary>
+        private static void AssertMassAnalyzers(Dictionary<string, string> footer, string run)
+        {
+            string analyzer = ASTRAL_RUN_NAMES.Contains(run)
+                ? @"quadrupole/asymmetric track lossless time-of-flight analyzer"
+                : @"radial ejection linear ion trap";
+            string expected = JsonConvert.SerializeObject(new SortedDictionary<string, int>
+            {
+                { analyzer, int.Parse(footer[@"osprey.source_ms2_sampled"], CultureInfo.InvariantCulture) },
+            });
+            Assert.AreEqual(expected, footer[@"osprey.ms2_mass_analyzers"], run);
         }
 
         private static void AssertExportsEqual(Dictionary<string, byte[]> expected, string workDir)

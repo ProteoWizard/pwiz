@@ -519,6 +519,9 @@ namespace pwiz.Osprey
                 string windowReads = OspreyEnvironment.DescribeWindowReads();
                 if (windowReads != null)
                     LogInfo(windowReads);
+                string scanMajorSwitches = OspreyEnvironment.DescribeScanMajorSwitches();
+                if (scanMajorSwitches != null)
+                    LogInfo(scanMajorSwitches);
                 // Always print which experiment-wide aggregation is in force, active or not.
                 // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs

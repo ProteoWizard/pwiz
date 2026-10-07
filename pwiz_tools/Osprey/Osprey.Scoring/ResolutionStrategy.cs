@@ -36,12 +36,26 @@ namespace pwiz.Osprey.Scoring
     /// type; callers pass the handle back to
     /// <see cref="IResolutionStrategy.ScoreXcorr"/> and
     /// <see cref="IResolutionStrategy.ReleaseWindowCache"/>.
+    ///
+    /// <para>The HRAM form fills on demand: a spectrum is preprocessed the first time xcorr asks
+    /// for it and kept for the rest of the window. Xcorr reads only each scored candidate's apex
+    /// and the four scans around it, so a window with few candidates needs few of its spectra -
+    /// measured on 3 Astral files, Stage 6's gap-fill passes used 2.5-5% of them and its re-score
+    /// 64%, first-pass scoring 91%. A cache serves one window on one thread (candidates are
+    /// scored in sequence), so filling it needs no lock.</para>
     /// </summary>
     public sealed class WindowXcorrCache
     {
         internal readonly double[][] Doubles;
         internal readonly SparseXcorrSpectrum[] Sparse;
         internal readonly bool[] VisitedBins;
+        // On-demand HRAM fill: the window's spectra, the scorer that preprocesses them and the
+        // scratch rented for the window's lifetime (returned by ReleaseWindowCache). The scratch
+        // is for filling only - each fill clears the buffers it reads, but leaves them dirty, so
+        // it must never be handed to XcorrAtScan, which expects the pool's zeroed buffers.
+        internal readonly IList<Spectrum> Spectra;
+        internal readonly SpectralScorer Scorer;
+        internal XcorrScratch Scratch;
 
         internal WindowXcorrCache(double[][] dd, int nBins)
         {
@@ -49,9 +63,12 @@ namespace pwiz.Osprey.Scoring
             VisitedBins = new bool[nBins];
         }
 
-        internal WindowXcorrCache(SparseXcorrSpectrum[] sparse, int nBins)
+        internal WindowXcorrCache(IList<Spectrum> spectra, SpectralScorer scorer, XcorrScratch scratch, int nBins)
         {
-            Sparse = sparse;
+            Sparse = new SparseXcorrSpectrum[spectra.Count];
+            Spectra = spectra;
+            Scorer = scorer;
+            Scratch = scratch;
             VisitedBins = new bool[nBins];
         }
 
@@ -72,15 +89,19 @@ namespace pwiz.Osprey.Scoring
         SpectralScorer CreateScorer();
 
         /// <summary>
-        /// Pre-preprocess all spectra in a window for XCorr. Returns a
-        /// strategy-typed cache handle. Caller releases via
-        /// <see cref="ReleaseWindowCache"/> at end of window.
+        /// Create a window's XCorr cache. Returns a strategy-typed cache handle. Unit
+        /// resolution preprocesses every spectrum here; HRAM preprocesses each one the first
+        /// time <see cref="ScoreXcorr"/> asks for it, so the cache keeps
+        /// <paramref name="spectra"/> and reads it until release: the list and its spectra
+        /// must not change, and the cache must be used from one thread at a time. Caller
+        /// releases via <see cref="ReleaseWindowCache"/> at end of window.
         /// </summary>
         WindowXcorrCache PreprocessWindowSpectra(IList<Spectrum> spectra,
             SpectralScorer scorer, XcorrScratchPool scratchPool);
 
         /// <summary>Release rented buffers from a cache produced by
-        /// <see cref="PreprocessWindowSpectra"/>. Pass the same cache back.</summary>
+        /// <see cref="PreprocessWindowSpectra"/>. Pass the same cache back. Rows already filled
+        /// are still served afterwards; no new rows are filled.</summary>
         void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool);
 
         /// <summary>Pool-aware scoring for a library entry at one spectrum.</summary>
@@ -173,20 +194,19 @@ namespace pwiz.Osprey.Scoring
             if (scratchPool == null)
                 return null;
 
-            var pp = new SparseXcorrSpectrum[spectra.Count];
-            var scratch = scratchPool.Rent();
-            try
-            {
-                for (int i = 0; i < spectra.Count; i++)
-                    pp[i] = scorer.PreprocessSpectrumForXcorrSparse(spectra[i], scratch);
-            }
-            finally { scratchPool.Return(scratch); }
-            return new WindowXcorrCache(pp, scorer.BinConfig.NBins);
+            // Nothing is preprocessed here: ScoreXcorr fills each spectrum the first time a
+            // candidate asks for it (see WindowXcorrCache).
+            return new WindowXcorrCache(spectra, scorer, scratchPool.Rent(), scorer.BinConfig.NBins);
         }
 
         public void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool)
         {
-            // The sparse cache holds no pooled buffers; it is dropped with the window.
+            // The sparse spectra are dropped with the window; the scratch goes back to the pool.
+            if (cache != null && cache.Scratch != null && scratchPool != null)
+            {
+                scratchPool.Return(cache.Scratch);
+                cache.Scratch = null;
+            }
         }
 
         public double ScoreXcorr(WindowXcorrCache preprocessed, int spectrumIndex,
@@ -194,11 +214,20 @@ namespace pwiz.Osprey.Scoring
             XcorrScratchPool scratchPool)
         {
             if (preprocessed != null && preprocessed.Sparse != null &&
-                spectrumIndex >= 0 && spectrumIndex < preprocessed.Sparse.Length &&
-                preprocessed.Sparse[spectrumIndex] != null)
+                spectrumIndex >= 0 && spectrumIndex < preprocessed.Sparse.Length)
             {
-                return scorer.XcorrFromSparse(
-                    preprocessed.Sparse[spectrumIndex], entry, preprocessed.VisitedBins);
+                // A filled row is served whether or not the window still holds its scratch, so a
+                // released cache returns the same (f32-narrowed) values rather than the live f64
+                // path's. Only filling needs the scratch. The window's own spectrum and scorer, so
+                // a spectrum preprocessed on demand is the one an up-front loop would have produced.
+                var sparse = preprocessed.Sparse[spectrumIndex];
+                if (sparse == null && preprocessed.Scratch != null)
+                {
+                    sparse = preprocessed.Sparse[spectrumIndex] = preprocessed.Scorer.PreprocessSpectrumForXcorrSparse(
+                        preprocessed.Spectra[spectrumIndex], preprocessed.Scratch);
+                }
+                if (sparse != null)
+                    return scorer.XcorrFromSparse(sparse, entry, preprocessed.VisitedBins);
             }
 
             if (scratchPool == null)
