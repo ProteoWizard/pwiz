@@ -108,6 +108,16 @@ namespace pwiz.SkylineTest
             string imPctText = imPct.ToString(Formats.PercentError, culture);
             Assert.AreNotEqual(zeroPct, imPctText); // the format itself must not round this away
 
+            // A negative error too small to show must read as zero, not "-0" (.NET Core keeps
+            // the sign of a negative value that rounds to zero under a single-section format).
+            const double tinyObservedIm = 1.0, tinyTargetIm = 1.00004; // ~ -0.004%
+            double tinyPct = 100.0 * (tinyObservedIm - tinyTargetIm) / tinyTargetIm;
+            Assert.AreEqual(zeroPct, tinyPct.ToString(Formats.PercentError, culture));
+            Assert.AreEqual(string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                    tinyObservedIm.ToString(Formats.IonMobility, culture), zeroPct),
+                ObservedValueFormatter.FormatWithPercentError(tinyObservedIm, tinyTargetIm, Formats.IonMobility));
+            Assert.AreEqual((-0.25).ToString(@"0.##", culture), (-0.25).ToString(Formats.PercentError, culture));
+
             // The shared formatter (observed-line tooltip + properties pane) must surface it.
             string imFormatted = ObservedValueFormatter.FormatWithPercentError(observedIm, targetIm, Formats.IonMobility);
             AssertEx.Contains(imFormatted, imPctText);
@@ -570,6 +580,11 @@ namespace pwiz.SkylineTest
             // No valid IM anywhere in the window -> null (don't fabricate a value).
             var imNone = new[] { 0f, 0f, float.NaN, 0f, 0f };
             Assert.IsNull(ChromPeak.ApexObservedIonMobility(intensities, imNone, 0, 4));
+
+            // No signal anywhere in the window -> null, even where the scans carry an IM
+            // (interpolation copies a neighbor's IM onto the zero-intensity points it fills in).
+            var zeroIntensities = new[] { 0f, 0f, 0f, 0f, 0f };
+            Assert.IsNull(ChromPeak.ApexObservedIonMobility(zeroIntensities, imAllValid, 0, 4));
 
             // Windowing: a stronger valid scan outside [startIndex, endIndex] is ignored.
             // Restricted to indices 0..1, the apex-of-valid is index 1 (30), not index 2 (100).

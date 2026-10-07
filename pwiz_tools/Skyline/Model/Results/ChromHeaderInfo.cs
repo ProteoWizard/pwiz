@@ -1234,16 +1234,18 @@ namespace pwiz.Skyline.Model.Results
         /// peak actually has signal. To stay robust against gap/interpolated scans, the apex
         /// is chosen among scans that carry a valid observed IM (a positive value; 0 and NaN
         /// mark "no measurement"), so a gap at the literal maximum-intensity scan can't
-        /// suppress an otherwise-measurable IM. Returns null when the peak carries no
-        /// measurable IM anywhere (e.g. the source isn't really IM data), so the caller reports
-        /// "unknown" rather than fabricating a value. A single scan's IM is returned without
-        /// averaging, since IM units (e.g. 1/K0) are not linearly averageable.
+        /// suppress an otherwise-measurable IM. Only scans with signal qualify, since
+        /// interpolation copies a neighbor's IM onto the zero-intensity points it fills in.
+        /// Returns null when the peak carries no measurable IM anywhere (e.g. the source isn't
+        /// really IM data, or the peak has no signal), so the caller reports "unknown" rather
+        /// than fabricating a value. A single scan's IM is returned without averaging, since
+        /// IM units (e.g. 1/K0) are not linearly averageable.
         /// </summary>
         internal static float? ApexObservedIonMobility(IReadOnlyList<float> intensities,
             IReadOnlyList<float> observedIonMobilities, int startIndex, int endIndex)
         {
             int apexIndex = -1;
-            float apexIntensity = float.NegativeInfinity;
+            float apexIntensity = 0; // Strictly greater below, so zero-intensity scans never qualify
             int count = Math.Min(intensities.Count, observedIonMobilities.Count);
             for (int i = Math.Max(0, startIndex); i <= endIndex && i < count; i++)
             {
