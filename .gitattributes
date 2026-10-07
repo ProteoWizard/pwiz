@@ -6,6 +6,12 @@
 # stored CRLF, the rest LF, some files mixed), so an LF write into a CRLF-stored file turned
 # a one-line edit into a whole-file diff; see issue #4604. Everything below this line is an
 # exception to text=auto, so keep the exceptions after it.
+#
+# Do NOT pin text test fixtures with -text to "keep them byte-exact": a -text file checks
+# out LF on Windows too, which changes what every developer and Windows agent has always
+# seen (CRLF), and breaks fixtures whose companions record a hash of the CRLF bytes (a .sky
+# with its .skyl audit log, for example - TestFilesTreeForm). text=auto reproduces the old
+# Windows bytes exactly; only Linux checkouts of formerly CRLF-stored fixtures change.
 * text=auto
 
 *.sh text eol=lf
@@ -29,10 +35,3 @@
 # is that they are the same bytes pwiz C++ parses, so line endings must survive a checkout
 # unchanged on every platform.
 pwiz/**/test/TestData/** -text
-
-# The same for every test-data directory (<Name>Test.data, osprey-regression.data, ...) and
-# the BiblioSpec test inputs and reference outputs: they are compared or parsed as bytes,
-# on Linux agents as well as Windows, so they keep whatever ending they were committed with.
-**/*.data/** -text
-pwiz_tools/BiblioSpec/tests/inputs/** -text
-pwiz_tools/BiblioSpec/tests/reference/** -text
