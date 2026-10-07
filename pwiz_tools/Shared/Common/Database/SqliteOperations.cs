@@ -25,7 +25,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
-using pwiz.Common.Database.NHibernate;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Database
@@ -123,14 +123,44 @@ namespace pwiz.Common.Database
             SQLiteConnection conn = (SQLiteConnection)fact.CreateConnection();
             if (conn != null)
             {
-                var connectionStringBuilder =
-                    SessionFactoryFactory.SQLiteConnectionStringBuilderFromFilePath(path);
-                connectionStringBuilder.Version = 3;
-
-                conn.ConnectionString = connectionStringBuilder.ToString();
+                conn.ConnectionString = ConnectionStringBuilderFromFilePath(path).ToString();
                 conn.Open();
             }
             return conn;
+        }
+
+        /// <summary>
+        /// Returns a ConnectionStringBuilder for opening the SQLite database at the specified path.
+        /// If the path points to a database stored uncompressed inside a .zip, the builder opens it
+        /// read-only in place through the zip VFS; otherwise it opens normally from disk. This method
+        /// takes care of the special settings needed to work with UNC paths, and always specifies
+        /// Version 3. Because the zip handling lives here, callers do not need to know whether the
+        /// database is inside a .zip.
+        /// </summary>
+        public static SQLiteConnectionStringBuilder ConnectionStringBuilderFromFilePath(string path)
+        {
+            var entry = new FilePath(path).GetZipEntry();
+            if (entry != null && entry.IsStored)
+            {
+                return new SQLiteConnectionStringBuilder(
+                    SqliteSliceVfs.GetConnectionString(entry.ZipFileReader.ZipPath, entry.GetStoredDataOffset(), entry.UncompressedSize))
+                {
+                    Version = 3
+                };
+            }
+            // when SQLite parses the connection string, it treats backslash as an escape character
+            // This is not normally an issue, because backslashes followed by a non-reserved character
+            // are not treated specially.
+
+            // Also, in order to prevent a drive letter being prepended to UNC paths, we specify ToFullPath=false
+            return new SQLiteConnectionStringBuilder
+            {
+                // ReSharper disable LocalizableElement
+                DataSource = path.Replace("\\", "\\\\"),
+                // ReSharper restore LocalizableElement
+                ToFullPath = false,
+                Version = 3
+            };
         }
     }
 }

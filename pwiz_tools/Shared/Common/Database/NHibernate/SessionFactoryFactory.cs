@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Data.SQLite;
 using NHibernate;
 using NHibernate.Cfg;
 
@@ -49,7 +48,7 @@ namespace pwiz.Common.Database.NHibernate
                 //.SetProperty("show_sql", "true")
                 //.SetProperty("generate_statistics", "true")
                 .SetProperty(@"dialect", typeof(global::NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
-                .SetProperty(@"connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString())
+                .SetProperty(@"connection.connection_string", ConnectionStringFromPath(path))
                 .SetProperty(@"connection.driver_class", typeof(global::NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
                 .SetProperty(@"connection.provider", typeof(global::NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
             if (createSchema)
@@ -58,23 +57,13 @@ namespace pwiz.Common.Database.NHibernate
         }
 
         /// <summary>
-        /// Returns a ConnectionStringBuilder with the datasource set to the specified path.  This method takes
-        /// care of the special settings needed to work with UNC paths.
+        /// Builds the SQLite connection string for the database at <paramref name="path"/>. If the
+        /// path is a database stored uncompressed inside a .zip, it is opened read-only in place
+        /// through the zip VFS; otherwise it is opened normally from disk.
         /// </summary>
-        public static SQLiteConnectionStringBuilder SQLiteConnectionStringBuilderFromFilePath(string path)
+        public static string ConnectionStringFromPath(string path)
         {
-            // when SQLite parses the connection string, it treats backslash as an escape character
-            // This is not normally an issue, because backslashes followed by a non-reserved character
-            // are not treated specially.
-
-            // Also, in order to prevent a drive letter being prepended to UNC paths, we specify ToFullPath=false
-            return new SQLiteConnectionStringBuilder
-            {
-                // ReSharper disable LocalizableElement
-                DataSource = path.Replace("\\", "\\\\"),
-                // ReSharper restore LocalizableElement
-                ToFullPath = false,
-            };
+            return SqliteOperations.ConnectionStringBuilderFromFilePath(path).ToString();
         }
 
         public static Configuration ConfigureMappings(Configuration configuration, Type typeDb, string schemaFilename = DEFAULT_SCHEMA_FILENAME)
