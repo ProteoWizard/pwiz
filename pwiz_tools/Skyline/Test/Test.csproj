@@ -316,6 +316,7 @@
     <Compile Include="DllFinderUnitTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
+    <Compile Include="WatersConnectCeStepsTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
     <Compile Include="ZedGraphTest.cs" />
   </ItemGroup>
