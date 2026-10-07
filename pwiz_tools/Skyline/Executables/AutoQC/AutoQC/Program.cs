@@ -294,6 +294,7 @@ namespace AutoQC
                 {
                     ProgramLog.Info(string.Format("The Skyline-daily option uses: {0}.", new SkylineSettings(SkylineType.SkylineDaily, null).CmdPath));
                 }
+                LogCustomSkylineCmd();
                 // Save the Skyline settings otherwise, in a new installation of AutoQC Loader, "Skyline" and "Skyline Daily" options
                 // are disabled in the "Skyline" tab.
                 SharedBatch.Properties.Settings.Default.Save();
@@ -318,9 +319,19 @@ namespace AutoQC
                 return false;
             }
 
+            LogCustomSkylineCmd();
             // Save the folder the user selected, so the dialog is not shown again at the next start.
             SharedBatch.Properties.Settings.Default.Save();
             return true;
+        }
+
+        private static void LogCustomSkylineCmd()
+        {
+            if (SkylineInstallations.HasCustomSkylineCmd)
+            {
+                ProgramLog.Info(string.Format("The Skyline installation directory option uses: {0}.",
+                    SharedBatch.Properties.Settings.Default.SkylineCustomCmdPath));
+            }
         }
 
         private static string GetFirstArg(string[] args)
