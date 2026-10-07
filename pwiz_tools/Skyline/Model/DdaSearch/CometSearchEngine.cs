@@ -490,6 +490,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             string lastRank = "";
             while ((line = cruxPepXml.ReadLine()) != null)
             {
+                line = EscapeBareAmpersands(line);
                 if (line.Contains(@"<spectrum_query"))
                 {
                     // We need to convert:

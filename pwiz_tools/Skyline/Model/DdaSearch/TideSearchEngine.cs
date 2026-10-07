@@ -512,6 +512,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 string lastRank = "";
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
+                    line = EscapeBareAmpersands(line);
                     if (line.Contains(@"<spectrum_query"))
                     {
                         lastPsmId = Regex.Replace(line, @".* spectrum=""([^""]+)"" start_scan.*", "$1");

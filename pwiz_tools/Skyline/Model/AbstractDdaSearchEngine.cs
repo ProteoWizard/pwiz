@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
@@ -231,6 +232,23 @@ namespace pwiz.Skyline.Model
         }
 
         public abstract bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat);
+
+        // Matches an ampersand that does NOT begin a predefined XML entity (amp, lt, gt, quot, apos)
+        // or a decimal or hexadecimal character reference.
+        private static readonly Regex UNESCAPED_AMPERSAND_REGEX =
+            new Regex(@"&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9A-Fa-f]+;)", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Search engines write file paths into pepXML attributes without escaping them, so a
+        /// path containing '&amp;' produces XML that BiblioSpec cannot parse. Escapes any bare
+        /// ampersand in a pepXML line, leaving existing entities unchanged.
+        /// </summary>
+        protected static string EscapeBareAmpersands(string pepXmlLine)
+        {
+            if (!pepXmlLine.Contains(@"&"))
+                return pepXmlLine;
+            return UNESCAPED_AMPERSAND_REGEX.Replace(pepXmlLine, @"&amp;");
+        }
 
         public void SetFastaFiles(string fastFile)
         {

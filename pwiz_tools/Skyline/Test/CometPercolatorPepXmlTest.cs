@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.SkylineTestUtil;
@@ -31,6 +32,8 @@ namespace pwiz.SkylineTest
     /// percolator_qvalue. Hits that Percolator dropped from its output tables must get a failing
     /// q-value (1) rather than none: BiblioSpec's PepXMLreader treats a percolator hit with no
     /// q-value as q-value 0, which would admit every unmatched PSM to the library unfiltered.
+    /// Also verifies the output is well-formed XML when Comet has written a path containing a
+    /// bare '&amp;' into the pepXML.
     /// </summary>
     [TestClass]
     public class CometPercolatorPepXmlTest : AbstractUnitTest
@@ -41,8 +44,11 @@ namespace pwiz.SkylineTest
             string pepXml = string.Join(Environment.NewLine, new[]
             {
                 @"<?xml version=""1.0"" encoding=""UTF-8""?>",
-                @"<msms_pipeline_analysis>",
-                @"<msms_run_summary base_name=""run"">",
+                // Comet writes file paths into attributes without escaping them; a folder named
+                // with '&' must not break BiblioSpec's XML parse. An already-escaped entity must
+                // survive unchanged (not become &amp;amp;).
+                @"<msms_pipeline_analysis summary_xml=""c:\Skyline T&est ^Data\run.pep.xml"">",
+                @"<msms_run_summary base_name=""c:\Already T&amp;Escaped\run"">",
                 @"<search_summary search_engine=""Comet"" search_engine_version=""2024.01"">",
                 @"</search_summary>",
                 // Hit A: matched, passing q-value
@@ -101,6 +107,13 @@ namespace pwiz.SkylineTest
 
             // The marker BiblioSpec keys on to read percolator q-values must still be emitted.
             AssertEx.Contains(output, @"<parameter name=""post-processor"" value=""percolator"" />");
+
+            // The output must be well-formed XML, with the raw '&' in the path escaped and the
+            // already-escaped one left alone.
+            var doc = XDocument.Parse(output);
+            AssertEx.AreEqual(@"c:\Skyline T&est ^Data\run.pep.xml", (string) doc.Root?.Attribute(@"summary_xml"));
+            AssertEx.AreEqual(@"c:\Already T&Escaped\run",
+                (string) doc.Root?.Element(@"msms_run_summary")?.Attribute(@"base_name"));
         }
     }
 }
