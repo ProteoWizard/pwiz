@@ -1,8 +1,12 @@
 #  .gitattributes for pwiz
 
-# Don't change line endings on potentially indexed mass spec data
-*.mzml binary
-*.mzxml binary
+# Line endings. Git stores LF for every file it recognises as text and converts on
+# checkout to the platform ending: core.autocrlf=true (or core.eol=native) gives CRLF on
+# Windows, LF on Linux and macOS. Storage used to be a per-file coin flip (about 45% of .cs
+# stored CRLF, the rest LF, some files mixed), so an LF write into a CRLF-stored file turned
+# a one-line edit into a whole-file diff; see issue #4604. Everything below this line is an
+# exception to text=auto, so keep the exceptions after it.
+* text=auto
 
 *.sh text eol=lf
 
@@ -14,7 +18,21 @@
 # core.autocrlf=true happened to be immune, which is why CI never saw it.
 *.bat text eol=crlf
 
+# Don't change line endings on potentially indexed mass spec data. Both spellings:
+# attribute patterns are case-sensitive on Linux agents (core.ignorecase=false).
+*.mzml binary
+*.mzML binary
+*.mzxml binary
+*.mzXML binary
+
 # Fixtures copied verbatim out of the cpp tests are reference data, not source: the whole point
 # is that they are the same bytes pwiz C++ parses, so line endings must survive a checkout
 # unchanged on every platform.
 pwiz/**/test/TestData/** -text
+
+# The same for every test-data directory (<Name>Test.data, osprey-regression.data, ...) and
+# the BiblioSpec test inputs and reference outputs: they are compared or parsed as bytes,
+# on Linux agents as well as Windows, so they keep whatever ending they were committed with.
+**/*.data/** -text
+pwiz_tools/BiblioSpec/tests/inputs/** -text
+pwiz_tools/BiblioSpec/tests/reference/** -text
