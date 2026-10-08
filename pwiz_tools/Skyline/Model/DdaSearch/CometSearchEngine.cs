@@ -346,11 +346,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     string cometPepXmlFilepath = GetCometSearchResultFilepath(spectrumFilename);
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
-                    using (var cruxPepXml = new StreamReader(cometPepXmlFilepath))
-                    using (var output = new StreamWriter(finalOutputFilepath))
-                    {
-                        FixPercolatorPepXml(cruxPepXml, output, qvalueByPsmId);
-                    }
+                    PERCOLATOR_PEPXML_ANNOTATOR.AddQValues(cometPepXmlFilepath, finalOutputFilepath, qvalueByPsmId);
                 }
 
                 DeleteIntermediateFiles();
@@ -480,48 +476,17 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        // Copy the Comet pepXML through, injecting each hit's Percolator q-value as a
-        // <search_score name="percolator_qvalue"> so BiblioSpec can FDR-filter the library.
-        // internal + static so it can be unit-tested with in-memory streams.
-        internal static void FixPercolatorPepXml(TextReader cruxPepXml, TextWriter output, IReadOnlyDictionary<string, double> qvalueByPsmId)
+        // Adds each hit's Percolator q-value to the Comet pepXML, after its expect score.
+        internal static readonly PercolatorPepXmlAnnotator PERCOLATOR_PEPXML_ANNOTATOR =
+            new PercolatorPepXmlAnnotator(GetPercolatorSpectrumId, @"_", @"<search_score name=""expect""", false);
+
+        private static string GetPercolatorSpectrumId(string spectrumQueryLine)
         {
-            string line;
-            string lastPsmId = "";
-            string lastRank = "";
-            while ((line = cruxPepXml.ReadLine()) != null)
-            {
-                if (line.Contains(@"<spectrum_query"))
-                {
-                    // We need to convert:
-                    //   DdaSearchTest/comet.run_2.04610.04610.3
-                    // to:
-                    //   DdaSearchTest/comet.run_2_4610_3
-                    lastPsmId = Regex.Replace(line, @".* spectrum=""(.+?)\.0*(\d+)\.\d+\.(\d+)"" .*", "$1_$2_$3");
-                }
-                else if (line.Contains(@"<search_hit"))
-                {
-                    lastRank = Regex.Replace(line, @".* hit_rank=""(\d+)"" .*", "$1");
-                }
-                else if (line.Contains(@"<search_score name=""expect"""))
-                {
-                    string psmIdAndRank = $@"{lastPsmId}_{lastRank}";
-                    output.WriteLine(line);
-                    if (qvalueByPsmId.TryGetValue(psmIdAndRank, out var qvalue))
-                        output.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""{0}"" />", qvalue.ToString(CultureInfo.InvariantCulture));
-                    else
-                        // Percolator dropped this PSM from its output tables. Without a percolator_qvalue,
-                        // BiblioSpec's PepXMLreader treats the hit as q-value 0 and admits it to the library
-                        // unfiltered; emit a failing q-value (1) so it is excluded, matching the MSFragger
-                        // and Tide integrations.
-                        output.WriteLine(@"    <search_score name=""percolator_qvalue"" value=""1"" />");
-                    continue;
-                }
-                else if (line.Contains(@"</search_summary>"))
-                {
-                    output.WriteLine(@"<parameter name=""post-processor"" value=""percolator"" />");
-                }
-                output.WriteLine(line);
-            }
+            // We need to convert:
+            //   DdaSearchTest/comet.run_2.04610.04610.3
+            // to:
+            //   DdaSearchTest/comet.run_2_4610_3
+            return Regex.Replace(spectrumQueryLine, @".* spectrum=""(.+?)\.0*(\d+)\.\d+\.(\d+)"" .*", "$1_$2_$3");
         }
 
         // Fix (TODO: remove these hacks when it's fixed in Crux and/or Comet):
