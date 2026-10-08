@@ -151,16 +151,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to record that task {0} completed {1}: {2}. A resume will redo this step..
-        /// </summary>
-        public static string AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_ {
-            get {
-                return ResourceManager.GetString("AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1___" +
-                        "_2___A_resume_will_redo_this_step_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Applies To.
         /// </summary>
         public static string OspreyArgUsageProvider_AppliesToHeader_Applies_To {

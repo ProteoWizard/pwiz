@@ -242,10 +242,9 @@ namespace pwiz.Osprey.Tasks
 
             // The per-run 2nd-pass FDR sidecar is THIS task's output now (#4486): the per-file
             // half of the second pass runs in the rescore worker, so the file is produced here
-            // and merely READ by SecondPassFDR. Declaring it matters beyond provenance -
-            // AnalysisPipeline.WriteTaskSidecars stamps a validity sidecar for every declared
-            // output, so leaving it on SecondPassFDR's list gave one binary two owners and made
-            // "who wrote this?" unanswerable without opening it.
+            // and merely READ by SecondPassFDR. Declaring it matters beyond provenance - the
+            // driver checks each declared output's embedded stamp against the declaring task,
+            // so leaving it on SecondPassFDR's list gave one binary two owners.
             //
             // Only when this run's mode actually has a per-file half. The retrain modes compute
             // the second pass over the whole pool in Stage 7 by definition, and declaring an
@@ -315,16 +314,6 @@ namespace pwiz.Osprey.Tasks
                 : taskKey + TrainingExportKeyTerms(ctx.Config) + TrainingExportWriter.RunInputIdentities(input);
         }
 
-        /// <summary>
-        /// A training export's stamp names the four artifacts of its run it read
-        /// (<see cref="TrainingExportWriter.RunInputs"/>), not every run's first-pass files.
-        /// </summary>
-        public override IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output)
-        {
-            string input = TrainingExportInputFor(ctx.Config, output);
-            return input == null ? taskInputs : TrainingExportWriter.RunInputs(input);
-        }
-
         public override bool Run(PipelineContext ctx)
         {
             // The export added to a finished analysis: nothing else of this task is outstanding,
@@ -351,7 +340,7 @@ namespace pwiz.Osprey.Tasks
         /// stamping each as it lands. A run whose export was written while it re-scored is
         /// current and skipped; every other route - a run resumed as already re-scored, a run
         /// with no re-scoring work, the export-only arm - lands here, so no route leaves an
-        /// export missing or lets the driver stamp a stale one. A failed run is reported and
+        /// export missing or stale. A failed run is reported and
         /// the rest still export; the task then fails, which stops the analysis before
         /// SecondPassFDR writes the blib, and a re-run retries only the failed exports.
         /// </summary>
@@ -389,9 +378,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// One run's training export, stale stamp cleared first and the new one written as it
-        /// lands, so a kill loses only the run in flight; a failure is recorded, not thrown,
-        /// since this can run inside the per-file loop.
+        /// One run's training export, its stamp embedded as it lands, so a kill loses only the
+        /// run in flight; a failure is recorded, not thrown, since this can run inside the
+        /// per-file loop.
         ///
         /// <para>A failure whose message is written for the user (a damaged or mismatched
         /// file) is recorded as that message, and anything else as a defect, type and stack
@@ -403,10 +392,10 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, LibraryEntry> library, PipelineContext ctx, int maxThreads,
             SpectraWindowIndex spectra, MzCalibrationResult ms2Cal)
         {
-            PerFileResumeDriver.ClearStale(output, Name);
             try
             {
-                TrainingExportWriter.ExportRun(input, output, library, ctx, maxThreads, spectra, ms2Cal);
+                TrainingExportWriter.ExportRun(input, output, library, ctx, maxThreads,
+                    ArtifactStamp.ForCurrentBuild(Name, runKey), spectra, ms2Cal);
             }
             catch (Exception ex) when (!IsOutOfMemory(ex))
             {
@@ -414,9 +403,7 @@ namespace pwiz.Osprey.Tasks
                 _trainingExportErrors[input] = !CommonExceptionUtil.IsProgrammingDefect(reported) && !string.IsNullOrEmpty(reported.Message)
                     ? reported.Message
                     : ex.ToString();
-                return;
             }
-            PerFileResumeDriver.Stamp(output, Name, OspreyVersion.Current, runKey, TrainingExportWriter.RunInputs(input), ctx.LogWarning);
         }
 
         /// <summary>
@@ -535,8 +522,7 @@ namespace pwiz.Osprey.Tasks
             // pool is the one that pays for it and a worker skips it because nothing
             // pulled it (issue #4597). WHAT it does is decided below, before Run returns,
             // and parked in _poolPlan; deferring the decision as well as the work would
-            // read state that is no longer true by the time the pull comes (see
-            // RescoredPoolPlan).
+            // make it depend on state read at pull time (see RescoredPoolPlan).
             //
             // The per-file source is handed over only when a loader exists, and that condition
             // is not a detail: a run that kept the resident buffer has no way to rebuild a file
@@ -619,16 +605,17 @@ namespace pwiz.Osprey.Tasks
             // skips per file, so proceeding with a partial set re-scores only what is missing.
             int pass2Present = 0;
             int pass2Expected = 0;
+            string pass2Key = ValidityKey(ctx);
             if (ctx.Config.InputFiles != null)
             {
                 foreach (var inputFile in ctx.Config.InputFiles)
                 {
                     pass2Expected++;
-                    // Presence is not readability. A bare File.Exists cannot see a version, so a
+                    // Presence is not currency. A bare File.Exists cannot see a version, so a
                     // sidecar left by a build before the v3 -> v4 record change satisfied this
                     // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
                     // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
-                    if (Pass2SidecarCurrent(inputFile))
+                    if (Pass2ArtifactsCurrent(inputFile, pass2Key))
                         pass2Present++;
                 }
             }
@@ -695,7 +682,7 @@ namespace pwiz.Osprey.Tasks
                     ? string.Format(OspreyTasksResources.PerFileRescoreTask_Run___task_ModelDiagnostics_only_builds_the_report_for_a_completed_analysis__Finish_the_,
                         OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME))
                     : string.Format(OspreyTasksResources.PerFileRescoreTask_Run_the_cross_run_reconciliation_data_they_need_is_not_available_to_this_run__To_rebuild_it__,
-                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
+                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
                 ctx.LogError(string.Format(
                     OspreyTasksResources.PerFileRescoreTask_Run_Cannot_resume___0__of__1__runs_still_need_re_scoring__but__2_,
                     pass2Expected - pass2Present, pass2Expected, reason));
@@ -724,10 +711,10 @@ namespace pwiz.Osprey.Tasks
                 return true;
             }
 
-            // Per-file sidecar lifecycle (delete-before / write-after) is
-            // handled inside ExecuteRescore's loop so a per-file skip can
-            // preserve the valid sidecars for already-rescored files and
-            // only invalidate the file(s) about to be re-rescored.
+            // Per-file validity is handled inside ExecuteRescore's loop:
+            // each output carries its own stamp, so a per-file skip keeps
+            // the already-rescored files and only the file(s) re-rescored
+            // are overwritten.
 
             // Join file stems for the reconciled parquet metadata hash.
             // In the in-process pipeline _perFileEntries has every file in
@@ -1363,29 +1350,16 @@ namespace pwiz.Osprey.Tasks
                         @"no configured input file, so its sidecar has nowhere to go. See issue #4486.",
                         fileName));
                 }
-                // The DECOY side first, then the pool image. The pool image's validity stamp is
-                // what makes Stage 7 fold this file as the worker's rather than recompute it, so
-                // it has to be the LAST thing that lands: an interruption between the two writes
-                // then leaves a file Stage 7 recomputes, rather than one it folds against a decoy
-                // artifact that was never written.
-                string decoysPath = Pass2CompetitionDecoys.PathFor(inputFile);
-                Pass2CompetitionDecoys.Write(decoysPath, bestDecoy);
-                string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                FdrScoresSidecar.Write(pass2Path, records, FdrScoresSidecar.Pass.SecondPass);
-                // The validity sidecar is what makes PRESENCE a sufficient indicator. Written by
-                // the producer, under the PRODUCER's task and key: the artifact now belongs to
-                // PerFileRescoring, so it must be invalidated by whatever invalidates
-                // PerFileRescoring. Stamping SecondPassFDR's key here would leave a file that
-                // outlives the inputs it was computed from, which is the one thing a resume
-                // cannot detect by looking.
-                // The RECONCILED parquet, named: these artifacts were computed from the file
-                // this same task wrote moments ago, so that is what they must be stamped
-                // against. Its Stage 4 sibling is a different population.
-                var stampInputs = new[] { ParquetScoreCache.GetReconciledScoresPath(inputFile) };
-                TaskValiditySidecar.Write(decoysPath, taskName, OspreyVersion.Current,
-                    taskValidityKey, stampInputs);
-                TaskValiditySidecar.Write(pass2Path, taskName, OspreyVersion.Current,
-                    taskValidityKey, stampInputs);
+                // Both artifacts embed the PRODUCER's stamp: they belong to PerFileRescoring, so
+                // whatever invalidates PerFileRescoring invalidates them. Stamping SecondPassFDR's
+                // key here would leave a file that outlives the inputs it was computed from. Each
+                // commits atomically with its stamp, and Stage 7 folds a file as the worker's only
+                // when BOTH are current, so an interruption between the two writes leaves a file
+                // Stage 7 recomputes rather than one it folds against a missing decoy artifact.
+                var stamp = ArtifactStamp.ForCurrentBuild(taskName, taskValidityKey);
+                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(inputFile), bestDecoy, stamp);
+                FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
+                    FdrScoresSidecar.Pass.SecondPass, stamp);
             }
             return new Pass2PerFileWorker(
                 scorer,
@@ -1957,11 +1931,28 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Per-file resume probe. When the file's reconciled parquet is already
-        /// on disk with a matching
-        /// <c>&lt;output&gt;.PerFileRescoring.osprey.task</c> sidecar, CLEARS this file's
-        /// in-memory entries and returns true so the caller skips re-scoring - the same
-        /// thing the rescore arm does once its own reconciled parquet is written, and for
+        /// Whether both per-file 2nd-pass artifacts of <paramref name="inputFile"/> - the scores
+        /// sidecar and the competition decoys - carry a stamp current for this task and
+        /// <paramref name="validityKey"/>.
+        ///
+        /// <para>ONE definition, called by both the cohort-level count in <see cref="Run"/> and
+        /// the per-file skip in <see cref="TryResumeRescoredFile"/>. They used to ask different
+        /// questions - the count asked whether the sidecar was readable, the skip asked whether
+        /// the reconciled parquet was stamped - and a crash between the two writes made them
+        /// disagree about the same file in the same run. Two notions of "done" is the defect;
+        /// this is the fix.</para>
+        /// </summary>
+        private bool Pass2ArtifactsCurrent(string inputFile, string validityKey)
+        {
+            return PerFileResumeDriver.IsCurrent(FdrScoresSidecar.Pass2Path(inputFile), Name, validityKey) &&
+                   PerFileResumeDriver.IsCurrent(Pass2CompetitionDecoys.PathFor(inputFile), Name, validityKey);
+        }
+
+        /// <summary>
+        /// Per-file resume probe. When the file's reconciled parquet (and, where this task
+        /// writes them, its 2nd-pass artifacts) carry a current PerFileRescoring stamp, CLEARS
+        /// this file's in-memory entries and returns true so the caller skips re-scoring - the
+        /// same thing the rescore arm does once its own reconciled parquet is written, and for
         /// the same reason: that parquet is what the deferred pool build restores them
         /// from, so Stage 7 loads its own.
         ///
@@ -1972,28 +1963,8 @@ namespace pwiz.Osprey.Tasks
         /// runs at 446 before the first real rescore.</para>
         /// Pairs with the worker (stage6) crash-resume contract: re-invoking
         /// the same CLI on the same inputs is a no-op for files whose rescore
-        /// completed. Otherwise clears any stale sidecar so a mid-Run crash
-        /// leaves no false-positive, and returns false.
+        /// completed. Otherwise returns false, and the rescore overwrites any stale artifact.
         /// </summary>
-        /// <summary>
-        /// Whether <paramref name="inputFile"/> carries a READABLE current 2nd-pass sidecar.
-        ///
-        /// <para>ONE definition, called by both the cohort-level count in <see cref="Run"/> and
-        /// the per-file skip in <see cref="TryResumeRescoredFile"/>. They used to ask different
-        /// questions - the count asked this, the skip asked whether the reconciled parquet was
-        /// stamped - and a crash between the two writes made them disagree about the same file
-        /// in the same run. Two notions of "done" is the defect; this is the fix.</para>
-        ///
-        /// <para>Presence is not readability: a bare File.Exists cannot see a version, and a
-        /// sidecar from before the v3 -> v4 record change once satisfied the count and made the
-        /// whole Stage 6 rescore a no-op.</para>
-        /// </summary>
-        private static bool Pass2SidecarCurrent(string inputFile)
-        {
-            return FdrScoresSidecar.IsCurrentFormat(
-                FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass);
-        }
-
         private bool TryResumeRescoredFile(
             int fileNum, int nTotalFiles, string fileName,
             List<FdrEntry> fdrEntries, RescorePassInputs inputs, PipelineContext ctx)
@@ -2025,7 +1996,7 @@ namespace pwiz.Osprey.Tasks
                              (inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx) &&
                               inputs.Config.InputFiles != null &&
                               inputIdx < inputs.Config.InputFiles.Count &&
-                              Pass2SidecarCurrent(inputs.Config.InputFiles[inputIdx]));
+                              Pass2ArtifactsCurrent(inputs.Config.InputFiles[inputIdx], inputs.TaskValidityKey));
             if (hasParquetPath
                 && PerFileResumeDriver.IsCurrent(reconciledPath, Name, inputs.TaskValidityKey)
                 && pass2Done)
@@ -2063,10 +2034,9 @@ namespace pwiz.Osprey.Tasks
                 fdrEntries.TrimExcess();
                 return true;
             }
-            // The stale stamp is cleared where the reconciled parquet is rewritten
-            // (WriteReconciledAndStamp), not here: a file with no Stage 6 work keeps a current
-            // parquet as it is (WriteUnchangedReconciled), and clearing its stamp here would
-            // force a rewrite that changes nothing but its mtime.
+            // Nothing is cleared here: a stale reconciled parquet is overwritten, stamp and all,
+            // where it is rewritten (WriteReconciledAndStamp), and a file with no Stage 6 work
+            // keeps a current parquet as it is (WriteUnchangedReconciled).
             return false;
         }
 
@@ -2154,12 +2124,11 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// PHASE 3 -- reconciled parquet write-back. Reads the original Stage 4
         /// parquet and writes a separate <c>.scores-reconciled.parquet</c>
-        /// sibling (leaving the original intact), then stamps the per-file
-        /// resume sidecar -- but ONLY on a successful write, so a failed write
-        /// can never mark stale reconciled content valid (which would let
-        /// Stage 7 / a future resume consume old rescored content). On failure
-        /// clears the sidecar and removes the partially-written parquet so the
-        /// next run re-rescores this file from scratch.
+        /// sibling (leaving the original intact) with this task's stamp in its
+        /// footer, in the same commit, so a failed write can never mark stale
+        /// reconciled content valid (which would let Stage 7 / a future resume
+        /// consume old rescored content). On failure removes whatever parquet
+        /// is at the reconciled path so the next run re-rescores this file.
         ///
         /// Returns whether the reconciled parquet was actually PERSISTED. False when
         /// this file has no <c>ParquetPaths</c> entry or its original parquet is gone
@@ -2181,29 +2150,15 @@ namespace pwiz.Osprey.Tasks
             }
 
             string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
-            // Clear any stale stamp before the write starts, so a mid-write crash leaves no
-            // false-positive pointing at a partially-written reconciled parquet.
-            PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
+            // The parquet embeds this task's stamp in its footer, in the same commit as its rows.
             bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                inputs.LibraryById, config, inputs.JoinFileStems, ctx.LogInfo, ctx.LogWarning);
-
+                inputs.LibraryById, config, inputs.JoinFileStems,
+                ArtifactStamp.ForCurrentBuild(Name, inputs.TaskValidityKey), ctx.LogInfo, ctx.LogWarning);
             if (wrote)
-            {
-                var perFileInputs = new List<string>
-                {
-                    FdrScoresSidecar.Pass1Path(inputFile),
-                };
-                if (config.Reconciliation != null && config.Reconciliation.Enabled)
-                    perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
-                PerFileResumeDriver.Stamp(reconciledOutPath, Name, OspreyVersion.Current,
-                    inputs.TaskValidityKey, perFileInputs, ctx.LogWarning);
                 return true;
-            }
 
-            // Clear the stale sidecar AND remove the partially-written
-            // reconciled parquet (output mechanics, the task's own
-            // concern) so the next run re-rescores from scratch.
-            PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
+            // Remove whatever an earlier run left at the reconciled path (output mechanics, the
+            // task's own concern) so the next run re-rescores from scratch.
             try
             {
                 if (File.Exists(reconciledOutPath))
@@ -2468,10 +2423,10 @@ namespace pwiz.Osprey.Tasks
             var loader = PublishedSurvivorLoader(ctx);
             if (loader == null)
                 return null;
-            // Both answers taken ONCE, here, for the reason RescoredPoolPlan gives: the
-            // reconciled-parquet judgement stops being true the moment this task returns, when
-            // the driver stamps a fresh validity sidecar onto every declared output that merely
-            // exists. The answer travels; the question does not.
+            // Both answers taken ONCE, here, as RescoredPoolPlan describes: the
+            // reconciled-parquet judgement is made in Run and travels with the plan (a driver
+            // re-stamp that once forced this no longer exists). The answer travels; the
+            // question does not.
             var reconciledPaths = CurrentReconciledPaths(ctx);
             // LAZY, and on this arm usually never read at all. PerFileGapFillForRescore is
             // published DEFERRED, and its own header records what pulling it costs: "dotTrace
@@ -2979,16 +2934,13 @@ namespace pwiz.Osprey.Tasks
         /// Everything the deferred pool build will do, DECIDED by <see cref="Run"/> and
         /// executed later, when a consumer pulls the <see cref="RescoredEntries"/> milestone.
         ///
-        /// <para>The work is deferred; the decisions are not, because two of these answers
-        /// stop being true the moment Run returns. <see cref="ReconciledPaths"/> is the one
-        /// that bites: once Run returns, the driver stamps a fresh validity sidecar onto
-        /// EVERY declared output that merely exists (<c>AnalysisPipeline.WriteTaskSidecars</c>)
-        /// - including a <c>.scores-reconciled.parquet</c> left by a run under a DIFFERENT
-        /// validity key, which this run rejected as stale (deleting its sidecar, not the
-        /// parquet) and never rewrote. Asking <c>PerFileResumeDriver.IsCurrent</c> after that
-        /// stamp answers yes for exactly that file and overlays another arm's boundaries into
-        /// this run's blib, silently. So the question is asked where the end-of-Run block used
-        /// to ask it, and only the answer travels.</para>
+        /// <para>The work is deferred; the decisions are not. <see cref="ReconciledPaths"/> is
+        /// decided once, in Run, and travels with the plan, so the deferred build cannot reach
+        /// a different answer. That was first forced by a driver re-stamp, after Run, of every
+        /// declared output that merely existed - including a stale
+        /// <c>.scores-reconciled.parquet</c> this run had rejected and never rewrote, which a
+        /// later <c>PerFileResumeDriver.IsCurrent</c> then accepted, overlaying another arm's
+        /// boundaries into this run's blib. That re-stamp no longer exists.</para>
         ///
         /// <para>The planner byproducts travel too rather than being re-read from the context,
         /// so a build in Stage 7 does not hold their last read hostage - see
@@ -3005,7 +2957,7 @@ namespace pwiz.Osprey.Tasks
             /// plan is a refill and nothing else). EMPTY is not null: a rescore that ran and
             /// skipped every file still overlays, exactly as a cold run does.</param>
             /// <param name="reconciledPaths">file name -> the <c>.scores-reconciled.parquet</c>
-            /// judged CURRENT while Run still held the answer. A file absent from this map is a
+            /// judged CURRENT in Run. A file absent from this map is a
             /// run Stage 6 did not persist, and it is a hard failure - see
             /// <see cref="ReconciledPathOrFail"/>. Null only on the refill-only plan, which
             /// does not overlay at all.</param>

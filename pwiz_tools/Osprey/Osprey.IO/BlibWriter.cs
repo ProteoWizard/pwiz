@@ -463,6 +463,43 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Add metadata key-value pair.
         /// </summary>
+        /// <summary>
+        /// Record <paramref name="stamp"/> in the <c>OspreyMetadata</c> table under
+        /// <see cref="ArtifactStamp.PARQUET_KEY"/>, so the blib carries its own validity record.
+        /// </summary>
+        public void AddStamp(ArtifactStamp stamp)
+        {
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
+            AddMetadata(ArtifactStamp.PARQUET_KEY, stamp.ToString());
+        }
+
+        /// <summary>
+        /// The validity stamp recorded in a blib's <c>OspreyMetadata</c> table, or null when the
+        /// file is missing, unreadable or unstamped. Never throws.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return null;
+            try
+            {
+                using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    using (var cmd = new SQLiteCommand(@"SELECT Value FROM OspreyMetadata WHERE Key = @k", conn))
+                    {
+                        cmd.Parameters.AddWithValue(@"@k", ArtifactStamp.PARQUET_KEY);
+                        return ArtifactStamp.Parse(cmd.ExecuteScalar() as string);
+                    }
+                }
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
+        }
+
         public void AddMetadata(string key, string value)
         {
             using (var cmd = new SQLiteCommand(_conn))

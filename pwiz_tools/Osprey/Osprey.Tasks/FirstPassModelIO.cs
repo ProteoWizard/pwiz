@@ -74,6 +74,10 @@ namespace pwiz.Osprey.Tasks
         /// plus the pass-1 provenance a SecondPassFDR node cannot otherwise know.</summary>
         private sealed class ModelDto
         {
+            /// <summary>The writing task's <see cref="ArtifactStamp"/>, serialized first.</summary>
+            [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+            public string OspreyValidity { get; set; }
+
             public int SchemaVersion { get; set; }
             public int NumFeatures { get; set; }
             public double[] Means { get; set; }
@@ -109,6 +113,10 @@ namespace pwiz.Osprey.Tasks
         /// library precursor belonging to a protein with at least two detected peptides.</summary>
         private sealed class StratumDto
         {
+            /// <summary>The writing task's <see cref="ArtifactStamp"/>, serialized first.</summary>
+            [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+            public string OspreyValidity { get; set; }
+
             public int SchemaVersion { get; set; }
 
             /// <summary>Sorted ascending on write: the in-memory source is a
@@ -216,9 +224,10 @@ namespace pwiz.Osprey.Tasks
         /// <param name="model">The trained 1st-pass model.</param>
         /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process;
         ///   see <see cref="Serialize"/>.</param>
-        public static bool Save(string path, PercolatorResults model, string experimentAgg)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static bool Save(string path, PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
         {
-            string json = Serialize(model, experimentAgg);
+            string json = Serialize(model, experimentAgg, stamp);
             if (json == null)
                 return false;
             WriteText(path, json);
@@ -238,13 +247,17 @@ namespace pwiz.Osprey.Tasks
         ///   stamped so a SecondPassFDR node reads the pass-1 arm instead of guessing it from its own
         ///   environment. Comes from the caller (which holds the byproduct) rather than being
         ///   re-read here, so this stays a pure serializer.</param>
-        public static string Serialize(PercolatorResults model, string experimentAgg)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static string Serialize(PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
         {
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
             if (model?.Standardizer == null)
                 return null;
 
             var dto = new ModelDto
             {
+                OspreyValidity = stamp.ToString(),
                 SchemaVersion = 1,
                 NumFeatures = model.Standardizer.NumFeatures,
                 Means = model.Standardizer.Means,
@@ -254,7 +267,7 @@ namespace pwiz.Osprey.Tasks
             if (model.IsGradientBoostedTrees)
             {
                 // Declined rather than written when any fold would fail Load's own check, since
-                // the marker stamped beside the file would then attest a model nobody can read.
+                // the stamp embedded in the file would then attest a model nobody can read.
                 var foldData = new GbtModelData[model.FoldGbtModels.Count];
                 for (int f = 0; f < foldData.Length; f++)
                 {
@@ -292,9 +305,10 @@ namespace pwiz.Osprey.Tasks
         /// <param name="path">Stratum sidecar path to write.</param>
         /// <param name="stratumBaseIds">The protein-compact stratum base ids. Sorted here so
         ///   the artifact is stable across runs.</param>
-        public static bool SaveStratum(string path, HashSet<uint> stratumBaseIds)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static bool SaveStratum(string path, HashSet<uint> stratumBaseIds, ArtifactStamp stamp)
         {
-            string json = SerializeStratum(stratumBaseIds);
+            string json = SerializeStratum(stratumBaseIds, stamp);
             if (json == null)
                 return false;
             WriteText(path, json);
@@ -308,15 +322,22 @@ namespace pwiz.Osprey.Tasks
         /// cohort, which is ~12 MB of indented JSON, and re-rendering it per file spends
         /// several GB of writes plus 446 sorts producing byte-identical output.
         /// </summary>
-        public static string SerializeStratum(HashSet<uint> stratumBaseIds)
+        public static string SerializeStratum(HashSet<uint> stratumBaseIds, ArtifactStamp stamp)
         {
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
             if (stratumBaseIds == null || stratumBaseIds.Count == 0)
                 return null;
 
             var sortedBaseIds = new uint[stratumBaseIds.Count];
             stratumBaseIds.CopyTo(sortedBaseIds);
             Array.Sort(sortedBaseIds); // Array.Sort OK: distinct uint keys, so stability cannot change the result
-            return SerializeJson(new StratumDto { SchemaVersion = 1, StratumBaseIds = sortedBaseIds });
+            return SerializeJson(new StratumDto
+            {
+                OspreyValidity = stamp.ToString(),
+                SchemaVersion = 1,
+                StratumBaseIds = sortedBaseIds,
+            });
         }
 
         /// <summary>Write an already-serialized artifact through <see cref="FileSaver"/>.</summary>

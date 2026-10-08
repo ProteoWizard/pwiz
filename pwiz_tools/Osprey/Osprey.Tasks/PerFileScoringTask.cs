@@ -142,6 +142,10 @@ namespace pwiz.Osprey.Tasks
         // outputs from a not-yet-run task never NPE on the accessor.
         private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
         private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
+
+        // The validity stamp every per-file output of this run embeds (the parquet in its footer,
+        // the calibration JSON as its first property). Set once in Run, before any file is scored.
+        private ArtifactStamp _outputStamp;
         // The ONE pool the run's sidecar readers canonicalize through, held here rather than
         // built per loader so the instance this task's own stub loads use is the instance it
         // publishes. Two pools over the same library would not share a single string.
@@ -213,9 +217,16 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
             {
-                yield return ParquetScoreCache.GetScoresPath(input);
-                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+                foreach (var output in OutputsForInput(input))
+                    yield return output;
             }
+        }
+
+        /// <summary>The outputs this task writes for one input file.</summary>
+        private static IEnumerable<string> OutputsForInput(string input)
+        {
+            yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+            yield return ParquetScoreCache.GetScoresPath(input);
         }
 
         public override bool Run(PipelineContext ctx)
@@ -271,13 +282,15 @@ namespace pwiz.Osprey.Tasks
             // lazily load CWT candidates -- matches Rust's end-to-end
             // behavior, which always writes the parquet sidecar regardless
             // of --task PerFileScoring.
-            var parquetFooterMetadata = new Dictionary<string, string>
+            string validityKey = ValidityKey(ctx);
+            _outputStamp = ArtifactStamp.ForCurrentBuild(Name, validityKey);
+            var parquetFooterMetadata = ParquetScoreCache.WithStamp(new Dictionary<string, string>
             {
                 { @"osprey.version", OspreyVersion.Current },
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { ParquetScoreCache.META_RECONCILED, @"false" },
-            };
+            }, _outputStamp);
 
             // Resolve how many input files score concurrently for this invocation
             // (--parallel-files-scoring, else --parallel-files, the OSPREY_MAX_PARALLEL_FILES
@@ -299,7 +312,6 @@ namespace pwiz.Osprey.Tasks
                 // Single file: process directly (no parallel overhead)
                 string inputFile = config.InputFiles[0];
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                string validityKey = ValidityKey(ctx);
                 var fileResult = ScoreOrLoadForFile(
                     inputFile, fileName, 0, 1,
                     fullLibrary, config, parquetFooterMetadata,
@@ -326,7 +338,6 @@ namespace pwiz.Osprey.Tasks
                 // Matches the memory envelope of the single-file path while
                 // still sharing the library load -- the safe choice for 3-file
                 // Astral runs that would OOM in parallel.
-                string validityKey = ValidityKey(ctx);
                 for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
                 {
                     string inputFile = config.InputFiles[fileIdx];
@@ -346,7 +357,6 @@ namespace pwiz.Osprey.Tasks
                 // Multiple files in parallel, bounded by the resolved
                 // concurrent-file count (see ResolveFileParallelism), handed out one at a
                 // time in input order so a lane that finishes takes the next file.
-                string validityKey = ValidityKey(ctx);
                 var fileResults = new ConcurrentDictionary<int, string>();
                 // Legend mapping each aggregate-line slot to its input file, printed once
                 // before the concurrent "[i] p%" line starts -- mirrors Skyline's numbered
@@ -2178,16 +2188,13 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Phase B per-file resume: if the file's <c>.scores.parquet</c>
-        /// already exists with a matching <c>.PerFileScoring.osprey.task</c>
-        /// sidecar (validity key matches the current config), load the
-        /// stubs + PIN features + best-effort calibration from disk and
-        /// skip <see cref="ProcessFile"/>. Otherwise clear any stale
-        /// sidecar, run <see cref="ProcessFile"/>, and on success write
-        /// a fresh sidecar. The pre-Run delete is the per-file analogue
-        /// of the task-level safety net other tasks use: a mid-Run crash
-        /// leaves no sidecar pointing at the partial parquet, so the
-        /// resume invocation reprocesses that file.
+        /// Phase B per-file resume: if every output this task writes for the file - the
+        /// <c>.scores.parquet</c> and the <c>.calibration.json</c> - carries a current validity
+        /// stamp (<see cref="IsFileCurrent"/>), load the stubs + PIN features + best-effort
+        /// calibration from disk and skip <see cref="ProcessFile"/>. Otherwise run
+        /// <see cref="ProcessFile"/>, whose writes embed this run's stamp. Nothing is cleared
+        /// first: each output commits atomically with its own stamp, so a crash between the two
+        /// writes leaves one output stale or missing and the file is rescored on resume.
         ///
         /// Returns the per-file <see cref="FdrEntry"/> list (from the
         /// disk load or <see cref="ProcessFile"/>), or <c>null</c> on
@@ -2207,7 +2214,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            if (PerFileResumeDriver.IsCurrent(scoresPath, Name, validityKey))
+            if (IsFileCurrent(inputFile, validityKey))
             {
                 var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
                 if (loaded != null)
@@ -2223,16 +2230,22 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_Scoring_file__0___1____2_,
                 fileIdx + 1, totalFiles, inputFile));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORE_FILE, @"{0}/{1}", fileIdx + 1, totalFiles));
-            // Clear stale sidecar so a mid-ProcessFile crash leaves no
-            // false-positive sidecar on the next invocation.
-            PerFileResumeDriver.ClearStale(scoresPath, Name);
-            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
-            if (fileResult != null)
+            return ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
+        }
+
+        /// <summary>
+        /// Whether every output this task writes for <paramref name="inputFile"/> carries a
+        /// stamp current for this task and <paramref name="validityKey"/>: the one predicate for
+        /// "this file is already scored", so the file's outputs are valid together or not at all.
+        /// </summary>
+        private bool IsFileCurrent(string inputFile, string validityKey)
+        {
+            foreach (var output in OutputsForInput(inputFile))
             {
-                PerFileResumeDriver.Stamp(scoresPath, Name, OspreyVersion.Current,
-                    validityKey, new[] { inputFile }, ctx.LogWarning);
+                if (!ArtifactValidity.IsCurrent(output, Name, validityKey))
+                    return false;
             }
-            return fileResult;
+            return true;
         }
 
         /// <summary>
@@ -3127,7 +3140,7 @@ namespace pwiz.Osprey.Tasks
                 // the configured output dir (or the input's own directory by
                 // default), matching where the resume-existence check looks.
                 string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
-                CalibrationIO.SaveCalibration(calParams, calPath);
+                CalibrationIO.SaveCalibration(calParams, calPath, _outputStamp);
                 ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Saved_calibration_to__0_, calPath));
             }
             catch (Exception ex)

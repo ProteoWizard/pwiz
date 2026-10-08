@@ -275,13 +275,13 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
 | INTENT | FileSaver sibling-temp rename, not copy_and_verify | Local temp + `copy_and_verify` to NAS | Same-dir sibling temp + `File.Move` promote; same crash-safety | `FileSaver.cs:68,92`; `ParquetScoreCache.cs:265` | info |
-| INTENT | No CacheValidity enum; hash mismatch hard-fails | `{ValidReconciled,ValidFirstPass,Stale}`; Stale→delete+rescore | Returns descriptive error + aborts on mismatch; resume via `.osprey.task` | `ParquetScoreCache.cs:1190,1256` | minor |
-| INTENT | `.osprey.task` resume sidecar has no Rust counterpart | Reuse inferred from footer hashes | Per-(output,task) JSON sidecar on search+library(+reconciliation) hashes | `TaskValiditySidecar.cs:80,98,144` | info |
+| INTENT | No CacheValidity enum; hash mismatch hard-fails | `{ValidReconciled,ValidFirstPass,Stale}`; Stale->delete+rescore | Returns descriptive error + aborts on mismatch; resume via the embedded validity stamp | `ParquetScoreCache.cs:1190,1256` | minor |
+| INTENT | Embedded validity stamp (resume) has no Rust counterpart | Reuse inferred from footer hashes | Every artifact embeds a (task, version, key) stamp on search+library(+reconciliation) hashes. C#-only fields Rust does not write, which cross-impl comparisons must ignore: parquet footer `osprey.validity`, first property `osprey_validity` of `.calibration.json` / `.reconciliation.json`, blib `OspreyMetadata` row `osprey.validity` | `ArtifactStamp.cs`; `ArtifactValidity.cs`; `BlibWriter.AddStamp` | info |
 | INTENT | Reconciled parquet separate, not in-place | Stage 6 rewrites in place | `.scores-reconciled.parquet` sibling; survives partial Stage 6 crash | `ParquetScoreCache.cs:1036,1055,1103` | minor |
 | INTENT | FDR sidecar matches by entry_id, tolerates count mismatch | `entry_count == entries.len()`, positional | entry_id→index map; allows smaller sidecar over larger stub list; stale summary comment | `FdrScoresSidecar.cs:437,484,492,74` | minor |
 | STALE | `reconciliation.json` is format_version 3 | v1, omits file_stems/first_pass_base_ids | Requires v3 + both fields (Rust code evolved past its doc) | `ReconciliationFile.cs:75,77,84,124,138,150` | minor |
 | STALE | `.spectra.bin` header is v3 w/ fingerprint | v1 (20 bytes), no size/mtime | v3 w/ source_size+source_mtime (Unix ms), invalidates on fingerprint change | `SpectraCache.cs:61,70,90,162` | minor |
-| INTENT | Calibration reuse not gated on `search_hash` | Reused when search_hash matches | Never writes search_hash (field unset); reuse is `.osprey.task` decision | `PerFileScoringTask.cs:1702`; `CalibrationParams.cs:125` | minor |
+| INTENT | Calibration reuse not gated on `search_hash` | Reused when search_hash matches | Never writes search_hash (field unset); reuse is the embedded `osprey_validity` stamp's decision | `PerFileScoringTask.cs:1702`; `CalibrationParams.cs:125` | minor |
 | UNVER | No verified equivalent to `evaluate_calibration.py` (**U7**) | Recommends Python calibration script | No Python dep; HTML via `--model-diagnostics`; exact equivalence unverified | `CalibrationIO.cs`; CLI | info |
 
 ### [15-hpc-scoring-split.md](15-hpc-scoring-split.md) — matches-with-notes

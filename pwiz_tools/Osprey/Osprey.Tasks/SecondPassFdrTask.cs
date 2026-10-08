@@ -77,8 +77,8 @@ namespace pwiz.Osprey.Tasks
             // Stage 7 reads the reconciled parquet, which Stage 6 writes for every run -
             // a run without one fails in UnusableReconciledParquets rather than being read
             // from its Stage 4 file, which a SecondPassFDR node is not even shipped.
-            // Recorded for provenance only -- the driver validates tasks by output sidecar
-            // key, never by re-checking Inputs() existence (TaskValiditySidecar).
+            // Documentation only - the driver validates tasks by each output's embedded
+            // stamp, never by re-checking Inputs() existence.
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
 
@@ -212,8 +212,8 @@ namespace pwiz.Osprey.Tasks
             // ...but ONLY where this task still writes them. Under the frozen modes the per-file
             // half of the second pass runs in the rescore worker (#4486), so those sidecars are
             // PerFileRescoring's output and this task's INPUT - see Inputs(). Declaring an output
-            // another task produces gives one binary two owners (both stamp a validity sidecar
-            // via AnalysisPipeline.WriteTaskSidecars) and, worse, lets the driver's
+            // another task produces gives one binary two owners (whose stamps would disagree
+            // on the task) and, worse, lets the driver's
             // IsTaskAlreadyDone - which requires every declared output to exist - skip THIS task
             // the moment Stage 6 has written them, which is the join never running at all.
             bool workerOwnsPerFileSidecars = OspreyEnvironment.Pass2ProteinCompact;
@@ -334,11 +334,10 @@ namespace pwiz.Osprey.Tasks
             // is added later. Fold the report from the completed second pass rather than
             // re-running the join (P16: a report is a derived view over the artifacts).
             //
-            // AHEAD OF THE MARKER WIPE BELOW, and that placement is the whole correctness
-            // argument. The wipe clears every declared output's validity stamp; running it
-            // first would destroy the record that this second pass is complete - which is the
-            // only evidence the fold is entitled to adopt it - and the next resume would then
-            // re-run the join it was just spared. Pass 1 has the same arm above its own writers
+            // AHEAD OF EVERY WRITER BELOW, and that placement is the whole correctness
+            // argument. Once a writer runs, the join is being redone: the completed second pass
+            // - the only evidence the fold is entitled to adopt - is overwritten rather than
+            // adopted, and the run pays for the join it should have been spared. Pass 1 has the same arm above its own writers
             // for the same reason (FirstPassFdrTask.Run).
             //
             // The cost of getting this wrong is the pass-1 trap restated: a SecondPassFDR that
@@ -373,9 +372,6 @@ namespace pwiz.Osprey.Tasks
                 return FoldPass2DiagnosticsOnly(ctx);
             }
 
-            // Mid-Run crash safety: see FirstPassFdrTask.Run for rationale.
-            foreach (var output in Outputs(ctx))
-                TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
             // RescoredEntries is the final milestone of the shared buffer:
             // demanding it materializes PerFileRescore (running its rescore /
@@ -446,7 +442,7 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.SecondPassFdrTask_Run_1_of__1__re_scored_intermediate_files_was_written_by_an_older_Osprey_build_and_cannot_be_,
                     OspreyTasksResources.SecondPassFdrTask_Run__0__of__1__re_scored_intermediate_files_were_written_by_an_older_Osprey_build_and_cannot_,
                     rescored.FileCount, string.Join(@", ", unusable.Stale),
-                    OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
 
             // NO .Value here any more (#4486). Every consumer below folds through
@@ -1124,7 +1120,8 @@ namespace pwiz.Osprey.Tasks
             if (!config.DiagnosticsOnly)
             {
                 Pass2FdrSidecar.WritePass2ExperimentSidecar(
-                    ctx, rescored.FileNames, perFileParquetPaths, result.ProteinFdr.PeptideQvalues);
+                    ctx, rescored.FileNames, perFileParquetPaths, result.ProteinFdr.PeptideQvalues,
+                    OutputStamp(ctx));
             }
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
@@ -1326,7 +1323,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Cross-file observations to write: {0}", passingEntries.Count);
 
             BlibOutputWriter.Write(config, rescored.FileNames, libraryById, bestByPrecursor,
-                bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);
+                bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts, OutputStamp(ctx));
 
             // One spectrum per passing precursor (its best run); the peaks are every run's
             // observation of those precursors, written as the per-run retention times.

@@ -181,14 +181,14 @@ public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
     private const int RecordLen = 36;
-    private const byte ExpectedVersion = 7;
+    private const byte ExpectedVersion = 8;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
     // own version, one record per DISTINCT entry_id.
     public const int ExperimentHeaderLen = 32;
     public const int ExperimentRecordLen = 44;
-    private const byte ExpectedExperimentVersion = 2;
+    private const byte ExpectedExperimentVersion = 3;
     private static readonly byte[] ExperimentMagic =
         { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x45, 0x58, 0x50 }; // OSPRYEXP
 
@@ -680,7 +680,9 @@ public static class OspreyFdrSidecarComparer
             return null;
         }
         ulong headerCount = BitConverter.ToUInt64(data, 16);
-        long expectedLen = (long)ExperimentHeaderLen + (long)headerCount * ExperimentRecordLen;
+        // The writer's validity stamp follows the records; its length is the u32 at [24..28].
+        long expectedLen = (long)ExperimentHeaderLen + (long)headerCount * ExperimentRecordLen +
+                           BitConverter.ToUInt32(data, 24);
         if (data.LongLength != expectedLen)
         {
             problem = "experiment sidecar length " + data.LongLength + " != header count " +
@@ -824,7 +826,8 @@ public static class OspreyFdrSidecarComparer
         long expectedLen;
         try
         {
-            expectedLen = checked(HeaderLen + (long)n * RecordLen);
+            // The writer's validity stamp follows the records; its length is the u32 at [24..28].
+            expectedLen = checked(HeaderLen + (long)n * RecordLen + BitConverter.ToUInt32(data, 24));
         }
         catch (OverflowException)
         {

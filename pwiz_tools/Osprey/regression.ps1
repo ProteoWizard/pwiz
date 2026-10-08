@@ -1225,8 +1225,8 @@ function Compare-DirFingerprint {
 # The canonical four-task pipeline, in execution order. These are the
 # OspreyTask.Name values (OspreyTasks.Create().Pipeline, the explicit ordered list the
 # task set declares): the same tokens
-# Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
-# [TASK] log lines and the .<Name>.osprey.task validity sidecars.
+# the driver writes into its [TASK] log lines and every artifact embeds in its
+# validity stamp.
 $pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
 
 # The driver's own per-task markers: the cache-hit skip at the top of the task
@@ -2112,14 +2112,6 @@ function Invoke-HpcChain {
             }
             Copy-Item $pass2Side (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin")
             Copy-Item $pass2Decoys (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin")
-            $decoysStamp = "$pass2Decoys.PerFileRescoring.osprey.task"
-            if (Test-Path $decoysStamp) {
-                Copy-Item $decoysStamp (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task")
-            }
-            $pass2Stamp = "$pass2Side.PerFileRescoring.osprey.task"
-            if (Test-Path $pass2Stamp) {
-                Copy-Item $pass2Stamp (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task")
-            }
         }
         # Same relay for the analysis-wide experiment sidecar: SecondPassFDR seeds pass-1
         # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
@@ -2540,11 +2532,10 @@ foreach ($name in $selected) {
         # Only the modes with a per-file half make this claim. OSPREY_PASS2_QVALUE=transfer and
         # the retrain modes compute the second pass in Stage 7 by definition, so there is no
         # worker answer to fold and demanding one would fail them for a contract they never
-        # made. Detected from the worker's own validity stamp reaching phase 4, not from the
-        # mode flag.
-        $chainHasWorkerOutput = @(Get-ChildItem -File -Path $chainDir `
-            -Filter '*.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task' `
-            -ErrorAction SilentlyContinue).Count -gt 0
+        # made. Detected from the worker's own validity stamp reaching phase 4 - the producer
+        # named inside the shipped 2nd-pass sidecar - not from the mode flag.
+        $chainHasWorkerOutput = @(Get-ChildItem -File -Path $chainDir -Filter '*.2nd-pass.fdr_scores.bin' `
+            -ErrorAction SilentlyContinue | Where-Object { Test-ProducedBy $_.FullName 'PerFileRescoring' }).Count -gt 0
         $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ answered=(\d+)/\1\b') -Quiet
         if (-not $chainHasWorkerOutput) {

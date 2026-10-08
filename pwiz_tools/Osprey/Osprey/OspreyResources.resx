@@ -127,9 +127,6 @@
   <data name="AnalysisPipeline_Run_Pipeline_failed___0_" xml:space="preserve">
     <value>Pipeline failed: {0}</value>
   </data>
-  <data name="AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>Failed to record that task {0} completed {1}: {2}. A resume will redo this step.</value>
-  </data>
   <data name="OspreyArgUsageProvider_AppliesToHeader_Applies_To" xml:space="preserve">
     <value>Applies To</value>
   </data>

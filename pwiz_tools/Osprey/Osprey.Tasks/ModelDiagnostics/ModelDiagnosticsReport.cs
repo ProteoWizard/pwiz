@@ -141,7 +141,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // interruption between the two leaves the artifact that can rebuild the view
                 // rather than a view with nothing behind it.
                 WritePass1Sidecar(data, config, validityKey, log.LogInfo);
-                string outPath = RenderAndWrite(data, config);
+                string outPath = RenderAndWrite(data, config, ProductStamp(FirstPassTaskName, validityKey));
 
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_, outPath));
             }
@@ -197,7 +197,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // interruption between the two leaves the artifact that can rebuild the view
                 // rather than a view with nothing behind it.
                 WritePass1Sidecar(data, config, validityKey, log.LogInfo);
-                string outPath = RenderAndWrite(data, config);
+                string outPath = RenderAndWrite(data, config, ProductStamp(FirstPassTaskName, validityKey));
 
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WriteFromAccumulator_Wrote_the_model_diagnostics_report___0_, outPath));
             }
@@ -372,9 +372,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string validityKey, IOspreyLog log)
         {
             string pass2Path = ResolvePass2SidecarPath(config);
-            WriteJson(pass2Path, data.Pass2);
-            StampProduct(pass2Path, SecondPassTaskName, validityKey, log.LogInfo);
-            string outPath = RenderAndWrite(data, config);
+            var pass2Stamp = ProductStamp(SecondPassTaskName, validityKey);
+            WriteJson(pass2Path, data.Pass2, pass2Stamp);
+            string outPath = RenderAndWrite(data, config, pass2Stamp);
             int pass2ViewCount = data.Pass2?.FdpViews?.Count ?? 0;
             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_MDIAG_PASS2, @"fdr-views={0} model={1}",
                 pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"none"));
@@ -417,8 +417,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             var data = ReadJson<ModelDiagnosticsData>(pass1Path);
             if (data == null)
                 return false;
-            data.Pass2 = ReadJson<ModelDiagnosticsData.Pass2Data>(ResolvePass2SidecarPath(config));
-            string outPath = RenderAndWrite(data, config);
+            string pass2Path = ResolvePass2SidecarPath(config);
+            data.Pass2 = ReadJson<ModelDiagnosticsData.Pass2Data>(pass2Path);
+            // The page re-rendered from the products carries the stamp of the newest product it
+            // shows, exactly as the page the producing task rendered did.
+            string outPath = RenderAndWrite(data, config,
+                ArtifactValidity.ReadStamp(data.Pass2 != null ? pass2Path : pass1Path));
             if (data.Pass2 == null)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, OspreyTasksResources.ModelDiagnosticsReport_TryRenderFromProducts_Second_pass_results_are_not_on_disk__so_this_report_covers_the_first_pass_only__Run_this_);
@@ -514,17 +518,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// Both were stamped by FirstPassFDR with the same key, so equal keys is the whole test -
         /// and it is answerable without a pipeline context, which the render path does not have.
         ///
-        /// <para>Refusing when the stamp is absent is deliberate. A product written before this
-        /// stamping existed cannot be shown to belong to this analysis, and "cannot tell" has to
-        /// resolve to "rebuild it" - the same conservative direction
-        /// <see cref="TaskValiditySidecar.IsValid"/> takes for a missing sidecar.</para>
+        /// <para>Refusing when the stamp is absent is deliberate. A product without one cannot be
+        /// shown to belong to this analysis, and "cannot tell" has to resolve to "rebuild it" -
+        /// the same conservative direction every resume check takes.</para>
         /// </summary>
         private static bool DescribesTheFirstPassOnDisk(OspreyConfig config, string pass1Path)
         {
-            string experimentPath = FirstPassExperimentSidecarPath(config);
-            if (!TaskValiditySidecar.TryReadValidityKey(experimentPath, FirstPassTaskName, out string key))
-                return false;
-            return TaskValiditySidecar.IsValid(pass1Path, FirstPassTaskName, key);
+            var experimentStamp = ArtifactValidity.ReadStamp(FirstPassExperimentSidecarPath(config));
+            return experimentStamp != null &&
+                   ArtifactValidity.IsCurrent(pass1Path, FirstPassTaskName, experimentStamp.Key) &&
+                   experimentStamp.IsCurrent(FirstPassTaskName, experimentStamp.Key);
         }
 
         /// <summary>
@@ -542,11 +545,15 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// for. Negative leaves it at <c>FileCount</c>.</para>
         /// </summary>
         private static string RenderAndWrite(ModelDiagnosticsData data, OspreyConfig config,
-            int runsContributed = -1)
+            ArtifactStamp stamp, int runsContributed = -1)
         {
             data.Completeness = BuildCompleteness(data, runsContributed,
                 HasCompletedSecondPass(config));
             string html = ModelDiagnosticsHtml.Render(data);
+            // The stamp of the product this page shows, as a comment ahead of the DOCTYPE, so the
+            // page is a declared output whose validity is read from the page itself.
+            if (stamp != null)
+                html = stamp.ToHtmlComment() + Environment.NewLine + html;
             string outPath = ResolveReportPath(config);
             string dir = Path.GetDirectoryName(outPath);
             if (!string.IsNullOrEmpty(dir))
@@ -637,42 +644,48 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string path = ResolvePass1SidecarPath(config);
             try
             {
-                WriteJson(path, data);
+                WriteJson(path, data, ProductStamp(FirstPassTaskName, validityKey));
             }
             finally
             {
                 data.Pass2 = pass2;
             }
-            StampProduct(path, FirstPassTaskName, validityKey, logWarning);
         }
 
         /// <summary>
-        /// Stamp a diagnostics product with its producing task's validity key, so a later render
-        /// can tell "this describes the analysis on disk" from "this is left over from another
-        /// one". No key means no stamp, and an unstamped product is refused by the render rather
-        /// than trusted.
+        /// The stamp a diagnostics product is written with, so a later render can tell "this
+        /// describes the analysis on disk" from "this is left over from another one". No key
+        /// means no stamp, and an unstamped product is refused by the render rather than trusted.
         /// </summary>
-        private static void StampProduct(string path, string taskName, string validityKey,
-            Action<string> logWarning)
+        private static ArtifactStamp ProductStamp(string taskName, string validityKey)
         {
-            if (string.IsNullOrEmpty(validityKey))
-                return;
-            PerFileResumeDriver.Stamp(path, taskName, OspreyVersion.Current, validityKey,
-                Array.Empty<string>(), logWarning);
+            return string.IsNullOrEmpty(validityKey) ? null : ArtifactStamp.ForCurrentBuild(taskName, validityKey);
         }
 
         /// <summary>
-        /// Atomic write of one diagnostics product. Every consumer relies on presence proving
+        /// Atomic write of one diagnostics product, with <paramref name="stamp"/> (when there is
+        /// one) as the document's first property. Every consumer relies on presence proving
         /// completeness (P8), so a partial write must never surface as a corrupt data model.
         /// </summary>
-        private static void WriteJson(string path, object value)
+        private static void WriteJson(string path, object value, ArtifactStamp stamp)
         {
             string dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
+            string json = JsonConvert.SerializeObject(value, SidecarSettings);
+            if (stamp != null)
+            {
+                // SidecarSettings writes compact JSON, so the object opens with '{' and the stamp
+                // goes straight after it - first, where ArtifactStamp.TryReadJsonHead looks.
+                string property = JsonConvert.ToString(ArtifactStamp.JSON_PROPERTY) + @":" +
+                                  JsonConvert.ToString(stamp.ToString());
+                json = json == @"{}"
+                    ? @"{" + property + @"}"
+                    : @"{" + property + @"," + json.Substring(1);
+            }
             using (var saver = new FileSaver(path))
             {
-                File.WriteAllText(saver.SafeName, JsonConvert.SerializeObject(value, SidecarSettings));
+                File.WriteAllText(saver.SafeName, json);
                 saver.Commit();
             }
         }

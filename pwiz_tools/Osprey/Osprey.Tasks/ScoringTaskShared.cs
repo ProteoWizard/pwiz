@@ -1082,7 +1082,7 @@ namespace pwiz.Osprey.Tasks
                 // a complete analysis reports its outputs valid and writes nothing.
                 error = string.Format(
                     OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_,
-                    path, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
+                    path, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
                 return null;
             }
             return retained;

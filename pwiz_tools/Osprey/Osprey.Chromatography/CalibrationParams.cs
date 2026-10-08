@@ -24,6 +24,7 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Chromatography
 {
@@ -48,6 +49,14 @@ namespace pwiz.Osprey.Chromatography
     /// </summary>
     public class CalibrationParams
     {
+        /// <summary>
+        /// The writing task's <see cref="ArtifactStamp"/>, serialized FIRST so a resume check
+        /// reads it alone (<see cref="ArtifactStamp.TryReadJsonHead"/>). Set by
+        /// <see cref="CalibrationIO.SaveCalibration"/>.
+        /// </summary>
+        [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100, NullValueHandling = NullValueHandling.Ignore)]
+        public string OspreyValidity { get; set; }
+
         /// <summary>Metadata about the calibration process.</summary>
         [JsonProperty(@"metadata")]
         public CalibrationMetadata Metadata { get; set; }

@@ -50,7 +50,7 @@ file, one LC-MS/MS acquisition. It is the unit the pipeline fans out over.
 
 The code spells this concept `file`, because a run arrives as a file and is keyed by
 its file stem. The two fan-out tasks are `PerFileScoring` and `PerFileRescoring` in the
-CLI and in the `.osprey.task` sidecar names - each task's `Name`, the one spelling; the
+CLI and in the `task=` field of every artifact's validity stamp - each task's `Name`, the one spelling; the
 class names differ (`FirstPassFdrTask`, `PerFileRescoreTask`, `SecondPassFdrTask`), so a
 name copied from a class will not match a filename. Stage 6's canonical name is
 "Per-file rescore".
@@ -443,6 +443,17 @@ per-file check read the parquet's stamp) four log lines later: 448 "skipping (ou
 valid)" lines, zero re-scores, and a .blib silently missing a run. Two notions of "done"
 is the defect, so the fix is one predicate, not a second check.
 
+That predicate is now per input file and covers ALL of that file's outputs, each judged by
+the validity stamp it carries inside itself (P9): `PerFileScoring` is done for a file when
+its `.calibration.json` and `.scores.parquet` are both current, `PerFileRescoring` when its
+reconciled parquet and both 2nd-pass binaries (`.2nd-pass.fdr_scores.bin` and
+`.2nd-pass.fdr_decoys.bin`) are. A kill between two writes leaves one output stale or
+missing, so the file reads as not done and is recomputed. Outputs becoming valid together
+therefore holds by construction, not by the order the writer happens to use (P14).
+`FirstPassFDR` keeps progressive per-file completion the same way: each per-file product
+carries its stamp from the moment it lands, so a stopped five-hour `FirstPassFDR` resumes
+in proportion to the files it had finished.
+
 The test for this is `TestSubsetRescoreResume` in `SubsetPipelineTest` (formerly
 `regression.ps1` mode 9), which cuts ONLY the later product and asserts the file is
 re-scored. Note why the partial-rescore case before it (formerly mode 8) could not catch it: it
@@ -532,15 +543,26 @@ and is the most easily confused point in the design. Because atomic placement al
 guarantees the bytes are whole, the key never asks "did the writer finish?" - it asks
 only **"was this computed under the same software version, library, parameters and file
 set as the run now asking?"** Those are orthogonal questions with orthogonal mechanisms:
-existence answers completeness, the key answers membership. `PerFileResumeDriver.IsCurrent`
-tests both, because a sidecar can outlive its output.
+existence answers completeness, the stamp answers membership.
+
+The answer to the second question is a validity stamp - (task, Osprey version, key) - that
+every durable artifact carries **inside itself**, written in the same `FileSaver` commit as
+its content. So the stamp cannot outlive its artifact, cannot drift from it, and cannot be
+re-certified onto a stale file by a later process: replacing the content replaces the stamp,
+and a file that exists has exactly the stamp its writer gave it. `PerFileResumeDriver.IsCurrent`
+and `PipelineContext.CanRehydrate` both read that embedded stamp; a file without one (a
+foreign file, or one from before stamps moved inside) is never current. The stamp used to be
+a separate `<output>.<TaskName>.osprey.task` file beside each artifact, which could outlive
+its output, so every check had to test existence and the key separately, and the driver
+re-stamped every declared output that merely existed after a task returned.
 
 **P10. A question one phase asks about another phase's work is answered by an artifact,
 never by process state.** Under an HPC split the phases are separate processes, so any
 signal held in memory is simply absent on the next node - and a task that infers from
-its own emptiness infers wrongly. This is why the `.osprey.task` stamp records the
-producing task's name: a later phase can ask "who wrote this?" without opening the
-artifact. This rule was learned from a defect. Stage 7 once decided whether the Stage 6
+its own emptiness infers wrongly. This is why every artifact's embedded stamp records the
+producing task's name: a later phase asks "who wrote this?" of the artifact itself, by
+reading its stamp alone (a parquet footer entry, a JSON head, a binary trailer). This rule
+was learned from a defect. Stage 7 once decided whether the Stage 6
 worker had run by reading a pipeline byproduct the worker published in memory; correct in
 one process, and in an HPC chain - where the two are separate processes - nothing
 published in Stage 6 reaches Stage 7, so it concluded no worker had run and rewrote every
@@ -586,19 +608,22 @@ absence is ambiguous - "nothing to report" and "this phase never ran" look ident
 disk - and P8's guarantee that presence proves completeness has no counterpart for
 absence.
 
-**P14. When a phase writes several files for one run, the file whose presence gates
-downstream reuse lands last.** `FileSaver` makes each individual write atomic; it says
-nothing about a *set* of writes. So the set needs an ordering discipline, and the rule
-is that the gate file is written after everything it implies. `PerFileRescoring` writes
-`<stem>.2nd-pass.fdr_decoys.bin` before `<stem>.2nd-pass.fdr_scores.bin` for exactly
-this reason: an interruption between them leaves a file the next phase recomputes,
-rather than one it trusts and folds against a companion that was never written.
+**P14. When a phase writes several files for one run, "done" is one predicate over all of
+them.** `FileSaver` makes each individual write atomic; it says nothing about a *set* of
+writes. This used to be answered by an ordering discipline - the file whose presence gates
+downstream reuse lands last, which is why `PerFileRescoring` writes
+`<stem>.2nd-pass.fdr_decoys.bin` before `<stem>.2nd-pass.fdr_scores.bin` - and the
+2026-09-04 incident (P7) showed how easily a second reader asking about a different file
+defeats it. Correctness now rests on the per-file predicate instead: a run is done only
+when every output in its set carries a current stamp (P7, P9), so an interruption anywhere
+in the set leaves a file the next phase recomputes, whatever order the writes landed in.
+Writers may keep their order; nothing relies on it.
 
 ### Resume and relocation
 
 **P15. Resume is a forward scan, and identity is path-independent.** The driver walks
-the stages in order, reusing each output whose sidecar key matches and recomputing the
-rest. Invalidation is by key rather than by cascade, and the asymmetry in the cost of
+the stages in order, reusing each output whose embedded stamp is current and recomputing
+the rest. Invalidation is by key rather than by cascade, and the asymmetry in the cost of
 getting a key wrong is what every key component in the codebase is arguing about: an
 over-inclusive key costs an unnecessary recompute, while an under-inclusive one silently
 reuses an artifact computed under different settings and reports it as the new result.
@@ -783,10 +808,13 @@ node running that task needs a copy, whatever batch it was handed.
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
 | `<blib-stem>.2nd-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `SecondPassFDR` (pass 2) | `--task ModelDiagnostics` | n/a |
 | `<blib-stem>.model-diagnostics.html` | experiment **cache** (`--model-diagnostics`) | the render step, at the end of whichever phase or task last wrote a diagnostics JSON | terminal | n/a |
-| `<output>.<TaskName>.osprey.task` | scope of its artifact | every task, via `PerFileResumeDriver` | the driver | with its artifact |
-
-In that last row `<output>` is the **full artifact path including its extension** - `foo.scores.parquet.PerFileScoring.osprey.task` - not the blib stem it means in the rows above it. A staging glob written from the uniform reading misses every per-run stamp.
 | `<output>.blib` | experiment product (terminal) | `SecondPassFDR` | Skyline | n/a |
+
+No row lists a validity record, because none is a separate file. Every product above
+carries its own validity stamp inside itself (see "Validity stamps live inside the artifact"
+below), and the two caches, `.libcache` and `.spectra.bin`, validate themselves from their
+headers as they always have. A node that has the artifact has its stamp; there is nothing
+else to stage.
 
 Nothing else is part of this contract. The `--fdrbench` pairing manifests and the
 peptide-trace dumps are side channels: no task reads them, nothing relays them, and
@@ -848,17 +876,18 @@ one artifact meant one relay hop and one reload site.
 > `regression.ps1`. When that branch lands, this becomes a fourth experiment-wide artifact
 > that must relay with the other three.
 
-**`<stem>.2nd-pass.fdr_scores.bin` has two possible writers, and the sidecar's NAME says
-which.** When `PerFileRescoring` runs the pass-2 per-run worker it writes this file and
-stamps the validity sidecar under its *own* task and key - the artifact belongs to the
-task that produced it, so it must be invalidated by whatever invalidates that task.
-Stamping `SecondPassFDR`'s key at production time would leave a file that outlives the
-inputs it was computed from, which is the one staleness a resume cannot detect by looking.
-Where no worker ran, `SecondPassFDR` writes the file itself.
+**`<stem>.2nd-pass.fdr_scores.bin` has two possible writers, and the file's own stamp says
+which.** When `PerFileRescoring` runs the pass-2 per-run worker it writes this file
+stamped with its *own* task and key - the artifact belongs to the task that produced it,
+so it must be invalidated by whatever invalidates that task. Stamping `SecondPassFDR`'s key
+at production time would leave a file that outlives the inputs it was computed from, which
+is the one staleness a resume cannot detect by looking. Where no worker ran, `SecondPassFDR`
+writes the file itself, under its own stamp.
 
-`SecondPassFDR` then decides fold-versus-recompute on the **presence** of a stamp named
-for `PerFileRescoring` - never by re-deriving that task's key. The filename already says
-who wrote the binary, which is the whole point of stamping it. Recomputing the producer's
+`SecondPassFDR` then decides fold-versus-recompute on whether the binary's embedded stamp
+names `PerFileRescoring` and this build's version (`Pass2FdrSidecar.HasWorkerStamp`) - never
+by re-deriving that task's key, which it deliberately does not compare. The stamp already
+says who wrote the binary, which is the whole point of stamping it. Recomputing the producer's
 key from the consumer's process was tried and failed exactly where it mattered:
 `PerFileRescoreTask.ValidityKey` folds in a per-leg flag, so a `--task SecondPassFDR`
 process and a `--task PerFileRescoring` process compute *different* keys for the same
@@ -866,8 +895,8 @@ task; in an HPC chain the check said "not valid", Stage 7 concluded no worker ha
 it rewrote every sidecar. **One task cannot reconstruct another task's key from a
 different leg, and must not try.** Staleness is still covered, by the task that owns it: if
 the worker's inputs changed, `PerFileRescoring`'s own validity fails, the driver re-runs
-it, and it rewrites both the binary and the stamp. A stamp that survives is one whose
-producer was legitimately skipped as already done.
+it, and it rewrites the binary - and with it the stamp, in the same commit. A stamp that
+survives is one whose producer was legitimately skipped as already done.
 
 **`<stem>.calibration.json` is read on every leg, not just the rescore.** Besides RT
 calibration for Stage 6, it carries the isolation-scheme windows that give the gap-fill
@@ -885,12 +914,17 @@ envelopes that were each sealed too early to hold it. This is why "just add it t
 per-run file" is not an available answer for that class of fact, and the reason is not
 deducible from the scope taxonomy alone.
 
-**`<output>.<TaskName>.osprey.task` is per-artifact, not per-task.** One sidecar is
-written next to each output, and its name carries the producing task so two tasks
-sharing an output path cannot trample each other's record. Reuse requires both the
-output to exist *and* its sidecar key to match: a sidecar can outlive its output, so a
-matching key alone is not enough (P8 and P9 are separate tests, and
-`PerFileResumeDriver.IsCurrent` runs both).
+**Validity stamps live inside the artifact, one per artifact.** Each durable product
+carries one stamp, `osprey-validity/1;task=<Task>;version=<OspreyVersion.Current>;key=<validity key>`,
+written in the same `FileSaver` commit as its content: a parquet footer entry, the first
+property of a JSON document, the opening comment of the HTML report, a row of the blib's
+metadata table, or a trailer after a binary sidecar's records (the bytes are
+[14-intermediate-files](14-intermediate-files.md), section 8). Reuse requires the stamp to
+be current - same task, same build, same key (`ArtifactStamp.IsCurrent`) - and a missing
+file has no stamp, so one read answers both P8's question and P9's. The stamp cannot
+outlive its output or be written over a stale one, which is what the separate
+`<output>.<TaskName>.osprey.task` file it replaced could do. Old directories holding only
+those files read as stale and recompute; they were written by another build anyway.
 
 ### Where blib-named experiment-wide artifacts live
 
@@ -994,22 +1028,21 @@ removes it for every run.
 runs that use them.** `--decoy-pairing-manifest` enters `SearchParameterHash` verbatim and
 unnormalised - the user's own spelling, relative or absolute. `OSPREY_PICK_LDA_MODEL`
 enters the *base* key through the peak-pick suffix, so it is inherited by all four tasks:
-moving, renaming, or per-node-mounting that model JSON invalidates every `.osprey.task`
-stamp in the tree and silently stops `-LinkFrom` adoption. A cohort using either therefore
+moving, renaming, or per-node-mounting that model JSON invalidates every artifact's
+validity stamp in the tree and silently stops `-LinkFrom` adoption. A cohort using either therefore
 *does* invalidate when it moves, which is why relocating such a dataset needs a junction
 restoring the original path rather than a re-run. Everything else in this section holds
 regardless, and adding a third path to a hash would narrow it further.
 
-A warm resume across builds is a separate matter: the version stamp is compared for exact
-equality (`YEAR.ORDINAL.BRANCH.DOY`) - **but only where it is checked, which is narrower
-than it sounds.** That comparison guards the per-run parquet load. The
-`.osprey.task` resume path does not do it: `TaskValiditySidecar.IsValid` compares the
-`validity_key` only, and the `version` field it records is provenance. No version component
-is in the base key either. So re-invoking the same straight-through command line the next
-day, against yesterday's output directory, reuses every task on a key match alone even
-across a build with different scoring - the under-inclusive-key outcome P15 calls the
-dangerous direction. Treat that as a gap, not a guarantee. `OSPREY_VERSION_OVERRIDE` pins
-the stamp and is the sanctioned way to consume another build's artifacts deliberately.
+A warm resume across builds is a separate matter, and the answer is that it does not
+happen: **a version change always invalidates.** Every artifact's stamp records
+`OspreyVersion.Current` (`YEAR.ORDINAL.BRANCH.DOY`), and `ArtifactStamp.IsCurrent` requires
+it to equal this build's, so re-invoking yesterday's command line against yesterday's output
+directory with a new build recomputes everything that build would write. This closes a gap:
+the `.osprey.task` file the stamp replaced recorded `version` as provenance and never compared
+it, so a key match alone reused every task across a build with different scoring - the
+under-inclusive outcome P15 calls the dangerous direction. `OSPREY_VERSION_OVERRIDE` pins
+the version and is the deliberate developer escape hatch for reusing artifacts across builds.
 
 ---
 
@@ -1022,7 +1055,8 @@ peak-pick arm, plus per-task additions - `FirstPassFDR` adds six, `PerFileRescor
 seven, `SecondPassFDR` seven. `PerFileRescoring`'s seventh is the one to know about:
 `LibraryFragmentRelease.ValidityKeySuffix` branches on the per-leg flags, which is exactly
 why a `SecondPassFDR` process and a `PerFileRescoring` process compute different keys for
-the same task - the asymmetry the stamp-presence rule above exists to work around.
+the same task - the asymmetry the who-wrote-it rule above (task and version, not key)
+exists to work around.
 **The exact composition, and the defect each component was added to prevent, is
 invalidation mechanics and lives in [14-intermediate-files](14-intermediate-files.md).**
 
@@ -1033,15 +1067,18 @@ something it should not have, and none would have cost more than a recompute if 
 turned out to be unnecessary.
 
 The build stamp is likewise 14's: reuse requires an exact match on all four components of
-`YEAR.ORDINAL.BRANCH.DOY`, and a mismatch is a hard failure rather than a warning, because
-a cache from another build may carry different scoring.
+`YEAR.ORDINAL.BRANCH.DOY`, because a cache from another build may carry different scoring.
+On the resume path a mismatch makes the artifact stale and it is recomputed; where a scores
+parquet's footer is checked directly (`ParquetScoreCache.ValidateScoresParquetGroup`) it is
+a hard failure rather than a warning.
 
 ### Resume is a forward scan
 
 The driver walks the four tasks in order and, for each one that is included, skips it when
-every declared output exists *and* carries a validity sidecar matching that output's current
-key (`PipelineContext.CanRehydrate`). Otherwise it runs the task and stamps sidecars over
-its outputs afterward. An output's key is its task's key (`OspreyTask.OutputValidityKey`),
+every declared output carries an embedded stamp current for that output's key
+(`PipelineContext.CanRehydrate`; a missing output has no stamp). Otherwise it runs the
+task, and each output carries its stamp from the moment it lands - the driver itself writes
+nothing. An output's key is its task's key (`OspreyTask.OutputValidityKey`),
 except for an optional product that keys on more (P17). Today that is only the training
 export: each run's export adds the export settings and the identities of that run's inputs
 to `PerFileRescoring`'s key.
@@ -1054,18 +1091,18 @@ Two details are easy to get wrong:
   downstream artifact stamped with a matching key is still describing the right input.
   Correctness therefore rests entirely on keys being exhaustive, which is why the table
   above exists.
-- **A stale sidecar is cleared before its output is recomputed, not after.** A crash
-  mid-Run then leaves no stale marker claiming a partially written output is valid. **The
-  granularity differs by task and must not be unified.** The two joins clear their single
-  coarse output's sidecar at the start of `Run`. The two fan-out tasks clear *per run*,
-  immediately before recomputing that run, because a task-level delete would wipe the
-  per-run stamps they rely on for their own within-task skip. Hoisting the delete into the
-  driver to remove the apparent asymmetry would make a resumed 500-run cohort re-score
-  every run - expensive, and it produces correct output, so no gate would catch it.
+- **Nothing is cleared before a recompute, and nothing is stamped after it.** A stale
+  artifact is simply overwritten, and a crash mid-write leaves the previous file or none
+  (P8) - either way a file whose stamp is not current. Because the driver never writes, it
+  cannot re-certify a stale file. The separate `.osprey.task` files did need both steps: the
+  driver stamped every declared output that merely existed after a task returned, so each
+  task had to delete stale records before recomputing, at a granularity that differed by task
+  (the joins at the start of `Run`, the fan-out tasks per run, so as not to wipe the per-run
+  records their within-task skip relied on). All of that is gone with the files.
 
-Sidecars are stamped even for the tasks that deliberately return "stop here" at an HPC
-boundary. Gating the stamp on the pipeline continuing would skip sidecar writes for
-exactly the successful early-exit modes the split depends on, and break resume for them.
+A task that deliberately returns "stop here" at an HPC boundary leaves its outputs exactly
+as resumable as one that continues: the stamp went into each output as it was written, so
+there is no post-task step for an early exit to skip.
 
 ### Per-run guards inside a stage
 
@@ -1118,9 +1155,9 @@ Four things hold at every boundary and are not repeated in each list:
   directory.** Such a leg has no raw input path to resolve `.spectra.bin` from, so without
   it the cache is not found and the run rebuilds it.
 
-- **Every artifact travels with its `.osprey.task` sidecar.** The stamp is how the
-  receiving node learns who produced the file and whether it may be reused; shipping the
-  artifact without it turns a valid reuse into a recompute, or worse (P10).
+- **There are no stamp files to ship.** Every artifact carries its validity stamp inside
+  itself, which is how the receiving node learns who produced the file and whether it may
+  be reused (P10), so a node needs only the artifacts themselves.
 - **Preserve mtime when copying the library.** `LibraryIdentityHash` is file name + size
   + mtime, so a copy tool that stamps a fresh timestamp gives the library a new identity
   and invalidates every artifact on the receiving node - a multi-hour recompute reported
@@ -1193,9 +1230,8 @@ The final join needs every run's reconciled output:
 Per run, for **every** run in the cohort:
 - `<stem>.scores-reconciled.parquet`
 - `<stem>.2nd-pass.fdr_scores.bin` and `<stem>.2nd-pass.fdr_decoys.bin`, where the
-  rescore node ran the pass-2 worker - together with their `.osprey.task` sidecars,
-  which is how this task learns the worker produced them and folds them instead of
-  recomputing
+  rescore node ran the pass-2 worker - the scores binary's embedded stamp is how this task
+  learns the worker produced them and folds them instead of recomputing
 - `<stem>.reconciliation.json` - read here for the gap-fill entry ids on the Stage-7 fold
 - `<stem>.calibration.json` - isolation-window coverage, so a node with no mzML still has it
 
@@ -1236,9 +1272,12 @@ running a transfer arm yields a whole cohort of reconciliation-moved peaks carry
 pre-reconciliation q-values, in a success-shaped run. Ship them unless you know no transfer
 arm will follow.
 
-The `.osprey.task` sidecars are not optional bookkeeping here. Without the stamp,
-`SecondPassFDR` cannot tell that a worker wrote the pass-2 files and will recompute them
-from survivors only - which is not the same answer (P10).
+The worker's stamp is not optional bookkeeping here. It travels inside
+`<stem>.2nd-pass.fdr_scores.bin`, so it arrives whenever the file does; but a binary that
+reaches this node without a stamp naming `PerFileRescoring` and this build - written by
+another build, say -
+reads as no worker answer, and `SecondPassFDR` recomputes the pass-2 files from survivors
+only, which is not the same answer (P10).
 
 
 ---

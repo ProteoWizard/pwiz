@@ -363,7 +363,7 @@ namespace pwiz.Osprey.Test
                 // anyway, which is the --task ModelDiagnostics defect shape.
                 RetainedBaseIdSidecar.Write(
                     RetainedBaseIdSidecar.PathFor(config.OutputBlib, config.InputFiles[0]),
-                    new[] { 1u, 2u, 3u });
+                    new[] { 1u, 2u, 3u }, TestStamps.Any);
                 string err = ScoringTaskShared.AllRunsBundleGuardError(config, null);
                 Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
 

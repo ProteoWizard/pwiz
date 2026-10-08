@@ -897,7 +897,7 @@ namespace pwiz.Osprey
 
             // No --task: the full pipeline. A cold run scores from Stage 1; a resume over a
             // directory that already holds each run's artifacts skips to whichever stage is
-            // outstanding, which the per-task validity sidecars decide - not the input kind.
+            // outstanding, which the artifacts' embedded validity stamps decide - not the input kind.
             if (!hasInputFiles)
                 return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, USAGE_INPUT);
             if (config.LibrarySource == null)

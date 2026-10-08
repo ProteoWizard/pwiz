@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
 using pwiz.Osprey.Tasks;
 
@@ -46,6 +47,16 @@ namespace pwiz.Osprey.Test
         /// <summary>The file <see cref="AssertLinearFileBytesArePinned"/> expects, as the build
         /// before tree models were persisted wrote it: LF, two-space indent, round-trip doubles,
         /// a trailing newline, and no tree property.</summary>
+        /// <summary>
+        /// The pinned file below, opened by the validity stamp it was written with - the first
+        /// property, ahead of everything the pin covers.
+        /// </summary>
+        private static string PinnedLinearModelFile(ArtifactStamp stamp)
+        {
+            return "{\n  \"" + ArtifactStamp.JSON_PROPERTY + "\": " + Newtonsoft.Json.JsonConvert.ToString(stamp.ToString()) +
+                   ",\n" + PINNED_LINEAR_MODEL_FILE.Substring("{\n".Length);
+        }
+
         private const string PINNED_LINEAR_MODEL_FILE =
             "{\n" +
             "  \"SchemaVersion\": 1,\n" +
@@ -160,7 +171,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_stratum_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3"),
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3", TestStamps.Any),
                     @"SVM model should persist");
                 Assert.IsTrue(File.Exists(path), @"sidecar should exist after Save");
 
@@ -181,7 +192,7 @@ namespace pwiz.Osprey.Test
                 // in a stable order regardless of how it was built.
                 Assert.IsNull(sidecar.StratumBaseIds, @"model sidecar should carry no stratum");
                 var stratum = new HashSet<uint> { 900, 3, 47, 1, 12345 };
-                Assert.IsTrue(FirstPassModelIO.SaveStratum(stratumPath, stratum),
+                Assert.IsTrue(FirstPassModelIO.SaveStratum(stratumPath, stratum, TestStamps.Any),
                     @"stratum should persist");
 
                 // A SecondPassFDR node cannot rebuild the stratum, so a lossy round trip would
@@ -198,9 +209,9 @@ namespace pwiz.Osprey.Test
                 // Nothing to persist is not a failure to persist - it is how every mode but
                 // protein-compact reaches this code, and an empty file would make a resume
                 // adopt an empty stratum as if it were a computed one.
-                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, new HashSet<uint>()),
+                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, new HashSet<uint>(), TestStamps.Any),
                     @"empty stratum should not persist");
-                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, null),
+                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, null, TestStamps.Any),
                     @"null stratum should not persist");
 
                 AssertLinearFileBytesArePinned();
@@ -266,7 +277,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_linear_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max"), @"tree model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), @"tree model should persist");
                 var sidecar = FirstPassModelIO.Load(path);
                 Assert.IsNotNull(sidecar, @"reloaded tree sidecar should not be null");
                 Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
@@ -306,7 +317,7 @@ namespace pwiz.Osprey.Test
                 }), @"tree node graph that would cycle");
 
                 // Save refuses what Load refuses, rather than stamping a file that every reader
-                // turns into null: the marker beside it would attest a model nobody can load.
+                // turns into null: the stamp inside it would attest a model nobody can load.
                 AssertSaveDeclines(new PercolatorResults
                 {
                     Standardizer = model.Standardizer,
@@ -323,7 +334,7 @@ namespace pwiz.Osprey.Test
                     FoldGbtModels = new List<GradientBoostedTrees> { model.FoldGbtModels[0], null }
                 }, @"a fold with no ensemble");
 
-                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), @"max"), @"SVM model should persist");
+                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), @"max", TestStamps.Any), @"SVM model should persist");
                 Assert.IsNull(JObject.Parse(File.ReadAllText(linearPath))[@"FoldGbtModels"],
                     @"a linear model's file must not gain a tree property");
             }
@@ -350,10 +361,10 @@ namespace pwiz.Osprey.Test
                 {
                     Standardizer = FeatureStandardizer.FromMeansStds(new[] { 0.0, 1.0 }, new[] { 1.0, 1.0 }),
                 };
-                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, @"max"),
+                Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, @"max", TestStamps.Any),
                     @"model without weights or trees should not persist");
                 Assert.IsFalse(File.Exists(path), @"no sidecar should be written when Save declines");
-                Assert.IsFalse(FirstPassModelIO.Save(path, null, @"max"), @"null model should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, null, @"max", TestStamps.Any), @"null model should not persist");
             }
             finally
             {
@@ -405,8 +416,8 @@ namespace pwiz.Osprey.Test
                 { @"run2", Path.Combine(dir, @"run2.scores.parquet") },
             };
             Assert.IsNull(FirstPassModelIO.LoadFromAny(parquetPaths), @"no model file: nothing to load");
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(parquetPaths[@"run1"], @"run1"), MakeTreeModel(), @"max"));
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(parquetPaths[@"run2"], @"run2"), MakeSvmModel(), @"max"));
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(parquetPaths[@"run1"], @"run1"), MakeTreeModel(), @"max", TestStamps.Any));
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(parquetPaths[@"run2"], @"run2"), MakeSvmModel(), @"max", TestStamps.Any));
 
             var modelOnly = FirstPassModelIO.LoadFromAny(parquetPaths);
             Assert.IsNotNull(modelOnly);
@@ -415,7 +426,7 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(modelOnly.StratumBaseIds);
 
             var stratum = new HashSet<uint> { 7, 11 };
-            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(parquetPaths[@"run2"], @"run2"), stratum));
+            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(parquetPaths[@"run2"], @"run2"), stratum, TestStamps.Any));
             var paired = FirstPassModelIO.LoadFromAny(parquetPaths);
             Assert.IsNotNull(paired);
             Assert.IsNotNull(paired.Model);
@@ -463,14 +474,13 @@ namespace pwiz.Osprey.Test
             const string key = @"validity-key";
             var task = FirstPassTask();
             string experimentPath = Path.Combine(dir, @"output.1st-pass.fdr_experiment.bin");
-            File.WriteAllText(experimentPath, @"experiment");
-            PerFileResumeDriver.Stamp(experimentPath, FirstPassFdrTask.TASK_NAME, OspreyVersion.Current, key,
-                Array.Empty<string>(), message => Assert.Fail(message));
+            FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
+                FdrScoresSidecar.Pass.FirstPass, ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, key));
             foreach (var kvp in parquetPaths)
             {
-                Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), MakeSvmModel(), @"max"));
+                Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), MakeSvmModel(), @"max", TestStamps.Any));
                 Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(kvp.Value, kvp.Key),
-                    new HashSet<uint> { 1, 2, 3 }));
+                    new HashSet<uint> { 1, 2, 3 }, TestStamps.Any));
             }
 
             var refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
@@ -582,8 +592,8 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_pinned_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max"), @"pinned SVM model should persist");
-                Assert.AreEqual(PINNED_LINEAR_MODEL_FILE, File.ReadAllText(path));
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), @"pinned SVM model should persist");
+                Assert.AreEqual(PinnedLinearModelFile(TestStamps.Any), File.ReadAllText(path));
             }
             finally
             {
@@ -598,7 +608,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_model_declined_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                Assert.IsFalse(FirstPassModelIO.Save(path, model, @"max"), what + @" should not persist");
+                Assert.IsFalse(FirstPassModelIO.Save(path, model, @"max", TestStamps.Any), what + @" should not persist");
                 Assert.IsFalse(File.Exists(path), what + @" should leave no file behind");
             }
             finally

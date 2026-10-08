@@ -53,15 +53,16 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Stream <paramref name="originalPath"/> group-by-group, overlaying the
         /// re-scored + gap-fill rows from <paramref name="fdrEntries"/>, and write the
-        /// result to <paramref name="reconciledPath"/>. Returns true when the reconciled
-        /// parquet was written; false on a read/write failure (so the caller does not
-        /// stamp a validity sidecar over a stale or absent output).
+        /// result to <paramref name="reconciledPath"/>, with <paramref name="stamp"/> in its
+        /// footer. Returns true when the reconciled parquet was written; false on a read/write
+        /// failure (so the caller can remove whatever an earlier run left there).
         /// </summary>
         internal static bool Write(string originalPath, string reconciledPath,
             List<FdrEntry> fdrEntries,
             string fileName, IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
             IReadOnlyList<string> joinFileStems,
+            ArtifactStamp stamp,
             Action<string> logInfo, Action<string> logWarning)
         {
             // 1. Split the re-scored entries into the small resident overlay map
@@ -82,8 +83,8 @@ namespace pwiz.Osprey.Tasks
             //    as the C# analog of Rust's total_rescored > 0, and a faithful copy must not
             //    read as work. The condition is exactly BuildOverlay's two outputs being
             //    empty - no re-scored row to overlay and no gap-fill row to append.
-            var metadata = BuildReconciliationMetadata(config, joinFileStems,
-                rescored: overlayByIndex.Count > 0 || gapFill.Count > 0);
+            var metadata = ParquetScoreCache.WithStamp(BuildReconciliationMetadata(config, joinFileStems,
+                rescored: overlayByIndex.Count > 0 || gapFill.Count > 0), stamp);
 
             // 4. The survivors this file is allowed to carry forward, which is exactly the
             //    entries Stage 5's compaction left in the buffer (per-run q under the
@@ -114,8 +115,8 @@ namespace pwiz.Osprey.Tasks
                 origRowCount = result.OrigRowCount;
                 nWritten = result.NWritten;
             }
-            // A read/write IO failure is a recoverable per-file skip (clears the sidecar,
-            // re-rescored next run). But an InvalidOperationException from the streaming
+            // A read/write IO failure is a recoverable per-file skip (the caller removes the
+            // output; re-rescored next run). But an InvalidOperationException from the streaming
             // merge is the canonical-order invariant guard firing -- that is silently-invalid
             // output, so let it propagate and ABORT the run (hard-fail over warn-and-proceed).
             catch (Exception ex) when (!(ex is InvalidOperationException))

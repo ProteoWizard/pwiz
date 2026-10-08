@@ -68,7 +68,8 @@ namespace pwiz.Osprey.Tasks
         /// loaded by the caller, or null to load them here.
         /// </summary>
         public static void ExportRun(string input, string output, IReadOnlyDictionary<uint, LibraryEntry> library,
-            PipelineContext ctx, int maxThreads, SpectraWindowIndex spectra = null, MzCalibrationResult ms2Cal = null)
+            PipelineContext ctx, int maxThreads, ArtifactStamp stamp,
+            SpectraWindowIndex spectra = null, MzCalibrationResult ms2Cal = null)
         {
             var sw = Stopwatch.StartNew();
             var config = ctx.Config;
@@ -161,9 +162,9 @@ namespace pwiz.Osprey.Tasks
             int nUnplaced = nToExport - records.Count;
 
             var source = SpectrumFileReader.TryReadSourceMetadata(input);
-            var metadata = BuildMetadata(config, stem, index, observed, source, runQPass, ms2Cal, tolerance,
-                toleranceUnit, ddcTolerance, ddcUnit, rtNeighborhood, maxQ, claimantQ, nParity, nFittedParity,
-                nFitted, records.Count);
+            var metadata = ParquetScoreCache.WithStamp(BuildMetadata(config, stem, index, observed, source,
+                runQPass, ms2Cal, tolerance, toleranceUnit, ddcTolerance, ddcUnit, rtNeighborhood, maxQ, claimantQ,
+                nParity, nFittedParity, nFitted, records.Count), stamp);
             TrainingExportParquet.Write(output, records, metadata, settings.WriteXics);
             sw.Stop();
 
@@ -392,15 +393,6 @@ namespace pwiz.Osprey.Tasks
                 + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input));
         }
 
-        /// <summary>The artifacts one run's export reads.</summary>
-        public static IEnumerable<string> RunInputs(string input)
-        {
-            yield return ParquetScoreCache.GetReconciledScoresPath(input);
-            yield return RunQPath(input, out _);
-            yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
-            yield return SpectraCache.GetCachePath(input);
-        }
-
         /// <summary>
         /// The q-value sidecar a run's export selects on, and which pass it is. The second-pass
         /// sidecar when the per-run second pass in PerFileRescoring wrote it; otherwise the
@@ -409,13 +401,10 @@ namespace pwiz.Osprey.Tasks
         /// export. Deciding by who wrote the file, which never changes once it is written, makes
         /// an export written while re-scoring and one written later from disk agree.
         ///
-        /// <para>Who wrote it is the worker's stamp beside the sidecar (the test SecondPassFDR
-        /// folds by, <see cref="Pass2FdrSidecar.HasWorkerStamp"/>) AND the worker's decoys file,
-        /// which only the worker writes. The stamp alone is not proof: after a later
-        /// PerFileRescoring run the driver stamps every declared output that exists, including a
-        /// second-pass sidecar SecondPassFDR wrote, which would flip the export to that sidecar
-        /// on the next invocation of the same command. The driver stamps files; it never
-        /// creates one.</para>
+        /// <para>Who wrote it is the producer named in the sidecar's own stamp (the test
+        /// SecondPassFDR folds by, <see cref="Pass2FdrSidecar.HasWorkerStamp"/>) AND the worker's
+        /// decoys file, which the worker writes alongside it and nothing else writes: a worker
+        /// sidecar without its decoys is not the worker's complete answer.</para>
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {

@@ -68,7 +68,7 @@ namespace pwiz.Osprey.Tasks
         /// Only invoked when protein FDR is enabled (the sole consumer of the
         /// 2nd-pass q-values). <paramref name="taskName"/> and
         /// <paramref name="taskValidityKey"/> are the owning task's identity,
-        /// stamped into each inline per-file validity sidecar.
+        /// embedded as the validity stamp of each per-file binary.
         /// </summary>
         internal static void ComputeAndPersist(
             PipelineContext ctx,
@@ -138,7 +138,7 @@ namespace pwiz.Osprey.Tasks
             // The one per-file .2nd-pass.fdr_scores.bin writer, shared by every path that
             // emits one - the projection score pass's flush callback, the frozen streamed
             // competition, and the resident write block below - so the resume skip, the
-            // validity sidecar and the summary counts are decided in one place rather than
+            // embedded validity stamp and the summary counts are decided in one place rather than
             // reimplemented per path.
             var pass2Writer = new Pass2SidecarWriter(ctx, config, taskName, taskValidityKey);
             var pass2Tally = pass2Writer.Tallies;
@@ -341,21 +341,16 @@ namespace pwiz.Osprey.Tasks
                         unmatchedSidecarKeys.Count, string.Join(@", ", unmatchedSidecarKeys)));
                 }
 
-                // Compute the task validity key once so each per-file
-                // .SecondPassFDR.osprey.task sidecar carries an identical
-                // key. AnalysisPipeline.WriteTaskSidecars also writes
-                // these at end-of-Run, but that step is bypassed when
-                // OspreyDiagnosticsLog.ExitAfterDump calls Environment.Exit
-                // (the test-snapshot stage7 / OSPREY_STAGE7_PROTEIN_FDR_ONLY
-                // path). Writing inline next to each 2nd-pass binary
-                // makes the per-file resume contract survive that
-                // early exit, so a downstream run sees a fully
-                // resume-able boundary file pair (binary + validity
-                // sidecar) for every file that completed.
+                // The task validity key is computed once (Pass2SidecarWriter), so each
+                // per-file binary embeds an identical stamp in the same commit as its
+                // records. That keeps the per-file resume contract intact even when
+                // OspreyDiagnosticsLog.ExitAfterDump calls Environment.Exit (the
+                // test-snapshot stage7 / OSPREY_STAGE7_PROTEIN_FDR_ONLY path): every
+                // file that completed is already resume-able.
 
                 // Resident / resume path only: write each file's .2nd-pass sidecar from
-                // the resident survivor buffer. The frozen competition (#4486) wrote the
-                // .bin + validity sidecar per file as it went, so this loop is skipped
+                // the resident survivor buffer. The frozen competition (#4486) wrote each
+                // stamped .bin per file as it went, so this loop is skipped
                 // for it - only the shared tallies it updated drive the summary log below.
                 //
                 // NOT ON THE STREAMED POOL, and this is a correctness skip rather than a
@@ -896,10 +891,10 @@ namespace pwiz.Osprey.Tasks
         /// Which per-run 2nd-pass sidecars the RESCORE WORKER owns, decided from what is on disk
         /// (#4486).
         ///
-        /// <para>A file qualifies when its <c>.2nd-pass.fdr_scores.bin</c> carries a VALID
-        /// <c>PerFileRescoring</c> validity stamp - the producer's own task name and current key.
-        /// Existence alone is not enough: an earlier run leaves the same file behind, and a
-        /// stale one must not be folded as though this run had computed it.</para>
+        /// <para>A file qualifies when its <c>.2nd-pass.fdr_scores.bin</c> carries an embedded
+        /// stamp naming <c>PerFileRescoring</c> as its producer and this build as its writer.
+        /// Existence alone is not enough: an earlier run leaves the same file behind, and one
+        /// from another build must not be folded as though this run had computed it.</para>
         ///
         /// <para>Deliberately not a published byproduct. Stage 6 and Stage 7 are separate
         /// PROCESSES in an HPC chain, so anything published in one is simply absent in the other
@@ -913,11 +908,10 @@ namespace pwiz.Osprey.Tasks
             var owned = new HashSet<string>(StringComparer.Ordinal);
             if (ctx.Config?.InputFiles == null)
                 return owned;
-            // PRESENCE of the producer's stamp, not a recomputation of the producer's KEY.
+            // The PRODUCER named in the binary's stamp, not a recomputation of the producer's KEY.
             //
-            // The stamp is named <output>.<taskName>.osprey.task, so the filename already says
-            // who wrote the binary - which is the whole point of stamping it. Recomputing
-            // PerFileRescoring's key from THIS process was wrong and failed exactly where it
+            // The stamp records which task wrote the binary - which is the whole point of
+            // stamping it. Recomputing PerFileRescoring's key from THIS process was wrong and failed exactly where it
             // mattered: PerFileRescoreTask.ValidityKey folds in
             // LibraryFragmentRelease.ValidityKeySuffix, which asks RunsOnThisLeg(ctx) ->
             // ctx.Config.ExpectReconciledInput - a PER-LEG flag. A --task SecondPassFDR process
@@ -928,8 +922,8 @@ namespace pwiz.Osprey.Tasks
             //
             // Staleness is still covered, by the task that owns it rather than by this check: if
             // the worker's inputs changed, PerFileRescoring's OWN validity fails, the driver
-            // re-runs it, and it rewrites both the binary and this stamp. A stamp that survives
-            // is one whose producer was legitimately skipped as already-done.
+            // re-runs it, and it rewrites the binary with a new stamp. A stamp that survives is
+            // one whose producer was legitimately skipped as already-done.
             foreach (string inputFile in ctx.Config.InputFiles)
             {
                 if (HasWorkerStamp(inputFile))
@@ -939,16 +933,17 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Whether <paramref name="inputFile"/>'s <c>.2nd-pass.fdr_scores.bin</c> carries a
-        /// <c>PerFileRescoring</c> stamp - the per-file test behind
+        /// Whether <paramref name="inputFile"/>'s <c>.2nd-pass.fdr_scores.bin</c> was written by
+        /// <c>PerFileRescoring</c> with this build - the per-file test behind
         /// <see cref="WorkerOwnedPass2Sidecars"/>, kept in one place so every reader of "who
         /// wrote this sidecar" asks the same question.
         /// </summary>
         internal static bool HasWorkerStamp(string inputFile)
         {
-            string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-            return File.Exists(pass2Path) &&
-                   File.Exists(TaskValiditySidecar.PathFor(pass2Path, PerFileRescoreTask.TASK_NAME));
+            var stamp = FdrScoresSidecar.ReadStamp(FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass);
+            return stamp != null &&
+                   string.Equals(stamp.Task, PerFileRescoreTask.TASK_NAME, StringComparison.Ordinal) &&
+                   string.Equals(stamp.Version, OspreyVersion.Current, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -977,7 +972,7 @@ namespace pwiz.Osprey.Tasks
             string dumpPath = FdrScoresSidecar.Pass2Path(inputFile) + @".recomputed";
             try
             {
-                FdrScoresSidecar.Write(dumpPath, entries, FdrScoresSidecar.Pass.SecondPass);
+                FdrScoresSidecar.Write(dumpPath, entries, FdrScoresSidecar.Pass.SecondPass, writer.Stamp);
                 ctx.LogWarning(string.Format(
                     @"Second-pass competition disagreement on '{0}': wrote this pass's " +
                     @"recomputed answer to {1} for diffing against the worker's sidecar at {2}.",
@@ -1052,7 +1047,7 @@ namespace pwiz.Osprey.Tasks
         {
             records = null;
             // The owned set is computed ONCE per run and passed in: deciding it here would
-            // re-stat every input file's validity sidecar for every file streamed, which is
+            // re-read every input file's validity stamp for every file streamed, which is
             // O(files^2) on the artifact class this move exists to stop re-reading.
             if (workerOwned == null || !workerOwned.Contains(fileKey))
                 return null;
@@ -1476,7 +1471,8 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx,
             IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
-            IReadOnlyDictionary<string, double> peptideQvalues)
+            IReadOnlyDictionary<string, double> peptideQvalues,
+            ArtifactStamp stamp)
         {
             var inputByName = new Dictionary<string, string>();
             foreach (var inputFile in ctx.Config.InputFiles)
@@ -1613,7 +1609,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 FdrExperimentSidecar.Write(experimentPath, experiment.Records,
-                    FdrScoresSidecar.Pass.SecondPass);
+                    FdrScoresSidecar.Pass.SecondPass, stamp);
                 ctx.LogVerbose(string.Format(
                     OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_for__1__precursor_candidates_to__0_,
                     experimentPath, experiment.Count));
@@ -3494,7 +3490,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Writes one file's <c>.2nd-pass.fdr_scores.bin</c> plus its inline validity sidecar,
+        /// Writes one file's <c>.2nd-pass.fdr_scores.bin</c> with its embedded validity stamp,
         /// with the resume skip and the shared counts.
         ///
         /// <para>Three paths emit these files - the projection score pass's flush callback, the
@@ -3503,18 +3499,15 @@ namespace pwiz.Osprey.Tasks
         /// <c>--task ModelDiagnostics</c> skip and the resident one did not. One body, so a path
         /// cannot quietly differ from another in what it writes or what it counts.</para>
         ///
-        /// <para>The inline validity sidecar is not optional bookkeeping: it is written next to
-        /// each binary as that binary lands, so an early <c>Environment.Exit</c> (the
-        /// OSPREY_STAGE7_PROTEIN_FDR_ONLY / diagnostics-dump path, which never reaches
-        /// <c>AnalysisPipeline.WriteTaskSidecars</c>) still leaves every completed file as a
-        /// resume-able binary + sidecar pair.</para>
+        /// <para>The stamp is not optional bookkeeping: it lands in the same commit as each
+        /// binary, so an early <c>Environment.Exit</c> (the OSPREY_STAGE7_PROTEIN_FDR_ONLY /
+        /// diagnostics-dump path) still leaves every completed file resume-able.</para>
         /// </summary>
         private sealed class Pass2SidecarWriter
         {
             private readonly PipelineContext _ctx;
             private readonly OspreyConfig _config;
-            private readonly string _taskName;
-            private readonly string _taskValidityKey;
+            private readonly ArtifactStamp _stamp;
             private readonly Dictionary<string, string> _inputByFileName =
                 new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -3523,8 +3516,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx = ctx;
                 _config = config;
-                _taskName = taskName;
-                _taskValidityKey = taskValidityKey;
+                _stamp = ArtifactStamp.ForCurrentBuild(taskName, taskValidityKey);
                 if (config.InputFiles == null)
                     return;
                 foreach (string inputFile in config.InputFiles)
@@ -3533,6 +3525,9 @@ namespace pwiz.Osprey.Tasks
 
             /// <summary>The per-file write counts this run's summary line reports.</summary>
             public Pass2WriteTallies Tallies { get; } = new Pass2WriteTallies();
+
+            /// <summary>The validity stamp every sidecar this writer produces embeds.</summary>
+            public ArtifactStamp Stamp => _stamp;
 
             /// <summary>
             /// The input file a per-file key names, or null when no <c>config.InputFiles</c>
@@ -3567,7 +3562,7 @@ namespace pwiz.Osprey.Tasks
             public bool Write(string fileName, IReadOnlyList<FdrEntry> entries)
             {
                 return WriteCore(fileName, path => FdrScoresSidecar.Write(
-                    path, entries, FdrScoresSidecar.Pass.SecondPass));
+                    path, entries, FdrScoresSidecar.Pass.SecondPass, _stamp));
             }
 
             /// <summary>Write one file's sidecar from assembled records (the projection path,
@@ -3576,12 +3571,12 @@ namespace pwiz.Osprey.Tasks
             public void Write(string fileName, IReadOnlyList<FdrScoreRecord> records)
             {
                 WriteCore(fileName, path => FdrScoresSidecar.Write(
-                    path, records, FdrScoresSidecar.Pass.SecondPass));
+                    path, records, FdrScoresSidecar.Pass.SecondPass, _stamp));
             }
 
             /// <summary>
-            /// The shared body: resolve the path, honor the two skips, write, then write the
-            /// validity sidecar. Returns true only when this call actually wrote the binary -
+            /// The shared body: resolve the path, honor the two skips, write (the binary embeds
+            /// its validity stamp). Returns true only when this call actually wrote the binary -
             /// a caller that finishes the file in a later pass (the frozen competition's
             /// experiment-scope patch) must not touch a file it did not write.
             /// </summary>
@@ -3619,18 +3614,6 @@ namespace pwiz.Osprey.Tasks
                         OspreyTasksResources.Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_, fileName, ex.Message));
                     Tallies.Failures++;
                     return false;
-                }
-                try
-                {
-                    TaskValiditySidecar.Write(pass2Path, _taskName, OspreyVersion.Current,
-                        _taskValidityKey,
-                        new[] { ParquetScoreCache.GetReconciledScoresPath(inputFile) });
-                }
-                catch (Exception ex) when (!(ex is OutOfMemoryException))
-                {
-                    _ctx.LogWarning(string.Format(
-                        OspreyTasksResources.Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_,
-                        OspreyArgNames.TaskText(_taskName), pass2Path, ex.Message));
                 }
                 return true;
             }
