@@ -29,8 +29,8 @@
 REM installers it names with it (ProteoWizard-Setup-<version>.exe and siblings)
 set VERSION_FILE=scripts\installer\build\installer-version.txt
 
-REM tcbuild.bat lets a vendor build pass without an installer when Inno Setup is
-REM unavailable, so a missing file is a warning here rather than a failure
+REM tcbuild.bat already fails a vendor build that is missing any installer, so this
+REM only warns, for a configuration that runs it without vendor support
 if not exist %%VERSION_FILE%% (
   echo ##teamcity[message text='%%VERSION_FILE%% not found, so no installer was built and PWIZ_VERSION is not set' status='WARNING']
   exit /b 0

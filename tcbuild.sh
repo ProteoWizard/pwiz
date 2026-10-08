@@ -86,6 +86,22 @@ done
 echo "##teamcity[progressMessage 'build.sh $*']"
 bash "$SCRIPT_DIR/build.sh" "$@" || fail "build.sh failed"
 
+# Every Linux package, on every branch: build.sh only warns when packaging fails, but a vendor
+# build here is the one Core Linux x86_64 publishes to the download page, where a partial set
+# would replace a working download list. See the matching installer check in tcbuild.bat.
+for arg in "$@"; do
+    if [ "$arg" = "--i-agree-to-the-vendor-licenses" ]; then
+        PKG_DIR="$SCRIPT_DIR/scripts/installer/build"
+        [ -f "$PKG_DIR/installer-version.txt" ] \
+            || fail "No Linux packages were built: scripts/installer/build/installer-version.txt is missing"
+        PKG_VERSION="$(cat "$PKG_DIR/installer-version.txt")"
+        for name in "ProteoWizard-linux-x64-$PKG_VERSION.tar.gz" "ProteoWizard-NoNetRuntime-linux-x64-$PKG_VERSION.tar.gz"; do
+            [ -f "$PKG_DIR/$name" ] || fail "Linux package $name was not built"
+        done
+        break
+    fi
+done
+
 # Post-build hygiene checks. Run from the repo root so git sees the full
 # working tree, not just pwiz-sharp/.
 cd "$SCRIPT_DIR/.."
