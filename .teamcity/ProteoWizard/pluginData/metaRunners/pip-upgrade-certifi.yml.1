@@ -1,0 +1,13 @@
+name: pip-upgrade-certifi
+title: pip-upgrade-certifi
+description: Upgrades the Python certifi package using the TeamCity Python runner
+steps:
+  - name: Upgrade certifi with Python runner
+    kotlin-script: |-
+      import os
+      import os.path
+      import ssl
+      import subprocess
+      import sys
+      print(" -- pip install --upgrade certifi")
+      subprocess.check_call([sys.executable, "-E", "-s", "-m", "pip", "install", "--upgrade", "certifi"])

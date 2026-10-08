@@ -23,7 +23,7 @@
     (It was checked in as ParquetNet.dll while a native parquet.dll, used by BiblioSpec,
     owned the plain name in Skyline's output folder. That native DLL is gone.)
 
-    Imported by pwiz_tools/Directory.Build.targets and pwiz-sharp/Directory.Build.targets.
+    Imported by pwiz_tools/Directory.Build.targets and the root Directory.Build.targets.
 
     A project that compiles against Parquet.Net sets ReferenceParquetNet=true and gets the
     pair below: the package for its dependency graph, and the patched build to compile

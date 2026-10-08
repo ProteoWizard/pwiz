@@ -1,3 +1,0 @@
-Snot	snot	snot	1
-Kleenex	kleenex	kleenex	1
-SoreThroat	soreThroat	sore_throat	0

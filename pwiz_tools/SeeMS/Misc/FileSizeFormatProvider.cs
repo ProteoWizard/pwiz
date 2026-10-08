@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     // graciously downloaded from: http://flimflan.com/blog/FileSizeFormatProvider.aspx
     public class FileSizeFormatProvider : IFormatProvider, ICustomFormatter

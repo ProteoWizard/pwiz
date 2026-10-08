@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="aa7f03ea-c6d3-46bb-87d3-204dd26863b5" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Bumbershoot subset source tarball</name>
+  <description />
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="artifactRules" value="build-linux-x86_64/Bumbershoot/*-src-*.tar.bz2&#xA;build-linux-x86_64/Bumbershoot/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <build-runners>
+      <runner id="RUNNER_784" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.sh" />
+          <param name="command.parameters" value="pwiz_tools/Bumbershoot//bumbershoot-src.tar.bz2 pwiz_tools/Bumbershoot//bumbershoot-src-without-t.tar.bz2 -j%env.NUMBER_OF_CORES% toolset=gcc-5 address-model=64" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_72" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="build-linux-x86_64/Bumbershoot/*-src-*.tar.bz2,build-linux-x86_64/Bumbershoot/VERSION" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_430" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <equals id="RQ_431" name="teamcity.agent.jvm.os.arch" value="amd64" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="TRIGGER_425" type="buildDependencyTrigger">
+        <parameters>
+          <param name="afterSuccessfulBuildOnly" value="true" />
+          <param name="branchFilter" value="+:*" />
+          <param name="dependsOn" value="ProteoWizard_Bumbershoot_Linux_X86_64" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <dependencies>
+      <depend-on sourceBuildTypeId="ProteoWizard_Bumbershoot_Linux_X86_64">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+          <option name="take-successful-builds-only" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+
