@@ -1,0 +1,7 @@
+# Commits that only changed formatting across the tree. git blame skips them and attributes
+# each line to the commit that last changed its content.
+# GitHub's blame view reads this file automatically. For local git, /pw-configure-git (or
+# pwiz-ai's scripts/Configure-Git.ps1) sets blame.ignoreRevsFile for every checkout.
+
+# Standardize UTF-8 encoding without BOM across entire codebase (#3651)
+5747ede7c9ede7d69f1971ceaa3f2eb552e39271
