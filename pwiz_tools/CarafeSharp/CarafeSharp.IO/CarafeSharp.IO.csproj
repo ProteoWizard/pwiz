@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.IO</RootNamespace>
+    <AssemblyName>CarafeSharp.IO</AssemblyName>
+    <!-- Parquet.Net, as pwiz's patched build: see Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 1.0.119 to match Osprey and pwiz-sharp. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <!-- Ionic.Zlib for stock-zlib-identical blib peak blobs, as Osprey and Skyline write them. -->
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+  </ItemGroup>
+
+</Project>

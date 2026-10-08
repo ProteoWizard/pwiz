@@ -1,0 +1,112 @@
+{
+  "format": "carafesharp-regression-golden-3",
+  "created": "2026-10-04T08:58:35",
+  "provenance": {
+    "dataset": "Stellar",
+    "leg": "isolated",
+    "torch": "cpu",
+    "device_used": "cpu",
+    "commit": "9fe180d11f715e2c016e7d562be0a7f0ea8a26ea",
+    "branch": "Skyline/work/20261001_osprey_missed_vs_diann",
+    "os": "Microsoft Windows 10.0.26200",
+    "os_platform": "Windows",
+    "processor": "13th Gen Intel(R) Core(TM) i9-13900H",
+    "logical_processors": 20,
+    "omp_num_threads": null,
+    "minutes": 15.24,
+    "subset_rule": "the pair groups whose peptide_pair_index is a multiple of 50, with all their members",
+    "subset_groups": 4378,
+    "subset_records": 17512,
+    "subset_pairing_rows": 17512,
+    "export_note": "carafesharp-export-v2: the format 2 export Osprey (e6367e1016, vendor reader) wrote from the Stellar _21 .raw, searching the Chronologer starting library.",
+    "torch_cpu_threads": 14,
+    "arguments": "-fdr 0.01 -itol 0.4 -itolu Da -rf -rf_rt_win auto -cor 0.8 -min_mz 200 -n_ion_min 2 -c_ion_min 2 -mode general -device cpu -enzyme NoCut -miss_c 1 -fixMod 1 -varMod 0 -maxVar 1 -clip_n_m -minLength 7 -maxLength 35 -min_pep_mz 400 -max_pep_mz 900 -min_pep_charge 2 -max_pep_charge 3 -lf_frag_mz_min 200 -lf_frag_mz_max 1960 -lf_top_n_frag 20 -lf_min_n_frag 2 -lf_frag_n_min 2 -lf_type blib -se Osprey -decoy_prefix decoy_ -nm -nf 4 -min_n 4 -valid -na 0 -fast"
+  },
+  "inputs": {
+    "export": {
+      "path": "carafesharp-export-v2/stellar/Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.training.parquet",
+      "sha256": "13730b17bca44a256efdd6b08afeffdb5a61ced6692dcbaf8087a6aec46ccd6a"
+    },
+    "library_fasta": {
+      "path": "carafesharp-testfiles-v1/stellar/carafe-osprey-entrapment/osprey_library_db_peptides.fasta",
+      "sha256": "c947d7809db97747698d98219fac0f6c2049d49cafd3144d8c23daa098a9ade6"
+    },
+    "library_pairing": {
+      "path": "carafesharp-testfiles-v1/stellar/carafe-osprey-entrapment/osprey_library_db_pairing.tsv",
+      "sha256": "1970dab17ef44019b2994df85de71f04dc9e01ec5563e1e1a47bd5a8f6e9f495"
+    },
+    "subset_fasta": {
+      "path": "inputs/library_subset_peptides.fasta",
+      "sha256": "25c1dd94bbb90df1a7a4a671495444dc917c18055ea4b2182066ff1d21db9ed6"
+    },
+    "subset_pairing": {
+      "path": "inputs/library_subset_pairing.tsv",
+      "sha256": "e9d5cd6306fee1062c7aaa5ccf1389d44b633c8fd00c8b302458091e158cccbc"
+    }
+  },
+  "metrics": {
+    "ms2.finetuned.cos": 0.9833722710609436,
+    "ms2.finetuned.pcc": 0.9818882346153259,
+    "ms2.finetuned.sa": 0.8837440609931946,
+    "ms2.finetuned.spc": 0.9166511297225952,
+    "ms2.pretrained.cos": 0.9665473699569702,
+    "ms2.pretrained.pcc": 0.9639310836791992,
+    "ms2.pretrained.sa": 0.8348690271377563,
+    "ms2.pretrained.spc": 0.8822351098060608,
+    "rt.finetuned.mae_normalized": 0.004034969393626631,
+    "rt.finetuned.r2": 0.9989623247685574,
+    "rt.pretrained.mae_normalized": 0.00631374143677188,
+    "rt.pretrained.r2": 0.9976639028847195
+  },
+  "use_finetuned_for_prediction": true,
+  "library": {
+    "precursors": 19344,
+    "peaks": 335906,
+    "decoy_pair_rows": 19340,
+    "decoy_pairs": 9670,
+    "entrapment_pairs": 4833,
+    "targets": 9666,
+    "paired_targets": 9666,
+    "unpaired_targets_decoy_not_written": 0
+  },
+  "sample": {
+    "file": "library_sample.tsv.gz",
+    "modulus": 10,
+    "precursors": 1923,
+    "rule": "the precursors whose 64-bit FNV-1a hash of modseq/charge, shifted right 32 bits, is 0 modulo the modulus"
+  },
+  "tolerances": {
+    "pretrained_metric": 1E-05,
+    "finetuned_metric": {
+      "cos": 0.0015,
+      "pcc": 0.0015,
+      "sa": 0.006,
+      "spc": 0.005,
+      "r2": 0.0001,
+      "mae_normalized": 0.0005
+    },
+    "precursor_and_decoy_pair_count_fraction": 0.0001,
+    "peak_count_fraction": 0.01,
+    "cosine_median_min": 0.99925,
+    "cosine_p5_min": 0.991,
+    "cosine_p1_min": 0.975,
+    "rt_minutes_median_max": 0.03,
+    "rt_minutes_p95_max": 0.1,
+    "rt_minutes_p99_max": 0.16
+  },
+  "exact": {
+    "use": "information only: reported as SAME or DIFFERS, never failing a run",
+    "training_tables": {
+      "fragment_intensity_df.tsv": "7420bdaab32180aaf57009b67dcab4b0364edb5f4a9b54519ceb1fca3264eef0",
+      "fragment_intensity_valid.tsv": "ed1075272c8ec632f803700efd217bb7a85995f13d13d3c171a9bbee1a27fd26",
+      "psm_pdv.txt": "099281df33eef83f5feb98948eddc23a7a9f1f382f0e5c73c041b87b2fce9b20",
+      "rt_train_data.tsv": "4245342b9b877e97f2b8a7d272f69f87d182c372300ca16f2b3738f7b38b60d0"
+    },
+    "models": {
+      "ms2.safetensors": "403d9dfd3ba8cbd628753d429e86d3c362d4aeea91abf005fac760dfcbf69dc5",
+      "rt.safetensors": "d96c756aade94cbb311ad9532e9879aa036fac822687d4729137f0236646366f"
+    },
+    "library_content_sha256": "2ebd6360d84bb6967457fa464a97afb824ddd23515c07f7425f651db9cd6c89a",
+    "library_content": "SHA-256 of one line per precursor, sorted: Skyline modified sequence, charge, precursor m/z, RT rounded to 1e-6, then the fragments in m/z order as m/z:intensity, each rounded to 1e-6"
+  }
+}

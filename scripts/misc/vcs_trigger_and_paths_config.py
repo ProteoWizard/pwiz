@@ -114,6 +114,7 @@ targets['Linux'] = targets['CoreLinuxNet']
 # will only trigger the "pwiz_tools/BiblioSpec/.*" targets.
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
+    (".*/nightly_trigger_and_paths_config.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
     # TeamCity versioned settings: every UI edit to a config in the Versioned Configs
@@ -180,6 +181,11 @@ matchPaths = [
     # pwiz compiles Shared/zedgraph + Shared/MSGraph in place and links Shared/Lib binaries.
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['Osprey']),
+    # CarafeSharp (the C# Carafe port) has no TeamCity config yet, and no other build compiles
+    # it: it depends on pwiz_tools/Shared/CommonUtil, never the reverse. Without this entry a
+    # CarafeSharp-only change falls through to pwiz_tools/.* and rebuilds All for nothing. Point
+    # it at the CarafeSharp config once one exists.
+    ("pwiz_tools/CarafeSharp/.*", {}),
     ("pwiz_tools/.*", targets['All']),
     (".*\\.bat", targets['Windows']),
     (".*\\.sh", targets['Linux'])
