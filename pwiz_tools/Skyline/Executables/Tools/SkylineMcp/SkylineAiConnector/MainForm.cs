@@ -32,6 +32,13 @@ namespace SkylineAiConnector
 {
     public partial class MainForm : Form
     {
+        /// <summary>
+        /// The oldest Skyline the connector supports: the first Skyline-daily with the JSON-RPC
+        /// IJsonToolService. Every MCP tool works with it unless the tool declares a newer method
+        /// with [RequiresJsonToolServiceMethod].
+        /// </summary>
+        public static readonly System.Version MIN_SKYLINE_VERSION = new System.Version(26, 1, 1, 83);
+
         private bool _setupExpanded;
         // Suppress CheckedChanged events while probing initial state
         private bool _suppressCheckEvents;
@@ -98,11 +105,11 @@ namespace SkylineAiConnector
                 return;
             }
 
-            if (!IsSupportedVersion(version))
+            if (new System.Version(version.Major, version.Minor, version.Build, version.Revision) < MIN_SKYLINE_VERSION)
             {
                 labelStatus.Text = string.Format("Skyline {0}.{1}.{2}.{3} does not support AI connections.",
                     version.Major, version.Minor, version.Build, version.Revision);
-                labelVersion.Text = "This tool requires Skyline 26.1.1.061 or later.";
+                labelVersion.Text = string.Format("This tool requires Skyline {0} or later.", MIN_SKYLINE_VERSION);
                 labelDocument.Visible = false;
                 buttonSetup.Enabled = false;
 
@@ -146,17 +153,6 @@ namespace SkylineAiConnector
                 _setupExpanded = true;
                 ShowHideSetupPane();
             }
-        }
-
-        private static bool IsSupportedVersion(Version version)
-        {
-            if (version.Major < 26) // 25.x or earlier
-                return false;
-            if (version.Major == 26 && version.Minor < 1) // 26.0.9
-                return false;
-            if (version.Major == 26 && version.Minor == 1 && version.Build < 1) // 26.1.0
-                return false;
-            return version.Major != 26 || version.Minor != 1 || version.Build != 1 || version.Revision >= 70; // 26.1.1.xxx < 70
         }
 
         private void DeployMcpServer()
@@ -445,6 +441,30 @@ namespace SkylineAiConnector
             }
         }
 
+        private void checkCodex_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressCheckEvents)
+                return;
+            try
+            {
+                if (checkCodex.Checked)
+                {
+                    ChatAppRegistry.AddToCodex();
+                    labelSetupStatus.Text = "Codex: Registered. Restart Codex to activate.";
+                }
+                else
+                {
+                    ChatAppRegistry.RemoveFromCodex();
+                    labelSetupStatus.Text = "Codex: Removed. Restart Codex to apply.";
+                }
+            }
+            catch (Exception ex)
+            {
+                labelSetupStatus.Text = "Codex: " + ex.Message;
+                RevertCheckbox(checkCodex);
+            }
+        }
+
         // -- Expand/collapse --
 
         private void ToggleSetupPanel()
@@ -527,6 +547,14 @@ namespace SkylineAiConnector
                     checkCursor.Checked = ChatAppRegistry.IsRegisteredInCursor();
                 else
                     checkCursor.Text = "Cursor (not installed)";
+
+                // Codex
+                bool codexInstalled = ChatAppRegistry.IsCodexInstalled();
+                checkCodex.Enabled = codexInstalled;
+                if (codexInstalled)
+                    checkCodex.Checked = ChatAppRegistry.IsRegisteredInCodex();
+                else
+                    checkCodex.Text = "Codex (not installed)";
             }
             finally
             {
