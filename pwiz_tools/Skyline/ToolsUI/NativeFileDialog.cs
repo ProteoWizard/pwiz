@@ -57,13 +57,16 @@ namespace pwiz.Skyline.ToolsUI
         /// building or tearing down.</summary>
         public static bool IsFileDialog(IntPtr hwnd)
         {
-            return HasDescendant(hwnd, NativeControl.LISTBOX_CLASS, CLASSIC_FILE_LIST_ID);
+            return new NativeSaveFileDialog(hwnd, CancellationToken.None)
+                .HasDescendant(NativeControl.LISTBOX_CLASS, CLASSIC_FILE_LIST_ID);
         }
 
         /// <summary>The Open or Save wrapper for a file dialog, or null while it has neither dialog's file-name
         /// field. The Save dialog starts out with the Open dialog's classic file-name combo (control id 1148),
-        /// destroys it, and creates its own file-name Edit (control id 1001) some 150 ms later. Open is checked
-        /// first because the combo is gone by the time the Save dialog has a field of its own.</summary>
+        /// destroys it, and creates its own file-name Edit (control id 1001) 50-100 ms later. Open is checked
+        /// first because the combo is gone by the time the Save dialog has a field of its own; while the combo is
+        /// there the Save dialog's commit button is not yet shown, so <see cref="IsOpenComplete"/> keeps that
+        /// brief Open classification from being reported.</summary>
         internal static NativeFileDialog Classify(IntPtr handle, CancellationToken cancellationToken)
         {
             if (NativeOpenFileDialog.IsOpenFileDialog(handle))

@@ -220,12 +220,6 @@ namespace pwiz.Skyline.ToolsUI
             return FindDescendant(className, controlId) != IntPtr.Zero;
         }
 
-        protected static bool HasDescendant(IntPtr dialogHwnd, string className, int controlId)
-        {
-            return User32.EnumChildWindows(dialogHwnd).Any(hwnd =>
-                User32.GetClassName(hwnd) == className && User32.GetDlgCtrlID(hwnd) == controlId);
-        }
-
         /// <summary>The dialog's descendant of the given class and control id, or a clear failure. Found by ID, not
         /// by walking the visible children: a dialog is discoverable (its window exists) a moment before it is
         /// SHOWN, and until then every one of its controls reports itself invisible -- so a lookup that filtered on

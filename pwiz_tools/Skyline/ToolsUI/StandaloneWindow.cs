@@ -166,20 +166,9 @@ namespace pwiz.Skyline.ToolsUI
         /// window is a child window and does not appear here (JsonUiService.GetOpenFormElements adds those).</summary>
         public static IEnumerable<StandaloneWindow> GetTopLevelWindows(CancellationToken cancellationToken)
         {
-            var processId = Kernel32.GetCurrentProcessId();
-            foreach (var hwnd in User32.EnumWindows())
-            {
-                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                if (windowProcessId != processId)
-                    continue;
-
-                if (!User32.IsWindowVisible(hwnd))
-                    continue;
-
-                var window = NewStandaloneWindow(hwnd, cancellationToken);
-                if (window != null)
-                    yield return window;
-            }
+            return GetTopLevelWindowHandles()
+                .Select(hwnd => NewStandaloneWindow(hwnd, cancellationToken))
+                .Where(window => window != null);
         }
 
         // Wraps a top-level window handle as the connector window abstraction that drives it, asking in turn what
