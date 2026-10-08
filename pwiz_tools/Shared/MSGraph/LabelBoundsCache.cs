@@ -10,10 +10,12 @@ namespace pwiz.MSGraph
         {
             public string Text;
             public float FontSize;
+            public float ScaleFactor;
 
             private bool Equals(Label other)
             {
-                return string.Equals(Text, other.Text) && FontSize.Equals(other.FontSize);
+                return string.Equals(Text, other.Text) && FontSize.Equals(other.FontSize) &&
+                       ScaleFactor.Equals(other.ScaleFactor);
             }
 
             public override bool Equals(object obj)
@@ -28,13 +30,13 @@ namespace pwiz.MSGraph
             {
                 unchecked
                 {
-                    return (Text.GetHashCode()*397) ^ FontSize.GetHashCode();
+                    return (((Text.GetHashCode()*397) ^ FontSize.GetHashCode())*397) ^ ScaleFactor.GetHashCode();
                 }
             }
 
             public override string ToString()
             {
-                return FontSize + @", " + Text;
+                return FontSize + @", " + ScaleFactor + @", " + Text;
             }
         }
 
@@ -45,15 +47,15 @@ namespace pwiz.MSGraph
             SizeF size;
             lock (_textBoxSizes)
             {
-                var label = new Label {Text = textObj.Text, FontSize = textObj.FontSpec.Size};
+                // Measure at the scale factor the label is drawn at - it includes the display
+                // DPI scaling, so it is not always 1.
+                var label = new Label {Text = textObj.Text, FontSize = textObj.FontSpec.Size, ScaleFactor = graphPane.CalcScaleFactor()};
                 if (!_textBoxSizes.TryGetValue(label, out size))
                 {
-                    const float scaleFactor = 1.0f;
-
                     // This is a really expensive call, so we're caching its result across threads.
                     var coords = textObj.FontSpec.GetBox(
                         graphics, textObj.Text, 0, 0,
-                        textObj.Location.AlignH, textObj.Location.AlignV, scaleFactor, new SizeF());
+                        textObj.Location.AlignH, textObj.Location.AlignV, label.ScaleFactor, new SizeF());
 
                     // Turn four points into a size.
                     var min = coords[0];

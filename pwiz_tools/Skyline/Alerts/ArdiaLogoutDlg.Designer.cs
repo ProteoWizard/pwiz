@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Alerts
             // ArdiaLogoutDlg
             // 
             resources.ApplyResources(this, "$this");
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.label1);
             this.Controls.Add(this.webView);
             this.Name = "ArdiaLogoutDlg";

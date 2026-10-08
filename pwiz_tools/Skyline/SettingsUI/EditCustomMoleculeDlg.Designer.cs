@@ -279,6 +279,7 @@ namespace pwiz.Skyline.SettingsUI
             this.AcceptButton = this.btnOK;
             this.CancelButton = this.btnCancel;
             resources.ApplyResources(this, "$this");
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.comboIsotopeLabelType);
             this.Controls.Add(this.labelIsotopeLabelType);
             this.Controls.Add(this.groupBoxOptionalValues);

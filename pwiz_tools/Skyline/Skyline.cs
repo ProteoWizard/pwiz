@@ -224,9 +224,11 @@ namespace pwiz.Skyline
 
             // Get placement values before changing anything.
             bool maximize = Settings.Default.MainWindowMaximized || Program.DemoMode;
+            // The persisted size is in 96-DPI logical units (see DpiUtil); the location is
+            // physical screen coordinates, clamped by ForceOnScreen below.
             Size size = Settings.Default.MainWindowSize;
             if (!size.IsEmpty)
-                Size = size;
+                Size = DpiUtil.ScaleFromLogical(this, size);
 
             // Restore window placement.
             Point location = Settings.Default.MainWindowLocation;
@@ -4190,7 +4192,7 @@ namespace pwiz.Skyline
         private void SkylineWindow_Resize(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Normal)
-                Settings.Default.MainWindowSize = Size;
+                Settings.Default.MainWindowSize = DpiUtil.ScaleToLogical(this, Size);
             Settings.Default.MainWindowMaximized =
                 (WindowState == FormWindowState.Maximized);
         }

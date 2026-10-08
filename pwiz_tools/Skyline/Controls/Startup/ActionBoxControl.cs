@@ -20,6 +20,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Startup
 {
@@ -67,18 +68,22 @@ namespace pwiz.Skyline.Controls.Startup
         {
             InitializeComponent();
 
+            // AutoScaleMode.Font has already scaled the designer geometry to the display DPI
+            // (on .NET the control scales itself in InitializeComponent); only the caller-
+            // supplied image sizes are still 96-DPI pixel values (issue #4599). The icon
+            // PictureBox uses StretchImage, so the tutorial bitmaps scale with it.
             if (imageWidth.HasValue)
             {
-                int deltaWidth = imageWidth.Value - iconPictureBox.Width;
+                int deltaWidth = DpiUtil.Scale(this, imageWidth.Value) - iconPictureBox.Width;
                 Width += deltaWidth;
-                iconPictureBox.Width = labelDescription.Width = imageWidth.Value;
+                iconPictureBox.Width = labelDescription.Width = DpiUtil.Scale(this, imageWidth.Value);
             }
             if (imageHeight.HasValue)
             {
-                int deltaHeight = imageHeight.Value - iconPictureBox.Height;
+                int deltaHeight = DpiUtil.Scale(this, imageHeight.Value) - iconPictureBox.Height;
                 Height += deltaHeight;
                 labelCaption.Top += deltaHeight;
-                iconPictureBox.Height = labelDescription.Height = imageHeight.Value;
+                iconPictureBox.Height = labelDescription.Height = DpiUtil.Scale(this, imageHeight.Value);
             }
         }
 

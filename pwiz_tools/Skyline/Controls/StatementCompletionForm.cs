@@ -57,7 +57,10 @@ namespace pwiz.Skyline.Controls
             const int dyPadding = 2;
             var screenRect = Screen.FromRectangle(parentRectangle).WorkingArea;
             int dxRequired = 0;
-            const int dxIcon = 32;
+            // The icon gutter and title/description gap are 96-DPI designs; scale them
+            // with the DPI-scaled row height and font (issue #4599).
+            int dxIcon = DpiUtil.Scale(this, 32);
+            int dxGap = DpiUtil.Scale(this, 16);
             int dxAvailable = screenRect.Width;
             int dxTitle = 0;
             using (var titleFont = CreateListViewFont())
@@ -65,8 +68,8 @@ namespace pwiz.Skyline.Controls
                 foreach (ListViewItem item in ListView.Items)
                 {
                     int dxItem = TextRenderer.MeasureText(item.Text, titleFont).Width;
-                    // Add 16 pixels to the width of the item so that the title and description are separated.
-                    dxItem += 16;
+                    // Add a gap to the width of the item so that the title and description are separated.
+                    dxItem += dxGap;
                     dxTitle = Math.Max(dxTitle, dxItem);
                     dxItem += dxIcon;
                     var description = GetDescription(item) ?? string.Empty;
@@ -123,8 +126,8 @@ namespace pwiz.Skyline.Controls
             var bounds = item.Bounds;
             graphics.FillRectangle(SystemBrushes.Window, bounds);
             int dxIcon = bounds.Height;
-            graphics.DrawImageUnscaled(item.ImageList.Images[item.ImageIndex], bounds.Left, bounds.Top, dxIcon,
-                                         bounds.Height);
+            DpiUtil.DrawImageCentered(graphics, item.ImageList.Images[item.ImageIndex],
+                bounds.Left, bounds.Top, bounds.Height);
             var textBounds = new Rectangle(bounds.Left + dxIcon, bounds.Top,
                 bounds.Width - dxIcon, bounds.Height);
             Color textColor = ListView.ForeColor;

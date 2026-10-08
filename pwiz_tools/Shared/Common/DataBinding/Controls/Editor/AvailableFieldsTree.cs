@@ -25,6 +25,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
@@ -68,6 +69,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     TransparentColor = Color.Magenta,
                 };
             ImageList.Images.AddRange(ImagelistImages);
+            ImageListScaler.ScaleToDpi(this, ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
             DrawMode = TreeViewDrawMode.OwnerDrawText;
             ShowNodeToolTips = true;
         }
