@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -129,12 +130,10 @@ namespace SkylineNightly
                     .OrderByDescending(File.GetLastWriteTimeUtc);
                 foreach (var file in candidates)
                 {
-                    var values = XDocument.Load(file)
-                        .Descendants(@"setting")
-                        .Where(s => s.Parent?.Name.LocalName == @"SkylineNightly.Properties.Settings")
-                        .ToDictionary(s => (string) s.Attribute(@"name") ?? string.Empty, s => s.Element(@"value")?.Value ?? string.Empty);
-                    // A file that never had a nightly folder set holds nothing worth carrying over
-                    if (!values.TryGetValue(nameof(Settings.NightlyFolder), out var folder) || string.IsNullOrEmpty(folder))
+                    var values = ReadSettingsFile(file);
+                    // A file that cannot be read, or never had a nightly folder set, holds nothing
+                    // worth carrying over; an older one may.
+                    if (values == null || !values.TryGetValue(nameof(Settings.NightlyFolder), out var folder) || string.IsNullOrEmpty(folder))
                         continue;
                     foreach (var pair in values)
                     {
@@ -151,6 +150,25 @@ namespace SkylineNightly
             catch (Exception)
             {
                 // Keep the defaults; the developer can set them in the SkylineNightly window
+            }
+        }
+
+        /// <summary>
+        /// The SkylineNightly settings in one user.config, by name, or null when the file cannot
+        /// be read or parsed (a partly written file, a duplicated setting).
+        /// </summary>
+        private static Dictionary<string, string> ReadSettingsFile(string file)
+        {
+            try
+            {
+                return XDocument.Load(file)
+                    .Descendants(@"setting")
+                    .Where(s => s.Parent?.Name.LocalName == @"SkylineNightly.Properties.Settings")
+                    .ToDictionary(s => (string) s.Attribute(@"name") ?? string.Empty, s => s.Element(@"value")?.Value ?? string.Empty);
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
 
