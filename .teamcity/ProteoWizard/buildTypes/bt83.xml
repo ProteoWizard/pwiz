@@ -10,11 +10,10 @@
       <ref id="ProteoWizard_RemoteAccountTestParameters" />
     </inherits>
     <options>
-      <option name="artifactRules" value="scripts/installer/build/ProteoWizard-*.exe&#xA;**/*.blib.observed" />
+      <option name="artifactRules" value="scripts/installer/build/ProteoWizard-*.exe&#xA;scripts/installer/build/installer-version.txt&#xA;**/*.blib.observed" />
     </options>
     <disabled-settings>
       <setting-ref ref="RUNNER_73" />
-      <setting-ref ref="Set_PWIZ_VERSION_variable" />
     </disabled-settings>
     <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_139, Set_PWIZ_VERSION_variable, RUNNER_73, RUNNER_85">
       <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
@@ -29,11 +28,17 @@
           <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
           <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
           <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
-          <param name="script.content"><![CDATA[REM Read version from build directory into PWIZ_VERSION
-set /p PWIZ_VERSION=<build-nt-x86\VERSION
+          <param name="script.content"><![CDATA[REM Read the installer version that scripts\installer\build.ps1 writes beside the
+REM installers it names with it (ProteoWizard-Setup-<version>.exe and siblings)
+set VERSION_FILE=scripts\installer\build\installer-version.txt
 
-REM Replace spaces with periods
-set PWIZ_VERSION=%%PWIZ_VERSION: =.%%
+REM tcbuild.bat lets a vendor build pass without an installer when Inno Setup is
+REM unavailable, so a missing file is a warning here rather than a failure
+if not exist %%VERSION_FILE%% (
+  echo ##teamcity[message text='%%VERSION_FILE%% not found, so no installer was built and PWIZ_VERSION is not set' status='WARNING']
+  exit /b 0
+)
+set /p PWIZ_VERSION=<%%VERSION_FILE%%
 
 REM Pass the value to TeamCity
 echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]></param>
@@ -59,7 +64,7 @@ echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]
           <param name="buildStatusUpdateContext" value="artifacts - ProteoWizard" />
           <param name="buildStatusUpdateDescription" value="Includes msconvert/SeeMS" />
           <param name="buildStatusUpdateState" value="success" />
-          <param name="buildStatusUpdateTargetUrl" value="https://mc-tca-01.s3.us-west-2.amazonaws.com/ProteoWizard/%system.teamcity.buildType.id%/%teamcity.build.id%/pwiz-setup-%env.PWIZ_VERSION%-x86_64.msi" />
+          <param name="buildStatusUpdateTargetUrl" value="https://mc-tca-01.s3.us-west-2.amazonaws.com/ProteoWizard/%system.teamcity.buildType.id%/%teamcity.build.id%/ProteoWizard-Setup-%env.PWIZ_VERSION%.exe" />
           <param name="teamcity.step.mode" value="execute_if_failed" />
           <param name="teamcity.step.phase" value="" />
         </parameters>
