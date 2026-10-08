@@ -1,8 +1,0 @@
-#!/bin/bash
-
-pushd $(dirname $0) > /dev/null
-
-read -p "user: " user
-
-rsync -avuz --exclude=*.svn* --exclude=*.swp . $user,proteowizard@web.sourceforge.net:htdocs
-

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="e1c1b8ab-1c66-4dbb-b7d5-335405bf113d" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Windows x86 debug</name>
+  <description>Still using VS2017 because VS2019 linking on this config tends to hang indefinitely.</description>
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_WindowsBase" />
+      <ref id="ProteoWizard_WindowsCoreDebug" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+    </inherits>
+    <options>
+      <option name="executionTimeoutMin" value="240" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RQ_1818" />
+      <setting-ref ref="RUNNER_2150" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=32" />
+    </parameters>
+    <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_142, RUNNER_314, RUNNER_45, RUNNER_2150">
+      <runner id="RUNNER_simpleRunner_142" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses pwiz/utility/bindings/CLI/timstof_prm_scheduler -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_314" name="New build step" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="quickbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses  executables pwiz pwiz_aux pwiz_tools/commandline pwiz_tools/examples pwiz_tools/sld pwiz_tools/SeeMS pwiz_tools/MSConvertGUI -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --remove-test-targets -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_45" name="BiblioSpec tests" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="quickbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses  pwiz_tools/BiblioSpec/tests -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --remove-test-targets -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_2150" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses executables pwiz pwiz_aux pwiz_tools/BiblioSpec -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements>
+      <starts-with id="RQ_1816" name="teamcity.agent.jvm.os.name" value="Windows" />
+    </requirements>
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="1" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

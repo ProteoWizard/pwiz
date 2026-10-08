@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestData.Results
                 string suffix = ExtensionTestContext.CanImportAbWiff2 ? "" : "-sample-centroid";
 
                 // Do file type checks
-                using (var msData = new MsDataFileImpl(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api" + suffix + extWiff2)))
+                using (var msData = new MsDataFileImpl(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "swath.api" + suffix + extWiff2)))
                 {
                     Assert.IsTrue(msData.IsABFile);
                 }
@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestData.Results
                 var chromSets = new[]
                 {
                     new ChromatogramSet(replicateName, new[]
-                        { new MsDataFilePath(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api" + suffix + extRaw)),  }),
+                        { new MsDataFilePath(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "swath.api" + suffix + extRaw)),  }),
                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
