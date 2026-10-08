@@ -1,0 +1,359 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using System.Xml.Linq;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
+
+namespace pwiz.Skyline.Util
+{
+    /// <summary>
+    /// Replaces the running program's user settings with those of another Skyline installation.
+    ///
+    /// The settings file is taken whole, and then the parts of it that must not simply be copied
+    /// are put right: the external tools it names live under the other installation's Tools
+    /// folder and are brought across, and the installation id stays this program's own unless
+    /// the other installation is being uninstalled, in which case this one carries on its
+    /// identity.
+    /// </summary>
+    public class SettingsImporter
+    {
+        private const string INSTALLING_SUFFIX = @"_installing";
+
+        /// <summary>
+        /// Runs a command line the way Programs and Features would, through the shell so that an
+        /// uninstaller needing elevation gets to ask for it. A ClickOnce uninstall is answered
+        /// with Remove, since that is what the user asked for in choosing to uninstall.
+        /// </summary>
+        public static void RunCommand(string commandLine)
+        {
+            SplitCommandLine(commandLine, out var fileName, out var arguments);
+            Process.Start(new ProcessStartInfo(fileName, arguments) { UseShellExecute = true });
+            var deploymentName = ClickOnceMaintenanceDialog.GetDeploymentName(commandLine);
+            if (deploymentName != null)
+                new ClickOnceMaintenanceDialog(deploymentName).ChooseRemoveWhenShown();
+        }
+
+        /// <summary>
+        /// Name of the user setting in which a Skyline that installs a newer one records how to
+        /// uninstall itself, so that the newer one can do that once it has taken the settings.
+        /// </summary>
+        public const string UNINSTALL_COMMAND_SETTING = @"UninstallCommand";
+
+        /// <summary>
+        /// The command <paramref name="configFile"/> records for uninstalling the installation
+        /// that wrote it, or null when it records none or cannot be read.
+        /// </summary>
+        public static string ReadUninstallCommand(string configFile)
+        {
+            try
+            {
+                var command = XDocument.Load(configFile).Descendants(@"setting")
+                    .Where(setting => (string) setting.Attribute(@"name") == UNINSTALL_COMMAND_SETTING)
+                    .Select(setting => (string) setting.Element(@"value"))
+                    .FirstOrDefault();
+                return string.IsNullOrEmpty(command) ? null : command;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public SettingsImporter(string sourceConfigFile)
+        {
+            SourceConfigFile = sourceConfigFile;
+            RunUninstall = RunCommand;
+        }
+
+        public string SourceConfigFile { get; set; }
+
+        /// <summary>
+        /// Whether this program keeps its own installation id, which is the default, rather
+        /// than taking over the one in the imported file. The id identifies an installation
+        /// in usage and error reports, so it should only be taken over when the other
+        /// installation is going away.
+        /// </summary>
+        public bool KeepInstallationId { get; set; } = true;
+
+        /// <summary>
+        /// Command to run after importing to uninstall the other installation, or null to leave
+        /// it in place.
+        /// </summary>
+        public string UninstallCommand { get; set; }
+
+        /// <summary>
+        /// How <see cref="UninstallCommand"/> gets run. A test replaces this to see the command
+        /// without running anything.
+        /// </summary>
+        public Action<string> RunUninstall { get; set; }
+
+        /// <summary>
+        /// The settings file as it was before <see cref="ImportSettingsFile"/> replaced it, or
+        /// null when there was none, so that <see cref="RevertImport"/> can put it back.
+        /// </summary>
+        private byte[] _originalConfigBytes;
+
+        private bool _settingsFileReplaced;
+
+        /// <summary>
+        /// Replaces the settings file with the source and reads it in, keeping this program's
+        /// own installation id unless the source's is to be taken over. The import then runs
+        /// <see cref="CopyTools"/> in the background and <see cref="FinishImport"/> back on the
+        /// UI thread, since reloading the settings raises PropertyChanged for every setting and
+        /// the graphs that listen for those expect to hear about them on the UI thread.
+        /// </summary>
+        public void ImportSettingsFile()
+        {
+            var settings = Settings.Default;
+            string ownInstallationId = settings.InstallationId;
+            string configFile = settings.SettingsFilePath;
+            var configFolder = Path.GetDirectoryName(configFile);
+            if (!string.IsNullOrEmpty(configFolder))
+                Directory.CreateDirectory(configFolder);
+            // Saved first, so that what a revert puts back includes this session's changes.
+            settings.Save();
+            _originalConfigBytes = File.Exists(configFile) ? File.ReadAllBytes(configFile) : null;
+            File.Copy(SourceConfigFile, configFile, true);
+            _settingsFileReplaced = true;
+            settings.Reload();
+
+            // An imported file with no id of its own has nothing to take over.
+            if (!string.IsNullOrEmpty(ownInstallationId) &&
+                (KeepInstallationId || string.IsNullOrEmpty(settings.InstallationId)))
+            {
+                settings.InstallationId = ownInstallationId;
+            }
+        }
+
+        /// <summary>
+        /// The whole import, with progress shown: replaces the settings file, copies the tools the
+        /// imported settings name, and finishes; or, when the copy is canceled or anything fails,
+        /// puts the settings back as they were. Returns whether the import finished.
+        /// </summary>
+        public bool Import(Control parent)
+        {
+            try
+            {
+                ImportSettingsFile();
+                bool toolsCopied = false;
+                try
+                {
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.Text = Program.Name;
+                    longWaitDlg.Message = ToolsUIResources.ToolOptionsUI_ImportSettings_Importing_settings;
+                    longWaitDlg.PerformWork(parent, 800, broker => toolsCopied = CopyTools(broker));
+                }
+                finally
+                {
+                    // Canceled or failed: nothing is imported, and nothing is uninstalled.
+                    if (!toolsCopied)
+                        RevertImport();
+                }
+                if (!toolsCopied)
+                    return false;
+                FinishImport();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                MessageDlg.ShowWithException(parent,
+                    string.Format(ToolsUIResources.ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_,
+                        SourceConfigFile), exception);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Saves everything, and uninstalls the other installation when that was asked for.
+        /// Settings once imported are not offered again at the next start, even though the file
+        /// they came from, written by an older Skyline, says nothing about that.
+        /// </summary>
+        public void FinishImport()
+        {
+            Settings.Default.CheckedForSettingsToImport = true;
+            Settings.Default.Save();
+
+            if (!string.IsNullOrEmpty(UninstallCommand))
+                RunUninstall(UninstallCommand);
+        }
+
+        /// <summary>
+        /// Puts back the settings file that <see cref="ImportSettingsFile"/> replaced, for an
+        /// import that was canceled or failed before <see cref="FinishImport"/>. Tool folders
+        /// already copied stay in the Tools folder, where nothing names them.
+        /// </summary>
+        public void RevertImport()
+        {
+            if (!_settingsFileReplaced)
+                return;
+            var settings = Settings.Default;
+            string configFile = settings.SettingsFilePath;
+            if (_originalConfigBytes == null)
+                FileEx.SafeDelete(configFile, true);
+            else
+                File.WriteAllBytes(configFile, _originalConfigBytes);
+            _settingsFileReplaced = false;
+            settings.Reload();
+        }
+
+        /// <summary>
+        /// Brings the external tools the current settings name into this installation's Tools
+        /// folder, and points the settings at the copies. Tools already there are left alone.
+        /// Returns false when the user canceled before every tool was copied.
+        /// </summary>
+        public bool CopyTools(ILongWaitBroker broker)
+        {
+            var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
+            var toolList = Settings.Default.ToolList;
+            var searchToolList = Settings.Default.SearchToolList;
+            int numTools = toolList.Count + searchToolList.Count;
+            if (numTools == 0)
+                return true;
+            if (broker != null)
+                broker.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
+            int increment = 100 / (numTools + 1);
+
+            bool canceled = false;
+            foreach (var tool in toolList)
+            {
+                string oldDir = tool.ToolDirPath;
+                string newDir = CopyToolFolder(oldDir, toolsDirectory);
+                if (newDir != null)
+                {
+                    tool.ToolDirPath = newDir;
+                    tool.ArgsCollectorDllPath = tool.ArgsCollectorDllPath?.Replace(oldDir, newDir);
+                }
+                if (!AdvanceProgress(broker, increment))
+                {
+                    canceled = true;
+                    break;
+                }
+            }
+            // Assigning the lists is what marks them changed, so that the new paths get saved.
+            Settings.Default.ToolList = ToolList.CopyTools(toolList);
+            if (canceled)
+                return false;
+
+            foreach (var tool in searchToolList)
+            {
+                // Only a tool Skyline installed itself is under a Tools folder. One the user
+                // pointed at stays where the user put it.
+                string oldDir = tool.InstallPath;
+                string newDir = tool.AutoInstalled ? CopyToolFolder(oldDir, toolsDirectory) : null;
+                if (newDir != null)
+                {
+                    tool.InstallPath = newDir;
+                    tool.Path = tool.Path?.Replace(oldDir, newDir);
+                }
+                if (!AdvanceProgress(broker, increment))
+                {
+                    canceled = true;
+                    break;
+                }
+            }
+            Settings.Default.SearchToolList = SearchToolList.CopyTools(searchToolList);
+            return !canceled;
+        }
+
+        /// <summary>
+        /// The folder the tool was copied to, or null when there was nothing to copy: no folder,
+        /// or one already under the Tools folder. A tool whose folder is already there is not
+        /// overwritten, since it may be the same tool at a newer version.
+        /// </summary>
+        private static string CopyToolFolder(string toolDirPath, string toolsDirectory)
+        {
+            if (string.IsNullOrEmpty(toolDirPath) || !Directory.Exists(toolDirPath))
+                return null;
+            string folderName = Path.GetFileName(
+                toolDirPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrEmpty(folderName))
+                return null;
+            string newDir = Path.Combine(toolsDirectory, folderName);
+            if (AreSameFolder(toolDirPath, newDir))
+                return null;
+            if (!Directory.Exists(newDir))
+            {
+                // Copy beside the destination and move into place, so that a copy which fails
+                // partway through does not leave what looks like an installed tool.
+                string tempDir = newDir + INSTALLING_SUFFIX;
+                DirectoryEx.SafeDelete(tempDir);
+                Directory.CreateDirectory(toolsDirectory);
+                DirectoryEx.DirectoryCopy(toolDirPath, tempDir, true);
+                Directory.Move(tempDir, newDir);
+            }
+            return newDir;
+        }
+
+        private static bool AreSameFolder(string folder1, string folder2)
+        {
+            return string.Equals(
+                Path.GetFullPath(folder1).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                Path.GetFullPath(folder2).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// False when the user canceled.
+        /// </summary>
+        private static bool AdvanceProgress(ILongWaitBroker broker, int increment)
+        {
+            if (broker == null)
+                return true;
+            if (broker.IsCanceled)
+                return false;
+            broker.ProgressValue += increment;
+            return true;
+        }
+
+        /// <summary>
+        /// Separates the executable from its arguments in a registered uninstall command, which
+        /// is a full command line such as
+        /// <c>"C:\Program Files\Skyline\unins000.exe" /SILENT</c> or
+        /// <c>rundll32.exe dfshim.dll,ShArpMaintain Skyline-daily.application, Culture=neutral, ...</c>.
+        /// </summary>
+        private static void SplitCommandLine(string commandLine, out string fileName, out string arguments)
+        {
+            commandLine = commandLine.Trim();
+            int fileNameEnd;
+            if (commandLine.StartsWith(@""""))
+            {
+                int closingQuote = commandLine.IndexOf('"', 1);
+                fileNameEnd = closingQuote < 0 ? commandLine.Length : closingQuote + 1;
+            }
+            else
+            {
+                int space = commandLine.IndexOf(' ');
+                fileNameEnd = space < 0 ? commandLine.Length : space;
+            }
+            fileName = commandLine.Substring(0, fileNameEnd).Trim('"');
+            arguments = commandLine.Substring(fileNameEnd).Trim();
+        }
+    }
+}
