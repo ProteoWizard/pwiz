@@ -87,9 +87,9 @@ namespace pwiz.Osprey.Tasks
             }
             // The footer check --task SecondPassFDR makes - this build's version, this search and
             // library, and a reconciled file - on every route, since an export written from disk
-            // has nothing else vouching for the file. Another build is named apart: every other
-            // stage skips by its validity key, which carries no build, so the generic "score the
-            // file again" remedy would only skip again.
+            // has nothing else vouching for the file. Another build is named apart, because its
+            // remedy differs: the file is current only for the build that wrote it, so the
+            // message names that build rather than a generic "score the file again".
             string otherBuild = OtherBuild(reconciledPath);
             if (otherBuild != null)
             {
@@ -401,15 +401,14 @@ namespace pwiz.Osprey.Tasks
         /// export. Deciding by who wrote the file, which never changes once it is written, makes
         /// an export written while re-scoring and one written later from disk agree.
         ///
-        /// <para>Who wrote it is the producer named in the sidecar's own stamp (the test
-        /// SecondPassFDR folds by, <see cref="Pass2FdrSidecar.HasWorkerStamp"/>) AND the worker's
-        /// decoys file, which the worker writes alongside it and nothing else writes: a worker
-        /// sidecar without its decoys is not the worker's complete answer.</para>
+        /// <para>Who wrote it is the test SecondPassFDR folds by,
+        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar AND the worker's decoys
+        /// file both carry the stamp of the reconciled parquet beside them. A worker sidecar
+        /// without its decoys is not the worker's complete answer.</para>
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {
-            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input) &&
-                               File.Exists(Pass2CompetitionDecoys.PathFor(input));
+            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input);
             pass = workerOwned ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass;
             return workerOwned ? FdrScoresSidecar.Pass2Path(input) : FdrScoresSidecar.Pass1Path(input);
         }

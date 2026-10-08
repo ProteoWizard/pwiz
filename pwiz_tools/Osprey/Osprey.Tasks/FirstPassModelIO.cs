@@ -135,6 +135,8 @@ namespace pwiz.Osprey.Tasks
             public PercolatorResults Model { get; set; }
             public string ExperimentAgg { get; set; }
             public HashSet<uint> StratumBaseIds { get; set; }
+            /// <summary>The model file's own stamp, when <see cref="LoadFromAny"/> loaded it.</summary>
+            public ArtifactStamp Stamp { get; set; }
         }
 
         /// <summary>
@@ -192,23 +194,39 @@ namespace pwiz.Osprey.Tasks
                 string stratumPath = StratumPathFor(kvp.Value, kvp.Key);
                 if (!File.Exists(stratumPath))
                     continue;
+                // The same FirstPassFDR run stamps the model and the stratum alike, so they
+                // pair only when their stamps match. A stratum left by an earlier run under
+                // another key - this run computed an empty one and wrote none, or its write
+                // failed - would otherwise be published with this run's model.
+                string modelPath = PathFor(kvp.Value, kvp.Key);
+                var modelStamp = ArtifactStamp.TryReadJsonHead(modelPath);
+                if (modelStamp == null ||
+                    !string.Equals(modelStamp.ToString(), ArtifactStamp.TryReadJsonHead(stratumPath)?.ToString(), StringComparison.Ordinal))
+                {
+                    continue;
+                }
                 var stratum = LoadStratum(stratumPath);
-                var sidecar = stratum != null ? Load(PathFor(kvp.Value, kvp.Key)) : null;
+                var sidecar = stratum != null ? Load(modelPath) : null;
                 if (sidecar == null)
                     continue;
                 // The dedicated file wins over anything the model file itself carried.
                 sidecar.StratumBaseIds = stratum;
+                sidecar.Stamp = modelStamp;
                 return sidecar;
             }
-            // No stem pairs a model with a readable stratum file. Return the first readable
+            // No stem pairs a model with a matching stratum file. Return the first readable
             // model, with whatever stratum it carries itself - non-null only in a directory
             // written before the split, where every copy was written together - and let the
             // caller's mode gate decide whether a missing stratum is fatal.
             foreach (var kvp in perFileParquetPaths)
             {
-                var sidecar = Load(PathFor(kvp.Value, kvp.Key));
+                string modelPath = PathFor(kvp.Value, kvp.Key);
+                var sidecar = Load(modelPath);
                 if (sidecar != null)
+                {
+                    sidecar.Stamp = ArtifactStamp.TryReadJsonHead(modelPath);
                     return sidecar;
+                }
             }
             return null;
         }

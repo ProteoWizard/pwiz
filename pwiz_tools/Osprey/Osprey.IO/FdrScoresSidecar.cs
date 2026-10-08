@@ -149,7 +149,7 @@ namespace pwiz.Osprey.IO
     /// file, read sequentially - and deletes the column read, the inferred join
     /// and the assertion that policed it.
     ///
-    /// v7 → v8 (2026-10-07): appended the writing task's <see cref="ArtifactStamp"/> after
+    /// v7 -> v8 (2026-10-07): appended the writing task's <see cref="ArtifactStamp"/> after
     /// the records, replacing the <c>.osprey.task</c> file that used to sit beside every
     /// sidecar. The records keep their offsets; only the exact-length check now adds the stamp.
     ///

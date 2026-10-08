@@ -451,6 +451,15 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         }
 
         /// <summary>
+        /// The Osprey version that wrote this analysis's first pass, from its experiment sidecar's
+        /// stamp, or null when the sidecar is missing or unstamped.
+        /// </summary>
+        public static string FirstPassVersion(OspreyConfig config)
+        {
+            return ArtifactValidity.ReadStamp(FirstPassExperimentSidecarPath(config))?.Version;
+        }
+
+        /// <summary>
         /// Whether every diagnostics product this analysis is CAPABLE of having is already on
         /// disk - so the report can be re-rendered from products alone and nothing needs
         /// folding. False means at least one half is outstanding and the pass that owns it has
@@ -515,19 +524,28 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// Whether the pass-1 diagnostics product describes the first pass that is on disk NOW.
-        /// Both were stamped by FirstPassFDR with the same key, so equal keys is the whole test -
+        /// Both were stamped by the same FirstPassFDR run, so identical stamps is the whole test -
         /// and it is answerable without a pipeline context, which the render path does not have.
         ///
-        /// <para>Refusing when the stamp is absent is deliberate. A product without one cannot be
+        /// <para>The stamps are compared to EACH OTHER, not to this build. Re-rendering writes
+        /// only the page, from products a completed analysis already holds, so the build that
+        /// wrote them does not matter; demanding this build's version sent a re-render of a
+        /// cohort finished by yesterday's build into the full pipeline, which re-ran every stage
+        /// for hours under a command documented to write nothing but the report.</para>
+        ///
+        /// <para>Refusing when a stamp is absent is deliberate. A product without one cannot be
         /// shown to belong to this analysis, and "cannot tell" has to resolve to "rebuild it" -
         /// the same conservative direction every resume check takes.</para>
         /// </summary>
         private static bool DescribesTheFirstPassOnDisk(OspreyConfig config, string pass1Path)
         {
             var experimentStamp = ArtifactValidity.ReadStamp(FirstPassExperimentSidecarPath(config));
-            return experimentStamp != null &&
-                   ArtifactValidity.IsCurrent(pass1Path, FirstPassTaskName, experimentStamp.Key) &&
-                   experimentStamp.IsCurrent(FirstPassTaskName, experimentStamp.Key);
+            var productStamp = ArtifactValidity.ReadStamp(pass1Path);
+            return experimentStamp != null && productStamp != null &&
+                   string.Equals(experimentStamp.Task, FirstPassTaskName, StringComparison.Ordinal) &&
+                   string.Equals(productStamp.Task, FirstPassTaskName, StringComparison.Ordinal) &&
+                   string.Equals(experimentStamp.Version, productStamp.Version, StringComparison.Ordinal) &&
+                   string.Equals(experimentStamp.Key, productStamp.Key, StringComparison.Ordinal);
         }
 
         /// <summary>

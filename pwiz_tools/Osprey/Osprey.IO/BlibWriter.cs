@@ -461,9 +461,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Add metadata key-value pair.
-        /// </summary>
-        /// <summary>
         /// Record <paramref name="stamp"/> in the <c>OspreyMetadata</c> table under
         /// <see cref="ArtifactStamp.PARQUET_KEY"/>, so the blib carries its own validity record.
         /// </summary>
@@ -500,6 +497,9 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// Add metadata key-value pair.
+        /// </summary>
         public void AddMetadata(string key, string value)
         {
             using (var cmd = new SQLiteCommand(_conn))

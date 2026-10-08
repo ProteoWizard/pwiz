@@ -213,7 +213,28 @@ namespace pwiz.Osprey.Test
                 WritePass2Sidecar(pass2, PerFileRescoreTask.TASK_NAME, 1);
                 Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring sidecar without the worker's decoys must not flip the export to the second pass");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass));
-                File.WriteAllText(Pass2CompetitionDecoys.PathFor(runA), @"decoys");
+                // The worker's answer is the pair carrying the stamp of the reconciled parquet
+                // beside it. A pair from a run under another key is not this run's answer.
+                var workerStamp = ArtifactStamp.ForCurrentBuild(PerFileRescoreTask.TASK_NAME, @"key");
+                // One row: an empty entry list writes no parquet at all.
+                ParquetScoreCache.WriteScoresParquet(ParquetScoreCache.GetReconciledScoresPath(runA),
+                    new List<CoelutionScoredEntry>
+                    {
+                        new CoelutionScoredEntry
+                        {
+                            EntryId = 1, Sequence = @"PEPTIDE", ModifiedSequence = @"PEPTIDE", Charge = 2,
+                            FileName = @"a.mzML", PeakBounds = new XICPeakBounds(), Features = new CoelutionFeatureSet(),
+                        },
+                    },
+                    ParquetScoreCache.WithStamp(null, workerStamp));
+                current = RunKey(runA);
+                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
+                    new Dictionary<uint, (double score, uint entryId)>(),
+                    ArtifactStamp.ForCurrentBuild(PerFileRescoreTask.TASK_NAME, @"another-key"));
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"decoys stamped by a run under another key are not this run's worker answer");
+                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
+                    new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
                 Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
                 Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
                 Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");

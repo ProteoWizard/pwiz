@@ -50,6 +50,8 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal static class ReconciledParquetWriter
     {
+        private const string META_RESCORED = @"osprey.rescored";
+
         /// <summary>
         /// Stream <paramref name="originalPath"/> group-by-group, overlaying the
         /// re-scored + gap-fill rows from <paramref name="fdrEntries"/>, and write the
@@ -214,8 +216,20 @@ namespace pwiz.Osprey.Tasks
                 // Absent on a parquet written before this key existed, which is why the
                 // reader treats a MISSING value as "1": back then the file was only written
                 // when there was work, so its existence meant the same thing.
-                { @"osprey.rescored", rescored ? @"1" : @"0" },
+                { META_RESCORED, rescored ? @"1" : @"0" },
             };
+        }
+
+        /// <summary>
+        /// Whether the reconciled parquet at <paramref name="reconciledPath"/> records rescore
+        /// work (<c>osprey.rescored</c> other than <c>0</c>). A parquet written before the key
+        /// existed reads as work, because back then it was only written when there was some.
+        /// </summary>
+        internal static bool RecordsRescoreWork(string reconciledPath)
+        {
+            var footer = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
+            return !footer.TryGetValue(META_RESCORED, out string rescored) ||
+                   !string.Equals(rescored, @"0", StringComparison.Ordinal);
         }
     }
 }

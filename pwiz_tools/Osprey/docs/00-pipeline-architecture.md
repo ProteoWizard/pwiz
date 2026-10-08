@@ -446,8 +446,12 @@ is the defect, so the fix is one predicate, not a second check.
 That predicate is now per input file and covers ALL of that file's outputs, each judged by
 the validity stamp it carries inside itself (P9): `PerFileScoring` is done for a file when
 its `.calibration.json` and `.scores.parquet` are both current, `PerFileRescoring` when its
-reconciled parquet and both 2nd-pass binaries (`.2nd-pass.fdr_scores.bin` and
-`.2nd-pass.fdr_decoys.bin`) are. A kill between two writes leaves one output stale or
+reconciled parquet is current and, where the protein-compact worker answers for the file, both
+2nd-pass binaries (`.2nd-pass.fdr_scores.bin` and `.2nd-pass.fdr_decoys.bin`) carry that
+parquet's own stamp. A file whose parquet records no rescore work (`osprey.rescored=0`) gets
+no worker pair and Stage 7 answers for it, so it is done without one; Stage 7 likewise folds a
+pair as the worker's only when it carries the stamp of the parquet beside it, so a pair left
+under another key is recomputed rather than folded. A kill between two writes leaves one output stale or
 missing, so the file reads as not done and is recomputed. Outputs becoming valid together
 therefore holds by construction, not by the order the writer happens to use (P14).
 `FirstPassFDR` keeps progressive per-file completion the same way: each per-file product
@@ -615,7 +619,8 @@ downstream reuse lands last, which is why `PerFileRescoring` writes
 `<stem>.2nd-pass.fdr_decoys.bin` before `<stem>.2nd-pass.fdr_scores.bin` - and the
 2026-09-04 incident (P7) showed how easily a second reader asking about a different file
 defeats it. Correctness now rests on the per-file predicate instead: a run is done only
-when every output in its set carries a current stamp (P7, P9), so an interruption anywhere
+when every output in its set carries a current stamp - for a set written by one task run, the
+SAME stamp (P7, P9) - so an interruption anywhere
 in the set leaves a file the next phase recomputes, whatever order the writes landed in.
 Writers may keep their order; nothing relies on it.
 

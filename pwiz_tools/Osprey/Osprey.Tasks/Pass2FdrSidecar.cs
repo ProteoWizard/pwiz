@@ -130,9 +130,8 @@ namespace pwiz.Osprey.Tasks
             // supposed to be route-independent. An in-memory signal cannot answer a question
             // about a file that outlives the process.
             //
-            // The artifact answers it itself: the sidecar exists and carries a PerFileRescoring
-            // validity stamp with the current key. That is exactly "presence is the indicator,
-            // and you never have to open a file to learn who wrote it".
+            // The artifacts answer it themselves: the scores sidecar and the decoys both carry
+            // the PerFileRescoring stamp of the reconciled parquet beside them (HasWorkerStamp).
             var workerWroteFiles = WorkerOwnedPass2Sidecars(ctx);
 
             // The one per-file .2nd-pass.fdr_scores.bin writer, shared by every path that
@@ -920,10 +919,11 @@ namespace pwiz.Osprey.Tasks
             // worker had run, and it recomputed and rewrote every sidecar. One task cannot
             // reconstruct another task's key from a different leg, and should not try.
             //
-            // Staleness is still covered, by the task that owns it rather than by this check: if
-            // the worker's inputs changed, PerFileRescoring's OWN validity fails, the driver
-            // re-runs it, and it rewrites the binary with a new stamp. A stamp that survives is
-            // one whose producer was legitimately skipped as already-done.
+            // Staleness is covered by comparing the stamps to EACH OTHER instead: the pair must
+            // carry the stamp of the reconciled parquet beside it (HasWorkerStamp). A
+            // PerFileRescoring run with a new key rewrites every reconciled parquet, but writes
+            // a new pair only where it has worker output, so a pair it did not replace is
+            // left behind under the old key and no longer matches.
             foreach (string inputFile in ctx.Config.InputFiles)
             {
                 if (HasWorkerStamp(inputFile))
@@ -933,17 +933,38 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Whether <paramref name="inputFile"/>'s <c>.2nd-pass.fdr_scores.bin</c> was written by
-        /// <c>PerFileRescoring</c> with this build - the per-file test behind
+        /// Whether <paramref name="inputFile"/>'s 2nd-pass scores and competition decoys are
+        /// the worker answer for the reconciled parquet beside them - the per-file test behind
         /// <see cref="WorkerOwnedPass2Sidecars"/>, kept in one place so every reader of "who
         /// wrote this sidecar" asks the same question.
+        ///
+        /// <para>All three carry the stamp of the <c>PerFileRescoring</c> run that wrote them,
+        /// and they must carry the SAME one. The reconciled parquet is rewritten by every
+        /// PerFileRescoring run whose key changed, including for a file that gets no worker
+        /// answer this time (no Stage 6 work, or no worker at all), so a pair left by an
+        /// earlier run under another key no longer matches it and is recomputed here rather
+        /// than folded as this run's answer. Comparing the stamps to each other, not to a key
+        /// recomputed in this process, is what keeps the test valid on a separate HPC leg.</para>
         /// </summary>
         internal static bool HasWorkerStamp(string inputFile)
         {
-            var stamp = FdrScoresSidecar.ReadStamp(FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass);
+            var reconciled = ParquetScoreCache.ReadStamp(ParquetScoreCache.GetReconciledScoresPath(inputFile));
+            if (reconciled == null ||
+                !string.Equals(reconciled.Task, PerFileRescoreTask.TASK_NAME, StringComparison.Ordinal) ||
+                !string.Equals(reconciled.Version, OspreyVersion.Current, StringComparison.Ordinal))
+            {
+                return false;
+            }
+            return IsSameStamp(FdrScoresSidecar.ReadStamp(FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass), reconciled) &&
+                   IsSameStamp(Pass2CompetitionDecoys.ReadStamp(Pass2CompetitionDecoys.PathFor(inputFile)), reconciled);
+        }
+
+        private static bool IsSameStamp(ArtifactStamp stamp, ArtifactStamp other)
+        {
             return stamp != null &&
-                   string.Equals(stamp.Task, PerFileRescoreTask.TASK_NAME, StringComparison.Ordinal) &&
-                   string.Equals(stamp.Version, OspreyVersion.Current, StringComparison.Ordinal);
+                   string.Equals(stamp.Task, other.Task, StringComparison.Ordinal) &&
+                   string.Equals(stamp.Version, other.Version, StringComparison.Ordinal) &&
+                   string.Equals(stamp.Key, other.Key, StringComparison.Ordinal);
         }
 
         /// <summary>

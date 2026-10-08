@@ -20,6 +20,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -37,6 +38,9 @@ namespace pwiz.Osprey.IO
         private const string PARQUET_EXT = @".parquet";
         private const string BLIB_EXT = @".blib";
 
+        // "SQLite format 3" plus its NUL terminator, the first 16 bytes of every SQLite 3 file.
+        private static readonly byte[] SQLITE_HEADER = Encoding.ASCII.GetBytes(@"SQLite format 3" + '\0');
+
         /// <summary>
         /// The stamp inside the artifact at <paramref name="path"/>, or null when the file is
         /// missing, unreadable, unstamped or of a kind that carries no stamp. Never throws.
@@ -52,14 +56,17 @@ namespace pwiz.Osprey.IO
             if (EndsWith(path, HTML_EXT))
                 return ArtifactStamp.TryReadHtmlHead(path);
             if (EndsWith(path, FdrScoresSidecar.EXT))
-                return FdrScoresSidecar.ReadStamp(path, PassFromName(path));
+                return FdrScoresSidecar.ReadStamp(path, PassFromName(path, FdrScoresSidecar.EXT));
             if (EndsWith(path, FdrExperimentSidecar.EXT))
-                return FdrExperimentSidecar.ReadStamp(path, PassFromName(path));
+                return FdrExperimentSidecar.ReadStamp(path, PassFromName(path, FdrExperimentSidecar.EXT));
             if (EndsWith(path, Pass2CompetitionDecoys.EXT))
                 return Pass2CompetitionDecoys.ReadStamp(path);
             if (EndsWith(path, RetainedBaseIdSidecar.EXT))
                 return RetainedBaseIdSidecar.ReadStamp(path);
-            if (EndsWith(path, BLIB_EXT))
+            // The output library is named by -o, verbatim, so it need not end in .blib. Any
+            // other SQLite file is read the same way rather than reading as unstamped, which
+            // would re-run the whole of SecondPassFDR on every invocation.
+            if (EndsWith(path, BLIB_EXT) || HasSqliteHeader(path))
                 return BlibWriter.ReadStamp(path);
             return null;
         }
@@ -81,14 +88,35 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The pass a first- or second-pass artifact belongs to, from the pass label every such
-        /// file name carries (<see cref="FdrScoresSidecar.LABEL_FIRST_PASS"/> or
-        /// <see cref="FdrScoresSidecar.LABEL_SECOND_PASS"/>).
+        /// Whether the file starts with the 16-byte SQLite 3 header. Never throws.
         /// </summary>
-        private static FdrScoresSidecar.Pass PassFromName(string path)
+        private static bool HasSqliteHeader(string path)
         {
-            string name = Path.GetFileName(path);
-            return name.IndexOf(@"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".", StringComparison.OrdinalIgnoreCase) >= 0
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    var header = new byte[SQLITE_HEADER.Length];
+                    return fs.Read(header, 0, header.Length) == header.Length &&
+                           header.AsSpan().SequenceEqual(SQLITE_HEADER);
+                }
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The pass a first- or second-pass artifact belongs to, from the pass label every such
+        /// file name carries immediately before its <paramref name="ext"/>
+        /// (<c>&lt;stem&gt;.2nd-pass.fdr_scores.bin</c>). Only that position counts: the stem is
+        /// the user's input or output name, and one that itself contains <c>.2nd-pass.</c> must
+        /// not turn a first-pass artifact into a second-pass one.
+        /// </summary>
+        private static FdrScoresSidecar.Pass PassFromName(string path, string ext)
+        {
+            return EndsWith(path, @"." + FdrScoresSidecar.LABEL_SECOND_PASS + ext)
                 ? FdrScoresSidecar.Pass.SecondPass
                 : FdrScoresSidecar.Pass.FirstPass;
         }

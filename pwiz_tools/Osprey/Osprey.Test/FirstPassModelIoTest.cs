@@ -44,9 +44,6 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class FirstPassModelIoTest
     {
-        /// <summary>The file <see cref="AssertLinearFileBytesArePinned"/> expects, as the build
-        /// before tree models were persisted wrote it: LF, two-space indent, round-trip doubles,
-        /// a trailing newline, and no tree property.</summary>
         /// <summary>
         /// The pinned file below, opened by the validity stamp it was written with - the first
         /// property, ahead of everything the pin covers.
@@ -57,6 +54,9 @@ namespace pwiz.Osprey.Test
                    ",\n" + PINNED_LINEAR_MODEL_FILE.Substring("{\n".Length);
         }
 
+        /// <summary>The file <see cref="AssertLinearFileBytesArePinned"/> expects, as the build
+        /// before tree models were persisted wrote it: LF, two-space indent, round-trip doubles,
+        /// a trailing newline, and no tree property.</summary>
         private const string PINNED_LINEAR_MODEL_FILE =
             "{\n" +
             "  \"SchemaVersion\": 1,\n" +
@@ -432,6 +432,14 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(paired.Model);
             Assert.IsFalse(paired.Model.IsGradientBoostedTrees, @"the stratum's own stem supplies the model");
             Assert.IsTrue(stratum.SetEquals(paired.StratumBaseIds));
+
+            // A stratum written by another run (another key) is not this model's, so it is not
+            // paired with it.
+            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(parquetPaths[@"run2"], @"run2"), stratum,
+                ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, @"another-run")));
+            var unpaired = FirstPassModelIO.LoadFromAny(parquetPaths);
+            Assert.IsNotNull(unpaired);
+            Assert.IsNull(unpaired.StratumBaseIds, @"a stratum stamped by another run must not be paired");
         }
 
         private static void AssertEveryTrainedModelIsPersisted(Dictionary<string, string> parquetPaths)
@@ -476,14 +484,15 @@ namespace pwiz.Osprey.Test
             string experimentPath = Path.Combine(dir, @"output.1st-pass.fdr_experiment.bin");
             FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
                 FdrScoresSidecar.Pass.FirstPass, ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, key));
-            foreach (var kvp in parquetPaths)
-            {
-                Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), MakeSvmModel(), @"max", TestStamps.Any));
-                Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(kvp.Value, kvp.Key),
-                    new HashSet<uint> { 1, 2, 3 }, TestStamps.Any));
-            }
-
+            // A model and stratum left by a run under ANOTHER key are not this run's first pass.
+            var otherRun = ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, @"other-key");
+            SaveModelAndStratum(parquetPaths, otherRun);
             var refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
+                new OspreyConfig(), out _);
+            Assert.AreEqual(1, refusals.Count, @"a model stamped with another key must not enter at the gate");
+
+            SaveModelAndStratum(parquetPaths, ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, key));
+            refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
                 new OspreyConfig(), out var sidecar);
             Assert.AreEqual(0, refusals.Count, string.Join(@"; ", refusals));
             Assert.IsNotNull(sidecar, @"the gate should hand back the sidecar it checked");
@@ -493,6 +502,16 @@ namespace pwiz.Osprey.Test
                 new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, out _);
             Assert.AreEqual(1, refusals.Count,
                 @"a gbdt run must not enter at the gate with a linear model: it would publish that model");
+        }
+
+        private static void SaveModelAndStratum(Dictionary<string, string> parquetPaths, ArtifactStamp stamp)
+        {
+            foreach (var kvp in parquetPaths)
+            {
+                Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), MakeSvmModel(), @"max", stamp));
+                Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(kvp.Value, kvp.Key),
+                    new HashSet<uint> { 1, 2, 3 }, stamp));
+            }
         }
 
         private static FirstPassFdrTask FirstPassTask()

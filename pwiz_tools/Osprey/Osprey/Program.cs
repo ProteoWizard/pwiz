@@ -766,6 +766,19 @@ namespace pwiz.Osprey
                 return EXIT_CODE_FAILURE_TO_START;
             }
 
+            // A product is outstanding, so the report needs a fold through the pipeline - which
+            // reads the analysis's intermediate files, and those are current only for the build
+            // that wrote them. Under another build every stage would recompute for hours under a
+            // command that writes nothing but the report, so refuse and name the override.
+            string analysisVersion = ModelDiagnosticsReport.FirstPassVersion(config);
+            if (analysisVersion != null &&
+                !string.Equals(analysisVersion, OspreyVersion.Current, StringComparison.Ordinal))
+            {
+                LogError(string.Format(OspreyResources.Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_this_build_is__2___so_building_the_missing_,
+                    ModelDiagnosticsTaskText, analysisVersion, OspreyVersion.Current, OspreyVersion.ENV_OVERRIDE));
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
             // rather than the re-analysis this task used to refuse to start.

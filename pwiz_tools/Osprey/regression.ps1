@@ -1778,7 +1778,7 @@ function Invoke-OspreyTaskRun {
         throw ("Osprey --task modified {0} file(s) it was given, which no task may do: [{1}]. " +
                "A phase produces new artifacts; rewriting one it received means a later stage " +
                "is reaching back into an earlier stage's output, so that file no longer matches " +
-               "the validity sidecar attesting it. See issue #4486. Log: {2}") -f
+               "the producer that stamped it. See issue #4486. Log: {2}") -f
               $touched.Count, ($touched -join ', '), $logPath
     }
 }
@@ -2459,7 +2459,9 @@ foreach ($name in $selected) {
             # Compare-Object boxes every byte into a PSObject and hashes it. On Astral (85.8 MB,
             # 2,498,773 records) that took the harness process to a 53 GB working set and stalled
             # this leg for many minutes; the span compare is under a second.
-            $expDiff = [OspreyFdrSidecarComparer]::CompareBytes(
+            # CompareExperimentBytes: header and records only. The trailing validity stamp is
+            # provenance whose key names the route, so it legitimately differs between legs.
+            $expDiff = [OspreyFdrSidecarComparer]::CompareExperimentBytes(
                 $expStraight[0].FullName, $expChain[0].FullName, 1000)
             if (-not $expDiff.Readable) {
                 $m3sIssues.Add("$expName : $($expDiff.Problem)")
@@ -2477,9 +2479,9 @@ foreach ($name in $selected) {
                     $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
                     $expDiff.FirstDiffOffset, $expDiff.DiffCount))
             } else {
-                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length -
+                $m3sCompared += [int](($expDiff.LengthExpected -
                     [OspreyFdrSidecarComparer]::ExperimentHeaderLen) /
-                    [OspreyFdrSidecarComparer]::ExperimentRecordLen
+                    [OspreyFdrSidecarComparer]::ExperimentRecordLen)
             }
         }
 

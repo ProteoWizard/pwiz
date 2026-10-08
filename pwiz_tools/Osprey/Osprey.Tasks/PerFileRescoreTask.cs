@@ -606,6 +606,9 @@ namespace pwiz.Osprey.Tasks
             int pass2Present = 0;
             int pass2Expected = 0;
             string pass2Key = ValidityKey(ctx);
+            // Only protein-compact has a per-file worker (TryCreatePass2Worker), so only there
+            // can a file owe a worker pair.
+            bool workerAnswers = OspreyEnvironment.Pass2ProteinCompact;
             if (ctx.Config.InputFiles != null)
             {
                 foreach (var inputFile in ctx.Config.InputFiles)
@@ -615,7 +618,7 @@ namespace pwiz.Osprey.Tasks
                     // sidecar left by a build before the v3 -> v4 record change satisfied this
                     // gate and made the WHOLE Stage 6 rescore a no-op - the run then finished
                     // green carrying 1st-pass q-values into the picked-protein FDR and the .blib.
-                    if (Pass2ArtifactsCurrent(inputFile, pass2Key))
+                    if (IsFileRescored(inputFile, ParquetScoreCache.GetReconciledScoresPath(inputFile), pass2Key, workerAnswers))
                         pass2Present++;
                 }
             }
@@ -800,7 +803,7 @@ namespace pwiz.Osprey.Tasks
             // needs the global pool - BuildRescoredPool, on the RescoredEntries pull. What is
             // decided HERE rather than there is which reconciled parquets that build may
             // overlay: this is the last moment the question has the right answer (see
-            // RescoredPoolPlan), and the answer is cheap - one small sidecar read per file.
+            // RescoredPoolPlan), and the answer is cheap - one embedded-stamp read per file.
             // Snapshot under the lock rather than handing the live dictionary on. The
             // parallel loop above has joined, so its contents are final - but passing the
             // mutable instance lets shared state outlive the region that guarded it, and
@@ -1354,8 +1357,10 @@ namespace pwiz.Osprey.Tasks
                 // whatever invalidates PerFileRescoring invalidates them. Stamping SecondPassFDR's
                 // key here would leave a file that outlives the inputs it was computed from. Each
                 // commits atomically with its stamp, and Stage 7 folds a file as the worker's only
-                // when BOTH are current, so an interruption between the two writes leaves a file
-                // Stage 7 recomputes rather than one it folds against a missing decoy artifact.
+                // when BOTH carry the stamp of the reconciled parquet beside them
+                // (Pass2FdrSidecar.HasWorkerStamp), so an interruption between the two writes
+                // leaves a file Stage 7 recomputes rather than one it folds against a missing or
+                // stale decoy artifact.
                 var stamp = ArtifactStamp.ForCurrentBuild(taskName, taskValidityKey);
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(inputFile), bestDecoy, stamp);
                 FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
@@ -1931,9 +1936,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Whether both per-file 2nd-pass artifacts of <paramref name="inputFile"/> - the scores
-        /// sidecar and the competition decoys - carry a stamp current for this task and
-        /// <paramref name="validityKey"/>.
+        /// Whether <paramref name="inputFile"/> is done for this task: its reconciled parquet at
+        /// <paramref name="reconciledPath"/> is current for <paramref name="validityKey"/> and,
+        /// when <paramref name="workerAnswers"/>, the worker's 2nd-pass pair is there too - unless
+        /// the parquet records that the file had no rescore work, which gets no pair.
         ///
         /// <para>ONE definition, called by both the cohort-level count in <see cref="Run"/> and
         /// the per-file skip in <see cref="TryResumeRescoredFile"/>. They used to ask different
@@ -1941,11 +1947,21 @@ namespace pwiz.Osprey.Tasks
         /// the reconciled parquet was stamped - and a crash between the two writes made them
         /// disagree about the same file in the same run. Two notions of "done" is the defect;
         /// this is the fix.</para>
+        ///
+        /// <para>A file with no rescore work gets a reconciled parquet (WriteUnchangedReconciled)
+        /// and no worker pair, and Stage 7 answers for it. Requiring the pair anyway counted such
+        /// a file as outstanding forever, which made <c>--task ModelDiagnostics</c> refuse any
+        /// cohort holding one (a blank or QC injection). The parquet's own
+        /// <c>osprey.rescored</c> flag tells the two apart; a kill between the parquet and the
+        /// pair of a file that WAS rescored still reads as not done.</para>
         /// </summary>
-        private bool Pass2ArtifactsCurrent(string inputFile, string validityKey)
+        private bool IsFileRescored(string inputFile, string reconciledPath, string validityKey, bool workerAnswers)
         {
-            return PerFileResumeDriver.IsCurrent(FdrScoresSidecar.Pass2Path(inputFile), Name, validityKey) &&
-                   PerFileResumeDriver.IsCurrent(Pass2CompetitionDecoys.PathFor(inputFile), Name, validityKey);
+            if (!PerFileResumeDriver.IsCurrent(reconciledPath, Name, validityKey))
+                return false;
+            return !workerAnswers ||
+                   Pass2FdrSidecar.HasWorkerStamp(inputFile) ||
+                   !ReconciledParquetWriter.RecordsRescoreWork(reconciledPath);
         }
 
         /// <summary>
@@ -1992,14 +2008,20 @@ namespace pwiz.Osprey.Tasks
             // Gated on Pass2Worker because the sidecar only exists where the per-file half of
             // the second pass runs; the retrain modes recompute over the whole pool and write
             // none, and demanding one there would re-score every file forever.
-            bool pass2Done = inputs.Pass2Worker == null ||
-                             (inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx) &&
-                              inputs.Config.InputFiles != null &&
-                              inputIdx < inputs.Config.InputFiles.Count &&
-                              Pass2ArtifactsCurrent(inputs.Config.InputFiles[inputIdx], inputs.TaskValidityKey));
-            if (hasParquetPath
-                && PerFileResumeDriver.IsCurrent(reconciledPath, Name, inputs.TaskValidityKey)
-                && pass2Done)
+            bool done;
+            if (inputs.Pass2Worker == null)
+            {
+                done = hasParquetPath && PerFileResumeDriver.IsCurrent(reconciledPath, Name, inputs.TaskValidityKey);
+            }
+            else
+            {
+                done = hasParquetPath &&
+                       inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx) &&
+                       inputs.Config.InputFiles != null &&
+                       inputIdx < inputs.Config.InputFiles.Count &&
+                       IsFileRescored(inputs.Config.InputFiles[inputIdx], reconciledPath, inputs.TaskValidityKey, true);
+            }
+            if (done)
             {
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.PerFileRescoreTask_TryResumeRescoredFile_File__0___1____2__was_already_re_scored__keeping_it_,

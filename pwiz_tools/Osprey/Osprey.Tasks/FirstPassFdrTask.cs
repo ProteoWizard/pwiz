@@ -436,13 +436,13 @@ namespace pwiz.Osprey.Tasks
                 File.Move(declared, aside);
                 ctx.LogInfo(string.Format(
                     @"{0}: harness report moved to {1}. The declared product " +
-                    @"path is left EMPTY on purpose, so nothing stamps or adopts it.",
+                    @"path is left EMPTY on purpose, so nothing adopts it.",
                     OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME), aside));
             }
             catch (Exception ex)
             {
                 // Loud, because the failure mode is the one this method exists to prevent: a
-                // partial report sitting at the declared path, about to be stamped as if it
+                // partial report sitting at the declared path, about to be adopted as if it
                 // described the cohort.
                 ctx.LogWarning(string.Format(
                     @"{0}: could not move the harness report off the declared " +
@@ -453,8 +453,12 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// True when the pass-1 diagnostics product is the single declared output this task
-        /// still owes: it is absent, and every other declared output exists with a current
-        /// validity stamp. The condition Run's fold arm turns on.
+        /// still owes: it is absent or not current, and every other declared output exists with
+        /// a current validity stamp. The condition Run's fold arm turns on.
+        ///
+        /// <para>"Not current" and not just "absent": a stale product left by another arm or
+        /// build made this decline, the gate route that FirstPassFDR then takes skips the
+        /// diagnostics, and nothing ever rebuilt it - every invocation re-ran the task.</para>
         ///
         /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
         /// output is covered without anyone remembering to add it here - the failure direction
@@ -464,9 +468,9 @@ namespace pwiz.Osprey.Tasks
         private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
         {
             string diagnosticsPath = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
-            if (string.IsNullOrEmpty(diagnosticsPath) || File.Exists(diagnosticsPath))
-                return false;
             string validityKey = ValidityKey(ctx);
+            if (string.IsNullOrEmpty(diagnosticsPath) || PerFileResumeDriver.IsCurrent(diagnosticsPath, Name, validityKey))
+                return false;
             var outputs = Outputs(ctx).ToList();
             foreach (string output in outputs)
             {
@@ -962,10 +966,8 @@ namespace pwiz.Osprey.Tasks
             //     the overlay builds the bundle from those without the summary. That arm
             //     completes, at O(files x entries), and it is the one to disclose.
             //
-            // No remedy is offered for the missing summary in either case that this task's own
-            // resume cannot deliver: FirstPassFDR declares the file in neither Outputs nor
-            // ValidityKey (see RetainedBaseIdSidecar.FormatVersion), so "re-run FirstPassFDR"
-            // over a complete analysis reports its outputs valid and writes nothing.
+            // The summary is a declared output of this task, so a missing one makes the task
+            // not current and the next run rebuilds it.
 
             // The bundle to adopt. In worker mode the upstream PerFileScoring
             // task hydrated it from sibling sidecars and published it. On a
@@ -3743,6 +3745,13 @@ namespace pwiz.Osprey.Tasks
             else if (modelSidecar.Model == null)
             {
                 refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model,
+                    FirstPassModelIO.EXT_MODEL));
+            }
+            else if (modelSidecar.Stamp == null || !modelSidecar.Stamp.IsCurrent(Name, validityKey))
+            {
+                // A model left by an earlier run under another key - this run's own model write
+                // failed - must not be published as this run's first pass.
+                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___0___is_not_up_to_date,
                     FirstPassModelIO.EXT_MODEL));
             }
             else
