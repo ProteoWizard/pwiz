@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta-runner name="Publish TeamCity Artifacts">
+  <description>Publishes artifacts to TeamCity</description>
+  <settings>
+    <parameters>
+      <param name="system.artifact.paths" value="" spec="text description='Comma-separated paths to artifacts in TeamCity format' display='normal' label='Paths to artifacts:' validationMode='not_empty'" />
+    </parameters>
+    <build-runners>
+      <runner name="" type="Ant">
+        <parameters>
+          <param name="build-file"><![CDATA[<project name="publish-artifacts">
+
+<target name="publish">
+<echo>##teamcity[publishArtifacts '${artifact.paths}']</echo>
+</target>
+
+</project>]]></param>
+          <param name="build-file-path" value="build.xml" />
+          <param name="target" value="publish" />
+          <param name="teamcity.coverage.emma.include.source" value="true" />
+          <param name="teamcity.coverage.emma.instr.parameters" value="-ix -*Test*" />
+          <param name="teamcity.coverage.idea.includePatterns" value="*" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use-custom-build-file" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <requirements />
+  </settings>
+</meta-runner>
+

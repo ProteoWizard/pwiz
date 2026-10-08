@@ -11,7 +11,7 @@ The data packages are listed in `testdata.json`, which the tests and the packagi
 | Platform | Command | Notes |
 |---|---|---|
 | Windows | `pwsh -File build.ps1` or `build.bat` | Needs PowerShell 7 and the .NET SDK that `global.json` names. |
-| Linux, WSL2 | `./build.sh` | Installs what is missing without root: the SDK into `~/.dotnet` (through `pwiz-sharp/scripts/ensure-dotnet.sh`) and PowerShell as a dotnet global tool. Under WSL2 it adds `/usr/lib/wsl/lib`, where the NVIDIA driver's CUDA libraries live, to the library path. Every argument passes through to `build.ps1`. |
+| Linux, WSL2 | `./build.sh` | Installs what is missing without root: the SDK into `~/.dotnet` (through `scripts/ensure-dotnet.sh`) and PowerShell as a dotnet global tool. Under WSL2 it adds `/usr/lib/wsl/lib`, where the NVIDIA driver's CUDA libraries live, to the library path. Every argument passes through to `build.ps1`. |
 
 `build.ps1` builds `CarafeSharp.sln` (Release, x64) and runs the tests. Its options:
 

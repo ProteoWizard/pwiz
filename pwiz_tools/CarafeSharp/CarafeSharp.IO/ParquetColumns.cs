@@ -22,9 +22,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Parquet;
-using Parquet.Data;
 using Parquet.Schema;
 
 namespace pwiz.CarafeSharp.IO
@@ -44,26 +44,33 @@ namespace pwiz.CarafeSharp.IO
             var columns = new Dictionary<string, Array>(StringComparer.Ordinal);
             IReadOnlyDictionary<string, string> metadata;
             using (var stream = File.OpenRead(path))
-            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
             {
-                metadata = new Dictionary<string, string>(reader.CustomMetadata);
-                var fields = reader.Schema.GetDataFields().ToDictionary(f => f.Name, StringComparer.Ordinal);
-                foreach (string name in columnNames)
+                var reader = RunSync(ParquetReader.CreateAsync(stream));
+                try
                 {
-                    if (!fields.ContainsKey(name))
-                        throw new InvalidDataException(string.Format(@"{0} has no column {1}.", path, name));
-                }
-                var parts = columnNames.ToDictionary(n => n, n => new List<Array>(), StringComparer.Ordinal);
-                for (int g = 0; g < reader.RowGroupCount; g++)
-                {
-                    using (var group = reader.OpenRowGroupReader(g))
+                    metadata = new Dictionary<string, string>(reader.CustomMetadata);
+                    var fields = reader.Schema.GetDataFields().ToDictionary(f => f.Name, StringComparer.Ordinal);
+                    foreach (string name in columnNames)
                     {
-                        foreach (string name in columnNames)
-                            parts[name].Add(RunSync(group.ReadColumnAsync(fields[name])).Data);
+                        if (!fields.ContainsKey(name))
+                            throw new InvalidDataException(string.Format(@"{0} has no column {1}.", path, name));
                     }
+                    var parts = columnNames.ToDictionary(n => n, n => new List<Array>(), StringComparer.Ordinal);
+                    for (int g = 0; g < reader.RowGroupCount; g++)
+                    {
+                        using (var group = reader.OpenRowGroupReader(g))
+                        {
+                            foreach (string name in columnNames)
+                                parts[name].Add(ReadColumn(group, fields[name]));
+                        }
+                    }
+                    foreach (string name in columnNames)
+                        columns[name] = Concatenate(parts[name], fields[name]);
                 }
-                foreach (string name in columnNames)
-                    columns[name] = Concatenate(parts[name], fields[name]);
+                finally
+                {
+                    RunSync(reader.DisposeAsync());
+                }
             }
             return new ParquetColumns(columns, metadata);
         }
@@ -72,8 +79,17 @@ namespace pwiz.CarafeSharp.IO
         public static IReadOnlyDictionary<string, string> ReadMetadata(string path)
         {
             using (var stream = File.OpenRead(path))
-            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
-                return new Dictionary<string, string>(reader.CustomMetadata);
+            {
+                var reader = RunSync(ParquetReader.CreateAsync(stream));
+                try
+                {
+                    return new Dictionary<string, string>(reader.CustomMetadata);
+                }
+                finally
+                {
+                    RunSync(reader.DisposeAsync());
+                }
+            }
         }
 
         /// <summary>
@@ -88,8 +104,8 @@ namespace pwiz.CarafeSharp.IO
             var fields = columns.Select((c, i) => new DataField(c.Key, elementTypes[i])).ToArray();
             int rowCount = columns.Count == 0 ? 0 : columns[0].Value.Length;
             using (var stream = File.Create(path))
-            using (var writer = RunSync(ParquetWriter.CreateAsync(new ParquetSchema(fields), stream)))
             {
+                var writer = RunSync(ParquetWriter.CreateAsync(new ParquetSchema(fields), stream));
                 writer.CustomMetadata = metadata.ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
                 for (int start = 0; start < rowCount; start += Math.Max(1, rowsPerGroup))
                 {
@@ -100,11 +116,86 @@ namespace pwiz.CarafeSharp.IO
                         {
                             var slice = Array.CreateInstance(elementTypes[i], count);
                             Array.Copy(columns[i].Value, start, slice, 0, count);
-                            RunSync(group.WriteColumnAsync(new DataColumn(fields[i], slice)));
+                            WriteColumn(group, fields[i], slice);
                         }
                     }
                 }
+                // Writes the footer
+                RunSync(writer.DisposeAsync());
             }
+        }
+
+        /// <summary>
+        /// One row group's column as an array: string[], byte[][], T[] for a required column, or
+        /// T?[] for a nullable one, as Parquet.Net 4's DataColumn.Data was.
+        /// </summary>
+        private static Array ReadColumn(ParquetRowGroupReader group, DataField field)
+        {
+            int rowCount = checked((int)group.RowCount);
+            // Parquet.Net 6 describes a string column as ReadOnlyMemory<char>; read it as strings.
+            if (field.ClrType == typeof(string) || field.ClrType == typeof(ReadOnlyMemory<char>))
+            {
+                var strings = new string[rowCount];
+                RunSync(group.ReadAsync(field, strings.AsMemory()));
+                return strings;
+            }
+            // and a binary column as ReadOnlyMemory<byte>; read it as byte arrays.
+            if (field.ClrType == typeof(byte[]) || field.ClrType == typeof(ReadOnlyMemory<byte>))
+            {
+                var bytes = new byte[rowCount][];
+                RunSync(group.ReadAsync(field, bytes.AsMemory()));
+                return bytes;
+            }
+            var method = field.IsNullable ? READ_NULLABLE : READ_REQUIRED;
+            return (Array)method.MakeGenericMethod(field.ClrType).Invoke(null, new object[] { group, field, rowCount });
+        }
+
+        private static readonly MethodInfo READ_REQUIRED = typeof(ParquetColumns).GetMethod(nameof(ReadRequired), BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo READ_NULLABLE = typeof(ParquetColumns).GetMethod(nameof(ReadNullable), BindingFlags.NonPublic | BindingFlags.Static);
+
+        private static T[] ReadRequired<T>(ParquetRowGroupReader group, DataField field, int rowCount) where T : struct
+        {
+            var values = new T[rowCount];
+            RunSync(group.ReadAsync(field, values.AsMemory()));
+            return values;
+        }
+
+        private static T?[] ReadNullable<T>(ParquetRowGroupReader group, DataField field, int rowCount) where T : struct
+        {
+            var values = new T?[rowCount];
+            RunSync(group.ReadAsync(field, values.AsMemory()));
+            return values;
+        }
+
+        private static void WriteColumn(ParquetRowGroupWriter group, DataField field, Array values)
+        {
+            if (values is string[] strings)
+            {
+                RunSync(group.WriteAsync(field, strings));
+                return;
+            }
+            if (values is byte[][] bytes)
+            {
+                RunSync(group.WriteAsync(field, bytes));
+                return;
+            }
+            var elementType = values.GetType().GetElementType() ?? typeof(object);
+            var underlying = Nullable.GetUnderlyingType(elementType);
+            var method = underlying != null ? WRITE_NULLABLE.MakeGenericMethod(underlying) : WRITE_REQUIRED.MakeGenericMethod(elementType);
+            method.Invoke(null, new object[] { group, field, values });
+        }
+
+        private static readonly MethodInfo WRITE_REQUIRED = typeof(ParquetColumns).GetMethod(nameof(WriteRequired), BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo WRITE_NULLABLE = typeof(ParquetColumns).GetMethod(nameof(WriteNullable), BindingFlags.NonPublic | BindingFlags.Static);
+
+        private static void WriteRequired<T>(ParquetRowGroupWriter group, DataField field, T[] values) where T : struct
+        {
+            RunSync(group.WriteAsync(field, new ReadOnlyMemory<T>(values)));
+        }
+
+        private static void WriteNullable<T>(ParquetRowGroupWriter group, DataField field, T?[] values) where T : struct
+        {
+            RunSync(group.WriteAsync(field, new ReadOnlyMemory<T?>(values)));
         }
 
         private readonly Dictionary<string, Array> _columns;
@@ -166,6 +257,11 @@ namespace pwiz.CarafeSharp.IO
         }
 
         private static void RunSync(Task task)
+        {
+            task.GetAwaiter().GetResult();
+        }
+
+        private static void RunSync(ValueTask task)
         {
             task.GetAwaiter().GetResult();
         }

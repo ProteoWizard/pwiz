@@ -53,18 +53,10 @@
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
-  <!-- Deploy pwiz's patched Parquet.Net (pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll) over the
-       NuGet Parquet.dll, exactly as pwiz_tools/Osprey/Directory.Build.targets does; that file
-       documents the fork's deltas. A no-op for projects without Parquet.dll in their output. -->
-  <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
-    <PropertyGroup>
-      <_PatchedParquetSource>$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.dll</_PatchedParquetSource>
-      <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
-    </PropertyGroup>
-    <Copy SourceFiles="$(_PatchedParquetSource)"
-          DestinationFiles="$(_ResolvedParquetTarget)"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
-  </Target>
+  <!-- pwiz's patched Parquet.Net for projects that set ReferenceParquetNet=true; that file
+       documents the fork. Imported here, as in pwiz_tools/Osprey/Directory.Build.targets,
+       because this is the nearest Directory.Build.targets and the only one imported for the
+       CarafeSharp tree. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
 
 </Project>

@@ -147,7 +147,7 @@ namespace SharedBatchTest
 
         public enum VendorDir
         {
-            ABI,
+            Sciex,
             Agilent,
             Bruker,
             Shimadzu,
