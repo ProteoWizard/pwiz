@@ -5,7 +5,7 @@
 #   ./build.sh -NoTests            build only
 #
 # Installs what is missing without root: the .NET SDK that global.json names (into
-# ~/.dotnet, through pwiz-sharp/scripts/ensure-dotnet.sh) and PowerShell (as a dotnet
+# ~/.dotnet, through scripts/ensure-dotnet.sh) and PowerShell (as a dotnet
 # global tool), as pwiz_tools/Osprey/tcbuild.sh does.
 #
 # No `set -e`: ensure-dotnet.sh expects to run without it (it probes for dotnet and reports its
@@ -19,8 +19,8 @@ fail() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || fail "cannot find the script folder"
 
-# shellcheck source=../../pwiz-sharp/scripts/ensure-dotnet.sh
-source "$SCRIPT_DIR/../../pwiz-sharp/scripts/ensure-dotnet.sh" || fail "cannot load pwiz-sharp/scripts/ensure-dotnet.sh"
+# shellcheck source=../../scripts/ensure-dotnet.sh
+source "$SCRIPT_DIR/../../scripts/ensure-dotnet.sh" || fail "cannot load scripts/ensure-dotnet.sh"
 resolve_dotnet || true
 ensure_dotnet_sdk "$SCRIPT_DIR" || fail "the .NET SDK that global.json names could not be installed"
 

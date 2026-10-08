@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestData
 
             // Sciex .wiff2 file
             string wiff2Ext = ExtensionTestContext.CanImportAbWiff2 ? ".wiff2" : "-sample-centroid.mzML";
-            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api" + wiff2Ext),
+            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "swath.api" + wiff2Ext),
                 "X500R QTOF", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
 
             // MzWiff generated mzXML files
@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestData
             if (Skyline.Program.NoVendorReaders)
                 return;
 
-            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "PressureTrace1.wiff"), 0, 0);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "PressureTrace1.wiff"), 0, 0);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "ImsSynthAllIons.d"), 49, 369032);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "GFb_4Scan_TimeSegs_1530_100ng.d"), 63, 56163792);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Bruker, "Hela_QC_PASEF_Slot1-first-6-frames.d"), 1, 23340182);
@@ -351,7 +351,7 @@ namespace pwiz.SkylineTestData
             var testFilesDir = TestFilesDirs[0];
 
             if (ExtensionTestContext.CanImportAbWiff2)
-                VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
+                VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
 
             if (ExtensionTestContext.CanImportAbWiff)
                 VerifySerialNumber(testFilesDir.GetTestPath("051309_digestion.wiff"), "U016050603");

@@ -24,7 +24,7 @@
 #   MSCONVERT, MSDIFF   commands to run, when the defaults are not wanted. Each may carry
 #                       arguments ("mywine msconvert"). By default the container's mywine
 #                       wrapper is preferred, then msconvert/msdiff on PATH, then the
-#                       staged build under pwiz-sharp/installer/build/stage.
+#                       staged build under scripts/installer/build/stage.
 #
 # Exit status is 0 when every fixture matched its reference. Under TeamCity it is always
 # 0: the service messages already fail the build, and reporting the failure a second time
@@ -35,7 +35,7 @@ set -u
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 
-VENDORS=("ABI" "Agilent" "Bruker" "Mobilion" "Shimadzu" "Thermo" "UIMF" "Waters")
+VENDORS=("Sciex" "Agilent" "Bruker" "Mobilion" "Shimadzu" "Thermo" "UIMF" "Waters")
 EXTENSIONS=(".d" ".lcd" ".mbi" ".raw" ".wiff" ".wiff2" ".uimf")
 
 DATA_ROOT="$ROOT/pwiz/data/vendor_readers"
@@ -130,8 +130,8 @@ resolve_tool()  # <tool-name> <override>; echoes the command words
         printf 'mywine %s\n' "$tool"
     elif command -v "$tool" > /dev/null 2>&1; then
         printf '%s\n' "$tool"
-    elif [ -x "$ROOT/pwiz-sharp/installer/build/stage/$tool.exe" ]; then
-        printf '%s\n' "$ROOT/pwiz-sharp/installer/build/stage/$tool.exe"
+    elif [ -x "$ROOT/scripts/installer/build/stage/$tool.exe" ]; then
+        printf '%s\n' "$ROOT/scripts/installer/build/stage/$tool.exe"
     else
         return 1
     fi

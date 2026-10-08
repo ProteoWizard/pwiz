@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="89fe799c-05d1-489b-9a33-e68c6f9e9861" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Linux x86_64 debug</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_LinuxCore" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+    </inherits>
+    <options>
+      <option name="artifactRules" value="build-linux-x86_64/VERSION" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_336" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.variant_property" value="debug" />
+    </parameters>
+    <build-runners order="RUNNER_simpleRunner_122, RUNNER_336" />
+    <build-triggers>
+      <build-trigger id="TRIGGER_1023" type="schedulingTrigger">
+        <parameters>
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+          <param name="triggerRules"><![CDATA[+:.
+-:%teamcity.build.checkoutDir%/pwiz_tools/Skyline/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Topograph/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Shared/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/SeeMS/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt17">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+          <option name="take-successful-builds-only" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+

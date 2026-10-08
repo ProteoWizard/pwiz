@@ -281,7 +281,7 @@ if ($Coverage -and -not $IsWindows) {
 }
 try {
     if ($Coverage) {
-        $dotcover = @(& (Join-Path $scriptRoot '../../pwiz-sharp/scripts/Ensure-DotCover.ps1') -ManifestDir $scriptRoot)[-1]
+        $dotcover = @(& (Join-Path $scriptRoot '../../scripts/Ensure-DotCover.ps1') -ManifestDir $scriptRoot)[-1]
         # The 2023.3.3 console runner's /Name=value syntax, with the target's (dotnet's) own
         # arguments after --. The command line is built by hand, as Osprey's build.ps1 does, so the
         # filter's '&' and '!' and the logger's ';' reach the target unchanged.

@@ -15,7 +15,7 @@
 ;   - Ask "for me" (per-user, no admin) or "for everyone" (per-machine, admin)
 ;   - Ask for a standard install (replaced in place by newer versions) or a
 ;     version-specific one (kept beside other versions, never replaced); see
-;     pwiz-sharp\installer\common\InstallType.iss
+;     scripts\installer\common\InstallType.iss
 ;   - Install to %LOCALAPPDATA%\Programs\Osprey\ or %ProgramFiles%\Osprey\
 ;     (plus " <version>" for a version-specific install)
 ;   - Optionally put the install directory on the user's or the system PATH so
@@ -223,7 +223,7 @@ begin
     EnvRemovePath(ExpandConstant('{app}'));
 end;
 
-#include "..\..\..\pwiz-sharp\installer\common\LegacyMsi.iss"
+#include "..\..\..\scripts\installer\common\LegacyMsi.iss"
 { The first Osprey packaging was a per-machine WiX .msi into the same
   %ProgramFiles%\Osprey folder (UpgradeCode from the retired Osprey.wxs); refuse
   a per-machine install over it. }
@@ -237,4 +237,4 @@ end;
 
 { Standard / version-specific wizard page and the AppId, directory, group and
   display-name code the [Setup] section routes through. }
-#include "..\..\..\pwiz-sharp\installer\common\InstallType.iss"
+#include "..\..\..\scripts\installer\common\InstallType.iss"

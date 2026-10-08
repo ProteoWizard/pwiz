@@ -7,18 +7,25 @@ charset = utf-8
 end_of_line = crlf
 insert_final_newline = true
 trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
 
 # Shell scripts must use LF (Unix line endings)
 [*.sh]
 end_of_line = lf
 
+[*.{csproj,props,targets,xml}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
 # Scoped to the trees Skyline.sln inspects, plus the two ported WinForms apps that hit the same
 # WinForms and .NET 10 annotation noise for the same reasons: pwiz_tools/Shared is here because 11
 # of Skyline.sln's 28 projects live there (EditorConfig matches on file path, not on which project
 # compiles the file), and SeeMS and MSConvertGUI because the WFO1000 note below names them.
-# Deliberately NOT pwiz_tools/Osprey or pwiz_tools/Bumbershoot: separate products with their own
-# .sln.DotSettings. pwiz-sharp is unaffected either way - its own .editorconfig sets root = true,
-# so nothing in this file has ever reached it.
+# Deliberately NOT pwiz_tools/Osprey: a separate product with its own .sln.DotSettings. The pwiz
+# library and tools have their own path-scoped sections further down.
 [pwiz_tools/{Skyline,Shared,SeeMS,MSConvertGUI}/**.cs]
 
 # IDE0011: Add braces
@@ -63,3 +70,39 @@ resharper_assign_null_to_not_null_attribute_highlighting = suggestion
 [pwiz_tools/Skyline/{CommonTest,Test,TestConnected,TestData,TestFunctional,TestPerf,TestTutorial,TestUtil}/**.cs]
 resharper_possible_null_reference_exception_highlighting = none
 resharper_assign_null_to_not_null_attribute_highlighting = none
+
+# ---------------------------------------------------------------------------------------
+# pwiz library + tools (pwiz/, build/, examples/, installer/ and the pwiz projects under
+# pwiz_tools/). Stricter than Skyline, which keeps LangVersion 8.0 and its own conventions
+# (pwiz_tools/Directory.Build.props), so these sections are path-scoped on purpose.
+# ---------------------------------------------------------------------------------------
+[{pwiz,build,examples,scripts/installer,pwiz_tools/BiblioSpec,pwiz_tools/Commandline,pwiz_tools/MSConvertGUI,pwiz_tools/SeeMS,pwiz_tools/BullseyeSharp}/**.cs]
+# Prefer file-scoped namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+
+# Use var when the type is apparent
+csharp_style_var_when_type_is_apparent = true:suggestion
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+
+# Readonly fields
+dotnet_style_readonly_field = true:warning
+
+# Nullable reference types
+dotnet_diagnostic.CS8600.severity = error
+dotnet_diagnostic.CS8602.severity = error
+dotnet_diagnostic.CS8603.severity = error
+
+# Using directives
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+
+# Test method naming: Given_When_Then / Method_Scenario_Expected conventions use underscores.
+# Inline array literals in CollectionAssert / DataRow are idiomatic in test code.
+# NB the .NET editorconfig glob impl treats `**/` as one-or-more directories, so the test
+# directories are listed explicitly rather than matched with `**/test/**`.
+[{pwiz/**/test,scripts/installer/test,pwiz_tools/BiblioSpec/test,pwiz_tools/Commandline/*/test,pwiz_tools/MSConvertGUI/Test}/**.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1861.severity = none
