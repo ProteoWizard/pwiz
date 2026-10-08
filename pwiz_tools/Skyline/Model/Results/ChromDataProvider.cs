@@ -95,6 +95,15 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract eIonMobilityUnits IonMobilityUnits { get; }
 
+        // Provides IM <-> CCS conversion for cache writers that need to compute
+        // CCS at peak detection. Null when no converter is available (e.g.
+        // SRM-style providers).
+        public virtual IIonMobilityFunctionsProvider IonMobilityFunctionsProvider => null;
+
+        // For a provider re-reading cached chromatograms, the observed CCS already computed for
+        // a peak picked again unchanged from the chromatogram with this provider ID. Null otherwise.
+        public virtual double? GetPreviousObservedCcs(int providerId, ChromPeak peak) => null;
+
         public abstract bool IsProcessedScans { get; }
 
         public abstract bool IsSingleMzMatch { get; }

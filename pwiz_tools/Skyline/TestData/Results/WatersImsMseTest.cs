@@ -166,6 +166,8 @@ namespace pwiz.SkylineTestData.Results
 
                 if (withDriftTimeFilter)
                 {
+                    AssertPrecursorHighEnergyOffset(document, testModeStr);
+
                     // Verify that the .imsdb or .blib file goes out in the share zipfile
                     for (int complete = 0; complete <= 1; complete++)
                     {
@@ -215,6 +217,24 @@ namespace pwiz.SkylineTestData.Results
         }
 
         private static double driftTimeMax = 13.799765403988133; // Known max drift time for this file - use to mimic resolving power logic for test purposes
+
+        /// <summary>
+        /// The high-energy IM offset reports use to put MS2 observed IM back in the precursor frame
+        /// must be the one extraction applied, in every window mode - including linear range, whose
+        /// width math needs the file's maximum IM, which reports do not have.
+        /// </summary>
+        private static void AssertPrecursorHighEnergyOffset(SrmDocument document, string testModeStr)
+        {
+            var filePath = document.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath;
+            var libraryIonMobilities = document.Settings.GetIonMobilities(document.MoleculeLibKeys.ToArray(), filePath);
+            foreach (var pair in document.MoleculePrecursorPairs)
+            {
+                double expected = document.Settings.GetIonMobilityFilter(pair.NodePep, pair.NodeGroup, null,
+                    libraryIonMobilities, null, driftTimeMax).HighEnergyIonMobilityOffset ?? 0;
+                AssertEx.AreEqual(expected, ObservedIonMobilityCalculator.GetPrecursorHighEnergyOffset(
+                    document.Settings, pair.NodePep, pair.NodeGroup, filePath), testModeStr + " high-energy offset");
+            }
+        }
 
         private static SrmDocument InitWatersImsMseDocument(TestFilesDir testFilesDir,
             IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType driftWindowWidthCalcType,

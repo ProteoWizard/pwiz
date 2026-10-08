@@ -152,10 +152,25 @@ namespace pwiz.Skyline.Model
         [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
         [Category("PrecursorInfo")] public string Charge { get; set; }
         [Category("PrecursorInfo")] public string Label { get; set; }
-        [Category("PrecursorInfo")] public string RetentionTime { get; set; }
+        // RetentionTime is an attribute of the current scan, not the precursor -
+        // categorized under Acquisition. The PEAK retention time for the current
+        // target (independent of which scan is being viewed) is exposed separately
+        // as PeakRetentionTime below.
+        [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
         [Category("PrecursorInfo")] public string CCS { get; set; }
+        // Per-peak observed CCS for the current target in the active replicate,
+        // with percent error vs the target CCS rendered inline. Mirrors what the
+        // dotted observed-IM line tooltip shows. Null when no peak / no converter.
+        [Category("PrecursorInfo")] public string ObservedCCS { get; set; }
         [Category("PrecursorInfo")] public string IonMobility { get; set; }
+        // Per-peak observed IM for the current target in the active replicate,
+        // with percent error vs the target IM rendered inline. Mirrors the dotted
+        // observed-IM line tooltip. Null when no peak picked / IM tracking off.
+        [Category("PrecursorInfo")] public string ObservedIonMobility { get; set; }
         [Category("PrecursorInfo")] public string IsolationWindow { get; set; }
+        // Apex retention time of the current target's peak in the active replicate,
+        // independent of which scan is being viewed.
+        [Category("PrecursorInfo")] public string PeakRetentionTime { get; set; }
         [Category("PrecursorInfo")] public string DissociationMethod { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityRange { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityFilterRange { get; set; }

@@ -24,18 +24,25 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using DataboundPrecursor = pwiz.Skyline.Model.Databinding.Entities.Precursor;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -867,12 +874,30 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
             doc = WaitForDocumentLoaded();
+
+            // After reimport with IM filtering active, transitions extracted with
+            // an IM window should carry observed IM. Observed CCS will not be
+            // populated here: the IM-to-CCS conversion is a vendor-proprietary
+            // black box, and open formats like mz5 (and mzML) don't expose it.
+            AssertExtractedObservedIonMobilityAndCcsPopulated(doc);
+            AssertObservedIonMobilitySurvivesReopen(docName, CompactFormatOption.NEVER);
+            AssertObservedIonMobilitySurvivesReopen(docName, CompactFormatOption.ALWAYS);
+
+            // Each rescore rebuilds the cache from the previous one, so the ion mobility units it
+            // records for the file must carry through to the next rescore. Peaks are picked from
+            // the chromatograms of the previous cache, so a loss only shows on the third rescore.
+            RescoreResults();
+            RescoreResults();
+            RescoreResults();
+            AssertExtractedObservedIonMobilityAndCcsPopulated(SkylineWindow.Document);
+
             var progress = new SilentProgressMonitor();
             var exported = testFilesDir.GetTestPath("export.blib");
             new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
                 .ExportSpectralLibrary(exported, progress);
             var refSpectra = GetRefSpectra(exported);
             AssertEx.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
+            AssertHighEnergyOffsetFromSpectralLibrary(exported);
 
             // Now simulate user tinkering with IMS library values - make sure they persist
             transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
@@ -916,6 +941,124 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(driftTimePredictorDoomedDlg, driftTimePredictorDoomedDlg.CancelDialog);
             OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
+        }
+
+        /// <summary>
+        /// Reports put MS2 observed IM back in the precursor frame with the high-energy IM offset
+        /// extraction applied. When that offset comes from a spectral library rather than an ion
+        /// mobility library, reports must find it there too. Undone afterward, so the ion mobility
+        /// library stays in place for the rest of the test.
+        /// </summary>
+        private void AssertHighEnergyOffsetFromSpectralLibrary(string libraryPath)
+        {
+            var docBefore = SkylineWindow.Document;
+            RunUI(() => SkylineWindow.ModifyDocument(@"Spectral library ion mobility", doc => doc.ChangeSettings(doc.Settings
+                .ChangePeptideLibraries(libs => libs.ChangeLibrarySpecs(new[] { new BiblioSpecLiteSpec(@"exported", libraryPath) }))
+                .ChangeTransitionIonMobilityFiltering(f => f.ChangeLibrary(IonMobilityLibrary.NONE)
+                    .ChangeUseSpectralLibraryIonMobilityValues(true)))));
+            var docLibrary = WaitForDocumentChangeLoaded(docBefore);
+            var filePath = docLibrary.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath;
+            var libraryIonMobilities = docLibrary.Settings.GetIonMobilities(docLibrary.MoleculeLibKeys.ToArray(), filePath);
+            int withOffset = 0;
+            foreach (var pair in docLibrary.MoleculePrecursorPairs)
+            {
+                // As extraction looks it up (SpectrumFilter), with the file's IM range
+                double expected = docLibrary.Settings.GetIonMobilityFilter(pair.NodePep, pair.NodeGroup, null,
+                    libraryIonMobilities, null, 1000).HighEnergyIonMobilityOffset ?? 0;
+                if (expected != 0)
+                    withOffset++;
+                AssertEx.AreEqual(expected, ObservedIonMobilityCalculator.GetPrecursorHighEnergyOffset(
+                    docLibrary.Settings, pair.NodePep, pair.NodeGroup, filePath), pair.NodeGroup.ToString());
+            }
+            AssertEx.IsTrue(withOffset > 0, @"Expected a high-energy ion mobility offset from the spectral library");
+            RunUI(SkylineWindow.Undo);
+            WaitForDocumentChangeLoaded(docLibrary);
+        }
+
+        private static void AssertExtractedObservedIonMobilityAndCcsPopulated(SrmDocument doc)
+        {
+            int withObservedIm = 0;
+            int withObservedCcs = 0;
+            int withImInfo = 0;
+            foreach (var transitionGroup in doc.MoleculeTransitionGroups)
+            {
+                foreach (var transition in transitionGroup.Transitions)
+                {
+                    foreach (var chromInfo in transition.Results.SelectMany(r => r))
+                    {
+                        if (chromInfo.IonMobility != null && chromInfo.IonMobility.HasIonMobilityValue)
+                            withImInfo++;
+                        if (chromInfo.ObservedIonMobility.HasValue)
+                        {
+                            withObservedIm++;
+                            // A scale-0 encode (e.g. when the per-time-point IM scale is sourced
+                            // from a missing CCS converter rather than the data reader's IM units)
+                            // silently decodes to NaN. Assert a finite, physically plausible
+                            // (positive) value, not just HasValue - NaN.HasValue is true and would
+                            // otherwise slip through this check.
+                            var observedIm = chromInfo.ObservedIonMobility.Value;
+                            AssertEx.IsTrue(!double.IsNaN(observedIm) && observedIm > 0,
+                                string.Format(@"Observed ion mobility should be finite and positive, got {0}", observedIm));
+                        }
+                        if (chromInfo.ObservedCcs.HasValue)
+                            withObservedCcs++;
+                    }
+                }
+            }
+            // Observed IM should always populate when IM filtering is active, since it
+            // is just the intensity-weighted centroid of raw spectrum IM values.
+            AssertEx.IsTrue(withImInfo > 0, @"Expected transitions with IM info after IM-filtered reimport");
+            AssertEx.IsTrue(withObservedIm > 0, @"Expected at least one transition with ObservedIonMobility after IM extraction");
+            // ObservedCcs depends on the source file's IM-to-CCS conversion, which is
+            // a vendor-proprietary black box. Open formats (mzML, mz5) don't expose it,
+            // so we don't assert presence of ObservedCcs here.
+
+            // Precursor-level aggregate: PrecursorResult.ObservedIonMobility combines the
+            // MS1 isotope channels into the single per-ion value shown in reports. Verify
+            // it is populated and finite/positive wherever the channels carry an observed IM.
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(doc, DataSchemaLocalizer.INVARIANT);
+            int withPrecursorObservedIm = 0;
+            foreach (var moleculeGroup in doc.MoleculeGroups)
+            {
+                foreach (var molecule in moleculeGroup.Molecules)
+                {
+                    foreach (var nodeGroup in molecule.TransitionGroups)
+                    {
+                        var identityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide, nodeGroup.TransitionGroup);
+                        var precursor = new DataboundPrecursor(dataSchema, identityPath);
+                        foreach (var precursorResult in precursor.Results.Values)
+                        {
+                            var aggregate = precursorResult.ObservedIonMobility;
+                            if (!aggregate.HasValue)
+                                continue;
+                            withPrecursorObservedIm++;
+                            AssertEx.IsTrue(!double.IsNaN(aggregate.Value) && aggregate.Value > 0,
+                                string.Format(@"Precursor observed ion mobility should be finite and positive, got {0}", aggregate.Value));
+                        }
+                    }
+                }
+            }
+            AssertEx.IsTrue(withPrecursorObservedIm > 0, @"Expected at least one precursor with an aggregated observed ion mobility");
+        }
+
+        /// <summary>
+        /// Observed IM/CCS are stored on the transition results in the .sky, so they must survive
+        /// saving and reopening in both the XML and the compact results format.
+        /// </summary>
+        private void AssertObservedIonMobilitySurvivesReopen(string docPath, CompactFormatOption compactFormatOption)
+        {
+            var expected = GetObservedIonMobilityValues(SkylineWindow.Document);
+            RunUI(() =>
+            {
+                using (CompactFormatOption.SetOverride(compactFormatOption))
+                {
+                    SkylineWindow.SaveDocument(docPath);
+                }
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(docPath);
+            });
+            var reopened = WaitForDocumentLoaded();
+            AssertEx.AreEqualDeep(expected, GetObservedIonMobilityValues(reopened));
         }
     }
 }

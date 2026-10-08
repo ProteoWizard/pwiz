@@ -18,12 +18,14 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
@@ -45,6 +47,16 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly bool _sourceHasPositivePolarityData;
         private readonly bool _sourceHasNegativePolarityData;
+        // Captured up front, since the cache builder asks for it after ReleaseMemory() drops the cache
+        private readonly eIonMobilityUnits _ionMobilityUnits;
+        // Storage scale of per-time-point observed IM, zero when observed IM is not tracked
+        private readonly int _observedIonMobilityScale;
+        // The previous peaks' observed IM and CCS, by chromatogram and peak boundaries, for peaks
+        // picked again unchanged (see GetPreviousObservedCcs)
+        private readonly ConcurrentDictionary<Tuple<int, float, float>, Tuple<float, float>> _previousObservedCcs =
+            new ConcurrentDictionary<Tuple<int, float, float>, Tuple<float, float>>();
+        // Converts observed IM to CCS for any other peak, with the raw file's vendor calibration
+        private readonly RawFileCcsConverter _rawFileCcsConverter;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -59,13 +71,18 @@ namespace pwiz.Skyline.Model.Results
                                               IProgressStatus status,
                                               int startPercent,
                                               int endPercent,
-                                              ILoadMonitor loader)
+                                              ILoadMonitor loader,
+                                              Func<MsDataFileImpl> openRawFile)
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
             // Open a new stream for the cache so that we can do concurrent reads
             _cache = cache = cache.ChangeReadStream(loader.StreamManager.CreatePooledStream(cache.CachePath, false));
 
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
+            _ionMobilityUnits = _fileIndex >= 0 ? cache.CachedFiles[_fileIndex].IonMobilityUnits : eIonMobilityUnits.none;
+            _observedIonMobilityScale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(_ionMobilityUnits);
+            if (_observedIonMobilityScale != 0)
+                _rawFileCcsConverter = new RawFileCcsConverter(_ionMobilityUnits, openRawFile);
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();
             foreach (var c in _chromKeyIndices.Where(i => i.Key.Precursor != 0))
             {
@@ -92,7 +109,30 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromKeyIndices.Select((v, i) => new ChromKeyProviderIdPair(v.Key, i)); }
         }
 
-        public override eIonMobilityUnits IonMobilityUnits { get { return _cache != null ? _cache.CachedFiles[_fileIndex].IonMobilityUnits : eIonMobilityUnits.none; } }
+        public override eIonMobilityUnits IonMobilityUnits { get { return _ionMobilityUnits; } }
+
+        public override IIonMobilityFunctionsProvider IonMobilityFunctionsProvider { get { return _rawFileCcsConverter; } }
+
+        /// <summary>
+        /// The observed CCS of the previous peak with the same boundaries in the same chromatogram,
+        /// which, picked from the same stored points, has the same apex and so the same observed IM
+        /// and CCS. Converting that IM again would need the raw file. The previous peak may have
+        /// been picked at import, from unrounded IM, so its IM is compared at storage precision.
+        /// </summary>
+        public override double? GetPreviousObservedCcs(int providerId, ChromPeak peak)
+        {
+            if (!peak.ObservedIonMobility.HasValue ||
+                !_previousObservedCcs.TryGetValue(Tuple.Create(providerId, peak.StartTime, peak.EndTime), out var previous))
+            {
+                return null;
+            }
+            if (Math.Round(previous.Item1 * (double)_observedIonMobilityScale) !=
+                Math.Round(peak.ObservedIonMobility.Value * (double)_observedIonMobilityScale))
+            {
+                return null;
+            }
+            return previous.Item2;
+        }
 
         public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
@@ -104,6 +144,18 @@ namespace pwiz.Skyline.Model.Results
             _lastIndices = chromKeyIndices;
             var tranInfo = _lastChromGroupInfo.GetTransitionInfo(chromKeyIndices.TranIndex, TransformChrom.raw);
             timeIntensities = tranInfo.TimeIntensities;
+            // Observed CCS is a precursor property, and only peaks from precursor chromatograms carry it
+            if (_observedIonMobilityScale != 0 && chromKeyIndices.Key.Source != ChromSource.fragment)
+            {
+                foreach (var peak in tranInfo.Peaks)
+                {
+                    if (peak.ObservedIonMobility.HasValue && peak.ObservedCcs.HasValue)
+                    {
+                        _previousObservedCcs[Tuple.Create(id, peak.StartTime, peak.EndTime)] =
+                            Tuple.Create(peak.ObservedIonMobility.Value, peak.ObservedCcs.Value);
+                    }
+                }
+            }
 
             // Assume that each chromatogram will be read once, though this may
             // not always be completely true.
@@ -159,16 +211,98 @@ namespace pwiz.Skyline.Model.Results
 
         public override void ReleaseMemory()
         {
-            Dispose();
+            // Peaks are still being scored after reading ends, so the CCS converter stays open
+            ReleaseCache();
         }
 
         public override void Dispose()
+        {
+            ReleaseCache();
+            _previousObservedCcs.Clear();
+            _rawFileCcsConverter?.Dispose();
+        }
+
+        private void ReleaseCache()
         {
             if (_cache != null)
                 _cache.ReadStream.CloseStream();
             _cache = null;
             _chromKeyIndices = null;
             _lastChromGroupInfo = null;
+        }
+    }
+
+    /// <summary>
+    /// Observed IM to CCS conversion for peaks picked again from cached chromatograms (rescore),
+    /// where the raw file whose vendor calibration does the conversion is not open. The raw file
+    /// is opened on first need; when it cannot be found or opened, peaks get no CCS.
+    /// </summary>
+    internal sealed class RawFileCcsConverter : IIonMobilityFunctionsProvider, IDisposable
+    {
+        private readonly Func<MsDataFileImpl> _openRawFile;
+        private readonly object _rawFileLock = new object();
+        private bool _rawFileOpened;
+        private MsDataFileImpl _rawFile;
+        private DataFileInstrumentInfo _rawFileConverter;
+
+        public RawFileCcsConverter(eIonMobilityUnits ionMobilityUnits, Func<MsDataFileImpl> openRawFile)
+        {
+            IonMobilityUnits = ionMobilityUnits;
+            _openRawFile = openRawFile;
+        }
+
+        public eIonMobilityUnits IonMobilityUnits { get; }
+
+        public bool ProvidesCollisionalCrossSectionConverter => true;
+
+        public double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj)
+        {
+            if (!im.Mobility.HasValue)
+                return double.NaN;
+            lock (_rawFileLock)
+            {
+                var rawFileConverter = GetRawFileConverter();
+                if (rawFileConverter == null || !rawFileConverter.ProvidesCollisionalCrossSectionConverter)
+                    return double.NaN;
+                return rawFileConverter.CCSFromIonMobility(im, mz, charge, obj);
+            }
+        }
+
+        public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj) => IonMobilityValue.EMPTY;
+        public bool HasCombinedIonMobility => false;
+        public bool IsWatersSonarData => false;
+        public Tuple<int, int> SonarMzToBinRange(double mz, double tolerance) => null;
+        public bool IsValidDiaPasefPoint(int windowGroup, double im, double isoMzLow, double isoMzHigh) => true;
+
+        public void Dispose()
+        {
+            lock (_rawFileLock)
+            {
+                _rawFile?.Dispose();
+                _rawFile = null;
+                _rawFileConverter = null;
+            }
+        }
+
+        // Opens the raw file at most once, for its vendor conversion
+        private DataFileInstrumentInfo GetRawFileConverter()
+        {
+            if (!_rawFileOpened)
+            {
+                _rawFileOpened = true;
+                try
+                {
+                    _rawFile = _openRawFile?.Invoke();
+                }
+                catch (Exception)
+                {
+                    // Observed CCS is supplementary, so a raw file that cannot be opened leaves it empty
+                    _rawFile = null;
+                }
+                if (_rawFile != null)
+                    _rawFileConverter = new DataFileInstrumentInfo(_rawFile);
+            }
+            return _rawFileConverter;
         }
     }
 }

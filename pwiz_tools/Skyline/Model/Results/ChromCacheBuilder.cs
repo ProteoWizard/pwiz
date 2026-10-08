@@ -60,6 +60,21 @@ namespace pwiz.Skyline.Model.Results
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
 
+        // Captured from the chromatogram provider while the data file is open;
+        // used inside _writeLock to compute per-peak % CCS error from the
+        // observed IM centroid stored on each ChromPeak.
+        private IIonMobilityFunctionsProvider _ionMobilityConverter;
+        // Observed CCS already computed for peaks picked again unchanged from cached chromatograms
+        private ChromDataProvider _previousObservedCcsProvider;
+
+        // The data reader's native ion mobility units, captured from the provider.
+        // Always available when IM data is present, independent of whether a CCS
+        // converter rode in on the file. Drives the scale used to encode per-time-point
+        // observed IM (see WriteChromDataSet) - sourcing it from _ionMobilityConverter
+        // instead would yield a zero scale (and destroy the data) for IM files with no
+        // vendor CCS calibration, e.g. drift time or 1/K0 imported as mzML/mz5.
+        private eIonMobilityUnits _ionMobilityUnits;
+
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
@@ -231,7 +246,7 @@ namespace pwiz.Skyline.Model.Results
                     // Read and write the mass spec data)
                     if (dataFilePathRecalc != null)
                     {
-                        provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo);
+                        provider = CreateChromatogramRecalcProvider(dataFilePathRecalc, fileInfo, msDataFilePath);
                         if (allChromData != null)
                         {
                             allChromData.MaxIntensity = (float) (provider.MaxIntensity ?? 0);
@@ -256,6 +271,9 @@ namespace pwiz.Skyline.Model.Results
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
                     _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
                     _currentFileInfo.IsSrm = provider.IsSrm;
+                    _ionMobilityConverter = provider.IonMobilityFunctionsProvider;
+                    _previousObservedCcsProvider = provider;
+                    _ionMobilityUnits = provider.IonMobilityUnits;
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
@@ -1246,7 +1264,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private ChromDataProvider CreateChromatogramRecalcProvider(MsDataFileUri dataFilePathRecalc, ChromFileInfo fileInfo)
+        private ChromDataProvider CreateChromatogramRecalcProvider(MsDataFileUri dataFilePathRecalc, ChromFileInfo fileInfo,
+            MsDataFilePath rawFilePath)
         {
             return new CachedChromatogramDataProvider(_cacheRecalc,
                                                       _document,
@@ -1256,7 +1275,23 @@ namespace pwiz.Skyline.Model.Results
                                                       _status,
                                                       0,
                                                       100,
-                                                      _loader);
+                                                      _loader,
+                                                      rawFilePath == null ? null : () => OpenRawFileForCcs(rawFilePath));
+        }
+
+        /// <summary>
+        /// The raw file behind recalculated chromatograms, opened only for its vendor IM to CCS
+        /// conversion, or null when it can no longer be found.
+        /// </summary>
+        private MsDataFileImpl OpenRawFileForCcs(MsDataFilePath rawFilePath)
+        {
+            var existingPath = ChromatogramSet.GetExistingDataFilePath(CachePath, rawFilePath);
+            if (existingPath == null)
+                return null;
+            return existingPath.OpenMsDataFile(new OpenMsDataFileParams
+            {
+                DownloadPath = Path.GetDirectoryName(CachePath) ?? Directory.GetCurrentDirectory()
+            });
         }
 
         private bool? IsSingleMatchMzFile
@@ -1318,7 +1353,8 @@ namespace pwiz.Skyline.Model.Results
         private void WriteChromDataSet(int indexInFile, ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
         {
             long location = _fs.Stream.Position;
-            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes);
+            int observedIonMobilityScale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(_ionMobilityUnits);
+            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes, observedIonMobilityScale);
             // Write the raw chromatogram points
             MemoryStream pointsMemoryStream = new MemoryStream();
             groupOfTimeIntensities.WriteToStream(pointsMemoryStream);
@@ -1369,6 +1405,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromTran.MissingMassErrors = true;
                 }
+                if (groupOfTimeIntensities.HasObservedIonMobilities && chromData.TimeIntensities.ObservedIonMobilities == null)
+                {
+                    chromTran.MissingObservedIonMobility = true;
+                }
                 _listTransitions.Add(chromTran);
 
                 // Make sure all transitions have the same number of peaks, as this is a cache requirement
@@ -1392,10 +1432,75 @@ namespace pwiz.Skyline.Model.Results
                     for (int i = 0; i < chromData.Peaks.Count; i++)
                         chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
                 }
+                ApplyObservedCcs(chromDataSet, chromData);
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
             }
 
             AddChromGroup(new ChromGroupHeaderEntry(indexInFile, header));
+        }
+
+        // Convert each peak's observed IM to observed CCS using the source file's
+        // vendor-supplied IM-CCS conversion (a vendor black box). Open formats like
+        // mzML and mz5 don't expose this conversion, in which case ProvidesCollisionalCrossSectionConverter
+        // is false and we leave ObservedCcs null. Done here while the file is still
+        // open; the converted value is persisted on the peak so reports can show CCS
+        // without the file later. CCS is a property of the precursor ion, so chromatograms
+        // extracted from MS2 spectra (in the high-energy IM frame) get none.
+        private void ApplyObservedCcs(ChromDataSet chromDataSet, ChromData chromData)
+        {
+            if (_ionMobilityConverter == null || !_ionMobilityConverter.ProvidesCollisionalCrossSectionConverter)
+                return;
+            if (chromData.Key.Source == ChromSource.fragment)
+                return;
+            var nodeGroup = chromDataSet.NodeGroup;
+            if (nodeGroup == null)
+                return;
+            int charge = nodeGroup.PrecursorCharge;
+            if (charge == 0)
+                return;
+            var imFilter = chromData.Key.IonMobilityFilter;
+            if (IonMobilityFilter.IsNullOrEmpty(imFilter) || !imFilter.HasIonMobilityValue)
+                return;
+            var imUnits = imFilter.IonMobility.Units;
+            double mz = chromDataSet.PrecursorMz;
+            for (int i = 0; i < chromData.Peaks.Count; i++)
+            {
+                var peak = chromData.Peaks[i];
+                var observedIm = peak.ObservedIonMobility;
+                if (!observedIm.HasValue)
+                    continue;
+                var imValue = IonMobilityValue.GetIonMobilityValue(observedIm.Value, imUnits);
+                var observedCcs = _previousObservedCcsProvider?.GetPreviousObservedCcs(chromData.ProviderId, peak)
+                                  ?? GetObservedCcs(_ionMobilityConverter, imValue, mz, charge, nodeGroup);
+                if (observedCcs.HasValue)
+                    chromData.Peaks[i] = peak.WithObservedCcs(observedCcs);
+            }
+        }
+
+        /// <summary>
+        /// Observed CCS for an observed IM, from the vendor-supplied conversion, or null when the
+        /// conversion gives no value or fails. Observed CCS is supplementary, and the conversion is
+        /// a vendor black box whose failures (e.g. a MassLynx status error surfaces as an
+        /// InvalidOperationException) say nothing about the extracted chromatograms, so any failure
+        /// leaves the peak without CCS rather than failing the import of the whole file.
+        /// </summary>
+        internal static double? GetObservedCcs(IIonMobilityFunctionsProvider converter, IonMobilityValue ionMobility,
+            double mz, int charge, object obj)
+        {
+            double ccs;
+            try
+            {
+                ccs = converter.CCSFromIonMobility(ionMobility, mz, charge, obj);
+            }
+            catch (Exception)
+            {
+                Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion,
+                    obj, ionMobility, mz, charge);
+                return null;
+            }
+            if (ccs == 0 || double.IsNaN(ccs))
+                return null;
+            return ccs;
         }
     }
 

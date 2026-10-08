@@ -20,11 +20,14 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -97,6 +100,39 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Does CCS show up in reports?
             TestReports();
 
+            // Rescore picks peaks again from the cached chromatograms, without the raw file whose
+            // vendor calibration converts observed IM to CCS. Observed CCS must survive it either way.
+            AssertObservedIonMobilitySurvivesRescore(false);
+            AssertObservedIonMobilitySurvivesRescore(true);
+        }
+
+        private void AssertObservedIonMobilitySurvivesRescore(bool withRawFile)
+        {
+            var expected = GetObservedIonMobilityValues(SkylineWindow.Document);
+            AssertEx.IsTrue(expected.Any(value => value.Item2.HasValue), @"Expected observed CCS from the vendor calibration");
+            var rawPath = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath.GetFilePath();
+            var hiddenPath = rawPath + @".hidden";
+            if (!withRawFile)
+                Directory.Move(rawPath, hiddenPath);
+            try
+            {
+                RescoreResults();
+            }
+            finally
+            {
+                if (!withRawFile)
+                    Directory.Move(hiddenPath, rawPath);
+            }
+            // Observed IM may move by the cache's storage rounding, since peaks picked at import read
+            // unrounded IM while rescored peaks read the stored values. Observed CCS must not change.
+            var actual = GetObservedIonMobilityValues(SkylineWindow.Document);
+            AssertEx.AreEqual(expected.Count, actual.Count);
+            double imTolerance = 0.5 / RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                AssertEx.AreEqual(expected[i].Item1, actual[i].Item1, imTolerance);
+                AssertEx.AreEqual(expected[i].Item2, actual[i].Item2);
+            }
         }
 
         private void TestReports(string msg = null)
