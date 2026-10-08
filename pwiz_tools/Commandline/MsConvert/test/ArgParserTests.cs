@@ -180,4 +180,29 @@ public class ArgParserTests
         // Default is null (no filtering).
         Assert.IsNull(Invoke("in.wiff").RunIndexSet);
     }
+
+    [TestMethod]
+    public void Usage_EndsWithTheCppVersionBlock()
+    {
+        // informational version (as Directory.Build.targets stamps it), assembly version -> release
+        var cases = new (string? Informational, Version? Assembly, string Expected)[]
+        {
+            ("4.0.26281-92536b2 (automated build)", new Version(4, 0, 26281, 0), "4.0.26281 (92536b2)"),
+            ("4.0.26281-92536b2 (developer build)", new Version(4, 0, 26281, 0), "4.0.26281 (92536b2)"),
+            ("4.0.26281-0 (developer build)", new Version(4, 0, 26281, 0), "4.0.26281 (0)"),
+            ("4.0.0", new Version(4, 0, 0, 0), "4.0.0 (0)"),
+            (null, new Version(4, 0, 26281, 0), "4.0.26281 (0)"),
+            (null, null, "0.0.0 (0)"),
+        };
+        foreach (var (informational, assembly, expected) in cases)
+            Assert.AreEqual(expected, VersionInfo.FormatRelease(informational, assembly), informational ?? "(none)");
+
+        // The usage text ends with the two lines the C++ msconvert printed, and its release line
+        // is in the shape the Docker image publish parses into a version tag.
+        string[] lines = ArgParser.Usage().Split('\n');
+        Assert.AreEqual(string.Empty, lines[^3]);
+        StringAssert.Matches(lines[^2], new System.Text.RegularExpressions.Regex(
+            @"^ProteoWizard release: [0-9]+\.[0-9]+\.[0-9]+ \([0-9a-z]+\)$"));
+        StringAssert.StartsWith(lines[^1], "Build date: ");
+    }
 }
