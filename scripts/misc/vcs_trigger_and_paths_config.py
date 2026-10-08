@@ -2,12 +2,12 @@ targets = {}
 
 # Retired C++ build configurations. The C++ tree lives in ProteoWizard/pwiz-cpp now and these
 # configurations build from that repo; nothing in this repo may trigger them. Kept here,
-# commented out, so the ids stay findable when the TeamCity side is re-pointed. bt83, bt17,
-# bt209 and the master Wine container are not among them: they took over the .NET builds below.
-#targets['CoreWindows'] = {'master': {"bt36": "Core Windows x86", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
+# commented out, so the ids stay findable when the TeamCity side is re-pointed. bt83, bt143,
+# bt17, bt209, the master TestConnected config and the master Wine container are not among
+# them: they took over the .NET builds below.
+#targets['CoreWindows'] = {'master': {"bt36": "Core Windows x86"}}
 #targets['CoreWindowsDebug'] = {'master': {"bt84": "Core Windows x86_64 debug", "bt75": "Core Windows debug"}}
-#targets['SkylineRelease'] = {'master': {"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection",
-#                                        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"},
+#targets['SkylineRelease'] = {'master': {"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection"},
 #                             'release': {"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64",
 #                                         "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection",
 #                                         "ProteoWizard_SkylineReleaseTestConnectedTests": "Skyline release TestConnected tests"}}
@@ -23,8 +23,9 @@ targets = {}
 # otherwise a cross-platform regression (a hardcoded 7za.exe, a backslash path, a
 # Windows-only vendor reference) only surfaces on the next unrelated Linux trigger. These are the
 # historic Core x86_64 configs, which took over the steps of the temporary Core Windows/Linux
-# .NET configs in Versioned Configs.
-targets['CoreWindowsNet'] = {'master': {"bt83": "Core Windows x86_64"}}
+# .NET configs in Versioned Configs. bt143 builds the same tree without vendor support (no
+# --i-agree-to-the-vendor-licenses), so the NO_VENDOR_SUPPORT build stays compiling and tested.
+targets['CoreWindowsNet'] = {'master': {"bt83": "Core Windows x86_64", "bt143": "Core Windows x86_64 (no vendor DLLs)"}}
 targets['CoreLinuxNet'] = {'master': {"bt17": "Core Linux x86_64"}}
 targets['CoreNet'] = merge(targets['CoreWindowsNet'], targets['CoreLinuxNet'])
 
@@ -66,10 +67,11 @@ targets['SkylineWithTestConnected'] = \
 {
     'master':
     {
-        # TestConnected tests are not triggered: their config
-        # (ProteoWizard_SkylineMasterAndPRsTestConnectedTests, which depends on bt209) still has
-        # its cpp/MSVC steps. Re-enable once it runs the .NET tests.
-        #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests"
+        # TestConnected runs TestConnected.dll from the staged output of the bt209 build it
+        # snapshot-depends on (same agent, same checkout). bt209 itself leaves that DLL out
+        # (pwiz_tools/Skyline/tcbuild.bat passes --skip-connected-tests), so remote-API changes
+        # are what get these tests run, as before the .NET port.
+        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests",
         "bt209": "Skyline master and PRs (Windows x86_64)"
     }
 }
