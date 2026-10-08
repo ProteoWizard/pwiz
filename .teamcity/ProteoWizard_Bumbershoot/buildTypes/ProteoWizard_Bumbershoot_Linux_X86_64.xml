@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="c4c0f1e7-cf7b-417b-8589-33959ea13c58" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="c4c0f1e7-cf7b-417b-8589-33959ea13c58" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
   <name>Bumbershoot Linux x86_64</name>
   <description>Bumbershoot is the suite of tools produced by the Tabb Lab at Vanderbilt, which now proudly call ProteoWizard home. This is the 64-bit Linux variant.</description>
   <settings ref="ProteoWizard_GitHubReportingConfig">
