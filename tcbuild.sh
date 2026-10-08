@@ -102,19 +102,20 @@ for arg in "$@"; do
     fi
 done
 
-# Post-build hygiene checks. Run from the repo root so git sees the full
-# working tree, not just pwiz-sharp/.
-cd "$SCRIPT_DIR/.."
+# Post-build hygiene checks, from the repo root (this script's directory) so git sees the
+# whole working tree. A git error fails the build: outside a repository git prints nothing
+# to stdout, which would read as a clean tree and pass both checks.
+cd "$SCRIPT_DIR"
 
 echo "##teamcity[progressMessage 'git ls-files --deleted (build should not delete tracked files)']"
-DELETED="$(git ls-files --deleted)"
+DELETED="$(git ls-files --deleted)" || fail "git ls-files failed"
 if [ -n "$DELETED" ]; then
     echo "$DELETED"
     fail "Build deleted tracked files"
 fi
 
 echo "##teamcity[progressMessage 'git status --porcelain (build should not leave untracked files)']"
-DIRTY="$(git status --porcelain)"
+DIRTY="$(git status --porcelain)" || fail "git status failed"
 if [ -n "$DIRTY" ]; then
     echo "$DIRTY"
     fail "Build produced files not in .gitignore"
