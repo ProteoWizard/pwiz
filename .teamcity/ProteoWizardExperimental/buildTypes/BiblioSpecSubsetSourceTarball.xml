@@ -30,13 +30,6 @@
       <equals id="RQ_965" name="teamcity.agent.jvm.os.arch" value="amd64" />
     </requirements>
     <build-triggers>
-      <build-trigger id="TRIGGER_426" type="buildDependencyTrigger">
-        <parameters>
-          <param name="afterSuccessfulBuildOnly" value="true" />
-          <param name="branchFilter" value="+:*" />
-          <param name="dependsOn" value="bt17" />
-        </parameters>
-      </build-trigger>
       <build-trigger id="retryBuildTrigger" type="retryBuildTrigger">
         <parameters>
           <param name="branchFilter" value="+:*" />
@@ -46,14 +39,6 @@
         </parameters>
       </build-trigger>
     </build-triggers>
-    <dependencies>
-      <depend-on sourceBuildTypeId="bt17">
-        <options>
-          <option name="take-started-build-with-same-revisions" value="true" />
-          <option name="take-successful-builds-only" value="true" />
-        </options>
-      </depend-on>
-    </dependencies>
   </settings>
 </build-type>
 

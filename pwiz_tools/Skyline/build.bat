@@ -57,6 +57,10 @@ REM #   --skip-tutorial-tests
 REM #       Build and stage TestTutorial as usual, so it still ships in SkylineTester.zip,
 REM #       but leave its tests out of every TestRunner pass (skip=TestTutorial.dll).
 REM #       tcbuild.bat passes this unless it is given --with-tutorial-perf.
+REM #   --skip-connected-tests
+REM #       Same for TestConnected (skip=TestConnected.dll). tcbuild.bat always passes
+REM #       it: the TestConnected config runs those tests on bt209's staged build, and
+REM #       only when the smart trigger sees a remote-API change.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -84,8 +88,9 @@ REM #   TestData, TestFunctional, TestConnected, TestTutorial and TestPerf - plu
 REM #   TestRunner harness. All of them are built and staged so SkylineTester.zip
 REM #   carries every test DLL. TestConnected's network-service tests self-skip when
 REM #   their credentials aren't configured, and TestPerf's tests only run with
-REM #   perftests=on, which only --with-tutorial-perf sets. --skip-tutorial-tests
-REM #   keeps the tutorial tests out of the run without leaving them out of the build.
+REM #   perftests=on, which only --with-tutorial-perf sets. --skip-tutorial-tests and
+REM #   --skip-connected-tests keep those suites out of the run without leaving them
+REM #   out of the build.
 REM #
 REM # NOTE: dotCover coverage (--coverage) is temporarily removed while the
 REM #   TestRunner path beds in; re-add it as a separate step once proven in CI.
@@ -105,6 +110,7 @@ set SEQUENTIAL=1
 set BUILDONLY=0
 set WITHTUTORIALPERF=0
 set TEST_SKIP=
+set SKIP_DLLS=
 set PERF_TESTS=
 set ERROR_TEXT=
 set ZIPS=
@@ -135,7 +141,8 @@ if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
 if /i "%~1"=="--with-tutorial-perf" (set WITHTUTORIALPERF=1) else ^
-if /i "%~1"=="--skip-tutorial-tests" (set "TEST_SKIP=skip=TestTutorial.dll") else ^
+if /i "%~1"=="--skip-tutorial-tests" (set "SKIP_DLLS=!SKIP_DLLS!,TestTutorial.dll") else ^
+if /i "%~1"=="--skip-connected-tests" (set "SKIP_DLLS=!SKIP_DLLS!,TestConnected.dll") else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -148,6 +155,10 @@ if /i "%~1"=="Release" (set CONFIG=Release) else (
 shift
 goto parseargs
 :endparse
+
+REM # One skip= for every suite left out of the run: TestRunner reads a single skip
+REM # argument, and a .dll entry in its list expands to every test in that DLL.
+if defined SKIP_DLLS set "TEST_SKIP=skip=!SKIP_DLLS:~1!"
 
 REM # --build-only is the stronger of the two: it stops before staging, so it can
 REM # never reach the test step. Stating the implication keeps that true even if the
