@@ -205,6 +205,14 @@ if (Test-Path $wiff2Src) {
     }
     Write-Host "    from wiff2/: $n files"
 }
+
+# Vendor EULAs, beside the binaries where the C++ installer put them. Every variant reads
+# vendor files - the default ones fetch the SDKs on first use, the offline one carries them -
+# so every variant ships the license terms.
+$eulas = Get-ChildItem (Join-Path $pwizSharp "pwiz/data/vendor_readers") -Filter "EULA.*.txt" -Recurse -File
+if (-not $eulas) { throw "No vendor EULAs found under pwiz/data/vendor_readers" }
+$eulas | ForEach-Object { Copy-Item $_.FullName (Join-Path $DestRoot $_.Name) }
+Write-Host "    vendor EULAs: $($eulas.Count) files"
 }
 
 Build-Payload $stagingDir
