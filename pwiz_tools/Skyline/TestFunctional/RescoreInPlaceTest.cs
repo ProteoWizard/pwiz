@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -39,8 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class RescoreInPlaceTest : AbstractFunctionalTest
     {
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestRescoreInPlace()
         {
             TestFilesZip = @"TestFunctional\RescoreInPlaceTest.zip";
@@ -119,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 while (!transitionSettingsUiClosed)
                 {
-                    SkylineWindow.BeginInvoke(new Action(() => transitionSettingsUi.OkDialog()));
+                    SkylineWindow.BeginInvoke(() => transitionSettingsUi.OkDialog());
                     WaitForConditionUI(() => transitionSettingsUiClosed || FindOpenForm<AlertDlg>() != null);
                     AlertDlg alertDlg = FindOpenForm<AlertDlg>();
                     if (alertDlg != null)

@@ -20,6 +20,7 @@
 using System;
 using System.Diagnostics;
 using Microsoft.Web.WebView2.Core;
+using pwiz.Common.Controls;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 
@@ -111,7 +112,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void RunUIAsync(Action act)
         {
-            CommonActionUtil.SafeBeginInvoke(this, act);
+            ControlUtil.SafeBeginInvoke(this, act);
         }
 
         private void NavigateToHtml()

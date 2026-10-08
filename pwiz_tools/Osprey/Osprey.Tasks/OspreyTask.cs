@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -55,14 +56,60 @@ namespace pwiz.Osprey.Tasks
     /// parquets is enforced separately by the parquet
     /// <c>osprey.search_hash</c> footer metadata check.)
     /// </summary>
-    public abstract class OspreyTask
+    public abstract class OspreyTask : ISelectableTask
     {
         /// <summary>
-        /// Short identifier used in pipeline log lines. Conventionally
-        /// PascalCase and matches the class name minus the <c>Task</c>
-        /// suffix (e.g. "PerFileScoring").
+        /// The base-key term of every search of a blib library. Since the reader started typing
+        /// every peak from m/z and reading modification text residue- and precision-aware, a
+        /// blib's entries carry ion types and masses they did not before - which reach the
+        /// scores, the generated decoys and every stage after them - so a directory scored
+        /// before the change must not be adopted after. A TSV library keys exactly as before.
+        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the <c>.libcache</c> composition
+        /// term does, so a change to the reader moves both. The typing tolerance needs no term:
+        /// it is the search's fragment tolerance, already in
+        /// <see cref="SearchIdentity.SearchParameterHash"/>.
+        /// </summary>
+        public const string BLIB_READER_TERM = @";blibreader=" + BlibLoader.READER_VERSION;
+
+        /// <summary>
+        /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
+        /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
+        /// spelling the CLI value list and the tests reference too.
         /// </summary>
         public abstract string Name { get; }
+
+        // ---- The selection contract (ISelectableTask) ------------------------------------
+        // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a
+        // task added later is a join that hydrates nothing per run until its author says
+        // otherwise. Where a task sits, and which stages run alongside it, are not here: the
+        // pipeline is an ordered list the task set composes (OspreyTasks), and membership is
+        // OspreyConfig.Includes over that list and the selection. The doc for each member is
+        // on the interface.
+
+        public virtual bool IsPerFileWorker => false;
+
+        public virtual bool HydratesPerRun => false;
+
+        public virtual void ApplySelection(OspreyConfig config)
+        {
+        }
+
+        /// <summary>
+        /// The requirement most tasks share - the run's inputs, its library and its output -
+        /// with messages naming this task. A task that needs less (or more) overrides.
+        /// </summary>
+        public virtual string ValidateSelection(OspreyConfig config)
+        {
+            if (!config.HasInputFiles)
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<file...>"));
+            if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
+            return null;
+        }
+
+        public virtual string DescribeOutput(OspreyConfig config) => null;
+
+        // ---- The pipeline contract ------------------------------------------------------
 
         /// <summary>
         /// Execute this task against the shared pipeline context. May
@@ -95,20 +142,6 @@ namespace pwiz.Osprey.Tasks
         /// consumes implements this as a no-op returning <c>true</c>.
         /// </summary>
         public abstract bool Rehydrate(PipelineContext ctx);
-
-        /// <summary>
-        /// Whether this task participates in the pipeline for the current
-        /// configuration. Driver-owned membership predicate: the orchestrator
-        /// iterates only the included tasks and runs those whose outputs are
-        /// not already on disk, while excluded tasks lazy-rehydrate their state
-        /// through <see cref="PipelineContext.Demand{T}"/> when an included task
-        /// reaches for it. Replaces the <c>DeriveStartAtTask</c> /
-        /// <c>DeriveStopAfterTask</c> range gating (the membership becomes a
-        /// per-task fact rather than a contiguous [start..stop] window).
-        /// Default <c>true</c>; tasks that run only in some HPC modes override
-        /// to gate on the relevant <see cref="OspreyConfig"/> flags.
-        /// </summary>
-        public virtual bool IsIncluded(PipelineContext ctx) => true;
 
         /// <summary>
         /// The byproduct purpose types this task publishes for downstream tasks
@@ -175,11 +208,66 @@ namespace pwiz.Osprey.Tasks
         /// selects which peak a precursor's row describes, in Stage 4, and
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
+        ///
+        /// <see cref="BLIB_READER_TERM"/> is here for the same reason: it changes what every
+        /// task reads from a blib library.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}",
+            @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix());
+            OspreyEnvironment.PickValidityKeySuffix(),
+            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty);
+
+        /// <summary>
+        /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>
+        /// (this task's <see cref="ValidityKey"/>, computed once by the caller) for every task
+        /// whose outputs all depend on the same inputs. A fan-out task whose output for one run
+        /// also depends on that run's own artifacts appends their identities here, so a
+        /// rewritten input invalidates that run's output alone.
+        /// </summary>
+        public virtual string OutputValidityKey(PipelineContext ctx, string taskKey, string output) => taskKey;
+
+        /// <summary>
+        /// The inputs one declared output's stamp records: <paramref name="taskInputs"/> (this
+        /// task's <see cref="Inputs"/>, listed once by the caller) for every output built from
+        /// all of them. An output whose <see cref="OutputValidityKey"/> follows its own run's
+        /// artifacts names those instead, so its stamp says what it was built from.
+        /// </summary>
+        public virtual IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output) => taskInputs;
+
+        /// <summary>
+        /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
+        /// in the one form every task's message takes.
+        /// </summary>
+        protected string RequiresError(string requirement)
+        {
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, OspreyArgNames.TaskText(Name), requirement);
+        }
+
+        /// <summary>
+        /// The two-requirement form. A separate format string, not "{1}" filled with a translated
+        /// "a and b" phrase, so each language words the pair in its own sentence.
+        /// </summary>
+        protected string RequiresError(string requirement1, string requirement2)
+        {
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError__0__requires__1__and__2__, OspreyArgNames.TaskText(Name),
+                requirement1, requirement2);
+        }
+
+        /// <summary>
+        /// A <see cref="DescribeOutput"/> for a task that writes one file per input: the file
+        /// itself when there is one input (every HPC worker), else the extension and where the
+        /// files go - <paramref name="directory"/>, or beside each input when that is empty.
+        /// </summary>
+        protected static string DescribePerInputOutput(OspreyConfig config, Func<string, string> pathFor,
+            string extension, string directory)
+        {
+            if (config.InputFiles != null && config.InputFiles.Count == 1)
+                return pathFor(config.InputFiles[0]);
+            return string.IsNullOrEmpty(directory)
+                ? string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_next_to_each_input, extension)
+                : string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_for_each_input__in__1_, extension, directory);
+        }
     }
 }

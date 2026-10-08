@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -357,7 +358,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (uiAction == null)
                     return;
-                if (!CommonActionUtil.SafeBeginInvoke(graphControl, uiAction))
+                if (!ControlUtil.SafeBeginInvoke(graphControl, uiAction))
                 {
                     // If the graph has already been disposed there is nowhere safe to marshal callbacks.
                     // The worker completion path will still dispose its CTS.
@@ -443,7 +444,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Messages.WriteAsyncDebugMessage(@"LabelLayoutRunner worker exception: {0}", ex);
                 }
 
-                var completionPosted = CommonActionUtil.SafeBeginInvoke(graphControl, (() =>
+                var completionPosted = ControlUtil.SafeBeginInvoke(graphControl, (() =>
                 {
                     try
                     {

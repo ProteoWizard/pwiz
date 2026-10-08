@@ -678,13 +678,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!IsHandleCreated)
                 return;
-            BeginInvoke(new Action(() =>
+            BeginInvoke(() =>
             {
                 if (!IsMobilogramPaneVisible)
                     return;
                 AlignMobilogramChartToHeatmap();
                 graphControl.Invalidate();
-            }));
+            });
         }
 
         /// <summary>
@@ -2700,13 +2700,13 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _cursorTip.Dispose();
             graphControlExtension.PropertiesSheet.SelectedObject = null;
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
             _msDataFileScanHelper.Dispose();
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         private void leftButton_Click(object sender, EventArgs e)

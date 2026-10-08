@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 using System;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -73,7 +72,7 @@ namespace pwiz.Skyline.ToolsUI
                 var keyUp = alt ? User32.WinMessageType.WM_SYSKEYUP : User32.WinMessageType.WM_KEYUP;
                 var charMessage = alt ? User32.WinMessageType.WM_SYSCHAR : User32.WinMessageType.WM_CHAR;
 
-                if (!PreProcess(control, keyDown, (IntPtr) (int) keyCode, lParam))
+                if (!PreProcess(control, keyDown, (int) keyCode, lParam))
                 {
                     // The message loop translates the key-down, queuing its character, before dispatching it; a
                     // KeyDown handler that sets SuppressKeyPress removes the queued character. So the character
@@ -81,18 +80,18 @@ namespace pwiz.Skyline.ToolsUI
                     var character = GetCharacter(keyCode, scanCode, state);
                     if (character.HasValue)
                         User32.PostMessageA(hwnd, charMessage, character.Value, (int) lParam);
-                    User32.SendMessage(hwnd, keyDown, (IntPtr) (int) keyCode, (IntPtr) lParam);
+                    User32.SendMessage(hwnd, keyDown, (int) keyCode, (IntPtr) lParam);
                     if (character.HasValue &&
                         User32.PeekMessage(out var queued, hwnd, (uint) charMessage, (uint) charMessage, User32.PM_REMOVE) &&
                         !control.IsDisposed &&
-                        !PreProcess(control, charMessage, queued.wParam, (long) queued.lParam))
+                        !PreProcess(control, charMessage, queued.wParam, queued.lParam))
                     {
                         User32.SendMessage(hwnd, charMessage, queued.wParam, queued.lParam);
                     }
                 }
                 // The key-up has the previous-state and transition bits set.
                 if (!control.IsDisposed)
-                    User32.SendMessage(hwnd, keyUp, (IntPtr) (int) keyCode, (IntPtr) (lParam | (3L << 30)));
+                    User32.SendMessage(hwnd, keyUp, (int) keyCode, (IntPtr) (lParam | (3L << 30)));
             }
             finally
             {
@@ -115,7 +114,7 @@ namespace pwiz.Skyline.ToolsUI
             var buffer = new StringBuilder(8);
             int count = User32.ToUnicode((uint) keyCode, scanCode, state, buffer, buffer.Capacity,
                 User32.TOUNICODE_NO_STATE_CHANGE);
-            return count == 1 ? buffer[0] : (int?) null;
+            return count == 1 ? buffer[0] : null;
         }
 
         // A modifier named in the key stroke is down as a left-hand press sets it (the generic and left keys);

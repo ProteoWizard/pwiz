@@ -19,7 +19,7 @@
 // limitations under the License.
 //
 
-namespace seems
+namespace Pwiz.SeeMS
 {
     partial class ProcessingPanels
     {
@@ -60,9 +60,6 @@ namespace seems
             this.label1 = new System.Windows.Forms.Label();
             this.smootherTabPage = new System.Windows.Forms.TabPage();
             this.smootherPanel = new System.Windows.Forms.Panel();
-            this.smootherWhittakerParameters = new System.Windows.Forms.GroupBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.smootherWhittakerLambdaTextBox = new System.Windows.Forms.TextBox();
             this.smootherSavitzkyGolayParameters = new System.Windows.Forms.GroupBox();
             this.smootherSavitzkyGolayPolynomialOrderTrackBar = new System.Windows.Forms.TrackBar();
             this.smootherSavitzkyGolayWindowSizeTrackBar = new System.Windows.Forms.TrackBar();
@@ -117,7 +114,6 @@ namespace seems
             this.thresholderPanel.SuspendLayout();
             this.smootherTabPage.SuspendLayout();
             this.smootherPanel.SuspendLayout();
-            this.smootherWhittakerParameters.SuspendLayout();
             this.smootherSavitzkyGolayParameters.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.smootherSavitzkyGolayPolynomialOrderTrackBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.smootherSavitzkyGolayWindowSizeTrackBar)).BeginInit();
@@ -244,7 +240,6 @@ namespace seems
             // smootherPanel
             // 
             this.smootherPanel.BackColor = System.Drawing.SystemColors.Control;
-            this.smootherPanel.Controls.Add(this.smootherWhittakerParameters);
             this.smootherPanel.Controls.Add(this.smootherSavitzkyGolayParameters);
             this.smootherPanel.Controls.Add(this.smootherParametersGroupBox);
             this.smootherPanel.Controls.Add(this.label5);
@@ -254,34 +249,6 @@ namespace seems
             this.smootherPanel.Name = "smootherPanel";
             this.smootherPanel.Size = new System.Drawing.Size(702, 720);
             this.smootherPanel.TabIndex = 0;
-            // 
-            // smootherWhittakerParameters
-            // 
-            this.smootherWhittakerParameters.Controls.Add(this.label8);
-            this.smootherWhittakerParameters.Controls.Add(this.smootherWhittakerLambdaTextBox);
-            this.smootherWhittakerParameters.Location = new System.Drawing.Point(62, 203);
-            this.smootherWhittakerParameters.Name = "smootherWhittakerParameters";
-            this.smootherWhittakerParameters.Size = new System.Drawing.Size(219, 53);
-            this.smootherWhittakerParameters.TabIndex = 6;
-            this.smootherWhittakerParameters.TabStop = false;
-            this.smootherWhittakerParameters.Text = "Whittaker Parameters";
-            this.smootherWhittakerParameters.Visible = false;
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 22);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(48, 13);
-            this.label8.TabIndex = 0;
-            this.label8.Text = "Lambda:";
-            // 
-            // smootherWhittakerLambdaTextBox
-            // 
-            this.smootherWhittakerLambdaTextBox.Location = new System.Drawing.Point(60, 19);
-            this.smootherWhittakerLambdaTextBox.Name = "smootherWhittakerLambdaTextBox";
-            this.smootherWhittakerLambdaTextBox.Size = new System.Drawing.Size(149, 20);
-            this.smootherWhittakerLambdaTextBox.TabIndex = 1;
             // 
             // smootherSavitzkyGolayParameters
             // 
@@ -831,8 +798,6 @@ namespace seems
             this.smootherTabPage.ResumeLayout(false);
             this.smootherPanel.ResumeLayout(false);
             this.smootherPanel.PerformLayout();
-            this.smootherWhittakerParameters.ResumeLayout(false);
-            this.smootherWhittakerParameters.PerformLayout();
             this.smootherSavitzkyGolayParameters.ResumeLayout(false);
             this.smootherSavitzkyGolayParameters.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.smootherSavitzkyGolayPolynomialOrderTrackBar)).EndInit();
@@ -883,12 +848,9 @@ namespace seems
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label smootherSavitzkyGolayWindowSizeLabel;
         private System.Windows.Forms.Label smootherSavitzkyGolayPolynomialOrderLabel;
-        private System.Windows.Forms.Label label8;
         public System.Windows.Forms.GroupBox smootherSavitzkyGolayParameters;
         public System.Windows.Forms.GroupBox smootherParametersGroupBox;
         public System.Windows.Forms.ComboBox smootherAlgorithmComboBox;
-        public System.Windows.Forms.GroupBox smootherWhittakerParameters;
-        public System.Windows.Forms.TextBox smootherWhittakerLambdaTextBox;
         public System.Windows.Forms.TrackBar smootherSavitzkyGolayWindowSizeTrackBar;
         public System.Windows.Forms.TrackBar smootherSavitzkyGolayPolynomialOrderTrackBar;
         public System.Windows.Forms.GroupBox peakPickerLocalMaximumParameters;

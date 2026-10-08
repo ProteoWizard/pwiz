@@ -1145,7 +1145,7 @@ namespace pwiz.Skyline.Controls
                 if (editTextBox != null)
                 {
                     User32.SendMessage(editTextBox.Handle, User32.WinMessageType.WM_CHAR,
-                        (IntPtr) e.KeyChar, IntPtr.Zero);
+                        e.KeyChar, IntPtr.Zero);
                 }
                 e.Handled = true;
             }

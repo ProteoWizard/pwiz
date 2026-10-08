@@ -157,7 +157,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public string GetCellFormattedValue(int col, int row)
         {
-            return _gridView[col, row]?.FormattedValue?.ToString();
+            return _gridView[col, row].FormattedValue?.ToString();
         }
 
         public string GetCellValue(int col, int row)

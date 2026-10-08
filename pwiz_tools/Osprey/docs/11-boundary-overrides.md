@@ -257,17 +257,18 @@ stamps `osprey.reconciled = "true"` and `osprey.reconciliation_hash` alongside
 (`ReconciledParquetWriter.cs:200-204`), which the downstream `--task
 SecondPassFDR` node validates.
 
-Note: six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
+Note: the six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
 `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are
-currently written null/zero — a tracked follow-up noted in
-`RescoreWorker.cs:64-71`, not a boundary-override algorithm difference.
+populated on the reconciled write path since PR #4188 (`ParquetScoreCache.BuildFdrEntryColumns`);
+an older note here that they were written null/zero stood on a stale class summary in
+the since-removed `RescoreWorker.cs`. See DIVERGENCES.md U6 (resolved).
 
 ## Worker mode, hydration, and compaction
 
-`RescoreWorker.Run` (`Osprey/RescoreWorker.cs:80`) is now a thin alias for
-`new AnalysisPipeline().Run(config)` (Phase C): the `--task PerFileRescoring`
-worker reuses the canonical pipeline, and the upstream boundary state is
-rehydrated lazily rather than hand-assembled.
+The `--task PerFileRescoring` worker IS the canonical pipeline (Phase C): `Program.Main`
+selects the task and runs `AnalysisPipeline.Run` like every other invocation, and the
+upstream boundary state is rehydrated lazily rather than hand-assembled. (The
+`RescoreWorker.Run` alias that survived the collapse with no callers was removed.)
 
 - `RescoreHydration.HydrateForRescore` (`Osprey.Tasks/RescoreHydration.cs:166`)
   loads pre-compaction `FdrEntry` stubs from each `.scores.parquet`, overlays the
@@ -290,8 +291,8 @@ computed by Stage 6 planning. The flags that affect this stage:
 
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
-| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` runs this stage as a standalone worker (internal `HpcTask.PerFileRescore`). `SecondPassFDR` (`HpcTask.SecondPassFdr`) rehydrates reconciled parquets instead of re-scoring. |
-| `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`PerFileRescoreTask.IsIncluded`). |
+| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` (`PerFileRescoreTask`) runs this stage as a standalone worker. `SecondPassFDR` (`SecondPassFdrTask`) rehydrates reconciled parquets instead of re-scoring. |
+| `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`OspreyConfig.Includes`: the selected stage runs by itself). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstPassFDR; determines which entries survive into the rescore set. |
 | `ReconciliationConfig.Enabled` | true | Gates reconciliation planning + `reconciliation.json` inputs (`PerFileRescoreTask.cs:158`). Disabling leaves only multi-charge consensus rescore. |
 | `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection, calibration refit, and reconciliation planning (`Stage6Planner.cs`). Not a CLI flag; config field. |
@@ -355,15 +356,14 @@ variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
   Evidence: `Osprey.Tasks/ReconciledParquetWriter.cs:54`, `:200-204`,
   `Osprey.Tasks/PerFileRescoreTask.cs:145-151`. Severity: minor.
 
-- **[UNVERIFIED] Six per-row blob columns written null/zero in the reconciled
-  parquet** - `RescoreWorker`'s summary states `fragment_mzs`,
+- **[RESOLVED] Six per-row blob columns written null/zero in the reconciled
+  parquet** - the summary of the since-removed `RescoreWorker.cs` stated `fragment_mzs`,
   `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`,
-  `bounds_area`, and `bounds_snr` are currently written null/zero, tracked as a
-  follow-up. This is a serialization gap in the reconciled parquet, not in the
-  boundary-override scoring itself (features and RT boundaries are computed and
-  written). A human should confirm whether any downstream consumer reads those
-  six columns off the reconciled parquet. Evidence: `Osprey/RescoreWorker.cs:64-71`.
-  Severity: minor.
+  `bounds_area`, and `bounds_snr` were written null/zero. That predated PR #4188,
+  which populates all six on the reconciled write path
+  (`Osprey.IO/ParquetScoreCache.cs`, `BuildFdrEntryColumns`; asserted by
+  `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay`). Kept as a row so
+  DIVERGENCES.md U6 keeps its number. Severity: info.
 
 Verified to match the Rust doc step for step: the single shared scoring path for
 first-pass and re-scoring; override detection by entry id; the

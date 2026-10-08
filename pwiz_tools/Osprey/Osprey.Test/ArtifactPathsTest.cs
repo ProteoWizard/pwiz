@@ -40,8 +40,9 @@ namespace pwiz.Osprey.Test
     {
         // Helper: run an action with ArtifactPaths overrides set, always resetting
         // the process-wide statics afterward so other tests see the default
-        // (null = each input file's own directory).
-        private static void WithArtifactDirs(string outputDir, string cacheDir, System.Action body)
+        // (null = each input file's own directory). Shared with other tests that
+        // depend on where artifacts resolve.
+        internal static void WithArtifactDirs(string outputDir, string cacheDir, System.Action body)
         {
             string savedOutput = ArtifactPaths.OutputDir;
             string savedCache = ArtifactPaths.CacheDir;
@@ -136,19 +137,19 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestWorkOutputCacheDirPrecedence()
         {
-            OspreyConfig work = Program.ParseArgs(new[] { "--work-dir", "W" });
+            OspreyConfig work = Program.ParseArgs(ArgTokens.Split(OspreyCommandArgs.ARG_WORK_DIR + @"W"));
             Assert.AreEqual("W", work.OutputDir);
             Assert.AreEqual("W", work.CacheDir);
 
-            OspreyConfig split = Program.ParseArgs(new[] { "--work-dir", "W", "--output-dir", "O", "--cache-dir", "C" });
+            OspreyConfig split = Program.ParseArgs(ArgTokens.Split(OspreyCommandArgs.ARG_WORK_DIR + @"W", OspreyCommandArgs.ARG_OUTPUT_DIR + @"O", OspreyCommandArgs.ARG_CACHE_DIR + @"C"));
             Assert.AreEqual("O", split.OutputDir);
             Assert.AreEqual("C", split.CacheDir);
 
-            OspreyConfig outOnly = Program.ParseArgs(new[] { "--work-dir", "W", "--output-dir", "O" });
+            OspreyConfig outOnly = Program.ParseArgs(ArgTokens.Split(OspreyCommandArgs.ARG_WORK_DIR + @"W", OspreyCommandArgs.ARG_OUTPUT_DIR + @"O"));
             Assert.AreEqual("O", outOnly.OutputDir);
             Assert.AreEqual("W", outOnly.CacheDir);
 
-            OspreyConfig none = Program.ParseArgs(new[] { "-i", "x.mzML" });
+            OspreyConfig none = Program.ParseArgs(ArgTokens.Split(OspreyCommandArgs.ARG_INPUT + @"x.mzML"));
             Assert.IsNull(none.OutputDir);
             Assert.IsNull(none.CacheDir);
         }

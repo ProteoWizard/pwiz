@@ -56,8 +56,7 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
-        [TestMethod, MinidumpLeakThreshold(15),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod, MinidumpLeakThreshold(15)]
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.

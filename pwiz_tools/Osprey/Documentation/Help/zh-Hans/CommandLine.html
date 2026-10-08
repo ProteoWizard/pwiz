@@ -1,0 +1,115 @@
+<html><head>
+<meta charset="utf-8">
+<title>Osprey 命令行用法</title>
+<meta name="description" content="Osprey（MacCoss 实验室开发的以肽段为中心的 DIA 搜索工具）的命令行用法：搜索和 FDR 参数、蛋白质推断、SpectraCache 暂存任务、ModelDiagnostics 仅报告任务，以及四个分布式 HPC --task 工作进程（PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR）。">
+<style>
+body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; max-width: 70em; }
+h1 { font-size: 1.6em; font-weight: 600; color: #000; margin: 0 0 .3em; }
+.RowType { font-size: 1.769em; line-height: 1.3em; font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; color: #000; }
+table { border: 1px solid #bbb; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }
+th { background-color: #ededed; color: #636363; text-align: left; padding: 10px 8px; font-weight: bold; border: 1px solid #bbb; }
+td { color: #2a2a2a; vertical-align: top; padding: 10px 8px; border: 1px solid #bbb; }
+pre { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-family: Consolas,'Courier New',monospace; font-size: .92em; white-space: pre-wrap; }
+code { font-family: Consolas,'Courier New',monospace; }
+a { color: #1565c0; }
+</style>
+</head><body>
+<h1>Osprey 命令行用法</h1>
+<p>Osprey 是 MacCoss 实验室开发的以肽段为中心的 DIA 搜索工具。它读取 DIA mzML 文件和谱图库，并将经过 FDR 控制的结果写入 BiblioSpecLite（<code>.blib</code>）库，该库可直接导入 Skyline。它在 Windows 和 Linux 上作为独立的可执行文件运行。</p>
+<p>有关流程概述、各阶段详情以及四个分布式 HPC 任务如何拆分与合并，请参见工作流程图：<a href="https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html">Osprey-workflow.html</a>。下方的参数表由命令行声明生成，因此始终与构建版本一致；运行 <code>Osprey --help</code> 可查看相同内容的文本版本。</p>
+<p>Osprey - 以肽段为中心的 DIA 分析</p><p>用法：osprey -i &lt;file1.mzML&gt; [file2.mzML ...] -l &lt;library.tsv&gt; -o &lt;output.blib&gt;</p><div class="RowType">一般输入/输出</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>-i</nobr>,&nbsp;<nobr>--input</nobr>&nbsp;&lt;file1.mzML&nbsp;...&gt;</td><td>输入 mzML 文件</td></tr>
+<tr><td><nobr>--input-list</nobr>&nbsp;&lt;list.txt&gt;</td><td>输入路径列表文件，每行一个（忽略 # 注释）。可替代很长的“<nobr>-i</nobr>”列表。</td></tr>
+<tr><td><nobr>-l</nobr>, <nobr>--library</nobr> &lt;library.tsv|.blib&gt;</td><td>谱图库（.tsv，.blib）</td></tr>
+<tr><td><nobr>-o</nobr>,&nbsp;<nobr>--output</nobr>&nbsp;&lt;output.blib&gt;</td><td>输出 blib 文件</td></tr>
+<tr><td><nobr>--work-dir</nobr>&nbsp;&lt;dir&gt;</td><td>将中间文件和谱图缓存写入此处（使输入数据可以是只读的）；默认：输入旁</td></tr>
+<tr><td><nobr>--output-dir</nobr>&nbsp;&lt;dir&gt;</td><td>中间文件的目录（覆盖“<nobr>--work-dir</nobr>”）</td></tr>
+<tr><td><nobr>--cache-dir</nobr>&nbsp;&lt;dir&gt;</td><td>.spectra.bin 缓存的目录（覆盖“<nobr>--work-dir</nobr>”）</td></tr>
+<tr><td><nobr>--report</nobr>&nbsp;&lt;report.tsv&gt;</td><td>将 TSV 报告写入文件</td></tr>
+<tr><td><nobr>--export-library</nobr>&nbsp;&lt;library.blib&gt;</td><td>Write the spectral library given by <nobr>--library</nobr> to this path as a .blib file that Skyline and Osprey can read, and exit without searching</td></tr>
+</table>
+<div class="RowType">评分与耐受性</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--resolution</nobr> &lt;unit | hram | auto&gt;</td><td>分辨率模式（默认：auto）</td></tr>
+<tr><td><nobr>--fragment-tolerance</nobr>&nbsp;&lt;value&gt;</td><td>碎片质荷比耐受性（默认：10）</td></tr>
+<tr><td><nobr>--fragment-unit</nobr> &lt;ppm | mz&gt;</td><td>碎片耐受性单位（默认：ppm）</td></tr>
+<tr><td><nobr>--no-prefilter</nobr></td><td>禁用共洗脱信号预过滤</td></tr>
+</table>
+<div class="RowType">FDR 与蛋白质推断</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--run-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>运行水平 FDR 阈值（默认：0.01）</td></tr>
+<tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>实验水平 FDR 阈值（默认：0.01）</td></tr>
+<tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>为跨运行协调和第二轮保留第一轮肽段的肽段 q 值阈值（默认：0.01 =“<nobr>--run-fdr</nobr>”；可放宽，例如到 0.05，以扩大协调池）</td></tr>
+<tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>蛋白质水平 FDR 阈值（可选）</td></tr>
+<tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDR 水平（默认：precursor）</td></tr>
+<tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>共享肽段处理方式（默认：all）</td></tr>
+<tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>将与 FDRBench 兼容的输入 TSV 写入此路径。水平取自“<nobr>--fdr-level</nobr>”（peptide；precursor 和 both 输出母离子水平）。包含每个报告的目标，即实际写入输出的肽段，不论 q 值如何，并将原始 SVM 判别值作为“score”，以便 FDRBench 通过诱捕计数计算真实 FDR，而不会在 Osprey 的阈值处截断。</td></tr>
+<tr><td><nobr>--fdrbench-per-run</nobr></td><td>与“<nobr>--fdrbench</nobr>”一起使用：每个（母离子，运行）输出一行，使用运行水平 q 值（增加“run”列）。默认每个母离子输出一行，使用实验水平 q 值。</td></tr>
+<tr><td><nobr>--fdrbench-pass</nobr> &lt;1 | 2 | both&gt;</td><td>与“<nobr>--fdrbench</nobr>”一起使用：要输出哪一轮 FDR。2（默认）= 写入 blib 的第二轮结果（即 Osprey 所报告内容的 FDR）。1 = 为第二轮筛选之前的完整第一轮池（每个已评分目标，不论 q 值），使用第一轮 q 值，与原始 Rust Osprey 的 FDRBench 输入一致（第二轮输出所依据的假设）。both = 在一次运行中同时输出两者，写入“<nobr>--fdrbench</nobr>”路径时使用 .pass1 / .pass2 文件名后缀。</td></tr>
+</table>
+<div class="RowType">诱饵</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--decoys-in-library</nobr></td><td>信任谱图库中已有的诱饵，而不是生成反向诱饵。如果未识别到任何诱饵，则报错停止。</td></tr>
+<tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>FDRBench 5 列配对清单 (TSV)，与“<nobr>--decoys-in-library</nobr>”一起使用</td></tr>
+<tr><td><nobr>--write-pin</nobr></td><td>为外部工具写入 PIN 文件</td></tr>
+</table>
+<div class="RowType">Training Export</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--training-export</nobr></td><td>Write &lt;stem&gt;.training.parquet per run: every target precursor at run q &lt;= <nobr>--training-export-max-q</nobr> with the observed intensities of its full b/y ladder and <nobr>per-ion</nobr> interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and <nobr>re-scores</nobr> nothing.</td></tr>
+<tr><td><nobr>--training-export-max-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run precursor <nobr>q-value</nobr> a target must reach to be exported (default: <nobr>--run-fdr</nobr>)</td></tr>
+<tr><td><nobr>--training-export-claimant-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run <nobr>q-value</nobr> at which another target counts as a claimant of a shared fragment peak (default: 0.01)</td></tr>
+<tr><td><nobr>--training-export-xics</nobr></td><td>With <nobr>--training-export</nobr>: also write each precursor&#39;s <nobr>per-ion</nobr> XIC matrix over its final peak boundaries</td></tr>
+</table>
+<div class="RowType">性能</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>同时评分的输入文件数（外层）。省略：每次一个（默认）。不带值：根据可用内存和核心数自动确定。&lt;N&gt;：不论内存和核心数，恰好为 N。与“<nobr>--threads</nobr>”不同。</td></tr>
+<tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td>每个文件的主搜索线程数（内层；默认：所有核心），在“<nobr>--parallel-files</nobr>”同时运行的文件之间分配</td></tr>
+</table>
+<div class="RowType">分布式 / HPC</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | TrainingExport | ModelDiagnostics&gt;</td><td>HPC：只运行一个流程任务（一个节点 = 一个任务）。省略则运行完整流程。SpectraCache 准备 .spectra.bin 缓存；TrainingExport 写入“<nobr>--training-export</nobr>”parquet 文件（对已完成的运行仅写入缺失的文件）；ModelDiagnostics 仅为已完成的运行重新生成“<nobr>--model-diagnostics</nobr>”报告，不写入其他输出。</td></tr>
+</table>
+<div class="RowType">日志</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>在每行输出前加上 [yyyy/MM/dd HH:mm:ss]</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>在每行输出前加上以 MB 为单位的托管内存和专用内存（与“<nobr>--timestamp</nobr>”配合使用，供 perfviz 读取）</td></tr>
+<tr><td><nobr>--log-file</nobr>&nbsp;&lt;path&gt;</td><td>将所有输出写入此文件，而不是 stderr</td></tr>
+<tr><td><nobr>--perf-stats</nobr></td><td>输出脚本和性能工具读取的机器可解析 [COUNT], [TIMING], [BENCH], [<nobr>STAGE-WALL</nobr>], [PATH], [TRAIN] 行（默认关闭）</td></tr>
+<tr><td><nobr>--verbose</nobr></td><td>显示默认隐藏的更多详细信息（例如每折的 Percolator 迭代）</td></tr>
+</table>
+<div class="RowType">诊断与信息</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>写入开发人员诊断转储文件，用于与 Rust 实现进行比较</td></tr>
+<tr><td><nobr>--model-diagnostics</nobr></td><td>写入独立的交互式 HTML 报告，内容包括训练好的评分模型、FDR 校准，以及单峰多 ID 重复分配</td></tr>
+<tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>显示此帮助信息（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
+<tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>显示版本</td></tr>
+</table>
+<p>示例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC 拆分（一个节点 = 一个“--task”）：请参见上方的“--task”。</p><div class="RowType">分布式执行（HPC）</div>
+<p>不指定 <code>--task</code> 时，整个流程在一个进程中运行。对于分布式（HPC／工作流引擎）执行，流程在合并／扇出边界处拆分为四个单任务工作进程，每个节点对应一个 <code>--task</code>：<code>PerFileScoring</code>（拆分，每个文件）&rarr; <code>FirstPassFDR</code>（合并，所有文件）&rarr; <code>PerFileRescoring</code>（拆分，每个文件）&rarr; <code>SecondPassFDR</code>（合并，所有文件）。请向每个任务传入相同的 <code>--library</code> 和搜索选项；parquet 完整性检查会拒绝搜索／库哈希不匹配的输入。</p>
+<pre>
+# 拆分 1 - 每个 mzML 一个进程（在每个输入旁写入 &lt;stem&gt;.scores.parquet、&lt;stem&gt;.calibration.json）
+Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+
+# 合并 1 - 对所有运行使用一个进程（传入排序后的列表，以确保顺序确定）
+Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   在每个 parquet 旁写入：&lt;stem&gt;.1st-pass.fdr_scores.bin、&lt;stem&gt;.reconciliation.json
+
+# 拆分 2 - 每个文件一个进程（得分 parquet 及其中间文件一起）
+Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   写入：&lt;stem&gt;.scores-reconciled.parquet，使用“--training-export”时还写入 &lt;stem&gt;.training.parquet
+
+# 合并 2 - 对所有运行使用一个进程，读取协调后的 parquet（写入 out.blib）
+Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+</pre>
+<p>每个任务都要用 <code>-i</code> 指定数据文件，名称与第一次拆分时相同。合并任务根据输入文件名主干推导每次运行的 parquet 和中间文件，因此数据文件本身不必仍然存在：工作进程的工作目录（或 <code>--output-dir</code> 下）中必须有该运行的产物。FirstPassFDR 协调对顺序敏感，因此请传入确定排序的列表。<code>--input-list</code> 每行接受一个路径；由于 <code>-i</code> 占用的命令行长度与文件数成正比，运行数超过几百个的队列需要使用它。请让调度程序进行扇出（每个拆分进程一个文件），而不要使用 <code>--parallel-files</code>，它是单节点多文件模式。</p>
+</body></html>

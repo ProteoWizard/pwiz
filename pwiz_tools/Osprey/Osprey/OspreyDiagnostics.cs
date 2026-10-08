@@ -94,6 +94,21 @@ namespace pwiz.Osprey
             }
             var sink = new OspreyFileDiagnostics();
             s_sink = sink.AnyEnabled ? sink : null;
+            if (s_sink != null)
+            {
+                // Guarantees CloseAll runs on a normal Environment.Exit, not just a return
+                // from Main - the held-open dump writers (cs_stage6_mp_inputs.tsv and
+                // siblings) commit through FileSaver, so without this an early *_ONLY exit
+                // (there are two dozen call sites) would leave their content sitting in an
+                // uncommitted temp forever rather than at the real path a developer expects.
+                // Does not run on a hard crash (AccessViolationException, a killed process) -
+                // no cleanup mechanism does; that content is recoverable, if at all, only via
+                // OspreyEnvironment.KeepFailedWrites naming the abandoned temp.
+                // Closes the sink this call created, not whatever s_sink holds at exit: a later
+                // Initialize with diagnostics off sets s_sink to null, and a handler reading the
+                // field then threw NullReferenceException at process exit (every test host run).
+                AppDomain.CurrentDomain.ProcessExit += (_, _) => sink.CloseAll();
+            }
         }
 
         /// <summary>

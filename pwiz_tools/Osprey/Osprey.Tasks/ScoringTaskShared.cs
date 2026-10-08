@@ -24,7 +24,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -57,11 +59,10 @@ namespace pwiz.Osprey.Tasks
         internal const uint BASE_ID_MASK = 0x7FFFFFFFu;
 
         // Serializes input parsing across concurrent ProcessFile() calls (mzML or
-        // vendor raw; the name predates vendor reading). The
-        // producer inside MzmlReader.LoadAllSpectra is a sequential XmlReader over
-        // a FileStream, so 3 files parsing in parallel means 3 sequential disk
-        // scans fighting for the same head/cache. Gating the parse step funnels
-        // the disk-bound work into one stream at a time while leaving the
+        // vendor raw; the name predates vendor reading). Reading a spectrum file is
+        // disk-bound and sequential, so 3 files parsing in parallel means 3
+        // sequential scans fighting for the same head/cache. Gating the parse step
+        // funnels the disk-bound work into one stream at a time while leaving the
         // subsequent main-search phase free to run in parallel across files.
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
@@ -74,7 +75,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static ScoringPipeline Pipeline(PipelineContext ctx)
         {
-            return new ScoringPipeline(ctx.LogInfo, ctx.Diagnostics as IScoringDiagnostics);
+            return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics);
         }
 
         /// <summary>
@@ -126,7 +127,7 @@ namespace pwiz.Osprey.Tasks
         /// written to the cache, then indexed and the parsed list dropped. Stages 1-4
         /// (calibration + scoring) stream each isolation window from the returned index. The
         /// full resident load survives only in Stage-6 rescore
-        /// (<c>PerFileRescoreTask.LoadSpectraForRescore</c>, a separate follow-up).
+        /// (<see cref="LoadSpectraForRescore"/>, a separate follow-up).
         ///
         /// Shared here rather than owned by <see cref="PerFileScoringTask"/> because
         /// <see cref="SpectraCacheTask"/> (<c>--task SpectraCache</c>) builds exactly the
@@ -150,10 +151,10 @@ namespace pwiz.Osprey.Tasks
                     var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
                     if (hit != null)
                     {
-                        ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                        ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_, cachePath));
                         return hit;
                     }
-                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing the input.");
+                    ctx.LogInfo(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Spectra_cache_stale_or_invalid__re_parsing_the_input_);
                 }
                 catch (Exception ex)
                 {
@@ -163,15 +164,15 @@ namespace pwiz.Osprey.Tasks
                     // LoadSpectra fallback. Only the miss-path re-index below stays a hard
                     // error, since that indexes a cache we just wrote.
                     ctx.LogWarning(string.Format(
-                        "Failed to index spectra cache: {0}. Re-parsing the input.", ex.Message));
+                        OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_index_spectra_cache___0___Re_parsing_the_input_, ex.Message));
                 }
             }
 
             // Miss/stale/absent: parse the input once (materialized only transiently here),
             // optionally serialized across files, write the cache, then index it and drop the
             // parsed list. The "Processing file N/M: <path>" banner already named the file.
-            // SpectrumFileReader picks the mzML or vendor-raw reader by extension; both
-            // return the same MzmlResult, so nothing below here knows the source format.
+            // SpectrumFileReader reads every format through ProteoWizard and returns the
+            // same SpectrumFileResult, so nothing below here knows the source format.
             // Deleting the sources once the caches exist is supported, so reaching a re-parse
             // with no source is a real state, not a bad argument. Say which of the two is
             // wrong - the cache, and why - rather than failing inside the reader on a path
@@ -183,10 +184,10 @@ namespace pwiz.Osprey.Tasks
             if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
             {
                 throw new InvalidDataException(string.Format(
-                    @"Spectra cache '{0}' is not usable and cannot be rebuilt because the source '{1}' is missing. Restore the source and re-run.",
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_The_spectra_cache___0___cannot_be_used_and_cannot_be_rebuilt__because_its_source___1___is_,
                     cachePath, inputFile));
             }
-            MzmlResult mzmlResult;
+            SpectrumFileResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
             try
@@ -218,13 +219,13 @@ namespace pwiz.Osprey.Tasks
                 {
                     cacheBytes = 0;
                 }
-                ctx.LogInfo(string.Format("Saved spectra cache ({0} MS2 + {1} MS1, {2:F2} GB) to '{3}'",
+                ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Saved_spectra_cache___0__MS2____1__MS1___2__GB__to___3__,
                     mzmlResult.Ms2Spectra.Count, mzmlResult.Ms1Spectra.Count,
                     cacheBytes / 1024.0 / 1024.0 / 1024.0, cachePath));
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
+                ctx.LogWarning(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_save_spectra_cache___0_, ex.Message));
             }
 
             // Index the just-written cache and stream from it (the parsed MS2 list drops when
@@ -243,11 +244,159 @@ namespace pwiz.Osprey.Tasks
                 indexError = ex;
             }
             if (index == null)
+            {
                 throw new IOException(string.Format(
-                    "Could not index the spectra cache for '{0}'. Per-file scoring streams MS2 from " +
-                    "'{1}'; ensure that directory is writable (the .scores.parquet and .calibration.json " +
-                    "outputs are written to the same place).", inputFile, cachePath), indexError);
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath,
+                    ParquetScoreCache.EXT_SCORES, CalibrationIO.EXT), indexError);
+            }
             return index;
+        }
+
+        /// <summary>
+        /// Build a streaming <see cref="SpectraWindowIndex"/> over the <c>.spectra.bin</c>
+        /// cache the original Stage 1-4 run wrote, so a task that starts after it (the Stage-6
+        /// rescore, the training export) loads each isolation window's MS2 on demand instead of
+        /// materializing the whole ~6 GB resident <c>List&lt;Spectrum&gt;</c>. MS1 + the
+        /// first-cycle isolation windows come from the same index, MS1 only when
+        /// <paramref name="loadMs1"/>. There is NO mzML fallback: such a task always runs
+        /// against a file the upstream stages already cached, so an absent/invalid cache is a
+        /// deployment error (the mzML may not even be shipped to the worker), and re-reading
+        /// the 6 GB mzML would defeat the streaming this method exists to enable. Throws
+        /// <see cref="SpectraCacheException"/> when the cache cannot be indexed, naming
+        /// <paramref name="consumer"/> as the stage that needed it. Moved unchanged from
+        /// <c>PerFileRescoreTask</c>.
+        /// </summary>
+        internal static SpectraWindowIndex LoadSpectraForRescore(string inputFile, string fileName,
+            string consumer, bool loadMs1)
+        {
+            string cachePath = SpectraCache.GetCachePath(inputFile);
+            SpectraWindowIndex index;
+            var reason = SpectraCacheRejection.None;
+            try
+            {
+                // Ask for the REASON, not just null. The six rejection rules have different
+                // remedies, and a message that lists them all sends the reader to the wrong one:
+                // "re-run PerFileScoring" is right for a stale cache and wrong for an absent
+                // one, where the cache usually exists and is valid but sits beside the raw data
+                // rather than in this worker's directory.
+                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile, loadMs1, out reason);
+            }
+            catch (Exception ex)
+            {
+                throw new SpectraCacheException(string.Format(
+                    OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read, consumer, cachePath, ex.Message,
+                    PerFileScoringTask.TASK_NAME),
+                    SpectraCacheRejection.None, cachePath, ex);
+            }
+            if (index == null)
+            {
+                // Absence is the one refusal that is usually a LOCATION problem rather than a
+                // damaged cache, so it names the flag that fixes it. The others are about the
+                // file that is there, and --task SpectraCache is what rebuilds it: PerFileScoring
+                // does not declare the cache, so over scoring that is current it only skips.
+                string spectraCacheTask = OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME);
+                string remedy = reason == SpectraCacheRejection.Absent
+                    ? string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_, fileName, spectraCacheTask,
+                        OspreyArgNames.Text(OspreyArgNames.TASK), OspreyArgNames.Text(OspreyArgNames.OUTPUT_DIR),
+                        OspreyArgNames.Text(OspreyArgNames.CACHE_DIR), SpectraCache.EXT)
+                    : string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_, fileName, spectraCacheTask);
+                throw new SpectraCacheException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_,
+                    consumer, cachePath, SpectraCacheException.Describe(reason), remedy, PerFileScoringTask.TASK_NAME),
+                    reason, cachePath);
+            }
+            return index;
+        }
+
+        /// <summary>
+        /// Load MS2 + MS1 mass calibrations and the original Stage-4 RT
+        /// calibration MAD from the sibling .calibration.json that
+        /// Stage 2 wrote. Moved unchanged from <c>PerFileRescoreTask</c>, with
+        /// <paramref name="consumer"/> naming the stage in the errors. Throws
+        /// <see cref="InvalidDataException"/> if the
+        /// calibration sidecar is missing or unreadable -- Stage 6
+        /// requires the Stage 1-4 calibration to rescore, and silently
+        /// falling back to uncalibrated would mask a real configuration
+        /// error (the worker's output would diverge from the
+        /// straight-through pipeline's output). Mirrors the hard-error
+        /// behavior in Rust <c>run_rescore</c> at
+        /// <c>osprey/crates/osprey/src/rescore.rs</c>. Individual calibration
+        /// sections (Ms1Calibration / Ms2Calibration / RtMad) may still
+        /// be absent within the file; those leave the corresponding
+        /// out-param at its uncalibrated / null default.
+        /// </summary>
+        internal static void LoadMassCalibrations(string inputFile, string consumer,
+            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+            out double? rtMadFromCalJson)
+        {
+            ms2Cal = MzCalibrationResult.Uncalibrated();
+            ms1Cal = MzCalibrationResult.Uncalibrated();
+            rtMadFromCalJson = null;
+
+            // Stage 1-4 wrote the calibration sidecar to the configured output
+            // directory (ArtifactPaths), which for a straight-through --output-dir
+            // run is NOT the (possibly read-only) input mzML's directory. Resolve
+            // it the same way the writer did; fall back to the input's own dir
+            // (via GetFullPath so a bare-filename input still yields an absolute
+            // dir) when no output dir is configured.
+            string parent = !string.IsNullOrEmpty(ArtifactPaths.OutputDir)
+                ? ArtifactPaths.OutputDir
+                : Path.GetDirectoryName(Path.GetFullPath(inputFile));
+            if (string.IsNullOrEmpty(parent))
+            {
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration, inputFile, consumer,
+                    PerFileScoringTask.TASK_NAME));
+            }
+            string calPath = CalibrationIO.CalibrationPathForInput(inputFile, parent);
+            if (!File.Exists(calPath))
+            {
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration, calPath, inputFile, consumer,
+                    PerFileScoringTask.TASK_NAME, OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME)));
+            }
+
+            CalibrationParams calParams;
+            try
+            {
+                calParams = CalibrationIO.LoadCalibration(calPath);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__, calPath, ex.Message), ex);
+            }
+
+            if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
+            {
+                ms2Cal = new MzCalibrationResult
+                {
+                    Mean = calParams.Ms2Calibration.Mean,
+                    Median = calParams.Ms2Calibration.Median,
+                    SD = calParams.Ms2Calibration.SD,
+                    Count = calParams.Ms2Calibration.Count,
+                    Unit = calParams.Ms2Calibration.Unit,
+                    AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
+                    Calibrated = true
+                };
+            }
+            if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
+            {
+                ms1Cal = new MzCalibrationResult
+                {
+                    Mean = calParams.Ms1Calibration.Mean,
+                    Median = calParams.Ms1Calibration.Median,
+                    SD = calParams.Ms1Calibration.SD,
+                    Count = calParams.Ms1Calibration.Count,
+                    Unit = calParams.Ms1Calibration.Unit,
+                    AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
+                    Calibrated = true
+                };
+            }
+            // The MAD is what Rust's run_search uses for rt_tolerance
+            // derivation; emit it from here (not from the refined cal's
+            // abs_residuals) so the C# rescore matches Rust's window
+            // size byte-for-byte.
+            if (calParams.RtCalibration != null && calParams.RtCalibration.MAD.HasValue)
+            {
+                rtMadFromCalJson = calParams.RtCalibration.MAD.Value;
+            }
         }
 
         /// <summary>
@@ -300,8 +449,8 @@ namespace pwiz.Osprey.Tasks
             if (perFileParquetPaths != null
                 && perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
-                string parent = Path.GetDirectoryName(parquetPath) ?? ".";
-                return Path.Combine(parent, fileName + ".mzML");
+                string parent = Path.GetDirectoryName(parquetPath) ?? @".";
+                return Path.Combine(parent, fileName + SpectrumFileReader.EXT_MZML);
             }
             return null;
         }
@@ -410,32 +559,27 @@ namespace pwiz.Osprey.Tasks
             // ADMIT, do not exclude. This listed the tasks to keep OUT and so admitted anything
             // unlisted - which is how --task ModelDiagnostics ended up routed down the per-run
             // rescore path and skipped its own regeneration (Astral mode 7: "regeneration
-            // changed nothing at all"). It sets none of NoJoin / StopAfterStage5 /
-            // ExpectReconciledInput, because it is neither a fan-out nor a join; it is a fifth
-            // thing, and an exclusion list cannot know about the fifth thing.
+            // changed nothing at all"). It set none of the membership flags of the day,
+            // because it is neither a fan-out nor a join; it is a fifth thing, and an
+            // exclusion list cannot know about the fifth thing.
             //
-            // Naming what is admitted fails CLOSED: a task added later is excluded until someone
-            // decides otherwise, which is the direction a predicate guarding a memory shape
-            // should fail in.
-            // ModelDiagnostics is admitted for the same reason PerFileRescore is: it consumes
-            // the per-run survivor loader and nothing else. Admitting it is what stops it
-            // falling to the all-runs bundle, which retains every run's survivors and grew
-            // 0.10 GB/file on a 446-run cohort - past a 63.7 GB box by file ~310, measured
-            // 2026-09-10. The report itself is unaffected either way, so the symptom was
-            // memory alone and no gate could see it: mode 7 covers this task but runs 3 files,
-            // where an O(files) bundle is free.
+            // So the question is asked of the task (ISelectableTask.HydratesPerRun), which
+            // fails CLOSED: a task added later answers false until its author decides
+            // otherwise, the direction a predicate guarding a memory shape should fail in.
+            // The rescore worker and ModelDiagnostics answer true for the same reason: each
+            // consumes the per-run survivor loader and nothing else, and admitting them is
+            // what stops either falling to the all-runs bundle, which retains every run's
+            // survivors and grew 0.10 GB/file on a 446-run cohort - past a 63.7 GB box by file
+            // ~310, measured 2026-09-10. The straight-through run (no task) is admitted too;
+            // the two joins answer false, which is what used to be a second test on the
+            // StopAfterStage5 / ExpectReconciledInput flags here.
             //
-            // Safe now for the reason the --model-diagnostics paragraph below gives: the report
-            // is FirstPassFDR's DECLARED OUTPUT, folded by FoldDiagnosticsOnly BEFORE Rehydrate
-            // is reached, so the per-run arm cannot skip a regeneration the way it did when the
-            // report was a side effect of whichever hydrate ran (Astral mode 7).
-            if (config.SelectedTask.HasValue &&
-                config.SelectedTask != HpcTask.PerFileRescore &&
-                config.SelectedTask != HpcTask.ModelDiagnostics)
-            {
-                return false;
-            }
-            if (config.StopAfterStage5 || config.ExpectReconciledInput)
+            // Safe for ModelDiagnostics for the reason the --model-diagnostics paragraph below
+            // gives: the report is FirstPassFDR's DECLARED OUTPUT, folded by
+            // FoldDiagnosticsOnly BEFORE Rehydrate is reached, so the per-run arm cannot skip a
+            // regeneration the way it did when the report was a side effect of whichever
+            // hydrate ran (Astral mode 7).
+            if (config.SelectedTask != null && !config.SelectedTask.HydratesPerRun)
                 return false;
             // --model-diagnostics is NOT excluded any more, and what changed is where the report
             // comes from rather than anything about this predicate.
@@ -481,6 +625,43 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Whether the stage of type <typeparamref name="T"/> is included in this run - the
+        /// one membership rule, <see cref="OspreyConfig.Includes"/>, asked by stage type from
+        /// code that has the config and not the instance. True with no selection (the full
+        /// pipeline); false when the run's pipeline has no such stage at all, so a standalone
+        /// selection (SpectraCache) runs no join.
+        /// </summary>
+        internal static bool Includes<T>(OspreyConfig config) where T : OspreyTask
+        {
+            if (config.SelectedTask == null)
+                return true;
+            return config.Pipeline.OfType<T>().Any(config.Includes);
+        }
+
+        /// <summary>
+        /// Whether the selected task is a stage of its pipeline that comes AFTER the stage of
+        /// type <typeparamref name="T"/>. A position question, answered from the ordered
+        /// pipeline the selection was resolved against; false with no selection, for a
+        /// selector that is not a stage (it starts the pipeline from its first stage), and
+        /// when the pipeline has no such anchor.
+        /// </summary>
+        internal static bool SelectedStageIsAfter<T>(OspreyConfig config) where T : OspreyTask
+        {
+            if (config.SelectedTask == null)
+                return false;
+            var pipeline = config.Pipeline;
+            int anchor = -1, selected = -1;
+            for (int i = 0; i < pipeline.Count; i++)
+            {
+                if (anchor < 0 && pipeline[i] is T)
+                    anchor = i;
+                if (ReferenceEquals(pipeline[i], config.SelectedTask))
+                    selected = i;
+            }
+            return anchor >= 0 && selected > anchor;
+        }
+
+        /// <summary>
         /// Every task that starts AFTER Stage 4 - the two joins and the rescore worker. They
         /// are handed a directory of per-run artifacts rather than spectra, so
         /// <see cref="PerFileScoringTask"/> does not run for them; a consumer materializes
@@ -490,38 +671,33 @@ namespace pwiz.Osprey.Tasks
         /// is the INPUT KIND - the Rust pipeline's way of saying Stage 1-4 was done. The port
         /// says it with <c>--task</c>, and the two seams disagreeing is what let
         /// <c>--task ModelDiagnostics</c> join the pipeline and demand state a diagnostics
-        /// fold never publishes. One question, asked of the task.</para>
+        /// fold never publishes. One question, asked of the pipeline: is the selected stage
+        /// after per-file scoring in it.</para>
         ///
-        /// <para><c>ModelDiagnostics</c> is deliberately NOT here. It is neither a fan-out nor
-        /// a join but a render over retained products, and it needs the per-file load to have
-        /// happened - which it did by taking <c>-i</c> even while the others took parquets.
-        /// That asymmetry was the first symptom of the two seams, and it survives the
-        /// retirement as an ordinary membership fact rather than as an input-kind accident.</para>
+        /// <para><c>ModelDiagnostics</c> answers false. It is neither a fan-out nor a join but
+        /// a render over retained products, and it needs the per-file load to have happened -
+        /// which it did by taking <c>-i</c> even while the others took parquets. That
+        /// asymmetry was the first symptom of the two seams, and it survives the retirement
+        /// as an ordinary position fact rather than as an input-kind accident: a selector
+        /// that is not a stage runs the pipeline from its first stage.</para>
         /// </summary>
         internal static bool StartsAfterPerFileScoring(OspreyConfig config)
         {
-            switch (config.SelectedTask)
-            {
-                case HpcTask.FirstPassFdr:
-                case HpcTask.PerFileRescore:
-                case HpcTask.SecondPassFdr:
-                    return true;
-                default:
-                    return false;
-            }
+            return SelectedStageIsAfter<PerFileScoringTask>(config);
         }
 
         /// <summary>
         /// Which per-run parquet THIS task reads its rows from: the Stage 6
-        /// <c>.scores-reconciled.parquet</c> for <c>SecondPassFDR</c>, the Stage 4
-        /// <c>.scores.parquet</c> for the two tasks that run before Stage 6 has written one.
+        /// <c>.scores-reconciled.parquet</c> for a stage after the rescore (<c>SecondPassFDR</c>),
+        /// the Stage 4 <c>.scores.parquet</c> for the stages that run before Stage 6 has
+        /// written one.
         ///
-        /// <para>A property of the TASK, not of what happens to be on disk. It used to be
-        /// decided by probing for the reconciled sibling and taking it where it existed,
-        /// which gives the right answer only because the pipeline happens to run the stages
-        /// in order - the file is absent before Stage 6 and present after. Re-run
-        /// <c>--task FirstPassFDR</c> over a directory a previous run completed and the same
-        /// probe hands the FIRST pass the survivor SUBSET, roughly 1/52 of its rows, with
+        /// <para>A property of the selection's place in the pipeline, not of what happens to
+        /// be on disk. It used to be decided by probing for the reconciled sibling and taking
+        /// it where it existed, which gives the right answer only because the pipeline happens
+        /// to run the stages in order - the file is absent before Stage 6 and present after.
+        /// Re-run <c>--task FirstPassFDR</c> over a directory a previous run completed and the
+        /// same probe hands the FIRST pass the survivor SUBSET, roughly 1/52 of its rows, with
         /// nothing to reject it: the version, search and library hashes all match. It then
         /// writes cohort-wide boundary artifacts from that subset and exits 0.</para>
         ///
@@ -536,21 +712,23 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool ReadsReconciledScores(OspreyConfig config)
         {
-            return config.SelectedTask == HpcTask.SecondPassFdr;
+            return SelectedStageIsAfter<PerFileRescoreTask>(config);
         }
 
         /// <summary>
         /// True when THIS process runs Stage 7's join, i.e. when a per-run source published for
-        /// that join will actually be folded by something.
+        /// that join will actually be folded by something: <see cref="SecondPassFdrTask"/> is
+        /// included in this run.
         ///
-        /// <para>Names what is ADMITTED, so it fails closed: the straight-through pipeline (no
-        /// <c>--task</c>, which runs every stage), the <c>SecondPassFDR</c> node, and
-        /// <c>ModelDiagnostics</c> - which is not an HPC fan-out node but does let
-        /// <c>SecondPassFDR</c> compute the pass-2 view, so it folds the same join and must not
-        /// be pushed back onto the resident pool. A task added later is excluded until someone
-        /// decides otherwise, which is the direction a predicate guarding a memory shape - and,
-        /// since <see cref="Stage7StreamAdmittedBeforeRescore"/>, a correctness one - should
-        /// fail in.</para>
+        /// <para>Asked of the membership rule, so it fails closed: the straight-through
+        /// pipeline (no <c>--task</c>, which runs every stage) and the <c>SecondPassFDR</c>
+        /// node run it, and so does <c>ModelDiagnostics</c> - not an HPC fan-out node, but a
+        /// selector that runs every canonical stage, so it lets <c>SecondPassFDR</c> compute
+        /// the pass-2 view, folds the same join and must not be pushed back onto the resident
+        /// pool. Every other selection includes only itself, which is the direction a
+        /// predicate guarding a memory shape - and, since
+        /// <see cref="Stage7StreamAdmittedBeforeRescore"/>, a correctness one - should fail
+        /// in.</para>
         ///
         /// <para>The excluded tasks each have a consumer that never arrives.
         /// <c>PerFileScoring</c> and <c>SpectraCache</c> stop before Stage 5.
@@ -562,10 +740,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool RunsStage7Join(OspreyConfig config)
         {
-            if (!config.SelectedTask.HasValue)
-                return true;
-            return config.SelectedTask == HpcTask.SecondPassFdr ||
-                   config.SelectedTask == HpcTask.ModelDiagnostics;
+            return Includes<SecondPassFdrTask>(config);
         }
 
         /// <summary>
@@ -622,7 +797,7 @@ namespace pwiz.Osprey.Tasks
         /// taking the streamed join with it.</para>
         ///
         /// <para>No consumer may read PIN features off these stubs
-        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: a non-Percolator FDR method,
+        /// (<c>PerFileScoringTask.NeedsResidentPool</c>:
         /// <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
         /// the entries those consumers index. And the analysis-wide retained base_id summary has
         /// to be on disk, because it IS the compaction predicate every refill applies; without
@@ -810,19 +985,18 @@ namespace pwiz.Osprey.Tasks
             // Named the same way the sibling guards name theirs, so a stale or misspelled token
             // cannot read as an unset one - even though no token can admit this path, an
             // operator who set one is owed the answer that it was not the problem.
+            // For the developer who hits this: the run was about to build the ALL-RUNS
+            // reconciliation bundle, O(files x entries) at 0.10 GB/file (past a 63.7 GB box by
+            // file ~310 of 446), although the per-run survivor loader built from the
+            // analysis-wide retained base_id summary was available. Something that was streamed
+            // is resident again - fix that rather than allowing it.
             string supplied = string.IsNullOrWhiteSpace(allowUnfixedResident)
                 ? string.Empty
-                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}'; no token " +
-                                @"admits this path.", allowUnfixedResident);
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is set to '{0}', but no setting " +
+                                @"allows this.", allowUnfixedResident);
             return string.Format(
-                @"This run is about to build the {0}, which holds every run's survivors at " +
-                @"once and grows O(files x entries) - measured at 0.10 GB/file on a 446-run " +
-                @"cohort, i.e. past a 63.7 GB box by file ~310. The bounded alternative " +
-                @"exists: the per-run survivor loader, built from the analysis-wide retained " +
-                @"base_id summary. Something that was streamed is resident again - fix that " +
-                @"rather than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this " +
-                @"path.{1}",
-                RescoreHydration.ALL_RUNS_BUNDLE_MARKER, supplied);
+                OspreyTasksResources.ScoringTaskShared_AllRunsBundleGuardError_Stopped_before_holding_the_first_pass_precursor_candidates_of_every_run_in_memory_at_once_,
+                supplied);
         }
 
         /// <summary>
@@ -869,10 +1043,10 @@ namespace pwiz.Osprey.Tasks
             if (retained != null)
                 return retained;
             // ONE remedy, and it comes from the inner error.
+            // Continuing would fold every run as empty and write an empty library.
             throw new InvalidDataException(string.Format(
-                @"The analysis-wide retained base_id summary is required here and could not be " +
-                @"read: {0} Continuing would fold every run as empty and write an empty library.",
-                error ?? @"(no reason reported)"));
+                OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIdsOrFail__0__Stopping__because_continuing_would_write_an_empty_library_,
+                error ?? OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIdsOrFail_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_could_not_be_read_));
         }
 
         /// <summary>
@@ -895,22 +1069,20 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path))
             {
                 error =
-                    @"No output blib, so the analysis-wide retained base_id summary cannot be " +
-                    @"located. It is written by FirstPassFDR and names itself after the blib.";
+                    string.Format(OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_No_output__blib_was_given__so_the_list_of_precursor_candidates_kept_for_cross_run_,
+                        LibrarySource.EXT_BLIB);
                 return null;
             }
             var retained = RetainedBaseIdSidecar.Read(path);
             if (retained == null)
             {
+                // FirstPassFDR writes this when Stage 6 planning ends, and every run's compaction
+                // reads it. The remedy is the stamp deletion, not "re-run FirstPassFDR": the task
+                // declares this file in neither Outputs nor its ValidityKey, so re-running it over
+                // a complete analysis reports its outputs valid and writes nothing.
                 error = string.Format(
-                    @"The analysis-wide retained base_id summary is missing or unreadable at {0}. " +
-                    @"It is written by FirstPassFDR when Stage 6 planning ends, and every run's " +
-                    @"compaction reads it; without it a run cannot be compacted without " +
-                    @"re-reading every other run's reconciliation.json. To produce it, delete " +
-                    @"this analysis's '<output>.FirstPassFDR.osprey.task' stamp and run the " +
-                    @"first pass again - FirstPassFDR declares this file in neither Outputs nor " +
-                    @"its ValidityKey, so re-running the task over a complete analysis reports " +
-                    @"its outputs valid and writes nothing.", path);
+                    OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_,
+                    path, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
                 return null;
             }
             return retained;
@@ -940,6 +1112,40 @@ namespace pwiz.Osprey.Tasks
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
                         entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
             }
+        }
+
+        /// <summary>
+        /// Report the first-pass compaction: what was kept, for the person watching, and the
+        /// admission detail behind <c>--verbose</c>. The base_id count mixes three admission
+        /// rules (run-level peptide q, protein q, and proteins with 2 or more detections), so it
+        /// does not belong in a one-line summary. <paramref name="droppedActions"/> is null where
+        /// the caller has no reconciliation plan to trim.
+        /// </summary>
+        internal static void LogCompaction(PipelineContext ctx, long before, long after,
+            int passingBaseIds, int? droppedActions)
+        {
+            ctx.LogInfo(string.Format(IsSingleFileSearch(ctx.Config)
+                    ? OspreyTasksResources.ScoringTaskShared_LogCompaction_Kept__0__of__1__precursor_candidates_for_re_scoring_and_second_pass_FDR_
+                    : OspreyTasksResources.ScoringTaskShared_LogCompaction_Kept__0__of__1__precursor_candidates_for_cross_run_reconciliation_,
+                after, before));
+            ctx.LogVerbose(droppedActions.HasValue
+                ? TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs___1__planned_peak_re_picks_and_boundary_imputations_,
+                    passingBaseIds, droppedActions.Value)
+                : TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs, passingBaseIds));
+        }
+
+        /// <summary>
+        /// A search of one input file that runs the whole pipeline - no <c>--task</c>, or a
+        /// selector such as <c>--task TrainingExport</c> that is not a stage of the pipeline it
+        /// runs: the only configuration with no other run to reconcile against, so its log never
+        /// mentions cross-run reconciliation. A <c>--task PerFileRescoring</c> worker also holds
+        /// one input, but it re-scores against the cross-run plan a multi-file FirstPassFDR
+        /// wrote, and says so.
+        /// </summary>
+        internal static bool IsSingleFileSearch(OspreyConfig config)
+        {
+            return (config.SelectedTask == null || !config.Pipeline.Contains(config.SelectedTask)) &&
+                   config.InputFiles != null && config.InputFiles.Count == 1;
         }
     }
 }

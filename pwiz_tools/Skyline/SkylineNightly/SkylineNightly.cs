@@ -118,7 +118,7 @@ namespace SkylineNightly
                     td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
                     // Add a trigger that will fire the task every day
-                    var dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
+                    var dt = td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
                     var scheduledTime = startTime.Value;
                     var now = DateTime.Now;
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
@@ -211,6 +211,8 @@ namespace SkylineNightly
         {
             using (var dlg = new FolderBrowserDialog())
             {
+                // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+                dlg.AutoUpgradeEnabled = false;
                 // ReSharper disable LocalizableElement
                 dlg.Description = "Select or create a nightly build folder."; // ReSharper restore LocalizableElement
                 dlg.ShowNewFolderButton = true;

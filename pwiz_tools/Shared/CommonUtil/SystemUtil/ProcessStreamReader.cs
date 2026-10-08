@@ -42,7 +42,11 @@ namespace pwiz.Common.SystemUtil
         private bool _isErrComplete;
         private Exception _readException;
 
-        private readonly List<string> _readLines = new List<string>();
+        // Queue (not List): the consumer pulls from the front every line. List.RemoveAt(0) is
+        // O(N) (it shifts the whole backing array), so draining a child that emits a lot of output
+        // -- e.g. msconvert's per-spectrum DIA-Umpire progress -- was O(N^2) and pinned a core for
+        // minutes while the process appeared to "hang" between files. Queue.Dequeue is O(1).
+        private readonly Queue<string> _readLines = new Queue<string>();
         private StringBuilder _errorLines;
 
         public ProcessStreamReader(Process process, bool keepErrorLines = false)
@@ -73,9 +77,7 @@ namespace pwiz.Common.SystemUtil
                     }
                     if (_readLines.Count > 0)
                     {
-                        string line = _readLines[0];
-                        _readLines.RemoveAt(0);
-                        return line;
+                        return _readLines.Dequeue();
                     }
                     if (_readException != null)
                         throw _readException;
@@ -112,7 +114,7 @@ namespace pwiz.Common.SystemUtil
                     {
                         if (linesToKeep != null)
                             linesToKeep.AppendLine(line);
-                        _readLines.Add(line);
+                        _readLines.Enqueue(line);
                         Monitor.Pulse(_readLines);
                     }
                 }

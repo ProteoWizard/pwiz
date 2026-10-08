@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model.Lib
                     GenerateChromatogramLibrary(_encyclopeDiaDlibInputFilepath, _encyclopeDiaElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
 
                     if (_config.LogProgressForIndividualFiles)
-                        File.WriteAllText(originalFilename + ".log", progressMonitorForFile.LogText);
+                        File.WriteAllText(originalFilename + @".log", progressMonitorForFile.LogText);
 
                     lock (narrowFileQueue)
                     {
@@ -328,7 +328,7 @@ namespace pwiz.Skyline.Model.Lib
                     GenerateQuantLibrary(_encyclopeDiaElibOutputFilepath, _encyclopeDiaQuantElibOutputFilepath, _fastaFilepath, diaFile, progressMonitorForFile, ref statusForFile, _config);
 
                     if (_config.LogProgressForIndividualFiles)
-                        File.WriteAllText(originalFilename + ".log", progressMonitorForFile.LogText);
+                        File.WriteAllText(originalFilename + @".log", progressMonitorForFile.LogText);
 
                     lock (wideFileQueue)
                     {
@@ -456,7 +456,7 @@ namespace pwiz.Skyline.Model.Lib
                 progressMonitorForFile.UpdateProgress(status);
 
                 var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false,

@@ -24,6 +24,7 @@ using SkylineBatch;
 using SharedBatch;
 using System.Linq;
 using SharedBatch.Properties;
+using SharedBatchTest;
 using System.Text.RegularExpressions;
 
 namespace SkylineBatchTest
@@ -77,18 +78,33 @@ namespace SkylineBatchTest
 
         public static string GetTestFilePath(string fileName)
         {
-            var currentPath = Directory.GetCurrentDirectory();
-            if (File.Exists(Path.Combine(currentPath, "SkylineCmd.exe")))
-                currentPath = Path.Combine(currentPath, "..", "..", "..", "Executables", "SkylineBatch", "SkylineBatchTest");
-            else
-            {
-                currentPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
-            }
+            return Path.Combine(FindTestDataDir(), fileName);
+        }
 
-            var batchTestPath = Path.Combine(currentPath ?? string.Empty, "Test");
-            if (!Directory.Exists(batchTestPath))
-                throw new DirectoryNotFoundException("Unable to find test data directory at: " + batchTestPath);
-            return Path.Combine(batchTestPath, fileName);
+        // The "Test" data folder lives in the SkylineBatchTest source dir. Walk up from the test
+        // assembly to find it: the number of intermediate output dirs differs between net472
+        // (bin\<config>) and net8 (bin\<config>\net8.0-windows), and when the tests run from a Skyline
+        // build dir the folder sits under Executables\SkylineBatch\SkylineBatchTest - so search for it
+        // (keyed on a known data file) rather than assuming a fixed depth.
+        private static string FindTestDataDir()
+        {
+            var dir = Path.GetDirectoryName(typeof(TestUtils).Assembly.Location) ?? Directory.GetCurrentDirectory();
+            while (dir != null)
+            {
+                foreach (var candidate in new[]
+                         {
+                             Path.Combine(dir, "Test"),
+                             Path.Combine(dir, "Executables", "SkylineBatch", "SkylineBatchTest", "Test")
+                         })
+                {
+                    if (Directory.Exists(candidate) && File.Exists(Path.Combine(candidate, "emptyTemplate.sky")))
+                        return candidate;
+                }
+                dir = Path.GetDirectoryName(dir);
+            }
+            throw new DirectoryNotFoundException(
+                "Unable to find the SkylineBatchTest 'Test' data directory above " +
+                (Path.GetDirectoryName(typeof(TestUtils).Assembly.Location) ?? Directory.GetCurrentDirectory()));
         }
 
         public static SkylineBatchConfig GetChangedConfig(SkylineBatchConfig baseConfig, Dictionary<string, object> changedVariables)
@@ -350,28 +366,13 @@ namespace SkylineBatchTest
 
         /// <summary>
         /// The directory of a Skyline build in this checkout, for the tests that need a real
-        /// SkylineCmd.exe to point a configuration at.
-        ///
-        /// Release comes first so a machine with both keeps the behaviour it had, but Debug is
-        /// probed too: the batch-tool build scripts default to Debug, and before that was
-        /// allowed for every one of these tests failed on a Debug tree with "Could not find a
-        /// Skyline installation at this location: ...\bin\x64\Release" - a directory that had
-        /// never been built.
+        /// SkylineCmd.exe to point a configuration at. With no build at all, returns the default
+        /// Release location so the tests fail naming a path a developer would recognize.
         /// </summary>
         public static string GetSkylineDir()
         {
-            var candidates = new[]
-            {
-                "bin\\x64\\Release",
-                "bin\\x64\\Debug"
-            };
-            foreach (var rel in candidates)
-            {
-                var dir = GetProjectDirectory(rel);
-                if (dir != null && File.Exists(Path.Combine(dir, SkylineInstallations.SkylineCmdExe)))
-                    return dir;
-            }
-            return GetProjectDirectory(candidates[0]);
+            return ExtensionTestContext.GetSkylineBinDirectory()
+                   ?? GetProjectDirectory("bin\\Release\\net10.0-windows");
         }
 
         public static string GetProjectDirectory(string relativePath)

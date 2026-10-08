@@ -53,8 +53,7 @@ namespace pwiz.SkylineTestFunctional
         private bool _expectEmptyResults;
 
         [TestMethod,
-         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)]
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiannSearch()
         {
             TestFilesZip = @"TestFunctional\DiannSearchTest.zip";
@@ -64,7 +63,6 @@ namespace pwiz.SkylineTestFunctional
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME),
          NoUnicodeTesting(@"DIA-NN 1.9.1 doesn't support UTF-8 paths properly.")]
         public void TestDiannSearch1_9_1()
         {
@@ -87,7 +85,6 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME),
          NoUnicodeTesting(@"DIA-NN 1.9.1 doesn't support UTF-8 paths properly.")]
         public void TestDiannSearchEmptyResults1_9_1()
         {

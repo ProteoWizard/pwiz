@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -977,17 +977,7 @@ namespace pwiz.Osprey.FDR
             public void Add(int g, double score, uint entryId, bool isDecoy, string peptide)
             {
                 uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
-                var dict = isDecoy ? _precDecoys : _precTargets;
-                KeyValuePair<int, double> existing;
-                if (dict.TryGetValue(baseId, out existing))
-                {
-                    if (score > existing.Value)
-                        dict[baseId] = new KeyValuePair<int, double>(g, score);
-                }
-                else
-                {
-                    dict[baseId] = new KeyValuePair<int, double>(g, score);
-                }
+                ReduceBest(isDecoy ? _precDecoys : _precTargets, baseId, g, score);
 
                 if (_meanBestN >= 2)
                 {
@@ -1013,16 +1003,75 @@ namespace pwiz.Osprey.FDR
                     return;
                 }
 
-                PeptideBest pb;
-                if (_peptBest.TryGetValue(peptide, out pb))
+                ReducePeptide(_peptBest, new PeptideBest(g, score, isDecoy, entryId, peptide));
+            }
+
+            /// <summary>
+            /// Whether the competition can be reduced a file at a time (<see cref="FileReduction"/>):
+            /// true in the default max mode, where every reduction <see cref="Add"/> makes is a
+            /// first-seen maximum. Mean-best-N also sums a floating-point decoy floor, which only
+            /// <see cref="Add"/> row by row, in order, reproduces.
+            /// </summary>
+            public bool ReducesByFile => _meanBestN < 2;
+
+            /// <summary>A reduction for one file's rows, buildable on a file lane; merge it with
+            /// <see cref="MergeFile"/> in file order.</summary>
+            public FileReduction BeginFile()
+            {
+                if (!ReducesByFile)
+                    throw new InvalidOperationException(@"A mean-best-N competition is reduced row by row, not by file.");
+                return new FileReduction();
+            }
+
+            public void MergeFile(FileReduction file)
+            {
+                file.MergeInto(this);
+            }
+
+            /// <summary>
+            /// One file's rows reduced the way <see cref="Add"/> reduces them - per base_id and
+            /// side, and per peptide, the first row with the highest score - each carrying its
+            /// GLOBAL ordinal. Merged in file order with the same strict comparison, a file's first
+            /// highest row replaces the experiment's only when it is strictly higher, so the winner
+            /// is the first highest row overall, at the ordinal it has in the plain loop; and a key
+            /// enters the maps when its first file merges, in that file's row order.
+            /// </summary>
+            internal sealed class FileReduction
+            {
+                private readonly Dictionary<uint, KeyValuePair<int, double>> _targets =
+                    new Dictionary<uint, KeyValuePair<int, double>>();
+                private readonly Dictionary<uint, KeyValuePair<int, double>> _decoys =
+                    new Dictionary<uint, KeyValuePair<int, double>>();
+                private readonly Dictionary<string, PeptideBest> _peptides =
+                    new Dictionary<string, PeptideBest>();
+
+                public void Add(int g, double score, uint entryId, bool isDecoy, string peptide)
                 {
-                    if (score > pb.Score)
-                        _peptBest[peptide] = new PeptideBest(g, score, isDecoy, entryId, peptide);
+                    ReduceBest(isDecoy ? _decoys : _targets, entryId & PercolatorEntry.BASE_ID_MASK, g, score);
+                    ReducePeptide(_peptides, new PeptideBest(g, score, isDecoy, entryId, peptide));
                 }
-                else
+
+                internal void MergeInto(StreamingFirstPassQ competition)
                 {
-                    _peptBest[peptide] = new PeptideBest(g, score, isDecoy, entryId, peptide);
+                    foreach (var kv in _targets)
+                        ReduceBest(competition._precTargets, kv.Key, kv.Value.Key, kv.Value.Value);
+                    foreach (var kv in _decoys)
+                        ReduceBest(competition._precDecoys, kv.Key, kv.Value.Key, kv.Value.Value);
+                    foreach (var kv in _peptides)
+                        ReducePeptide(competition._peptBest, kv.Value);
                 }
+            }
+
+            private static void ReduceBest(Dictionary<uint, KeyValuePair<int, double>> dict, uint baseId, int g, double score)
+            {
+                if (!dict.TryGetValue(baseId, out var existing) || score > existing.Value)
+                    dict[baseId] = new KeyValuePair<int, double>(g, score);
+            }
+
+            private static void ReducePeptide(Dictionary<string, PeptideBest> dict, PeptideBest candidate)
+            {
+                if (!dict.TryGetValue(candidate.Peptide, out var pb) || candidate.Score > pb.Score)
+                    dict[candidate.Peptide] = candidate;
             }
 
             /// <summary>
@@ -1065,6 +1114,26 @@ namespace pwiz.Osprey.FDR
             /// re-attaching the bit here recovers the per-entry key the sidecar record uses
             /// without the caller having to mask anything.</para>
             /// </summary>
+            /// <summary>
+            /// Drops the per-precursor and per-peptide bests once every map has been built from
+            /// them; each Build method returns a new map, so nothing built depends on them. The
+            /// file lanes' closures keep this object reachable through pass 2, the stage's memory
+            /// peak, so dropping the reference would not be enough.
+            /// </summary>
+            public void Release()
+            {
+                _precTargets.Clear();
+                _precTargets.TrimExcess();
+                _precDecoys.Clear();
+                _precDecoys.TrimExcess();
+                _peptBest.Clear();
+                _peptBest.TrimExcess();
+                _mb2Targets?.Clear();
+                _mb2Targets?.TrimExcess();
+                _mb2Decoys?.Clear();
+                _mb2Decoys?.TrimExcess();
+            }
+
             public Dictionary<uint, double> BuildExperimentAggregateScoreMap()
             {
                 ResolveExperimentBests(out var targets, out var decoys);

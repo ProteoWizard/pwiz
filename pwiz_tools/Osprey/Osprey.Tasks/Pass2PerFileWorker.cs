@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -58,7 +58,6 @@ namespace pwiz.Osprey.Tasks
     {
         private readonly FrozenModelScorer _scorer;
         private readonly int _nFeatures;
-        private readonly string _mode;
         private readonly HashSet<uint> _stratumBaseIds;
         private readonly Action<string> _logWarning;
 
@@ -98,7 +97,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
 
         public Pass2PerFileWorker(
-            FrozenModelScorer scorer, string mode, HashSet<uint> stratumBaseIds,
+            FrozenModelScorer scorer, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
             Action<string, IReadOnlyList<FdrScoreRecord>,
                 IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
@@ -107,7 +106,6 @@ namespace pwiz.Osprey.Tasks
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
             _nFeatures = scorer.NumFeatures;
-            _mode = mode;
             _stratumBaseIds = stratumBaseIds;
             _logWarning = logWarning ?? throw new ArgumentNullException(nameof(logWarning));
             _seeders = new ThreadLocal<Pass2FdrSidecar.Pass1ScalarSeeder>(() =>
@@ -159,7 +157,7 @@ namespace pwiz.Osprey.Tasks
 
             Pass2FdrSidecar.ReadOneFilePass2Inputs(
                 pass1SidecarPath, effectiveParquetPath, survivors,
-                _scorer, _nFeatures, _seeders.Value, _logWarning, _mode,
+                _scorer, _nFeatures, _seeders.Value, _logWarning,
                 survivorIds, pass1Records,
                 out uint[] entryIds, out double[] scores, out var survivorScores);
 
@@ -351,19 +349,7 @@ namespace pwiz.Osprey.Tasks
             // the wrong tool to reach for in the one method whose entire purpose is to stop this
             // output varying between runs - even though equal file names make the tie moot here.
             unreadable = unreadable.OrderBy(s => s, StringComparer.Ordinal).ToList();
-            if (unreadable.Count > 0)
-            {
-                ctx.LogWarning(string.Format(
-                    "1st-pass Score/Pep/ExperimentAggregateScore could not be " +
-                    "restored for {0} file(s) (no readable 1st-pass sidecar): [{1}]. Peaks Stage 6 " +
-                    "changed in those files keep reset defaults, so their 2nd-pass sidecars are " +
-                    "wrong AND a Score of 0 enters the second-pass protein FDR null unfiltered. " +
-                    "Treat this run's protein-level numbers as unreliable.",
-                    unreadable.Count, string.Join(", ", unreadable)));
-            }
-            ctx.LogVerbose(string.Format(
-                "Restored 1st-pass Score/Pep/ExperimentAggregateScore onto {0} survivor(s) across {1} file(s).",
-                restored, filesRead));
+            Pass2FdrSidecar.Pass1ScalarSeeder.LogSeedSummary(ctx, unreadable, restored, filesRead);
         }
 
         public void Dispose()

@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
@@ -222,7 +221,7 @@ namespace pwiz.PanoramaClient
                     contextMenuStrip.Show(Cursor.Position);
                     break;
                 case MouseButtons.Left:
-                    Process.Start(urlLink.Text);
+                    ProcessEx.OpenInShell(urlLink.Text);
                     break;
             }
         }

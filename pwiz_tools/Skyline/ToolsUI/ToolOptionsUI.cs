@@ -18,12 +18,12 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.ToolsUI
         private class KoinaPingRequest : KoinaHelpers.KoinaRequest
         {
             private static KoinaConfig _koinaConfig;
-            private static Channel _channel;
+            private static ChannelBase _channel;
 
             static KoinaPingRequest()
             {
@@ -247,7 +247,7 @@ namespace pwiz.Skyline.ToolsUI
                 var pr = new KoinaPingRequest(KoinaIntensityModelCombo,
                     KoinaRetentionTimeModelCombo,
                     _settingsNoMod, nodePep, nodeGroup, _pingInput.NCE.Value,
-                    () => { CommonActionUtil.SafeBeginInvoke(this, UpdateServerStatus); });
+                    () => { ControlUtil.SafeBeginInvoke(this, UpdateServerStatus); });
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {
                     _pingRequest?.Cancel();
@@ -291,15 +291,15 @@ namespace pwiz.Skyline.ToolsUI
             _driverRemoteAccounts.EditList();
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            base.OnClosing(e);
+            base.OnFormClosing(e);
 
             if (!e.Cancel)
                 _pingRequest?.Cancel();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             if (DialogResult == DialogResult.OK)
             {
@@ -325,7 +325,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (koinaSettingsValidBefore != KoinaHelpers.KoinaSettingsValid)
                     Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         public void OkDialog()

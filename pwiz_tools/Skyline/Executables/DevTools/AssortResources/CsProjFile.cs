@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-#nullable enable
 
+// Also linked into Test.csproj, whose layout implies pwiz.SkylineTest; this is the tool's namespace
+// ReSharper disable once CheckNamespace
 namespace AssortResources
 {
     public class CsProjFile
@@ -86,7 +87,9 @@ namespace AssortResources
                 new XElement(ElementName("LastGenOutput"), designerName)));
             foreach (var language in languages.OrderBy(l=>l))
             {
-                string languageFileName = Path.Combine(Path.GetDirectoryName(relativeResourcePath),
+                // A resource at the project root has no directory part, which GetDirectoryName reports
+                // as null for a rooted path and "" otherwise; either way it belongs beside the project.
+                string languageFileName = Path.Combine(Path.GetDirectoryName(relativeResourcePath) ?? string.Empty,
                     resourceName + "." + language + ".resx");
                 MainItemGroup.Add(new XElement(ElementName("EmbeddedResource"),
                     new XAttribute("Include", languageFileName),

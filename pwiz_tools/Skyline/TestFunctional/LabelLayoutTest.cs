@@ -46,6 +46,14 @@ namespace pwiz.SkylineTestFunctional
             new ExpectedPointSnapshot(12, "WTNPDGTTSK", 84f, 199644.5f),
         };
 
+        /// <summary>
+        /// Set to true to regenerate EXPECTED_POINT_COUNT and EXPECTED_RANDOM_POINTS above:
+        /// the run prints them as pasteable C#, and <see cref="AbstractUnitTestEx.CheckRecordMode"/> then fails the
+        /// test so record mode cannot be committed switched on. Recording requires an on-screen
+        /// run (offscreen=off) - offscreen coordinates are not reproducible.
+        /// </summary>
+        protected override bool IsRecordMode => false;
+
         [TestMethod]
         public void TestLabelLayoutDeterminism()
         {
@@ -145,6 +153,9 @@ namespace pwiz.SkylineTestFunctional
             // that the layout code ran and produced labels.
             if (Program.SkylineOffscreen)
             {
+                Assert.IsFalse(IsRecordMode,
+                    "Cannot record expected values from an offscreen run - screen coordinates are not" +
+                    " reproducible there. Re-run with offscreen=off.");
                 Assert.IsTrue(first.Count > 0, "First snapshot has no labels (offscreen).");
                 Assert.IsTrue(second.Count > 0, "Second snapshot has no labels (offscreen).");
                 return;
@@ -164,12 +175,45 @@ namespace pwiz.SkylineTestFunctional
             if (!Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture)))
                 return;
 
+            // Both snapshots agree by here, so the layout is deterministic within this run - which
+            // is what this test is named for. Everything below pins it to absolute values recorded
+            // on one machine, so record mode regenerates them rather than asserting them.
+            if (IsRecordMode)
+            {
+                RecordExpectedValues(first);
+                return;
+            }
+
             Assert.AreEqual(EXPECTED_POINT_COUNT, first.Count, "Plot point count is different from expected.");
             foreach (var expectedPoint in EXPECTED_RANDOM_POINTS)
             {
                 AssertExpectedPoint(first, expectedPoint, "first");
                 AssertExpectedPoint(second, expectedPoint, "second");
             }
+        }
+
+        /// <summary>
+        /// Prints the current layout as the two constants at the top of this file, ready to paste.
+        /// The sampled indexes are carried over from the existing EXPECTED_RANDOM_POINTS so a
+        /// re-record keeps spanning the list; any index past the new count is dropped.
+        /// </summary>
+        private static void RecordExpectedValues(IReadOnlyList<PointSnapshot> snapshot)
+        {
+            Console.WriteLine();
+            Console.WriteLine(@"// Paste over the constants at the top of LabelLayoutTest.cs:");
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture,
+                @"        private const int EXPECTED_POINT_COUNT = {0};", snapshot.Count));
+            Console.WriteLine(@"        private static readonly ExpectedPointSnapshot[] EXPECTED_RANDOM_POINTS =");
+            Console.WriteLine(@"        {");
+            foreach (var index in EXPECTED_RANDOM_POINTS.Select(p => p.Index).Where(i => i < snapshot.Count))
+            {
+                var point = snapshot[index];
+                Console.WriteLine(string.Format(CultureInfo.InvariantCulture,
+                    @"            new ExpectedPointSnapshot({0}, ""{1}"", {2}f, {3}f),",
+                    index, point.LabelText, point.LabelPosition.X, point.LabelPosition.Y));
+            }
+            Console.WriteLine(@"        };");
+            Console.WriteLine();
         }
 
         private void AssertExpectedPoint(IReadOnlyList<PointSnapshot> snapshot, ExpectedPointSnapshot expected, string snapshotName)

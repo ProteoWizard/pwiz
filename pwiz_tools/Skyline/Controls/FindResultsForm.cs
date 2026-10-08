@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Controls
             {
                 return;
             }
-            BeginInvoke(new Action(ResizeListViewColumns));
+            BeginInvoke(ResizeListViewColumns);
         }
 
         private void ResizeListViewColumns()

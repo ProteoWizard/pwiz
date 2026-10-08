@@ -307,20 +307,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.HasLibInfo ? (int?) DocNode.LibInfo.Rank : null;
+                return DocNode.HasLibInfo ? DocNode.LibInfo.Rank : null;
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double? LibraryIntensity
         {
-            get { return DocNode.HasLibInfo ? (double?) DocNode.LibInfo.Intensity : null; }
+            get { return DocNode.HasLibInfo ? DocNode.LibInfo.Intensity : null; }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int IsotopeDistIndex { get { return DocNode.Transition.MassIndex; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int? IsotopeDistRank { get { return DocNode.HasDistInfo ? (int?)DocNode.IsotopeDistInfo.Rank : null; } }
+        public int? IsotopeDistRank { get { return DocNode.HasDistInfo ? DocNode.IsotopeDistInfo.Rank : null; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? IsotopeDistProportion {get { return DocNode.HasDistInfo ? (double?) DocNode.IsotopeDistInfo.Proportion : null; }}
+        public double? IsotopeDistProportion {get { return DocNode.HasDistInfo ? DocNode.IsotopeDistInfo.Proportion : null; }}
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double? FullScanFilterWidth
         {

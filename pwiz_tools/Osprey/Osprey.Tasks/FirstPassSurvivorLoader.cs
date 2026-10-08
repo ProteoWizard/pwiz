@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -115,6 +115,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Experimental (OSPREY_STUB_IDENTITY): the library lookup the parquet read takes charge,
+        /// decoy flag and peptide from instead of decoding them. Null reads them from the file.
+        /// </summary>
+        internal LibraryIdentity Identity { get; set; }
+
+        /// <summary>
         /// Load one file's survivors. Returns null with <paramref name="error"/> set
         /// on any missing path or failed sidecar overlay; those are genuine faults
         /// rather than absences, because Stage 5 just wrote both artifacts. The
@@ -152,7 +158,8 @@ namespace pwiz.Osprey.Tasks
                 !_perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
                 error = string.Format(
-                    @"First-pass survivor load: no scores parquet path for {0}", fileName);
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_No__scores_parquet_file_is_known_for__0___so_its_kept_precursor_candidates_cannot_be_, fileName,
+                    ParquetScoreCache.EXT_SCORES);
                 return null;
             }
             if (parquetPathOverride != null)
@@ -164,11 +171,9 @@ namespace pwiz.Osprey.Tasks
                 if (ParquetScoreCache.IsSubsetWithoutScoreIndex(parquetPathOverride))
                 {
                     error = string.Format(
-                        @"First-pass survivor load: {0} holds the survivor subset but carries no " +
-                        @"score_index column, so its rows cannot be matched back to " +
-                        @".scores.parquet. Re-run the analysis from Stage 5 over this directory - " +
-                        @"the FDR sidecars beside it are from the same older build, so there is no " +
-                        @"self-consistent set to convert toward.", parquetPathOverride);
+                        OspreyTasksResources.FirstPassSurvivorLoader_Load__0__was_written_by_an_older_Osprey_build_and_cannot_be_matched_to_its__scores_parquet__,
+                        parquetPathOverride, ParquetScoreCache.EXT_SCORES,
+                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
                     return null;
                 }
                 parquetPath = parquetPathOverride;
@@ -184,12 +189,12 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> stubs;
             try
             {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor, _sequencePool);
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, isSurvivor, _sequencePool, Identity);
             }
             catch (Exception ex)
             {
                 error = string.Format(
-                    @"First-pass survivor load: failed to load stubs from {0}: {1}",
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_Failed_to_load_the_first_pass_precursor_candidates_from__0____1_,
                     parquetPath, ex.Message);
                 return null;
             }
@@ -207,8 +212,7 @@ namespace pwiz.Osprey.Tasks
                     entryId => !isSurvivor(entryId), _experimentRecords))
             {
                 error = string.Format(
-                    @"First-pass survivor load: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
-                    @"(expected at {1})", fileName, pass1Path);
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___, fileName, pass1Path);
                 return null;
             }
 

@@ -37,8 +37,7 @@ namespace pwiz.SkylineTestFunctional
     public class EncyclopeDiaSearchTest : AbstractFunctionalTestEx
     {
         [TestMethod,
-         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearch()
         {
             TestFilesZip = @"Test\EncyclopeDiaHelpersTest.zip";

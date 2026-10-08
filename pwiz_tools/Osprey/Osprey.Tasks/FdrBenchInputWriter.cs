@@ -48,6 +48,19 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class FdrBenchInputWriter
     {
+        public const string EXT_PAIRING = @".pairing.tsv";
+
+        /// <summary>Heading of the score column FDRBench reads (<c>-score 'score:1'</c>).</summary>
+        public const string COLUMN_SCORE = @"score";
+        /// <summary>Heading of the run column a per-run file adds.</summary>
+        public const string COLUMN_RUN = @"run";
+
+        /// <summary>
+        /// How a truncated protein-ID list ends, as a user sees it in the file: the kept IDs,
+        /// then this with N the number dropped (see FormatProteinField).
+        /// </summary>
+        public const string TRUNCATION_MARKER_PATTERN = @";...+N_more";
+
         /// <summary>
         /// Mask for extracting the target-side base id from <see cref="FdrEntry.EntryId"/>.
         /// The high bit is set for decoys; clearing it yields the library entry id shared
@@ -96,8 +109,17 @@ namespace pwiz.Osprey.Tasks
             string dir = Path.GetDirectoryName(config.OutputFdrBench);
             string stem = Path.GetFileNameWithoutExtension(config.OutputFdrBench);
             string ext = Path.GetExtension(config.OutputFdrBench);
-            string name = stem + @".pass" + pass.ToString(CultureInfo.InvariantCulture) + ext;
+            string name = stem + PassSuffix(pass) + ext;
             return string.IsNullOrEmpty(dir) ? name : Path.Combine(dir, name);
+        }
+
+        /// <summary>
+        /// The stem suffix <see cref="PathForPass"/> adds when both passes are written:
+        /// <c>.pass1</c> or <c>.pass2</c>.
+        /// </summary>
+        public static string PassSuffix(int pass)
+        {
+            return @".pass" + pass.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -215,6 +237,10 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public sealed class PeptideInputSink : IDisposable
         {
+            // Rows per formatting block in Commit: large enough that a block's hand-off is
+            // noise beside formatting it, small enough to spread a few million rows over lanes.
+            private const int COMMIT_BLOCK_ROWS = 65536;
+
             private readonly IReadOnlyDictionary<uint, LibraryEntry> _libraryById;
             private readonly bool _perRun;
             private readonly ICollection<string> _skipEntrapmentSeqs;
@@ -258,10 +284,10 @@ namespace pwiz.Osprey.Tasks
                 try
                 {
                     _writer = new StreamWriter(_saver.SafeName, false);
-                    _writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
+                    _writer.NewLine = TextUtil.LF; // emit '\n' line endings for the TSV body
                     _writer.WriteLine(perRun
-                        ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
-                        : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
+                        ? new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", COLUMN_SCORE, @"protein", COLUMN_RUN }.ToDsvLine(TextUtil.SEPARATOR_TSV)
+                        : new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", COLUMN_SCORE, @"protein" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                 }
                 catch
                 {
@@ -302,8 +328,10 @@ namespace pwiz.Osprey.Tasks
                 }
             }
 
-            /// <summary>Write the per-precursor rows (if any), commit the file and return the counts.</summary>
-            public Result Commit()
+            /// <summary>Write the per-precursor rows (if any), commit the file and return the
+            /// counts. <paramref name="lanes"/> threads format the sorted rows in blocks, which are
+            /// written in order, so the file is the same whatever the count.</summary>
+            public Result Commit(int lanes = 1)
             {
                 if (!_perRun)
                 {
@@ -312,21 +340,43 @@ namespace pwiz.Osprey.Tasks
                     // writing. The key is unique per surviving row, so this is a total order with no
                     // ties - deterministic, diff-friendly output. Ordinal compare avoids any
                     // culture-dependent sequence ordering.
-                    foreach (var best in _best.Values
+                    var sorted = _best.Values
                         .OrderBy(r => r.ModifiedSequence, StringComparer.Ordinal)
-                        .ThenBy(r => r.Charge))
+                        .ThenBy(r => r.Charge)
+                        .ToArray();
+                    // Formatting - two E10 doubles and a protein list per row - is the cost, and each
+                    // row's text depends on that row alone, so blocks are formatted on lanes and
+                    // written here in sorted order; the counts are integers, summed the same way.
+                    int blocks = (sorted.Length + COMMIT_BLOCK_ROWS - 1) / COMMIT_BLOCK_ROWS;
+                    OrderedFileLanes.Run(blocks, lanes, b => FormatBlock(sorted, b), (b, block) =>
                     {
-                        var lookup = ResolveLibrary(_libraryById, best.EntryId, ref _result);
-                        if (_skipEntrapmentSeqs != null && _skipEntrapmentSeqs.Contains(lookup.Peptide))
-                            continue; // excluded orphan entrapment (kept consistent with the manifest)
-                        _writer.WriteLine(FormatRow(lookup.Peptide, best.ModifiedSequence,
-                            best.Charge, best.ExperimentQvalue, best.Score, lookup.Protein, null));
-                        _result.Rows++;
-                    }
+                        _writer.Write(block.Text);
+                        _result.Rows += block.Counts.Rows;
+                        _result.MissingLibrary += block.Counts.MissingLibrary;
+                        _result.TruncatedProtein += block.Counts.TruncatedProtein;
+                    });
                 }
                 _writer.Dispose();
                 _saver.Commit();
                 return _result;
+            }
+
+            private (string Text, Result Counts) FormatBlock(Row[] sorted, int block)
+            {
+                var counts = new Result();
+                var text = new StringWriter(CultureInfo.InvariantCulture) { NewLine = _writer.NewLine };
+                int end = Math.Min(sorted.Length, (block + 1) * COMMIT_BLOCK_ROWS);
+                for (int i = block * COMMIT_BLOCK_ROWS; i < end; i++)
+                {
+                    var best = sorted[i];
+                    var lookup = ResolveLibrary(_libraryById, best.EntryId, ref counts);
+                    if (_skipEntrapmentSeqs != null && _skipEntrapmentSeqs.Contains(lookup.Peptide))
+                        continue; // excluded orphan entrapment (kept consistent with the manifest)
+                    text.WriteLine(FormatRow(lookup.Peptide, best.ModifiedSequence,
+                        best.Charge, best.ExperimentQvalue, best.Score, lookup.Protein, null));
+                    counts.Rows++;
+                }
+                return (text.ToString(), counts);
             }
 
             public void Dispose()
@@ -395,22 +445,22 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {
-                    writer.NewLine = "\n";
-                    writer.WriteLine("sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index");
+                    writer.NewLine = TextUtil.LF;
+                    writer.WriteLine(new[] { @"sequence", @"decoy", @"proteins", @"peptide_type", @"peptide_pair_index" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var kv in rows)
                     {
                         var lib = kv.Value;
                         bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
                         uint pair = pairing.PairIndexBySeq[lib.Sequence];
                         string protein = FormatProteinField(lib.ProteinIds, out _);
-                        writer.WriteLine(string.Join("\t", new[]
+                        writer.WriteLine(new[]
                         {
                             lib.Sequence,
-                            "No",
+                            @"No",
                             protein,
-                            entrap ? "p_target" : "target",
+                            entrap ? @"p_target" : @"target",
                             pair.ToString(CultureInfo.InvariantCulture)
-                        }));
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                         written++;
                     }
                 }
@@ -423,7 +473,7 @@ namespace pwiz.Osprey.Tasks
         private static string FormatRow(string peptide, string modSeq, byte charge,
             double qValue, double score, string protein, string runName)
         {
-            string row = string.Join("\t", new[]
+            var fields = new List<string>
             {
                 peptide,
                 modSeq,
@@ -431,8 +481,10 @@ namespace pwiz.Osprey.Tasks
                 qValue.ToString(@"E10", CultureInfo.InvariantCulture),
                 score.ToString(@"E10", CultureInfo.InvariantCulture),
                 protein
-            });
-            return runName == null ? row : row + "\t" + runName;
+            };
+            if (runName != null)
+                fields.Add(runName);
+            return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
         /// <summary>Resolve an entry id to its (sequence, protein-field), updating warning counts.</summary>

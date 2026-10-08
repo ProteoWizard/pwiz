@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
             BackgroundEventThreads.ShowFormOnBackgroundThread(
                 ()=>new BackgroundEventThreadsTestForm());
             var testForm = WaitForOpenForm<BackgroundEventThreadsTestForm>();
-            testForm.BeginInvoke(new Action(testForm.Close));
+            testForm.BeginInvoke(testForm.Close);
             WaitForClosedForm<BackgroundEventThreadsTestForm>();
 
             Assert.AreEqual(0, Program.TestExceptions.Count);
@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestFunctional
             Program.TestExceptions.Clear();
             testForm = WaitForOpenForm<BackgroundEventThreadsTestForm>();
             Assert.IsNotNull(testForm);
-            testForm.BeginInvoke(new Action(testForm.Close));
+            testForm.BeginInvoke(testForm.Close);
         }
 
         class BackgroundEventThreadsTestForm : FormEx
