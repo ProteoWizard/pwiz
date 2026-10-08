@@ -19,7 +19,7 @@
 // limitations under the License.
 //
 
-namespace seems
+namespace Pwiz.SeeMS
 {
 	partial class ChromatogramListForm
 	{
@@ -52,7 +52,7 @@ namespace seems
             this.components = new System.ComponentModel.Container();
             this.gridView = new System.Windows.Forms.DataGridView();
             this.chromatogramBindingSource = new System.Windows.Forms.BindingSource( this.components );
-            this.chromatogramDataSet = new seems.Misc.ChromatogramDataSet();
+            this.chromatogramDataSet = new Pwiz.SeeMS.Misc.ChromatogramDataSet();
             this.selectColumnsMenuStrip = new System.Windows.Forms.ContextMenuStrip( this.components );
             this.selectColumnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.idDataGridViewTextBoxColumn = new DataGridViewAutoFilter.DataGridViewAutoFilterTextBoxColumn();
@@ -182,7 +182,7 @@ namespace seems
 		#endregion
 
         private System.Windows.Forms.DataGridView gridView;
-        private seems.Misc.ChromatogramDataSet chromatogramDataSet;
+        private Pwiz.SeeMS.Misc.ChromatogramDataSet chromatogramDataSet;
         private System.Windows.Forms.BindingSource chromatogramBindingSource;
         private System.Windows.Forms.ContextMenuStrip selectColumnsMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem selectColumnsToolStripMenuItem;

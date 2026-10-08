@@ -239,7 +239,7 @@ Osprey-Setup-<version>.exe        Inno Setup installer: per-user or per-machine,
 
 The version is the Skyline scheme `YEAR.ORDINAL.BRANCH.DOY` shared with the
 build via `version.ps1`. The Setup.exe is built with Inno Setup 6 (see
-`Installer/Setup.iss`; `pwiz-sharp/installer/Ensure-InnoSetup.ps1` fetches the
+`Installer/Setup.iss`; `scripts/installer/Ensure-InnoSetup.ps1` fetches the
 compiler when a machine lacks it). Like the ProteoWizard-Sharp installer it asks
 for a per-user or per-machine install and offers a "version-specific" install
 that keeps its own folder and Start Menu shortcuts beside other versions instead

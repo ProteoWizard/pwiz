@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="53e64e72-c5af-4d2f-99f4-de1e6f1dde74" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>GitHub reporting config</name>
+  <settings>
+    <disabled-settings>
+      <setting-ref ref="BUILD_EXT_25" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.SKYLINE_DOWNLOAD_FROM_S3" value="1" />
+      <param name="env.SKYLINE_DOWNLOAD_PATH" value="c:\skyline-downloads" />
+    </parameters>
+    <build-extensions>
+      <extension id="BUILD_EXT_13" type="teamcity.github.status">
+        <parameters>
+          <param name="github_report_on" value="on start and finish" />
+          <param name="guthub_authentication_type" value="token" />
+          <param name="guthub_context" value="teamcity - %system.teamcity.buildConfName%" />
+          <param name="guthub_host" value="https://api.github.com" />
+          <param name="guthub_owner" value="ProteoWizard" />
+          <param name="guthub_repo" value="pwiz" />
+          <param name="secure:github_access_token" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_25" type="commit-status-publisher">
+        <parameters>
+          <param name="github_authentication_type" value="token" />
+          <param name="github_host" value="https://api.github.com" />
+          <param name="publisherId" value="githubStatusPublisher" />
+          <param name="secure:github_access_token" value="credentialsJSON:b3f6322b-e1d2-4bd3-9b40-b7048111ad01" />
+        </parameters>
+      </extension>
+    </build-extensions>
+  </settings>
+</template>
+

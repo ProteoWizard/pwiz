@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="f668234e-e9e5-43f9-9cdd-a3b778a678bc" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Skyline master and PRs TestConnected tests</name>
+  <description>Runs Skyline's remote connection (TestConnected) tests</description>
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="%WINDOWS_CHECKOUT_DIR%" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="90" />
+    </options>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.toolset_property" value="toolset=msvc-14.1" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners>
+      <runner id="simpleRunner" name="Run TestConnected tests" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe buildcheck=1 test=TestConnected.dll offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1978" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <not-exists id="RQ_1979" name="VS2013" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriodMode" value="USE_DEFAULT" />
+          <param name="triggerRules" value="+:%system.teamcity.build.checkoutDir%/pwiz_tools/Skyline/**" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt209">
+        <options>
+          <option name="run-build-if-dependency-failed" value="RUN" />
+          <option name="run-build-on-the-same-agent" value="true" />
+          <option name="take-started-build-with-same-revisions" value="true" />
+          <option name="take-successful-builds-only" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="7" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+
