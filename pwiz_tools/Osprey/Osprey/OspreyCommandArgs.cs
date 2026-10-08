@@ -135,10 +135,13 @@ namespace pwiz.Osprey
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"ppm" } };
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
             (c, p) => c._config.PrefilterEnabled = false);
+        public static readonly OspreyArgument ARG_DEMUX = new OspreyArgument(OspreyArgNames.DEMUX,
+            new[] { @"off", @"auto" }, (c, p) => c._config.DemuxMode =
+                p.Value.ToLowerInvariant() == @"auto" ? DemuxMode.auto : DemuxMode.off) { DescriptionArgs = () => new object[] { @"off" } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_SCORING =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Scoring_Tolerance, true,
-                ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_NO_PREFILTER);
+                ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_NO_PREFILTER, ARG_DEMUX);
 
         // --- FDR & Protein Inference ------------------------------------------------------
         public static readonly OspreyArgument ARG_RUN_FDR = new OspreyArgument(@"run-fdr",

@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>pwiz.Osprey.DemuxTool</RootNamespace>
+    <AssemblyName>Osprey.DemuxTool</AssemblyName>
+  </PropertyGroup>
+
+  <!-- An evaluation tool: reads a vendor file (SCIEX .wiff2, Thermo .raw) or an mzML with
+       pwiz-sharp, demultiplexes it with Osprey.Demux and writes mzML, so the demultiplexing can
+       be judged by any search engine. Vendor reading needs a build with -VendorReader. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Demux\Osprey.Demux.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <!-- The .wiff2 reader is a runtime-only plugin, staged as msconvert-sharp stages it: built, not
+         referenced, and copied next to the executable, where Pwiz.Vendor.Sciex loads it into its
+         own load context so its SCIEX.Apis.Data.v1 dependencies do not meet the .wiff stack's. -->
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
+                      Condition="'$(NativeVendorsAvailable)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!-- The .wiff2 plugin's own SQLite and Unity assemblies, and SQLite's native interop, go to a
+       wiff2 subfolder the plugin's load context searches, as msconvert-sharp's
+       StageWiff2NativeAssemblies does. Osprey does not import pwiz-sharp's Directory.Build.props,
+       so the paths are spelled out here. -->
+  <Target Name="StageWiff2NativeAssemblies" AfterTargets="Build" Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <PropertyGroup>
+      <_PwizSharpRoot>$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\</_PwizSharpRoot>
+      <_Wiff2OutDir>$([MSBuild]::EnsureTrailingSlash('$(OutputPath)'))wiff2</_Wiff2OutDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(_Wiff2OutDir)" />
+    <Copy SourceFiles="$(_PwizSharpRoot)vendor-archives\Sciex\System.Data.SQLite.dll" DestinationFolder="$(_Wiff2OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(_PwizSharpRoot)vendor-assemblies\Sciex\SQLite.Interop.dll" DestinationFolder="$(_Wiff2OutDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(_PwizSharpRoot)vendor-archives\Sciex\Unity.Abstractions.dll" DestinationFolder="$(_Wiff2OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

@@ -46,6 +46,7 @@ namespace pwiz.Osprey.Core
         public const string PARALLEL_FILES = @"parallel-files";
         public const string VERBOSE = @"verbose";
         public const string TRAINING_EXPORT = @"training-export";
+        public const string DEMUX = @"demux";
 
         /// <summary>The argument as it is typed: <c>--name</c>.</summary>
         public static string Text(string name)

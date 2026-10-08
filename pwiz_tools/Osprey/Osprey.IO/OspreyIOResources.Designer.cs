@@ -918,6 +918,15 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to the cache was demultiplexed with different settings, or its demultiplexing state does not match the demultiplexing option, so it must be rebuilt.
+        /// </summary>
+        public static string SpectraCacheException_Describe_the_cache_was_demultiplexed_with_different_settings__or_its_demultiplexing_state_does_not_match {
+            get {
+                return ResourceManager.GetString("SpectraCacheException_Describe_the_cache_was_demultiplexed_with_different_settings__or_its_demultiplexing_state_does_not_match", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to the cache was refused for an unrecorded reason.
         /// </summary>
         public static string SpectraCacheException_Describe_the_cache_was_refused_for_an_unrecorded_reason {

@@ -568,6 +568,33 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not index the demultiplexed spectra cache &apos;{0}&apos; just written: {1}..
+        /// </summary>
+        public static string DemuxCacheBuilder_Resolve_Could_not_index_the_demultiplexed_spectra_cache___0___just_written___1__ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_Resolve_Could_not_index_the_demultiplexed_spectra_cache___0___just_written___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read &apos;{0}&apos; to demultiplex it..
+        /// </summary>
+        public static string DemuxCacheBuilder_Resolve_Could_not_read___0___to_demultiplex_it_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_Resolve_Could_not_read___0___to_demultiplex_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is demultiplexed, but its demultiplexed spectra cache &apos;{1}&apos; is missing or stale. Re-run {2} with {3} auto to rebuild it..
+        /// </summary>
+        public static string DemuxCacheBuilder_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_ {
+            get {
+                return ResourceManager.GetString("DemuxCacheBuilder_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics..
         /// </summary>
         public static string EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_ {

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -138,9 +139,16 @@ namespace pwiz.Osprey.Tasks
             out int unsortedCount, PipelineContext ctx)
         {
             unsortedCount = 0;
+            // With --demux, a valid demultiplexed cache is all the search needs, so a run
+            // staged with demux can be searched after its .spectra.bin is gone.
+            var demuxHit = DemuxCacheBuilder.TryOpenDemuxCache(inputFile, ctx);
+            if (demuxHit != null)
+                return demuxHit;
+
             // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
             // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
+            SpectraWindowIndex hit = null;
             if (File.Exists(cachePath))
             {
                 try
@@ -148,13 +156,9 @@ namespace pwiz.Osprey.Tasks
                     // Cache hit: index the file directly (header pass only) -- never build the
                     // full MS2 list. Returns null when stale/invalid (bad magic/version or the
                     // source fingerprint changed), which falls through to a re-parse below.
-                    var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
-                    if (hit != null)
-                    {
-                        ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_, cachePath));
-                        return hit;
-                    }
-                    ctx.LogInfo(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Spectra_cache_stale_or_invalid__re_parsing_the_input_);
+                    hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                    if (hit == null)
+                        ctx.LogInfo(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Spectra_cache_stale_or_invalid__re_parsing_the_input_);
                 }
                 catch (Exception ex)
                 {
@@ -166,6 +170,14 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(string.Format(
                         OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_index_spectra_cache___0___Re_parsing_the_input_, ex.Message));
                 }
+            }
+            if (hit != null)
+            {
+                // Outside the try above on purpose: that catch treats every exception as a
+                // corrupt cache and re-parses, which would swallow the demux-off refusal of an
+                // overlapping run and any real demultiplexing error.
+                ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_, cachePath));
+                return DemuxCacheBuilder.Resolve(inputFile, hit, null, double.NaN, ctx);
             }
 
             // Miss/stale/absent: parse the input once (materialized only transiently here),
@@ -190,6 +202,7 @@ namespace pwiz.Osprey.Tasks
             SpectrumFileResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
+            var parseStopwatch = Stopwatch.StartNew();
             try
             {
                 mzmlResult = SpectrumFileReader.LoadAllSpectra(inputFile);
@@ -199,6 +212,7 @@ namespace pwiz.Osprey.Tasks
                 if (serializeMzmlRead)
                     s_mzmlReadGate.Release();
             }
+            double parseSeconds = parseStopwatch.Elapsed.TotalSeconds;
             unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
             try
@@ -249,7 +263,8 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath,
                     ParquetScoreCache.EXT_SCORES, CalibrationIO.EXT), indexError);
             }
-            return index;
+            // The spectra just parsed are still resident, so demultiplexing needs no re-read.
+            return DemuxCacheBuilder.Resolve(inputFile, index, mzmlResult, parseSeconds, ctx);
         }
 
         /// <summary>
@@ -267,8 +282,14 @@ namespace pwiz.Osprey.Tasks
         /// <c>PerFileRescoreTask</c>.
         /// </summary>
         internal static SpectraWindowIndex LoadSpectraForRescore(string inputFile, string fileName,
-            string consumer, bool loadMs1)
+            string consumer, bool loadMs1, PipelineContext ctx)
         {
+            // A demultiplexed run is rescored from the same demultiplexed cache Stages 1-4
+            // searched.
+            var demuxIndex = DemuxCacheBuilder.TryOpenDemuxCache(inputFile, ctx);
+            if (demuxIndex != null)
+                return demuxIndex;
+
             string cachePath = SpectraCache.GetCachePath(inputFile);
             SpectraWindowIndex index;
             var reason = SpectraCacheRejection.None;
@@ -304,6 +325,9 @@ namespace pwiz.Osprey.Tasks
                     consumer, cachePath, SpectraCacheException.Describe(reason), remedy, PerFileScoringTask.TASK_NAME),
                     reason, cachePath);
             }
+            // Only the .spectra.bin was found: right for a run that does not overlap, wrong
+            // for one that Stages 1-4 searched demultiplexed.
+            DemuxCacheBuilder.ThrowIfDemuxCacheMissing(inputFile, index, ctx);
             return index;
         }
 

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.Demux</RootNamespace>
+    <AssemblyName>Osprey.Demux</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <!-- Deliberately depends on Osprey.Core alone: the demultiplexer takes spectra in and
+       hands spectra back, with no knowledge of scoring, FDR or the cache format, so it
+       can later move into pwiz-sharp for Skyline and msconvert to share. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+  </ItemGroup>
+
+</Project>
