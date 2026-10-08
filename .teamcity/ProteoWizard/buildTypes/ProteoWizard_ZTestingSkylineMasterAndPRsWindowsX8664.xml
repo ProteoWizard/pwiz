@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="5dab5b03-4b2d-46ff-8c6e-13e50b4dd7f2" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>z testing Skyline master and PRs (Windows x86_64)</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_WindowsSkylineRelease" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+      <ref id="ProteoWizard_RemoteAccountTestParameters" />
+    </inherits>
+    <options>
+      <option name="artifactRules" value="build-nt-x86/*.tar.bz2&#xA;pwiz_tools/Skyline/TestResults/*.trx&#xA;pwiz_tools/Topograph/TestResults/*.trx&#xA;pwiz_tools/Skyline/bin/x64/Release/SkylineTester.zip&#xA;pwiz_tools/Skyline/bin/x64/Release/SkylineNightly.zip&#xA;pwiz_tools/Skyline/bin/x64/Release/BiblioSpec.zip" />
+      <option name="executionTimeoutMin" value="120" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RUNNER_109" />
+      <setting-ref ref="RUNNER_243" />
+      <setting-ref ref="RUNNER_84" />
+      <setting-ref ref="Run_pass2_perf_tests_in_parallel_if_possible" />
+      <setting-ref ref="simpleRunner" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="WINDOWS_CHECKOUT_DIR" value="c:\teamcity\pwiz" />
+      <param name="buildStatusUpdateContext" value="" />
+      <param name="buildStatusUpdateDescription" value="" />
+      <param name="buildStatusUpdateState" value="success" />
+      <param name="buildStatusUpdateTargetUrl" value="" />
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.address_model_short" value="64" />
+    </parameters>
+    <build-runners order="simpleRunner, RUNNER_simpleRunner_131, Set_PYTHON_HOME_if_unset_by_agent, RUNNER_243, RUNNER_83, RUNNER_46, Run_pass2_perf_tests_in_parallel_if_possible, RUNNER_109, RUNNER_84">
+      <runner id="simpleRunner" name="" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[echo Installing Skyline-daily-24.1.1.292-x86_64...
+set TEMP=%%LOCALAPPDATA%%\Temp
+copy "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64\Skyline-daily-24.1.1.292-x86_64.msi" "%%TEMP%%"
+C:\teamcity\pwiz\libraries\tuxliketimeout.exe 120000 msiexec /qn /l* "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64-install.log" /norestart /i "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64.msi" REBOOT=ReallySuppress ALLUSERS=2 MSIINSTALLPERUSER=1
+set EXIT=%%ERRORLEVEL%%
+set status=%%EXIT%%
+IF %%EXIT%% NEQ 0 (
+ echo Install failed with code %%EXIT%%.
+ type "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64-install.log"
+ copy "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64-install.log" "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64"
+ del "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64.msi"
+ set pp=##
+IF %%status%% NEQ 0 (echo %%pp%%teamcity[testFailed name='%%name%%' message='Exit status: %%status%%'] )
+echo %%pp%%teamcity[testFinished name='%%name%%']
+ exit %%EXIT%%
+)
+set pp=##
+echo %%pp%%teamcity[testFinished name='%%name%%']
+
+chcp 437
+set PATH_TMP=%%PATH%%
+set PATH=
+copy "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64\Release\*Test*.dll" "%%LocalAppData%%\Programs\Skyline-daily" >nul
+copy "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64\Release\Microsoft*.dll" "%%LocalAppData%%\Programs\Skyline-daily" >nul
+copy "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe*" "%%LocalAppData%%\Programs\Skyline-daily" >nul
+set name="%%SUITE%%TestData.dll,TestDdaSearch"
+C:\teamcity\pwiz\libraries\tuxliketimeout.exe 600000 "%%LocalAppData%%\Programs\Skyline-daily\TestRunner.exe" log=TestDataInstalled.log teamcitytestsuite="%%SUITE%%" test=TestData.dll,TestDdaSearch loop=1 offscreen=0 language=en teamcitytestdecoration=1
+set TEST_EXIT=%%ERRORLEVEL%%
+IF %%TEST_EXIT%% NEQ 0 echo Deployment test failed with code %%TEST_EXIT%%.
+set PATH=%%PATH_TMP%%
+
+set name=%%SUITE%%TestSkylineUninstall
+set pp=##
+cho %%pp%%teamcity[testStarted name='%%name%%']
+
+echo Uninstalling Skyline-daily-24.1.1.292-x86_64...
+C:\teamcity\pwiz\libraries\tuxliketimeout.exe 120000 msiexec /qn /l* "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64-uninstall.log" /norestart /x "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64.msi" REBOOT=ReallySuppress
+set EXIT=%%ERRORLEVEL%%
+set status=%%EXIT%%
+IF %%TEST_EXIT%% NEQ 0 IF %%EXIT%% NEQ 0 set status=%%EXIT%%
+IF %%EXIT%% NEQ 0 (
+ echo Uninstall failed with code %%EXIT%%.
+ type "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64-uninstall.log"
+)
+
+set status=%%TEST_EXIT%%
+set pp=##
+IF %%status%% NEQ 0 (echo %%pp%%teamcity[testFailed name='%%name%%' message='Exit status: %%status%%'] )
+echo %%pp%%teamcity[testFinished name='%%name%%']
+IF %%TEST_EXIT%% EQU 0 echo Deployment test passed.
+IF %%TEST_EXIT%% EQU 0 echo Deployment test passed. > "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64\Test.passed"
+
+rmdir /s /q "%%LocalAppData%%\Programs\Skyline-daily"
+copy "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64-install.log" "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64" >nul
+copy "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64-uninstall.log" "C:\teamcity\pwiz\pwiz_tools\Skyline\bin\x64" >nul
+del "%%TEMP%%\Skyline-daily-24.1.1.292-x86_64.msi"
+
+IF %%TEST_EXIT%% NEQ 0 exit 1]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_simpleRunner_131" name="Build Skyline" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="pwiz_tools\Skyline//SkylineBatch.exe pwiz_tools\Skyline//SkylineTester.zip --i-agree-to-the-vendor-licenses -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --without-compassxtract --teamcity-test-decoration --automated --official" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_243" name="Run TestData,TestDdaSearch from admin installer" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="quickbuild.bat" />
+          <param name="command.parameters" value="pwiz_tools\Skyline//TestData --abbreviate-paths --verbose-test --incremental --i-agree-to-the-vendor-licenses -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --without-compassxtract --teamcity-test-decoration --automated" />
+          <param name="script.content" value="pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe buildcheck=1 test=TestFunctional.dll offscreen=0 pass0=on teamcitytestdecoration=1 runsmallmoleculeversions=on" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_83" name="Run pass0 and pass2 on Test,TestFunctional,TestConnected,TestTutorial (in parallel if possible)" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[IF "%%USERNAME%%" equ "maccoss-teamcity" (set PARALLEL_ARGS=parallelmode=server workercount=%env.PARALLEL_WORKER_COUNT%) ELSE (set "PARALLEL_ARGS= ")
+@echo on
+pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe %%PARALLEL_ARGS%% test=CommonTest.dll,Test.dll,TestFunctional.dll,TestConnected.dll,TestTutorial.dll buildcheck=1 pass0=on pass1=off teamcitytestdecoration=1 runsmallmoleculeversions=on perftests=on]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_46" name="Run TestData pass1 TestData.dll,TestDiaSearchFixedWindows (in parallel if possible)" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[IF "%%USERNAME%%" equ "maccoss-teamcity" (set PARALLEL_ARGS=parallelmode=server workercount=%env.PARALLEL_WORKER_COUNT%) ELSE (set "PARALLEL_ARGS= ")
+pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe %%PARALLEL_ARGS%% log=TestPass1Subset.log buildcheck=1 pass1=on pass2=off test=TestData.dll,TestDiaSearchFixedWindows offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="Run_pass2_perf_tests_in_parallel_if_possible" name="Run pass2 perf tests (in parallel if possible)" type="simpleRunner">
+        <parameters>
+          <param name="script.content"><![CDATA[IF "%%USERNAME%%" equ "maccoss-teamcity" (set PARALLEL_ARGS=parallelmode=server workercount=%env.PARALLEL_WORKER_COUNT%) ELSE (set "PARALLEL_ARGS= ")
+
+FOR /f %%%%I IN ('powershell -command "(Get-Content scripts\misc\tc-perftests-skiplist.txt | Select-String -Pattern '^[^#].+') -join ','"') DO SET "SKIPLIST=%%%%I"
+echo pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe %%PARALLEL_ARGS%% test=TestPerf.dll skip=%%SKIPLIST%% buildcheck=1 teamcitytestdecoration=1 runsmallmoleculeversions=on perftests=on
+pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe %%PARALLEL_ARGS%% test=TestPerf.dll skip=%%SKIPLIST%% buildcheck=1 teamcitytestdecoration=1 runsmallmoleculeversions=on perftests=on]]></param>
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_109" name="SkylineBatch tests" type="dotnet">
+        <parameters>
+          <param name="command" value="vstest" />
+          <param name="dotNetCoverage.dotCover.home.path" value="%teamcity.tool.JetBrains.dotCover.CommandLineTools.DEFAULT%" />
+          <param name="paths" value="pwiz_tools\Skyline\bin\x64\Release\SkylineBatchTest.dll" />
+          <param name="platform" value="x64" />
+          <param name="required.sdk" value="4.7.2" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="vstest.version" value="VSTest_17_Windows" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_84" name="Send build status update for SkylineTester.zip artifact" type="ProteoWizard_SendBuildStatusToGitHub">
+        <parameters>
+          <param name="GitHubAuthToken" value="credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2" />
+          <param name="buildStatusUpdateContext" value="artifacts - SkylineTester.zip" />
+          <param name="buildStatusUpdateDescription" value="Includes Skyline-daily version for this pull request" />
+          <param name="buildStatusUpdateState" value="success" />
+          <param name="buildStatusUpdateTargetUrl" value="https://mc-tca-01.s3.us-west-2.amazonaws.com/ProteoWizard/%system.teamcity.buildType.id%/%teamcity.build.id%/SkylineTester.zip" />
+          <param name="teamcity.step.mode" value="execute_if_failed" />
+          <param name="teamcity.step.phase" value="" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="45" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/SeeMS/**
+-:pwiz_tools/MSConvertGUI/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="BUILD_EXT_687" type="BuildFailureOnMetric">
+        <parameters>
+          <param name="anchorBuild" value="lastSuccessful" />
+          <param name="metricKey" value="InspectionStatsW" />
+          <param name="metricThreshold" value="400" />
+          <param name="metricUnits" value="metricUnitsDefault" />
+          <param name="moreOrLess" value="more" />
+          <param name="withBuildAnchor" value="false" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_316" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="LEAKED" />
+          <param name="buildFailureOnMessage.outputText" value="Leak detected" />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+        </parameters>
+      </extension>
+    </build-extensions>
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="4" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

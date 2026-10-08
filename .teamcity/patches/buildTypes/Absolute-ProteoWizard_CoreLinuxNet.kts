@@ -52,7 +52,7 @@ create(DslContext.projectId, BuildType({
         }
         exec {
             id = "RUNNER_simpleRunner_139"
-            path = "pwiz-sharp/tcbuild.sh"
+            path = "tcbuild.sh"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
         }
         script {
