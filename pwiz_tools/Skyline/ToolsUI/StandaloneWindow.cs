@@ -145,6 +145,20 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.GetOptions.CallNow(FindElement(controlId, UiActions.GetOptions)));
         }
 
+        /// <summary>The handles of this process's visible top-level windows, whether or not the connector can
+        /// drive them. This is what a wait snapshots before it acts, so that a window it cannot classify yet (a
+        /// file dialog the shell is still building, see <see cref="NativeDialog.Create"/>) is still known to have
+        /// been there, and is not reported as a dialog the action opened once it becomes classifiable.</summary>
+        public static IEnumerable<IntPtr> GetTopLevelWindowHandles()
+        {
+            var processId = Kernel32.GetCurrentProcessId();
+            return User32.EnumWindows().Where(hwnd =>
+            {
+                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
+                return windowProcessId == processId && User32.IsWindowVisible(hwnd);
+            });
+        }
+
         /// <summary>Every visible top-level window of this process that is a managed Form, a tip Skyline draws itself
         /// or a native modal dialog, each wrapped as the connector window abstraction that drives it (see
         /// <see cref="NewStandaloneWindow"/>). Enumerated purely from Win32 + WinForms' handle-table lookups, so it
