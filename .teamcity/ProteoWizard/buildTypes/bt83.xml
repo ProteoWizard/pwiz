@@ -12,9 +12,6 @@
     <options>
       <option name="artifactRules" value="scripts/installer/build/ProteoWizard-*.exe&#xA;scripts/installer/build/installer-version.txt&#xA;**/*.blib.observed" />
     </options>
-    <disabled-settings>
-      <setting-ref ref="RUNNER_73" />
-    </disabled-settings>
     <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_139, Set_PWIZ_VERSION_variable, RUNNER_73, RUNNER_85">
       <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
         <parameters>
@@ -52,7 +49,7 @@ echo ##teamcity[setParameter name='env.PWIZ_VERSION' value='%%PWIZ_VERSION%%']]]
           <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
           <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
           <param name="env.PYTHON_HOME" value="C:\Python38" />
-          <param name="system.artifact.paths" value="build-nt-x86/*.msi,build-nt-x86/*.tar.bz2,build-nt-x86/VERSION" />
+          <param name="system.artifact.paths" value="scripts/installer/build/ProteoWizard-*.exe,scripts/installer/build/installer-version.txt" />
           <param name="teamcity.activeBuildBranch.age.hours" value="0" />
           <param name="teamcity.activeVcsBranch.age.days" value="3" />
           <param name="teamcity.step.mode" value="default" />
