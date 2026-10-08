@@ -22,7 +22,6 @@
  */
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Osprey.Core;
@@ -288,6 +287,22 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<Spectrum> LoadWindowSerialRead(int windowKey)
         {
+            byte[] readBuffer = null;
+            return LoadWindowSerialRead(windowKey, ref readBuffer);
+        }
+
+        /// <summary>
+        /// <see cref="LoadWindowSerialRead(int)"/> reading into <paramref name="readBuffer"/>, which
+        /// the caller keeps for its next window on the same thread. It is replaced with an exact-size
+        /// array when null or too small for this window's block. A reused buffer's pages are already
+        /// resident; a fresh one's fault in during the read, inside the lock every reader of this
+        /// index waits on (about a fifth of the time the lock is held, measured on Astral).
+        ///
+        /// <para>The caller owns the buffer's lifetime: scoped to its read loop, the memory is
+        /// released when the loop ends, which a process-wide pool would not do.</para>
+        /// </summary>
+        public List<Spectrum> LoadWindowSerialRead(int windowKey, ref byte[] readBuffer)
+        {
             if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets))
                 return new List<Spectrum>();
 
@@ -307,37 +322,29 @@ namespace pwiz.Osprey.IO
                 }
                 if (end - start > Array.MaxLength)
                     return LoadWindow(windowKey);
-                // Rented before taking the lock, so no other thread's read waits on it. A pooled
-                // block's pages are already resident; a fresh one's would fault in during the read,
-                // inside the lock that every reader of this index waits on (about a fifth of the
-                // time the lock is held, measured on Astral).
+                // Allocated before taking the lock, so no other thread's read waits on it.
                 length = (int)(end - start);
-                block = ArrayPool<byte>.Shared.Rent(length);
+                if (readBuffer == null || readBuffer.Length < length)
+                    readBuffer = new byte[length];
+                block = readBuffer;
                 lock (OspreyEnvironment.SerialReadsProcessWide ? PROCESS_BLOCK_READ_LOCK : _blockReadLock)
                 {
                     fs.Seek(start, SeekOrigin.Begin);
                     fs.ReadExactly(block, 0, length);
                 }
             }
-            try
+            // ReadRecords copies every value out of the block, so the caller may reuse it at once.
+            using (var r = new BinaryReader(new MemoryStream(block, 0, length, false)))
             {
-                using (var r = new BinaryReader(new MemoryStream(block, 0, length, false)))
+                var result = ReadRecords(r, offsets, start);
+                // The records must fill the block exactly: one that ends early or late was cut
+                // at the wrong place.
+                if (r.BaseStream.Position != length)
                 {
-                    var result = ReadRecords(r, offsets, start);
-                    // The records must fill the block exactly: one that ends early or late was cut
-                    // at the wrong place.
-                    if (r.BaseStream.Position != length)
-                    {
-                        throw new InvalidDataException(string.Format(
-                            OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, end, start + r.BaseStream.Position));
-                    }
-                    return result;
+                    throw new InvalidDataException(string.Format(
+                        OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, end, start + r.BaseStream.Position));
                 }
-            }
-            finally
-            {
-                // ReadRecords copies every value out of the block, so nothing still refers to it.
-                ArrayPool<byte>.Shared.Return(block);
+                return result;
             }
         }
 

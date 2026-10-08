@@ -517,7 +517,7 @@ namespace pwiz.Osprey.IO
 
             using (var saver = new FileSaver(path))
             {
-                // 1 MB buffer: the body is millions of 36-byte records, and the default 4 KB buffer
+                // 1 MB buffer: the body is millions of small records, and the default 4 KB buffer
                 // made a WriteFile call per 4 KB that left first-pass lanes blocked ~19 s per file.
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 20))
                 using (var bw = new BinaryWriter(fs))
