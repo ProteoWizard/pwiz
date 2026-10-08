@@ -16,11 +16,22 @@
           <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
           <param name="script.content"><![CDATA[/usr/bin/docker load -i pwiz-skyline-i-agree-to-the-vendor-licenses.tbz2
 
-/usr/bin/docker run --rm chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 mywine msconvert 2>&1 | grep "ProteoWizard release:" > VERSION
-version=$(sed -Ee "s/ProteoWizard release: ([0-9]+.[0-9]+.[0-9]+) \(([0-9a-z]+)\)/\1-\2/" VERSION | tr -d '\r')
-echo VERSION
-cat VERSION
+# The .NET msconvert prints no version: the container build labels the image with the one
+# in its installer's name. An image without the label is a C++ one, whose msconvert prints
+# "ProteoWizard release: <version> (<hash>)".
+version=$(/usr/bin/docker inspect --format '{{ index .Config.Labels "org.opencontainers.image.version" }}' chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 2>/dev/null | tr -d '\r')
+if [ -z "$version" ] || [ "$version" = "<no value>" ]; then
+  /usr/bin/docker run --rm chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 mywine msconvert 2>&1 | grep "ProteoWizard release:" > VERSION
+  version=$(sed -Ee "s/ProteoWizard release: ([0-9]+.[0-9]+.[0-9]+) \(([0-9a-z]+)\)/\1-\2/" VERSION | tr -d '\r')
+fi
 echo version: $version
+
+# Push nothing without a version: an empty one makes every :$version reference invalid,
+# and the :latest pushes would still go through, leaving latest with no versioned tag.
+if [ -z "$version" ]; then
+  echo "##teamcity[buildProblem description='Could not determine the ProteoWizard version of the image, so nothing was pushed']"
+  exit 1
+fi
 
 /usr/bin/docker tag chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:$version
 /usr/bin/docker tag chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:latest

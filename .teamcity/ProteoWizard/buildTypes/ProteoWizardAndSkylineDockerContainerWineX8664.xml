@@ -33,9 +33,19 @@ if ls ProteoWizard-*Setup-*.exe >/dev/null 2>&1; then
 else
   PB=ubuntu:20.04;  RB=proteowizard/wine-dotnet:winestaging10.6-net4.8-x64
 fi
+# The .NET msconvert prints no version, so the image carries the one in the installer's name
+# (ProteoWizard-WithVendorSdks-Setup-<version>.exe, the installer the Dockerfile installs) as a
+# label, which the Publish Docker image config tags the image with.
+LABEL_ARGS=""
+SETUP=$(ls ProteoWizard-WithVendorSdks-Setup-*.exe 2>/dev/null | head -1)
+if [ -n "$SETUP" ]; then
+  VERSION=$(basename "$SETUP" .exe | sed -e 's/^ProteoWizard-WithVendorSdks-Setup-//')
+  echo "ProteoWizard version: $VERSION"
+  LABEL_ARGS="--label org.opencontainers.image.version=$VERSION"
+fi
 /usr/bin/docker system prune --all --force --volumes
 df -h
-/usr/bin/docker build --build-arg PAYLOAD_BASE=$PB --build-arg RUNTIME_BASE=$RB -t chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 .]]></param>
+/usr/bin/docker build --build-arg PAYLOAD_BASE=$PB --build-arg RUNTIME_BASE=$RB $LABEL_ARGS -t chambm/pwiz-skyline-i-agree-to-the-vendor-licenses:x64 .]]></param>
           <param name="teamcity.build.workingDir" value="container" />
           <param name="teamcity.step.mode" value="default" />
           <param name="use.custom.script" value="true" />
