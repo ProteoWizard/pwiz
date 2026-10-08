@@ -3160,12 +3160,23 @@ namespace pwiz.Osprey.Tasks
         /// Sets <see cref="RunPlan.FirstPassFdrLanes"/> for this stage's per-file phases, before
         /// the first of them. Free memory is measured here, after Stage 1-4 state is loaded and
         /// before the first pass grows its own.
+        ///
+        /// <para>In a straight-through run PerFileScoring's freed heap is still committed here
+        /// and counts as used: SEA-AD 82 files at 64 GB read 29.3 GB free and ran 1 lane
+        /// (4,082 s). Releasing it first reads 45.2 GB and runs 3 (2,123 s), so the reading is
+        /// taken after <see cref="SystemMemory.AvailablePhysicalBytesAfterCollect"/>. That is done
+        /// whenever there is more than one file, including under <c>OSPREY_FDR_FILE_LANES</c>, so a
+        /// forced lane count enters the stage in the same memory state as the count it is compared
+        /// with: at 1 lane, entering with the heap still committed cost 784 s (4,082 s vs 3,298 s
+        /// for the same stage in a fresh process).</para>
         /// </summary>
         private static void ResolveFileLanes(PipelineContext ctx, int nFiles, long maxRowsPerFile)
         {
+            long availableBytes = nFiles > 1
+                ? SystemMemory.AvailablePhysicalBytesAfterCollect()
+                : SystemMemory.AvailablePhysicalBytes();
             ctx.RunPlan.FirstPassFdrLanes = FdrLaneResolver.Resolve(nFiles, ctx.Config.NThreads,
-                maxRowsPerFile, SystemMemory.AvailablePhysicalBytes(), OspreyEnvironment.FdrFileLanes,
-                ctx.LogInfo);
+                maxRowsPerFile, availableBytes, OspreyEnvironment.FdrFileLanes, ctx.LogInfo);
         }
 
         /// <summary>
