@@ -37,6 +37,10 @@ namespace SkylineTester
         // "SkylineTester Files" with that directory as its working directory.
         private const string SKYLINE_TESTER_LAUNCHER = "SkylineTester.cmd";
 
+        // Where SkylineTester.csproj publishes the single-file SkylineNightly.exe and
+        // SkylineNightlyShim.exe that SkylineNightly.zip carries ($(SingleFileNightlyDir) there).
+        private const string SINGLE_FILE_NIGHTLY_DIR = "SkylineNightlySingleFile";
+
         // Excluded files must be lower-case!
         private static readonly List<string> EXCLUDED_FILES = new List<string>
         {
@@ -44,6 +48,7 @@ namespace SkylineTester
             "skylinetester.zip",
             "skylinetesterwithtestdata.zip",
             "skylinenightly.zip",
+            "skylinenightlysinglefile", // SINGLE_FILE_NIGHTLY_DIR: belongs to SkylineNightly.zip only
             "bibliospec.zip",
             "testrunner.log",
             "microsoft.visualstudio.qualitytools.unittestframework.dll", // Ignore if this appears in a build dir - gets added explicitly
@@ -222,33 +227,26 @@ namespace SkylineTester
 
                 if ((String.Empty + Path.GetFileName(zipPath)).ToLower() == "skylinenightly.zip")
                 {
-                    // Add files to top level of zip file.
-                    // net8 layout. Both .exe files are apphost launchers only: without the
-                    // matching .dll, .deps.json and .runtimeconfig.json beside them the
-                    // extracted zip cannot start at all, so they are members too. The old
-                    // net472 list needed just the .exe plus a .exe.config; net8 emits
-                    // <name>.dll.config instead, and never a .exe.config.
+                    // Single-file executables, at the top level of the zip. Every nightly machine
+                    // runs a .NET Framework SkylineNightlyShim.exe that updates itself and
+                    // SkylineNightly.exe from this zip by extracting a fixed list of file names
+                    // (SkylineNightly.exe, SkylineNightly.pdb, DotNetZip.dll,
+                    // SkylineNightlyShim.exe, Microsoft.Win32.TaskScheduler.dll). A plain .NET
+                    // build's .exe is only a launcher for a .dll that list never extracts, so
+                    // that shim would leave both programs unable to start - itself included, so
+                    // it could not recover. A single-file .exe carries its .dll, its
+                    // dependencies and its runtime config inside, and runs on its own.
                     var files = new[]
                     {
                         "SkylineNightlyShim.exe",
-                        "SkylineNightlyShim.dll",
-                        "SkylineNightlyShim.dll.config",
-                        "SkylineNightlyShim.deps.json",
-                        "SkylineNightlyShim.runtimeconfig.json",
+                        "SkylineNightlyShim.pdb",
                         "SkylineNightly.exe",
-                        "SkylineNightly.dll",
-                        "SkylineNightly.dll.config",
-                        "SkylineNightly.deps.json",
-                        "SkylineNightly.runtimeconfig.json",
-                        "SkylineNightly.pdb",
-                        "Microsoft.Diagnostics.Runtime.dll",
-                        "Microsoft.Win32.TaskScheduler.dll",
-                        "ProDotNetZip.dll"
+                        "SkylineNightly.pdb"
                     };
                     foreach (var file in files)
                     {
                         Console.WriteLine(file);
-                        zipFile.AddFile(file);
+                        zipFile.AddFile(Path.Combine(SINGLE_FILE_NIGHTLY_DIR, file), string.Empty);
                     }
                 }
 
