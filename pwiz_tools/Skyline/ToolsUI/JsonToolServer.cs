@@ -429,9 +429,6 @@ namespace pwiz.Skyline.ToolsUI
 
         private object Dispatch(string method, JToken[] args)
         {
-            if (method == @"QueryAvailableMethods")
-                return string.Join(@",", _methods.Keys.OrderBy(k => k));
-
             if (!_methods.TryGetValue(method, out var methodInfo))
             {
                 throw new JsonRpcException(JsonToolConstants.ERROR_METHOD_NOT_FOUND,
