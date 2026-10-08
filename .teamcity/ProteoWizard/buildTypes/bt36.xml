@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="b2301046-6f9d-4534-89d0-19bd6026f3cf" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Windows x86</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_WindowsBase" />
+      <ref id="ProteoWizard_WindowsCoreRelease" />
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_RemoteAccountTestParameters" />
+    </inherits>
+    <disabled-settings>
+      <setting-ref ref="TRIGGER_1042" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=32" />
+    </parameters>
+    <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_139, RUNNER_81">
+      <runner id="RUNNER_81" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="plugin.docker.imageId" value="" />
+          <param name="plugin.docker.imagePlatform" value="" />
+          <param name="plugin.docker.run.parameters" value="" />
+          <param name="system.artifact.paths" value="build-nt-x86/*.msi,build-nt-x86/*.tar.bz2,build-nt-x86/VERSION" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="execute_if_failed" />
+          <param name="teamcity.step.phase" value="" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <build-triggers>
+      <build-trigger id="TRIGGER_1042" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter"><![CDATA[+:*
+-:Skyline/skyline_*]]></param>
+          <param name="cronExpression_dm" value="*" />
+          <param name="cronExpression_dw" value="?" />
+          <param name="cronExpression_hour" value="*" />
+          <param name="cronExpression_min" value="0" />
+          <param name="cronExpression_month" value="*" />
+          <param name="cronExpression_sec" value="0" />
+          <param name="cronExpression_year" value="*" />
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:pwiz_tools/Skyline/**
+-:pwiz_tools/Topograph/**
+-:pwiz_tools/Bumbershoot/**
+-:pwiz_tools/Shared/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <build-extensions>
+      <extension id="perfmon" type="perfmon" />
+    </build-extensions>
+  </settings>
+</build-type>
+

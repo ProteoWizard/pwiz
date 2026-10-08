@@ -16,16 +16,17 @@
     should gate its import per-TFM (as Skyline.csproj does) so the git-date
     computation runs only on the net8 pass.
   -->
-  <Import Project="..\..\pwiz-sharp\build\PwizVersion.targets"
-          Condition="Exists('..\..\pwiz-sharp\build\PwizVersion.targets')" />
+  <Import Project="..\..\build\PwizVersion.targets"
+          Condition="Exists('..\..\build\PwizVersion.targets')" />
 
   <PropertyGroup>
     <SkylineVersionYear>26</SkylineVersionYear>
     <SkylineVersionOrdinal>1</SkylineVersionOrdinal>
-    <!-- 0 = release, 1 = daily, 9 = feature-complete daily (mirrors SKYLINE_BRANCH
+    <!-- 0 = release, 1 = daily (.NET 4.7.2 line, Skyline/skyline_26_1_1), 2 = daily (.NET 10 line,
+         this branch, from 26.1.2), 9 = feature-complete daily (mirrors SKYLINE_BRANCH
          in Jamfile.jam). This is the .Build component, which TestDocumentFormatCurrent
-         keys off (skips the version/format sync check on feature-complete builds). -->
-    <SkylineVersionBranch>1</SkylineVersionBranch>
+         keys off (skips the version/format sync check on feature-complete builds only). -->
+    <SkylineVersionBranch>2</SkylineVersionBranch>
     <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_SkylineBuildKindSuffix>
     <_SkylineBuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_SkylineBuildKindSuffix>
   </PropertyGroup>
