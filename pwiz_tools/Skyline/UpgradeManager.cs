@@ -104,10 +104,10 @@ namespace pwiz.Skyline
             {
                 // A newer Skyline published as an installer replaces this ClickOnce one. Until
                 // one is published, ClickOnce keeps updating as before.
-                var publishedVersion = AppDeployment.GetPublishedInstallerVersion();
-                if (publishedVersion != null)
+                var innoVersion = AppDeployment.GetAvailableInnoInstallerVersion();
+                if (innoVersion != null)
                 {
-                    e.Result = publishedVersion;
+                    e.Result = innoVersion;
                     return;
                 }
                 e.Result = AppDeployment.CheckForDetailedUpdate();
@@ -120,10 +120,10 @@ namespace pwiz.Skyline
 
         private void updateCheck_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Result is Version publishedVersion)
+            if (e.Result is Version innoVersion)
             {
-                if (ShowUpgradeForm(publishedVersion, true, true))
-                    AppDeployment.InstallPublishedVersion(ParentWindow, publishedVersion);
+                if (ShowUpgradeForm(innoVersion, true, true))
+                    AppDeployment.InstallInnoVersion(ParentWindow, innoVersion);
                 return;
             }
             var exTrust = e.Result as TrustNotGrantedException;
@@ -277,8 +277,16 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// The ClickOnce deployment this Skyline runs from, and the two ways it can be upgraded:
+        /// by ClickOnce itself, or by the Inno Setup installer published in the InstallUrl folder,
+        /// which replaces ClickOnce. The installer is checked for first.
+        /// </summary>
         public interface IDeployment
         {
+            /// <summary>
+            /// Whether this Skyline was started through ClickOnce. Nothing is checked for otherwise.
+            /// </summary>
             bool IsNetworkDeployed { get; }
             Version CurrentVersion { get; }
 
@@ -291,17 +299,18 @@ namespace pwiz.Skyline
             void OpenInstallLink(Control parentWindow);
 
             /// <summary>
-            /// The version of the installer published in the InstallUrl folder, when it is newer
-            /// than this one, or null when none is published, it cannot be read, or it is not newer.
+            /// The version of the Inno Setup installer published in the InstallUrl folder, when it
+            /// is newer than this one, or null when none is published, it cannot be read, or it is
+            /// not newer.
             /// </summary>
-            Version GetPublishedInstallerVersion();
+            Version GetAvailableInnoInstallerVersion();
 
             /// <summary>
-            /// Downloads the published installer, leaves the new Skyline what it needs to take this
-            /// one's settings and uninstall it (see <see cref="InstallerHandoff"/>), starts the
-            /// installer, and closes this Skyline so that it can be replaced.
+            /// Downloads the published Inno Setup installer, leaves the new Skyline what it needs to
+            /// take this one's settings and uninstall it (see <see cref="InstallerHandoff"/>),
+            /// starts the installer, and closes this Skyline so that it can be replaced.
             /// </summary>
-            void InstallPublishedVersion(Control parentWindow, Version version);
+            void InstallInnoVersion(Control parentWindow, Version version);
         }
 
         public sealed class UpdateCheckDetails
@@ -435,7 +444,7 @@ namespace pwiz.Skyline
                 WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
             }
 
-            public Version GetPublishedInstallerVersion()
+            public Version GetAvailableInnoInstallerVersion()
             {
                 try
                 {
@@ -457,7 +466,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            public void InstallPublishedVersion(Control parentWindow, Version version)
+            public void InstallInnoVersion(Control parentWindow, Version version)
             {
                 string installerFileName = Settings.Default.ProductName + @"-Setup-" + version + @".exe";
                 string installerPath = Path.Combine(Path.GetTempPath(), installerFileName);
@@ -467,7 +476,7 @@ namespace pwiz.Skyline
                     {
                         longWaitDlg.Text = string.Format(SkylineResources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
                         longWaitDlg.Message = string.Format(
-                            SkylineResources.UpgradeManager_InstallPublishedVersion_Downloading_the__0__installer,
+                            SkylineResources.UpgradeManager_InstallInnoVersion_Downloading_the__0__installer,
                             Settings.Default.ProductName);
                         var status = longWaitDlg.PerformWork(parentWindow, 500, progressMonitor =>
                         {

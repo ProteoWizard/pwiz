@@ -3703,9 +3703,9 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Downloading the {0} installer.
         /// </summary>
-        public static string UpgradeManager_InstallPublishedVersion_Downloading_the__0__installer {
+        public static string UpgradeManager_InstallInnoVersion_Downloading_the__0__installer {
             get {
-                return ResourceManager.GetString("UpgradeManager_InstallPublishedVersion_Downloading_the__0__installer", resourceCulture);
+                return ResourceManager.GetString("UpgradeManager_InstallInnoVersion_Downloading_the__0__installer", resourceCulture);
             }
         }
 

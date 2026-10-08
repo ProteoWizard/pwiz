@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestFunctional
         {
             using (_deployment = UpgradeBasicTest.CreateDeployment())
             {
-                _deployment.PublishedInstallerVersion = new Version(3, 6, 1, 10200);
+                _deployment.AvailableInnoInstallerVersion = new Version(3, 6, 1, 10200);
                 RunFunctionalTest();
             }
         }
@@ -243,9 +243,9 @@ namespace pwiz.SkylineTestFunctional
         {
             var upgradeDlg = WaitForOpenForm<UpgradeDlg>();
             Assert.IsTrue(upgradeDlg.UpdateFound);
-            Assert.AreEqual(_deployment.PublishedInstallerVersion.ToString(), upgradeDlg.VersionText);
+            Assert.AreEqual(_deployment.AvailableInnoInstallerVersion.ToString(), upgradeDlg.VersionText);
             OkDialog(upgradeDlg, upgradeDlg.AcceptButton.PerformClick);
-            WaitForCondition(() => Equals(_deployment.PublishedInstallerVersion, _deployment.InstalledPublishedVersion));
+            WaitForCondition(() => Equals(_deployment.AvailableInnoInstallerVersion, _deployment.InstalledInnoVersion));
             // Not updated through ClickOnce
             Assert.AreNotEqual(_deployment.UpdateVersion, _deployment.CurrentVersion);
 
@@ -352,22 +352,22 @@ namespace pwiz.SkylineTestFunctional
         /// The installer version to report as published, or null for none, which leaves the
         /// ClickOnce update path the other tests exercise.
         /// </summary>
-        public Version PublishedInstallerVersion { get; set; }
+        public Version AvailableInnoInstallerVersion { get; set; }
 
         /// <summary>
-        /// The version <see cref="InstallPublishedVersion"/> was asked for, instead of downloading
+        /// The version <see cref="InstallInnoVersion"/> was asked for, instead of downloading
         /// and running an installer.
         /// </summary>
-        public Version InstalledPublishedVersion { get; private set; }
+        public Version InstalledInnoVersion { get; private set; }
 
-        public Version GetPublishedInstallerVersion()
+        public Version GetAvailableInnoInstallerVersion()
         {
-            return PublishedInstallerVersion;
+            return AvailableInnoInstallerVersion;
         }
 
-        public void InstallPublishedVersion(Control parentWindow, Version version)
+        public void InstallInnoVersion(Control parentWindow, Version version)
         {
-            InstalledPublishedVersion = version;
+            InstalledInnoVersion = version;
         }
 
         public void Dispose()
