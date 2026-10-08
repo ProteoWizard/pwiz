@@ -4,33 +4,31 @@
   <description />
   <settings>
     <inherits>
-      <ref id="ProteoWizard_LinuxCore" />
       <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_RemoteAccountTestParameters" />
     </inherits>
-    <build-runners order="simpleRunner, RUNNER_simpleRunner_122, RUNNER_336, RUNNER_80">
-      <runner id="simpleRunner" name="" type="simpleRunner">
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="artifactRules" value="**/ProteoWizard-*.tar.gz&#xA;**/*.blib.observed" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="60" />
+    </options>
+    <build-runners order="RUNNER_simpleRunner_139">
+      <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
         <parameters>
-          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
-          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
-          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
-          <param name="script.content" value="ls -l libraries" />
-          <param name="teamcity.step.mode" value="default" />
-          <param name="use.custom.script" value="true" />
-        </parameters>
-      </runner>
-      <runner id="RUNNER_80" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
-        <parameters>
-          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
-          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
-          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
-          <param name="env.PYTHON_HOME" value="C:\Python38" />
-          <param name="system.artifact.paths" value="build-linux-x86_64/*.tar.bz2,build-linux-x86_64/VERSION" />
-          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
-          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="command.executable" value="tcbuild.sh" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated --require-vendor-support" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
       </runner>
     </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1839" name="teamcity.agent.jvm.os.name" value="Linux" />
+    </requirements>
     <build-triggers>
       <build-trigger id="retryBuildTrigger" type="retryBuildTrigger">
         <parameters>
@@ -53,7 +51,41 @@
           <param name="withBuildAnchor" value="true" />
         </parameters>
       </extension>
+      <extension id="BUILD_EXT_446" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="The spot instance is scheduled for termination" />
+          <param name="buildFailureOnMessage.outputText" value="AWS terminated the spot instance early. Retrigger the build manually from TeamCity." />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+          <param name="buildFailureOnMessage.stopBuildOnFailure" value="true" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_457" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="terminated due to StackOverflowException" />
+          <param name="buildFailureOnMessage.outputText" value="Build terminated due to stack overflow in Skyline tests (see build log)." />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+          <param name="buildFailureOnMessage.stopBuildOnFailure" value="true" />
+        </parameters>
+      </extension>
+      <extension id="BUILD_EXT_544" type="BuildFailureOnMessage">
+        <parameters>
+          <param name="buildFailureOnMessage.conditionType" value="contains" />
+          <param name="buildFailureOnMessage.messagePattern" value="...failed" />
+          <param name="buildFailureOnMessage.reportOnlyFirstMatch" value="false" />
+          <param name="buildFailureOnMessage.reverse" value="false" />
+        </parameters>
+      </extension>
     </build-extensions>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="120" />
+        </parameters>
+      </policy>
+    </cleanup>
   </settings>
 </build-type>
 
