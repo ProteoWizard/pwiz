@@ -42,7 +42,7 @@ build.bat                             REM restore + build Pwiz.sln + run the tes
 Alternative entry points:
 
 - Open `Pwiz.sln` in Visual Studio 2022 or Rider
-- `build.sh` on Linux (no native vendor SDKs; Thermo, mzML/mzXML/MGF and friends only)
+- `build.sh` on Linux (Thermo, Bruker and Waters vendor formats plus mzML/mzXML/MGF and friends; the other vendor SDKs are Windows-only)
 - `build.bat --help` lists the flags (`--without-mascot`, `--coverage`, `--automated`, ...)
 
 Key locations:
