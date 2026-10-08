@@ -19,9 +19,13 @@
  */
 using System;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Protocol;
+using SkylineMcpServer.Tools;
 
 namespace SkylineMcpServer;
 
@@ -44,12 +48,30 @@ public static class Program
         FunctionalTest = Environment.GetEnvironmentVariable("SKYLINE_MCP_TEST") == "1" ||
                          Array.Exists(args, a => a == "--test");
 
+        var toolAvailability = new ToolAvailability(typeof(SkylineTools));
         var builder = Host.CreateApplicationBuilder(args);
         builder.Logging.ClearProviders();
         builder.Services
             .AddMcpServer()
             .WithStdioServerTransport()
-            .WithToolsFromAssembly();
+            .WithToolsFromAssembly()
+            // Offer only the tools the targeted Skyline can run
+            .AddListToolsFilter(next => (request, cancellationToken) =>
+                new ValueTask<ListToolsResult>(next(request, cancellationToken).AsTask().ContinueWith(task =>
+                {
+                    var result = task.Result;
+                    result.Tools = toolAvailability.FilterTools(result.Tools);
+                    return result;
+                }, cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)))
+            // A call can target a different Skyline (skyline_set_instance, or a new one started);
+            // tell the client to list tools again when that changes what can run
+            .AddCallToolFilter(next => (request, cancellationToken) =>
+                new ValueTask<CallToolResult>(next(request, cancellationToken).AsTask().ContinueWith(task =>
+                {
+                    if (toolAvailability.CheckListChanged())
+                        request.Server.SendNotificationAsync(NotificationMethods.ToolListChangedNotification, CancellationToken.None);
+                    return task.Result;
+                }, cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)));
 
         await builder.Build().RunAsync();
     }
