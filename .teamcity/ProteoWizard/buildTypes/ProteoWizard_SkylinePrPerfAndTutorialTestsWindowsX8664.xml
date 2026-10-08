@@ -17,6 +17,7 @@
       <option name="executionTimeoutMin" value="320" />
     </options>
     <disabled-settings>
+      <setting-ref ref="RUNNER_65" />
       <setting-ref ref="TRIGGER_46" />
       <setting-ref ref="vcsTrigger" />
     </disabled-settings>
@@ -28,18 +29,52 @@
       <param name="env.link_property" value="" />
       <param name="env.variant_property" value="release" />
     </parameters>
-    <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, Skyline_Clean, RUNNER_simpleRunner_139">
-      <runner id="Skyline_Clean" name="Clean" type="simpleRunner">
+    <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_104, RUNNER_simpleRunner_131, simpleRunner, RUNNER_46, RUNNER_65, enableLockScreen">
+      <runner id="RUNNER_104" name="Create PrositConfig file" type="MRPP_CreateTextFile">
         <parameters>
-          <param name="command.executable" value="clean.bat" />
+          <param name="content" value="%prositconfig_production_xml%" />
+          <param name="system.dest.file" value="pwiz_tools/Skyline/Model/Prosit/Config/PrositConfig_production.xml" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
       </runner>
-      <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
+      <runner id="RUNNER_simpleRunner_131" name="" type="simpleRunner">
         <parameters>
-          <param name="command.executable" value="pwiz_tools/Skyline/tc-perftests.bat" />
-          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated --require-vendor-support" />
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="pwiz_tools\Skyline//Skyline.exe --i-agree-to-the-vendor-licenses -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% --without-compassxtract --teamcity-test-decoration --automated --official" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
           <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="simpleRunner" name="Unlock screen for screenshots" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="IF &quot;%%USERNAME%%&quot; equ &quot;maccoss-teamcity&quot; schtasks /run /tn &quot;Start screenshot mode&quot;" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_46" name="Run most TestPerf and TestTutorial tests (some long running perftests are excluded)" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts\misc\tc-perftests.bat" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_65" name="Run perf and tutorial tests" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=TestTutorial.dll test=TestSmallMoleculeLibrariesTutorial language=en pause=-4 loop=1 perftests=on offscreen=0 teamcitytestdecoration=1 runsmallmoleculeversions=on" />
+          <param name="teamcity.step.mode" value="default" />
+          <param name="use.custom.script" value="true" />
+        </parameters>
+      </runner>
+      <runner id="enableLockScreen" name="Enable lock screen" type="simpleRunner">
+        <parameters>
+          <param name="script.content" value="IF &quot;%%USERNAME%%&quot; equ &quot;maccoss-teamcity&quot; schtasks /run /tn &quot;End screenshot mode&quot;" />
+          <param name="teamcity.step.mode" value="execute_always" />
+          <param name="use.custom.script" value="true" />
         </parameters>
       </runner>
     </build-runners>
@@ -114,16 +149,6 @@
           <param name="buildFailureOnMessage.messagePattern" value="Failed screenshots" />
           <param name="buildFailureOnMessage.reportOnlyFirstMatch" value="false" />
           <param name="buildFailureOnMessage.reverse" value="false" />
-        </parameters>
-      </extension>
-      <extension id="BUILD_EXT_539" type="BuildFailureOnMetric">
-        <parameters>
-          <param name="anchorBuild" value="lastSuccessful" />
-          <param name="metricKey" value="buildTestCount" />
-          <param name="metricThreshold" value="50" />
-          <param name="metricUnits" value="metricUnitsDefault" />
-          <param name="moreOrLess" value="less" />
-          <param name="withBuildAnchor" value="true" />
         </parameters>
       </extension>
     </build-extensions>

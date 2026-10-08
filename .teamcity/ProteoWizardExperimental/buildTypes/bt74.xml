@@ -57,6 +57,13 @@
         </parameters>
       </build-trigger>
     </build-triggers>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt17">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
   </settings>
 </build-type>
 
