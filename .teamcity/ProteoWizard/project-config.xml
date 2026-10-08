@@ -4,7 +4,7 @@
   <description>http://proteowizard.sourceforge.net/</description>
   <parameters>
     <param name="GitHubAuthToken" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" spec="password label='GitHubAuthToken' display='normal'" />
-    <param name="SkylineCurrentRelease" value="skyline_26_1" />
+    <param name="SkylineCurrentRelease" value="skyline_26_1_1" />
     <param name="TeamCityAuthToken" value="credentialsJSON:c2bbab87-b6a4-45a2-839b-b20bb9fc79a6" spec="password display='normal'" />
     <param name="WINDOWS_CHECKOUT_DIR" value="C:\pwiz" />
     <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
