@@ -27,6 +27,7 @@ namespace SkylineAiConnector
             this.checkGeminiCli = new System.Windows.Forms.CheckBox();
             this.checkVSCode = new System.Windows.Forms.CheckBox();
             this.checkCursor = new System.Windows.Forms.CheckBox();
+            this.checkCodex = new System.Windows.Forms.CheckBox();
             this.checkAutoConnect = new System.Windows.Forms.CheckBox();
             this.labelSetupStatus = new System.Windows.Forms.Label();
             this.groupBoxSetup = new System.Windows.Forms.GroupBox();
@@ -144,15 +145,25 @@ namespace SkylineAiConnector
             this.checkCursor.Text = "C&ursor";
             this.checkCursor.CheckedChanged += new System.EventHandler(this.checkCursor_CheckedChanged);
             //
+            // checkCodex
+            //
+            this.checkCodex.AutoSize = true;
+            this.checkCodex.Location = new System.Drawing.Point(10, 149);
+            this.checkCodex.Name = "checkCodex";
+            this.checkCodex.Size = new System.Drawing.Size(62, 19);
+            this.checkCodex.TabIndex = 5;
+            this.checkCodex.Text = "Code&x";
+            this.checkCodex.CheckedChanged += new System.EventHandler(this.checkCodex_CheckedChanged);
+            //
             // labelSetupStatus
             //
             this.labelSetupStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelSetupStatus.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.labelSetupStatus.Location = new System.Drawing.Point(8, 157);
+            this.labelSetupStatus.Location = new System.Drawing.Point(8, 182);
             this.labelSetupStatus.Name = "labelSetupStatus";
             this.labelSetupStatus.Size = new System.Drawing.Size(440, 30);
-            this.labelSetupStatus.TabIndex = 5;
+            this.labelSetupStatus.TabIndex = 6;
             //
             // groupBoxSetup
             //
@@ -164,10 +175,11 @@ namespace SkylineAiConnector
             this.groupBoxSetup.Controls.Add(this.checkGeminiCli);
             this.groupBoxSetup.Controls.Add(this.checkVSCode);
             this.groupBoxSetup.Controls.Add(this.checkCursor);
+            this.groupBoxSetup.Controls.Add(this.checkCodex);
             this.groupBoxSetup.Controls.Add(this.labelSetupStatus);
             this.groupBoxSetup.Location = new System.Drawing.Point(13, 161);
             this.groupBoxSetup.Name = "groupBoxSetup";
-            this.groupBoxSetup.Size = new System.Drawing.Size(455, 200);
+            this.groupBoxSetup.Size = new System.Drawing.Size(455, 225);
             this.groupBoxSetup.TabIndex = 5;
             this.groupBoxSetup.TabStop = false;
             this.groupBoxSetup.Text = "Register Skyline MCP server with:";
@@ -177,7 +189,7 @@ namespace SkylineAiConnector
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonClose;
-            this.ClientSize = new System.Drawing.Size(480, 377);
+            this.ClientSize = new System.Drawing.Size(480, 402);
             this.Controls.Add(this.groupBoxSetup);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.labelVersion);
@@ -211,6 +223,7 @@ namespace SkylineAiConnector
         private System.Windows.Forms.CheckBox checkGeminiCli;
         private System.Windows.Forms.CheckBox checkVSCode;
         private System.Windows.Forms.CheckBox checkCursor;
+        private System.Windows.Forms.CheckBox checkCodex;
         private System.Windows.Forms.Label labelSetupStatus;
         private System.Windows.Forms.GroupBox groupBoxSetup;
     }

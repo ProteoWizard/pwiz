@@ -49,6 +49,9 @@ REM #   --skip-tutorial-tests, so the per-commit run leaves the tutorial suite t
 REM #   the Perf/Tutorial configuration (tc-perftests.bat), and perf tests stay
 REM #   out because nothing sets perftests=on. Pass --with-tutorial-perf to run
 REM #   both: the skip is dropped and build.bat adds perftests=on.
+REM #   TestConnected is always left out (--skip-connected-tests): the "Skyline master
+REM #   and PRs TestConnected tests" configuration runs it on this build's staged
+REM #   output, and the smart trigger queues that only for remote-API changes.
 REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0
@@ -91,8 +94,11 @@ REM # build.bat turns it into perftests=on.
 set TUTORIAL_ARG=--skip-tutorial-tests
 for %%A in (%*) do if /i "%%~A"=="--with-tutorial-perf" set TUTORIAL_ARG=
 
-echo ##teamcity[progressMessage 'Skyline build.bat %* %TUTORIAL_ARG% %DISTRO_ZIPS%']
-call "%SCRIPT_DIR%\build.bat" %* %TUTORIAL_ARG% %DISTRO_ZIPS%
+REM # TestConnected stays out unconditionally - see the scope note above.
+set CONNECTED_ARG=--skip-connected-tests
+
+echo ##teamcity[progressMessage 'Skyline build.bat %* %TUTORIAL_ARG% %CONNECTED_ARG% %DISTRO_ZIPS%']
+call "%SCRIPT_DIR%\build.bat" %* %TUTORIAL_ARG% %CONNECTED_ARG% %DISTRO_ZIPS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
 

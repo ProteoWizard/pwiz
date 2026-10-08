@@ -249,6 +249,18 @@ public class SkylineConnection : IJsonToolService, IDisposable
     }
 
     /// <summary>
+    /// The process ID of the Skyline instance <see cref="TryConnect"/> would connect to, without connecting,
+    /// or null when no Skyline instance is available.
+    /// </summary>
+    public static int? GetTargetProcessId()
+    {
+        var infos = FindConnectionFiles();
+        if (TargetProcessId.HasValue && infos.Any(i => i.ProcessId == TargetProcessId.Value))
+            return TargetProcessId;
+        return infos.OrderByDescending(i => i.ConnectedAt).FirstOrDefault()?.ProcessId;
+    }
+
+    /// <summary>
     /// Get information about all available Skyline instances, including document paths
     /// queried from each live instance.
     /// </summary>
