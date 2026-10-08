@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Common</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Common</AssemblyName>
+    <Description>Runtime loader for vendor SDK assemblies. Resolves ThermoFisher.* / Clearcore2.* / MIDAC.* / etc. on demand by downloading the matching vendor_api_&lt;Vendor&gt;.7z from the manifest, extracting into a per-user cache, and Assembly.LoadFrom-ing the DLLs. Lets the installer MSI ship only pwiz-sharp's own DLLs; vendor SDKs come down on first use.</Description>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\utility\Util.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bundled 7-Zip for decrypting the password-protected vendor archives at runtime. Same
+         binaries the build-time ExtractXxxAssemblies targets use via $(SevenZaExe); ~750 KB,
+         a small price for not depending on a managed 7z library that handles AES encryption.
+
+         Per-TARGET-OS, and it has to be: 7za.exe is a Windows PE, so shipping it in a Linux payload
+         gives VendorSdkLoader a file that exists and cannot execute - the download and hash
+         check both succeed and only the extraction fails. Nothing caught this before because
+         until native SDK resolution existed, no Linux process ever extracted a vendor archive
+         at runtime; the Linux build stages its native libraries at build time instead. -->
+    <None Condition="'$(PwizTargetIsWindows)' == 'true'" Include="$(PwizLibrariesPath)\7za.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>7za.exe</Link>
+    </None>
+    <None Condition="'$(PwizTargetIsWindows)' != 'true'" Include="$(PwizLibrariesPath)\7zz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>7zz</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- VendorSdkPins.generated.cs is .gitignored. It's regenerated on every build
+       below from the vendor 7z archives' SHA-256 + commit history. The
+       Compile Remove+Include pair ensures it's in the Compile list even when
+       the file doesn't exist at project-evaluation time (fresh checkout); the
+       BeforeTargets target creates it before CoreCompile reads source. -->
+  <ItemGroup>
+    <Compile Remove="VendorSdkPins.generated.cs" />
+    <Compile Include="VendorSdkPins.generated.cs" />
+  </ItemGroup>
+
+  <!-- Runs on every build, including Linux CI agents that have no pwsh, so the generator is a
+       plain net10.0 console tool rather than a PowerShell script.
+
+       Once per build, not once per configuration of this project. One build can compile this
+       project more than once. A Release Osprey build compiles it three times: x64|Release for
+       the Osprey projects that reach it; Debug for the x64|Release vendor projects (Sciex,
+       Bruker, Mobilion), whose references to it drop Configuration and Platform because nothing
+       from pwiz-sharp is in Osprey.sln; and Release|AnyCPU for ProteowizardWrapper, which
+       pwiz_tools\Directory.Build.targets gives that configuration. Each compile used to run the
+       generator itself, so two `dotnet run`s compiled it into the same obj\Release\net10.0 at
+       once. The loser failed on a file the winner held open: VendorPinsGenerator.dll (CS2012)
+       or VendorPinsGenerator.sourcelink.json on Windows, or the apphost (MSB3030) on Linux.
+       Every configuration now asks MSBuild for the generator's RunVendorPinsGenerator target
+       with the same global properties, so MSBuild runs it once and gives the other callers the
+       cached result, waiting for it if it is still running.
+
+       Not in design-time builds. Visual Studio and the Roslyn language server run CoreCompile
+       without compiling, in build sessions of their own that share no results with a
+       command-line build, so each would start its own `dotnet run` into the same folder while a
+       real build does. The Compile Remove/Include pair above keeps the file in the Compile list
+       even before the first real build creates it. -->
+  <PropertyGroup>
+    <VendorPinsGeneratorProj>$(PwizRepoRoot)build\VendorPinsGenerator\VendorPinsGenerator.csproj</VendorPinsGeneratorProj>
+  </PropertyGroup>
+  <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile" Condition="'$(DesignTimeBuild)' != 'true'">
+    <!-- MSBuild shares the result only between requests whose global properties match, and a
+         request inherits the caller's. So set or remove every global property that differs
+         between callers, or the generator runs once per distinct set again:
+         - Configuration and Platform differ between the configurations themselves.
+         - TargetFramework, RuntimeIdentifier and SelfContained are what a ProjectReference
+           removes.
+         - ShouldUnsetParentConfigurationAndPlatform=false is passed down by the SetPlatform in
+           pwiz_tools\Directory.Build.targets on out-of-solution references, so it reaches the
+           configuration ProteowizardWrapper builds and not the others. A property added there
+           must be added here too. -->
+    <MSBuild Projects="$(VendorPinsGeneratorProj)"
+             Targets="RunVendorPinsGenerator"
+             Properties="Configuration=Release;Platform=AnyCPU"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained;ShouldUnsetParentConfigurationAndPlatform" />
+  </Target>
+
+</Project>

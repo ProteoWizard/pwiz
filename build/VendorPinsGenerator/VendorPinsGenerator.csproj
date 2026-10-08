@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>VendorPinsGenerator</RootNamespace>
+    <AssemblyName>VendorPinsGenerator</AssemblyName>
+    <!-- Build-time tool, not part of the product or solution. -->
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Called by Vendor.Common's RegenerateVendorSdkPins through the MSBuild task, which runs it
+       once per build however many configurations of Vendor.Common ask (see there). Inside a
+       build it must stay the only thing that runs the generator: a second `dotnet run` of this
+       project during the same build compiles into the same obj\Release\net10.0 and brings the
+       race back. scripts\installer\build.ps1 runs it separately, before its builds start.
+
+       `dotnet run` rather than building this project in the caller's build: the outer build's
+       restore does not cover a project nothing references, and `dotnet run` restores it. The
+       child inherits the outer build's SDK, which is correct now that the single repo-root
+       global.json governs both. Scrubbing the MSBuild environment variables either broke the
+       child (MSB4236) or removed variables that were never set.
+
+       The root is passed as $(PwizRepoDir) rather than $(PwizRepoRoot), which ends in a
+       backslash: for a checkout at a drive root "P:\" would reach the generator as P:" because
+       a backslash before a closing quote escapes it. -->
+  <Target Name="RunVendorPinsGenerator">
+    <Exec Command="dotnet run --project &quot;$(MSBuildProjectFullPath)&quot; -c Release -- &quot;$(PwizRepoDir)&quot;"
+          WorkingDirectory="$(PwizRepoRoot)"
+          StandardOutputImportance="low" />
+  </Target>
+</Project>

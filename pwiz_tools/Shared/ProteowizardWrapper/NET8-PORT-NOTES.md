@@ -211,7 +211,7 @@ already present or not needed):
   (`MsDataFileImpl.cs:200` — "we infer from WindowGroup and IM"); pwiz-sharp's
   default matches. **Not needed for the Skyline port.**
 - ~~CCS ↔ IM calculator~~ — `IIonMobilityCcsConversion` interface present
-  (`pwiz/src/MsData/IIonMobilityCcsConversion.cs`) with
+  (`pwiz/data/msdata/IIonMobilityCcsConversion.cs`) with
   `CanConvertIonMobilityAndCcs`, `IonMobilityToCcs`, `CcsToIonMobility`.
   Implemented by all 5 IM-capable vendor readers (Waters, Thermo, Mobilion,
   Bruker, Agilent). Small shape note: cpp's `canConvertIonMobilityAndCCS(units)`

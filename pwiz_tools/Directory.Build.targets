@@ -72,7 +72,7 @@
        Command-line csproj builds carry no solution configuration and are untouched.
 
        Anything added to SetPlatform becomes a global property of the whole subtree, and
-       pwiz-sharp's Vendor.Common.csproj (RegenerateVendorSdkPins) has to remove it again, or
+       pwiz\data\vendor_readers\Common\Vendor.Common.csproj (RegenerateVendorSdkPins) has to remove it again, or
        VendorPinsGenerator runs twice in one build and races itself. -->
   <Target Name="AssignOutOfSolutionProjectReferenceConfiguration"
           AfterTargets="AssignProjectConfiguration"
