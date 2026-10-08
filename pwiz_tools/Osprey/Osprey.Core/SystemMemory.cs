@@ -46,6 +46,15 @@ namespace pwiz.Osprey.Core
         public static long AvailablePhysicalBytes()
         {
             var info = GC.GetGCMemoryInfo();
+            // The load is a GC's observation, so before the first GC it reads 0 and every
+            // byte of RAM looks free - other processes' use included. A stage that sizes its
+            // lanes as the first work of a fresh process (--task SpectraCache) would budget
+            // a shared box's whole memory. One gen0 collection makes the reading real.
+            if (info.Index == 0)
+            {
+                GC.Collect(0);
+                info = GC.GetGCMemoryInfo();
+            }
             // TotalAvailableMemoryBytes is the GC's view of total physical (or
             // the cgroup limit); MemoryLoadBytes is how much is currently in
             // use. Their difference is the free headroom.

@@ -69,8 +69,11 @@ a { color: #1565c0; }
 <div class="RowType">Performance</div>
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
-<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from <nobr>--threads</nobr>.</td></tr>
-<tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td><nobr>Per-file</nobr> <nobr>main-search</nobr> threads (INNER; default: all cores), divided across files run concurrently by <nobr>--parallel-files</nobr></td></tr>
+<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>Input files run concurrently by each <nobr>per-file</nobr> stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from <nobr>--threads</nobr>.</td></tr>
+<tr><td><nobr>--parallel-files-caching</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>--task</nobr> SpectraCache caches concurrently, overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time.</td></tr>
+<tr><td><nobr>--parallel-files-scoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files scored concurrently (PerFileScoring), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
+<tr><td><nobr>--parallel-files-rescoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>re-scored</nobr> concurrently (PerFileRescoring, and the <nobr>second-pass</nobr> <nobr>per-file</nobr> phases), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
+<tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td><nobr>Per-file</nobr> <nobr>main-search</nobr> threads (INNER; default: all cores), divided across the files a scoring or <nobr>re-scoring</nobr> stage runs concurrently (<nobr>--parallel-files</nobr> or its <nobr>per-stage</nobr> forms)</td></tr>
 </table>
 <div class="RowType">Distributed / HPC</div>
 <table>

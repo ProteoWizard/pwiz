@@ -355,6 +355,52 @@ namespace pwiz.Osprey.Core
         public FileParallelism FileParallelism { get; set; } = FileParallelism.Sequential;
 
         /// <summary>
+        /// One stage's own across-files request, set by <c>--parallel-files-caching</c>,
+        /// <c>--parallel-files-scoring</c> or <c>--parallel-files-rescoring</c>; null when that
+        /// flag is absent and the stage shares <see cref="FileParallelism"/>. Like it, never part
+        /// of any identity / cache hash.
+        /// </summary>
+        public FileParallelism? CachingFileParallelism { get; set; }
+
+        /// <inheritdoc cref="CachingFileParallelism"/>
+        public FileParallelism? ScoringFileParallelism { get; set; }
+
+        /// <inheritdoc cref="CachingFileParallelism"/>
+        public FileParallelism? RescoringFileParallelism { get; set; }
+
+        /// <summary>
+        /// The across-files request one stage runs under: its own flag when given, otherwise
+        /// the shared <c>--parallel-files</c> (which is the sequential default when absent).
+        /// <paramref name="argName"/> names the argument that decided, for the log line that
+        /// reports the stage's count.
+        /// </summary>
+        public FileParallelism GetFileParallelism(FileStage stage, out string argName)
+        {
+            FileParallelism? stageRequest;
+            switch (stage)
+            {
+                case FileStage.Caching:
+                    stageRequest = CachingFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_CACHING;
+                    break;
+                case FileStage.Scoring:
+                    stageRequest = ScoringFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_SCORING;
+                    break;
+                case FileStage.Rescoring:
+                    stageRequest = RescoringFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_RESCORING;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
+            }
+            if (stageRequest.HasValue)
+                return stageRequest.Value;
+            argName = OspreyArgNames.PARALLEL_FILES;
+            return FileParallelism;
+        }
+
+        /// <summary>
         /// HPC: when true, exit after Stage 5 + reconciliation planning,
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and

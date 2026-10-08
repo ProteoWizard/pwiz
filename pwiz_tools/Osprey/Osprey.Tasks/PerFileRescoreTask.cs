@@ -511,6 +511,11 @@ namespace pwiz.Osprey.Tasks
             // available -- one Get expresses the whole dependency.
             _perFileEntries = ctx.Get<CompactedEntries>().Value;
 
+            // This stage's own concurrent-file count (--parallel-files-rescoring, else
+            // --parallel-files), not scoring's: re-scoring holds far less per file, so the two
+            // do not want the same count.
+            ResolveRescoringLanes(ctx, ctx.LogInfo);
+
             // The loader for the survivor lists FirstPassFDR released after planning
             // (issue #4526); null when this run kept the resident buffer, which leaves
             // nothing to refill and makes the deferred build below a no-op.
@@ -894,6 +899,10 @@ namespace pwiz.Osprey.Tasks
             // publishing it as RescoredEntries -- never calling Run, so Rehydrate
             // stays pure. The --task SecondPassFDR path (ExpectReconciledInput)
             // below is a different rehydrate that must NOT materialize FirstPassFDR.
+            //
+            // Every arm publishes RescoredEntries with this stage's lane count for Stage 7's
+            // per-run fold, so it is resolved first. No log line: nothing is re-scored here.
+            ResolveRescoringLanes(ctx, null);
             if (!ctx.Config.ExpectReconciledInput)
             {
                 _perFileEntries = ctx.Get<CompactedEntries>().Value;
@@ -1069,6 +1078,30 @@ namespace pwiz.Osprey.Tasks
             return true;
         }
 
+        /// <summary>
+        /// Resolves this stage's concurrent-file count (<see cref="FileStage.Rescoring"/>) onto
+        /// <see cref="RunPlan.RescoringFileParallelism"/>, which the re-score fan-out and Stage 7's
+        /// per-run fold (<see cref="RunPlan.FileLanes"/>) read. <paramref name="log"/> is null on
+        /// the rehydrate paths, which re-score nothing.
+        /// </summary>
+        private static void ResolveRescoringLanes(PipelineContext ctx, Action<string> log)
+        {
+            var config = ctx.Config;
+            // Auto, after scoring ran on lanes in this process: keep scoring's count. A fresh probe
+            // here sees the library and FirstPassFDR's products resident, and budgets with
+            // scoring's per-file estimate - many times what a re-scored file holds - so it would
+            // give re-scoring FEWER lanes than scoring had. Until re-scoring has a footprint
+            // estimate of its own, the count that fit scoring is the better bound.
+            if (config.GetFileParallelism(FileStage.Rescoring, out _).Mode == FileParallelismMode.Auto &&
+                ctx.RunPlan.ScoringFileParallelism > 1)
+            {
+                ctx.RunPlan.RescoringFileParallelism = ctx.RunPlan.ScoringFileParallelism;
+                return;
+            }
+            ctx.RunPlan.RescoringFileParallelism = PerFileScoringTask.ResolveFileParallelism(
+                config, FileStage.Rescoring, config.InputFiles?.Count ?? 0, log);
+        }
+
         // RunWorker + its helpers (AddIfNotNull, LoadOriginalRtCalibration)
         // were removed in Phase C. The stage6 worker mode
         // (--task PerFileRescoring) now routes through
@@ -1162,13 +1195,12 @@ namespace pwiz.Osprey.Tasks
             // The Stage 6 rescore is the "second per-file fan-out": each file's rescore
             // is independent (its own entry list + its own .scores-reconciled.parquet),
             // and it reuses the same RunCoelutionScoring the Stage 1-4 fan-out already
-            // runs concurrently. So run files in parallel under the SAME
-            // EffectiveFileParallelism the scoring phase resolved (set on RunPlan by
-            // PerFileScoringTask). Output is byte-identical to the sequential loop because
-            // the per-file work shares no mutable state - which regression.ps1 cannot see, as
-            // it never passes --parallel-files; SubsetPipelineTest compares the two.
-            // Per-file results land by index so the accumulation is order-free.
-            int parallelism = Math.Max(1, ctx.RunPlan.EffectiveFileParallelism);
+            // runs concurrently. So run files in parallel under this stage's own count
+            // (RunPlan.FileLanes, resolved at the top of RunRescore). Output is byte-identical
+            // to the sequential loop because the per-file work shares no mutable state - which
+            // regression.ps1 cannot see, as it never passes --parallel-files; SubsetPipelineTest
+            // compares the two. Per-file results land by index so the accumulation is order-free.
+            int parallelism = ctx.RunPlan.FileLanes;
             var counts = new (int Rescored, int GapCwt, int GapForced, bool Scored)[nTotalFiles];
             // Per-file survivor-refill failures, collected rather than thrown from inside the
             // parallel body so the actionable message survives (see RescoreOneFileStreamed).
@@ -1598,8 +1630,8 @@ namespace pwiz.Osprey.Tasks
             // files so total demand stays near core count (mirrors ProcessFile under
             // --parallel-files). The subset rescore is light, but this still avoids
             // thread oversubscription when several files re-score at once.
-            if (ctx.RunPlan.EffectiveFileParallelism > 1)
-                fileConfig.NThreads = Math.Max(1, config.NThreads / ctx.RunPlan.EffectiveFileParallelism);
+            if (ctx.RunPlan.RescoringFileParallelism > 1)
+                fileConfig.NThreads = Math.Max(1, config.NThreads / ctx.RunPlan.RescoringFileParallelism);
 
             // Build the per-file scoring subset: boundary_overrides keyed
             // by entry_id + the subset library RunCoelutionScoring scores.
@@ -1872,7 +1904,7 @@ namespace pwiz.Osprey.Tasks
             ms1Spectra = null;
             isolationWindows = null;
             rescored = null;
-            if (ctx.RunPlan.EffectiveFileParallelism <= 1)
+            if (ctx.RunPlan.RescoringFileParallelism <= 1)
                 GC.Collect();
 
             // Post-release floor: the persistent set that survives after this file's
