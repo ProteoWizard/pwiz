@@ -327,10 +327,11 @@ namespace AutoQC
 
         private static void LogCustomSkylineCmd()
         {
-            if (SkylineInstallations.HasCustomSkylineCmd)
+            // Each configuration that uses the option stores its own folder. This is the default the configuration form shows.
+            var customCmdPath = SharedBatch.Properties.Settings.Default.SkylineCustomCmdPath;
+            if (!string.IsNullOrEmpty(customCmdPath))
             {
-                ProgramLog.Info(string.Format("The Skyline installation directory option uses: {0}.",
-                    SharedBatch.Properties.Settings.Default.SkylineCustomCmdPath));
+                ProgramLog.Info(string.Format("The saved default for the Skyline installation directory option is: {0}.", customCmdPath));
             }
         }
 

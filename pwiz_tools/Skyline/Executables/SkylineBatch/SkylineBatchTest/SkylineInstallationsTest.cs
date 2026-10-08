@@ -137,7 +137,12 @@ namespace SkylineBatchTest
         {
             var noSkylineCmdDir = Path.Combine(testDir, @"NoSkylineCmd");
             Directory.CreateDirectory(noSkylineCmdDir);
-            foreach (var installDir in new[] { noSkylineCmdDir, SkylineInstallations.Skyline, @"C:\Skyline|""" })
+            // A root-relative install folder: "\Users\...\RootRelative", the test folder without "C:". Windows resolves it
+            // against the current drive, so File.Exists finds the SkylineCmd.exe created here even though the path is relative.
+            var fullInstallDir = Path.GetDirectoryName(MakeSkylineCmd(Path.Combine(testDir, @"RootRelative")));
+            Assert.IsNotNull(fullInstallDir);
+            var rootRelativeDir = fullInstallDir.Substring(Path.GetPathRoot(fullInstallDir).Length - 1);
+            foreach (var installDir in new[] { noSkylineCmdDir, SkylineInstallations.Skyline, @"C:\Skyline|""", rootRelativeDir })
             {
                 SetInstallDir(SkylineInstallations.Skyline, installDir);
                 SkylineInstallations.FindSkyline();

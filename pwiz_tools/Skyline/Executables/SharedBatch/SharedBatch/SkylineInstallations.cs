@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using Microsoft.Win32;
+using pwiz.Common.SystemUtil;
 using SharedBatch.Properties;
 
 namespace SharedBatch
@@ -114,8 +115,9 @@ namespace SharedBatch
         private static string GetSkylineCmdInDir(string installDir)
         {
             // A registry value can hold anything, and Path.Combine throws on characters not allowed in a path.
+            // Path.IsPathRooted would accept the relative forms "C:Skyline" and "\Skyline".
             if (string.IsNullOrEmpty(installDir) || installDir.IndexOfAny(Path.GetInvalidPathChars()) >= 0 ||
-                !Path.IsPathRooted(installDir))
+                !PathEx.IsPathFullyQualified(installDir))
             {
                 return null;
             }
