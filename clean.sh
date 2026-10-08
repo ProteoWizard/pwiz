@@ -1,36 +1,115 @@
 #!/bin/bash
 
-pwiz_root=$(dirname $0)
-pushd $pwiz_root > /dev/null
+# ------------------------------------------------------------------------
+# clean.sh - wipe pwiz build artifacts.
+#
+# Linux/macOS counterpart of clean.bat, and the pwiz-sharp analogue of cpp
+# pwiz's clean.sh two levels up. Same flags and same behaviour as clean.bat;
+# keep the two in step when either changes.
+#
+# Default: wipe build outputs but KEEP the two caches (.NET runtime download
+# + extracted vendor SDK assemblies). This is the mode TC runs - tcbuild.bat
+# calls clean.bat with no arguments before every build, so CI already gets a
+# from-scratch compile on every commit.
+#
+# Pass --all (or -a) to clear the caches too. Measured cost of doing so:
+#   - vendor-assemblies/ re-extract (171 MB across 7 vendors): ~2 s. Cheap,
+#     because it's a local 7z unpack of checked-in archives.
+#   - installer/cache/: a ~56 MB re-download of the .NET desktop runtime from
+#     aka.ms, and only on builds that run the installer. That's the real cost
+#     of --all, and it's a reliability cost as much as a time one - it puts an
+#     external endpoint on the build's critical path.
+# Both caches are content-addressed (vendor archives by SHA-256 via the pins
+# table, the runtime by a fixed versioned URL), so neither can drift
+# commit-to-commit. --all is a paranoia reset: better suited to a nightly
+# than to every commit.
+#
+# The list below tracks pwiz-sharp/.gitignore: everything the build writes is
+# gitignored, so that file is the spec for what belongs here. Two gitignored
+# entries are deliberately kept (see "NOT touched" below).
+#
+# What gets removed (always):
+#   - bin/ and obj/ under every project (dotnet build outputs, AOT publish
+#     output)
+#   - TestResults/ at every level - the top-level one plus the per-project
+#     dirs `dotnet test` drops in pwiz/test/*/ (run logs + dotCover snapshots)
+#   - installer/build/ (packaged output + the version.txt sidecar that
+#     Installer.Tests reads) and installer/staging/ (payload staging tree)
+#   - examples/**/build/ and pwiz_tools/BiblioSpec/native/**/build/ (cmake build
+#     trees - the AOT example, MascotShim, etc.)
+#   - pwiz/data/vendor_readers/Common/VendorSdkPins.generated.cs (regenerated on every
+#     build from the vendor 7z archives' SHA-256 + git history)
+#
+# What gets removed only with --all:
+#   - installer/cache/ (~56 MB .NET runtime installer; re-downloaded by the
+#     installer build on the next run if missing)
+#   - vendor-assemblies/ (DLLs extracted from the vendor 7z archives by the
+#     .csproj ExtractVendorAssemblies targets - one top-level dir, per
+#     $(PwizVendorAssembliesPath); re-extracted on the next dotnet build)
+#
+# What is NOT touched, ever:
+#   - vendor-archives/ - looks like a cache, is NOT: those archives are
+#     TRACKED IN GIT and are build inputs. Deleting them is unrecoverable
+#     without a fresh checkout. Do not add it to the --all branch.
+#   - build/ at the top level - also tracked source (MSBuild .targets and the
+#     VendorPinsGenerator/AgilentPatcher projects). This is why the cmake
+#     sweep below is scoped to named subtrees instead of walking for any dir
+#     called "build".
+#   - Directory.Build.user.props (per-user "I agreed to vendor licenses" flag;
+#     wiping it would force the user to re-run i-agree-to-the-vendor-licenses)
+#   - .vs/ and *.user/*.suo files (IDE local state; not build output)
+#
+# Usage:
+#   ./clean.sh          Wipe build outputs, keep caches (default).
+#   ./clean.sh --all    Wipe caches too (TC-equivalent full reset).
+#   ./clean.sh -a       Short alias.
+# ------------------------------------------------------------------------
 
-echo "Cleaning project..."
-if (ls build-*-* > /dev/null 2>&1); then rm -fr build-*-*; fi;
-if (ls libraries/boost_*_*_? > /dev/null 2>&1); then rm -fr libraries/boost_*_*_?; fi;
-if (ls libraries/msparser_*_linux64 > /dev/null 2>&1); then rm -fr libraries/msparser_*_linux64; fi;
-if [ -d libraries/boost-build/src/engine/bin ]; then rm -fr libraries/boost-build/src/engine/bin; fi;
-if [ -d libraries/boost-build/src/engine/bootstrap ]; then rm -fr libraries/boost-build/src/engine/bootstrap; fi;
-if [ -d libraries/gd-2.0.33 ]; then rm -fr libraries/gd-2.0.33; fi;
-if [ -d libraries/zlib-1.2.3 ]; then rm -fr libraries/zlib-1.2.3; fi;
-if [ -d libraries/libgd-2.1.0alpha ]; then rm -fr libraries/libgd-2.1.0alpha; fi;
-if [ -d libraries/libpng-1.5.6 ]; then rm -fr libraries/libpng-1.5.6; fi;
-if [ -d libraries/freetype-VER-2-13-3 ]; then rm -fr libraries/freetype-VER-2-13-3; fi;
-if [ -d libraries/hdf5-1.8.7 ]; then rm -fr libraries/hdf5-1.8.7; fi;
-if [ -d libraries/fftw-3.1.2 ]; then rm -fr libraries/fftw-3.1.2; fi;
-if [ -d libraries/expat-2.0.1 ]; then rm -fr libraries/expat-2.0.1; fi;
-if [ -f libraries/libfftw3-3.def ]; then rm -f libraries/libfftw3-3.def; fi;
-if [ -f libraries/libfftw3-3.dll ]; then rm -f libraries/libfftw3-3.dll; fi;
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$script_dir" || exit 1
 
-if [ -f pwiz/Version.cpp ]; then rm -f pwiz/Version.cpp; fi;
-if [ -f pwiz/data/msdata/Version.cpp ]; then rm -f pwiz/data/msdata/Version.cpp; fi;
-if [ -f pwiz/data/tradata/Version.cpp ]; then rm -f pwiz/data/tradata/Version.cpp; fi;
-if [ -f pwiz/data/identdata/Version.cpp ]; then rm -f pwiz/data/identdata/Version.cpp; fi;
-if [ -f pwiz/data/proteome/Version.cpp ]; then rm -f pwiz/data/proteome/Version.cpp; fi;
-if [ -f pwiz/analysis/Version.cpp ]; then rm -f pwiz/analysis/Version.cpp; fi;
+clean_cache=0
+case "${1:-}" in
+    --all|-a) clean_cache=1 ;;
+    "")       ;;
+    *)        echo "clean.sh: unknown argument '$1' (expected --all or -a)" >&2; exit 2 ;;
+esac
 
-if [ -d pwiz/data/vendor_readers/ABI/T2D/Reader_ABI_T2D_Test.data ]; then rm -fr pwiz/data/vendor_readers/ABI/T2D/Reader_ABI_T2D_Test.data; fi;
+echo "Cleaning pwiz build artifacts..."
 
-git clean -f -x pwiz/data/vendor_readers
-git clean -f -x pwiz_tools/BiblioSpec/tests/inputs
-git clean -f -x pwiz_tools/BiblioSpec/tests/output
+# bin/, obj/ and TestResults/ under every pwiz project. -prune stops the walk from
+# descending into a tree it is about to delete (which would otherwise make find
+# complain about vanished paths). No tracked pwiz file lives under a dir with any of
+# these names, so the sweep is safe. Scoped to the pwiz subtrees: pwiz_tools/Shared/Lib
+# keeps tracked binaries under bin-like dirs, and Skyline has its own clean scripts.
+for subtree in pwiz build examples scripts pwiz_tools/BiblioSpec pwiz_tools/Commandline pwiz_tools/MSConvertGUI pwiz_tools/SeeMS pwiz_tools/BullseyeSharp; do
+    if [ -d "$subtree" ]; then
+        find "$subtree" -type d \( -name bin -o -name obj -o -name TestResults \) -prune -exec rm -rf {} +
+    fi
+done
+rm -rf TestResults
 
-popd > /dev/null
+# Top-level output trees.
+rm -rf scripts/installer/build scripts/installer/staging
+
+# CMake build trees. Scoped to these two subtrees on purpose: the top-level
+# build/ is tracked source, so a bare "find . -name build" would delete it.
+for subtree in examples pwiz_tools/BiblioSpec/native; do
+    if [ -d "$subtree" ]; then
+        find "$subtree" -type d -name build -prune -exec rm -rf {} +
+    fi
+done
+
+# Vendor SDK pins are regenerated on every build (build/VendorPinsGenerator is
+# invoked as a pre-CoreCompile target in Vendor.Common.csproj).
+rm -f pwiz/data/vendor_readers/Common/VendorSdkPins.generated.cs
+
+# Caches: preserved by default; wiped only with --all. NB vendor-assemblies is a
+# single top-level dir ($(PwizVendorAssembliesPath)), not a per-project one, and
+# vendor-archives/ next to it is tracked - do not add it here.
+if [ "$clean_cache" -eq 1 ]; then
+    rm -rf scripts/installer/cache vendor-assemblies
+    echo "Clean complete (caches wiped too)."
+else
+    echo "Clean complete (caches preserved)."
+fi

@@ -11,7 +11,7 @@ Release x64 from Visual Studio):
      NuGet doc-comment XML files, the non-Windows native runtimes and any stray
      RID-named publish folder.
   3. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
-     the pwiz-sharp installer under pwiz-sharp\installer\cache\).
+     the ProteoWizard installer under scripts\installer\cache\).
   4. Compile Setup.iss twice: the default variant bundling the runtime and the
      NoNetRuntime variant that only checks for it.
   5. Report.
@@ -54,7 +54,7 @@ $ErrorActionPreference = 'Stop'
 $installerDir = $PSScriptRoot
 $skylineDir   = (Resolve-Path (Join-Path $installerDir '..\..')).Path
 $repoRoot     = (Resolve-Path (Join-Path $skylineDir '..\..')).Path
-$pwizSharpInstaller = Join-Path $repoRoot 'pwiz-sharp\installer'
+$pwizSharpInstaller = Join-Path $repoRoot 'scripts\installer'
 if (-not $OutputDir) { $OutputDir = Join-Path $skylineDir 'bin\installer' }
 # Absolute, because it is handed to ISCC, which resolves relative paths against the script.
 $OutputDir = [System.IO.Path]::GetFullPath($OutputDir)

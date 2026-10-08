@@ -217,11 +217,11 @@
          ProcessStartInfo expecting them to sit next to Skyline in the bin dir. Reference
          the projects so they build first; the _DeployBundledToolOutputs target below deploys
          their outputs. -->
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
+    <ProjectReference Include="..\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
+    <ProjectReference Include="..\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
@@ -315,7 +315,7 @@
        _DeployBundledToolOutputs target above deploys its output. net8-only: the net472 build gets
        the native msconvert from the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\MsConvert.csproj"
+    <ProjectReference Include="..\Commandline\MsConvert\src\MsConvert.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
@@ -329,7 +329,7 @@
        the legacy BullseyeSharp.exe from pwiz_tools\Skyline\BullseyeSharp\BullseyeSharp.csproj via
        the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\BullseyeSharp.csproj"
+    <ProjectReference Include="..\BullseyeSharp\src\BullseyeSharp.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
@@ -499,7 +499,7 @@
        pwiz.CLI.Bruker.PrmScheduling assembly. P/Invokes prmscheduler.dll shipped
        inside pwiz. Only wired for net8; net472 keeps the old C++/CLI reference. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\pwiz\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj" />
+    <ProjectReference Include="..\..\pwiz\utility\bindings\timstof_prm_scheduler\Bruker.PrmScheduling.csproj" />
   </ItemGroup>
 
   <!-- Build batch hooks (preserved from legacy) - PreBuildEvents.bat is what

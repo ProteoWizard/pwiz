@@ -9,7 +9,7 @@
        That silent-success mode is the whole reason this file exists; neither check below is
        expected to fire on a same-platform build.
 
-       Imported from pwiz-sharp/Directory.Build.targets and pwiz_tools/Directory.Build.targets, so
+       Imported from the root Directory.Build.targets and pwiz_tools/Directory.Build.targets, so
        every project in both trees is covered without a per-project opt-in. -->
 
   <Import Project="$(MSBuildThisFileDirectory)PwizTargetPlatform.props" Condition="'$(PwizTargetPlatformPropsImported)' != 'true'" />

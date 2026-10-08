@@ -25,14 +25,19 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-using pwiz.CLI.cv;
-using pwiz.CLI.msdata;
-using pwiz.CLI.proteome;
-using pwiz.CLI.chemistry;
-using pwiz.Common.Collections;
-using ZedGraph;
+using Pwiz.Data.Common.Cv;
+using Pwiz.Data.MsData;
+using Pwiz.Data.MsData.Instruments;
+using Pwiz.Data.MsData.Spectra;
+using Pwiz.Data.MsData.Readers;
+using Pwiz.Data.MsData.Mzml;
+using Pwiz.Util.Proteome;
+using Pwiz.Util.Chemistry;
 
-namespace seems
+using ZedGraph;
+using pwiz.Common.Collections;
+
+namespace Pwiz.SeeMS
 {
     public interface IAnnotation
     {
@@ -171,9 +176,9 @@ namespace seems
         {
             {CVID.MS_ion_trap, new MZTolerance(0.5)},
             {CVID.MS_quadrupole, new MZTolerance(0.5)},
-            {CVID.MS_FT_ICR, new MZTolerance(10, MZTolerance.Units.PPM)},
-            {CVID.MS_orbitrap, new MZTolerance(15, MZTolerance.Units.PPM)},
-            {CVID.MS_TOF, new MZTolerance(25, MZTolerance.Units.PPM)},
+            {CVID.MS_FT_ICR, new MZTolerance(10, MZToleranceUnits.Ppm)},
+            {CVID.MS_orbitrap, new MZTolerance(15, MZToleranceUnits.Ppm)},
+            {CVID.MS_TOF, new MZTolerance(25, MZToleranceUnits.Ppm)},
         };
 
         static Map<char, double> immoniumIonByResidue;
@@ -183,15 +188,15 @@ namespace seems
             var immoniumMod = new Formula("C-1O-1H1");
             foreach (AminoAcid aa in Enum.GetValues(typeof(AminoAcid)))
             {
-                var record = AminoAcidInfo.record(aa);
-                immoniumIonByResidue[record.symbol] = (record.residueFormula + immoniumMod).monoisotopicMass();
+                var record = AminoAcidInfo.Record(aa);
+                immoniumIonByResidue[record.Symbol] = (record.ResidueFormula + immoniumMod).MonoisotopicMass;
             }
         }
 
         Panel panel = annotationPanels.peptideFragmentationPanel;
         string sequence;
         int min, max;
-        MZTolerance manualTolerance;
+        MZTolerance? manualTolerance;
         MZTolerance tolerance;
         int precursorMassType; // 0=mono, 1=avg
         int fragmentMassType; // 0=mono, 1=avg
@@ -207,7 +212,7 @@ namespace seems
             sequence = "PEPTIDE";
             min = 1;
             max = 1;
-            tolerance = manualTolerance = new MZTolerance(0.5);
+            manualTolerance = tolerance = new MZTolerance(0.5);
             precursorMassType = 0;
             fragmentMassType = 0;
             showLadders = true;
@@ -267,7 +272,7 @@ namespace seems
 
         public PeptideFragmentationAnnotation (string sequence,
                                                int minCharge, int maxCharge,
-                                               MZTolerance tolerance,
+                                               MZTolerance? tolerance,
                                                IonSeries ionSeries,
                                                bool showFragmentationLadders,
                                                bool showMissedFragments,
@@ -289,8 +294,8 @@ namespace seems
             annotationPanels.precursorMassTypeComboBox.SelectedIndex = 0;
             annotationPanels.fragmentMassTypeComboBox.SelectedIndex = 0;
 
-            if (!ReferenceEquals(tolerance, null))
-                annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex = (int) tolerance.units;
+            if (tolerance != null)
+                annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex = (int) tolerance.Value.Units;
             else
                 annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex = 0;
 
@@ -425,9 +430,8 @@ namespace seems
                 manualTolerance = null;
             else
             {
-                manualTolerance = new MZTolerance();
-                manualTolerance.value = Convert.ToDouble(annotationPanels.fragmentToleranceTextBox.Text);
-                manualTolerance.units = (MZTolerance.Units) annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex;
+                manualTolerance = new MZTolerance(Convert.ToDouble(annotationPanels.fragmentToleranceTextBox.Text),
+                                                  (MZToleranceUnits) annotationPanels.fragmentToleranceUnitsComboBox.SelectedIndex);
             }
 
             OnOptionsChanged(this, EventArgs.Empty);
@@ -577,8 +581,8 @@ namespace seems
         private void addFragmentationSummary (GraphObjList list, pwiz.MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
         {
             int ionSeriesChargeState = min;
-            string sequence = peptide.sequence;
-            ModificationMap modifications = peptide.modifications();
+            string sequence = peptide.Sequence;
+            ModificationMap modifications = peptide.Modifications;
 
             // Select the color for the ion series.
             Color topSeriesColor;
@@ -616,17 +620,17 @@ namespace seems
                 double bottomSeriesFragmentMZ = 0.0;
                 switch (topSeries)
                 {
-                    case "a": topSeriesFragmentMZ = fragmentation.a(i, ionSeriesChargeState); break;
-                    case "b": topSeriesFragmentMZ = fragmentation.b(i, ionSeriesChargeState); break;
-                    case "c": if (i < sequence.Length) topSeriesFragmentMZ = fragmentation.c(i, ionSeriesChargeState); break;
+                    case "a": topSeriesFragmentMZ = fragmentation.A(i, ionSeriesChargeState); break;
+                    case "b": topSeriesFragmentMZ = fragmentation.B(i, ionSeriesChargeState); break;
+                    case "c": if (i < sequence.Length) topSeriesFragmentMZ = fragmentation.C(i, ionSeriesChargeState); break;
                     default: continue;
                 }
                 switch (bottomSeries)
                 {
-                    case "x": if (i < sequence.Length) bottomSeriesFragmentMZ = fragmentation.x(i, ionSeriesChargeState); break;
-                    case "y": bottomSeriesFragmentMZ = fragmentation.y(i, ionSeriesChargeState); break;
-                    case "z": bottomSeriesFragmentMZ = fragmentation.z(i, ionSeriesChargeState); break;
-                    case "z*": bottomSeriesFragmentMZ = fragmentation.zRadical(i, ionSeriesChargeState); break;
+                    case "x": if (i < sequence.Length) bottomSeriesFragmentMZ = fragmentation.X(i, ionSeriesChargeState); break;
+                    case "y": bottomSeriesFragmentMZ = fragmentation.Y(i, ionSeriesChargeState); break;
+                    case "z": bottomSeriesFragmentMZ = fragmentation.Z(i, ionSeriesChargeState); break;
+                    case "z*": bottomSeriesFragmentMZ = fragmentation.ZRadical(i, ionSeriesChargeState); break;
                     default: continue;
                 }
 
@@ -644,7 +648,7 @@ namespace seems
                 StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
 
                 // Figure out if any mods are there on this amino acid
-                double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+                double deltaMass = modifications[i - 1].MonoisotopicDeltaMass;
 
                 // Round the mod mass and append it to the amino acid as a string
                 if (deltaMass > 0.0)
@@ -705,8 +709,8 @@ namespace seems
         private void addIonSeries (GraphObjList list, pwiz.MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
         {
             int ionSeriesChargeState = min;
-            string sequence = peptide.sequence;
-            ModificationMap modifications = peptide.modifications();
+            string sequence = peptide.Sequence;
+            ModificationMap modifications = peptide.Modifications;
 
             // Select the color for the ion series.
             Color topSeriesColor;
@@ -745,9 +749,9 @@ namespace seems
                 // Figure out the right mz for this fragmentaion site
                 switch (topSeries)
                 {
-                    case "a": rightPoint = fragmentation.a(i, ionSeriesChargeState); break;
-                    case "b": rightPoint = fragmentation.b(i, ionSeriesChargeState); break;
-                    case "c": if (i < sequence.Length) rightPoint = fragmentation.c(i, ionSeriesChargeState); break;
+                    case "a": rightPoint = fragmentation.A(i, ionSeriesChargeState); break;
+                    case "b": rightPoint = fragmentation.B(i, ionSeriesChargeState); break;
+                    case "c": if (i < sequence.Length) rightPoint = fragmentation.C(i, ionSeriesChargeState); break;
                     default: break;
                 }
 
@@ -782,7 +786,7 @@ namespace seems
                     // Add a text box in the middle of the left and right mz boundaries
                     StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
                     // Figure out if any mods are there on this amino acid
-                    double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+                    double deltaMass = modifications[i - 1].MonoisotopicDeltaMass;
                     // Round the mod mass and append it to the amino acid as a string
                     if (deltaMass > 0.0)
                     {
@@ -807,10 +811,10 @@ namespace seems
                 // Get the right mz for this series
                 switch (bottomSeries)
                 {
-                    case "x": if (i < sequence.Length) rightPoint = fragmentation.x(i, ionSeriesChargeState); break;
-                    case "y": rightPoint = fragmentation.y(i, ionSeriesChargeState); break;
-                    case "z": rightPoint = fragmentation.z(i, ionSeriesChargeState); break;
-                    case "z*": rightPoint = fragmentation.zRadical(i, ionSeriesChargeState); break;
+                    case "x": if (i < sequence.Length) rightPoint = fragmentation.X(i, ionSeriesChargeState); break;
+                    case "y": rightPoint = fragmentation.Y(i, ionSeriesChargeState); break;
+                    case "z": rightPoint = fragmentation.Z(i, ionSeriesChargeState); break;
+                    case "z*": rightPoint = fragmentation.ZRadical(i, ionSeriesChargeState); break;
                     default: rightPoint = 0.0; break;
                 }
 
@@ -845,7 +849,7 @@ namespace seems
                     // Add the text label containing the amino acid
                     StringBuilder label = new StringBuilder(sequence[sequence.Length - i].ToString());
                     // Figure out if any mods are there on this amino acid
-                    double deltaMass = modifications[sequence.Length - i].monoisotopicDeltaMass();
+                    double deltaMass = modifications[sequence.Length - i].MonoisotopicDeltaMass;
                     // Round the mod mass and append it to the amino acid as a string
                     if (deltaMass > 0.0)
                     {
@@ -884,8 +888,8 @@ namespace seems
             try
             {
                 peptide = new Peptide(sequence,
-                    pwiz.CLI.proteome.ModificationParsing.ModificationParsing_Auto,
-                    pwiz.CLI.proteome.ModificationDelimiter.ModificationDelimiter_Brackets);
+                    ModificationParsing.Auto,
+                    ModificationDelimiter.Brackets);
             }
             catch (Exception)
             {
@@ -897,18 +901,18 @@ namespace seems
             if (ReferenceEquals(manualTolerance, null))
             {
                 MZTolerance maxTolerance = new MZTolerance(0.5);
-                foreach (var scan in spectrum.scanList.scans.Where(o => o.instrumentConfiguration != null))
+                foreach (var scan in spectrum.ScanList.Scans.Where(o => o.InstrumentConfiguration != null))
                 {
                     // assume the last analyzer of the instrument configuration is responsible for the resolution
-                    if (scan.instrumentConfiguration.componentList.Count(o => o.type == ComponentType.ComponentType_Analyzer) == 0)
+                    if (scan.InstrumentConfiguration.ComponentList.Count(o => o.Type == ComponentType.Analyzer) == 0)
                         continue;
-                    var analyzer = scan.instrumentConfiguration.componentList.Last(o => o.type == ComponentType.ComponentType_Analyzer).cvParamChild(CVID.MS_mass_analyzer_type);
-                    if (analyzer.cvid == CVID.CVID_Unknown)
+                    var analyzer = scan.InstrumentConfiguration.ComponentList.Last(o => o.Type == ComponentType.Analyzer).CvParamChild(CVID.MS_mass_analyzer_type);
+                    if (analyzer.Cvid == CVID.CVID_Unknown)
                         continue;
 
-                    MZTolerance analyzerTolerance = null;
+                    MZTolerance? analyzerTolerance = null;
                     foreach (var kvp in mzToleranceByAnalyzer)
-                        if (CV.cvIsA(analyzer.cvid, kvp.Key))
+                        if (CvLookup.CvIsA(analyzer.Cvid, kvp.Key))
                         {
                             analyzerTolerance = kvp.Value;
                             break;
@@ -917,27 +921,27 @@ namespace seems
                     if (analyzerTolerance == null)
                         continue;
 
-                    if (maxTolerance.units == analyzerTolerance.units)
+                    if (maxTolerance.Units == analyzerTolerance.Value.Units)
                     {
-                        if (maxTolerance.value < analyzerTolerance.value)
-                            maxTolerance = analyzerTolerance;
+                        if (maxTolerance.Value < analyzerTolerance.Value.Value)
+                            maxTolerance = analyzerTolerance.Value;
                     }
-                    else if (analyzerTolerance.units == MZTolerance.Units.PPM)
-                        maxTolerance = analyzerTolerance;
+                    else if (analyzerTolerance.Value.Units == MZToleranceUnits.Ppm)
+                        maxTolerance = analyzerTolerance.Value;
                 }
                 tolerance = maxTolerance;
             }
             else
-                tolerance = manualTolerance;
+                tolerance = manualTolerance.Value;
 
             if (ionSeriesIsEnabled(IonSeries.Auto))
-                foreach (var precursor in spectrum.precursors)
-                    foreach (var method in precursor.activation.cvParamChildren(CVID.MS_dissociation_method))
+                foreach (var precursor in spectrum.Precursors)
+                    foreach (var method in precursor.Activation.Params.CvParamChildren(CVID.MS_dissociation_method))
                     {
-                        if (!ionSeriesByDissociationMethod.Contains(method.cvid))
+                        if (!ionSeriesByDissociationMethod.Contains(method.Cvid))
                             ionSeries = IonSeries.All;
                         else
-                            ionSeries |= ionSeriesByDissociationMethod[method.cvid];
+                            ionSeries |= ionSeriesByDissociationMethod[method.Cvid];
                     }
 
             int nSeries = (ionSeriesIsEnabled(IonSeries.a) ? 1 : 0) +
@@ -950,9 +954,9 @@ namespace seems
 
             showLadders = showLadders && nSeries < 2 && cSeries < 2;
 
-            string unmodifiedSequence = peptide.sequence;
+            string unmodifiedSequence = peptide.Sequence;
             int sequenceLength = unmodifiedSequence.Length;
-            Fragmentation fragmentation = peptide.fragmentation(fragmentMassType == 0 ? true : false, true);
+            Fragmentation fragmentation = peptide.Fragmentation(fragmentMassType == 0 ? true : false, true);
 
             for (int i = 1; i <= sequenceLength; ++i)
             {
@@ -961,16 +965,16 @@ namespace seems
 
                 for (int charge = min; charge <= max; ++charge)
                 {
-                    if (ionSeriesIsEnabled(IonSeries.a)) addFragment(list, points, "a", i, charge, fragmentation.a(i, charge));
-                    if (ionSeriesIsEnabled(IonSeries.b)) addFragment(list, points, "b", i, charge, fragmentation.b(i, charge));
-                    if (ionSeriesIsEnabled(IonSeries.y)) addFragment(list, points, "y", i, charge, fragmentation.y(i, charge));
-                    if (ionSeriesIsEnabled(IonSeries.z)) addFragment(list, points, "z", i, charge, fragmentation.z(i, charge));
-                    if (ionSeriesIsEnabled(IonSeries.zRadical)) addFragment(list, points, "z*", i, charge, fragmentation.zRadical(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.a)) addFragment(list, points, "a", i, charge, fragmentation.A(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.b)) addFragment(list, points, "b", i, charge, fragmentation.B(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.y)) addFragment(list, points, "y", i, charge, fragmentation.Y(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.z)) addFragment(list, points, "z", i, charge, fragmentation.Z(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.zRadical)) addFragment(list, points, "z*", i, charge, fragmentation.ZRadical(i, charge));
 
                     if (i < sequenceLength)
                     {
-                        if (ionSeriesIsEnabled(IonSeries.c)) addFragment(list, points, "c", i, charge, fragmentation.c(i, charge));
-                        if (ionSeriesIsEnabled(IonSeries.x)) addFragment(list, points, "x", i, charge, fragmentation.x(i, charge));
+                        if (ionSeriesIsEnabled(IonSeries.c)) addFragment(list, points, "c", i, charge, fragmentation.C(i, charge));
+                        if (ionSeriesIsEnabled(IonSeries.x)) addFragment(list, points, "x", i, charge, fragmentation.X(i, charge));
                     }
                 }
             }
@@ -988,20 +992,20 @@ namespace seems
             // fill peptide info table
             annotationPanels.peptideInfoGridView.Rows.Clear();
 
-            if (spectrum.precursors.Count > 0 &&
-                spectrum.precursors[0].selectedIons.Count > 0 &&
-                spectrum.precursors[0].selectedIons[0].hasCVParam(CVID.MS_selected_ion_m_z) &&
-                spectrum.precursors[0].selectedIons[0].hasCVParam(CVID.MS_charge_state))
+            if (spectrum.Precursors.Count > 0 &&
+                spectrum.Precursors[0].SelectedIons.Count > 0 &&
+                spectrum.Precursors[0].SelectedIons[0].Params.HasCVParam(CVID.MS_selected_ion_m_z) &&
+                spectrum.Precursors[0].SelectedIons[0].Params.HasCVParam(CVID.MS_charge_state))
             {
-                double selectedMz = (double) spectrum.precursors[0].selectedIons[0].cvParam(CVID.MS_selected_ion_m_z).value;
-                int chargeState = (int) spectrum.precursors[0].selectedIons[0].cvParam(CVID.MS_charge_state).value;
-                double calculatedMass = (precursorMassType == 0 ? peptide.monoisotopicMass(chargeState) : peptide.molecularWeight(chargeState)) * chargeState;
+                double selectedMz = spectrum.Precursors[0].SelectedIons[0].Params.CvParam(CVID.MS_selected_ion_m_z).ValueAs<double>();
+                int chargeState = spectrum.Precursors[0].SelectedIons[0].Params.CvParam(CVID.MS_charge_state).ValueAs<int>();
+                double calculatedMass = (precursorMassType == 0 ? peptide.MonoisotopicMass(chargeState) : peptide.MolecularWeight(chargeState)) * chargeState;
                 double observedMass = selectedMz * chargeState;
                 annotationPanels.peptideInfoGridView.Rows.Add("Calculated mass:", calculatedMass, "Mass error (daltons):", observedMass - calculatedMass);
                 annotationPanels.peptideInfoGridView.Rows.Add("Observed mass:", observedMass, "Mass error (ppm):", ((observedMass - calculatedMass) / calculatedMass) * 1e6);
             }
             else
-                annotationPanels.peptideInfoGridView.Rows.Add("Calculated neutral mass:", precursorMassType == 0 ? peptide.monoisotopicMass() : peptide.molecularWeight());
+                annotationPanels.peptideInfoGridView.Rows.Add("Calculated neutral mass:", precursorMassType == 0 ? peptide.MonoisotopicMass() : peptide.MolecularWeight());
 
             annotationPanels.peptideInfoGridView.Columns[1].DefaultCellStyle.Format = "F4";
             foreach (DataGridViewRow row in annotationPanels.peptideInfoGridView.Rows)
@@ -1085,14 +1089,14 @@ namespace seems
 
                 if (ionSeriesIsEnabled(IonSeries.a))
                     for (int charge = min; charge <= max; ++charge)
-                        values.Add(fragmentation.a(i, charge));
+                        values.Add(fragmentation.A(i, charge));
                 if (ionSeriesIsEnabled(IonSeries.b))
                     for (int charge = min; charge <= max; ++charge)
-                        values.Add(fragmentation.b(i, charge));
+                        values.Add(fragmentation.B(i, charge));
                 if (ionSeriesIsEnabled(IonSeries.c))
                     for (int charge = min; charge <= max; ++charge)
                         if (i < sequenceLength)
-                            values.Add(fragmentation.c(i, charge));
+                            values.Add(fragmentation.C(i, charge));
                         else
                             values.Add("");
 
@@ -1103,18 +1107,18 @@ namespace seems
                 if (ionSeriesIsEnabled(IonSeries.x))
                     for (int charge = min; charge <= max; ++charge)
                         if (i > 1)
-                            values.Add(fragmentation.x(cTerminalLength, charge));
+                            values.Add(fragmentation.X(cTerminalLength, charge));
                         else
                             values.Add("");
                 if (ionSeriesIsEnabled(IonSeries.y))
                     for (int charge = min; charge <= max; ++charge)
-                        values.Add(fragmentation.y(cTerminalLength, charge));
+                        values.Add(fragmentation.Y(cTerminalLength, charge));
                 if (ionSeriesIsEnabled(IonSeries.z))
                     for (int charge = min; charge <= max; ++charge)
-                        values.Add(fragmentation.z(cTerminalLength, charge));
+                        values.Add(fragmentation.Z(cTerminalLength, charge));
                 if (ionSeriesIsEnabled(IonSeries.zRadical))
                     for (int charge = min; charge <= max; ++charge)
-                        values.Add(fragmentation.zRadical(cTerminalLength, charge));
+                        values.Add(fragmentation.ZRadical(cTerminalLength, charge));
                 row.SetValues(values.ToArray());
             }
 
