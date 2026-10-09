@@ -1411,6 +1411,27 @@ public class BuildTests
             referenceCheckName: "diann2-parquet.check");
     }
 
+    /// <summary>
+    /// Spectronaut's "Skyline" parquet export: DIA-NN's report-lib.parquet / report.parquet
+    /// column set spelled with underscores (plus <c>File_Name</c>, <c>RT_End</c>, no
+    /// <c>Fragment_Charge</c>, string <c>Proteotypic</c>/<c>Q_Value</c>, NaN <c>IM</c>),
+    /// mods written as Unimod titles (<c>[Carbamidomethyl (C)]</c>), and a footer written by
+    /// current Arrow, which stock Parquet.Net 4.25 cannot read. The subset covers charges 1-4,
+    /// N-terminal Acetyl merged with Oxidation/Carbamidomethyl on residue 1, a non-proteotypic
+    /// precursor, three runs and two report-only precursors.
+    /// </summary>
+    [TestMethod]
+    public void Spectronaut_Parquet()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Spectronaut_Parquet),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "spectronaut-parquet/sgs-sample1_Skyline-Library.parquet" },
+            outputBlibName: "spectronaut-parquet.blib",
+            referenceCheckName: "spectronaut-parquet.check");
+    }
+
     /// <summary>Jamfile.jam:344 — <c>paser-hela-dia</c>.</summary>
     [TestMethod]
     public void Paser_HelaDia()
