@@ -174,15 +174,17 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// WinForms scales toolbar and menu images with the display DPI but not a Button's Image,
-        /// which stays the 96-DPI bitmap from the designer. Scale them once, when the form loads;
-        /// an image shared by several buttons is scaled once and shared again (issue #4599).
+        /// which stays the 96-DPI bitmap from the designer, nor the ImageList a Button draws its
+        /// glyph from by ImageKey. Scale them once, when the form loads; an image or list shared
+        /// by several buttons is scaled once and shared again (issue #4599).
         /// </summary>
-        private static void ScaleButtonImages(Control root)
+        public static void ScaleButtonImages(Control root)
         {
             float factor = DpiUtil.GetFactor(root);
             if (Math.Abs(factor - 1) < 0.01f)
                 return;
             var scaled = new Dictionary<Image, Image>();
+            var scaledLists = new HashSet<ImageList>();
             var pending = new Stack<Control>();
             pending.Push(root);
             while (pending.Count > 0)
@@ -191,9 +193,17 @@ namespace pwiz.Skyline.Util
                 foreach (Control child in control.Controls)
                     pending.Push(child);
                 // Exact type only: Button subclasses (e.g. LiteDropDownList) manage their own images
-                if (control.GetType() != typeof(Button) || ((Button) control).Image == null)
+                if (control.GetType() != typeof(Button))
                     continue;
                 var button = (Button) control;
+                if (button.ImageList != null)
+                {
+                    if (scaledLists.Add(button.ImageList))
+                        ImageListScaler.ScaleToDpi(button, button.ImageList);
+                    continue;
+                }
+                if (button.Image == null)
+                    continue;
                 if (!scaled.TryGetValue(button.Image, out var image))
                 {
                     var size = new Size((int) Math.Round(button.Image.Width * factor), (int) Math.Round(button.Image.Height * factor));

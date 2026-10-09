@@ -95,6 +95,8 @@ namespace pwiz.Skyline.Util
         {
             base.OnLoad(e);
 
+            FormEx.ScaleButtonImages(this);
+
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
             GetModeUIHelper().OnLoad(this);
 
