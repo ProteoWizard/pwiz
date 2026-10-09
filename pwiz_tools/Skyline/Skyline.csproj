@@ -35,6 +35,7 @@
          downgrades that net8's runtime supersedes safely. -->
     <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <!-- Parquet.Net, as pwiz's patched build: see ..\Shared\Lib\Parquet\ParquetNet.targets -->
     <ReferenceParquetNet>true</ReferenceParquetNet>
     <!-- Skyline ships as Skyline-daily.exe in the daily channel; honor the env
@@ -575,28 +576,6 @@
       <Compile Include="$(IntermediateOutputPath)Net8Version.g.cs" />
       <FileWrites Include="$(IntermediateOutputPath)Net8Version.g.cs" />
     </ItemGroup>
-  </Target>
-
-
-  <!-- net8 app.config. App.config is shared with the net472 leg and carries three
-       .NET Framework-only sections; the system.data one is fatal on net8 (undeclared
-       section aborts the whole configuration system at startup, so Skyline-daily.exe
-       would not launch at all). App.net8.xslt removes them. Transforming at build
-       time rather than checking in a second config keeps the 46 KB of user settings
-       in one place. -->
-  <Target Name="_GenerateNet8AppConfig" BeforeTargets="PrepareForBuild"
-          Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <!-- AppConfig is set HERE, not in a plain PropertyGroup: $(IntermediateOutputPath) is
-         defined by the SDK targets, which for an Sdk-attribute project are imported after
-         the project body, so a property group referencing it evaluates to a bare
-         "App.net8.config" and the build fails with MSB3030 file-not-found. -->
-    <MakeDir Directories="$(IntermediateOutputPath)" />
-    <XslTransformation XmlInputPaths="App.config" XslInputPath="App.net8.xslt"
-                       OutputPaths="$(IntermediateOutputPath)App.net8.config" />
-    <PropertyGroup>
-      <AppConfig>$(IntermediateOutputPath)App.net8.config</AppConfig>
-    </PropertyGroup>
-    <Message Importance="normal" Text="Generated $(AppConfig) from App.config" />
   </Target>
 
 

@@ -21,10 +21,9 @@
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
 
-  <!-- Fixtures + app config land next to the assembly for AbstractUnitTest.GetTestPath. -->
+  <!-- Fixtures land next to the assembly for AbstractUnitTest.GetTestPath. -->
   <ItemGroup>
     <None Include="*.zip" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="app.config" />
   </ItemGroup>
 
   <ItemGroup>
