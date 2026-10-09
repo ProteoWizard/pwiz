@@ -70,6 +70,9 @@ a { color: #1565c0; }
 <table>
 <tr><th>参数</th><th>描述</th></tr>
 <tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>同时评分的输入文件数（外层）。省略：每次一个（默认）。不带值：根据可用内存和核心数自动确定。&lt;N&gt;：不论内存和核心数，恰好为 N。与“<nobr>--threads</nobr>”不同。</td></tr>
+<tr><td><nobr>--parallel-files-caching</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>--task</nobr> SpectraCache caches concurrently, overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time.</td></tr>
+<tr><td><nobr>--parallel-files-scoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files scored concurrently (PerFileScoring), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
+<tr><td><nobr>--parallel-files-rescoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>re-scored</nobr> concurrently (PerFileRescoring, and the <nobr>second-pass</nobr> <nobr>per-file</nobr> phases), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
 <tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td>每个文件的主搜索线程数（内层；默认：所有核心），在“<nobr>--parallel-files</nobr>”同时运行的文件之间分配</td></tr>
 </table>
 <div class="RowType">分布式 / HPC</div>
