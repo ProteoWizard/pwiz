@@ -784,6 +784,16 @@ namespace pwiz.Osprey.Test
                 // No record lost or double-counted across the window partition.
                 Assert.AreEqual(full.Ms2Spectra.Count, streamedTotal);
 
+                // One caller-kept buffer across every window, twice: after the first pass it is
+                // the largest block's size, so the second pass reads smaller blocks into a buffer
+                // whose tail still holds another window's bytes.
+                byte[] readBuffer = null;
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    foreach (var kvp in expected)
+                        AssertSpectraListEqual(kvp.Value, index.LoadWindowSerialRead(kvp.Key, ref readBuffer));
+                }
+
                 // Absent key -> empty list (matches the dictionary miss).
                 int absentKey = 1;
                 while (expected.ContainsKey(absentKey))
