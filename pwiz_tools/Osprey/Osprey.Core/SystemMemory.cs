@@ -26,9 +26,9 @@ namespace pwiz.Osprey.Core
     /// Best-effort probe of free physical memory, used by AUTO file parallelism
     /// (<see cref="FileParallelismResolver"/>) and the first-pass FDR lane count
     /// (<see cref="FdrLaneResolver"/>) to decide how many files to work on
-    /// concurrently without exhausting RAM. This is a
-    /// sizing hint, never a correctness input, so an unknown value (0) simply
-    /// falls the resolver back to a CPU-bound cap.
+    /// concurrently without exhausting RAM. This is a sizing hint, never a
+    /// correctness input. A reading of 0 is ambiguous - the probe failed, or no
+    /// memory is free - and each caller decides how to treat it.
     ///
     /// net8.0 uses <c>GC.GetGCMemoryInfo()</c>, which is cross-platform and
     /// respects container / cgroup limits on Linux (the HPC case). net472
