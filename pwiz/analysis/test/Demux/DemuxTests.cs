@@ -121,10 +121,11 @@ public static class DemuxTests
             // x = (0, 2). Cpp's NNLSSolver::Solve (DemuxSolver.cpp) ignores the return value and
             // copies solver.x() into the solution, so the column must hold (0, 2), not zeros.
             // On the Eclipse staggered fixture 17 transitions hit the 50-iteration limit this
-            // way, and zeroing them dropped real peaks of up to 1.1e7 from the demuxed spectra.
+            // way, and zeroing them dropped real peaks of up to 5e7 from the demuxed spectra
+            // (Demux_EclipseNnlsFixture_MatchesCppPeakByPeak).
             var A = DenseMatrix.OfArray(new[,] { { 1.0, 0 }, { 0, 1 } });
             var B = DenseMatrix.OfArray(new[,] { { 1.0 }, { 2.0 } });
-            var X = new NnlsSolver(maxIter: 1, parallelColumns: false).Solve(A, B);
+            var X = new NnlsSolver(maxIter: 1).Solve(A, B);
             AssertVectorEqual(new[] { 0.0, 2.0 }, X.Column(0).ToArray(), 1e-12);
         }
 
