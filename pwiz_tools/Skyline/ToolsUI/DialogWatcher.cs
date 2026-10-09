@@ -155,7 +155,7 @@ namespace pwiz.Skyline.ToolsUI
             // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an
             // effect of either action is seen as new.
             int startCount = ModalNestingCount;
-            var startWindows = new HashSet<IntPtr>(StandaloneWindow.GetTopLevelWindows(cancellationToken).Select(w => w.Hwnd));
+            var startWindows = new HashSet<IntPtr>(StandaloneWindow.GetTopLevelWindowHandles());
             PruneModalsNotOpen(startWindows);
 
             // syncContext / actionDone / actionError are set on the UI thread (the posted delegate) and read on this
