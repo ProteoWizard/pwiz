@@ -3699,7 +3699,16 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading the {0} installer.
+        /// </summary>
+        public static string UpgradeManager_InstallInnoVersion_Downloading_the__0__installer {
+            get {
+                return ResourceManager.GetString("UpgradeManager_InstallInnoVersion_Downloading_the__0__installer", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Upgrading {0}.
         /// </summary>

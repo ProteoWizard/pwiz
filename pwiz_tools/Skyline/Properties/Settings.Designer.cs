@@ -3764,5 +3764,35 @@ namespace pwiz.Skyline.Properties {
                 this["EnableMcpAutoConnect"] = value;
             }
         }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://skyline.ms/_webdav/home/software/Skyline/daily/@files/")]
+        public string InstallUrl {
+            get {
+                return ((string)(this["InstallUrl"]));
+            }
+        }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Skyline-daily")]
+        public string ProductName {
+            get {
+                return ((string)(this["ProductName"]));
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string UninstallCommand {
+            get {
+                return ((string)(this["UninstallCommand"]));
+            }
+            set {
+                this["UninstallCommand"] = value;
+            }
+        }
     }
 }
