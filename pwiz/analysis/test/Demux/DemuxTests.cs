@@ -113,6 +113,21 @@ public static class DemuxTests
                 $"expected a small iteration count, got {solver.IterationCount}");
         }
 
+        [TestMethod]
+        public void NnlsSolver_IterationLimitHit_KeepsPartialSolution()
+        {
+            // A = I, b = (1, 2) needs two LS solves: P = {1} gives x = (0, 2), then P = {0, 1}.
+            // With maxIter = 1 the second solve is refused and Nnls.Solve returns false with
+            // x = (0, 2). Cpp's NNLSSolver::Solve (DemuxSolver.cpp) ignores the return value and
+            // copies solver.x() into the solution, so the column must hold (0, 2), not zeros.
+            // On the Eclipse staggered fixture 17 transitions hit the 50-iteration limit this
+            // way, and zeroing them dropped real peaks of up to 1.1e7 from the demuxed spectra.
+            var A = DenseMatrix.OfArray(new[,] { { 1.0, 0 }, { 0, 1 } });
+            var B = DenseMatrix.OfArray(new[,] { { 1.0 }, { 2.0 } });
+            var X = new NnlsSolver(maxIter: 1, parallelColumns: false).Solve(A, B);
+            AssertVectorEqual(new[] { 0.0, 2.0 }, X.Column(0).ToArray(), 1e-12);
+        }
+
         private static void AssertVectorEqual(double[] expected, double[]? actual, double tolerance)
         {
             Assert.IsNotNull(actual);

@@ -68,11 +68,11 @@ public sealed class NnlsSolver : IDemuxSolver
             Parallel.For(0, numCols, fragIndex =>
             {
                 var solver = localNnls.Value!;
-                if (!solver.Solve(AtB, fragIndex))
-                {
-                    // Cpp swallows convergence failure silently — match that to keep parity.
-                    return;
-                }
+                // Cpp's NNLSSolver::Solve ignores solve()'s result and copies solver.x() either
+                // way, so a column that hits the iteration limit (or a singular passive set)
+                // keeps the last feasible solution rather than zeros. The active-set loop can
+                // cycle on real data until it hits the limit with a good x in hand.
+                solver.Solve(AtB, fragIndex);
                 var sol = solver.X;
                 for (int i = 0; i < numRows; i++) X[i, fragIndex] = sol[i];
             });
