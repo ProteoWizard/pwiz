@@ -43,6 +43,7 @@ namespace pwiz.Skyline.ToolsUI
         // has no handle and cannot appear here.
         public const string BUTTON_CLASS = @"Button";
         public const string EDIT_CLASS = @"Edit";
+        public const string LISTBOX_CLASS = @"ListBox";
         public const string STATIC_CLASS = @"Static";
         public const string TREE_CLASS = @"SysTreeView32";
 

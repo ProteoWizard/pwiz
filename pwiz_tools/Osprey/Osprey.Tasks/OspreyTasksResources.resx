@@ -1465,6 +1465,9 @@
   <data name="SpectraCacheTask_Run_Cached__0__of__1__files_in__2_s" xml:space="preserve">
     <value>Cached {0:N0} of {1:N0} files in {2:N1}s</value>
   </data>
+  <data name="SpectraCacheTask_Run_Caching__0__files___1__at_a_time_" xml:space="preserve">
+    <value>Caching {0:N0} files, {1:N0} at a time:</value>
+  </data>
   <data name="SpectraCacheTask_Run_Caching_spectra__0___1____2_" xml:space="preserve">
     <value>Caching spectra {0}/{1}: {2}</value>
   </data>
