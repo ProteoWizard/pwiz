@@ -23,6 +23,7 @@
     <IsPackable>false</IsPackable>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
 
 </Project>
