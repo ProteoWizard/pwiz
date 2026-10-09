@@ -194,6 +194,12 @@ set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 
+REM # Make Copy retry "Access denied" (MSB3021) as it already retries a file in use. Writing the
+REM # same output file twice in quick succession hits it intermittently on the build agents, and
+REM # the test projects' bins get many vendor DLLs twice: from pwiz-sharp and from Skyline's
+REM # bundled tools. tcinspect.ps1 sets the same for the inspection's builds.
+set MSBUILDALWAYSRETRY=1
+
 if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: ENABLED']
 ) else (

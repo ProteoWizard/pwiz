@@ -160,6 +160,9 @@ try {
                 IAgreeToVendorLicenses = 'true'
             }
             if ($AutomatedBuild) { $buildProperties.AutomatedBuild = 'true' }
+            # Make Copy retry "Access denied" (MSB3021), as build.bat does. One MSB3021 in
+            # inspectcode's solution build fails the whole inspection (exit code 4).
+            $env:MSBUILDALWAYSRETRY = '1'
 
             if (-not [string]::IsNullOrEmpty($PreBuild)) {
                 Write-Host "##teamcity[progressMessage 'Building $(Split-Path -Leaf $PreBuild) for the inspection']"

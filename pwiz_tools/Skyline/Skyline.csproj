@@ -262,10 +262,21 @@
                 Exclude="%(_BundledToolDir.Identity)win-*\**;%(_BundledToolDir.Identity)linux-*\**;%(_BundledToolDir.Identity)osx-*\**">
       <Output TaskParameter="Include" ItemName="_BundledToolFile" />
     </CreateItem>
+    <!-- Each tool folder is a complete app, so they share most of their files (pwiz-sharp, the
+         vendor DLLs, the VC++ runtime), and all of them land in the same bin. Deploy each
+         destination file once: not at all when one of this project's own None or Content items
+         with a Link already copies it there (the VC++ runtime from VendorNativeCrt.targets),
+         otherwise from the first tool that has it. The tools run side by side from that one folder,
+         so they already have to agree on these files. -->
     <ItemGroup>
-      <Content Include="@(_BundledToolFile)">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <_BundledToolFileByLink Include="@(_BundledToolFile->'%(RecursiveDir)%(Filename)%(Extension)')">
+        <SourcePath>%(_BundledToolFile.FullPath)</SourcePath>
         <Link>%(_BundledToolFile.RecursiveDir)%(_BundledToolFile.Filename)%(_BundledToolFile.Extension)</Link>
+      </_BundledToolFileByLink>
+      <_BundledToolFileByLink Remove="@(None->HasMetadata('CopyToOutputDirectory')->WithoutMetadataValue('CopyToOutputDirectory', 'Never'));@(Content->HasMetadata('CopyToOutputDirectory')->WithoutMetadataValue('CopyToOutputDirectory', 'Never'))"
+                              MatchOnMetadata="Link" MatchOnMetadataOptions="PathLike" />
+      <Content Include="@(_BundledToolFileByLink->Distinct()->'%(SourcePath)')" RemoveMetadata="SourcePath">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <Visible>false</Visible>
       </Content>
     </ItemGroup>
