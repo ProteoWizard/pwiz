@@ -54,15 +54,19 @@ public sealed class SpectrumPeakExtractor
         // double-counted across two bins (cpp lines 47-57). Each midpoint comes from the two
         // ORIGINAL ranges, as cpp computes it from a copy: where three or more ranges overlap in
         // a chain, the middle range's moved lower edge must not shift the next midpoint.
-        var original = ((double Low, double High)[])_ranges.Clone();
+        // Only a range's Low is ever moved before its own turn, so carrying that one original
+        // value forward is enough.
+        double originalLow = _ranges[0].Low;
         for (int i = 0; i + 1 < n; i++)
         {
-            if (original[i].High > original[i + 1].Low)
+            double nextOriginalLow = _ranges[i + 1].Low;
+            if (_ranges[i].High > nextOriginalLow)
             {
-                double center = (original[i].High + original[i].Low + original[i + 1].High + original[i + 1].Low) / 4.0;
+                double center = (_ranges[i].High + originalLow + _ranges[i + 1].High + nextOriginalLow) / 4.0;
                 _ranges[i] = (_ranges[i].Low, center);
                 _ranges[i + 1] = (center, _ranges[i + 1].High);
             }
+            originalLow = nextOriginalLow;
         }
     }
 

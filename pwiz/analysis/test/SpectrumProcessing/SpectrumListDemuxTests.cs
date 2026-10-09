@@ -337,8 +337,7 @@ public class SpectrumListDemuxTests
             var f = line.Split('\t');
             var key = (f[0], f[1]);
             if (!expected.TryGetValue(key, out var peaks)) expected[key] = peaks = new();
-            peaks.Add((double.Parse(f[2], System.Globalization.CultureInfo.InvariantCulture),
-                double.Parse(f[3], System.Globalization.CultureInfo.InvariantCulture)));
+            peaks.Add((double.Parse(f[2], Invariant), double.Parse(f[3], Invariant)));
         }
 
         int compared = 0;
@@ -369,13 +368,14 @@ public class SpectrumListDemuxTests
         Assert.AreEqual(expected.Values.Sum(p => p.Count), compared, "every expected cpp peak compared");
     }
 
+    private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
+
     /// <summary>Reads the cut-down Eclipse fixture: an <c>S</c> line per MS2 spectrum (scan, start
     /// time in minutes, isolation target and offsets), each followed by its peaks. An <c>M</c> peak
     /// is the spectrum's highest m/z, kept only because it sets the extractor's search span; its m/z
     /// is returned by scan so the comparison leaves it out.</summary>
     private static SpectrumListSimple ReadEclipseFixture(string path, out Dictionary<string, double> notCompared)
     {
-        var ic = System.Globalization.CultureInfo.InvariantCulture;
         var list = new SpectrumListSimple();
         notCompared = new Dictionary<string, double>();
         string currentScan = string.Empty;
@@ -392,7 +392,7 @@ public class SpectrumListDemuxTests
         }
         foreach (var line in File.ReadLines(path))
         {
-            if (line.StartsWith('#')) continue;
+            if (line.Length == 0 || line.StartsWith('#')) continue;
             var f = line.Split('\t');
             if (f[0] == "S")
             {
@@ -401,24 +401,28 @@ public class SpectrumListDemuxTests
                 current = new Spectrum { Index = list.Spectra.Count, Id = $"scan={f[1]}" };
                 current.Params.Set(CVID.MS_ms_level, 2);
                 var precursor = new Precursor();
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, double.Parse(f[3], ic), CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, double.Parse(f[4], ic), CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, double.Parse(f[5], ic), CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, double.Parse(f[3], Invariant), CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, double.Parse(f[4], Invariant), CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, double.Parse(f[5], Invariant), CVID.MS_m_z);
                 current.Precursors.Add(precursor);
                 var scan = new Scan();
-                scan.Set(CVID.MS_scan_start_time, double.Parse(f[2], ic), CVID.UO_minute);
+                scan.Set(CVID.MS_scan_start_time, double.Parse(f[2], Invariant), CVID.UO_minute);
                 current.ScanList.Scans.Add(scan);
+            }
+            else if (current is null)
+            {
+                Assert.Fail($"peak line before the first spectrum in {Path.GetFileName(path)}: {line}");
             }
             else if (f[0] == "M")
             {
-                mzs.Add(double.Parse(f[1], ic));
-                intensities.Add(double.Parse(f[2], ic));
+                mzs.Add(double.Parse(f[1], Invariant));
+                intensities.Add(double.Parse(f[2], Invariant));
                 notCompared[currentScan] = mzs[^1];
             }
             else
             {
-                mzs.Add(double.Parse(f[0], ic));
-                intensities.Add(double.Parse(f[1], ic));
+                mzs.Add(double.Parse(f[0], Invariant));
+                intensities.Add(double.Parse(f[1], Invariant));
             }
         }
         Finish();
