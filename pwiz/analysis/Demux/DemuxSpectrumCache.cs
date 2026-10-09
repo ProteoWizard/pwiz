@@ -90,12 +90,15 @@ internal sealed class DemuxSpectrumCache : SpectrumListWrapper, IMsLevelProvider
 
     /// <summary>Reads spectra <paramref name="first"/> to <paramref name="last"/> into the cache
     /// in file order, so blocks solved afterwards do not queue for the reader.</summary>
-    public void Prefetch(int first, int last)
+    public void Prefetch(int first, int last, CancellationToken cancel = default)
     {
         first = System.Math.Max(first, 0);
         last = System.Math.Min(last, _summaries.Length - 1);
         for (int i = first; i <= last; i++)
+        {
+            cancel.ThrowIfCancellationRequested();
             GetSpectrum(i, getBinaryData: true);
+        }
     }
 
     /// <inheritdoc/>

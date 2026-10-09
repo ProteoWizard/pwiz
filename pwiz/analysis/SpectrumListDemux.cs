@@ -71,8 +71,9 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
 
         /// <summary>Threads solving demux blocks (default 1). Above 1, blocks of the source
         /// spectra ahead of the one requested are solved in parallel batches. Output is
-        /// identical at any thread count. A host converting several files at once should leave
-        /// it at 1.</summary>
+        /// identical at any thread count. Memory grows with it: each thread holds a batch of
+        /// solved blocks and the spectra they read. A host converting several files at once
+        /// should leave it at 1.</summary>
         public int SolveThreads { get; init; } = 1;
     }
 
@@ -125,8 +126,10 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         private readonly int _solveAhead;
         private readonly int _prefetchMargin; // spectra either side of a batch its blocks read
 
-        // The batch solving in the background, its first position, and where the next starts.
+        // The batch solving in the background, its cancellation, its first position, and where
+        // the next starts.
         private Task<SolvedBatch>? _nextBatch;
+        private CancellationTokenSource? _nextBatchCancel;
         private int _nextBatchFirst;
         private int _nextBatchStart;
 
@@ -235,8 +238,14 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
                     : SolveBlock(_demux, _solver, request.SpectrumOriginalIndex);
                 _lastSolvedSourceIndex = request.SpectrumOriginalIndex;
             }
-            // A block that failed in a batch fails only the request for its own spectrum.
-            _lastSolved.Error?.Throw();
+            // A block that failed in a batch fails only the request for its own spectrum, and is
+            // solved again if asked for again, as a serial solve would be.
+            if (_lastSolved.Error is { } error)
+            {
+                _solved.Remove(request.SpectrumOriginalIndex);
+                _lastSolved = null;
+                error.Throw();
+            }
             var solution = _lastSolved.Solution!;
 
             // Copy the source spectrum and overwrite the demux-specific fields.
@@ -365,9 +374,11 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             }
             if (_nextBatch is not null && _nextBatchFirst <= position && position < _nextBatchStart)
             {
-                var next = WaitFor(_nextBatch);
+                var pending = _nextBatch;
                 _nextBatch = null;
-                Keep(next, position);
+                _nextBatchCancel?.Dispose();
+                _nextBatchCancel = null;
+                Keep(pending.GetAwaiter().GetResult(), position);
                 StartNextBatch();
                 return _solved[sourceIndex];
             }
@@ -376,29 +387,33 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
 
             // In order but in no batch in hand: drop the background batch and batch from here.
             WaitForBackground();
-            var batch = SolveBatch(position);
+            var batch = SolveBatch(position, CancellationToken.None);
             Keep(batch, position);
             _nextBatchStart = batch.End;
             StartNextBatch();
             return _solved[sourceIndex];
         }
 
-        /// <summary>Waits for the background batch, if any, and drops it. Blocks asked for
-        /// again are solved again, so its errors are not reported here.</summary>
+        /// <summary>Cancels the background batch, if any, waits for it to stop and drops it.
+        /// Blocks asked for again are solved again, so its errors are not reported here.</summary>
         public void WaitForBackground()
         {
             var pending = _nextBatch;
+            var cancel = _nextBatchCancel;
             _nextBatch = null;
+            _nextBatchCancel = null;
             if (pending is null)
                 return;
+            cancel?.Cancel();
             try
             {
                 pending.Wait();
             }
             catch (AggregateException)
             {
-                // Dropped with the batch
+                // Cancelled, or dropped with the batch
             }
+            cancel?.Dispose();
         }
 
         private void StartNextBatch()
@@ -407,23 +422,25 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
                 return;
             int start = _nextBatchStart;
             _nextBatchFirst = start;
-            _nextBatch = Task.Run(() => SolveBatch(start));
+            _nextBatchCancel = new CancellationTokenSource();
+            var token = _nextBatchCancel.Token;
+            _nextBatch = Task.Run(() => SolveBatch(start, token), token);
             _nextBatchStart = System.Math.Min(start + _solveAhead, _ms2Sources.Count);
         }
 
         /// <summary>Solves the blocks of the sources at file-order positions from
         /// <paramref name="start"/>, in parallel, touching no state the reader's thread changes.</summary>
-        private SolvedBatch SolveBatch(int start)
+        private SolvedBatch SolveBatch(int start, CancellationToken cancel)
         {
             int end = System.Math.Min(start + _solveAhead, _ms2Sources.Count);
             var results = new SolvedBlock[end - start];
             // Decode this batch's spectra in order first (usually already read with the batch
             // before), then read the next batch's while this one solves: reading is serial.
-            PrefetchBatch(start, end);
+            PrefetchBatch(start, end, cancel);
             int nextEnd = System.Math.Min(end + _solveAhead, _ms2Sources.Count);
-            var readNext = end < nextEnd ? Task.Run(() => PrefetchBatch(end, nextEnd)) : null;
+            var readNext = end < nextEnd ? Task.Run(() => PrefetchBatch(end, nextEnd, cancel), cancel) : null;
             Parallel.For(0, results.Length,
-                new ParallelOptions { MaxDegreeOfParallelism = _params.SolveThreads },
+                new ParallelOptions { MaxDegreeOfParallelism = _params.SolveThreads, CancellationToken = cancel },
                 () => (Demux: CreateDemultiplexer(),
                     Solver: new NnlsSolver(_params.NnlsMaxIter, _params.NnlsEps, parallelColumns: false)),
                 (i, _, worker) =>
@@ -439,20 +456,21 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
                     return worker;
                 },
                 _ => { });
-            try
-            {
-                readNext?.Wait();
-            }
-            catch (AggregateException)
-            {
-                // Not this batch's error: the next batch reads those spectra again and reports it.
-            }
+            readNext?.Wait(CancellationToken.None);
             return new SolvedBatch(start, end, results);
         }
 
-        private void PrefetchBatch(int start, int end)
+        private void PrefetchBatch(int start, int end, CancellationToken cancel)
         {
-            _inner.Prefetch(_ms2Sources[start] - _prefetchMargin, _ms2Sources[end - 1] + _prefetchMargin);
+            try
+            {
+                _inner.Prefetch(_ms2Sources[start] - _prefetchMargin, _ms2Sources[end - 1] + _prefetchMargin, cancel);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                // Reading ahead only: a spectrum that failed is read again by the block that
+                // needs it, and the error is reported for that block alone.
+            }
         }
 
         /// <summary>Adds a solved batch, dropping blocks before <paramref name="position"/>,
@@ -463,20 +481,6 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
                 _solved.Remove(stale);
             for (int i = 0; i < batch.Results.Length; i++)
                 _solved[_ms2Sources[batch.Start + i]] = batch.Results[i];
-        }
-
-        private static SolvedBatch WaitFor(Task<SolvedBatch> task)
-        {
-            try
-            {
-                return task.GetAwaiter().GetResult();
-            }
-            catch (AggregateException e) when (e.InnerExceptions.Count == 1)
-            {
-                // Throw what a serial solve would have, not the parallel wrapper.
-                ExceptionDispatchInfo.Capture(e.InnerExceptions[0]).Throw();
-                throw;
-            }
         }
 
         private static Spectrum CopySpectrum(Spectrum src)

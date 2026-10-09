@@ -464,7 +464,9 @@ namespace MSConvertGUI
                     if (DemuxRemoveNonOverlappingEdgesCheckbox.Checked)
                         demuxArgs += " removeNonOverlappingEdges=true";
 
-                    if (int.TryParse(DemuxSolveThreadsValue.Text, out int solveThreads) && solveThreads > 1)
+                    // The filter validates it, as it does the mass error.
+                    string solveThreads = DemuxSolveThreadsValue.Text.Trim();
+                    if (!String.IsNullOrEmpty(solveThreads) && solveThreads != "1")
                         demuxArgs += String.Format(" solveThreads={0}", solveThreads);
 
                     FilterDGV.Rows.Add(new[]

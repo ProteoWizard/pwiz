@@ -283,7 +283,7 @@ public class SpectrumListDemuxTests
             var (_, jumping) = LoadAndWrap(fixtureName, p);
             // Every jump outside the batches in hand solves a whole batch, so keep the jumps few.
             var order = new List<int>();
-            for (int i = jumping.Count - 1; i >= 0; i -= jumping.Count / 4)
+            for (int i = jumping.Count - 1; i >= 0; i -= System.Math.Max(1, jumping.Count / 4))
                 order.Add(i);                         // Backwards through the run
             var random = new Random(42);
             for (int k = 0; k < 6; k++)
@@ -291,6 +291,68 @@ public class SpectrumListDemuxTests
             order.AddRange(new[] { 0, jumping.Count / 2, jumping.Count - 1, 1, jumping.Count / 2 + 1 });
             foreach (int i in order)
                 AssertSpectraEqual(expected[i], jumping.GetSpectrum(i, getBinaryData: true), $"SolveThreads={threads} jumping");
+        }
+    }
+
+    [TestMethod]
+    public void SolveThreads_UnreadableSpectrum_FailsSameSpectraAsSingleThread()
+    {
+        // One unreadable MS2 spectrum must fail the same demuxed spectra at any thread count,
+        // not a whole batch, and every other spectrum must still come out identical.
+        var (centroided, _) = LoadAndWrap("OverlapTest.mzML", new SpectrumListDemux.Params());
+        int bad = Enumerable.Range(centroided.Count / 2, centroided.Count / 2).First(i =>
+            centroided.GetSpectrum(i).Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) == 2);
+
+        var serial = ReadAll(bad, 1);
+        Assert.IsTrue(serial.Any(r => r.Error), "some spectra should fail to demultiplex");
+        Assert.IsTrue(serial.Count(r => !r.Error) > serial.Length / 2, "most spectra should demultiplex");
+        foreach (int threads in new[] { 2, 4 })
+        {
+            var parallel = ReadAll(bad, threads);
+            for (int i = 0; i < serial.Length; i++)
+            {
+                Assert.AreEqual(serial[i].Error, parallel[i].Error, $"SolveThreads={threads}, index {i}: failed");
+                if (!serial[i].Error)
+                    AssertSpectraEqual(serial[i].Spectrum!, parallel[i].Spectrum!, $"SolveThreads={threads}");
+            }
+        }
+    }
+
+    private static (bool Error, Spectrum? Spectrum)[] ReadAll(int unreadableIndex, int solveThreads)
+    {
+        var (centroided, _) = LoadAndWrap("OverlapTest.mzML", new SpectrumListDemux.Params());
+        var demuxed = new SpectrumListDemux(new UnreadableSpectrumList(centroided, unreadableIndex),
+            new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly, SolveThreads = solveThreads });
+        var results = new (bool, Spectrum?)[demuxed.Count];
+        for (int i = 0; i < demuxed.Count; i++)
+        {
+            try
+            {
+                results[i] = (false, demuxed.GetSpectrum(i, getBinaryData: true));
+            }
+            catch (InvalidDataException)
+            {
+                results[i] = (true, null);
+            }
+        }
+        return results;
+    }
+
+    /// <summary>Throws reading the peaks of one spectrum, as a damaged vendor file might.</summary>
+    private sealed class UnreadableSpectrumList : SpectrumListWrapper
+    {
+        private readonly int _unreadableIndex;
+
+        public UnreadableSpectrumList(ISpectrumList inner, int unreadableIndex) : base(inner)
+        {
+            _unreadableIndex = unreadableIndex;
+        }
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        {
+            if (index == _unreadableIndex && getBinaryData)
+                throw new InvalidDataException($"spectrum {index} is unreadable");
+            return base.GetSpectrum(index, getBinaryData);
         }
     }
 
