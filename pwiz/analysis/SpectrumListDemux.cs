@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using MathNet.Numerics.LinearAlgebra;
 using Pwiz.Analysis.Demux;
 using Pwiz.Data.Common.Cv;
@@ -67,6 +68,12 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         /// <summary>Drop edge isolation segments not covered at the same multiplicity as the
         /// bulk of the cycle.</summary>
         public bool RemoveNonOverlappingEdges { get; init; }
+
+        /// <summary>Threads solving demux blocks (default 1). Above 1, blocks of the source
+        /// spectra ahead of the one requested are solved in parallel batches. Output is
+        /// identical at any thread count. A host converting several files at once should leave
+        /// it at 1.</summary>
+        public int SolveThreads { get; init; } = 1;
     }
 
     private readonly DemuxImpl _impl;
@@ -91,6 +98,14 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => _impl.DataProcessing;
 
+    /// <inheritdoc/>
+    protected override void DisposeCore()
+    {
+        // A batch solving in the background reads the inner list; finish it before disposal.
+        _impl.WaitForBackground();
+        base.DisposeCore();
+    }
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "_inner is a DemuxSpectrumCache wrapping the same underlying ISpectrumList that SpectrumListDemux's base SpectrumListWrapper holds. Both wrappers point at the same disposable; SpectrumListBase.Dispose is idempotent (ISpectrumList.cs:147) so the base wrapper's DisposeCore handles cleanup. Adding a second dispose path here would be redundant.")]
     private sealed class DemuxImpl
@@ -102,12 +117,28 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         private readonly NnlsSolver _solver;
         private readonly DemuxIndexMapper _indexMapper;
 
+        // Solve-ahead (SolveThreads > 1): MS2 source indices in file order, each one's position
+        // in that order, and the blocks solved so far by source index.
+        private readonly List<int> _ms2Sources = new();
+        private readonly Dictionary<int, int> _ms2SourcePosition = new();
+        private readonly Dictionary<int, SolvedBlock> _solved = new();
+        private readonly int _solveAhead;
+        private readonly int _prefetchMargin; // spectra either side of a batch its blocks read
+
+        // The batch solving in the background, its first position, and where the next starts.
+        private Task<SolvedBatch>? _nextBatch;
+        private int _nextBatchFirst;
+        private int _nextBatchStart;
+
+        private int _lastPosition = -1; // to tell an in-order reader from one that jumps
+
         public DataProcessing? DataProcessing { get; }
 
         // 1-deep cache: each multiplexed source spectrum produces multiple output sub-spectra
         // and they're requested consecutively. Solving once per source is the main optimization.
+        // Only the reader's thread touches it; solve-ahead workers return SolvedBlocks.
         private int _lastSolvedSourceIndex = -1;
-        private Matrix<double>? _lastSolution;
+        private SolvedBlock? _lastSolved;
 
         public DemuxImpl(ISpectrumList inner, Params p, DataProcessing? innerDp)
         {
@@ -127,30 +158,36 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             };
             _pmc = new PrecursorMaskCodec(_inner, pmcParams);
 
-            _demux = p.Optimization switch
-            {
-                Optimization.OverlapOnly => new OverlapDemultiplexer(new OverlapDemultiplexer.Params
-                {
-                    InterpolateRetentionTime = p.InterpolateRetentionTime,
-                    ApplyWeighting = p.ApplyWeighting,
-                    MassError = p.MassError,
-                }),
-                _ => new MsxDemultiplexer(new MsxDemultiplexer.Params
-                {
-                    ApplyWeighting = p.ApplyWeighting,
-                    MassError = p.MassError,
-                    VariableFill = p.VariableFill,
-                }),
-            };
-            _demux.Initialize(_inner, _pmc);
+            _demux = CreateDemultiplexer();
 
             _indexMapper = new DemuxIndexMapper(_inner, _pmc);
             _inner.ReleaseIdentities();
 
-            // A block reads about three cycles of spectra, more with DemuxBlockExtra; a smaller
+            foreach (var request in _indexMapper.IndexMap)
+            {
+                if (request.MsLevel == 2 && !_ms2SourcePosition.ContainsKey(request.SpectrumOriginalIndex))
+                {
+                    _ms2SourcePosition.Add(request.SpectrumOriginalIndex, _ms2Sources.Count);
+                    _ms2Sources.Add(request.SpectrumOriginalIndex);
+                }
+            }
+
+            // An overlap block reads about three cycles of spectra; an MSX block DemuxBlockSize
+            // spectra, PrecursorsPerSpectrum cycles or more. More with DemuxBlockExtra. A smaller
             // cache decodes each spectrum several times. One extra per cycle for the MS1.
-            int cycles = CACHE_CYCLES + (int)System.Math.Ceiling(System.Math.Max(0, p.DemuxBlockExtra));
-            _inner.EnsureCapacity(cycles * (_pmc.SpectraPerCycle + 1));
+            int spectraPerCycle = _pmc.SpectraPerCycle + 1;
+            int cycles = System.Math.Max(CACHE_CYCLES, _pmc.DemuxBlockSize / _pmc.SpectraPerCycle + 1) +
+                (int)System.Math.Ceiling(System.Math.Max(0, p.DemuxBlockExtra));
+            _prefetchMargin = (cycles + 1) / 2 * spectraPerCycle;
+            _solveAhead = p.SolveThreads > 1 ? p.SolveThreads * SOLVE_AHEAD_PER_THREAD : 1;
+            int capacity = cycles * spectraPerCycle;
+            if (_solveAhead > 1)
+            {
+                // Three batches: the one being read out, the one solving, the one being read in.
+                int batchSpectra = (_solveAhead * spectraPerCycle + _pmc.SpectraPerCycle - 1) / _pmc.SpectraPerCycle;
+                capacity += 3 * (batchSpectra + 2 * _prefetchMargin);
+            }
+            _inner.EnsureCapacity(capacity);
 
             // Build the data-processing chain; the "PRISM Demultiplexing" UserParam is what
             // SpectrumWorkerThreads keys on in cpp, and the mzML writer surfaces it.
@@ -191,20 +228,16 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         {
             var refSpectrum = _inner.GetSpectrum(request.SpectrumOriginalIndex, getBinaryData: true);
 
-            Matrix<double> solution;
-            if (_lastSolution is not null && _lastSolvedSourceIndex == request.SpectrumOriginalIndex)
+            if (_lastSolved is null || _lastSolvedSourceIndex != request.SpectrumOriginalIndex)
             {
-                solution = _lastSolution;
-            }
-            else
-            {
-                var muxIndices = new List<int>();
-                _demux.GetMatrixBlockIndices(request.SpectrumOriginalIndex, muxIndices, _params.DemuxBlockExtra);
-                _demux.BuildDeconvBlock(request.SpectrumOriginalIndex, muxIndices, out var masks, out var signal);
-                solution = _solver.Solve(masks, signal);
-                _lastSolution = solution;
+                _lastSolved = _params.SolveThreads > 1
+                    ? GetSolvedAhead(request.SpectrumOriginalIndex)
+                    : SolveBlock(_demux, _solver, request.SpectrumOriginalIndex);
                 _lastSolvedSourceIndex = request.SpectrumOriginalIndex;
             }
+            // A block that failed in a batch fails only the request for its own spectrum.
+            _lastSolved.Error?.Throw();
+            var solution = _lastSolved.Solution!;
 
             // Copy the source spectrum and overwrite the demux-specific fields.
             var demuxed = CopySpectrum(refSpectrum);
@@ -245,7 +278,7 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
 
             // Sum the per-window contributions for every demux index this source spectrum exposes,
             // so we can rescale to preserve total intensity.
-            var refDemuxIndices = _demux.SpectrumIndices;
+            var refDemuxIndices = _lastSolved.SpectrumIndices;
             var summed = new double[solution.ColumnCount];
             foreach (var di in refDemuxIndices)
                 for (int j = 0; j < solution.ColumnCount; j++)
@@ -281,6 +314,169 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             demuxed.SetMZIntensityArrays(newMz, newInt, CVID.MS_number_of_detector_counts);
             demuxed.DefaultArrayLength = newMz.Count;
             return demuxed;
+        }
+
+        private IDemultiplexer CreateDemultiplexer()
+        {
+            IDemultiplexer demux = _params.Optimization switch
+            {
+                Optimization.OverlapOnly => new OverlapDemultiplexer(new OverlapDemultiplexer.Params
+                {
+                    InterpolateRetentionTime = _params.InterpolateRetentionTime,
+                    ApplyWeighting = _params.ApplyWeighting,
+                    MassError = _params.MassError,
+                }),
+                _ => new MsxDemultiplexer(new MsxDemultiplexer.Params
+                {
+                    ApplyWeighting = _params.ApplyWeighting,
+                    MassError = _params.MassError,
+                    VariableFill = _params.VariableFill,
+                }),
+            };
+            demux.Initialize(_inner, _pmc);
+            return demux;
+        }
+
+        /// <summary>Builds and solves the block of one source spectrum. Depends on the source
+        /// index alone, so blocks can be solved on any thread in any order.</summary>
+        private SolvedBlock SolveBlock(IDemultiplexer demux, NnlsSolver solver, int sourceIndex)
+        {
+            var muxIndices = new List<int>();
+            demux.GetMatrixBlockIndices(sourceIndex, muxIndices, _params.DemuxBlockExtra);
+            demux.BuildDeconvBlock(sourceIndex, muxIndices, out var masks, out var signal);
+            // SpectrumIndices describes the demultiplexer's latest block, so copy it now.
+            return new SolvedBlock(solver.Solve(masks, signal), demux.SpectrumIndices.ToArray());
+        }
+
+        /// <summary>The solved block of <paramref name="sourceIndex"/>, from batches solved in
+        /// file order, the next one in the background while the reader consumes this one. A
+        /// jump outside the batches in hand is solved alone; reading on in order from there
+        /// starts batching again.</summary>
+        private SolvedBlock GetSolvedAhead(int sourceIndex)
+        {
+            int position = _ms2SourcePosition[sourceIndex];
+            bool inOrder = position == _lastPosition || position == _lastPosition + 1;
+            _lastPosition = position;
+
+            if (_solved.TryGetValue(sourceIndex, out var solved))
+            {
+                StartNextBatch();
+                return solved;
+            }
+            if (_nextBatch is not null && _nextBatchFirst <= position && position < _nextBatchStart)
+            {
+                var next = WaitFor(_nextBatch);
+                _nextBatch = null;
+                Keep(next, position);
+                StartNextBatch();
+                return _solved[sourceIndex];
+            }
+            if (!inOrder)
+                return SolveBlock(_demux, _solver, sourceIndex);
+
+            // In order but in no batch in hand: drop the background batch and batch from here.
+            WaitForBackground();
+            var batch = SolveBatch(position);
+            Keep(batch, position);
+            _nextBatchStart = batch.End;
+            StartNextBatch();
+            return _solved[sourceIndex];
+        }
+
+        /// <summary>Waits for the background batch, if any, and drops it. Blocks asked for
+        /// again are solved again, so its errors are not reported here.</summary>
+        public void WaitForBackground()
+        {
+            var pending = _nextBatch;
+            _nextBatch = null;
+            if (pending is null)
+                return;
+            try
+            {
+                pending.Wait();
+            }
+            catch (AggregateException)
+            {
+                // Dropped with the batch
+            }
+        }
+
+        private void StartNextBatch()
+        {
+            if (_nextBatch is not null || _nextBatchStart >= _ms2Sources.Count)
+                return;
+            int start = _nextBatchStart;
+            _nextBatchFirst = start;
+            _nextBatch = Task.Run(() => SolveBatch(start));
+            _nextBatchStart = System.Math.Min(start + _solveAhead, _ms2Sources.Count);
+        }
+
+        /// <summary>Solves the blocks of the sources at file-order positions from
+        /// <paramref name="start"/>, in parallel, touching no state the reader's thread changes.</summary>
+        private SolvedBatch SolveBatch(int start)
+        {
+            int end = System.Math.Min(start + _solveAhead, _ms2Sources.Count);
+            var results = new SolvedBlock[end - start];
+            // Decode this batch's spectra in order first (usually already read with the batch
+            // before), then read the next batch's while this one solves: reading is serial.
+            PrefetchBatch(start, end);
+            int nextEnd = System.Math.Min(end + _solveAhead, _ms2Sources.Count);
+            var readNext = end < nextEnd ? Task.Run(() => PrefetchBatch(end, nextEnd)) : null;
+            Parallel.For(0, results.Length,
+                new ParallelOptions { MaxDegreeOfParallelism = _params.SolveThreads },
+                () => (Demux: CreateDemultiplexer(),
+                    Solver: new NnlsSolver(_params.NnlsMaxIter, _params.NnlsEps, parallelColumns: false)),
+                (i, _, worker) =>
+                {
+                    try
+                    {
+                        results[i] = SolveBlock(worker.Demux, worker.Solver, _ms2Sources[start + i]);
+                    }
+                    catch (Exception e)
+                    {
+                        results[i] = new SolvedBlock(null, Array.Empty<int>(), ExceptionDispatchInfo.Capture(e));
+                    }
+                    return worker;
+                },
+                _ => { });
+            try
+            {
+                readNext?.Wait();
+            }
+            catch (AggregateException)
+            {
+                // Not this batch's error: the next batch reads those spectra again and reports it.
+            }
+            return new SolvedBatch(start, end, results);
+        }
+
+        private void PrefetchBatch(int start, int end)
+        {
+            _inner.Prefetch(_ms2Sources[start] - _prefetchMargin, _ms2Sources[end - 1] + _prefetchMargin);
+        }
+
+        /// <summary>Adds a solved batch, dropping blocks before <paramref name="position"/>,
+        /// which an in-order reader will not ask for again.</summary>
+        private void Keep(SolvedBatch batch, int position)
+        {
+            foreach (int stale in _solved.Keys.Where(k => _ms2SourcePosition[k] < position).ToList())
+                _solved.Remove(stale);
+            for (int i = 0; i < batch.Results.Length; i++)
+                _solved[_ms2Sources[batch.Start + i]] = batch.Results[i];
+        }
+
+        private static SolvedBatch WaitFor(Task<SolvedBatch> task)
+        {
+            try
+            {
+                return task.GetAwaiter().GetResult();
+            }
+            catch (AggregateException e) when (e.InnerExceptions.Count == 1)
+            {
+                // Throw what a serial solve would have, not the parallel wrapper.
+                ExceptionDispatchInfo.Capture(e.InnerExceptions[0]).Throw();
+                throw;
+            }
         }
 
         private static Spectrum CopySpectrum(Spectrum src)
@@ -357,6 +553,16 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
 
     // Acquisition cycles the spectrum cache holds: the source cycle, one either side, one spare.
     private const int CACHE_CYCLES = 4;
+
+    // Blocks solved ahead per solve thread: keeps every thread busy while a batch's slowest finishes.
+    private const int SOLVE_AHEAD_PER_THREAD = 32;
+
+    /// <summary>A source spectrum's solved block and the rows for its own isolation windows.</summary>
+    private sealed record SolvedBlock(Matrix<double>? Solution, IReadOnlyList<int> SpectrumIndices,
+        ExceptionDispatchInfo? Error = null);
+
+    /// <summary>The solved blocks of the MS2 sources at file-order positions [Start, End).</summary>
+    private sealed record SolvedBatch(int Start, int End, SolvedBlock[] Results);
 
     private readonly record struct DemuxRequestIndex(
         int MsLevel,

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
 
@@ -17,8 +18,8 @@ internal interface IMsLevelProvider
 }
 
 /// <summary>
-/// Spectrum-list wrapper that pre-computes MS levels and caches recently-fetched binary spectra
-/// in a bounded LRU. Drops the demux pipeline's GetSpectrum count from ~500 metadata calls +
+/// Spectrum-list wrapper that pre-computes MS levels and caches recently-fetched binary spectra,
+/// bounded, oldest read evicted first. Drops the demux pipeline's GetSpectrum count from ~500 metadata calls +
 /// ~30 binary calls per source spectrum to ~0 metadata calls + ~5 binary calls (the rest hit
 /// the cache from the previous source spectrum's demux block).
 /// </summary>
@@ -31,16 +32,19 @@ internal sealed class DemuxSpectrumCache : SpectrumListWrapper, IMsLevelProvider
     private readonly SpectrumSummary[] _summaries;
     private SpectrumIdentity[]? _identities; // only until the index mapper has read them
     private int _capacity;
-    private readonly object _lock = new();
 
-    // Two synchronized structures form an LRU: linked list for ordering, dict for O(1) lookup.
-    private readonly LinkedList<(int Index, Spectrum Spectrum)> _lru = new();
-    private readonly Dictionary<int, LinkedListNode<(int Index, Spectrum Spectrum)>> _byIndex;
+    // Serializes inner reads and cache changes: vendor readers are not thread-safe, and
+    // SpectrumListDemux builds blocks on several threads when solving ahead.
+    private readonly object _readLock = new();
+
+    // Hits take no lock; a lock on every hit was the contention under solve-ahead. Evicts the
+    // oldest read first, which an in-order reader has moved past.
+    private readonly ConcurrentDictionary<int, Spectrum> _byIndex = new();
+    private readonly Queue<KeyValuePair<int, Spectrum>> _readOrder = new();
 
     public DemuxSpectrumCache(ISpectrumList inner, int capacity = 256) : base(inner)
     {
         _capacity = capacity;
-        _byIndex = new Dictionary<int, LinkedListNode<(int, Spectrum)>>(capacity);
 
         // Pre-compute MS levels in one sweep. Each metadata-only GetSpectrum is cheap individually
         // (~10s of µs) but the cumulative cost dominated FindNearbySpectra in the demux pipeline,
@@ -80,8 +84,18 @@ internal sealed class DemuxSpectrumCache : SpectrumListWrapper, IMsLevelProvider
     /// <summary>Raises the capacity to at least <paramref name="capacity"/> spectra.</summary>
     public void EnsureCapacity(int capacity)
     {
-        lock (_lock)
+        lock (_readLock)
             _capacity = System.Math.Max(_capacity, capacity);
+    }
+
+    /// <summary>Reads spectra <paramref name="first"/> to <paramref name="last"/> into the cache
+    /// in file order, so blocks solved afterwards do not queue for the reader.</summary>
+    public void Prefetch(int first, int last)
+    {
+        first = System.Math.Max(first, 0);
+        last = System.Math.Min(last, _summaries.Length - 1);
+        for (int i = first; i <= last; i++)
+            GetSpectrum(i, getBinaryData: true);
     }
 
     /// <inheritdoc/>
@@ -90,35 +104,26 @@ internal sealed class DemuxSpectrumCache : SpectrumListWrapper, IMsLevelProvider
         // We only cache decoded (binary) spectra. Metadata-only calls bypass the cache because
         // most of them are MS-level probes and hit GetMsLevel via FindNearbySpectra anyway.
         if (!getBinaryData)
-            return Inner.GetSpectrum(index, getBinaryData: false);
-
-        lock (_lock)
         {
-            if (_byIndex.TryGetValue(index, out var node))
-            {
-                _lru.Remove(node);
-                _lru.AddFirst(node);
-                return node.Value.Spectrum;
-            }
+            lock (_readLock)
+                return Inner.GetSpectrum(index, getBinaryData: false);
         }
 
-        var spec = Inner.GetSpectrum(index, getBinaryData: true);
+        if (_byIndex.TryGetValue(index, out var cached))
+            return cached;
 
-        lock (_lock)
+        lock (_readLock)
         {
-            if (!_byIndex.ContainsKey(index))
-            {
-                var node = new LinkedListNode<(int, Spectrum)>((index, spec));
-                _lru.AddFirst(node);
-                _byIndex[index] = node;
-                while (_byIndex.Count > _capacity)
-                {
-                    var last = _lru.Last!;
-                    _lru.RemoveLast();
-                    _byIndex.Remove(last.Value.Index);
-                }
-            }
+            // Another thread may have read it while this one waited.
+            if (_byIndex.TryGetValue(index, out cached))
+                return cached;
+
+            var spec = Inner.GetSpectrum(index, getBinaryData: true);
+            _byIndex[index] = spec;
+            _readOrder.Enqueue(new KeyValuePair<int, Spectrum>(index, spec));
+            while (_readOrder.Count > _capacity)
+                _byIndex.TryRemove(_readOrder.Dequeue());
+            return spec;
         }
-        return spec;
     }
 }
