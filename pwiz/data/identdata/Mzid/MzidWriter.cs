@@ -65,7 +65,7 @@ public sealed class MzidWriter
 
     // ------------- cv / analysis software -------------
 
-    private static void WriteCvList(XmlWriter w, IList<CV> cvs)
+    private static void WriteCvList(XmlWriter w, List<CV> cvs)
     {
         // mzIdentML 1.1 schema requires at least one cv, so production-quality output should
         // populate Cvs. We emit a cvList only when one is provided to keep round-trip parity:

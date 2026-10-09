@@ -85,7 +85,7 @@ public sealed class Ms2Deisotoper : ISpectrumDataFilter
     /// <summary>Sort peaks by descending intensity and walk the order — for each kept peak, drop
     /// peaks within (2 + tol) Da downstream that have lower intensity (hi-res) OR drop peaks in
     /// the intensity-sorted list whose m/z is between (mz - tol, mz + 2 + tol) (low-res).</summary>
-    private void DeisotopeScan(IList<double> mz, IList<double> inten, int n, bool[] keep)
+    private void DeisotopeScan(List<double> mz, List<double> inten, int n, bool[] keep)
     {
         var order = new int[n];
         for (int i = 0; i < n; i++) order[i] = i;
@@ -123,7 +123,7 @@ public sealed class Ms2Deisotoper : ISpectrumDataFilter
     }
 
     /// <summary>Poisson chain-based deisotoping (Breen et al. 2000, Bellew et al. 2006).</summary>
-    private void DeisotopePoisson(IList<double> mz, IList<double> inten, int n, bool[] keep)
+    private void DeisotopePoisson(List<double> mz, List<double> inten, int n, bool[] keep)
     {
         if (n < 2) return;
 
@@ -199,7 +199,7 @@ public sealed class Ms2Deisotoper : ISpectrumDataFilter
         for (int i = 0; i < n; i++) if (remove[i]) keep[i] = false;
     }
 
-    private static double KlScore(IsotopeChain chain, IList<double> mz, IList<double> inten)
+    private static double KlScore(IsotopeChain chain, List<double> mz, List<double> inten)
     {
         double mStar = PoissonLambda * mz[chain.Indices[0]] * chain.Charge;
         double mExp = System.Math.Exp(-mStar);
@@ -237,7 +237,7 @@ public sealed class Ms2Deisotoper : ISpectrumDataFilter
     }
 
     private static void Compact(Spectrum spectrum, bool[] keep, int n,
-        IReadOnlyList<double> mz, IReadOnlyList<double> inten, BinaryDataArray intArr)
+        List<double> mz, List<double> inten, BinaryDataArray intArr)
     {
         int kept = 0;
         for (int i = 0; i < n; i++) if (keep[i]) kept++;

@@ -15,6 +15,11 @@
       usual one - Windows Desktop projects (UseWindowsForms/UseWPF) get it from the framework,
       so only plain net10.0 projects with preserialized resources need the package. -->
  <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
+ <!-- Keep the build warning-free: a new compiler, analyzer or MSBuild task warning (MSBxxxx,
+      e.g. a duplicate .resx resource name) fails the build. Demote with NoWarn or
+      MSBuildWarningsAsMessages above, with a comment saying why. -->
+ <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+ <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
  <!-- .NET 9+ defaults this to "all" (transitive), which fails restore. Restore the
       net8 default; transitive advisories are tracked separately. -->
  <NuGetAuditMode>direct</NuGetAuditMode>

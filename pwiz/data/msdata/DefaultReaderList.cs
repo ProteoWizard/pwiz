@@ -251,16 +251,6 @@ public sealed class ReaderList : IReader
     }
 
     /// <summary>
-    /// A reader list pre-populated with the built-in format readers in priority order:
-    /// mzML → mzMLb → MGF.
-    /// </summary>
-    /// <remarks>
-    /// mzMLb comes after mzML in this list, but Identify is content-driven (HDF5
-    /// magic bytes for mzMLb, <c>&lt;mzML&gt;</c> XML tag for mzML), so the order only
-    /// matters for ambiguous inputs — and the two formats can't be confused with
-    /// each other.
-    /// </remarks>
-    /// <summary>
     /// Additional readers registered at startup (typically vendor-SDK-backed readers from
     /// <c>Pwiz.Vendor.*</c>). The vendor projects can't be referenced from
     /// <c>Pwiz.Data.MsData</c> directly without dragging the native SDKs into every consumer,
@@ -270,6 +260,16 @@ public sealed class ReaderList : IReader
     /// </summary>
     public static List<IReader> AdditionalReaders { get; } = new();
 
+    /// <summary>
+    /// A reader list pre-populated with the built-in format readers in priority order:
+    /// mzML → mzMLb → MGF.
+    /// </summary>
+    /// <remarks>
+    /// mzMLb comes after mzML in this list, but Identify is content-driven (HDF5
+    /// magic bytes for mzMLb, <c>&lt;mzML&gt;</c> XML tag for mzML), so the order only
+    /// matters for ambiguous inputs — and the two formats can't be confused with
+    /// each other.
+    /// </remarks>
     public static ReaderList Default
     {
         get

@@ -653,7 +653,7 @@ public sealed class MaxQuantReader : BuildParser
         _targetColumns.Sort((a, b) => a.Position.CompareTo(b.Position));
     }
 
-    private void CollectFilenames(IReadOnlyList<string> dataLines)
+    private void CollectFilenames(List<string> dataLines)
     {
         // cpp parity: MaxQuantReader.cpp:581. Walk every row, pull just the Raw File column,
         // bucket into _fileMap keys.
@@ -809,7 +809,7 @@ public sealed class MaxQuantReader : BuildParser
     // --- modification application ---------------------------------------------------
 
     private static void AddFixedMods(List<SeqMod> v, string sequence,
-        IReadOnlyDictionary<MaxQuantModification.MaxQuantModPosition, List<MaxQuantModification>> modsByPosition)
+        Dictionary<MaxQuantModification.MaxQuantModPosition, List<MaxQuantModification>> modsByPosition)
     {
         var modsAnywhere = modsByPosition[MaxQuantModification.MaxQuantModPosition.Anywhere];
         var modsAnyNTerm = modsByPosition[MaxQuantModification.MaxQuantModPosition.AnyNTerm];
