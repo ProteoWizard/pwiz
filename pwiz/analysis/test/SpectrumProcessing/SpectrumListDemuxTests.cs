@@ -313,12 +313,8 @@ public class SpectrumListDemuxTests
     }
 
     /// <summary>
-    /// Real Orbitrap Eclipse staggered-window data (8 windows of 12 Th staggered by 6 Th) cut down to
-    /// the peaks of four fragment m/z values, against cpp msconvert's demultiplexing of the full
-    /// spectra (see the data folder's README). Each demultiplexed peak is solved from the peaks
-    /// within the extraction tolerance of its own m/z, so the cut-down input reproduces those solves
-    /// exactly. In some spectra these columns' NNLS reaches its iteration limit; cpp keeps the last
-    /// feasible solution there, and a C# port that dropped it lost peaks of up to 5e7.
+    /// Real staggered-window data cut down to four fragment m/z whose NNLS reaches the iteration
+    /// limit in some spectra, against cpp msconvert's output (see the data folder's README).
     /// </summary>
     [TestMethod]
     public void Demux_EclipseNnlsFixture_MatchesCppPeakByPeak()
@@ -328,8 +324,7 @@ public class SpectrumListDemuxTests
         var demuxList = new SpectrumListDemux(spectra,
             new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly });
 
-        // Expected: cpp's peaks of intensity >= 1. Smaller values are rounding around a true zero,
-        // which cpp's Householder QR and C#'s Cholesky resolve differently.
+        // Below 1 are rounding-level near-zeros that cpp (QR) and C# (Cholesky) resolve differently.
         var expected = new Dictionary<(string Scan, string Demux), List<(double Mz, double Intensity)>>();
         foreach (var line in File.ReadLines(Path.Combine(root, "EclipseNnlsFixture.expected.tsv")))
         {
@@ -370,10 +365,8 @@ public class SpectrumListDemuxTests
 
     private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
 
-    /// <summary>Reads the cut-down Eclipse fixture: an <c>S</c> line per MS2 spectrum (scan, start
-    /// time in minutes, isolation target and offsets), each followed by its peaks. An <c>M</c> peak
-    /// is the spectrum's highest m/z, kept only because it sets the extractor's search span; its m/z
-    /// is returned by scan so the comparison leaves it out.</summary>
+    /// <summary>Reads the Eclipse fixture (format in the data folder's README); <paramref name="notCompared"/>
+    /// gets each spectrum's <c>M</c> peak m/z by scan.</summary>
     private static SpectrumListSimple ReadEclipseFixture(string path, out Dictionary<string, double> notCompared)
     {
         var list = new SpectrumListSimple();

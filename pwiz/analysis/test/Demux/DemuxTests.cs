@@ -116,13 +116,7 @@ public static class DemuxTests
         [TestMethod]
         public void NnlsSolver_IterationLimitHit_KeepsPartialSolution()
         {
-            // A = I, b = (1, 2) needs two LS solves: P = {1} gives x = (0, 2), then P = {0, 1}.
-            // With maxIter = 1 the second solve is refused and Nnls.Solve returns false with
-            // x = (0, 2). Cpp's NNLSSolver::Solve (DemuxSolver.cpp) ignores the return value and
-            // copies solver.x() into the solution, so the column must hold (0, 2), not zeros.
-            // On the Eclipse staggered fixture 17 transitions hit the 50-iteration limit this
-            // way, and zeroing them dropped real peaks of up to 5e7 from the demuxed spectra
-            // (Demux_EclipseNnlsFixture_MatchesCppPeakByPeak).
+            // maxIter = 1 stops after the first LS solve with x = (0, 2); like cpp, keep it, not zeros.
             var A = DenseMatrix.OfArray(new[,] { { 1.0, 0 }, { 0, 1 } });
             var B = DenseMatrix.OfArray(new[,] { { 1.0 }, { 2.0 } });
             var X = new NnlsSolver(maxIter: 1).Solve(A, B);
@@ -308,11 +302,8 @@ public static class DemuxTests
         [TestMethod]
         public void OverlappingRanges_SnapToCentersOfTheOriginalRanges()
         {
-            // Three bins of +/-0.005 whose ranges overlap pairwise: [499.995, 500.005],
-            // [499.999, 500.009], [500.003, 500.013]. Cpp snaps each overlap to the mean of the two
-            // ORIGINAL ranges' edges (it works from a copy): 500.002, then 500.006. Snapping against
-            // the already-moved middle bin would put the second edge at 500.00675 instead, and
-            // 500.0064 would fall in the middle bin.
+            // Cpp snaps to the original edges: 500.002, then 500.006 (not 500.00675 from the moved
+            // middle bin), so 500.0064 belongs to the upper bin.
             double[] peakMzs = { 500.000, 500.004, 500.008 };
             var ext = new SpectrumPeakExtractor(peakMzs, new MZTolerance(0.005, MZToleranceUnits.Mz));
             var matrix = DenseMatrix.Create(1, ext.NumPeaks, 0);

@@ -68,12 +68,7 @@ public sealed class NnlsSolver : IDemuxSolver
             Parallel.For(0, numCols, fragIndex =>
             {
                 var solver = localNnls.Value!;
-                // Cpp's NNLSSolver::Solve ignores solve()'s result and copies solver.x() either
-                // way, so a column that hits the iteration limit keeps the last feasible
-                // solution rather than zeros. A singular passive set also keeps it, though C#
-                // detects singularity by Cholesky on A^T A where cpp solves by QR, so on a nearly
-                // singular set C# can stop earlier than cpp would. The active-set loop can
-                // cycle on real data until it hits the limit with a good x in hand.
+                // Like cpp, keep the last feasible x even when Solve fails (e.g. at the iteration limit).
                 solver.Solve(AtB, fragIndex);
                 var sol = solver.X;
                 for (int i = 0; i < numRows; i++) X[i, fragIndex] = sol[i];

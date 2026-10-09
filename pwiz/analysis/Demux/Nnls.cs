@@ -61,9 +61,7 @@ public sealed class Nnls
     /// <summary>Number of LS sub-problems solved during the most recent solve.</summary>
     public int IterationCount => _numLs;
 
-    /// <summary>The solution vector. After a solve that returned false (iteration limit or a
-    /// singular passive set) it holds the last feasible iterate, which <see cref="NnlsSolver"/>
-    /// keeps, as cpp's demultiplexer does; it is never cleared on failure.</summary>
+    /// <summary>The solution vector; after a failed solve, the last feasible iterate.</summary>
     public double[] X => _x;
 
     /// <summary>Constructs an NNLS solver for the system matrix <paramref name="A"/>.</summary>

@@ -51,11 +51,7 @@ public sealed class SpectrumPeakExtractor
         _maxValue = _ranges[n - 1].High;
 
         // Snap adjacent overlapping ranges to a shared midpoint so a single peak can't be
-        // double-counted across two bins (cpp lines 47-57). Each midpoint comes from the two
-        // ORIGINAL ranges, as cpp computes it from a copy: where three or more ranges overlap in
-        // a chain, the middle range's moved lower edge must not shift the next midpoint.
-        // Only a range's Low is ever moved before its own turn, so carrying that one original
-        // value forward is enough.
+        // double-counted across two bins (cpp lines 47-57), using the original edges as cpp does.
         double originalLow = _ranges[0].Low;
         for (int i = 0; i + 1 < n; i++)
         {
