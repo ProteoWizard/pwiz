@@ -34,7 +34,7 @@ public class SpectrumListFactoryCppCoverageTests
         ("index", "0-1"),
         ("isolationWidth", "[1,10]"),
         ("isolationWindows", "[1,10]"),
-#if !NO_VENDOR_SUPPORT
+#if !NO_WATERS_SUPPORT
         ("lockmassRefiner", "mz=500 tol=1.0"),
 #endif
         ("metadataFixer", ""),
@@ -72,7 +72,7 @@ public class SpectrumListFactoryCppCoverageTests
         ("demultiplex", "needs a real DIA multiplexed scan set to construct"),
         ("precursorRefine", "constructed from MSData rather than a spectrum list"),
         ("precursorRecalculation", "not ported - cpp calls it superseded by Thermo's own estimation"),
-#if NO_VENDOR_SUPPORT
+#if NO_WATERS_SUPPORT
         ("lockmassRefiner", "registered only with vendor support - the refiner is in Pwiz.Vendor.Waters"),
 #endif
     };
