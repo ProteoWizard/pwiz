@@ -265,29 +265,34 @@ namespace pwiz.Osprey
         // (the Rust HPC split fans files across nodes, one file per process), so it gets its
         // own group rather than sitting under Distributed / HPC.
         public static readonly OspreyArgument ARG_PARALLEL_FILES = new OspreyArgument(OspreyArgNames.PARALLEL_FILES,
-            () => @"[<N>]", (c, p) =>
-            {
-                if (string.IsNullOrEmpty(p.Value))
-                {
-                    c._config.FileParallelism = FileParallelism.Auto;
-                }
-                else
-                {
-                    // 0 is the value a user most naturally types to mean "off" --
-                    // map it to sequential rather than silently falling through to
-                    // auto. Positive N is an explicit concurrent-file count.
-                    int n = ParseInt(p);
-                    c._config.FileParallelism = n <= 0
-                        ? FileParallelism.Sequential
-                        : FileParallelism.Explicit(n);
-                }
-            }) { DescriptionArgs = () => new object[] { ARG_THREADS.ArgumentText } };
+            () => @"[<N>]", (c, p) => c._config.FileParallelism = ParseFileParallelism(p))
+            { DescriptionArgs = () => new object[] { ARG_THREADS.ArgumentText } };
+        // Per-stage overrides of --parallel-files, in the same three forms. The per-file stages
+        // do not scale alike (caching is bound by a single-threaded vendor decode, scoring by
+        // CPU and a large per-file working set), so one count cannot suit all of them. Each
+        // applies to its stage only and falls back to --parallel-files when absent.
+        public static readonly OspreyArgument ARG_PARALLEL_FILES_CACHING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_CACHING,
+            () => @"[<N>]", (c, p) => c._config.CachingFileParallelism = ParseFileParallelism(p))
+            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME) } };
+        public static readonly OspreyArgument ARG_PARALLEL_FILES_SCORING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_SCORING,
+            () => @"[<N>]", (c, p) => c._config.ScoringFileParallelism = ParseFileParallelism(p))
+            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileScoringTask.TASK_NAME } };
+        public static readonly OspreyArgument ARG_PARALLEL_FILES_RESCORING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_RESCORING,
+            () => @"[<N>]", (c, p) => c._config.RescoringFileParallelism = ParseFileParallelism(p))
+            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileRescoreTask.TASK_NAME } };
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
             () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p)) { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Performance, true,
-                ARG_PARALLEL_FILES, ARG_THREADS);
+                ARG_PARALLEL_FILES, ARG_PARALLEL_FILES_CACHING, ARG_PARALLEL_FILES_SCORING, ARG_PARALLEL_FILES_RESCORING,
+                ARG_THREADS);
+
+        /// <summary>The arguments that take an OPTIONAL count (see TokenizeAndDispatch).</summary>
+        private static readonly OspreyArgument[] OPTIONAL_COUNT_ARGS =
+        {
+            ARG_PARALLEL_FILES, ARG_PARALLEL_FILES_CACHING, ARG_PARALLEL_FILES_SCORING, ARG_PARALLEL_FILES_RESCORING
+        };
 
         // --- Logging ----------------------------------------------------------------------
         // Per-line output decoration and redirection. --timestamp / --memstamp prefix each
@@ -511,7 +516,7 @@ namespace pwiz.Osprey
                     i++;
                     continue;
                 }
-                if (ReferenceEquals(matched, ARG_PARALLEL_FILES))
+                if (OPTIONAL_COUNT_ARGS.Any(countArg => ReferenceEquals(countArg, matched)))
                 {
                     // Optional value: consume the next token as the count ONLY when
                     // it is a non-flag non-negative integer (0 = sequential, N = N
@@ -807,6 +812,19 @@ namespace pwiz.Osprey
                 throw new ArgumentException(InvalidValueMessage(p));
             }
             return result;
+        }
+
+        /// <summary>
+        /// The request a <c>--parallel-files</c>-style argument carries: no value is auto, and a
+        /// count is explicit. <c>0</c> - the value a user most naturally types to mean "off" -
+        /// is an explicit ONE file at a time, not the sequential default: the default yields to
+        /// the <c>OSPREY_MAX_PARALLEL_FILES</c> cap, and a stage the user turned off must not.
+        /// </summary>
+        private static FileParallelism ParseFileParallelism(NameValuePair p)
+        {
+            if (string.IsNullOrEmpty(p.Value))
+                return FileParallelism.Auto;
+            return FileParallelism.Explicit(Math.Max(1, ParseInt(p)));
         }
 
         /// <summary>

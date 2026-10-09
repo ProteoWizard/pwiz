@@ -420,6 +420,19 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
 
+            // Each per-file stage resolves its own count: scoring and re-scoring on different lane
+            // counts, over a shared --parallel-files they both override, still give the sequential
+            // answer, and each stage's decision line names the flag that set it.
+            string stagesDir = CreateDir(@"parallel-files-stages");
+            int rescoringLanes = RUN_NAMES.Length - 1;
+            string stagesLog = RunAnalysis(stagesDir, DataInputs(), FdrLanes(1),
+                OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, @"1",
+                OspreyCommandArgs.ARG_PARALLEL_FILES_SCORING.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture),
+                OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING.ArgumentText, rescoringLanes.ToString(CultureInfo.InvariantCulture));
+            AssertBlibsEqual(baseBlib, Path.Combine(stagesDir, BLIB_FILE));
+            StringAssert.Contains(stagesLog, ExplicitParallelismLine(RUN_NAMES.Length, OspreyArgNames.PARALLEL_FILES_SCORING));
+            StringAssert.Contains(stagesLog, ExplicitParallelismLine(rescoringLanes, OspreyArgNames.PARALLEL_FILES_RESCORING));
+
             // --diagnostics writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
             // It also sets every OSPREY_DUMP_* variable in the process environment, which would turn
@@ -541,12 +554,28 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(sampledDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"sampled calibration reported no precursors");
 
-            // The spectra-cache task alone writes one cache per run and nothing downstream.
+            // The spectra-cache task alone writes one cache per run and nothing downstream. Pinned
+            // to one lane, so the lane comparison below always has a sequential baseline.
             string cacheDir = CreateDir(@"spectra-cache");
             RunAnalysis(cacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
-                SpectraCacheTask.TASK_NAME);
+                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING.ArgumentText, @"1");
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(cacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length);
             Assert.IsFalse(File.Exists(Path.Combine(cacheDir, BLIB_FILE)));
+
+            // With --parallel-files the runs cache on lanes at once, and every cache is
+            // byte-identical to the one-lane result: a file's cache depends only on its input.
+            string laneCacheDir = CreateDir(@"spectra-cache-lanes");
+            string laneLog = RunAnalysis(laneCacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
+                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
+                RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
+            StringAssert.Contains(laneLog, string.Format(OspreyTasksResources.SpectraCacheTask_Run_Caching__0__files___1__at_a_time_,
+                RUN_NAMES.Length, RUN_NAMES.Length));
+            foreach (string run in RUN_NAMES)
+            {
+                CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(cacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    File.ReadAllBytes(Path.Combine(laneCacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    @"a cache built on a lane differs from the one-lane cache: " + run);
+            }
         }
 
         /// <summary>
@@ -741,6 +770,17 @@ namespace pwiz.Osprey.Test
             var match = Regex.Match(log, @"Calibration pass 1 matches scored \[[^\]]*\]: (\d+)");
             Assert.IsTrue(match.Success, @"no calibration match count in the log");
             return int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// The decision line a per-file stage logs when <paramref name="argName"/> set its count to
+        /// <paramref name="lanes"/> over the subset's runs.
+        /// </summary>
+        private static string ExplicitParallelismLine(int lanes, string argName)
+        {
+            return string.Format(
+                OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_,
+                lanes, RUN_NAMES.Length, OspreyArgNames.Text(argName));
         }
 
         /// <summary>

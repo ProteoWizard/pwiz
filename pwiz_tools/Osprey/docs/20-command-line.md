@@ -147,7 +147,15 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
 | `--parallel-files` | `[<N>]` | one at a time | Files scored concurrently (OUTER). No value = auto from free RAM + cores; `<N>` = exactly N. **Single-node** mode — do not use under an HPC scheduler that already fans out. |
-| `--threads` | `<count>` | all cores | Per-file main-search threads (INNER), divided across concurrently-scored files. |
+| `--parallel-files-caching` | `[<N>]` | `--parallel-files` | Files whose spectra are cached concurrently (`--task SpectraCache`), overriding `--parallel-files` for that stage only. Same forms. A vendor decode is single-threaded (~20 MB/s per Thermo file), so this stage gains from far more lanes than scoring; `--threads` is not divided here. mzML parses still run one at a time, and a full run caches inside scoring at the scoring count. |
+| `--parallel-files-scoring` | `[<N>]` | `--parallel-files` | Files scored concurrently (`PerFileScoring`, Stages 1-4), overriding `--parallel-files` for that stage only. Same forms. |
+| `--parallel-files-rescoring` | `[<N>]` | `--parallel-files` | Files re-scored concurrently (`PerFileRescoring`, Stage 6, and Stage 7's per-run fold), overriding `--parallel-files` for that stage only. Same forms. Its per-file working set is a fraction of scoring's. |
+| `--threads` | `<count>` | all cores | Per-file main-search threads (INNER), divided across the files a scoring or re-scoring stage runs concurrently. |
+
+Each per-file stage resolves its own count, once, from its own flag, else `--parallel-files`, else
+`OSPREY_MAX_PARALLEL_FILES` (not for caching), else one at a time, and logs a `File parallelism: N (...)` line naming
+the argument that decided. First-pass FDR's lanes are separate (from `--threads` and free memory).
+None of these counts enters a validity key or changes an output byte; one lane is the plain loop.
 
 ### Distributed / HPC
 

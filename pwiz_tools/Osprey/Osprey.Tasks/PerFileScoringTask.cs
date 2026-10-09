@@ -279,14 +279,14 @@ namespace pwiz.Osprey.Tasks
                 { ParquetScoreCache.META_RECONCILED, @"false" },
             };
 
-            // Resolve how many input files run concurrently for this invocation
-            // (--parallel-files, the OSPREY_MAX_PARALLEL_FILES back-compat cap,
-            // free RAM, and core count) in the one shared place. Stored on the
+            // Resolve how many input files score concurrently for this invocation
+            // (--parallel-files-scoring, else --parallel-files, the OSPREY_MAX_PARALLEL_FILES
+            // back-compat cap, free RAM, and core count) in the one shared place. Stored on the
             // per-run RunPlan (driver-owned run state), not on the parsed
             // OspreyConfig; ProcessFile reads it to divide the inner main-search
             // thread budget and avoid oversubscription.
-            int effectiveParallelism = ResolveFileParallelism(config, nFiles, ctx.LogInfo);
-            ctx.RunPlan.EffectiveFileParallelism = effectiveParallelism;
+            int effectiveParallelism = ResolveFileParallelism(config, FileStage.Scoring, nFiles, ctx.LogInfo);
+            ctx.RunPlan.ScoringFileParallelism = effectiveParallelism;
 
             var swAllFiles = Stopwatch.StartNew();
             if (nFiles == 1)
@@ -570,13 +570,6 @@ namespace pwiz.Osprey.Tasks
 
             int nFiles = config.InputFiles.Count;
 
-            // Mirror Run's EffectiveFileParallelism bookkeeping via the shared
-            // resolver (unused by the disk-load path, which never calls
-            // ProcessFile, but kept so the RunPlan reflects the same per-run
-            // state either way). No log callback: this path does not parallelize,
-            // so it should not emit a file-parallelism decision line.
-            ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
-
             // Compute the reconciled-2nd-pass-bundle predicate ONCE here and thread it to
             // both the loader (lean/fat choice) and the hydrator, so a sidecar appearing
             // between two separate disk reads cannot make them disagree (lean empty stubs
@@ -691,13 +684,6 @@ namespace pwiz.Osprey.Tasks
             var perFileParquetPaths = new Dictionary<string, string>();
 
             int nFiles = config.InputFiles?.Count ?? 0;
-
-            // Mirror Run's EffectiveFileParallelism bookkeeping via the shared
-            // resolver (unused by the disk-load path, which never calls
-            // ProcessFile, but kept so the RunPlan reflects the same per-run
-            // state either way). No log callback: this path does not parallelize,
-            // so it should not emit a file-parallelism decision line.
-            ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
 
             // Lean on resume too (#4400): a pure straight-through resume (all files
             // skipped) used to rematerialize the full fat FdrEntry stub buffer + PIN
@@ -1062,24 +1048,32 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Resolve the effective concurrent-file count for this invocation via the
+        /// Resolve one stage's concurrent-file count for this invocation via the
         /// shared <see cref="FileParallelismResolver"/> -- the single owner of the
-        /// precedence between <c>--parallel-files</c>, the
+        /// precedence between the stage's own flag, <c>--parallel-files</c>, the
         /// <c>OSPREY_MAX_PARALLEL_FILES</c> back-compat cap, free RAM, and the core
-        /// count. The memory probe and per-file footprint estimate are evaluated
+        /// count. Every per-file stage resolves through here (caching and re-scoring
+        /// too), so a stage's count can never be derived differently from another's.
+        /// The memory probe and per-file footprint estimate are evaluated
         /// lazily (auto mode only), so the common sequential / explicit paths do no
-        /// I/O. <paramref name="log"/> is null on the disk-load bookkeeping paths
-        /// that never actually parallelize, so they compute the same number without
-        /// emitting a misleading decision line.
+        /// I/O. <paramref name="log"/> is null where the count is resolved without the
+        /// stage doing its per-file work (a rehydrate), so no decision line is emitted.
+        ///
+        /// The <c>OSPREY_MAX_PARALLEL_FILES</c> cap does not apply to caching: it predates
+        /// caching on lanes and was sized for scoring's memory, and harnesses that set it to
+        /// match scoring (Test-PerfGate) must not find staging turned parallel by it.
         /// </summary>
-        private static int ResolveFileParallelism(OspreyConfig config, int nFiles, Action<string> log)
+        internal static int ResolveFileParallelism(OspreyConfig config, FileStage stage, int nFiles,
+            Action<string> log)
         {
+            var request = config.GetFileParallelism(stage, out string argName);
+            int envCap = stage == FileStage.Caching ? 0 : OspreyEnvironment.MaxParallelFiles;
             return FileParallelismResolver.Resolve(
-                config.FileParallelism, nFiles, OspreyEnvironment.MaxParallelFiles,
+                request, nFiles, envCap,
                 Environment.ProcessorCount,
                 SystemMemory.AvailablePhysicalBytes,
                 () => EstimateInputBytes(config.InputFiles),
-                log);
+                log, argName);
         }
 
         /// <summary>
@@ -2659,11 +2653,11 @@ namespace pwiz.Osprey.Tasks
             // 32 threads on a 32-core box, the prior 96-way oversubscription
             // produced 45-95s wall-time variance on Stellar; a fair share
             // (10 threads each) holds the run near steady-state.
-            if (ctx.RunPlan.EffectiveFileParallelism > 1)
+            if (ctx.RunPlan.ScoringFileParallelism > 1)
             {
-                int perFileThreads = Math.Max(1, config.NThreads / ctx.RunPlan.EffectiveFileParallelism);
+                int perFileThreads = Math.Max(1, config.NThreads / ctx.RunPlan.ScoringFileParallelism);
                 ctx.LogInfo(LogTag.BENCH, @"Per-file thread cap: {0} ({1} total / {2} files in parallel)",
-                    perFileThreads, config.NThreads, ctx.RunPlan.EffectiveFileParallelism);
+                    perFileThreads, config.NThreads, ctx.RunPlan.ScoringFileParallelism);
                 config.NThreads = perFileThreads;
             }
 
@@ -2684,7 +2678,7 @@ namespace pwiz.Osprey.Tasks
             MultiProgressReporter.Current?.BeginSegment();
             var swParse = Stopwatch.StartNew();
             SpectraWindowIndex windowIndex = ScoringTaskShared.EnsureSpectraCache(
-                inputFile, ctx.RunPlan.EffectiveFileParallelism > 1, out int unsortedCount, ctx);
+                inputFile, ctx.RunPlan.ScoringFileParallelism > 1, out int unsortedCount, ctx);
             swParse.Stop();
 
             long inputBytes = 0;
