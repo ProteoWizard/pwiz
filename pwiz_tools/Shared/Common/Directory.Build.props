@@ -13,7 +13,7 @@
  <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
  <!-- Same warning-free policy as pwiz_tools/Directory.Build.props, which this file does not import. -->
  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
- <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
+ <MSBuildWarningsAsErrors>$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
  <LangVersion>8.0</LangVersion>
  </PropertyGroup> 
  </Project>
