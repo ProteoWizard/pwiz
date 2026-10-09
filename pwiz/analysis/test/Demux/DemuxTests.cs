@@ -306,6 +306,22 @@ public static class DemuxTests
         }
 
         [TestMethod]
+        public void OverlappingRanges_SnapToCentersOfTheOriginalRanges()
+        {
+            // Three bins of +/-0.005 whose ranges overlap pairwise: [499.995, 500.005],
+            // [499.999, 500.009], [500.003, 500.013]. Cpp snaps each overlap to the mean of the two
+            // ORIGINAL ranges' edges (it works from a copy): 500.002, then 500.006. Snapping against
+            // the already-moved middle bin would put the second edge at 500.00675 instead, and
+            // 500.0064 would fall in the middle bin.
+            double[] peakMzs = { 500.000, 500.004, 500.008 };
+            var ext = new SpectrumPeakExtractor(peakMzs, new MZTolerance(0.005, MZToleranceUnits.Mz));
+            var matrix = DenseMatrix.Create(1, ext.NumPeaks, 0);
+            ext.Extract(MakeSpectrumPlain(new[] { 500.0064 }, new[] { 1.0 }), matrix, rowNum: 0);
+            Assert.AreEqual(0.0, matrix[0, 1], 1e-12, "middle bin");
+            Assert.AreEqual(1.0, matrix[0, 2], 1e-12, "upper bin");
+        }
+
+        [TestMethod]
         public void OutOfRangePeaks_AreIgnored()
         {
             double[] peakMzs = { 100.0, 200.0 };
