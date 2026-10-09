@@ -11,3 +11,7 @@ parquet-cpp-arrow 24 (stock Parquet.Net 4.25.0 cannot parse it). Mods are Unimod
 Precursors were chosen to cover charges 1-4, each mod alone, N-terminal Acetyl merged with
 Oxidation and with Carbamidomethyl on residue 1, a non-proteotypic precursor, all three runs,
 and two precursors present in the results but not in the library.
+
+sgs-sample1.sn-report.zip holds the same two files, stored uncompressed, the way Spectronaut
+ships a report export. The loose pair is the same data outside a container, so between the two
+tests both input shapes are covered.

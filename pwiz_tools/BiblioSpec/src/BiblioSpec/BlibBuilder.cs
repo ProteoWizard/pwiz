@@ -116,6 +116,7 @@ public class BlibBuilder : BlibMaker
         ".mlb",
         ".speclib",
         ".parquet",  // DIA-NN v2+ report-lib.parquet (cpp PR #4189)
+        ".sn-report.zip",  // Spectronaut export: both its parquet files in one uncompressed zip
         ".tsv",
         ".osw",
         ".mzTab",
