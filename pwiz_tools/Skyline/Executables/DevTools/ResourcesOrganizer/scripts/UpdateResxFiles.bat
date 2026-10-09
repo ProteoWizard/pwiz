@@ -21,11 +21,14 @@ if not exist %LASTVERSIONDB% (
     set ERRORLEVEL=1
     goto end
 )
+REM Osprey is not in LastReleaseResources.db yet, so importLastVersion would revert its
+REM translations to English. Remove this exclusion once Osprey is part of the baseline.
+set EXTRA_EXCLUDE=pwiz_tools\Osprey
 pushd %PWIZ_ROOT%
 call %~dp0MakeResourcesDb.bat %WORKDIR%\CurrentRelease.db
 popd
 pushd %WORKDIR%
-%RESORGANIZER% importLastVersion --db CurrentRelease.db %LASTVERSIONDB% --output MergedResources.db --language ja zh-CHS
+%RESORGANIZER% importLastVersion --db CurrentRelease.db %LASTVERSIONDB% --output MergedResources.db --language ja zh-Hans
 if %ERRORLEVEL% neq 0 (
     goto error
 )

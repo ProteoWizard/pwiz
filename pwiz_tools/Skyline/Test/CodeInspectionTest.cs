@@ -146,16 +146,23 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"WebClient is obsolete on modern .NET (SYSLIB0014), so it has to go before the port. pwiz.Common.SystemUtil.HttpClientWithProgress is the project standard for HTTP: it reports progress, supports cancellation, and is testable through its TestBehavior seam. There is no inline opt-out for this rule - if you believe you have a legitimate exception, add it to this inspection in CodeInspectionTest.cs so it gets reviewed.",
                 null, // No inline opt-out - see the note above this inspection
-                // Known remaining uses, tolerated as warnings so no NEW ones can be added. Lower this
-                // number as each is migrated - it is the only thing tracking them.
+                // Known remaining use, tolerated as a warning so no NEW ones can be added. Lower this
+                // number when it is migrated - it is the only thing tracking it.
                 //   Executables\Installer\SetupDeployProject.cs - the installer strategy is expected to
                 //     change wholesale with the .NET port, so migrating it now would likely be wasted work.
-                //   SkylineNightly\Nightly.cs, SkylineNightlyShim\Program.cs - these may not have
-                //     HttpClientWithProgress available. The Shim especially is a deliberately tiny
-                //     program that runs on developer machines during nightly testing, only to check
-                //     that SkylineNightly itself is current; plain HttpClient with much simpler
-                //     handling is likely the right answer there rather than the full wrapper.
-                3);
+                1);
+
+            // Looking for WebRequest/HttpWebRequest use, obsolete on modern .NET for the same reason as
+            // WebClient above. The last uses under the scan roots were migrated to HttpClient, so none are
+            // tolerated, and for the same reason as above there is no inline opt-out.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // Nothing exempted
+                string.Empty, // No file content required for inspection
+                @"WebRequest\.Create(Http|Default)?\s*\(", // Forbidden pattern
+                true, // Pattern is a regular expression
+                @"WebRequest and HttpWebRequest are obsolete on modern .NET (SYSLIB0014). Use pwiz.Common.SystemUtil.HttpClientWithProgress, or plain HttpClient in a project that cannot reference it. There is no inline opt-out for this rule - if you believe you have a legitimate exception, add it to this inspection in CodeInspectionTest.cs so it gets reviewed."); // No inline opt-out - see the note above this inspection
 
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask
@@ -312,6 +319,40 @@ namespace pwiz.SkylineTest
                 @"(new XmlTextWriter|File\.WriteAllText|File\.WriteAllLines|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8[^E]", // Forbidden pattern - catches file writing with Encoding.UTF8 (but not UTF8Encoding)
                 true, // Pattern is a regular expression
                 @"Encoding.UTF8 includes a BOM by default. Use 'new UTF8Encoding(false)' for UTF-8 without BOM, or 'new UTF8Encoding(true)' if you explicitly need a BOM."); // Explanation for prohibition, appears in report
+
+            // Remedy for both invisible character inspections below. Verbatim @"" strings do not process escapes, and a
+            // *.Designer.cs file copies its strings from the .resx file it is generated from.
+            const string invisibleCharacterRemedy = @"Delete it or replace it with its ASCII equivalent. If the character is intended, write it as a \uXXXX escape in a regular (not @"""") string or char literal, because verbatim strings do not process escapes. In a generated *.Designer.cs file, fix the source .resx file instead.";
+
+            // Looking for invisible format characters (soft hyphen U+00AD, zero-width spaces and joiners, direction marks,
+            // a BOM inside a file), which are pasted in from documents or produced by editing tools, cannot be seen in
+            // review, and make strings that look identical compare unequal. A BOM at the start of a file is not seen here,
+            // because File.ReadAllText removes it. The soft hyphen is listed separately because the .NET Framework regex
+            // engine classifies it as a dash (Pd), so \p{Cf} alone does not match it there. The regex sees UTF-16 code
+            // units, so format characters outside the Basic Multilingual Plane (e.g. the TAG characters U+E0001-E007F)
+            // are not matched.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Cf}\xAD]", // Forbidden pattern - any BMP character in the Unicode format category, and the soft hyphen
+                true, // Pattern is a regular expression
+                @"Invisible format character (e.g. soft hyphen U+00AD or zero-width space U+200B). " + invisibleCharacterRemedy); // Explanation for prohibition, appears in report
+
+            // Looking for space and line break characters other than the ASCII ones (non-breaking, ideographic and
+            // typographic spaces, which come from pasted text or Japanese and Chinese input methods, and the line and
+            // paragraph separators and next line character). The compiler accepts all of them, and treats the line breaks
+            // as the end of a line, so code after one inside a // comment compiles but is not seen by these inspections,
+            // which split lines only at '\n'.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Zs}\p{Zl}\p{Zp}\x85-[ ]]", // Forbidden pattern - any Unicode space, line or paragraph separator, or next line, except the ASCII space
+                true, // Pattern is a regular expression
+                @"Non-ASCII space or line break character (e.g. non-breaking space U+00A0, ideographic space U+3000 or line separator U+2028). " + invisibleCharacterRemedy); // Explanation for prohibition, appears in report
 
             FilesTreeDataModelInspection();
 
@@ -658,11 +699,11 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Gdi32), 5 },
+                { typeof(Gdi32), 9 },
                 { typeof(Kernel32), 10 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
-                { typeof(User32), 45 },
+                { typeof(User32), 50 },
 
                 { typeof(DwmapiTest), 4 },
                 { typeof(Gdi32Test), 1 },
@@ -1272,18 +1313,12 @@ namespace pwiz.SkylineTest
                     var warnings = new List<string>();
                     // Track already reported issues for this file to avoid duplicate reports
                     var reportedMatches = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    // Per-file tracking for inconsistent line endings and multiline pattern faults
-                    var crlfCount =0;
+                    // Per-file tracking for multiline pattern faults
                     var multiLinePatternFaults = new Dictionary<Pattern, string>();
                     var multiLinePatternFaultLocations = new Dictionary<Pattern, int>();
 
                     foreach (var line in lines)
                     {
-                        // Look for inconsistent line endings
-                        if (line.EndsWith("\r")) 
-                        {
-                            crlfCount++;
-                        }
                         lineNum++;
                         if (forbiddenPatternsForThisFile != null)
                         {
@@ -1346,11 +1381,6 @@ namespace pwiz.SkylineTest
                                 }
                             }
                         }
-                    }
-
-                    if (crlfCount != 0 && crlfCount < lines.Length-1)
-                    {
-                        results.Add($@"Inconsistent line endings in {filename}");
                     }
 
                     if (requiredPatternsObservedInThisFile != null)

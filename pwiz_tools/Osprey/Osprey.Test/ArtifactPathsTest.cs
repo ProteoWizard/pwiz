@@ -40,8 +40,9 @@ namespace pwiz.Osprey.Test
     {
         // Helper: run an action with ArtifactPaths overrides set, always resetting
         // the process-wide statics afterward so other tests see the default
-        // (null = each input file's own directory).
-        private static void WithArtifactDirs(string outputDir, string cacheDir, System.Action body)
+        // (null = each input file's own directory). Shared with other tests that
+        // depend on where artifacts resolve.
+        internal static void WithArtifactDirs(string outputDir, string cacheDir, System.Action body)
         {
             string savedOutput = ArtifactPaths.OutputDir;
             string savedCache = ArtifactPaths.CacheDir;

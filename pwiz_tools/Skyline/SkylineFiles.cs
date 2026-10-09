@@ -1687,7 +1687,7 @@ namespace pwiz.Skyline
 
         private DocumentFormat? GetFileFormatOnDisk()
         {
-            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
+            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : null;
         }
 
         public bool ShareDocument(string fileDest, ShareType shareType, bool useFileSaver = true, int zipFileMaxSegmentSize = 0)
@@ -4176,7 +4176,12 @@ namespace pwiz.Skyline
             }
 
             // Validate folder path matches
+            // EscapeDataString is NOT the replacement here: folderPath is a URI AbsolutePath, so its
+            // '/' separators have to survive escaping or the Contains match can never succeed.
+            // Retiring this properly means building the comparison from Uri parts.
+#pragma warning disable SYSLIB0013
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
+#pragma warning restore SYSLIB0013
                 return null; // Folder path mismatch
 
             // Validate upload permissions

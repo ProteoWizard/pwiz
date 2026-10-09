@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             return bestIon == null
-                ? (IonSeriesKey?)null
+                ? null
                 : new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge, bestIon.Losses);
         }
 

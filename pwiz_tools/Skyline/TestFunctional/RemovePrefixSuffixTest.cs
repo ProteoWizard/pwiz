@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -80,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
 
             using (new WaitDocumentChange())
             {
-                SkylineWindow.BeginInvoke(new Action(()=>SkylineWindow.ImportResults()));
+                SkylineWindow.BeginInvoke(()=>SkylineWindow.ImportResults());
                 WaitForConditionUI(() => null != FindOpenForm<ImportResultsDlg>() || null != FindOpenForm<AlertDlg>());
                 var importResultsDlg = FindOpenForm<ImportResultsDlg>();
                 if (importResultsDlg == null)

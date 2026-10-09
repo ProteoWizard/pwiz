@@ -125,11 +125,11 @@ namespace pwiz.SkylineTestFunctional
         protected bool RunAndMaybeTryCancel(Action action, bool tryToCancel)
         {
             bool finished = false;
-            SkylineWindow.BeginInvoke(new Action(() =>
+            SkylineWindow.BeginInvoke(() =>
             {
                 action();
                 finished = true;
-            }));
+            });
             bool triedToCancel = false;
             while (!finished)
             {

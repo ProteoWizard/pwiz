@@ -109,19 +109,15 @@ namespace pwiz.Osprey.Tasks
         /// owns both halves of it - so it reads the analysis-wide summary that task left on
         /// disk (<c>ScoringTaskShared.ReadRetainedBaseIdsOrFail</c>).</para>
         ///
-        /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path and
-        /// inherits its config conditions - today only the Percolator framework, since
-        /// <c>--fdrbench-pass 1</c> stopped forcing the resident pool (#4507; the pass-1 TSV is
-        /// emitted before compaction from the sidecars, so the release, which runs after, never
-        /// touches what it reads).</para>
+        /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path,
+        /// which no config condition excludes any more. <c>--fdrbench-pass 1</c> stopped forcing
+        /// the resident pool with #4507 (the pass-1 TSV is emitted before compaction from the
+        /// sidecars, so the release, which runs after, never touches what it reads), and the
+        /// last non-Percolator FDR method, the other exclusion, was deleted with #4543.</para>
         /// </summary>
         private static bool LegAdmitsRelease(OspreyConfig config)
         {
-            if (config.StopAfterStage5)
-                return false;
-            if (config.ExpectReconciledInput)
-                return true;
-            return config.FdrMethod.UsesPercolatorFramework();
+            return !config.StopAfterStage5;
         }
 
         /// <summary>
@@ -214,6 +210,18 @@ namespace pwiz.Osprey.Tasks
             }
             FragmentMath.ClearTop6MzCache();
             return released;
+        }
+
+        /// <summary>
+        /// Write the machine-channel record of one release, which the regression gate parses to
+        /// assert the release ran and what it kept. <paramref name="scope"/> is
+        /// <see cref="LogKey.SCOPE_RESCORE_GAP_FILL"/> or
+        /// <see cref="LogKey.SCOPE_RETAINED_SUMMARY"/>.
+        /// </summary>
+        public static void LogRelease(IOspreyLog log, int released, int entries, int retained, string scope)
+        {
+            log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_RELEASED,
+                @"released={0} entries={1} retained={2} scope={3}", released, entries, retained, scope));
         }
     }
 }

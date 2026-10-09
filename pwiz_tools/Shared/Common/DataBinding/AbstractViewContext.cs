@@ -654,10 +654,7 @@ namespace pwiz.Common.DataBinding
         {
             targetBindingList.SetView(sourceBindingList.ViewInfo, newRowSource);
             targetBindingList.RowFilter = sourceBindingList.RowFilter;
-            if (sourceBindingList.SortDescriptions != null)
-            {
-                targetBindingList.ApplySort(sourceBindingList.SortDescriptions);
-            }
+            targetBindingList.ApplySort(sourceBindingList.SortDescriptions);
         }
 
         public ViewLayoutList GetViewLayoutList(ViewName viewName)

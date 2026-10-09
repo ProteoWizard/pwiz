@@ -18,7 +18,7 @@
  */
 
 using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -48,9 +48,11 @@ namespace pwiz.Skyline.ToolsUI
 {
     public partial class ToolOptionsUI : FormEx, IMultipleViewProvider
     {
-        private readonly SettingsListBoxDriver<Server> _driverServers;
-        private readonly SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
-        private readonly SettingsListComboDriver<ColorScheme> _driverColorSchemes;
+        // Not readonly: importing settings replaces the lists these are bound to, so they are
+        // created again from the new lists.
+        private SettingsListBoxDriver<Server> _driverServers;
+        private SettingsListBoxDriver<RemoteAccount> _driverRemoteAccounts;
+        private SettingsListComboDriver<ColorScheme> _driverColorSchemes;
 
         // For Koina pinging
         private readonly SrmSettings _settingsNoMod;
@@ -58,16 +60,9 @@ namespace pwiz.Skyline.ToolsUI
         public ToolOptionsUI(SrmSettings settings)
         {
             InitializeComponent();
-            checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
-            powerOfTenCheckBox.Checked = Settings.Default.UsePowerOfTen;
             Icon = Resources.Skyline;
-
-            _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
-            _driverServers.LoadList();
-            _driverRemoteAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
-            _driverRemoteAccounts.LoadList();
-            _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
-            _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
+            FindInstallations = () => new SkylineInstallations().ListOtherInstallations();
+            RunUninstall = SettingsImporter.RunCommand;
 
             var pingPep = new Peptide(@"PING");
             var peptide = new PeptideDocNode(pingPep);
@@ -88,16 +83,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 listBoxLanguages.Items.Add(new DisplayLanguageItem(culture.Name, culture.DisplayName));
             }
-            for (int i = 0; i < listBoxLanguages.Items.Count; i++)
-            {
-                var displayLanguageItem = (DisplayLanguageItem) listBoxLanguages.Items[i];
-                if (Equals(displayLanguageItem.Key, Settings.Default.DisplayLanguage))
-                {
-                    listBoxLanguages.SelectedIndex = i;
-                }
-            }
             comboCompactFormatOption.Items.AddRange(CompactFormatOption.ALL_VALUES.ToArray());
-            comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
 
             var iModels = KoinaIntensityModel.Models.ToList();
             iModels.Insert(0, string.Empty);
@@ -109,19 +95,64 @@ namespace pwiz.Skyline.ToolsUI
             ComboHelper.AutoSizeDropDown(intensityModelCombo);
             iRTModelCombo.Items.AddRange(rtModels.ToArray());
             ComboHelper.AutoSizeDropDown(iRTModelCombo);
-            
+
             koinaServerStatusLabel.Text = string.Empty;
-            if (iModels.Contains(Settings.Default.KoinaIntensityModel))
-                intensityModelCombo.SelectedItem = Settings.Default.KoinaIntensityModel;
-            if (rtModels.Contains(Settings.Default.KoinaRetentionTimeModel))
-                iRTModelCombo.SelectedItem = Settings.Default.KoinaRetentionTimeModel;
 
             ceCombo.Items.AddRange(
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object) c)
                     .ToArray());
+            tbxSettingsFilePath.Text = Settings.Default.SettingsFilePath;
+
+            LoadSettings();
+        }
+
+        /// <summary>
+        /// Finds the other installed Skylines whose settings could be imported. A test replaces
+        /// this to offer installations of its own making.
+        /// </summary>
+        public Func<IEnumerable<SkylineInstallation>> FindInstallations { get; set; }
+
+        /// <summary>
+        /// Runs the command that uninstalls another installation. A test replaces this to see
+        /// the command without running anything.
+        /// </summary>
+        public Action<string> RunUninstall { get; set; }
+
+        /// <summary>
+        /// Shows every control the value it has in the saved settings. Called once the form is
+        /// built and again after settings are imported, when all of those values change.
+        /// </summary>
+        private void LoadSettings()
+        {
+            checkBoxShowWizard.Checked = Settings.Default.ShowStartupForm;
+            powerOfTenCheckBox.Checked = Settings.Default.UsePowerOfTen;
+
+            _driverServers = new SettingsListBoxDriver<Server>(listboxServers, Settings.Default.ServerList);
+            _driverServers.LoadList();
+            _driverRemoteAccounts = new SettingsListBoxDriver<RemoteAccount>(listBoxRemoteAccounts, Settings.Default.RemoteAccountList);
+            _driverRemoteAccounts.LoadList();
+            _driverColorSchemes = new SettingsListComboDriver<ColorScheme>(comboColorScheme, Settings.Default.ColorSchemes, true);
+            _driverColorSchemes.LoadList(Settings.Default.CurrentColorScheme);
+
+            for (int i = 0; i < listBoxLanguages.Items.Count; i++)
+            {
+                var displayLanguageItem = (DisplayLanguageItem) listBoxLanguages.Items[i];
+                if (Equals(displayLanguageItem.Key, Settings.Default.DisplayLanguage))
+                {
+                    listBoxLanguages.SelectedIndex = i;
+                }
+            }
+            comboCompactFormatOption.SelectedItem = CompactFormatOption.FromSettings();
+
+            SelectIfListed(intensityModelCombo, Settings.Default.KoinaIntensityModel);
+            SelectIfListed(iRTModelCombo, Settings.Default.KoinaRetentionTimeModel);
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
-            tbxSettingsFilePath.Text = System.Configuration.ConfigurationManager
-                .OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+        }
+
+        private static void SelectIfListed(ComboBox combo, string item)
+        {
+            if (item != null && combo.Items.Contains(item))
+                combo.SelectedItem = item;
         }
 
         private class KoinaPingRequest : KoinaHelpers.KoinaRequest
@@ -292,15 +323,15 @@ namespace pwiz.Skyline.ToolsUI
             _driverRemoteAccounts.EditList();
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            base.OnClosing(e);
+            base.OnFormClosing(e);
 
             if (!e.Cancel)
                 _pingRequest?.Cancel();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             if (DialogResult == DialogResult.OK)
             {
@@ -326,7 +357,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (koinaSettingsValidBefore != KoinaHelpers.KoinaSettingsValid)
                     Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         public void OkDialog()
@@ -452,6 +483,36 @@ namespace pwiz.Skyline.ToolsUI
                 Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
                 Settings.Default.Save();
             }
+        }
+
+        private void btnImportSettings_Click(object sender, EventArgs e)
+        {
+            ImportSettings();
+        }
+
+        /// <summary>
+        /// Offers the settings of the other installed Skylines, and replaces this one's with the
+        /// chosen installation's. The controls are then reloaded, since closing with OK writes
+        /// them back to the settings.
+        /// </summary>
+        public void ImportSettings()
+        {
+            var installations = FindInstallations().ToList();
+            if (installations.Count == 0)
+            {
+                MessageDlg.Show(this, ToolsUIResources.ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_);
+                return;
+            }
+            SettingsImporter importer;
+            using (var dlg = new ImportSettingsDlg(installations, true))
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                importer = dlg.Importer;
+            }
+            importer.RunUninstall = RunUninstall;
+            importer.Import(this);
+            LoadSettings();
         }
 
         private void koinaDescrLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

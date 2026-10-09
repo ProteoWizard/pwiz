@@ -75,7 +75,9 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public MzTolerance PrecursorTolerance;
-            public MzTolerance FragmentTolerance;
+            // No fragment tolerance here: Comet derives its fragment binning from the MS2 analyzer
+            // resolution (see the search settings page below), so there is nothing per-instrument
+            // to set. Both instruments here are high-resolution MS2.
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
 
             // This may be necessary in the future if the default settings change but we don't want the tutorial results to change.
@@ -195,7 +197,6 @@ namespace TestPerf
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
                 PrecursorTolerance = new MzTolerance(30, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(40, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF
             });
 
@@ -259,7 +260,6 @@ namespace TestPerf
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                 PrecursorTolerance = new MzTolerance(10, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(20, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.QExactive
             });
 
@@ -330,6 +330,22 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         protected override void DoTest()
+        {
+            try
+            {
+                DoTutorialSteps();
+            }
+            finally
+            {
+                // Cleanup output files in persistent dir, even when the test fails: the DIA-SWATH tutorial
+                // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
+                // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+                if (!IsRecordMode)
+                    CleanUpPersistentDir(GetTestPath("DIA\\"));
+            }
+        }
+
+        private void DoTutorialSteps()
         {
             Assert.IsNotNull(_expectedValues);
 
@@ -550,11 +566,12 @@ namespace TestPerf
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                // PROOF-OF-CONCEPT (temporary): search with Comet instead of MSAmanda. Comet's
-                // output is thread/machine-deterministic (deterministic I/L tiebreak + fixed pin
-                // ordering), so the library count is stable across machines, unlike MSAmanda whose
-                // parallel ordering drives a +/-2 per-machine drift. Comet takes no fragment
-                // tolerance (fragment binning comes from the MS2 analyzer resolution setting).
+                // Search with Comet instead of MSAmanda. Comet's output is thread/machine-
+                // deterministic (deterministic I/L tiebreak + fixed pin ordering), so the library
+                // count is stable across machines, unlike MSAmanda whose parallel ordering drives
+                // a +/-2 per-machine drift. Comet takes no fragment tolerance: the MS2 tolerance
+                // box is disabled for Comet and CometSearchEngine.SetFragmentIonMassTolerance is a
+                // no-op, because fragment binning comes from the MS2 analyzer resolution set below.
                 importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.Comet;
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b,y";
@@ -595,7 +612,7 @@ namespace TestPerf
             // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
             // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
             // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)
@@ -707,7 +724,6 @@ namespace TestPerf
                         { "collinsb_I180316_002", 41 }
                     }))
             {
-                CleanUpPersistentDir(diaDir);
                 return;
             }
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
@@ -890,13 +906,6 @@ namespace TestPerf
                     fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                 });*/
                 TakeCoverShot();
-            }
-
-            // Cleanup output files in persistent dir
-            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
-            if (!IsRecordMode)
-            {
-                CleanUpPersistentDir(diaDir);
             }
 
             if (IsRecordMode)

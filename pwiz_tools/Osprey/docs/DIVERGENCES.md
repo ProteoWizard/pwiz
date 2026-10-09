@@ -4,7 +4,10 @@ This report consolidates every divergence found by the 18 per-document parity re
 
 ## Executive summary
 
-Across all 18 algorithm documents the C# port is a faithful, parity-focused reproduction of the Rust engine: on the Stellar/Astral reference datasets it is bit-identical, enforced by the `regression.ps1` 1e-9 gate (golden + resume + HPC-chain legs) plus `OSPREY_CROSS_IMPL_*` byte-parity hooks. Of **110 catalogued divergences**, the overwhelming majority are either **documentation staleness** (the Rust prose lagging its own evolving Rust code, which the C# port correctly tracks) or **intentional C# infrastructure/CLI redesigns** that preserve output. There is exactly **one genuine PORT-ERROR** — the Razor shared-peptide assignment order in protein parsimony — and it sits off the default, bit-identical-tested path. **Seven items are UNVERIFIED** (an eighth, U6, is resolved) (the reviewer could not confirm one side against source and flagged them for a human to check). Nothing on the default analysis path was found to change output relative to Rust.
+Across all 18 algorithm documents the C# port is a faithful, parity-focused reproduction of the Rust engine: on the Stellar/Astral reference datasets it is bit-identical, enforced by the `regression.ps1` 1e-9 gate (golden + resume + HPC-chain legs) plus `OSPREY_CROSS_IMPL_*` byte-parity hooks. Of **110 catalogued divergences**, the overwhelming majority are either **documentation staleness** (the Rust prose lagging its own evolving Rust code, which the C# port correctly tracks) or **intentional C# infrastructure/CLI redesigns** that preserve output. There is exactly **one genuine PORT-ERROR** — the Razor shared-peptide assignment order in protein parsimony — and it sits off the default, bit-identical-tested path. **Seven items are UNVERIFIED** (an eighth, U6, is resolved) (the reviewer could not confirm one side against source and flagged them for a human to check). At the time of that review, nothing on the default analysis path was found to change output relative to Rust. (Since
+then two first-pass defaults changed in C# ahead of Rust, and Rust has since adopted both: the
+one-run-per-precursor training selection, `OSPREY_TRAIN_PICK_RUN` (maccoss/osprey#66), and the
+1%-tolerance SVM C selection, `OSPREY_SVM_C_TOLERANCE` (maccoss/osprey#69). See [07](07-fdr-control.md).)
 
 ### Count by classification
 
@@ -33,13 +36,22 @@ The 6 `major` items are: the sparse-library calibration retry omission (doc 04),
 > [README.md](README.md) for the index). Doc-number references in prose use the new
 > numbering.
 
-> **Updates since generation (features added after this report).** `--fdr-method
-> gbdt` (doc 07) is a **C#-only** addition — the Rust reference has no GBDT scorer,
-> so it is not a divergence to reconcile. The opt-in learned peak-pick model (doc 06)
+> **Updates since generation (features added after this report).** The experimental
+> `OSPREY_FDR_MODEL=gbdt` classifier (doc 07) is a **C#-only** addition - the Rust reference
+> has no GBDT scorer, so it is not a divergence to reconcile. Selecting it is: the Rust
+> `--fdr-method` argument was removed from C# (#4543), along with the Simple method and the
+> unreachable Mokapot value (see the doc 07 table and item 2 below). The opt-in learned peak-pick model (doc 06)
 > and the pass-2 frozen q-value modes (doc 12) postdate this report; both exist in
 > Rust too (the pick model in lock-step; the pass-2 modes ported C#→Rust in
 > maccoss/osprey#57) and are off the default parity-gated path. The one **PORT-ERROR**
 > below (P1, Razor rollup order) is tracked as ProteoWizard/pwiz#4441.
+>
+> **Library reading, C# ahead of Rust.** The UniMod id masses are Skyline's `UniModData.cs`
+> masses in one C# table (`Osprey.Core/UniMod.cs`); Rust's `unimod_id_to_mass` (osprey-io
+> `output/blib.rs`) still maps ids 28, 122, 214, 312, 385 and 747 to other modifications' masses
+> and lacks 27, 354, 2016 and the SILAC labels. A .blib library's peaks are typed from m/z and its
+> modifications matched at their printed precision in C# only ([13](13-blib-output-schema.md)).
+> Neither reaches the parity datasets, whose DIA-NN libraries use only UniMod:4.
 
 ---
 
@@ -77,10 +89,11 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 - **Doc:** [06-peak-detection.md](06-peak-detection.md)
 - **Rust says:** Rust doc gives a blib-boundary priority list where Tukey median-polish FWHM (apex ± 1.96σ) is priority 1 and CWT boundaries are fallback.
 - **C# does:** `FdrEntry.StartRt/EndRt` written for output are the CWT/detected `bestPeak` boundaries; median polish is consumed only for four scoring features. README asserts blib is bit-identical cross-impl, so Rust likely also writes CWT bounds (doc stale) — but `Osprey.IO/BlibWriter.cs` was not read to confirm no downstream re-derivation.
-- **C# evidence:** `Osprey.Scoring/CoelutionScorer.cs:462`
+- **C# evidence:** `Osprey.Scoring/CoelutionScorer.cs:456`
 - **Recommended action:** Read `BlibWriter.cs` and confirm boundaries are written straight from the CWT peak with no median-polish re-derivation. Given the byte-identical blib gate this is almost certainly doc-staleness, not a port error.
 
-#### U4. Simple FDR scores on `coelution_sum`, not a ROC-AUC-selected best feature — minor
+#### U4. Simple FDR scores on `coelution_sum`, not a ROC-AUC-selected best feature — minor - **resolved: Simple was deleted**
+- **Resolution:** C# no longer has a Simple method: `FdrMethod.Simple` and `RunSimpleFdr` were deleted with `--fdr-method` (#4543), so there is nothing left to diff against Rust. The record below is kept as it was found.
 - **Doc:** [07-fdr-control.md](07-fdr-control.md)
 - **Rust says:** Simple applies target-decoy competition on the best single feature selected by ROC AUC.
 - **C# does:** `RunSimpleFdr` scores directly by `e.CoelutionSum` (PIN feature 0) with no ROC-AUC selection. Whether current Rust Simple also just uses `coelution_sum` was not confirmed against Rust source.
@@ -162,25 +175,26 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 |---|---|---|---|---|---|
 | UNVER | E-value not computed (**U2**) | Comet E-value from XCorr survival fn, stored (unused for FDR) | No `evalue` field, no survival fn; only LDA drives competition | `CalibrationScorer.cs:34-56` | info |
 | STALE | Unit-res bin count is 2000, not 2001 | 2001 bins (1.0005 m/z) | `UnitResolution()` = 2000 bins; confirmed by test comment | `BinConfig.cs:42-59`; `ScoringTest.cs:1087` | info |
-| INTENT | Only the 21 PIN features computed | ~47 scores incl hyperscore, dot_product variants, etc. | Exactly the 21 PIN features; unused fields never populated | `OspreyFeatureCalculators.cs:36-44`; `CoelutionScorer.cs:253-274` | minor |
-| INTENT | MS1 features gated by resolution, not MS1 presence | MS1 scoring available when MS1 present | Features 13/14 HRAM-only; `UnitStrategy.HasMs1Features=false` → exactly 0.0 at unit res | `ResolutionStrategy.cs:112/163`; `Ms1Calculators.cs:37-38` | info |
+| INTENT | Only the 21 PIN features computed | ~47 scores incl hyperscore, dot_product variants, etc. | Exactly the 21 PIN features; unused fields never populated | `OspreyFeatureCalculators.cs:36-44`; `CoelutionScorer.cs:247-268` | minor |
+| INTENT | MS1 features gated by resolution, not MS1 presence | MS1 scoring available when MS1 present | Features 13/14 HRAM-only; `UnitStrategy.HasMs1Features=false` → exactly 0.0 at unit res | `ResolutionStrategy.cs:133/184`; `Ms1Calculators.cs:37-38` | info |
 
 ### [02-xcorr-scoring.md](02-xcorr-scoring.md) — matches-with-notes
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
 | INTENT | Managed scalar loops, no BLAS/SIMD, no dense vector | XCorr via BLAS `sdot`; calibration forms dense theoretical vector | Managed scalar loop; `O(n_fragments)` sum-at-bins form; bit-identical | `SpectralScorer.cs:186,273`; `Calibrator.cs:1189` | info |
-| INTENT | Sparse HRAM cache instead of dense `Vec<Vec<f32>>` | Dense `float[NBins]` (~391 KB) per window | `SparseXcorrSpectrum` (~20 B/peak), recovers flanking-subtracted value on demand, bit-identical (issue #4398) | `SparseXcorrSpectrum.cs:55,93`; `ResolutionStrategy.cs:170` | info |
+| INTENT | Sparse HRAM cache instead of dense `Vec<Vec<f32>>` | Dense `float[NBins]` (~391 KB) per window | `SparseXcorrSpectrum` (~20 B/peak), recovers flanking-subtracted value on demand, bit-identical (issue #4398) | `SparseXcorrSpectrum.cs:55,93`; `ResolutionStrategy.cs:226` | info |
+| INTENT | HRAM cache filled on demand | Every spectrum of a window preprocessed before scoring | `ScoreXcorr` preprocesses a spectrum the first time a candidate needs it (apex +/-2 only); identical values, 2.5-91% of the spectra depending on the pass | `ResolutionStrategy.cs:191,212` | info |
 | STALE | Simplified snippet omits fragment-bin dedup | Pseudocode sums per-fragment with no dedup (would double-count) | Dedups via `visitedBins`; matches dense semantics. Covered by `TestXcorrFragmentBinDedup` | `SpectralScorer.cs:198`; `ScoringTest.cs:382` | minor |
-| INTENT | Precision split: unit-res f64, HRAM f32-narrowed | Doc silent on precision boundary | Unit/calibration cache f64; HRAM narrows to float, mirroring Rust HRAM f32 cache | `ResolutionStrategy.cs:119`; `SparseXcorrSpectrum.cs:113` | info |
+| INTENT | Precision split: unit-res f64, HRAM f32-narrowed | Doc silent on precision boundary | Unit/calibration cache f64; HRAM narrows to float, mirroring Rust HRAM f32 cache | `ResolutionStrategy.cs:140`; `SparseXcorrSpectrum.cs:113` | info |
 
 ### [06-peak-detection.md](06-peak-detection.md) — matches-with-notes
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
 | STALE | Peak selection uses RT-penalized rank score | Highest mean pairwise fragment correlation | `coelution * exp(-dt²/2σ²) * ln(1+apex)` — Gaussian RT penalty + log-intensity tiebreak (both impls have penalty; doc behind) | `PeakDataExtractor.cs:289` | minor |
-| STALE | Median-polish 10 iters / tol 0.01 | 20 iters / 1e-4 | Call site `maxIter=10, tol=0.01` (matches current Rust `pipeline.rs`; doc's 20/1e-4 is old default) | `CoelutionScorer.cs:242` | minor |
-| UNVER | Blib boundaries from CWT peak, not median-polish FWHM (**U3**) | Median-polish FWHM priority 1, CWT fallback | `StartRt/EndRt` = CWT `bestPeak` bounds; median polish only for 4 features; `BlibWriter.cs` not read to confirm | `CoelutionScorer.cs:462` | minor |
+| STALE | Median-polish 10 iters / tol 0.01 | 20 iters / 1e-4 | Call site `maxIter=10, tol=0.01` (matches current Rust `pipeline.rs`; doc's 20/1e-4 is old default) | `CoelutionScorer.cs:236` | minor |
+| UNVER | Blib boundaries from CWT peak, not median-polish FWHM (**U3**) | Median-polish FWHM priority 1, CWT fallback | `StartRt/EndRt` = CWT `bestPeak` bounds; median polish only for 4 features; `BlibWriter.cs` not read to confirm | `CoelutionScorer.cs:456` | minor |
 | STALE | Scale-space/ridge-tracking is aspirational | Loop over scales [2,4,8,16] w/ ridge tracking, S/N<3 | Single data-driven scale from median FWHM, `minConsensusHeight=0.0`; only the old plan is aspirational | `CwtPeakDetector.cs:161` | info |
 | STALE | No linear-baseline background subtraction | Trapezoidal AUC minus linear baseline (plan §4.4) | Plain trapezoidal integral, no baseline (area is relative, not for quant) | `PeakDetector.cs:178` | info |
 | STALE | Consensus aggregation is median, not sum | Plan §4.3 sums per-transition CWTs | Pointwise `ConsensusMedianCwt` (matches production doc) | `CwtPeakDetector.cs:265` | info |
@@ -191,18 +205,19 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 |---|---|---|---|---|---|
 | STALE | Re-scoring engine is `RunCoelutionScoring` | Re-score via `run_search()` w/ boundary_overrides | No `run_search`; overrides via `ScoringContext.BoundaryOverrides` from `PerFileRescoreTask` (equivalent) | `PeakDataExtractor.cs:82-167`; `PerFileRescoreTask.cs:733` | info |
 | INTENT | Consensus is a pure selection function | One `select_post_fdr_consensus()` selects + hands off | `SelectRescoreTargets` pure; merge + override re-scoring separate in `PerFileRescoreTask` | `MultiChargeConsensus.cs:51`; `PerFileRescoreTask.cs:879,1066` | info |
-| STALE | No Mokapot scoring | Lists Percolator/Mokapot | Native Percolator SVM only; Mokapot not CLI-wired | see 08 | info |
+| STALE | No Mokapot scoring | Lists Percolator/Mokapot | Native Percolator only; Mokapot never wired, and its enum value was deleted (#4543) | see 08 | info |
 | STALE | FDR gate is `RunPrecursorQvalue` | Generic "FDR threshold" | Gates on `RunPrecursorQvalue≤fdr` specifically (matches Rust `pipeline.rs`) | `MultiChargeConsensus.cs:115` | info |
 
 ### [07-fdr-control.md](07-fdr-control.md) — matches-with-notes
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
-| INTENT | Native Percolator replaces external Mokapot | 3 methods incl Mokapot (Python subprocess, PIN round-trip) | Native Percolator + Simple only; `FdrMethod.Mokapot` enum never CLI-wired; no Python dep | `OspreyCommandArgs.cs:120`; `OspreyConfig.cs:422` | info |
+| INTENT | Native Percolator replaces external Mokapot | 3 methods incl Mokapot (Python subprocess, PIN round-trip) | Native Percolator only; the never-wired `FdrMethod.Mokapot` and the Simple method were deleted (#4543); no Python dep | `OspreyConfig.cs` (`FdrClassifier`) | info |
+| INTENT | No `--fdr-method`; the classifier is `OSPREY_FDR_MODEL` | `--fdr-method {percolator\|mokapot\|simple}` selects the engine; an unknown value warns and runs percolator | Argument removed with no alias (#4543) and rejected as an unknown argument. The one remaining choice, the classifier inside Percolator, is the env var `OSPREY_FDR_MODEL` (unset / `svm` = linear SVM, `gbdt` = experimental trees); an unrecognized value fails at startup. A Rust command line passing `--fdr-method percolator` must drop it | `OspreyCommandArgs.cs`; `OspreyEnvironment.cs` (`FdrModel`) | info |
 | INTENT | No `FdrLevel::Protein`; `--fdr-level protein` unreachable | Supports {precursor,peptide,protein,both}; protein filters blib | Enum {Precursor,Peptide,Both}; effective-qvalue throws on Protein; protein q computed/reported but can't gate blib; 2 stale in-code comments | `OspreyConfig.cs:411`; `OspreyCommandArgs.cs:138`; `FdrEntry.cs:136` | major |
 | STALE | Default `--fdr-level` is Precursor, not Peptide | Default Peptide | Defaults Precursor (matches Rust `FdrLevel::default()`; doc prose stale) | `OspreyConfig.cs:284` | minor |
-| STALE | No gbdt/FastTree method in either impl | Lab memory mentions Rust `--fdr-method gbdt` | No gbdt symbol anywhere; enum {Percolator,Mokapot,Simple}, CLI percolator\|simple | `OspreyConfig.cs:422`; `OspreyCommandArgs.cs:120` | info |
-| UNVER | Simple scores on coelution_sum, not ROC-AUC best feature (**U4**) | Best single feature by ROC AUC | Scores directly by `CoelutionSum`; Rust Simple behavior not confirmed | `PercolatorEngine.cs:359` | minor |
+| STALE | No gbdt/FastTree method in either impl | Lab memory mentions Rust `--fdr-method gbdt` | At generation, no gbdt symbol anywhere. Since then C# gained the experimental gbdt classifier (`OSPREY_FDR_MODEL=gbdt`, a C#-only addition); Rust still has none | `OspreyConfig.cs` (`FdrClassifier`) | info |
+| UNVER | Simple scores on coelution_sum, not ROC-AUC best feature (**U4**) | Best single feature by ROC AUC | Resolved: Simple was deleted (#4543) | - | minor |
 | INTENT | Streaming-only Percolator (matches Rust v26.7.0) | Direct path removed v26.7.0 | `DispatchSvm` always streams; former direct branch removed for parity | `PercolatorEngine.cs:336` | info |
 
 ### [08-protein-parsimony.md](08-protein-parsimony.md) — **diverges**
@@ -224,7 +239,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | Planner passing-precursor precondition undocumented | "For each scored entry" no per-entry gate | Also requires `(base_id,charge)` in `passingBaseIds`; ties to Rust `reconciliation.rs:560-576` | `ReconciliationPlanner.cs:131-144,209` | minor |
 | STALE | Ceiling is sigma-clipped MAD, not plain | "calibration-MAD-based ceiling" | Sigma-clipped median of refined residuals, capped by first-pass MAD; ties to Rust docstring | `ReconciliationPlanner.cs:166-183,299-322` | minor |
 | INTENT | Decoy pairing by base_id, not prefix | Matched by DECOY_ prefix | Pairs by `EntryId & 0x7FFFFFFF`; recognizes prefix-less lib decoys | `ConsensusRts.cs:93-118`; `ReconciliationPlanner.cs:120-144` | info |
-| INTENT | Second-pass FDR is native Percolator only | "Percolator/Mokapot/Simple applies" | No Python Mokapot; native managed Percolator (or simple) | `SecondPassFdrTask.cs`; see 08 | info |
+| INTENT | Second-pass FDR is native Percolator only | "Percolator/Mokapot/Simple applies" | No Python Mokapot and no Simple; the frozen first-pass Percolator model (linear SVM, or experimental gbdt trees) | `SecondPassFdrTask.cs`; see 08 | info |
 
 ### [11-boundary-overrides.md](11-boundary-overrides.md) — matches-with-notes
 
@@ -329,9 +344,9 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 
 These are the deliberate, output-preserving architectural choices in the C# port that recur across many documents. None is a defect; they are recorded so a reader knows what to expect and does not re-flag them:
 
-1. **Native managed Percolator, no Mokapot.** The external Python Mokapot path (PIN round-trip, subprocess, `--save_models`/`--load_models`) is not wired to the C# CLI. `--fdr-method` accepts `percolator | gbdt | simple`. The `FdrMethod.Mokapot` enum value survives but is unreachable. (docs 07, 09, 10, 13, 19)
+1. **Native managed Percolator, no Mokapot, no Simple.** The external Python Mokapot path (PIN round-trip, subprocess, `--save_models`/`--load_models`) was never wired to the C# CLI, and its unreachable `FdrMethod.Mokapot` value was deleted with the Simple method (#4543). (docs 07, 09, 10, 13, 19)
 
-2. **`gbdt` is a C#-only FDR method.** `--fdr-method gbdt` selects a gradient-boosted-tree classifier inside the Percolator framework (`GradientBoostedTrees.cs`); the linear-SVM Percolator remains the default. The Rust reference has **no** GBDT scorer, so this is a C# addition beyond the reference, not a divergence to reconcile. (doc 07)
+2. **No `--fdr-method`; `gbdt` is a C#-only, experimental classifier.** Rust's `--fdr-method {percolator|mokapot|simple}` was removed from C# with no alias (#4543) and is rejected as an unknown argument. The only choice left is the classifier inside the Percolator framework, a developer lever, so it is the environment variable `OSPREY_FDR_MODEL`: unset or `svm` for the linear SVM (the default and the parity-gated path), `gbdt` for gradient-boosted trees (`GradientBoostedTrees.cs`); anything else fails at startup. The Rust reference has **no** GBDT scorer, so the trees are a C# addition beyond the reference, not a divergence to reconcile; the CLI difference is one. (doc 07, doc 20)
 
 3. **`FdrLevel` has no `Protein` variant.** The enum is `{Precursor, Peptide, Both}`; `--fdr-level protein` is rejected. Protein q-values are still computed, propagated, and reported, but cannot gate blib output from the CLI. Two stale in-code comments still reference the removed mode. (docs 07, 08)
 

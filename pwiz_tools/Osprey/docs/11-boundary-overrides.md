@@ -298,7 +298,7 @@ computed by Stage 6 planning. The flags that affect this stage:
 | `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection, calibration refit, and reconciliation planning (`Stage6Planner.cs`). Not a CLI flag; config field. |
 | `ReconciliationConfig.TopNPeaks` | 5 (`ReconciliationConfig.cs:36`) | CWT candidates stored per precursor at first-pass; the pool `UseCwtPeak` overrides are drawn from. |
 | `--no-prefilter` (`PrefilterEnabled`) | true | Only affects non-override entries; override entries always skip the pre-filter (`PeakDataExtractor.cs:117`). The gap-fill CWT pass forces prefilter off regardless (`PerFileRescoreTask.cs:1375`). |
-| `--parallel-files [N]` | off (sequential) | Runs per-file rescores concurrently under `EffectiveFileParallelism` (`PerFileRescoreTask.cs:547`); output is byte-identical to sequential (gated by regression.ps1). |
+| `--parallel-files-rescoring [N]`, else `--parallel-files [N]` | off (sequential) | Runs per-file rescores concurrently under `RunPlan.RescoringFileParallelism`, which `PerFileRescoreTask` resolves for itself; output is byte-identical to sequential (gated by SubsetPipelineTest). |
 | `--threads <count>` | all cores | Inner window parallelism per file; divided across concurrent files under `--parallel-files` (`PerFileRescoreTask.cs:684`). |
 | `--protein-fdr <v>` | optional (`EffectiveProteinFdr`) | Feeds the protein-rescue gate into consensus RT computation (`Stage6Planner.cs:176`), affecting which entries become reconciliation targets. |
 
@@ -326,10 +326,10 @@ variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
   reconciliation re-scoring as strictly sequential across files (`iter_mut`, one
   ~3 GB spectra load at a time), relying only on window-level parallelism inside
   `run_search`. C# keeps that window-level parallelism but additionally runs whole
-  files concurrently under `--parallel-files` / `EffectiveFileParallelism`, with
+  files concurrently under `--parallel-files-rescoring` / `RescoringFileParallelism`, with
   a per-file GC drop skipped in the parallel case. Output is byte-identical
-  (regression.ps1-gated); this is an added performance option, not an algorithm
-  change. Evidence: `Osprey.Tasks/PerFileRescoreTask.cs:547-584`, `:809-810`.
+  (SubsetPipelineTest-gated); this is an added performance option, not an algorithm
+  change. Evidence: `ExecuteRescore` and `ResolveRescoringLanes` in `Osprey.Tasks/PerFileRescoreTask.cs`.
   Severity: minor.
 
 - **[STALE-RUST-DOC] Gap-fill two-pass not covered by the boundary-override

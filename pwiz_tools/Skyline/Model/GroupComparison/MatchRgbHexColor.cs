@@ -230,10 +230,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             Labeled = reader.GetBoolAttribute(ATTR.labeled);
 
             var symbol = reader.GetAttribute(ATTR.symbol_type);
-            PointSymbol = symbol == null ? (PointSymbol?)null : Helpers.ParseEnum(symbol, Model.GroupComparison.PointSymbol.Circle);
+            PointSymbol = symbol == null ? null : Helpers.ParseEnum(symbol, Model.GroupComparison.PointSymbol.Circle);
 
             var pointSize = reader.GetAttribute(ATTR.point_size);
-            PointSize = pointSize == null ? (PointSize?)null : Helpers.ParseEnum(pointSize, Model.GroupComparison.PointSize.normal);
+            PointSize = pointSize == null ? null : Helpers.ParseEnum(pointSize, Model.GroupComparison.PointSize.normal);
 
             reader.Read();
         }

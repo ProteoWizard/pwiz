@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -1106,7 +1105,13 @@ namespace pwiz.Skyline.Controls
             switch(e.KeyCode)
             {
                 case Keys.Space:
-                    ShowPickList();
+                    // When Space opens a pick-list it is used up: its character would otherwise start editing an
+                    // editable node's label (OnKeyPress), which takes the focus and so closes the pick-list.
+                    if (GetPicker(SelectedNode) != null)
+                    {
+                        ShowPickList();
+                        e.Handled = e.SuppressKeyPress = true;
+                    }
                     break;
 
                 case Keys.End:
@@ -1129,15 +1134,19 @@ namespace pwiz.Skyline.Controls
         {
             if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
-                BeginEdit(true);
-                string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
-                if (IsKeyLocked(Keys.CapsLock))
-                    keyChar = keyChar.ToLower();
-                if (@"+^%~(){}[]".IndexOf(keyChar, StringComparison.Ordinal) >= 0)
+                // A character can arrive here while the label is already being edited, when it was sent
+                // to this window rather than to the one with the focus. It belongs to the edit under way.
+                if (_editTextBox == null)
+                    BeginEdit(true);
+                // Handed straight to the edit box. SendKeys would type it into whichever window is in front,
+                // which is another application whenever Skyline is not the active one. The edit can already have
+                // ended, committed by the edit box losing the focus as it opened, leaving nothing to type into.
+                var editTextBox = _editTextBox?.TextBox;
+                if (editTextBox != null)
                 {
-                    keyChar = @"{" + keyChar + @"}";
+                    User32.SendMessage(editTextBox.Handle, User32.WinMessageType.WM_CHAR,
+                        e.KeyChar, IntPtr.Zero);
                 }
-                SendKeys.Send(keyChar);
                 e.Handled = true;
             }
             else
@@ -1145,6 +1154,13 @@ namespace pwiz.Skyline.Controls
                 base.OnKeyPress(e);                
             }
         }
+
+        /// <summary>
+        /// The control a key pressed on the tree goes to, for the AI connector, which does not move the focus:
+        /// the label's edit box while a label is being edited (Down and Up move through the completion pop-up,
+        /// Enter accepts, Esc cancels), otherwise the tree itself.
+        /// </summary>
+        public Control KeyTarget => (Control) _editTextBox?.TextBox ?? this;
 
         protected override void OnBeforeLabelEdit(NodeLabelEditEventArgs e)
         {

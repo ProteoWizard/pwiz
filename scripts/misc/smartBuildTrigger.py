@@ -77,6 +77,10 @@ def merge(dict1, *dicts):
                 r[k] = d[k]
     return r
 
+# Default for config files that do not define it (the nightly one does not); the exec below
+# overrides it when the config file has its own.
+extraStatuses = {}
+
 # exec the targets_and_paths_file to define the targets and matchPaths variables
 with open(targets_and_paths_file, "rb") as source_file:
     code = compile(source_file.read(), targets_and_paths_file, "exec")
@@ -177,7 +181,7 @@ for targetKey in targets:
                     # record its display name so the trigger loop's building[trigger] lookup
                     # succeeds. Targets reachable only via merge()'d matchPaths entries never
                     # have their global dict mutated by promotion, so this is the only place
-                    # they enter building (e.g. ProteoWizard_SkylineWindowsNet).
+                    # they enter building (e.g. bt209).
                     building[target2] = targets[targetKey][target][target2]
                 elif not base_branch == target:
                     notBuildingDueToBranch[target2] = targets[targetKey][target][target2]
@@ -190,8 +194,8 @@ buildNodeToPOST = '<build branchName="%s"><buildType id="%s"/></build>'
 base64string = base64.b64encode(('%s:%s' % (teamcity_username, teamcity_password)).encode('ascii')).decode('ascii')
 headers = {"Authorization": "Basic %s" % base64string, "Content-Type": "application/xml"}
 for trigger in triggers:
-    if trigger == "bt209" or trigger == "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional":
-        continue # special case to skip triggering this build since Skyline Code Inspection starts it as part of build chain (TODO: refactor to make this capability more generic)
+    if trigger == "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional":
+        continue # special case to skip triggering this build since Skyline release code inspection starts it as part of build chain (TODO: refactor to make this capability more generic)
     print("Triggering build %s (%s): %s" % (building[trigger], trigger, triggers[trigger]))
     data = buildNodeToPOST % (current_branch, trigger)
     rsp = post(teamcityUrl, data, headers)
@@ -204,6 +208,13 @@ for target in notBuildingDueToChangedFiles:
     print("Not building %s (%s) due to unchanged files, but reporting success to GitHub." % (notBuildingDueToChangedFiles[target], target))
     data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuildingDueToChangedFiles[target]
     rsp = post(githubUrl, data, headers)
+    # A config can report more than one status (bt209 also reports code
+    # inspection); those have to be reported too, or they go missing for this commit.
+    # These are whole contexts, posted verbatim - see the comment on extraStatuses.
+    for extraStatus in extraStatuses.get(target, []):
+        print("Also reporting success for %s's paired status '%s'." % (target, extraStatus))
+        data = '{"state": "success", "context": "%s", "description": "Build not necessary with these changed files"}' % extraStatus
+        rsp = post(githubUrl, data, headers)
 
 for target in notBuildingDueToBranch:
     print("Not building %s (%s) or reporting to GitHub due to PR's target branch." % (notBuildingDueToBranch[target], target))

@@ -29,7 +29,7 @@ namespace pwiz.Common.DataAnalysis.Matrices
     /// <summary>
     /// Performs QR factorization of a matrix with a tolerance for detecting linear dependence of columns.
     /// This implementation was originally taken from the class 
-    /// <see cref="MathNet.Numerics.Providers.LinearAlgebra.ManagedLinearAlgebraProvider" />
+    /// <c>MathNet.Numerics.Providers.LinearAlgebra.ManagedLinearAlgebraProvider</c>
     /// but was then modified to enable a tolerance for detecting linear dependence.
     /// The logic for detecting linear dependence was taken from the R source code in the file "dqrdc2.f".
     /// </summary>

@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 result.RootHash = Hash.FromBase64(rootHashString);
             }
             result.VerifyHashValues();
-            if (loggedSkylineDocumentHash != null)
+            if (!string.IsNullOrEmpty(loggedSkylineDocumentHash))
             {
                 result.DocumentHash = Hash.FromBase64(loggedSkylineDocumentHash);
             }
@@ -1143,7 +1143,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var diffTree = DiffTree.FromEnumerator(
                 Reflector<Targets>.EnumerateDiffNodes(objInfo, property, docType, false,
                     ignoreTransitions
-                        ? (Func<DiffNode, bool>) (node => !IsTransitionDiff(node.Property.PropertyType))
+                        ? (node => !IsTransitionDiff(node.Property.PropertyType))
                         : null));
 
             if (diffTree.Root != null)

@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -83,9 +84,9 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                logWarning(string.Format(
-                    @"  Failed to write {0} sidecar for {1}: {2}",
-                    taskName, outputPath, ex.Message));
+                logWarning(TextUtil.GetIndentation(1) + string.Format(
+                    OspreyTasksResources.PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_,
+                    OspreyArgNames.TaskText(taskName), outputPath, ex.Message));
             }
         }
     }

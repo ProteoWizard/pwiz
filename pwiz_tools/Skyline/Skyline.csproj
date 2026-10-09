@@ -198,7 +198,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
   </ItemGroup>
 
@@ -220,108 +219,124 @@
 
     <!-- BiblioSpec CLI tools (BlibBuild, BlibFilter). Skyline shells out to these via
          ProcessStartInfo expecting them to sit next to Skyline in the bin dir. Reference
-         the projects so they build first; the Content include below deploys their outputs. -->
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
+         the projects so they build first; the _DeployBundledToolOutputs target below deploys
+         their outputs. -->
+    <ProjectReference Include="..\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
                       ReferenceOutputAssembly="false"
-                      Private="false" />
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
+                      Private="false"
+                      DeployOutput="true" />
+    <ProjectReference Include="..\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
                       ReferenceOutputAssembly="false"
-                      Private="false" />
+                      Private="false"
+                      DeployOutput="true" />
   </ItemGroup>
 
-  <!-- Copy BlibBuild.exe / BlibFilter.exe + their runtime deps (unimod.xml etc.) to
-       Skyline's bin dir AND to any project that references Skyline via ProjectReference
-       (test assemblies). Content items propagate through ProjectReference by default. -->
-  <ItemGroup>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
+  <!-- Deploy the output of every ProjectReference marked DeployOutput="true" (BlibBuild,
+       BlibFilter, msconvert, bullseye-sharp) to Skyline's bin dir AND to any project that
+       references Skyline via ProjectReference (test assemblies). Content items propagate
+       through ProjectReference by default.
 
-  <!-- BlibBuild reads Mascot .dat results through the native MascotShim.dll wrapper and its
-       msparser.dll dependency, emitted under BlibBuild's runtimes\win-x64\native\. The wildcard
-       Content above does not deploy files whose Link lands under runtimes\...\ into consuming bins
-       (they collide with RID-specific native-asset handling), so the mascot reader was missing at
-       run time. Deploy the mascot natives flat next to BlibBuild.exe - as legacy Skyline shipped
-       msparser.dll - so DllImport("MascotShim") and its msparser dependency resolve from the
-       executable's own directory. -->
-  <ItemGroup Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native')">
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\MascotShim.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>MascotShim.dll</Link>
-      <Visible>false</Visible>
-    </Content>
-    <!-- BiblioSpec.csproj emits msparserD.dll in Debug and msparser.dll otherwise
-         (Debug links msparserD.lib), so the name has to track $(Configuration) here
-         too. Copying the Release name unconditionally made every Debug build after
-         the first one fail MSB3030 - the first build passes only because the native
-         directory does not exist yet when this ItemGroup condition is evaluated. -->
-    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparserD.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>msparserD.dll</Link>
-      <Visible>false</Visible>
-    </Content>
-    <Content Condition="'$(Configuration)' != 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>msparser.dll</Link>
-      <Visible>false</Visible>
-    </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser-config\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>msparser-config\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
+       The folder comes from asking each reference for GetTargetPath with the same global
+       properties ResolveProjectReferences builds it with, rather than from a path written here.
+       Where a tool lands depends on how the build was started: build.bat and Build-Skyline.ps1
+       pass Platform=x64, which flows to the references and puts BlibBuild in bin\x64\Release,
+       while a Visual Studio build of Skyline.sln gives these out-of-solution references
+       Platform=AnyCPU (see AssignOutOfSolutionProjectReferenceConfiguration in
+       pwiz_tools\Directory.Build.targets), which puts it in bin\Release. A fixed
+       bin\$(Configuration) path deployed whatever an earlier AnyCPU build had left there, and the
+       Exists() conditions it needed were evaluated before the reference was built. -->
+  <Target Name="_DeployBundledToolOutputs"
+          BeforeTargets="AssignTargetPaths"
+          DependsOnTargets="PrepareProjectReferences">
+    <MSBuild Projects="@(_MSBuildProjectReferenceExistent)"
+             Condition="'%(_MSBuildProjectReferenceExistent.DeployOutput)' == 'true'"
+             Targets="GetTargetPath"
+             Properties="%(_MSBuildProjectReferenceExistent.SetConfiguration); %(_MSBuildProjectReferenceExistent.SetPlatform); %(_MSBuildProjectReferenceExistent.SetTargetFramework)"
+             RemoveProperties="%(_MSBuildProjectReferenceExistent.GlobalPropertiesToRemove)$(_GlobalPropertiesToRemoveFromProjectReferences)">
+      <Output TaskParameter="TargetOutputs" ItemName="_BundledToolTargetPath" />
+    </MSBuild>
+    <ItemGroup>
+      <_BundledToolDir Include="@(_BundledToolTargetPath->'%(RootDir)%(Directory)')" />
+    </ItemGroup>
+    <!-- Exclude any RID-named publish folder: a self-contained `dotnet publish -r win-x64` run
+         from one of these projects (msconvert, say) lands 200 MB of runtime under
+         bin\...\net10.0\win-x64, which is not part of the tool's framework-dependent output and
+         would otherwise ride into Skyline's bin and from there into the installer. -->
+    <CreateItem Include="%(_BundledToolDir.Identity)**\*"
+                Exclude="%(_BundledToolDir.Identity)win-*\**;%(_BundledToolDir.Identity)linux-*\**;%(_BundledToolDir.Identity)osx-*\**">
+      <Output TaskParameter="Include" ItemName="_BundledToolFile" />
+    </CreateItem>
+    <ItemGroup>
+      <Content Include="@(_BundledToolFile)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>%(_BundledToolFile.RecursiveDir)%(_BundledToolFile.Filename)%(_BundledToolFile.Extension)</Link>
+        <Visible>false</Visible>
+      </Content>
+    </ItemGroup>
+
+    <!-- BlibBuild reads Mascot .dat results through the native MascotShim.dll wrapper and its
+         msparser.dll dependency, emitted under BlibBuild's runtimes\win-x64\native\. The wildcard
+         Content above does not deploy files whose Link lands under runtimes\...\ into consuming
+         bins (they collide with RID-specific native-asset handling), so the mascot reader was
+         missing at run time. Deploy the mascot natives flat next to BlibBuild.exe - as legacy
+         Skyline shipped msparser.dll - so DllImport("MascotShim") and its msparser dependency
+         resolve from the executable's own directory. BiblioSpec.csproj emits msparserD.dll in
+         Debug and msparser.dll otherwise (Debug links msparserD.lib), so the name tracks
+         $(Configuration). -->
+    <PropertyGroup>
+      <_MascotNativeDir>@(_BundledToolTargetPath->WithMetadataValue('Filename', 'BlibBuild')->'%(RootDir)%(Directory)runtimes\win-x64\native\')</_MascotNativeDir>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_MascotNativeDir)' != '' And Exists('$(_MascotNativeDir)')">
+      <Content Include="$(_MascotNativeDir)MascotShim.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>MascotShim.dll</Link>
+        <Visible>false</Visible>
+      </Content>
+      <Content Condition="'$(Configuration)' == 'Debug'" Include="$(_MascotNativeDir)msparserD.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>msparserD.dll</Link>
+        <Visible>false</Visible>
+      </Content>
+      <Content Condition="'$(Configuration)' != 'Debug'" Include="$(_MascotNativeDir)msparser.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>msparser.dll</Link>
+        <Visible>false</Visible>
+      </Content>
+      <!-- A separate item type with qualified metadata: inside a target, an unqualified
+           %(Filename) here would batch over every Content item already defined -->
+      <_MsparserConfigFile Include="$(_MascotNativeDir)msparser-config\**\*" />
+      <Content Include="@(_MsparserConfigFile)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>msparser-config\%(_MsparserConfigFile.RecursiveDir)%(_MsparserConfigFile.Filename)%(_MsparserConfigFile.Extension)</Link>
+        <Visible>false</Visible>
+      </Content>
+    </ItemGroup>
+  </Target>
 
   <!-- msconvert (managed pwiz-sharp port). Skyline shells out to msconvert for DIA-Umpire and
        EncyclopeDIA demultiplexing conversions, expecting msconvert.exe next to Skyline in the bin
        dir (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the
-       Content include below deploys its output. net8-only: the net472 build gets the native
-       msconvert from the Jam toolchain. -->
+       _DeployBundledToolOutputs target above deploys its output. net8-only: the net472 build gets
+       the native msconvert from the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\MsConvert.csproj"
+    <ProjectReference Include="..\Commandline\MsConvert\src\MsConvert.csproj"
                       ReferenceOutputAssembly="false"
-                      Private="false" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0')">
-    <!-- Exclude any RID-named publish folder: a self-contained `dotnet publish -r win-x64` run
-         from that project lands 200 MB of runtime under bin\...\net10.0\win-x64, which is not
-         part of msconvert's framework-dependent output and would otherwise ride into Skyline's
-         bin and from there into the installer. -->
-    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*"
-             Exclude="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\win-*\**;..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\linux-*\**;..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\osx-*\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
+                      Private="false"
+                      DeployOutput="true" />
   </ItemGroup>
 
   <!-- BullseyeSharp (managed pwiz-sharp port; its AssemblyName is "bullseye-sharp", so it emits
        bullseye-sharp.exe). Skyline's Hardklor feature-detection pipeline shells out to it to match
        MS1 features against MS2 scans, expecting bullseye-sharp.exe next to Skyline in the bin dir
-       (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the Content
-       include below deploys its output. net8-only: the net472 build gets the legacy BullseyeSharp.exe
-       from pwiz_tools\Skyline\BullseyeSharp\BullseyeSharp.csproj via the Jam toolchain. -->
+       (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the
+       _DeployBundledToolOutputs target above deploys its output. net8-only: the net472 build gets
+       the legacy BullseyeSharp.exe from pwiz_tools\Skyline\BullseyeSharp\BullseyeSharp.csproj via
+       the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\BullseyeSharp.csproj"
+    <ProjectReference Include="..\BullseyeSharp\src\BullseyeSharp.csproj"
                       ReferenceOutputAssembly="false"
-                      Private="false" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
+                      Private="false"
+                      DeployOutput="true" />
   </ItemGroup>
 
   <!-- Hardklor (native x64 C++ feature-detection tool). Skyline's Hardklor/Bullseye pipeline
@@ -400,8 +415,8 @@
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows')">
-    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows')">
+    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -488,7 +503,7 @@
        pwiz.CLI.Bruker.PrmScheduling assembly. P/Invokes prmscheduler.dll shipped
        inside pwiz. Only wired for net8; net472 keeps the old C++/CLI reference. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\pwiz\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj" />
+    <ProjectReference Include="..\..\pwiz\utility\bindings\timstof_prm_scheduler\Bruker.PrmScheduling.csproj" />
   </ItemGroup>
 
   <!-- Build batch hooks (preserved from legacy) - PreBuildEvents.bat is what
@@ -521,10 +536,28 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <Compile Remove="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <!-- Net8Version.g.cs is rewritten only when the values stamped into it change, the way the SDK's
+       own GenerateAssemblyInfo works. WriteCodeFragment writes its file unconditionally, so running
+       it on every build left Net8Version.g.cs newer than Skyline-daily.dll every time, and Skyline -
+       with everything that references it - recompiled on every build, however small the change.
+       The inputs cache below is rewritten only when its content differs, and gates the target. -->
+  <Target Name="_WriteNet8VersionInputsCache"
+          Condition="'$(TargetFramework)' == 'net10.0-windows'"
+          DependsOnTargets="ComputeSkylineVersion">
+    <WriteLinesToFile File="$(IntermediateOutputPath)Net8Version.inputs.cache"
+                      Lines="$(SkylineNumericVersion);$(SkylineInformationalVersion)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)Net8Version.inputs.cache" />
+    </ItemGroup>
+  </Target>
   <Target Name="StampNet8InformationalVersion"
           Condition="'$(TargetFramework)' == 'net10.0-windows'"
-          DependsOnTargets="ComputeSkylineVersion"
-          BeforeTargets="CoreCompile">
+          DependsOnTargets="ComputeSkylineVersion;_WriteNet8VersionInputsCache"
+          BeforeTargets="CoreCompile"
+          Inputs="$(IntermediateOutputPath)Net8Version.inputs.cache"
+          Outputs="$(IntermediateOutputPath)Net8Version.g.cs">
     <ItemGroup>
       <AssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute">
         <_Parameter1>$(SkylineNumericVersion)</_Parameter1>
@@ -538,10 +571,14 @@
     </ItemGroup>
     <WriteCodeFragment AssemblyAttributes="@(AssemblyAttribute)"
                        Language="C#"
-                       OutputDirectory="$(IntermediateOutputPath)"
-                       OutputFile="Net8Version.g.cs">
-      <Output TaskParameter="OutputFile" ItemName="Compile" />
-    </WriteCodeFragment>
+                       OutputFile="$(IntermediateOutputPath)Net8Version.g.cs" />
+    <!-- Added here rather than from the task's Output: when the target is skipped as up to date,
+         MSBuild still evaluates its item groups but does not run the task, so this is what keeps
+         the existing file in the compile. -->
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)Net8Version.g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)Net8Version.g.cs" />
+    </ItemGroup>
   </Target>
 
 

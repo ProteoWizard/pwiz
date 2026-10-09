@@ -1,6 +1,7 @@
 /*
  * Original author: brendanx .at. uw.edu
  * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ *                Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  * 
@@ -23,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,24 +72,33 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Simulates a DNS resolution failure (NameResolutionFailure)
+        /// Simulates a DNS resolution failure for a name that does not exist, in the shape .NET
+        /// reports it: <see cref="HttpRequestError.NameResolutionError"/> with an inner
+        /// <see cref="SocketException"/> of <see cref="SocketError.HostNotFound"/>. Simulating the
+        /// .NET Framework shape instead (an inner <see cref="WebException"/>) let these tests pass
+        /// while every real DNS failure was reported as a connection failure.
         /// </summary>
         public static HttpClientTestHelper SimulateDnsFailure(string hostname = "nonexistent.example.com")
         {
-            // This is real and has been seen in a debugger. The InnerException is a WebException
-            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
-            var webEx = new WebException($"The remote name could not be resolved: '{hostname}'", WebExceptionStatus.NameResolutionFailure);
-            var httpEx = new HttpRequestException("An error occurred while sending the request.", webEx);
-            return new HttpClientTestHelper(httpEx);
+            return SimulateSocketFailure(HttpRequestError.NameResolutionError, SocketError.HostNotFound, hostname);
         }
 
         /// <summary>
-        /// Simulates a network connection failure
+        /// Simulates a DNS resolution failure for a name that exists but has no address record, which
+        /// .NET reports as <see cref="HttpRequestError.ConnectionError"/> with an inner
+        /// <see cref="SocketException"/> of <see cref="SocketError.NoData"/>.
         /// </summary>
-        public static HttpClientTestHelper SimulateConnectionFailure()
+        public static HttpClientTestHelper SimulateDnsNoDataFailure(string hostname = "nonexistent.example.com")
         {
-            var httpEx = new HttpRequestException("An error occurred while sending the request.");
-            return new HttpClientTestHelper(httpEx);
+            return SimulateSocketFailure(HttpRequestError.ConnectionError, SocketError.NoData, hostname);
+        }
+
+        /// <summary>
+        /// Simulates a refused connection to a host that resolved, in the shape .NET reports it.
+        /// </summary>
+        public static HttpClientTestHelper SimulateConnectionFailure(string hostname = "unreachable.example.com")
+        {
+            return SimulateSocketFailure(HttpRequestError.ConnectionError, SocketError.ConnectionRefused, hostname);
         }
 
         /// <summary>
@@ -394,12 +405,19 @@ namespace pwiz.SkylineTestUtil
             if (_simulatedException is TimeoutException)
                 return uri != null ? GetTimeoutMessage(uri) : null;
             
-            // HttpRequestException - check message for HTTP status codes
             if (_simulatedException is HttpRequestException httpEx)
             {
                 if (uri == null)
                     return null;
-                
+
+                // Socket-level failures are classified by their shape, before any message text is
+                // read: a host name can contain digits that look like an HTTP status code.
+                if (IsDnsFailureShape(httpEx))
+                    return GetDnsFailureMessage(uri);
+                if (httpEx.InnerException is SocketException)
+                    return GetConnectionFailureMessage(uri);
+
+                // Otherwise check the message for HTTP status codes
                 var message = httpEx.Message;
                 if (message.Contains("404"))
                     return GetHttp404Message(uri);
@@ -413,14 +431,7 @@ namespace pwiz.SkylineTestUtil
                     return GetHttp429Message(uri);
                 if (message.Contains("503"))
                     return GetHttp503Message(uri);
-                
-                // Check for WebException inner exception
-                if (httpEx.InnerException is WebException webEx)
-                {
-                    if (webEx.Status == WebExceptionStatus.NameResolutionFailure)
-                        return GetDnsFailureMessage(uri);
-                }
-                
+
                 // Generic connection failure
                 return GetConnectionFailureMessage(uri);
             }
@@ -549,6 +560,27 @@ namespace pwiz.SkylineTestUtil
         {
             // Restore the original test behavior
             HttpClientWithProgress.TestBehavior = _originalTestBehavior;
+        }
+
+        private static HttpClientTestHelper SimulateSocketFailure(HttpRequestError error, SocketError socketError, string hostname)
+        {
+            var socketEx = new SocketException((int)socketError);
+            return new HttpClientTestHelper(new HttpRequestException(error, $"{socketEx.Message} ({hostname})", socketEx));
+        }
+
+        /// <summary>
+        /// The DNS shapes .NET produces, listed independently of the product's classifier so that
+        /// a change to either one shows up as a test failure.
+        /// </summary>
+        private static bool IsDnsFailureShape(HttpRequestException httpEx)
+        {
+            if (httpEx.HttpRequestError == HttpRequestError.NameResolutionError)
+                return true;
+            var socketEx = httpEx.InnerException as SocketException;
+            return socketEx != null && (socketEx.SocketErrorCode == SocketError.HostNotFound ||
+                                        socketEx.SocketErrorCode == SocketError.NoData ||
+                                        socketEx.SocketErrorCode == SocketError.NoRecovery ||
+                                        socketEx.SocketErrorCode == SocketError.TryAgain);
         }
     }
 
@@ -821,7 +853,7 @@ namespace pwiz.SkylineTestUtil
 
             // Extract Authorization header from request
             string authorization = null;
-            if (request.Headers?.Authorization != null)
+            if (request.Headers.Authorization != null)
             {
                 var authScheme = request.Headers.Authorization.Scheme;
                 var authParameter = request.Headers.Authorization.Parameter;
@@ -1061,7 +1093,7 @@ namespace pwiz.SkylineTestUtil
 
             // Extract Authorization header from request for playback lookup
             string authorization = null;
-            if (response.RequestMessage?.Headers?.Authorization != null)
+            if (response.RequestMessage?.Headers.Authorization != null)
             {
                 var authScheme = response.RequestMessage.Headers.Authorization.Scheme;
                 var authParameter = response.RequestMessage.Headers.Authorization.Parameter;
@@ -1076,10 +1108,10 @@ namespace pwiz.SkylineTestUtil
             var interaction = new HttpInteraction
             {
                 Url = urlString,
-                Method = response.RequestMessage?.Method?.Method,
+                Method = response.RequestMessage?.Method.Method,
                 Authorization = authorization,
                 StatusCode = (int)response.StatusCode,
-                ContentType = response.Content?.Headers?.ContentType?.ToString()
+                ContentType = response.Content.Headers.ContentType?.ToString()
             };
             var entry = new RecordingEntry(interaction);
 
@@ -1118,9 +1150,9 @@ namespace pwiz.SkylineTestUtil
                 var interaction = new HttpInteraction
                 {
                     Url = uri?.ToString(),
-                    Method = response?.RequestMessage?.Method?.Method,
-                    ContentType = response?.Content?.Headers?.ContentType?.ToString(),
-                    StatusCode = response != null ? (int)response.StatusCode : (int?)null
+                    Method = response?.RequestMessage?.Method.Method,
+                    ContentType = response?.Content.Headers.ContentType?.ToString(),
+                    StatusCode = response != null ? (int)response.StatusCode : null
                 };
                 entry = new RecordingEntry(interaction);
                 lock (_lock)

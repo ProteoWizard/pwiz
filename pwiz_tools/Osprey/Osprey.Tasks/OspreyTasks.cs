@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var task in all.Where(t => !pipeline.Contains(t)))
             {
                 if (!pipelineBySelector.ContainsKey(task))
-                    throw new InvalidOperationException(string.Format(@"--task {0} is not a stage and names no pipeline to run.", task.Name));
+                    throw new InvalidOperationException(string.Format(@"{0} is not a stage and names no pipeline to run.", OspreyArgNames.TaskText(task.Name)));
             }
             // A selector's pipeline is built from THIS set's instances - the membership rule
             // compares by reference, so a fresh instance in a declared pipeline would be a
@@ -98,15 +98,15 @@ namespace pwiz.Osprey.Tasks
             foreach (var kv in pipelineBySelector)
             {
                 if (!all.Contains(kv.Key) || pipeline.Contains(kv.Key))
-                    throw new InvalidOperationException(string.Format(@"--task {0} declares a pipeline but is a stage or is not listed.", kv.Key.Name));
+                    throw new InvalidOperationException(string.Format(@"{0} declares a pipeline but is a stage or is not listed.", OspreyArgNames.TaskText(kv.Key.Name)));
                 if (kv.Value.Any(t => !all.Contains(t)))
-                    throw new InvalidOperationException(string.Format(@"--task {0}'s pipeline uses a task instance that is not in the task list.", kv.Key.Name));
+                    throw new InvalidOperationException(string.Format(@"{0}'s pipeline uses a task instance that is not in the task list.", OspreyArgNames.TaskText(kv.Key.Name)));
             }
         }
 
         /// <summary>
-        /// A fresh set of instances: the six tasks, the canonical pipeline over four of them,
-        /// and what the other two run when selected.
+        /// A fresh set of instances: the seven tasks, the canonical pipeline over four of them,
+        /// and what the other three run when selected.
         /// </summary>
         public static OspreyTasks Create()
         {
@@ -115,11 +115,12 @@ namespace pwiz.Osprey.Tasks
             var firstPassFdr = new FirstPassFdrTask();
             var perFileRescore = new PerFileRescoreTask();
             var secondPassFdr = new SecondPassFdrTask();
+            var trainingExport = new TrainingExportTask();
             var modelDiagnostics = new ModelDiagnosticsTask();
 
             var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr };
             return new OspreyTasks(
-                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, modelDiagnostics },
+                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport, modelDiagnostics },
                 pipeline,
                 new Dictionary<OspreyTask, IReadOnlyList<OspreyTask>>
                 {
@@ -130,6 +131,11 @@ namespace pwiz.Osprey.Tasks
                     // the report with every other write suppressed.
                     { spectraCache, new OspreyTask[] { spectraCache } },
                     { modelDiagnostics, pipeline },
+                    // TrainingExport asks for the export, a declared output of PerFileRescoring:
+                    // on a finished analysis every other stage rehydrates and PerFileRescoring
+                    // writes only the missing exports; on an unfinished one the analysis runs
+                    // with the export. A selector, never a stage (P17).
+                    { trainingExport, pipeline },
                 });
         }
 

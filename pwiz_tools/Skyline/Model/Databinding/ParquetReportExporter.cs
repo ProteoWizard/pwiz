@@ -21,6 +21,7 @@ using Parquet.Schema;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -62,7 +63,10 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 options.ColumnEncodingHints[column.DataField.Path.ToString()] = EncodingHint.Dictionary;
             }
-            var writer = ParquetWriter.CreateAsync(schema, stream, options).GetAwaiter().GetResult();
+            // Parquet.Net 6 does not use ConfigureAwait(false) when it writes the file's header and footer,
+            // so blocking on it from a thread with a WinForms SynchronizationContext would deadlock
+            var writer = ActionUtil.CallWithoutSynchronizationContext(() =>
+                ParquetWriter.CreateAsync(schema, stream, options).GetAwaiter().GetResult());
             using (var pipeline = new ExportPipeline(writer, columns, columnValueTree, rowItemEnumerator))
             {
                 pipeline.RowsPerGroup = DecideRowCountPerGroup(rowItemEnumerator.ItemProperties);
@@ -72,7 +76,7 @@ namespace pwiz.Skyline.Model.Databinding
             // that throws again, and from a "using" that exception would replace the one which says
             // why the export failed. The writer holds nothing but the caller's stream, so a failed
             // export leaves it undisposed.
-            writer.DisposeAsync().GetAwaiter().GetResult();
+            ActionUtil.CallWithoutSynchronizationContext(() => writer.DisposeAsync().GetAwaiter().GetResult());
         }
 
         private List<ColumnData> BuildColumns(ItemProperties itemProperties, ColumnValueTree columnValueTree)
@@ -522,15 +526,14 @@ namespace pwiz.Skyline.Model.Databinding
                     // This is a list column
                     // The element storage type is nullable so individual list slots can hold nulls
                     StorageType = new StorageType(typeof(IEnumerable<>).MakeGenericType(ListElementType.Type));
-                    var elementField = new DataField(@"element", ListElementType.Type,
-                        isNullable: true, isArray: false);
+                    var elementField = MakeDataField(@"element", ListElementType.Type, isArray: false);
                     SchemaField = new ListField(Name, elementField);
                     DataField = elementField;
                 }
                 else
                 {
                     StorageType = new StorageType(DecideStorageType(valueType));
-                    DataField = new DataField(Name, StorageType.Type, isNullable: true);
+                    DataField = MakeDataField(Name, StorageType.Type, isArray: null);
                     SchemaField = DataField;
                 }
             }
@@ -598,7 +601,35 @@ namespace pwiz.Skyline.Model.Databinding
                     // Extract the list from ListColumnValue<T>
                     return ConvertListColumnValue(value);
                 }
-                return StorageType.ConvertValue(value);
+                return ConvertToColumnValue(StorageType, value);
+            }
+
+            private static DataField MakeDataField(string name, Type storageType, bool? isArray)
+            {
+                if (storageType != typeof(DateTime?))
+                {
+                    return new DataField(name, storageType, isNullable: true, isArray);
+                }
+                // Without a format, Parquet.Net writes DateTime as the deprecated INT96. The
+                // values are stored to the millisecond because Parquet.Net 6 writes the digits
+                // of a Millis value as they are, but does its own time zone conversion when it
+                // writes Micros or Nanos.
+                return new DateTimeDataField(name, DateTimeFormat.Timestamp, true,
+                    DateTimeTimeUnit.Millis, true, isArray);
+            }
+
+            private static object ConvertToColumnValue(StorageType storageType, object value)
+            {
+                value = storageType.ConvertValue(value);
+                // Parquet.Net writes the DateTime digits without looking at DateTime.Kind,
+                // so a local time has to be converted to UTC here. A time with no time zone
+                // (DateTimeKind.Unspecified) is written as if it were UTC, which keeps the
+                // output the same on every computer.
+                if (value is DateTime dateTime && dateTime.Kind == DateTimeKind.Local)
+                {
+                    return dateTime.ToUniversalTime();
+                }
+                return value;
             }
 
             private Array ConvertListColumnValue(object listColumnValue)
@@ -610,7 +641,7 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType.Type)
+                if (array.GetType().GetElementType() == ListElementType.Type && ListElementType.Type != typeof(DateTime?))
                 {
                     return array;
                 }
@@ -618,7 +649,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var convertedArray = Array.CreateInstance(ListElementType.Type, array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    var value = ListElementType.ConvertValue(array.GetValue(i));
+                    var value = ConvertToColumnValue(ListElementType, array.GetValue(i));
                     if (value != null)
                     {
                         convertedArray.SetValue(value, i);
@@ -845,7 +876,8 @@ namespace pwiz.Skyline.Model.Databinding
             { typeof(decimal), typeof(decimal?) },
             // Old call sites wrapped DateTime as DateTimeOffset with a local-Kind
             // assumption that wasn't actually valid; store DateTime? directly so
-            // the value goes through unchanged.
+            // the value goes through unchanged. See ColumnData.MakeDataField for
+            // how it is encoded.
             { typeof(DateTime), typeof(DateTime?) }
         };
 

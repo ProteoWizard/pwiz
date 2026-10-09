@@ -697,7 +697,7 @@ namespace pwiz.SkylineTestUtil
         {
             if (_excelCodePagesRegistered)
                 return;
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             _excelCodePagesRegistered = true;
         }
 
@@ -751,7 +751,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         if (i > 0)
                             sb.Append('\t');
-                        sb.Append(row[i] ?? String.Empty);
+                        sb.Append(row[i]);
                     }
                     sb.AppendLine();
                 }
@@ -3086,20 +3086,20 @@ namespace pwiz.SkylineTestUtil
         // thread-static. Field names verified against Microsoft.WindowsDesktop.App 8.0.
         private static void ReleaseModalMenuFilterWindow()
         {
-            var filterType = typeof(System.Windows.Forms.ToolStripManager).GetNestedType(
-                @"ModalMenuFilter", System.Reflection.BindingFlags.NonPublic);
+            var filterType = typeof(ToolStripManager).GetNestedType(
+                @"ModalMenuFilter", BindingFlags.NonPublic);
             var instance = filterType?
                 .GetField(@"t_instance",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    BindingFlags.NonPublic | BindingFlags.Static)
                 ?.GetValue(null);
             if (instance == null)
                 return; // no menu was shown on this thread - nothing to release
             foreach (var fieldName in new[] { @"_lastActiveWindow", @"_activeHwnd" })
             {
                 var field = filterType.GetField(fieldName,
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    BindingFlags.NonPublic | BindingFlags.Instance);
                 if (field != null)
-                    field.SetValue(instance, System.Activator.CreateInstance(field.FieldType));
+                    field.SetValue(instance, Activator.CreateInstance(field.FieldType));
             }
         }
 
@@ -3120,14 +3120,14 @@ namespace pwiz.SkylineTestUtil
         // has to be reported rather than silently skipped.
         private static void ReleaseToolStripToolTips()
         {
-            const System.Reflection.BindingFlags nonPublicInstance =
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
-            const System.Reflection.BindingFlags nonPublicStatic =
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            const BindingFlags nonPublicInstance =
+                BindingFlags.NonPublic | BindingFlags.Instance;
+            const BindingFlags nonPublicStatic =
+                BindingFlags.NonPublic | BindingFlags.Static;
             // net10 name first, then the net8 name.
             var toolStripsField =
-                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_activeToolStrips", nonPublicStatic) ??
-                typeof(System.Windows.Forms.ToolStripManager).GetField(@"t_toolStripWeakArrayList", nonPublicStatic);
+                typeof(ToolStripManager).GetField(@"t_activeToolStrips", nonPublicStatic) ??
+                typeof(ToolStripManager).GetField(@"t_toolStripWeakArrayList", nonPublicStatic);
             if (toolStripsField == null)
             {
                 // Same reasoning as the ToolStrip.ToolTip / ToolTip._timer check below: a silent return

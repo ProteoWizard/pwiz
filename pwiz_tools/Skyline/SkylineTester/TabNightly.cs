@@ -186,7 +186,7 @@ namespace SkylineTester
                 td.Settings.Priority = ProcessPriorityClass.High;
 
                 // Add a trigger that will fire the task every other day
-                DailyTrigger dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger {DaysInterval = 1});
+                DailyTrigger dt = td.Triggers.Add(new DailyTrigger {DaysInterval = 1});
                 dt.StartBoundary = startTime;
                 dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                 dt.Enabled = true;
@@ -336,7 +336,7 @@ namespace SkylineTester
                 lock (MainWindow.NewNightlyRun)
                 {
                     MainWindow.NewNightlyRun.Revision = _revision = revision;
-                    MainWindow.Invoke(new System.Action(() => MainWindow.UpdateRun(MainWindow.NewNightlyRun, MainWindow.NightlyRunDate)));
+                    MainWindow.Invoke(() => MainWindow.UpdateRun(MainWindow.NewNightlyRun, MainWindow.NightlyRunDate));
                 }
             };
             revisionWorker.RunWorkerAsync();
@@ -383,7 +383,8 @@ namespace SkylineTester
             // "git pull" instead of deleted and re-cloned. Defaults are unchanged - nukeBuild is the
             // designer default, and a .skytr that says nothing still nukes.
             // withTutorialPerf: a nightly selects its tests at run time, so TestTutorial and
-            // TestPerf have to be staged even though build.bat leaves them out by default.
+            // TestPerf have to be staged. build.bat now always builds them; the flag is kept so
+            // the intent stays stated here.
             if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList,
                     MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false, true))
                 MainWindow.CommandShell.Add("# Nightly cancelled.");
@@ -444,6 +445,10 @@ namespace SkylineTester
                 DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.ffffff", CultureInfo.InvariantCulture),
                 message));
             var frames = stackTrace.GetFrames();
+            // Kept although net10 annotates GetFrames non-null, for the same reason as the ClrMD
+            // walks in HangDetection and GcRootReporter: this is a diagnostic path, and an NRE here
+            // would cost the nightly record it exists to write
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (frames == null || frames.Length == 0)
                 lines.Add("    !!no stack!!");
             else

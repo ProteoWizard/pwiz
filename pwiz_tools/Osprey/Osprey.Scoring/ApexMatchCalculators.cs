@@ -145,9 +145,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class ConsecutiveIonsCalc : ApexSpectrumOspreyFeatureCalculator
     {
-        public override string Name { get { return "consecutive_ions"; } }
+        public override string Name { get { return @"consecutive_ions"; } }
 
-        public override string DisplayName { get { return "Consecutive ion series"; } }
+        public override string DisplayName { get { return OspreyScoringResources.ConsecutiveIonsCalc_DisplayName_Consecutive_ion_series; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -217,9 +217,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class ExplainedIntensityCalc : ApexSpectrumOspreyFeatureCalculator
     {
-        public override string Name { get { return "explained_intensity"; } }
+        public override string Name { get { return @"explained_intensity"; } }
 
-        public override string DisplayName { get { return "Explained intensity"; } }
+        public override string DisplayName { get { return OspreyScoringResources.ExplainedIntensityCalc_DisplayName_Explained_intensity; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -239,9 +239,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class MassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
-        public override string Name { get { return "mass_accuracy_deviation_mean"; } }
+        public override string Name { get { return @"mass_accuracy_deviation_mean"; } }
 
-        public override string DisplayName { get { return "Mass error (signed mean)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.MassAccuracyMeanCalc_DisplayName_Mass_error__signed_mean_; } }
 
         // SIGNED, centered near zero: neither tail is target-like (the magnitude
         // matters, not the sign), so the expected coefficient direction is ill-defined.
@@ -268,9 +268,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class AbsMassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
-        public override string Name { get { return "abs_mass_accuracy_deviation_mean"; } }
+        public override string Name { get { return @"abs_mass_accuracy_deviation_mean"; } }
 
-        public override string DisplayName { get { return "Mass error (abs mean)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.AbsMassAccuracyMeanCalc_DisplayName_Mass_error__abs_mean_; } }
 
         public override bool IsReversedScore { get { return true; } }   // lower is better
 

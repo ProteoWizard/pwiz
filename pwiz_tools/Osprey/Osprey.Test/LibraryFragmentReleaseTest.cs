@@ -162,12 +162,12 @@ namespace pwiz.Osprey.Test
             // pass-1 emitter streams off the sidecars on the projection path, before compaction
             // and reading only library sequences and accessions, so the leg releases like any
             // other - for either selection that includes pass 1.
-            AssertRunsOnLeg(true, @"--fdrbench-pass 1", new OspreyConfig
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_FDRBENCH_PASS + OspreyConfig.FDRBENCH_PASS_1, new OspreyConfig
             {
                 OutputFdrBench = @"bench.tsv",
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1
             });
-            AssertRunsOnLeg(true, @"--fdrbench-pass both", new OspreyConfig
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_FDRBENCH_PASS + @"both", new OspreyConfig
             {
                 OutputFdrBench = @"bench.tsv",
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
@@ -209,16 +209,16 @@ namespace pwiz.Osprey.Test
             try
             {
                 AssertSuffix(true, @"straight-through, released", new OspreyConfig());
-                AssertSuffix(true, @"--task SecondPassFDR, released",
+                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + @", released",
                     TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
-                AssertSuffix(true, @"--task FirstPassFDR cannot release",
+                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME + @" cannot release",
                     TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
 
                 OspreyEnvironment.UseFdrProjection = false;
                 AssertSuffix(false, @"could have released, Stage 5 went resident instead",
                     new OspreyConfig());
                 // SecondPassFDR's release is its own and does not ride the Stage 5 path.
-                AssertSuffix(true, @"--task SecondPassFDR ignores OSPREY_FDR_PROJECTION",
+                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + @" ignores OSPREY_FDR_PROJECTION",
                     TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
                 OspreyEnvironment.UseFdrProjection = savedProjection;
 

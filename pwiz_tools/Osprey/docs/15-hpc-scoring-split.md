@@ -22,10 +22,11 @@ There is one task set, `OspreyTasks.Create()` (`Osprey.Tasks/OspreyTasks.cs`), h
 | Stage 6 per-file rescore | `PerFileRescoring` | `PerFileRescoreTask` | yes |
 | Stages 7-8 second-pass FDR | `SecondPassFDR` | `SecondPassFdrTask` | yes |
 | Render over a completed analysis | `ModelDiagnostics` | `ModelDiagnosticsTask` | no - runs the canonical stages |
+| Ask for the training export | `TrainingExport` | `TrainingExportTask` | no - runs the canonical stages |
 
-- `SpectraCache` and `ModelDiagnostics` are **not pipeline stages**: both are reachable only by naming them in `--task`, and neither belongs in an HPC relay plan. What each runs when selected is declared in the set (`OspreyTasks.PipelineFor`): `SpectraCache` a one-task pipeline of its own, `ModelDiagnostics` the canonical stages (which rehydrate from their stamps and fold the report with every other write suppressed). `ModelDiagnosticsTask` is therefore never in a pipeline list and its `Run` / `Rehydrate` are unreachable; what it owns is the name, what it consumes, and the two flags the selection implies. See 00-pipeline-architecture.md, "Two selectable tasks that are not pipeline tasks".
+- `SpectraCache`, `ModelDiagnostics` and `TrainingExport` are **not pipeline stages**: each is reachable only by naming it in `--task`, and none belongs in an HPC relay plan. What each runs when selected is declared in the set (`OspreyTasks.PipelineFor`): `SpectraCache` a one-task pipeline of its own, `ModelDiagnostics` and `TrainingExport` the canonical stages. Under `ModelDiagnostics` those stages rehydrate from their stamps and fold the report with every other write suppressed. Under `TrainingExport` the export is on, so a finished analysis skips every stage but `PerFileRescoring`, which writes only the missing exports (the export is its declared output, P17). `ModelDiagnosticsTask` and `TrainingExportTask` are therefore never in a pipeline list, and their `Run` / `Rehydrate` are unreachable (they throw); what each owns is the name, what it consumes, and the flags the selection implies. See 00-pipeline-architecture.md, "Three selectable tasks that are not pipeline tasks".
 - The residual spelling to read carefully is `PerFileRescoring` (the name) vs `PerFileRescoreTask` (the class); everything else differs only in the `Fdr`/`FDR` casing, which follows this codebase's own type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace.
-- **Adding a stage** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus its place in the two lists of `OspreyTasks.Create()`; a selector-only task additionally declares there which pipeline it runs. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` switches on a task name; `PipelineMembershipTest` goes red until the new task has its rows (and a subclass missing from the set fails its reflection guard), and the `--task` help prose (`OspreyCommandArgs`) describes the two selector-only tasks by name and wants a sentence for a new one; [20-command-line.md](20-command-line.md)'s `--task` row lists the values. A second pipeline - selectable by a future `--pipeline <name>` - would be another ordered list declared beside `Pipeline`.
+- **Adding a stage** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus its place in the two lists of `OspreyTasks.Create()`; a selector-only task additionally declares there which pipeline it runs. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` switches on a task name; `PipelineMembershipTest` goes red until the new task has its rows (and a subclass missing from the set fails its reflection guard), and the `--task` help prose (`OspreyCommandArgs`) describes the tasks that are not stages by name and wants a sentence for a new one; [20-command-line.md](20-command-line.md)'s `--task` row lists the values. A second pipeline - selectable by a future `--pipeline <name>` - would be another ordered list declared beside `Pipeline`.
 
 ## Orchestration model: `--task` + one membership rule
 
@@ -35,6 +36,7 @@ Instead of Rust's `--no-join` / `--join-at-pass=N` / `--join-only` flags, the C#
 FirstPassFdrTask     -> config.StopAfterStage5 = true          (the flag's only setter)
 SecondPassFdrTask    -> config.ExpectReconciledInput = true
 ModelDiagnosticsTask -> config.ModelDiagnostics = config.DiagnosticsOnly = true
+TrainingExportTask   -> config.TrainingExport.Enabled = true   (what --training-export sets)
 (the other three set nothing)
 ```
 
@@ -58,6 +60,7 @@ Cross-task state flows through a typed byproduct registry (`PipelineContext.Get<
 | `PerFileRescoring` | yes | yes | yes | - | - |
 | `SecondPassFDR` | - | - | yes | yes | yes |
 | `ModelDiagnostics` | - | yes | - | - | yes |
+| `TrainingExport` | - | yes | - | - | yes |
 | *(no `--task`)* | | | - | - | yes |
 
 ### Membership truth table
@@ -72,8 +75,9 @@ The exact per-stage membership per mode is pinned by `PipelineMembershipTest.Tes
 | `--task PerFileRescoring` | rehydrate | rehydrate | run | – |
 | `--task SecondPassFDR` | rehydrate | (skipped) | rehydrate | run |
 | `--task ModelDiagnostics` (not a stage of the pipeline it runs) | run | run | run | run |
+| `--task TrainingExport` (not a stage of the pipeline it runs) | run | run | run | run |
 
-("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "–" = never touched.) `--task ModelDiagnostics` sets neither stop boundary and is a member of every stage, like the straight-through run, suppressing artifact WRITES rather than membership. It is listed here because a truth-table row claiming otherwise stood in this file and in a unit test. `--task SpectraCache` has no row: it walks a one-task pipeline of its own, in which it is the selection and so included.
+("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "–" = never touched.) `--task ModelDiagnostics` sets neither stop boundary and is a member of every stage, like the straight-through run, suppressing artifact WRITES rather than membership. It is listed here because a truth-table row claiming otherwise stood in this file and in a unit test. `--task TrainingExport` is the same shape: every stage is a member, and the resume scan decides what runs - on a finished analysis only `PerFileRescoring`'s export-only arm. `--task SpectraCache` has no row: it walks a one-task pipeline of its own, in which it is the selection and so included.
 ## Stage 1-4 — Per-file scoring (`--task PerFileScoring`)
 
 `PerFileScoringTask` (`Osprey.Tasks/PerFileScoringTask.cs`). Load the library + generate/pair decoys (`LoadLibraryAndDecoys`, `:695`), then score every input mzML (`Run`, `:173-421`). Each file's parse → RT/mass calibration → coelution scoring writes:
@@ -107,9 +111,11 @@ Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the 
 
 `PerFileRescoreTask` (`Osprey.Tasks/PerFileRescoreTask.cs`). Consumes the boundary file pair + the per-file parquet and re-scores each file against the consensus + reconciliation boundaries, runs the gap-fill two-pass, and writes a **reconciled** parquet. `Run` (`:185-315`) reads the post-FirstPassFDR buffer (`ctx.Get<CompactedEntries>()`, `:200`; demanding it materializes `FirstPassFdrTask`), self-gates on planning state (`didPlan` or a rescore bundle, and no 2nd-pass sidecar already present, `:232-247`), then calls `ExecuteRescore` (`:491-612`).
 
-`ExecuteRescore` runs the per-file loop `RescoreOneFile` (`:644-813`), which for each file with work: builds `boundary_overrides` keyed by entry_id + the subset library, streams spectra from `.spectra.bin` (`LoadSpectraForRescore`; there is **no** mzML fallback — an absent, stale or wrong-version cache is fatal here) and reloads mass calibrations, picks the refined RT calibration (falling back to first-pass), re-scores via `ScoringPipeline.RunCoelutionScoring`, overlays the rescored entries in place, runs gap-fill, and writes the reconciled parquet. Rescore runs the files **in parallel** under the same `EffectiveFileParallelism` the scoring phase resolved (`:547-584`).
+`ExecuteRescore` runs the per-file loop `RescoreOneFile` (`:644-813`), which for each file with work: builds `boundary_overrides` keyed by entry_id + the subset library, streams spectra from `.spectra.bin` (`LoadSpectraForRescore`; there is **no** mzML fallback — an absent, stale or wrong-version cache is fatal here) and reloads mass calibrations, picks the refined RT calibration (falling back to first-pass), re-scores via `ScoringPipeline.RunCoelutionScoring`, overlays the rescored entries in place, runs gap-fill, and writes the reconciled parquet. Rescore runs the files **in parallel** under its own resolved count, `RunPlan.RescoringFileParallelism` (`--parallel-files-rescoring`, else `--parallel-files`).
 
 Reconciled output goes to a **separate** `<stem>.scores-reconciled.parquet` sibling, leaving the Stage 4 `<stem>.scores.parquet` intact (`ParquetScoreCache.GetReconciledScoresPath`; `WriteReconciledAndStamp`, `:944-987`). Its footer carries `osprey.reconciled = "true"` plus `osprey.reconciliation_hash` (`Osprey.Tasks/ReconciledParquetWriter.cs:198-205`). This differs from the Rust doc, which says Stage 6 "rewrites each `<stem>.scores.parquet`" in place (see Divergences).
+
+With `--training-export` this task also writes `<stem>.training.parquet` per run ([22-training-export.md](22-training-export.md)): while the run's spectra are in hand, after its per-run second pass, or - when the flag is added to a finished analysis and the exports are all this task has outstanding - from the run's own artifacts, re-scoring nothing (`OnlyTrainingExportsOutstanding`). A failed export is reported and the other runs still export; the task then fails, so `SecondPassFDR` does not write the blib, and a re-run retries only the failed exports.
 
 Under `--task PerFileRescoring` the membership rule includes only this stage (the selection is a stage of the pipeline it runs, so it runs alone; the input KIND used to tell the two per-file workers apart, and now the selection itself does); `PerFileScoringTask` and `FirstPassFdrTask` lazy-rehydrate the upstream state from the boundary files via `ctx.Demand`. The worker is the canonical driver, not a path of its own - the hand-rolled worker was collapsed into it, and the `RescoreWorker` alias that survived that collapse with no callers was removed. `ValidateSelection` requires `--input` (the run this worker rescores, whose parquet and sidecars derive from its stem) plus `--library` + `--output`.
 
@@ -209,7 +215,7 @@ a corrupt cache a downstream stage must reject. See principle P8 in
 | `--reconciliation-compaction-fdr <v>` | 0.01 | Peptide-q gate for Stage 5 compaction (`FirstPassFdrTask.cs:689`). |
 | `--protein-fdr <v>` | 0.01 (machinery always runs) | Protein-rescue gate for compaction (`EffectiveProteinFdr`, `FirstPassFdrTask.cs:693`) and the SecondPassFDR passing-group count. |
 | `Reconciliation.Enabled` (config) | true | Gates Stage 6 planning (`FirstPassFdrTask.cs:387`) and the `--task FirstPassFDR` requirement (`FirstPassFdrTask.ValidateSelection`). |
-| `--parallel-files [N]` | sequential (off) | OUTER parallelism: number of input files scored/rescored at once. Both Stage 1-4 scoring and Stage 6 rescore fan out under the same resolved `EffectiveFileParallelism` (`RunPlan.cs:47`). Auto when the flag is given with no value. |
+| `--parallel-files [N]` | sequential (off) | OUTER parallelism: number of input files cached, scored and rescored at once. Each stage resolves its own count (`RunPlan.ScoringFileParallelism`, `RunPlan.RescoringFileParallelism`), and `--parallel-files-caching` / `-scoring` / `-rescoring` override this one for their stage. Auto when the flag is given with no value. |
 | `--threads <count>` | all cores | INNER per-file main-search thread budget, divided across concurrently running files. |
 | `--work-dir` / `--output-dir` / `--cache-dir` | input file's own dir | Redirect where per-file artifacts (parquet, spectra, calibration, sidecars) are written (`ArtifactPaths`, `Program.cs:135-136`). |
 | `OSPREY_MAX_PARALLEL_FILES` (env) | unset | Back-compat cap on the resolved concurrent-file count (`FileParallelismResolver`). |

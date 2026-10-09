@@ -91,13 +91,7 @@
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
-    <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="8.1.2" />
-    <!-- Pinned: System.ServiceModel.Primitives pulls Cryptography.Xml, whose
-         8.0.0-8.0.3 carry GHSA-37gx-xxp4-5rgx and whose 6.0.x line pulls a
-         Pkcs with GHSA-555c-2p6r-68mm. 8.0.4 is clean and brings Pkcs [8.0.1,),
-         also clean. Drop when ServiceModel depends on a clean Xml itself. -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.4" />
     <Reference Include="DigitalRune.Windows.Docking">
       <HintPath>..\..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
@@ -120,6 +114,6 @@
       <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo</Parent>
     </VendorTestArchives>
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\build\ExtractTestData.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\build\ExtractTestData.targets" />
 
 </Project>

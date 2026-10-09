@@ -43,7 +43,7 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="AcceptOutput"/> -- parking it in a parallel array (1st pass) or
     /// streaming it to the sidecar (2nd pass).
     /// </summary>
-    internal abstract class FdrProjectionSinkBase : IFdrOutputSink
+    internal abstract class FdrProjectionSinkBase : IFdrFileLaneSink
     {
         protected readonly FdrProjectionSet Projections;
         private readonly FdrLevel _fdrLevel;
@@ -51,11 +51,17 @@ namespace pwiz.Osprey.Tasks
         private readonly string _passLabel;
         private readonly int[] _fileTargets;
         private readonly int[] _fileDecoys;
-        private readonly Dictionary<string, double> _bestQByPrecursor;
+        // Distinct passing precursors (modseq|charge) for the unique-precursors [COUNT] line, its
+        // only reader. Null when --perf-stats is off: the tally is a string per passing row, tens
+        // of millions at cohort scale, for a line that would not be written.
+        private readonly HashSet<string> _passingPrecursors;
         // Streaming --model-diagnostics accumulator (null off the report path): folds every
         // pre-compaction row into the reduced report structures so the projection path can emit
         // the pass-1 report without holding the resident FdrEntry pool. Fed in Accept.
         private readonly ModelDiagnosticsData.Accumulator _mdiagAccumulator;
+        // Files whose diagnostics fold and passing-precursor keys PrepareFile built on a file
+        // lane and AcceptPrepared merged, so Accept must not fold their rows a second time.
+        private readonly bool[] _prepared;
 
         protected FdrProjectionSinkBase(
             FdrProjectionSet projections, OspreyConfig config, string passLabel,
@@ -68,8 +74,9 @@ namespace pwiz.Osprey.Tasks
             int nFiles = projections.PerFile.Count;
             _fileTargets = new int[nFiles];
             _fileDecoys = new int[nFiles];
-            _bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
+            _passingPrecursors = LogTag.COUNT.IsEnabled ? new HashSet<string>(StringComparer.Ordinal) : null;
             _mdiagAccumulator = mdiagAccumulator;
+            _prepared = new bool[nFiles];
         }
 
         /// <summary>
@@ -89,8 +96,8 @@ namespace pwiz.Osprey.Tasks
             double apexRt, in FdrQValues q)
         {
             // Tail [COUNT] tally, identical to the retired inline block: passing =
-            // EffectiveRunQvalue <= RunFdr, split target/decoy; best-q-per-precursor
-            // over passing targets keyed by modseq|charge. peptide + charge are passed in
+            // EffectiveRunQvalue <= RunFdr, split target/decoy; distinct passing target
+            // precursors keyed by modseq|charge. peptide + charge are passed in
             // (issue #4355 struct-shrink S3 Stage B) so this works whether the caller holds
             // a resident projection (2nd pass) or streams the row straight from parquet.
             double eff = q.EffectiveRunQvalue(_fdrLevel);
@@ -101,25 +108,53 @@ namespace pwiz.Osprey.Tasks
                 else
                     _fileTargets[fileIdx]++;
             }
-            if (!isDecoy && eff <= _runFdr)
-            {
-                string pkey = peptide + "|" + charge;
-                double existing;
-                if (!_bestQByPrecursor.TryGetValue(pkey, out existing) || eff < existing)
-                    _bestQByPrecursor[pkey] = eff;
-            }
+            if (_passingPrecursors != null && !isDecoy && eff <= _runFdr && !_prepared[fileIdx])
+                _passingPrecursors.Add(PassingKey(peptide, charge));
 
             // --model-diagnostics: fold this pre-compaction row into the streaming report
             // reductions (every row -- targets, decoys, entrapment, failing -- not just the
             // passing set the [COUNT] tally reads). Null off the report path.
-            if (_mdiagAccumulator != null)
+            if (_mdiagAccumulator != null && !_prepared[fileIdx])
                 _mdiagAccumulator.Add(fileIdx, peptide, charge, entryId, isDecoy, score, in q);
 
             AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, experimentAggregateScore,
                 apexRt, in q);
         }
 
-        public void Finish(Action<string> logInfo)
+        /// <summary>
+        /// The order-free share of <see cref="Accept"/> for a whole file, on a file lane: the
+        /// --model-diagnostics fold (merged in file order by <see cref="AcceptPrepared"/>, which
+        /// reproduces folding the rows in order) and the file's distinct passing precursors (a set
+        /// whose size is all the [COUNT] line reads). Null when this sink keeps neither.
+        /// </summary>
+        public object PrepareFile(int fileIdx, FdrFileRows rows)
+        {
+            if (_mdiagAccumulator == null && _passingPrecursors == null)
+                return null;
+            var fold = _mdiagAccumulator?.BeginFile(fileIdx);
+            var passing = _passingPrecursors != null ? new HashSet<string>(StringComparer.Ordinal) : null;
+            for (int r = 0; r < rows.Count; r++)
+            {
+                FdrQValues q = rows.QAt(r);
+                fold?.Add(rows.Peptides[r], rows.Charges[r], rows.EntryIds[r], rows.IsDecoys[r], rows.Scores[r], in q);
+                if (passing != null && !rows.IsDecoys[r] && q.EffectiveRunQvalue(_fdrLevel) <= _runFdr)
+                    passing.Add(PassingKey(rows.Peptides[r], rows.Charges[r]));
+            }
+            return new PreparedFile(fold, passing);
+        }
+
+        public void AcceptPrepared(int fileIdx, object prepared)
+        {
+            if (!(prepared is PreparedFile file))
+                return;
+            if (file.Mdiag != null)
+                _mdiagAccumulator.MergeFile(file.Mdiag);
+            if (file.Passing != null)
+                _passingPrecursors.UnionWith(file.Passing);
+            _prepared[fileIdx] = true;
+        }
+
+        public void Finish(IOspreyLog log)
         {
             // Flush any deferred per-file output first (2nd-pass empty-file sidecars);
             // the [COUNT] lines follow so they land at the same position the retired
@@ -131,22 +166,22 @@ namespace pwiz.Osprey.Tasks
             var perFile = Projections.PerFile;
             for (int f = 0; f < perFile.Count; f++)
             {
-                logInfo(string.Format(
-                    "[COUNT] {0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
-                    _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr));
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:0%} FDR",
+                    _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr);
                 nTargetPassing += _fileTargets[f];
                 nDecoyPassing += _fileDecoys[f];
             }
 
-            logInfo(string.Format(
-                "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
-                _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
-            logInfo(string.Format(
-                "[COUNT] {0} total across files: {1}",
-                _passLabel, nTargetPassing));
-            logInfo(string.Format(
-                "[COUNT] {0} unique precursors (best q across files): {1}",
-                _passLabel, _bestQByPrecursor.Count));
+            log.LogInfo(string.Format(
+                OspreyTasksResources.FdrProjectionSinkBase_Finish__0__Percolator_results___1__targets___2__decoys_pass__3__FDR,
+                PercolatorEngine.PassDisplayName(_passLabel), nTargetPassing, nDecoyPassing, _runFdr));
+            log.LogInfo(LogTag.COUNT, @"{0} total across files: {1}",
+                _passLabel, nTargetPassing);
+            if (_passingPrecursors != null)
+            {
+                log.LogInfo(LogTag.COUNT, @"{0} unique precursors (best q across files): {1}",
+                    _passLabel, _passingPrecursors.Count);
+            }
         }
 
         /// <summary>Handle one row's persisted output (park it, or stream it to the sidecar).</summary>
@@ -157,6 +192,23 @@ namespace pwiz.Osprey.Tasks
         /// <summary>Flush any deferred per-file output before the [COUNT] tally is logged.</summary>
         protected virtual void OnFinish()
         {
+        }
+
+        private static string PassingKey(string peptide, byte charge)
+        {
+            return peptide + @"|" + charge;
+        }
+
+        private sealed class PreparedFile
+        {
+            public PreparedFile(ModelDiagnosticsData.Accumulator.FileFold mdiag, HashSet<string> passing)
+            {
+                Mdiag = mdiag;
+                Passing = passing;
+            }
+
+            public ModelDiagnosticsData.Accumulator.FileFold Mdiag { get; }
+            public HashSet<string> Passing { get; }
         }
     }
 

@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
@@ -118,7 +117,7 @@ namespace SkylineNightly
                     td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
                     // Add a trigger that will fire the task every day
-                    var dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
+                    var dt = td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
                     var scheduledTime = startTime.Value;
                     var now = DateTime.Now;
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
@@ -143,8 +142,11 @@ namespace SkylineNightly
 
                     // Add an action that will launch SkylineNightlyShim whenever the trigger fires. What
                     // to run is in the settings saved above; the shim just updates and says "run".
-                    var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location.Replace(@".exe", @"Shim.exe"), @"run"));
+                    // The shim sits beside the running .exe. Not Assembly.Location: on .NET that is
+                    // SkylineNightly.dll, so replacing ".exe" changed nothing and the task ran the
+                    // .dll; in the single-file build SkylineNightly.zip ships, it is empty.
+                    var nightlyDir = Path.GetDirectoryName(Environment.ProcessPath) ?? string.Empty;
+                    td.Actions.Add(new ExecAction(Path.Combine(nightlyDir, @"SkylineNightlyShim.exe"), @"run"));
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);

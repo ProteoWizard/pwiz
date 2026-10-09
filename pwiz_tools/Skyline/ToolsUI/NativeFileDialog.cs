@@ -44,8 +44,36 @@ namespace pwiz.Skyline.ToolsUI
         // The commit button's control id, so it is found without matching a localized caption.
         protected const int IDOK = 1;
 
+        // The classic common-dialog file list (lst1). The modern Open and Save dialogs are built on the classic
+        // template and keep this hidden ListBox from moments after their window is created until it is destroyed,
+        // so it says "file dialog" during the stretch when neither dialog's own file-name field exists yet.
+        private const int CLASSIC_FILE_LIST_ID = 1120;
+
         protected NativeFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
+        }
+
+        /// <summary>Whether the "#32770" is a common file dialog (Open or Save), including one the shell is still
+        /// building or tearing down.</summary>
+        public static bool IsFileDialog(IntPtr hwnd)
+        {
+            return new NativeSaveFileDialog(hwnd, CancellationToken.None)
+                .HasDescendant(NativeControl.LISTBOX_CLASS, CLASSIC_FILE_LIST_ID);
+        }
+
+        /// <summary>The Open or Save wrapper for a file dialog, or null while it has neither dialog's file-name
+        /// field. The Save dialog starts out with the Open dialog's classic file-name combo (control id 1148),
+        /// destroys it, and creates its own file-name Edit (control id 1001) 50-100 ms later. Open is checked
+        /// first because the combo is gone by the time the Save dialog has a field of its own; while the combo is
+        /// there the Save dialog's commit button is not yet shown, so <see cref="IsOpenComplete"/> keeps that
+        /// brief Open classification from being reported.</summary>
+        internal static NativeFileDialog Classify(IntPtr handle, CancellationToken cancellationToken)
+        {
+            if (NativeOpenFileDialog.IsOpenFileDialog(handle))
+                return new NativeOpenFileDialog(handle, cancellationToken);
+            if (NativeSaveFileDialog.IsSaveFileDialog(handle))
+                return new NativeSaveFileDialog(handle, cancellationToken);
+            return null;
         }
 
         /// <summary>The dialog's controls: its Win32 children (the file-name field, the commit and cancel buttons)

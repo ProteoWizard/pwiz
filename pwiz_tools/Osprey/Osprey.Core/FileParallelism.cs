@@ -81,29 +81,49 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The per-file stages whose concurrent-file count can be set on its own, with
+    /// <c>--parallel-files-caching</c>, <c>--parallel-files-scoring</c> and
+    /// <c>--parallel-files-rescoring</c>; each falls back to the shared <c>--parallel-files</c>.
+    /// They do not scale alike: caching is bound by a single-threaded vendor decode, scoring
+    /// by CPU and its large per-file working set, re-scoring by a much smaller one.
+    /// </summary>
+    public enum FileStage
+    {
+        Caching,
+        Scoring,
+        Rescoring
+    }
+
+    /// <summary>
     /// Resolves the parsed <see cref="FileParallelism"/> request into the actual
-    /// number of input files to score concurrently for one run -- the single
+    /// number of input files one per-file stage runs concurrently - the single
     /// place that owns the precedence between the CLI argument, the
     /// <c>OSPREY_MAX_PARALLEL_FILES</c> back-compat cap, free RAM, and the core
-    /// count. <c>PerFileScoringTask</c> calls it once per invocation and stores
-    /// the result on <c>RunPlan.EffectiveFileParallelism</c>.
+    /// count. Each <see cref="FileStage"/> calls it once, with the request
+    /// <see cref="OspreyConfig.GetFileParallelism"/> chose for it: the stage's own
+    /// flag when given, otherwise the shared <c>--parallel-files</c>.
     ///
-    /// Precedence (highest first):
-    ///   1. explicit <c>--parallel-files N</c>  -> N, clamped to file count only
-    ///                                             (a 500 GB box can force more).
-    ///   2. <c>--parallel-files</c> (auto)      -> RAM/CPU-aware estimate.
-    ///   3. <c>OSPREY_MAX_PARALLEL_FILES</c>    -> legacy cap (only when the
-    ///                                             argument is absent).
-    ///   4. otherwise                           -> 1 (sequential default).
+    /// Precedence (highest first), where "the argument" is the stage's own flag
+    /// or, absent that, <c>--parallel-files</c>:
+    ///   1. explicit count (<c>0</c> means 1) -> N, clamped to file count only
+    ///                                           (a 500 GB box can force more).
+    ///   2. the argument with no value        -> RAM/CPU-aware estimate (auto).
+    ///   3. <c>OSPREY_MAX_PARALLEL_FILES</c>  -> legacy cap (only when no argument
+    ///                                           applies; the caller passes 0 for caching).
+    ///   4. otherwise                         -> 1 (sequential default).
     /// The argument wins over the env var when both are set.
     /// </summary>
     public static class FileParallelismResolver
     {
-        // Per-file peak working-set estimate = largest input mzML x this factor.
+        // Per-file peak working-set estimate = largest input x this factor.
         // Grounded in the 2026-06-11 Astral (hram) observation: a ~6 GB on-disk
         // mzML drove a ~14.6 GB per-file working set (~2.4x), rounded up to bias
         // AUTO toward FEWER concurrent files (over-estimating footprint is the
-        // safe error -- it avoids the OOM this argument exists to prevent).
+        // safe error - it avoids the OOM this argument exists to prevent).
+        // It also scales a .spectra.bin size when a cache-only input is sized
+        // from its cache (EstimatePerFileBytes); a cache-only run never pays the
+        // source parse this was calibrated against, so recalibrating from mzML
+        // parses keeps that case conservative too.
         // Coarse by design; explicit --parallel-files N bypasses it entirely.
         private const double FOOTPRINT_MULTIPLIER = 3.0;
 
@@ -116,14 +136,17 @@ namespace pwiz.Osprey.Core
         /// and <paramref name="perFileBytesEstimate"/> are only invoked in auto
         /// mode, so the common (sequential / explicit) paths do no I/O or system
         /// probing. <paramref name="log"/> (optional) receives a one-line summary
-        /// of the chosen N and the reason; pass null on the bookkeeping-only paths
-        /// that never actually parallelize.
+        /// of the chosen N and the reason; pass null where the count is resolved without
+        /// the stage's per-file work running. <paramref name="argName"/> is the argument the
+        /// request came from - a stage's own flag or the shared <c>--parallel-files</c> - so
+        /// the summary says which one decided.
         /// </summary>
         public static int Resolve(
             FileParallelism request, int nFiles, int envCap, int processorCount,
             Func<long> availableBytesProbe, Func<long> perFileBytesEstimate,
-            Action<string> log = null)
+            Action<string> log = null, string argName = OspreyArgNames.PARALLEL_FILES)
         {
+            string argText = OspreyArgNames.Text(argName);
             if (nFiles <= 1)
                 return 1;
 
@@ -139,13 +162,13 @@ namespace pwiz.Osprey.Core
                     // is safe.
                     int explicitN = Math.Max(1, Math.Min(request.Count, nFiles));
                     log?.Invoke(string.Format(
-                        @"File parallelism: {0} (explicit --parallel-files, {1} files)",
-                        explicitN, nFiles));
+                        OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_,
+                        explicitN, nFiles, argText));
                     return explicitN;
 
                 case FileParallelismMode.Auto:
                     return ResolveAuto(nFiles, cores, cpuCap,
-                        availableBytesProbe, perFileBytesEstimate, log);
+                        availableBytesProbe, perFileBytesEstimate, log, argText);
 
                 default:
                     // Sequential default -- unless the legacy env cap is set, in
@@ -164,19 +187,26 @@ namespace pwiz.Osprey.Core
                         return capped;
                     }
                     log?.Invoke(string.Format(
-                        @"File parallelism: 1 (sequential default; pass --parallel-files to score {0} files concurrently)",
-                        nFiles));
+                        OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass__1__to_run__0__files_at_once_,
+                        nFiles, argText));
                     return 1;
             }
         }
 
         /// <summary>
-        /// Largest input footprint estimate in bytes (max input file size x
-        /// <see cref="FOOTPRINT_MULTIPLIER"/>), or 0 when no file size can be
-        /// read. Uses the max rather than the mean because the concurrent peak is
-        /// bounded by the biggest files running together.
+        /// Largest input footprint estimate in bytes (max input size x
+        /// <see cref="FOOTPRINT_MULTIPLIER"/>), or 0 when no size can be read. Uses
+        /// the max rather than the mean because the concurrent peak is bounded by
+        /// the biggest files running together.
+        ///
+        /// An input that measures 0 - its source deleted once cached (pwiz #4616),
+        /// or truncated - is sized from the <c>.spectra.bin</c> that
+        /// <paramref name="cachePathResolver"/> locates for it (null skips this, for
+        /// callers with no caches). Without that, a staged cohort sizes 0 throughout
+        /// and auto mode loses its memory budget on exactly the largest runs.
         /// </summary>
-        public static long EstimatePerFileBytes(IEnumerable<string> inputFiles)
+        public static long EstimatePerFileBytes(IEnumerable<string> inputFiles,
+            Func<string, string> cachePathResolver)
         {
             long maxBytes = 0;
             if (inputFiles != null)
@@ -184,6 +214,8 @@ namespace pwiz.Osprey.Core
                 foreach (var file in inputFiles)
                 {
                     long len = SafeFileLength(file);
+                    if (len == 0 && cachePathResolver != null)
+                        len = SafeFileLength(SafeResolve(cachePathResolver, file));
                     if (len > maxBytes)
                         maxBytes = len;
                 }
@@ -196,28 +228,31 @@ namespace pwiz.Osprey.Core
         private static int ResolveAuto(
             int nFiles, int cores, int cpuCap,
             Func<long> availableBytesProbe, Func<long> perFileBytesEstimate,
-            Action<string> log)
+            Action<string> log, string argText)
         {
             long availableBytes = availableBytesProbe?.Invoke() ?? 0;
             long perFileBytes = perFileBytesEstimate?.Invoke() ?? 0;
 
-            if (availableBytes <= 0 || perFileBytes <= 0)
+            if (perFileBytes <= 0)
             {
-                // No usable memory signal -- fall back to a CPU-bound cap rather
-                // than guessing. Still safer than the old unbounded default.
+                // No per-file estimate - fall back to a CPU-bound cap rather than
+                // guessing. Still safer than the old unbounded default.
                 log?.Invoke(string.Format(
-                    @"File parallelism: {0} (auto, CPU-bound: {1} cores, {2} files; memory estimate unavailable)",
-                    cpuCap, cores, nFiles));
+                    OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_,
+                    cpuCap, cores, nFiles, argText));
                 return cpuCap;
             }
 
-            long budget = (long)(availableBytes * RAM_BUDGET_FRACTION);
-            int memFit = (int)Math.Max(1, budget / perFileBytes);
+            // Zero free memory is exhausted (a cgroup or heap limit at its ceiling),
+            // or unreadable; either way the budget below comes to one file at a time,
+            // as FdrLaneResolver reads it, never the CPU cap.
+            long budget = (long)(Math.Max(0, availableBytes) * RAM_BUDGET_FRACTION);
+            int memFit = (int)Math.Max(1, Math.Min(int.MaxValue, budget / perFileBytes));
             int chosen = Math.Max(1, Math.Min(cpuCap, memFit));
             log?.Invoke(string.Format(
-                @"File parallelism: {0} (auto: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -> {4} by RAM, capped to {5} cores / {6} files)",
+                OspreyCoreResources.FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__,
                 chosen, availableBytes / (double)BYTES_PER_GB, RAM_BUDGET_FRACTION,
-                perFileBytes / (double)BYTES_PER_GB, memFit, cores, nFiles));
+                perFileBytes / (double)BYTES_PER_GB, memFit, cores, nFiles, argText));
             return chosen;
         }
 
@@ -228,12 +263,12 @@ namespace pwiz.Osprey.Core
                 if (string.IsNullOrEmpty(path))
                     return 0;
                 if (File.Exists(path))
-                    return new FileInfo(path).Length;
+                    return TargetLength(path);
                 // A vendor bundle is a DIRECTORY (Agilent .d, Bruker .d, Waters .raw).
                 // Sizing it at 0 does not merely lose precision: EstimatePerFileBytes
                 // returns 0 for the whole set, ResolveAuto takes its no-signal branch
-                // and runs at the full core count with NO memory budget at all. That is
-                // the opposite of conservative on exactly the largest inputs.
+                // and runs at min(file count, cores) with NO memory budget at all.
+                // That is the opposite of conservative on exactly the largest inputs.
                 var dir = new DirectoryInfo(path);
                 if (!dir.Exists)
                     return 0;
@@ -246,8 +281,33 @@ namespace pwiz.Osprey.Core
             {
                 // Unreadable path - treat as unknown size (0), never throw from a
                 // sizing hint.
+                return 0;
             }
-            return 0;
+        }
+
+        // Through a handle, so a symbolic link reports the size of its target:
+        // FileInfo.Length measures the link itself (0 on Windows, the length of the
+        // stored target path on Unix). A dangling link throws, which reads as 0.
+        private static long TargetLength(string path)
+        {
+            using (var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read,
+                       FileShare.ReadWrite | FileShare.Delete))
+            {
+                return RandomAccess.GetLength(handle);
+            }
+        }
+
+        private static string SafeResolve(Func<string, string> cachePathResolver, string inputPath)
+        {
+            try
+            {
+                return cachePathResolver(inputPath);
+            }
+            catch (Exception)
+            {
+                // A sizing hint never throws; an unresolvable cache is an unknown size.
+                return null;
+            }
         }
 
         private const long BYTES_PER_GB = 1024L * 1024L * 1024L;

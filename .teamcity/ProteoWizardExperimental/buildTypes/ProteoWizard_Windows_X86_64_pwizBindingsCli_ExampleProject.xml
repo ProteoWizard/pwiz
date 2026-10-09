@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="dadfc688-666c-46d9-a501-a2ab7c747e48" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Windows x86_64 pwiz_bindings_cli example project</name>
+  <description />
+  <settings>
+    <inherits>
+      <ref id="ProteoWizard_GitHubReportingConfig" />
+      <ref id="ProteoWizard_WindowsBase" />
+    </inherits>
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="artifactRules" value="build-nt-x86/*.tar.bz2&#xA;build-nt-x86/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="%WINDOWS_CHECKOUT_DIR%" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="45" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_203" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses pwiz/utility/bindings/CLI/example -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property%" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_78" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="build-nt-x86/*.tar.bz2,build-nt-x86/VERSION" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_211" name="teamcity.agent.jvm.os.name" value="Windows" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="60" />
+          <param name="quietPeriodMode" value="USE_DEFAULT" />
+        </parameters>
+      </build-trigger>
+      <build-trigger id="TRIGGER_170" type="buildDependencyTrigger">
+        <parameters>
+          <param name="afterSuccessfulBuildOnly" value="true" />
+          <param name="dependsOn" value="bt83" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <cleanup>
+      <policy type="days" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepDays.count" value="120" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

@@ -54,6 +54,7 @@ namespace pwiz.Skyline.ToolsUI
             this.labelDisplayLanguage = new System.Windows.Forms.Label();
             this.listBoxLanguages = new System.Windows.Forms.ListBox();
             this.tabMisc = new System.Windows.Forms.TabPage();
+            this.btnImportSettings = new System.Windows.Forms.Button();
             this.tbxSettingsFilePath = new System.Windows.Forms.TextBox();
             this.lblSettingsPath = new System.Windows.Forms.Label();
             this.btnResetSettings = new System.Windows.Forms.Button();
@@ -250,7 +251,8 @@ namespace pwiz.Skyline.ToolsUI
             this.listBoxLanguages.Name = "listBoxLanguages";
             // 
             // tabMisc
-            // 
+            //
+            this.tabMisc.Controls.Add(this.btnImportSettings);
             this.tabMisc.Controls.Add(this.tbxSettingsFilePath);
             this.tabMisc.Controls.Add(this.lblSettingsPath);
             this.tabMisc.Controls.Add(this.btnResetSettings);
@@ -260,9 +262,16 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.tabMisc, "tabMisc");
             this.tabMisc.Name = "tabMisc";
             this.tabMisc.UseVisualStyleBackColor = true;
-            // 
+            //
+            // btnImportSettings
+            //
+            resources.ApplyResources(this.btnImportSettings, "btnImportSettings");
+            this.btnImportSettings.Name = "btnImportSettings";
+            this.btnImportSettings.UseVisualStyleBackColor = true;
+            this.btnImportSettings.Click += new System.EventHandler(this.btnImportSettings_Click);
+            //
             // tbxSettingsFilePath
-            // 
+            //
             resources.ApplyResources(this.tbxSettingsFilePath, "tbxSettingsFilePath");
             this.tbxSettingsFilePath.Name = "tbxSettingsFilePath";
             this.tbxSettingsFilePath.ReadOnly = true;
@@ -409,5 +418,6 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.TextBox tbxKoinaServer;
         private System.Windows.Forms.TextBox tbxSettingsFilePath;
         private System.Windows.Forms.Label lblSettingsPath;
+        private System.Windows.Forms.Button btnImportSettings;
     }
 }

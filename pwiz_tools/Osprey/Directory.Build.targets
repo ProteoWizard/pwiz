@@ -1,10 +1,28 @@
 <Project>
 
-  <!-- The patched Parquet.Net reference and the swap of ParquetNet.dll over the NuGet
-       Parquet.dll that used to live here. Imported here as well as from
+  <!-- The patched Parquet.Net reference, which used to live here. Imported here as well as from
        pwiz_tools/Directory.Build.targets because this file, being the nearest
        Directory.Build.targets, is the only one MSBuild imports for the Osprey tree. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
+
+  <!-- ProteowizardWrapper, CommonUtil and pwiz-sharp are not in Osprey.sln, so a solution build
+       strips Configuration and Platform from references to them and every level below falls back
+       to Debug|AnyCPU. Give them this build's Configuration and AnyCPU, as
+       pwiz_tools\Directory.Build.targets does for Skyline.sln, so Osprey and Skyline share one
+       pwiz-sharp build in bin\<Configuration>. A target rather than reference metadata, because
+       the SDK flattens transitive references into every Osprey project and each one must pass the
+       same global properties, or a second instance is built. -->
+  <Target Name="CarryConfigurationToOutOfSolutionReferences"
+          AfterTargets="AssignProjectConfiguration"
+          Condition="'$(CurrentSolutionConfigurationContents)' != ''">
+    <ItemGroup>
+      <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
+        <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
+        <SetPlatform>Platform=AnyCPU;ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
+        <GlobalPropertiesToRemove />
+      </ProjectReferenceWithConfiguration>
+    </ItemGroup>
+  </Target>
 
   <!-- Stamp the Osprey version + git short hash on EVERY build path, not just
        build.ps1 / package.ps1. A plain `dotnet build`, a Debug build in VS, and

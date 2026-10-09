@@ -36,7 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
     <ProjectReference Include="..\Skyline.csproj" />
@@ -48,7 +47,6 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
 
   <!-- net472: the legacy on-disk DLLs + EnvDTE VS COM automation the net8 path drops -->
@@ -93,6 +91,8 @@
        ====================================================================== -->
   <PropertyGroup>
     <SkylineStageDir>$(MSBuildThisFileDirectory)..\bin\staging\$(Configuration)</SkylineStageDir>
+    <!-- Must match CreateZipInstallerWindow.SINGLE_FILE_NIGHTLY_DIR. -->
+    <SingleFileNightlyDir>SkylineNightlySingleFile</SingleFileNightlyDir>
   </PropertyGroup>
 
   <!-- Per-zip prerequisites. CreateZipFile adds member files by BARE NAME from the
@@ -106,19 +106,27 @@
        while SkylineNightlyShim is plain net10.0, and both also multi-target net472,
        so the framework has to be pinned or MSBuild builds the net472 leg too. -->
   <ItemGroup>
+    <!-- SingleFile: SkylineNightly.zip carries these two as single-file executables (see
+         _StageDistroZipPrereqs). Every nightly machine already runs a .NET Framework
+         SkylineNightlyShim.exe that updates itself and SkylineNightly.exe from this zip by
+         extracting a fixed list of file NAMES. A plain .NET build's .exe is only a launcher
+         for a .dll that list never extracts, so the update left both programs unable to
+         start. A single-file .exe needs nothing beside it. -->
     <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightly\SkylineNightly.csproj">
       <Zip>SkylineNightly.zip</Zip>
       <Tfm>net10.0-windows</Tfm>
+      <SingleFile>true</SingleFile>
     </DistroZipPrereq>
     <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\SkylineNightlyShim\SkylineNightlyShim.csproj">
       <Zip>SkylineNightly.zip</Zip>
       <Tfm>net10.0</Tfm>
+      <SingleFile>true</SingleFile>
     </DistroZipPrereq>
     <!-- BlibBuild and BlibFilter already reach the staging dir through Skyline's own
          ProjectReference graph; BlibToMs2 does not, because nothing in Skyline uses it.
          It ships only in this distro (that is the point of BiblioSpec.zip: it carries
          BlibToMs2, which the Skyline installer does not). -->
-    <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj">
+    <DistroZipPrereq Include="$(MSBuildThisFileDirectory)..\..\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj">
       <Zip>BiblioSpec.zip</Zip>
       <Tfm>net10.0</Tfm>
     </DistroZipPrereq>
@@ -193,7 +201,9 @@
     <PropertyGroup>
       <_Wanted>false</_Wanted>
       <_Wanted Condition="$(DistroZips.Contains('%(DistroZipPrereq.Zip)'))">true</_Wanted>
-      <_PrereqOut>%(DistroZipPrereq.RootDir)%(DistroZipPrereq.Directory)bin\$(Configuration)\%(DistroZipPrereq.Tfm)</_PrereqOut>
+      <!-- The prerequisites build with this project's Platform (it flows down as a global
+           property), so their output is under the same platform directory. -->
+      <_PrereqOut>%(DistroZipPrereq.RootDir)%(DistroZipPrereq.Directory)bin\$(BundledProjectPlatformDir)$(Configuration)\%(DistroZipPrereq.Tfm)</_PrereqOut>
     </PropertyGroup>
 
     <Message Condition="'$(_Wanted)' == 'true'" Importance="high"
@@ -211,6 +221,13 @@
     <MSBuild Condition="'$(_Wanted)' == 'true'"
              Projects="%(DistroZipPrereq.Identity)" Targets="Build"
              Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm)" />
+    <!-- The single-file copy goes to its own folder: the staging dir already holds the
+         ordinary launcher .exe of the same name, which Skyline and SkylineTester use.
+         Framework-dependent: the nightly machines have the .NET 10 Desktop Runtime. The
+         projects list win-x64 in RuntimeIdentifiers, so the restore above covers it. -->
+    <MSBuild Condition="'$(_Wanted)' == 'true' AND '%(DistroZipPrereq.SingleFile)' == 'true'"
+             Projects="%(DistroZipPrereq.Identity)" Targets="Publish"
+             Properties="Configuration=$(Configuration);TargetFramework=%(DistroZipPrereq.Tfm);RuntimeIdentifier=win-x64;SelfContained=false;PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;PublishDir=$(SkylineStageDir)\$(SingleFileNightlyDir)\" />
 
     <!-- Same merge-into-one-bin that Stage-Tests.ps1 does. robocopy returns
          0-7 for success, so the exit code is ignored and the real check is the

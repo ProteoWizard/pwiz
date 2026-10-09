@@ -343,7 +343,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 path += IonMobilityDb.EXT;
 
             // This function MessageDlg.Show's error messages
-            if (!ValidateIonMobilitiesList(LibraryMobilitiesFlat, textLibraryName.Text ?? string.Empty))
+            if (!ValidateIonMobilitiesList(LibraryMobilitiesFlat, textLibraryName.Text))
             {
                 gridViewIonMobilities.Focus();
                 return;                
@@ -543,7 +543,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public string LibraryName
         {
-            get { return (textLibraryName.Text ?? string.Empty).Trim(); }
+            get { return textLibraryName.Text.Trim(); }
             set { textLibraryName.Text = (value ?? string.Empty).Trim(); }
         }
 

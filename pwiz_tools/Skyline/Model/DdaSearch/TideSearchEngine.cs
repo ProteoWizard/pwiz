@@ -419,7 +419,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 string fileroot = AdditionalSettings[@"fileroot"].ValueToString(CultureInfo.InvariantCulture);
 
-                string tideOutputFile = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : @".") + "tide-search");
+                string tideOutputFile = Path.Combine(cruxOutputDir, (fileroot.IsNullOrEmpty() ? "" : @".") + @"tide-search");
 
                 string TidePepXmlFilepath = tideOutputFile + @".pep.xml" ;
                 string cruxInputFilepath = tideOutputFile + @".pin";

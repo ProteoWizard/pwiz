@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -49,6 +50,15 @@ namespace pwiz.Osprey.FDR
         public const string FIRST_PASS_LABEL = @"First-pass";
 
         /// <summary>
+        /// A pass label as a person reads it. <see cref="FIRST_PASS_LABEL"/> is also a token the
+        /// code compares and a tagged line carries, so it stays English there; prose shows this.
+        /// </summary>
+        public static string PassDisplayName(string passLabel)
+        {
+            return passLabel == FIRST_PASS_LABEL ? OspreyFDRResources.PercolatorEngine_PassDisplayName_First_pass : passLabel;
+        }
+
+        /// <summary>
         /// Run Percolator-based FDR control. Builds PercolatorEntry objects from
         /// FdrEntry stubs and runs Percolator, then maps results back onto the
         /// stubs. Static so the second-pass run after Stage 6 reconciliation
@@ -67,7 +77,7 @@ namespace pwiz.Osprey.FDR
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
-            Action<string> logInfo,
+            IOspreyLog log,
             out FeatureContributions contributions,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
@@ -105,16 +115,14 @@ namespace pwiz.Osprey.FDR
                 out int nWithFeatures, out int nWithoutFeatures,
                 out int nInputTargets, out int nInputDecoys);
 
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
-                passLabel, percEntries.Count, nInputTargets, nInputDecoys, numFeatures));
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
-                passLabel, nWithFeatures, nWithoutFeatures));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} peaks ({2} targets, {3} decoys, {4} features)",
+                passLabel, percEntries.Count, nInputTargets, nInputDecoys, numFeatures);
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator features computed: {1} peaks with PIN features, {2} fallback",
+                passLabel, nWithFeatures, nWithoutFeatures);
 
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             PercolatorResults results = DispatchSvm(
-                percEntries, percConfig, logInfo, passLabel, loadFileFeatures, frozenModel);
+                percEntries, percConfig, log, passLabel, loadFileFeatures, frozenModel);
 
             // Surface the trained model's feature contributions to the caller
             // (the --model-diagnostics report reads them). Computed already; this
@@ -162,19 +170,17 @@ namespace pwiz.Osprey.FDR
                             fileTargets++;
                     }
                 }
-                logInfo(string.Format(
-                    "[COUNT] {0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
-                    passLabel, kvp.Key, fileTargets, fileDecoys, config.RunFdr));
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:0%} FDR",
+                    passLabel, kvp.Key, fileTargets, fileDecoys, config.RunFdr);
                 nTargetPassing += fileTargets;
                 nDecoyPassing += fileDecoys;
             }
 
-            logInfo(string.Format(
-                "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
-                passLabel, nTargetPassing, nDecoyPassing, config.RunFdr));
-            logInfo(string.Format(
-                "[COUNT] {0} total across files: {1}",
-                passLabel, nTargetPassing));
+            log.LogInfo(string.Format(
+                OspreyFDRResources.PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR,
+                PassDisplayName(passLabel), nTargetPassing, nDecoyPassing, config.RunFdr));
+            log.LogInfo(LogTag.COUNT, @"{0} total across files: {1}",
+                passLabel, nTargetPassing);
 
             // Compute unique precursors across files (best q-value per modseq+charge)
             var bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
@@ -186,16 +192,15 @@ namespace pwiz.Osprey.FDR
                         continue;
                     if (entry.EffectiveRunQvalue(config.FdrLevel) > config.RunFdr)
                         continue;
-                    string pkey = entry.ModifiedSequence + "|" + entry.Charge;
+                    string pkey = entry.ModifiedSequence + @"|" + entry.Charge;
                     double q = entry.EffectiveRunQvalue(config.FdrLevel);
                     double existing;
                     if (!bestQByPrecursor.TryGetValue(pkey, out existing) || q < existing)
                         bestQByPrecursor[pkey] = q;
                 }
             }
-            logInfo(string.Format(
-                "[COUNT] {0} unique precursors (best q across files): {1}",
-                passLabel, bestQByPrecursor.Count));
+            log.LogInfo(LogTag.COUNT, @"{0} unique precursors (best q across files): {1}",
+                passLabel, bestQByPrecursor.Count);
             return false;
         }
 
@@ -216,7 +221,7 @@ namespace pwiz.Osprey.FDR
             FdrProjectionSet projections,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
-            Action<string> logInfo,
+            IOspreyLog log,
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
@@ -277,11 +282,11 @@ namespace pwiz.Osprey.FDR
             // direct path fit on all entries, streaming fits on the best-per-precursor
             // subsample). One path, lower memory, and matched to Rust.
             LogProjectionInputCounts(
-                projections, numFeatures, loadFileFeatures, logInfo, passLabel);
-            logInfo(string.Format("Running {0} Percolator on {1} entries...",
-                passLabel, n));
+                projections, numFeatures, loadFileFeatures, log, passLabel);
+            log.LogInfo(string.Format(OspreyFDRResources.PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candidate_peaks___,
+                PassDisplayName(passLabel), n));
             bool streamingAbort = RunStreamingIntoProjection(
-                projections.PerFile, peptideById, percConfig, logInfo, passLabel,
+                projections.PerFile, peptideById, percConfig, log, passLabel,
                 loadFileFeatures, loadFileApexRts, sink, captureContributions, captureModel);
             if (streamingAbort)
                 return true;
@@ -294,14 +299,14 @@ namespace pwiz.Osprey.FDR
             // projection here would read the now-absent fields. The sink also flushes
             // any deferred per-file output (2nd-pass sidecars). Same values, same
             // FdrLevel selection, so identical [COUNT] lines.
-            sink.Finish(logInfo);
+            sink.Finish(log);
             return false;
         }
 
         /// <summary>
         /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
         /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
-        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],IOspreyLog,IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// projection overload for the lean 1st-pass case, it builds the same parity-locked
         /// <see cref="PercolatorConfig"/> and delegates to
         /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>, which streams every row's identity +
@@ -317,15 +322,16 @@ namespace pwiz.Osprey.FDR
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
-            Action<string> logInfo,
+            IOspreyLog log,
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null,
-            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
-            FileRunScopeSink flushFileRunScope = null)
+            FileRunScopeSink flushFileRunScope = null,
+            int fileLanes = 1)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -335,9 +341,60 @@ namespace pwiz.Osprey.FDR
                     @"loader is required.");
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             return PercolatorScorer.RunStreamingFirstPass(
-                fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
+                fileNames, streamFileRows, loadFileFeatures, percConfig, log, passLabel, sink,
                 captureContributions, captureModel, tryStreamCompletedScores, pretrainedModel,
-                flushFileRunScope);
+                flushFileRunScope, fileLanes);
+        }
+
+        /// <summary>
+        /// The validity-key term for the classifier that trains and applies the first-pass
+        /// model: EMPTY unless <c>OSPREY_FDR_MODEL=gbdt</c>, and under gbdt the model plus every tree
+        /// setting that changes the trained model - the <see cref="GbtParams"/> this process
+        /// trains with, <see cref="OspreyEnvironment.GbtMaxIterations"/> and
+        /// <see cref="OspreyEnvironment.GbtInnerFolds"/>. FirstPassFDR, PerFileRescoring and
+        /// SecondPassFDR append it, because each writes output that model determines.
+        ///
+        /// <para>Empty for the linear SVM on purpose, in the shape of
+        /// <see cref="OspreyEnvironment.ExperimentAggValidityKeySuffix"/>: the SVM's outputs never
+        /// changed, so an unconditional term would invalidate every percolator output directory to
+        /// record nothing. Keyed for gbdt because without it one arm's directory was adopted by
+        /// the other - a percolator directory re-run as gbdt, a gbdt directory written before the
+        /// lean first pass trained trees (so holding SVM-scored results), or one OSPREY_GBT_*
+        /// sweep point re-run as the next - each reporting "skipping (outputs valid)" and handing
+        /// back the other arm's numbers.</para>
+        ///
+        /// <para>Kept out of the base task key and out of <c>SearchParameterHash</c>, which must
+        /// match the Rust implementation; gbdt has no Rust counterpart. The term is spelled
+        /// <c>fdrmodel=</c> after the variable that selects it; it read <c>fdrmethod=</c> while
+        /// <c>--fdr-method</c> did, and no release carried that spelling.</para>
+        /// </summary>
+        public static string GbdtValidityKeySuffix(OspreyConfig config)
+        {
+            return GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
+                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds);
+        }
+
+        /// <summary>
+        /// <see cref="GbdtValidityKeySuffix(OspreyConfig)"/> for explicitly supplied settings, so
+        /// the arms can be compared without the process-wide environment, which is read once.
+        /// <see cref="GbtParams.MaxDegreeOfParallelism"/> is the one field left out: the trained
+        /// model is bit-identical at any value, so keying it would invalidate a directory for a
+        /// difference that cannot exist.
+        /// </summary>
+        public static string GbdtValidityKeySuffix(FdrClassifier fdrClassifier, GbtParams gbtParams,
+            int maxIterations, int innerFolds)
+        {
+            if (fdrClassifier != FdrClassifier.Gbdt)
+                return string.Empty;
+            return string.Format(CultureInfo.InvariantCulture,
+                @";fdrmodel=gbdt;gbtobjective={0};gbttrees={1};gbtdepth={2};gbtlr={3:R}" +
+                @";gbtminchild={4:R};gbtsubsample={5:R};gbtcolsample={6:R};gbtgamma={7:R}" +
+                @";gbtlambda={8:R};gbtalpha={9:R};gbtbins={10};gbtseed={11}" +
+                @";gbtiterations={12};gbtinnerfolds={13}",
+                gbtParams.Objective, gbtParams.NTrees, gbtParams.MaxDepth, gbtParams.LearningRate,
+                gbtParams.MinChildWeight, gbtParams.Subsample, gbtParams.ColSample, gbtParams.Gamma,
+                gbtParams.RegLambda, gbtParams.RegAlpha, gbtParams.MaxBins, gbtParams.Seed,
+                maxIterations, innerFolds);
         }
 
         /// <summary>
@@ -347,27 +404,17 @@ namespace pwiz.Osprey.FDR
         /// SVM runs off a <see cref="PercolatorEntry"/> list or the projection row
         /// count -- the two buffer shapes cannot select a different SVM path for the
         /// same population. <c>MaxTrainSize</c> (the streaming training-subsample size)
-        /// is left at the <see cref="PercolatorConfig"/> default (300000).
+        /// is the <see cref="PercolatorConfig"/> default (300000) unless
+        /// OSPREY_MAX_TRAIN_SIZE overrides it.
         /// </summary>
-        private static PercolatorConfig BuildProjectionPercolatorConfig(
+        internal static PercolatorConfig BuildProjectionPercolatorConfig(
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             PercolatorDiagnosticsConfig diagnostics)
         {
-            // Start from the validated GbtParams defaults and apply any env overrides
-            // (OSPREY_GBT_*), so a regularization / capacity sweep runs without a recompile
-            // per setting. Unset vars leave the default in place. Tree-only: this object is
-            // ignored on the SVM path. The chosen values are echoed to the run log.
-            var gbtParams = new GbtParams();
-            if (OspreyEnvironment.GbtGamma.HasValue) gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
-            if (OspreyEnvironment.GbtRegLambda.HasValue) gbtParams.RegLambda = OspreyEnvironment.GbtRegLambda.Value;
-            if (OspreyEnvironment.GbtRegAlpha.HasValue) gbtParams.RegAlpha = OspreyEnvironment.GbtRegAlpha.Value;
-            if (OspreyEnvironment.GbtMaxDepth.HasValue) gbtParams.MaxDepth = OspreyEnvironment.GbtMaxDepth.Value;
-            if (OspreyEnvironment.GbtNTrees.HasValue) gbtParams.NTrees = OspreyEnvironment.GbtNTrees.Value;
-            if (OspreyEnvironment.GbtMinChildWeight.HasValue) gbtParams.MinChildWeight = OspreyEnvironment.GbtMinChildWeight.Value;
-            if (OspreyEnvironment.GbtLearningRate.HasValue) gbtParams.LearningRate = OspreyEnvironment.GbtLearningRate.Value;
-            if (OspreyEnvironment.GbtSubsample.HasValue) gbtParams.Subsample = OspreyEnvironment.GbtSubsample.Value;
-            if (OspreyEnvironment.GbtColSample.HasValue) gbtParams.ColSample = OspreyEnvironment.GbtColSample.Value;
+            // Tree-only: this object is ignored on the SVM path. The chosen values are echoed to
+            // the run log.
+            var gbtParams = BuildGbtParams();
 
             return new PercolatorConfig
             {
@@ -377,21 +424,25 @@ namespace pwiz.Osprey.FDR
                 // still improving when they hit 10, so they get their own (higher) cap --
                 // both loops still early-stop on convergence, so this only binds when the
                 // model genuinely has further to go. See OspreyEnvironment.GbtMaxIterations.
-                MaxIterations = config.FdrMethod == FdrMethod.Gbdt
+                MaxIterations = config.FdrClassifier == FdrClassifier.Gbdt
                     ? OspreyEnvironment.GbtMaxIterations
                     : 10,
                 NFolds = 3,
                 FeatureInfos = featureInfos,
-                // --fdr-method gbdt: swap the linear SVM for gradient-boosted trees.
+                // OSPREY_FDR_MODEL=gbdt: swap the linear SVM for gradient-boosted trees.
                 // This is the ONLY knob that differs between the two methods -- the
                 // dedup, fold assignment, semi-supervised iteration, competition, and
                 // q-value/PEP math are the same shared code either way, which is what
                 // makes them comparable at matched entrapment FDP.
-                UseGradientBoostedTrees = config.FdrMethod == FdrMethod.Gbdt,
+                UseGradientBoostedTrees = config.FdrClassifier == FdrClassifier.Gbdt,
                 GbtParams = gbtParams,
                 // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
                 // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
                 MaxTrainSize = OspreyEnvironment.MaxTrainSizeOverride ?? 300000,
+                // The most regularized C within this fraction of the best inner-CV count
+                // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum,
+                // the pre-#4703 rule).
+                CSelectionTolerance = OspreyEnvironment.SvmCSelectionTolerance,
                 // Honors --threads; drives only the tree score pass (see NThreads).
                 NThreads = config.NThreads,
                 // Collect per-feature target/decoy score histograms only for the
@@ -400,6 +451,38 @@ namespace pwiz.Osprey.FDR
                 CollectFeatureHistograms = config.ModelDiagnostics,
                 Diagnostics = diagnostics
             };
+        }
+
+        /// <summary>
+        /// The tree hyper-parameters this process trains with: the validated
+        /// <see cref="GbtParams"/> defaults with any OSPREY_GBT_* override applied, so a
+        /// regularization / capacity sweep runs without a recompile per setting. Unset variables
+        /// leave the default in place. The one source of them, shared by the training config and
+        /// <see cref="GbdtValidityKeySuffix(OspreyConfig)"/>, so the key cannot describe a model
+        /// other than the one trained.
+        /// </summary>
+        private static GbtParams BuildGbtParams()
+        {
+            var gbtParams = new GbtParams();
+            if (OspreyEnvironment.GbtGamma.HasValue)
+                gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
+            if (OspreyEnvironment.GbtRegLambda.HasValue)
+                gbtParams.RegLambda = OspreyEnvironment.GbtRegLambda.Value;
+            if (OspreyEnvironment.GbtRegAlpha.HasValue)
+                gbtParams.RegAlpha = OspreyEnvironment.GbtRegAlpha.Value;
+            if (OspreyEnvironment.GbtMaxDepth.HasValue)
+                gbtParams.MaxDepth = OspreyEnvironment.GbtMaxDepth.Value;
+            if (OspreyEnvironment.GbtNTrees.HasValue)
+                gbtParams.NTrees = OspreyEnvironment.GbtNTrees.Value;
+            if (OspreyEnvironment.GbtMinChildWeight.HasValue)
+                gbtParams.MinChildWeight = OspreyEnvironment.GbtMinChildWeight.Value;
+            if (OspreyEnvironment.GbtLearningRate.HasValue)
+                gbtParams.LearningRate = OspreyEnvironment.GbtLearningRate.Value;
+            if (OspreyEnvironment.GbtSubsample.HasValue)
+                gbtParams.Subsample = OspreyEnvironment.GbtSubsample.Value;
+            if (OspreyEnvironment.GbtColSample.HasValue)
+                gbtParams.ColSample = OspreyEnvironment.GbtColSample.Value;
+            return gbtParams;
         }
 
         /// <summary>
@@ -413,7 +496,7 @@ namespace pwiz.Osprey.FDR
         private static PercolatorResults DispatchSvm(
             List<PercolatorEntry> percEntries,
             PercolatorConfig percConfig,
-            Action<string> logInfo,
+            IOspreyLog log,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             PercolatorResults frozenModel = null)
@@ -421,8 +504,8 @@ namespace pwiz.Osprey.FDR
             // Section header (full input population). The cross-validation fold count and the
             // actual training-subset size are reported by RunPercolator once the subsample is
             // built, just above the per-iteration percent lines.
-            logInfo(string.Format("Running {0} Percolator on {1} entries...",
-                passLabel, percEntries.Count));
+            log.LogInfo(string.Format(OspreyFDRResources.PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___,
+                PassDisplayName(passLabel), percEntries.Count));
 
             // Streaming-only (cross-impl parity with the Rust streaming-only change):
             // ALWAYS take the streaming SVM path -- best-per-precursor dedup +
@@ -431,74 +514,7 @@ namespace pwiz.Osprey.FDR
             // different standardizer-fit population; removed so C# and Rust train
             // identically at every scale (mirrors Rust run_percolator_fdr, now stream-only).
             return RunPercolatorStreaming(
-                percEntries, percConfig, logInfo, passLabel, loadFileFeatures, frozenModel);
-        }
-
-        /// <summary>
-        /// Run simple target-decoy competition FDR (no machine learning).
-        /// Uses coelution_sum as the scoring function.
-        /// </summary>
-        public static void RunSimpleFdr(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config,
-            Action<string> logInfo)
-        {
-            var fdrController = new FdrController(config.RunFdr);
-
-            foreach (var kvp in perFileEntries)
-            {
-                var result = fdrController.CompeteAndFilter(
-                    kvp.Value,
-                    e => e.CoelutionSum,
-                    e => e.IsDecoy,
-                    e => e.EntryId);
-
-                logInfo(string.Format(
-                    "  {0}: {1} targets pass (FDR={2:F4}, {3} target wins, {4} decoy wins)",
-                    kvp.Key, result.PassingTargets.Count, result.FdrAtThreshold,
-                    result.NTargetWins, result.NDecoyWins));
-
-                // Assign q-values based on simple competition
-                // Passing targets get fdr_at_threshold, non-passing get 1.0
-                var passingIds = new HashSet<uint>();
-                foreach (var target in result.PassingTargets)
-                    passingIds.Add(target.EntryId);
-
-                foreach (var entry in kvp.Value)
-                {
-                    // The score this mode's competition ranks on, recorded for EVERY entry -
-                    // decoys and non-passing targets included. A consumer drawing a score-space
-                    // acceptance boundary (the co-assignment panel) needs it on both sides of the
-                    // comparison, and a decoy has no q to fall back on. Left at ResetScores' 0.0
-                    // it would not merely be missing: 0.0 sits mid distribution for a signed
-                    // score, so it would read as a real value and collapse the boundary.
-                    // NOT setting entry.Score here, deliberately. It stays at ResetScores' 0.0
-                    // for every entry in this mode, which means the co-assignment panel renders a
-                    // uniform "no co-assignment anywhere" page under --fdr-method simple (the
-                    // per-file cutoff is 0.0 and `partner.Score > row.Score` is never true).
-                    // Assigning CoelutionSum fixes the panel but is NOT free: ProteinFdr's
-                    // CollectBestPeptideScores and ComputeProteinFdr both rank on Score, so it
-                    // silently moves protein q-values and passing-protein counts for this mode -
-                    // and --fdr-method simple appears nowhere in regression.ps1 or the goldens,
-                    // so nothing would catch a regression. The mode is slated for removal
-                    // (only Percolator is well tested), so a diagnostics-only gain is not worth
-                    // an unpinned scoring change in it.
-                    //
-                    // CoelutionSum is per-ROW, so unlike the Percolator paths this does not
-                    // satisfy "every row of an entry carries the same aggregate". The panel's
-                    // reduction takes the max over real values, which turns it into the entry's
-                    // best coelution - a sensible entry-level aggregate for this mode - but a
-                    // consumer that assumes the read is a non-reduction must not rely on it here.
-                    entry.ExperimentAggregateScore = entry.CoelutionSum;
-                    if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
-                    {
-                        entry.RunPrecursorQvalue = result.FdrAtThreshold;
-                        entry.RunPeptideQvalue = result.FdrAtThreshold;
-                        entry.ExperimentPrecursorQvalue = result.FdrAtThreshold;
-                        entry.ExperimentPeptideQvalue = result.FdrAtThreshold;
-                    }
-                }
-            }
+                percEntries, percConfig, log, passLabel, loadFileFeatures, frozenModel);
         }
 
         /// <summary>
@@ -534,8 +550,8 @@ namespace pwiz.Osprey.FDR
             if (stubCount != resultEntries.Count)
             {
                 throw new InvalidOperationException(string.Format(
-                    "Percolator result count ({0}) does not match FdrEntry stub count ({1}); " +
-                    "the index-zip write-back requires them to be equal.",
+                    @"Percolator result count ({0}) does not match FdrEntry stub count ({1}); " +
+                    @"the index-zip write-back requires them to be equal.",
                     resultEntries.Count, stubCount));
             }
 
@@ -589,7 +605,7 @@ namespace pwiz.Osprey.FDR
         internal static PercolatorResults RunPercolatorStreaming(
             List<PercolatorEntry> percEntries,
             PercolatorConfig percConfig,
-            Action<string> logInfo,
+            IOspreyLog log,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
             PercolatorResults frozenModel = null)
@@ -605,9 +621,8 @@ namespace pwiz.Osprey.FDR
             // table -- the fix for the anti-conservative retrain AND the stepped table.
             if (frozenModel != null)
             {
-                logInfo(string.Format(
-                    "{0}: applying FROZEN 1st-pass model to all {1} entries (no retrain) + " +
-                    "target-decoy competition for q/PEP.", passLabel, n));
+                log.LogInfo(string.Format(
+                    OspreyFDRResources.PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_, PassDisplayName(passLabel), n));
                 return PercolatorScorer.ScorePopulationAndComputeFdr(
                     percEntries, frozenModel, percConfig, loadFileFeatures,
                     applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
@@ -648,9 +663,8 @@ namespace pwiz.Osprey.FDR
                 if (labels[bestIdx[i]]) dedupDecoys++;
                 else dedupTargets++;
             }
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
-                passLabel, bestIdx.Length, dedupTargets, dedupDecoys, n));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming best-per-precursor: {1} precursors ({2} targets, {3} decoys) from {4} peaks",
+                passLabel, bestIdx.Length, dedupTargets, dedupDecoys, n);
 
             int subTargets = 0, subDecoys = 0;
             for (int i = 0; i < trainSubsetGlobalIdx.Length; i++)
@@ -658,9 +672,8 @@ namespace pwiz.Osprey.FDR
                 if (labels[trainSubsetGlobalIdx[i]]) subDecoys++;
                 else subTargets++;
             }
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
-                passLabel, trainSubsetGlobalIdx.Length, subTargets, subDecoys));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
+                passLabel, trainSubsetGlobalIdx.Length, subTargets, subDecoys);
 
             // 3. Build subset entry list + train.
             var subsetEntries = new List<PercolatorEntry>(trainSubsetGlobalIdx.Length);
@@ -723,7 +736,7 @@ namespace pwiz.Osprey.FDR
         private static void LogProjectionInputCounts(
             FdrProjectionSet projections, int numFeatures,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            Action<string> logInfo, string passLabel)
+            IOspreyLog log, string passLabel)
         {
             bool streamFeatures = loadFileFeatures != null;
             int n = 0, nInputTargets = 0, nInputDecoys = 0;
@@ -748,12 +761,10 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
-                passLabel, n, nInputTargets, nInputDecoys, numFeatures));
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
-                passLabel, nWithFeatures, nWithoutFeatures));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} peaks ({2} targets, {3} decoys, {4} features)",
+                passLabel, n, nInputTargets, nInputDecoys, numFeatures);
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator features computed: {1} peaks with PIN features, {2} fallback",
+                passLabel, nWithFeatures, nWithoutFeatures);
         }
 
         /// <summary>
@@ -787,7 +798,7 @@ namespace pwiz.Osprey.FDR
             List<KeyValuePair<string, List<FdrProjection>>> perFile,
             string[] peptideById,
             PercolatorConfig percConfig,
-            Action<string> logInfo,
+            IOspreyLog log,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             Func<string, double[]> loadFileApexRts,
@@ -817,9 +828,8 @@ namespace pwiz.Osprey.FDR
             // removed direct fork nor the resident FdrEntry path emits it. Under the
             // projection flag BOTH the 1st and 2nd pass must show this line, at every
             // scale (the direct-vs-streaming dispatch is gone).
-            logInfo(string.Format(
-                @"[PATH] {0} projection streaming ingest (RunStreamingIntoProjection): {1} rows",
-                passLabel, n));
+            log.LogInfo(LogTag.PATH, @"{0} projection streaming ingest (RunStreamingIntoProjection): {1} rows",
+                passLabel, n);
 
             int maxTrain = percConfig.MaxTrainSize;
 
@@ -854,7 +864,7 @@ namespace pwiz.Osprey.FDR
             //    full-N PercolatorEntry buffer the FdrEntry streaming path allocates.
             // Phase marker: the dedup + subsample over all N rows is a multi-minute
             // silent span on an 82-file join; announce it so the console is not blank.
-            logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
+            log.LogInfo(string.Format(OspreyFDRResources.PercolatorEngine_RunStreamingIntoProjection_Selecting_training_peaks_from__0__precursor_candidate_peaks___, n));
             int[] bestIdx;
             // fileStart is how this path supplies run identity: it hands an EMPTY entries list to
             // avoid the full-N PercolatorEntry buffer, so there are no FileName strings to read a
@@ -870,9 +880,8 @@ namespace pwiz.Osprey.FDR
                 if (labels[bestIdx[i]]) dedupDecoys++;
                 else dedupTargets++;
             }
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
-                passLabel, bestIdx.Length, dedupTargets, dedupDecoys, n));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming best-per-precursor: {1} precursors ({2} targets, {3} decoys) from {4} peaks",
+                passLabel, bestIdx.Length, dedupTargets, dedupDecoys, n);
 
             int subTargets = 0, subDecoys = 0;
             for (int i = 0; i < trainSubsetGlobalIdx.Length; i++)
@@ -880,9 +889,8 @@ namespace pwiz.Osprey.FDR
                 if (labels[trainSubsetGlobalIdx[i]]) subDecoys++;
                 else subTargets++;
             }
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
-                passLabel, trainSubsetGlobalIdx.Length, subTargets, subDecoys));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
+                passLabel, trainSubsetGlobalIdx.Length, subTargets, subDecoys);
 
             // 3. Build the subset PercolatorEntry list from the projection rows at the
             //    (ascending) subset indices, then load ONLY the subset's feature
@@ -913,7 +921,9 @@ namespace pwiz.Osprey.FDR
             // ran ~5 min silent before cross-validation. Console-only, never touches the
             // loaded features, so training is byte-identical.
             using (var loadProgress = new ProgressReporter(
-                string.Format(@"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count),
+                CountText.Format(subsetByFile.Count,
+                    OspreyFDRResources.PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from_1_file,
+                    OspreyFDRResources.PercolatorEngine_RunStreamingIntoProjection_Loading_Percolator_training_features_from__0__files),
                 subsetByFile.Count))
             {
                 int loadDone = 0;

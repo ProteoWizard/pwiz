@@ -83,6 +83,18 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public static class TukeyMedianPolish
     {
+        /// <summary>
+        /// Maximum iterations of the scoring fit: the polish behind feature
+        /// <c>median_polish_cosine</c> in <c>CoelutionScorer</c>, the per-candidate cosine the
+        /// learned peak pick weighs, and the training export's refit of the scored peak, which
+        /// must reproduce the scored cosine bit for bit. One definition, so the three cannot
+        /// drift apart.
+        /// </summary>
+        public const int SCORING_MAX_ITERATIONS = 10;
+
+        /// <summary>Convergence tolerance of the scoring fit (see <see cref="SCORING_MAX_ITERATIONS"/>).</summary>
+        public const double SCORING_TOLERANCE = 0.01;
+
         // .NET Framework 4.7.2 doesn't have double.IsFinite, so we provide our own.
         // A double is finite when it's neither NaN nor +/- infinity.
         private static bool IsFinite(double v)
@@ -138,10 +150,14 @@ namespace pwiz.Osprey.Scoring
             bool converged = false;
             int nIter = 0;
 
-            var oldRow = new double[nScans];
             var colBuf = new double[nFrags];
             var rowMedians = new double[nFrags];
             var colMedians = new double[nScans];
+            // Working copy for NanMedian, which reorders it; sized for a row or a column.
+            var medianScratch = new double[Math.Max(nFrags, nScans)];
+            var oldResiduals = new double[nFrags][];
+            for (int f = 0; f < nFrags; f++)
+                oldResiduals[f] = new double[nScans];
 
             for (int iteration = 0; iteration < maxIter; iteration++)
             {
@@ -150,16 +166,12 @@ namespace pwiz.Osprey.Scoring
                 // Save old residuals for convergence check (matches Rust).
                 // Rust checks max|new - old| AFTER both sweeps complete,
                 // not incrementally during each sweep.
-                double[][] oldResiduals = new double[nFrags][];
                 for (int f = 0; f < nFrags; f++)
-                {
-                    oldResiduals[f] = new double[nScans];
                     Array.Copy(residuals[f], oldResiduals[f], nScans);
-                }
 
                 // Row sweep: subtract nanmedian of each row
                 for (int f = 0; f < nFrags; f++)
-                    rowMedians[f] = NanMedian(residuals[f]);
+                    rowMedians[f] = NanMedian(residuals[f], medianScratch);
 
                 for (int f = 0; f < nFrags; f++)
                 {
@@ -173,7 +185,7 @@ namespace pwiz.Osprey.Scoring
                     }
                 }
 
-                double medianOfRowMedians = NanMedian(rowMedians);
+                double medianOfRowMedians = NanMedian(rowMedians, medianScratch);
                 if (IsFinite(medianOfRowMedians))
                 {
                     for (int f = 0; f < nFrags; f++)
@@ -189,7 +201,7 @@ namespace pwiz.Osprey.Scoring
                 {
                     for (int f = 0; f < nFrags; f++)
                         colBuf[f] = residuals[f][s];
-                    colMedians[s] = NanMedian(colBuf);
+                    colMedians[s] = NanMedian(colBuf, medianScratch);
                 }
 
                 for (int f = 0; f < nFrags; f++)
@@ -203,7 +215,7 @@ namespace pwiz.Osprey.Scoring
                     }
                 }
 
-                double medianOfColMedians = NanMedian(colMedians);
+                double medianOfColMedians = NanMedian(colMedians, medianScratch);
                 if (IsFinite(medianOfColMedians))
                 {
                     for (int s = 0; s < nScans; s++)
@@ -397,20 +409,8 @@ namespace pwiz.Osprey.Scoring
 
             for (int f = 0; f < nFrags; f++)
             {
-                pred.Clear();
-                obs.Clear();
-
-                for (int s = 0; s < nScans; s++)
-                {
-                    if (!IsFinite(polish.Residuals[f][s]))
-                        continue;
-                    double predicted = Math.Exp(polish.Overall + polish.RowEffects[f] + polish.ColEffects[s]);
-                    double observed = Math.Exp(polish.Overall + polish.RowEffects[f] + polish.ColEffects[s] + polish.Residuals[f][s]);
-                    pred.Add(Math.Sqrt(predicted));
-                    obs.Add(Math.Sqrt(observed));
-                }
-
-                double r2 = pred.Count < 3 ? 0.0 : ComputeR2(pred, obs);
+                double r2 = FragmentR2(polish.Overall, polish.RowEffects[f], polish.ColEffects,
+                    polish.Residuals[f], pred, obs);
                 if (r2 < minR2)
                     minR2 = r2;
             }
@@ -418,6 +418,21 @@ namespace pwiz.Osprey.Scoring
             if (minR2 == double.MaxValue)
                 return 0.0;
             return Math.Max(0.0, minR2);
+        }
+
+        /// <summary>
+        /// R^2 (sqrt-preprocessed) of one fragment row against the fit: predicted
+        /// <c>exp(overall + rowEffect + colEffects[s])</c> against observed
+        /// <c>exp(overall + rowEffect + colEffects[s] + residuals[s])</c> over the scans whose
+        /// residual is finite, or 0 with fewer than three such scans. The per-fragment term of
+        /// <see cref="MinFragmentR2"/>, which a row projected onto an existing fit (one that
+        /// was not part of it) can be scored with too.
+        /// </summary>
+        public static double FragmentR2(double overall, double rowEffect, double[] colEffects,
+            double[] residuals)
+        {
+            return FragmentR2(overall, rowEffect, colEffects, residuals,
+                new List<double>(colEffects.Length), new List<double>(colEffects.Length));
         }
 
         /// <summary>
@@ -473,23 +488,46 @@ namespace pwiz.Osprey.Scoring
         // ============================================================
 
         /// <summary>
-        /// Median of a slice, skipping NaN values. Returns NaN if no finite values.
+        /// <see cref="FragmentR2(double,double,double[],double[])"/> into caller-owned scratch
+        /// lists, so <see cref="MinFragmentR2"/> allocates them once for every fragment.
         /// </summary>
-        private static double NanMedian(double[] values)
+        private static double FragmentR2(double overall, double rowEffect, double[] colEffects,
+            double[] residuals, List<double> pred, List<double> obs)
         {
-            var finite = new List<double>(values.Length);
+            pred.Clear();
+            obs.Clear();
+
+            int nScans = colEffects.Length;
+            for (int s = 0; s < nScans; s++)
+            {
+                if (!IsFinite(residuals[s]))
+                    continue;
+                double predicted = Math.Exp(overall + rowEffect + colEffects[s]);
+                double observed = Math.Exp(overall + rowEffect + colEffects[s] + residuals[s]);
+                pred.Add(Math.Sqrt(predicted));
+                obs.Add(Math.Sqrt(observed));
+            }
+
+            return pred.Count < 3 ? 0.0 : ComputeR2(pred, obs);
+        }
+
+        /// <summary>
+        /// Median of a slice, skipping non-finite values. Returns NaN if no finite values.
+        /// The finite values are copied into <paramref name="scratch"/> (at least as long as
+        /// <paramref name="values"/>) and the median selected there (<see cref="MedianMath"/>), leaving
+        /// <paramref name="values"/> untouched. The selection returns the value a sort would:
+        /// equal doubles differ only in the sign of zero, and the residuals start as the ln of
+        /// a positive value and change only by subtraction, where x - x gives +0.0.
+        /// </summary>
+        private static double NanMedian(double[] values, double[] scratch)
+        {
+            int count = 0;
             for (int i = 0; i < values.Length; i++)
             {
                 if (IsFinite(values[i]))
-                    finite.Add(values[i]);
+                    scratch[count++] = values[i];
             }
-            if (finite.Count == 0)
-                return double.NaN;
-            finite.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant since tied values are equal
-            int mid = finite.Count / 2;
-            if (finite.Count % 2 == 0)
-                return 0.5 * (finite[mid - 1] + finite[mid]);
-            return finite[mid];
+            return MedianMath.MedianInPlace(new Span<double>(scratch, 0, count));
         }
 
         private static double CosineAngle(List<double> a, List<double> b)

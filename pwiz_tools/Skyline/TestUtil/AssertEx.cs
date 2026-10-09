@@ -698,6 +698,9 @@ namespace pwiz.SkylineTestUtil
         private static void ValidationCallBack(object sender, ValidationEventArgs args)
         {
             string message = String.Format(CultureInfo.InvariantCulture, "XML Validation error: {0}", args.Message);
+            // Framework-annotated non-null rather than guaranteed by anything here, and this runs
+            // while already reporting a validation error
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (null != args.Exception)
             {
                 message = TextUtil.SpaceSeparate(message, string.Format("Line {0} Position {1}", args.Exception.LineNumber, args.Exception.LinePosition));
