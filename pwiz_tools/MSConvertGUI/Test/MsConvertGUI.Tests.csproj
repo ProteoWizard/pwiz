@@ -12,7 +12,6 @@
 
     <!-- Same posture as MsConvertGUI itself: WinForms-heavy port, pre-nullable. -->
     <Nullable>disable</Nullable>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 

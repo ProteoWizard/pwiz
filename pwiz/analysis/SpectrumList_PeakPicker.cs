@@ -102,6 +102,12 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
         return set;
     }
 
+    /// <summary>
+    /// Wraps <paramref name="inner"/>, peak-picking the spectra whose MS level is in
+    /// <paramref name="msLevelsToPeakPick"/> with <paramref name="algorithm"/>, or with the
+    /// vendor's centroiding when <paramref name="preferVendorPeakPicking"/> is set and the
+    /// inner list supports it.
+    /// </summary>
     public SpectrumList_PeakPicker(
         ISpectrumList inner,
         IPeakDetector? algorithm,

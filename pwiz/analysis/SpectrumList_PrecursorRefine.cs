@@ -222,7 +222,7 @@ public sealed class SpectrumList_PrecursorRefine : SpectrumListWrapper
         }
     }
 
-    private static int LowerBound(IReadOnlyList<double> sorted, double key)
+    private static int LowerBound(List<double> sorted, double key)
     {
         int lo = 0, hi = sorted.Count;
         while (lo < hi)

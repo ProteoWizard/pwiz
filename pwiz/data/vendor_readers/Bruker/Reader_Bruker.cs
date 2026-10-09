@@ -57,6 +57,7 @@ public sealed class Reader_Bruker : IReader
         };
     }
 
+    /// <inheritdoc/>
     public CVID Identify(string filename, string? head)
     {
         ArgumentNullException.ThrowIfNull(filename);

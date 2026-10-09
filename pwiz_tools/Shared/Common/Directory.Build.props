@@ -11,6 +11,9 @@
       CA1416 (platform-compat) is handled in Directory.Build.targets - suppressed only on
       Windows-targeted projects, so multi-platform net10.0 model/command-line code keeps it. -->
  <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
+ <!-- Same warning-free policy as pwiz_tools/Directory.Build.props, which this file does not import. -->
+ <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+ <MSBuildWarningsAsErrors>$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
  <LangVersion>8.0</LangVersion>
  </PropertyGroup> 
  </Project>

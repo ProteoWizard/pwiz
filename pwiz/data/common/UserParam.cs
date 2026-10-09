@@ -34,16 +34,28 @@ public sealed class UserParam : IEquatable<UserParam>
     }
 
     // Implicit conversions matching pwiz.CLI's UserParamValue casts. See CVParam for rationale.
+
+    /// <summary>Parses <see cref="Value"/> as double, invariant culture (0 on empty).</summary>
     public static implicit operator double(UserParam p) =>
         string.IsNullOrEmpty(p.Value) ? 0.0 : double.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as double?, returning null on empty.</summary>
     public static implicit operator double?(UserParam p) =>
         string.IsNullOrEmpty(p.Value) ? null : double.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as int, invariant culture (0 on empty).</summary>
     public static implicit operator int(UserParam p) =>
         string.IsNullOrEmpty(p.Value) ? 0 : int.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as float, invariant culture (0 on empty).</summary>
     public static implicit operator float(UserParam p) =>
         string.IsNullOrEmpty(p.Value) ? 0f : float.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as bool ("true"/"1" → true).</summary>
     public static implicit operator bool(UserParam p) =>
         p.Value == "true" || p.Value == "1";
+
+    /// <summary>Returns the raw string <see cref="Value"/>.</summary>
     public static implicit operator string(UserParam p) => p?.Value ?? string.Empty;
 
     /// <summary>Returns the <see cref="Value"/> parsed as <typeparamref name="T"/>.</summary>

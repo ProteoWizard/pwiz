@@ -280,7 +280,7 @@ public class SpectrumListDemuxTests
 
     /// <summary>Builds a list of indices into <paramref name="originalMz"/> matching each entry
     /// in <paramref name="derivedMz"/> within 1e-5 m/z. Mirrors cpp's <c>DemuxTest::GetMask</c>.</summary>
-    private static void BuildMzMask(IReadOnlyList<double> originalMz, IReadOnlyList<double> derivedMz, List<int> mask)
+    private static void BuildMzMask(List<double> originalMz, List<double> derivedMz, List<int> mask)
     {
         mask.Clear();
         int origIdx = 0;

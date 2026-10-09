@@ -594,6 +594,7 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
         }
     }
 
+    /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
         if (_disposed) return;
