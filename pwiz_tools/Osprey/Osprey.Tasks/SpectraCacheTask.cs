@@ -120,13 +120,14 @@ namespace pwiz.Osprey.Tasks
             // An mzML parse still is (see CacheFile).
             // The lane count is this stage's own (--parallel-files-caching, else --parallel-files),
             // resolved like every other per-file stage's; one lane is the plain loop. --threads is
-            // not divided by it: a decode runs on its own thread.
+            // not divided by it, since a decode runs on its own thread, except among the
+            // demultiplexer's solve threads (see CacheFile).
             int lanes = PerFileScoringTask.ResolveFileParallelism(config, FileStage.Caching, nFiles, ctx.LogInfo);
             if (lanes <= 1)
             {
                 for (int fileIdx = 0; fileIdx < nFiles; fileIdx++)
                 {
-                    if (CacheFile(ctx, fileIdx, nFiles, false))
+                    if (CacheFile(ctx, fileIdx, nFiles, 1))
                         built++;
                 }
             }
@@ -144,7 +145,7 @@ namespace pwiz.Osprey.Tasks
                     using (multi.BeginFile(fileIdx, 1))
                     {
                         MultiProgressReporter.Current.BeginSegment();
-                        if (CacheFile(ctx, fileIdx, nFiles, true))
+                        if (CacheFile(ctx, fileIdx, nFiles, lanes))
                             Interlocked.Increment(ref built);
                     }
                 });
@@ -165,7 +166,7 @@ namespace pwiz.Osprey.Tasks
         /// run that silently re-parses. Safe on a lane: everything it touches is the file's
         /// own, and the exit code is only ever set to failure.
         /// </summary>
-        private static bool CacheFile(PipelineContext ctx, int fileIdx, int nFiles, bool onLanes)
+        private static bool CacheFile(PipelineContext ctx, int fileIdx, int nFiles, int lanes)
         {
             string inputFile = ctx.Config.InputFiles[fileIdx];
             ctx.LogInfo(string.Format(OspreyTasksResources.SpectraCacheTask_Run_Caching_spectra__0___1____2_,
@@ -178,9 +179,10 @@ namespace pwiz.Osprey.Tasks
                 // A vendor decode runs on one thread, so lanes run it ungated. An mzML parse
                 // decodes on OSPREY_MZML_DECODE_THREADS of its own and streams the file at disk
                 // speed - sized for one file at a time - so on lanes it still takes the read gate.
-                bool gateRead = onLanes && !SpectrumFileReader.IsVendorFormat(inputFile);
+                // Ungated reads on lanes share --threads among their demultiplexers.
+                bool gateRead = lanes > 1 && !SpectrumFileReader.IsVendorFormat(inputFile);
                 index = ScoringTaskShared.EnsureSpectraCache(
-                    inputFile, gateRead, out int unsortedCount, ctx);
+                    inputFile, gateRead, out int unsortedCount, ctx, lanes);
                 if (unsortedCount > 0)
                 {
                     ctx.LogWarning(string.Format(

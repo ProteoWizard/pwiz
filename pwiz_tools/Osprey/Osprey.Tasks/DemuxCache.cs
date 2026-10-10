@@ -65,9 +65,10 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The demultiplexing settings for a run, or null when <c>--demux</c> is off. msconvert's
         /// <c>demultiplex optimization=overlap_only massError=10ppm</c>, solved on the search's
-        /// threads: Osprey reads one file at a time, so the solve can go wide underneath it.
+        /// threads shared among the <paramref name="concurrentReads"/> files being read at once
+        /// (one, except on <c>--task SpectraCache</c> lanes): each solve thread holds blocks.
         /// </summary>
-        internal static SpectrumListDemux.Params CreateParams(OspreyConfig config)
+        internal static SpectrumListDemux.Params CreateParams(OspreyConfig config, int concurrentReads = 1)
         {
             if (config.DemuxMode == DemuxMode.off)
                 return null;
@@ -75,7 +76,7 @@ namespace pwiz.Osprey.Tasks
             {
                 Optimization = SpectrumListDemux.Optimization.OverlapOnly,
                 MassError = new MZTolerance(MASS_ERROR_PPM, MZToleranceUnits.Ppm),
-                SolveThreads = Math.Max(1, config.NThreads),
+                SolveThreads = Math.Max(1, config.NThreads / Math.Max(1, concurrentReads)),
             };
         }
 
@@ -111,9 +112,10 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// A valid demultiplexed cache for the input, or null when there is none to use. Tried
         /// before anything else, so a run staged with demultiplexing can be searched from its
-        /// demultiplexed cache alone.
+        /// demultiplexed cache alone. <paramref name="loadMs1"/> as for
+        /// <see cref="SpectraWindowIndex.BuildFromCache(string,string,bool,out SpectraCacheRejection,string)"/>.
         /// </summary>
-        internal static SpectraWindowIndex TryOpen(string inputFile, PipelineContext ctx)
+        internal static SpectraWindowIndex TryOpen(string inputFile, PipelineContext ctx, bool loadMs1 = true)
         {
             var p = CreateParams(ctx.Config);
             if (p == null)
@@ -123,7 +125,7 @@ namespace pwiz.Osprey.Tasks
                 return null;
             try
             {
-                var hit = SpectraWindowIndex.BuildFromCache(demuxPath, inputFile, out var reason, Descriptor(p));
+                var hit = SpectraWindowIndex.BuildFromCache(demuxPath, inputFile, loadMs1, out var reason, Descriptor(p));
                 if (hit != null)
                 {
                     ctx.LogInfo(string.Format(OspreyTasksResources.DemuxCache_TryOpen_Streaming_demultiplexed_spectra_from_cache___0_, demuxPath));
@@ -157,27 +159,48 @@ namespace pwiz.Osprey.Tasks
         /// Whether the run a <c>.spectra.bin</c> holds is multiplexed, so that <c>--demux auto</c>
         /// must search its demultiplexed cache instead: the reason a valid <c>.spectra.bin</c>
         /// cannot be searched in its place. Decided from the isolation windows the cache
-        /// recorded, by the same ProteoWizard detection the read uses, so it needs neither the
-        /// source file nor a vendor reader. False when <c>--demux</c> is off.
+        /// recorded, by the same ProteoWizard detection the read uses over the same spectra, so it
+        /// needs neither the source file nor a vendor reader. An MSX run is the exception: the
+        /// cache keeps one window per spectrum, so it is not recognized here. False when
+        /// <c>--demux</c> is off.
         /// </summary>
         internal static bool IsDemultiplexedRun(SpectraWindowIndex plainIndex, OspreyConfig config)
         {
             if (CreateParams(config) == null)
                 return false;
-            return SpectrumFileReader.DetectDemultiplexScheme(plainIndex.LeadingIsolationWindows) != null;
+            plainIndex.ReadRecordedIsolationWindows(out var centers, out var lowerOffsets, out var upperOffsets);
+            return SpectrumFileReader.DetectDemultiplexScheme(centers, lowerOffsets, upperOffsets) != null;
         }
 
         /// <summary>
         /// <see cref="IsDemultiplexedRun(SpectraWindowIndex,OspreyConfig)"/> for the input's
-        /// <c>.spectra.bin</c>, false when there is no usable one. For the start-up check.
+        /// <c>.spectra.bin</c>, false when there is no usable one: a damaged cache is then
+        /// reported where it is read, as before. For the start-up check.
         /// </summary>
         internal static bool IsDemultiplexedRun(string inputFile, OspreyConfig config)
         {
             if (CreateParams(config) == null)
                 return false;
-            var plainIndex = SpectraWindowIndex.BuildFromCache(SpectraCache.GetCachePath(inputFile), inputFile,
-                false, out _);
-            return plainIndex != null && IsDemultiplexedRun(plainIndex, config);
+            try
+            {
+                var plainIndex = SpectraWindowIndex.BuildFromCache(SpectraCache.GetCachePath(inputFile), inputFile,
+                    false, out _);
+                return plainIndex != null && IsDemultiplexedRun(plainIndex, config);
+            }
+            catch (Exception ex) when (ex is IOException || ex is InvalidDataException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The run's demultiplexed cache when one exists, otherwise its <c>.spectra.bin</c>: the
+        /// larger of the two a run can be searched from, for sizing a run without its source.
+        /// </summary>
+        internal static string GetLargestCachePath(string inputFile)
+        {
+            string demuxPath = SpectraCache.GetDemuxCachePath(inputFile);
+            return File.Exists(demuxPath) ? demuxPath : SpectraCache.GetCachePath(inputFile);
         }
 
         /// <summary>

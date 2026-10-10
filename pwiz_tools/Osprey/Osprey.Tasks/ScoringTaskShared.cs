@@ -79,33 +79,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Extract unique isolation windows from the first cycle of MS2 spectra.
-        /// </summary>
-        internal static List<IsolationWindow> ExtractIsolationWindows(List<Spectrum> spectra)
-        {
-            var windows = new List<IsolationWindow>();
-            var seenCenters = new HashSet<int>();
-
-            foreach (var spectrum in spectra)
-            {
-                int centerKey = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
-                if (seenCenters.Contains(centerKey))
-                    break;
-                seenCenters.Add(centerKey);
-                windows.Add(spectrum.IsolationWindow);
-            }
-
-            // Sort by center m/z. Array.Sort OK: windows were deduplicated above on the
-            // rounded center key (Round(Center*10)); because that key is a function of
-            // Center, two windows sharing a Center share a key and one is dropped, so
-            // every retained window has a distinct Center and the comparator never
-            // returns 0. (This guarantees distinct Centers, not any minimum spacing --
-            // centers on either side of a rounding boundary can be arbitrarily close.)
-            windows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: (see above) dedup on the rounded center key leaves distinct Centers, so the comparator never ties
-            return windows;
-        }
-
-        /// <summary>
         /// Find the MS1 spectrum with retention time closest to the given RT.
         /// Assumes MS1 spectra are sorted by RT. Thin forwarder to the single
         /// implementation in Core (<see cref="MS1Spectrum.FindNearest"/>) so the
@@ -120,7 +93,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Ensure a valid <c>.spectra.bin</c> cache exists for the input and return a
         /// streaming <see cref="SpectraWindowIndex"/> over it (per-window MS2 offsets, plus
-        /// MS1 and the first-cycle isolation windows) WITHOUT materializing the full MS2
+        /// MS1 and the run's isolation windows) WITHOUT materializing the full MS2
         /// <c>List&lt;Spectrum&gt;</c>. On a cache hit (the common re-run path) the file is only
         /// header-indexed; on a miss the input is parsed once - mzML or vendor raw, whichever
         /// <see cref="SpectrumFileReader"/> selects - (gated across parallel files),
@@ -135,12 +108,13 @@ namespace pwiz.Osprey.Tasks
         /// which is precisely what a raw-vs-mzML parity check must be able to rule out.
         /// </summary>
         internal static SpectraWindowIndex EnsureSpectraCache(string inputFile, bool serializeMzmlRead,
-            out int unsortedCount, PipelineContext ctx)
+            out int unsortedCount, PipelineContext ctx, int concurrentReads = 1)
         {
             unsortedCount = 0;
             // With --demux auto, a valid demultiplexed cache is all the search needs, so a run
             // staged demultiplexed can be searched after its source and .spectra.bin are gone.
-            var demultiplex = DemuxCache.CreateParams(ctx.Config);
+            // concurrentReads: files read at once on other lanes, which share the solve threads.
+            var demultiplex = DemuxCache.CreateParams(ctx.Config, serializeMzmlRead ? 1 : concurrentReads);
             var demuxHit = DemuxCache.TryOpen(inputFile, ctx);
             if (demuxHit != null)
                 return demuxHit;
@@ -289,7 +263,7 @@ namespace pwiz.Osprey.Tasks
         /// cache the original Stage 1-4 run wrote, so a task that starts after it (the Stage-6
         /// rescore, the training export) loads each isolation window's MS2 on demand instead of
         /// materializing the whole ~6 GB resident <c>List&lt;Spectrum&gt;</c>. MS1 + the
-        /// first-cycle isolation windows come from the same index, MS1 only when
+        /// isolation windows come from the same index, MS1 only when
         /// <paramref name="loadMs1"/>. There is NO mzML fallback: such a task always runs
         /// against a file the upstream stages already cached, so an absent/invalid cache is a
         /// deployment error (the mzML may not even be shipped to the worker), and re-reading
@@ -303,7 +277,7 @@ namespace pwiz.Osprey.Tasks
         {
             // A demultiplexed run is rescored from the same demultiplexed cache Stages 1-4
             // searched.
-            var demuxIndex = DemuxCache.TryOpen(inputFile, ctx);
+            var demuxIndex = DemuxCache.TryOpen(inputFile, ctx, loadMs1);
             if (demuxIndex != null)
                 return demuxIndex;
 

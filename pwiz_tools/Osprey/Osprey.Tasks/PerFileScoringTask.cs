@@ -1094,13 +1094,13 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The per-file footprint estimate auto mode budgets RAM with: each input's size,
-        /// or, for an input whose source is gone or empty, its spectra cache's - wherever
-        /// <see cref="ArtifactPaths"/> puts caches for this run, including a separate
-        /// <c>--cache-dir</c>.
+        /// or, for an input whose source is gone or empty, its spectra cache's (the
+        /// demultiplexed one when it has one) - wherever <see cref="ArtifactPaths"/> puts
+        /// caches for this run, including a separate <c>--cache-dir</c>.
         /// </summary>
         internal static long EstimateInputBytes(IEnumerable<string> inputFiles)
         {
-            return FileParallelismResolver.EstimatePerFileBytes(inputFiles, SpectraCache.GetCachePath);
+            return FileParallelismResolver.EstimatePerFileBytes(inputFiles, DemuxCache.GetLargestCachePath);
         }
 
         /// <summary>
@@ -3153,7 +3153,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Build the DIA <see cref="IsolationSchemeJson"/> block persisted in
-        /// calibration.json from a file's first-cycle isolation windows, so an HPC
+        /// calibration.json from a file's isolation windows, so an HPC
         /// SecondPassFDR node (which has no mzML) can rehydrate the gap-fill m/z filter's
         /// coverage. Windows are stored as <c>[center, width]</c> pairs; the scalar
         /// summary fields (num_windows / mz_min / mz_max / typical_width /
@@ -3183,7 +3183,7 @@ namespace pwiz.Osprey.Tasks
                     break;
                 }
             }
-            // ExtractIsolationWindows sorts by center, so first/last are min/max
+            // SpectraWindowIndex sorts its windows by center, so first/last are min/max
             // -- matches Rust's mz_min/mz_max taken from the sorted window list.
             return new IsolationSchemeJson
             {

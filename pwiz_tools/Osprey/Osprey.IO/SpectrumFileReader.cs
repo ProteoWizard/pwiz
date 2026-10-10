@@ -140,11 +140,13 @@ namespace pwiz.Osprey.IO
                 {
                     // Which of the two this run is. Without demultiplex settings, a multiplexed
                     // run is still detected (from the metadata of its first cycles), so the
-                    // caller can say that it was searched as acquired.
+                    // caller can say that it was searched as acquired. That is only for a
+                    // warning, so a read it cannot finish leaves the run as it was before
+                    // detection existed; the read below reports a real reader error itself.
                     if (demultiplex != null)
                         demultiplexed = msData.DemultiplexScheme;
                     else
-                        notDemultiplexed = msData.DetectDemultiplexScheme();
+                        notDemultiplexed = TryDetectDemultiplexScheme(msData);
 
                     // A chromatogram-only file has no spectrum list, so SpectrumCount is 0
                     // and this reads nothing. Osprey has no use for such a file, but an
@@ -216,31 +218,71 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The multiplexing scheme of a run from the isolation windows of its first MS2 spectra in
+        /// The multiplexing scheme of a run from the isolation window of every MS2 spectrum in
         /// acquisition order, as a spectra cache records them, or null when it is not multiplexed.
-        /// The same ProteoWizard detection as <see cref="DetectDemultiplexScheme(string)"/>, for a
-        /// run whose source file is not at hand.
+        /// The same ProteoWizard detection as <see cref="DetectDemultiplexScheme(string)"/>, over
+        /// the same spectra (the head, middle and end of the run), for a run whose source file is
+        /// not at hand. A cache records one window per spectrum, so an MSX run, whose spectra
+        /// each isolate several, cannot be told from ordinary DIA this way.
         /// </summary>
-        public static SpectrumListDemux.Scheme DetectDemultiplexScheme(IEnumerable<IsolationWindow> windowsInAcquisitionOrder)
+        public static SpectrumListDemux.Scheme DetectDemultiplexScheme(double[] centers, double[] lowerOffsets,
+            double[] upperOffsets)
         {
-            var spectra = new PwizSpectra.SpectrumListSimple();
-            foreach (var window in windowsInAcquisitionOrder)
+            return SpectrumListDemux.DetectScheme(new RecordedWindowSpectrumList(centers, lowerOffsets, upperOffsets));
+        }
+
+        private static SpectrumListDemux.Scheme TryDetectDemultiplexScheme(MsDataFileImpl msData)
+        {
+            try
             {
-                int index = spectra.Spectra.Count;
-                var spectrum = new PwizSpectra.Spectrum
-                {
-                    Index = index,
-                    Id = string.Format(CultureInfo.InvariantCulture, @"scan={0}", index + 1)
-                };
+                return msData.DetectDemultiplexScheme();
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// MS2 spectra with only an isolation window, built when asked for: detection reads a few
+        /// thousand of a run's spectra, not all of them.
+        /// </summary>
+        private sealed class RecordedWindowSpectrumList : PwizSpectra.SpectrumListBase
+        {
+            private readonly double[] _centers;
+            private readonly double[] _lowerOffsets;
+            private readonly double[] _upperOffsets;
+
+            public RecordedWindowSpectrumList(double[] centers, double[] lowerOffsets, double[] upperOffsets)
+            {
+                _centers = centers;
+                _lowerOffsets = lowerOffsets;
+                _upperOffsets = upperOffsets;
+            }
+
+            public override int Count => _centers.Length;
+
+            public override PwizSpectra.SpectrumIdentity SpectrumIdentity(int index)
+            {
+                return new PwizSpectra.SpectrumIdentity { Index = index, Id = GetId(index) };
+            }
+
+            public override PwizSpectra.Spectrum GetSpectrum(int index, bool getBinaryData = false)
+            {
+                var spectrum = new PwizSpectra.Spectrum { Index = index, Id = GetId(index) };
                 spectrum.Params.Set(CVID.MS_ms_level, 2);
                 var precursor = new PwizSpectra.Precursor();
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, window.Center, CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, window.LowerOffset, CVID.MS_m_z);
-                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, window.UpperOffset, CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, _centers[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, _lowerOffsets[index], CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, _upperOffsets[index], CVID.MS_m_z);
                 spectrum.Precursors.Add(precursor);
-                spectra.Spectra.Add(spectrum);
+                return spectrum;
             }
-            return SpectrumListDemux.DetectScheme(spectra);
+
+            private static string GetId(int index)
+            {
+                return string.Format(CultureInfo.InvariantCulture, @"scan={0}", index + 1);
+            }
         }
 
         private static MsDataFileImpl OpenForSearch(string path, SpectrumListDemux.Params demultiplex)

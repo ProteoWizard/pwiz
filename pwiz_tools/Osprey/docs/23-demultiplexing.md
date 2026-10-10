@@ -66,7 +66,8 @@ scheme only when both hold:
 
 - the run has more than one precursor per MS2 spectrum (MSX), or its isolation windows overlap
   (each window covers more than one demux window), and
-- every MS2 spectrum of the first two cycles maps onto the same number of demux windows.
+- every MS2 spectrum of two cycles at the start, middle and end of the run maps onto the same
+  number of demux windows, so a method whose windows change partway is not multiplexed.
 
 The second condition separates staggered windows from ordinary DIA whose neighbouring windows
 share a margin of 0.5-1 Th. In such a run the margins become thin demux windows covered twice,
@@ -75,6 +76,11 @@ demultiplexer would refuse that run spectrum by spectrum; Osprey searches it as 
 
 A run with no MS2, no repeating cycle, a varying number of precursors per spectrum, or SRM
 spectra is not multiplexed.
+
+The same detection answers for a `.spectra.bin` whose source is not at hand (a run cached
+without `--demux`, then searched with it): it runs over the isolation window the cache recorded
+for every MS2 spectrum, sampling the same start, middle and end. A cache records one window per
+spectrum, so an MSX run cannot be recognized this way (see [Limitations](#limitations)).
 
 ## Relationship to msconvert
 
@@ -151,17 +157,15 @@ bumped when ProteoWizard's demultiplexer changes its output under the same setti
 
 One Orbitrap Eclipse staggered run (EV13: 1.24 GB `.raw`, 101 x 12 Th windows at 2-fold
 overlap, demultiplexed into 102 bins of 6 Th and 158,700 MS2 spectra), vendor file to spectra
-cache, on a quiet 32-thread machine:
+cache (`--task SpectraCache --demux auto`), on an idle 32-thread machine, three runs each,
+interleaved:
 
-| Read | Time |
-|---|---|
-| Without demultiplexing (`.spectra.bin`) | 13.7 s |
-| `--demux auto`, ProteoWizard's demultiplexer (this branch) | 37.6 s |
-| #4710, default (weighted) engine | 44.0 s |
-| #4710, msconvert-style engine | 24.0 s |
-| msconvert's demultiplexer, single-threaded | 214.6 s |
-
-Peak working set with `--demux auto` is about 2.0 GB, the same as the plain read.
+| Demultiplexer | Time | Peak working set |
+|---|---|---|
+| ProteoWizard's (this branch) | 23.9-24.0 s | 4.4 GB |
+| #4710, default (weighted) engine | 41.4-45.2 s | 9.4 GB |
+| #4710, msconvert-style engine | 21.9-23.1 s | 3.0 GB |
+| msconvert's demultiplexer before these changes, single-threaded | 214.6 s | |
 
 `SpectrumListDemux` solves ahead when `SolveThreads` is above 1 (Osprey passes its thread count):
 blocks are solved in batches on worker threads while the reader consumes the batch before, the
@@ -169,23 +173,35 @@ spectra of the next batch are read while this one is solved, and the spectrum ca
 from the cycle so no spectrum is decoded twice. Each block depends only on its source spectrum,
 so the output is byte-identical at any thread count.
 
-What remains is serial, in the single-threaded Thermo reader: one metadata sweep of the run
-(about 10 s, half of it computing precursor intensities from MS1 scans) and vendor decoding
-(about 14 s).
+Until pwiz #4817 the read took 40 s: the Thermo reader's precursor lookup walked back to the
+first scan of the run for every spectrum carrying "Master Scan Number: 0" (every DIA scan), 22 s
+of the serial read path. With it fixed the solve is the larger cost (about 13 s of 32 threads),
+nearly half of it building MathNet natural splines in `OverlapDemultiplexer`.
 
 ## Results
 
-> **TODO (parent):** search results for the demultiplexed runs, compared with the same runs
-> searched as acquired and with #4710, are being produced and will be added here.
+Six Eclipse staggered runs (EV13-15, Total01-03), one human Carafe library with 1:1
+entrapment, three Percolator seeds per demultiplexer at a 1.5M-row training cap (at the default
+300k cap the seed alone moves a search 6-11%, pwiz #4812), experiment level at q <= 0.01:
+
+| Demultiplexer | Precursors (seeds 42 / 1 / 2) | Mean | Entrapment FDP |
+|---|---|---|---|
+| ProteoWizard's (this branch) | 37,436 / 37,928 / 37,468 | 37,611 | 0.47-0.52% |
+| #4710, weighted | 38,513 / 36,478 / 36,523 | 37,171 | 0.47-0.57% |
+| #4710, msconvert-style | 37,318 / 37,355 / 37,178 | 37,284 | 0.43-0.48% |
+
+The three are equivalent within the seed spread.
 
 ## Limitations
 
 - **MSX** (several precursors per spectrum) is detected and demultiplexed by ProteoWizard's MSX
-  demultiplexer, but has not been tested on real data.
+  demultiplexer, but has not been tested on real data. An MSX run cached without `--demux` is
+  not recognized from its `.spectra.bin` alone, so with `--demux auto` it is searched as
+  acquired from that cache; delete the cache, or keep the source, to have it demultiplexed.
 - **Scanning quadrupole** (SCIEX ZT Scan, Waters SONAR) is not supported: ProteoWizard has no
   scanning demultiplexer.
-- **The Thermo reader is single-threaded**, so the metadata sweep and vendor decoding bound the
-  demultiplexed read (see [Performance](#performance)).
+- **The Thermo reader decodes on one thread**, so vendor decoding is serial under the parallel
+  solve (see [Performance](#performance)).
 - **Unit-resolution data** (Stellar centroids) is demultiplexed with the same 10 ppm mass error,
   which has not been validated.
 - **No rebuild without the source.** Unlike #4710's cache, the demultiplexed cache cannot be

@@ -98,16 +98,6 @@ namespace pwiz.Osprey.IO
         public IReadOnlyList<IsolationWindow> IsolationWindows { get; }
 
         /// <summary>
-        /// The isolation windows of the first <see cref="LEADING_WINDOWS"/> MS2 records, in
-        /// acquisition order: enough cycles of the run to tell whether it is multiplexed
-        /// (staggered or MSX) without its source file.
-        /// </summary>
-        public IReadOnlyList<IsolationWindow> LeadingIsolationWindows { get; private set; }
-
-        /// <summary>MS2 records kept in <see cref="LeadingIsolationWindows"/>.</summary>
-        public const int LEADING_WINDOWS = 4096;
-
-        /// <summary>
         /// The window keys in first-encounter (file) order -- the same order the resident
         /// calibration grouping (<c>spectraByWindowKey</c>) inserts them, so a linear-scan
         /// window fallback enumerates them identically. Used only by the streaming
@@ -208,14 +198,11 @@ namespace pwiz.Osprey.IO
                 var windowKeysInFileOrder = new List<int>();
                 var allMs2Rts = new double[nMs2];
 
-                var leadingWindows = new List<IsolationWindow>();
                 for (uint i = 0; i < nMs2; i++)
                 {
                     double isoCenter = index.IsoCenters[i];
                     double isoLower = index.IsoLowers[i];
                     double isoUpper = index.IsoUppers[i];
-                    if (leadingWindows.Count < LEADING_WINDOWS)
-                        leadingWindows.Add(new IsolationWindow(isoCenter, isoLower, isoUpper));
                     allMs2Rts[i] = index.Rts[i];
 
                     int key = SpectraCache.WindowKey(isoCenter);
@@ -243,7 +230,7 @@ namespace pwiz.Osprey.IO
                 foreach (int key in windowKeysInFileOrder)
                     isolationWindows.Add(windowKeyToFirstIso[key]);
 
-                // Sorted by center, as ExtractIsolationWindows sorted the first cycle.
+                // Sorted by center.
                 isolationWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties
 
                 // MS1 in full from the recorded section offset (small in DIA and needed
@@ -259,10 +246,28 @@ namespace pwiz.Osprey.IO
                 }
 
                 return new SpectraWindowIndex(cachePath, windowKeyToOffsets, allMs2Rts,
-                    windowKeyToFirstIso, windowKeysInFileOrder, index.Ms1SectionOffset, ms1Spectra, isolationWindows)
-                {
-                    LeadingIsolationWindows = leadingWindows
-                };
+                    windowKeyToFirstIso, windowKeysInFileOrder, index.Ms1SectionOffset, ms1Spectra, isolationWindows);
+            }
+        }
+
+        /// <summary>
+        /// The isolation window of every MS2 record of a <c>.spectra.bin</c> (not a demultiplexed
+        /// cache), in acquisition order, read again from the cache's index: what a caller needs
+        /// to tell whether the run is multiplexed without its source file. Not kept by the index,
+        /// which would hold three doubles per spectrum for every run it serves.
+        /// </summary>
+        public void ReadRecordedIsolationWindows(out double[] centers, out double[] lowerOffsets,
+            out double[] upperOffsets)
+        {
+            using (var fs = new FileStream(_cachePath, FileMode.Open, FileAccess.Read))
+            using (var r = new BinaryReader(fs))
+            {
+                if (!SpectraCache.TryReadHeader(r, null, out uint nMs2, out _, out var reason))
+                    throw new SpectraCacheException(SpectraCacheException.Describe(reason), reason, _cachePath);
+                var index = SpectraCache.ReadIndex(fs, r, nMs2);
+                centers = index.IsoCenters;
+                lowerOffsets = index.IsoLowers;
+                upperOffsets = index.IsoUppers;
             }
         }
 

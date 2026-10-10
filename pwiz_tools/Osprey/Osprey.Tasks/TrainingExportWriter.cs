@@ -390,7 +390,18 @@ namespace pwiz.Osprey.Tasks
             return @";recon=" + IdentityOrAbsent(ParquetScoreCache.GetReconciledScoresPath(input))
                 + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:") + IdentityOrAbsent(runQPath)
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
-                + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input));
+                + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
+                + DemuxSpectraIdentity(input);
+        }
+
+        /// <summary>
+        /// The demultiplexed cache's identity when the run has one, which a --demux auto export
+        /// reads in place of the .spectra.bin; empty otherwise, so no other run's key changes.
+        /// </summary>
+        private static string DemuxSpectraIdentity(string input)
+        {
+            string demuxPath = SpectraCache.GetDemuxCachePath(input);
+            return File.Exists(demuxPath) ? @";demuxspectra=" + IdentityOrAbsent(demuxPath) : string.Empty;
         }
 
         /// <summary>

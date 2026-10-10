@@ -59,7 +59,7 @@ namespace pwiz.Osprey.IO
     /// [footer: [ms1_section_offset: int64] [index_offset: int64]]  (16 bytes at EOF)
     ///
     /// The acquisition-order index lets a reader rebuild the window map, AllMs2Rts,
-    /// and the first-cycle isolation windows from one compact contiguous read (no
+    /// and the run's isolation windows from one compact contiguous read (no
     /// record walk), and restores acquisition order for the full LoadSpectraCache
     /// read even though the body is physically window-grouped.
     ///
@@ -161,7 +161,7 @@ namespace pwiz.Osprey.IO
             // Writing each window's records contiguously lets SpectraWindowIndex
             // .LoadWindow read a whole window in one sequential run (the cold-HDD fix);
             // the acquisition-order index written after the body restores file order
-            // for AllMs2Rts / first-cycle windows and for the full LoadSpectraCache read.
+            // for AllMs2Rts / the isolation windows and for the full LoadSpectraCache read.
             var windowKeyOrder = new List<int>();
             var windowKeyToIndices = new Dictionary<int, List<int>>();
             for (int i = 0; i < nMs2; i++)
@@ -698,7 +698,7 @@ namespace pwiz.Osprey.IO
         /// The per-record index read back from a v4 cache's EOF index block, in
         /// acquisition order. <see cref="RecordOffsets"/>[i] locates MS2 record i's
         /// peak blob within the window-grouped body; the iso/rt fields let a reader
-        /// rebuild the window map, AllMs2Rts, and first-cycle windows without
+        /// rebuild the window map, AllMs2Rts, and the isolation windows without
         /// touching the body.
         /// </summary>
         internal sealed class SpectraCacheIndex
