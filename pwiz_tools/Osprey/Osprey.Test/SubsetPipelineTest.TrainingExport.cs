@@ -241,6 +241,14 @@ namespace pwiz.Osprey.Test
                     AssertExportsEqual(hashes, workDir);
                 }
             }
+
+            // The protein-compact directory re-run under the other pass-2 mode, a parameter both
+            // second-pass halves are keyed on, must report what a clean run of that mode does: a
+            // per-run answer left by the first mode must be replaced, never folded (#4729).
+            string rerunDir = Path.Combine(_testDir, @"export-single-run-" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
+            RunSingleRunExport(rerunDir, inputs, OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+            AssertBlibsEqual(Path.Combine(_testDir, @"export-single-run-" + OspreyEnvironment.PASS2_QVALUE_TRANSFER, BLIB_FILE),
+                Path.Combine(rerunDir, BLIB_FILE));
         }
 
         /// <summary>
