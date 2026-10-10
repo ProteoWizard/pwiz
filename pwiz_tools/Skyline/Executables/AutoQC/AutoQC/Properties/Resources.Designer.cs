@@ -552,6 +552,26 @@ namespace AutoQC.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline could not be found. It may have been upgraded or uninstalled. Stopping configuration. Restart AutoQC, and then start the configuration again..
+        /// </summary>
+        public static string ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found__Stopping_configuration__Restart_AutoQC_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found__Stopping_confi" +
+                        "guration__Restart_AutoQC_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline could not be found in {0}. It may have been moved or uninstalled. Stopping configuration. Edit the configuration to select a folder with an installed Skyline..
+        /// </summary>
+        public static string ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found_in__0___Stopping_configuration__Edit_the_configuration_ {
+            get {
+                return ResourceManager.GetString("ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found_in__0___Stoppin" +
+                        "g_configuration__Edit_the_configuration_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Annotations file could not be imported..
         /// </summary>
         internal static string ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_ {

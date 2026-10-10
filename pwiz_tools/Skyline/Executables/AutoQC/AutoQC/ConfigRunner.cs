@@ -1,6 +1,7 @@
 /*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,6 +82,10 @@ namespace AutoQC
         private bool _panoramaFatalError;
         private DateTime _panoramaErrorOccurred = DateTime.MinValue;
         private DateTime _lastUploadAt = DateTime.MinValue;
+
+        // Set if the last process reported that the ClickOnce Skyline it starts is not installed, or the SkylineCmd.exe
+        // it runs no longer exists.
+        private bool _skylineNotFound;
 
         private bool _annotationsImportError;
         private bool _annotationsFirstImport = true;
@@ -271,6 +276,8 @@ namespace AutoQC
                 // imported into the document.
                 if (!ReadLastAcquiredFileDate(_logger, this))
                 {
+                    if (_skylineNotFound)
+                        _logger.LogError(GetSkylineNotFoundMessage());
                     ChangeStatus(RunnerStatus.Error);
                     return;
                 }
@@ -354,6 +361,13 @@ namespace AutoQC
                 {
                     // Try to import any older files that resulted in an import error the first time.
                     TryReimportOldFiles(e, false);
+                }
+
+                // AutoQC finds Skyline only at startup, so every later import would fail the same way.
+                if (_skylineNotFound)
+                {
+                    _logger.LogError(GetSkylineNotFoundMessage());
+                    break;
                 }
 
                 if (_panoramaFatalError)
@@ -810,7 +824,7 @@ namespace AutoQC
                 }
                 else if(_runnerStatus != RunnerStatus.Error)
                 {
-                    ChangeStatus(_panoramaUploadError || _panoramaFatalError ? RunnerStatus.Error : RunnerStatus.Stopped);
+                    ChangeStatus(_panoramaUploadError || _panoramaFatalError || _skylineNotFound ? RunnerStatus.Error : RunnerStatus.Stopped);
                 }
 
                 if (_runnerStatus == RunnerStatus.Stopped && (_panoramaUploadError || _panoramaFatalError || _annotationsImportError))
@@ -1125,6 +1139,22 @@ namespace AutoQC
             }
         }
 
+        public bool SkylineNotFound => _skylineNotFound;
+
+        /// <summary>
+        /// The message logged when the configuration stops because Skyline could not be found. A restart finds the
+        /// installed Skyline again for the Skyline and Skyline-daily options. For a custom folder, and the SkylineCmd.exe
+        /// next to AutoQC, a restart builds the same path, so the configuration has to be edited.
+        /// </summary>
+        public string GetSkylineNotFoundMessage()
+        {
+            var skylineSettings = Config.SkylineSettings;
+            if (skylineSettings.Type == SkylineType.Skyline || skylineSettings.Type == SkylineType.SkylineDaily)
+                return Resources.ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found__Stopping_configuration__Restart_AutoQC_;
+            return string.Format(Resources.ConfigRunner_GetSkylineNotFoundMessage_Skyline_could_not_be_found_in__0___Stopping_configuration__Edit_the_configuration_,
+                Path.GetDirectoryName(skylineSettings.CmdPath));
+        }
+
         public string ImportResultsFileArgs(ImportContext importContext)
         {
             // Get the current results time window
@@ -1257,7 +1287,15 @@ namespace AutoQC
         public ProcStatus RunProcess(ProcessInfo processInfo)
         {
             _processRunner = new ProcessRunner(_logger);
-            return _processRunner.RunProcess(processInfo);
+            var status = _processRunner.RunProcess(processInfo);
+            // A missing ClickOnce Skyline is reported by SkylineRunner, and ProcessRunner records it in
+            // SkylineNotFound. Any other missing Skyline is detected here, when the run failed and its
+            // SkylineCmd.exe no longer exists. That happens when an Inno Setup or administrative Skyline was
+            // uninstalled, or a custom Skyline folder was deleted or moved. ProcessNewFiles and RunConfiguration
+            // check the flag and stop the configuration.
+            _skylineNotFound = _processRunner.SkylineNotFound ||
+                               (status == ProcStatus.Error && !File.Exists(processInfo.Executable));
+            return status;
         }
 
         public void StopProcess()

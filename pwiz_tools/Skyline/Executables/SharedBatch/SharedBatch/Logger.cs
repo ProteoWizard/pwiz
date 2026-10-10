@@ -1,6 +1,7 @@
  /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -120,9 +121,11 @@ using SharedBatch.Properties;
                 {
                 }
             }
-            lock (_uiBuffer)
+            lock (_uiBufferLock)
             {
                 _uiBuffer.Clear();
+                // A stopped configuration and its restart share this logger, so a stream may still be open.
+                _fileStream?.Close();
                 _fileStream = new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite);
             }
         }

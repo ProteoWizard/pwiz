@@ -1,6 +1,7 @@
 /*
  * Original author: Ali Marsh <alimarsh .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  * Copyright 2020 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -196,6 +197,45 @@ namespace AutoQCTest
             }
             Assert.IsTrue(!replacedWithDuplicate, "Expected exception for duplicate config.");
             Assert.IsTrue(configManager.ConfigOrderEquals(new[] { "oneReplaced", "two", "three" }));
+        }
+
+        /// <summary>
+        /// Checks that enabling and disabling a configuration keep its <see cref="SharedBatch.Logger"/>. The Log tab displays the lines
+        /// that object holds, and a configuration that stops disables itself right after it logs why. Also checks that
+        /// initializing the shared logger again leaves no file handle open.
+        /// </summary>
+        [TestMethod]
+        public void TestEnableDisableKeepsLogger()
+        {
+            var configManager = TestUtils.GetTestConfigManager();
+            var logger = configManager.AutoQcState.GetLogger("one");
+
+            var initialState = configManager.AutoQcState;
+            configManager.SetState(initialState, initialState.Copy().EnableConfig(initialState.BaseState.GetConfigIndex("one"), null));
+            AssertLoggerKept(configManager, logger, "enabling");
+
+            initialState = configManager.AutoQcState;
+            configManager.SetState(initialState, initialState.Copy().DisableConfig(initialState.BaseState.GetConfigIndex("one"), null));
+            AssertLoggerKept(configManager, logger, "disabling");
+
+            // A restart can initialize the shared logger before the stopped runner closes it.
+            var logFile = Path.Combine(TestContext.GetTestPath(@"TestEnableDisableKeepsLogger"), "AutoQC.log");
+            var sharedLogger = new SharedBatch.Logger(logFile, "one", true);
+            sharedLogger.Init();
+            sharedLogger.Close();
+            var movedFile = logFile + ".moved";
+            File.Move(logFile, movedFile);
+            AssertEx.IsTrue(File.Exists(movedFile), "Expected no open handle on " + logFile + " after Init twice and Close");
+        }
+
+        private static void AssertLoggerKept(AutoQcConfigManager configManager, SharedBatch.Logger logger, string action)
+        {
+            var state = configManager.AutoQcState;
+            AssertEx.IsTrue(ReferenceEquals(logger, state.GetLogger("one")),
+                "Expected the log list to keep the logger after " + action + " the configuration");
+            var runner = state.GetConfigRunner(state.BaseState.GetConfig(state.BaseState.GetConfigIndex("one")));
+            AssertEx.IsTrue(ReferenceEquals(logger, runner.GetLogger()),
+                "Expected the new runner to use the same logger after " + action + " the configuration");
         }
 
         // Investigate why this test is failing. It was not running correctly. After fixing its threading issue, the test fails.
