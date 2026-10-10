@@ -68,11 +68,8 @@ public sealed class NnlsSolver : IDemuxSolver
             Parallel.For(0, numCols, fragIndex =>
             {
                 var solver = localNnls.Value!;
-                if (!solver.Solve(AtB, fragIndex))
-                {
-                    // Cpp swallows convergence failure silently — match that to keep parity.
-                    return;
-                }
+                // Like cpp, keep the last feasible x even when Solve fails (e.g. at the iteration limit).
+                solver.Solve(AtB, fragIndex);
                 var sol = solver.X;
                 for (int i = 0; i < numRows; i++) X[i, fragIndex] = sol[i];
             });
