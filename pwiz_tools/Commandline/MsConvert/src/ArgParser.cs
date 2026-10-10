@@ -486,8 +486,11 @@ internal static class ArgParser
         "  -h, --help               Show this help",
     };
 
-    /// <summary>Generates the usage text shown for --help / on parse failure.</summary>
-    internal static string Usage() => string.Join('\n', s_usageLines);
+    /// <summary>
+    /// Generates the usage text shown for --help / on parse failure, ending with the version
+    /// block as the C++ msconvert's usage did.
+    /// </summary>
+    internal static string Usage() => string.Join('\n', s_usageLines) + "\n\n" + VersionInfo.Block;
 }
 
 /// <summary>Thrown by the parser when <c>--help</c> is encountered; the caller prints usage and exits.</summary>

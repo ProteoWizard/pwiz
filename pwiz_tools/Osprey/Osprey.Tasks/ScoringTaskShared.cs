@@ -1028,14 +1028,8 @@ namespace pwiz.Osprey.Tasks
         /// CALLER for whom empty means "release everything" rather than "retain nothing", and a
         /// guard in a shared reader cannot tell those apart.</para>
         ///
-        /// <para>The remedy - carried on <see cref="ReadRetainedBaseIds"/>'s error, so every
-        /// caller that logs it says the same thing - names a STAMP deletion rather than "re-run
-        /// FirstPassFDR", because that task declares this file in neither <c>Outputs</c> nor its
-        /// <c>ValidityKey</c>. That is deliberate, with its own rationale at
-        /// <c>RetainedBaseIdSidecar.FormatVersion</c>, and its consequence is stated in
-        /// <c>FirstPassFdrTask</c>: re-running the task over a complete analysis "reports its
-        /// outputs valid and writes nothing". An operator told to re-run it would loop
-        /// forever.</para>
+        /// <para>The remedy is carried on <see cref="ReadRetainedBaseIds"/>'s error, so every
+        /// caller that logs it says the same thing.</para>
         /// </summary>
         internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
         {
@@ -1077,12 +1071,11 @@ namespace pwiz.Osprey.Tasks
             if (retained == null)
             {
                 // FirstPassFDR writes this when Stage 6 planning ends, and every run's compaction
-                // reads it. The remedy is the stamp deletion, not "re-run FirstPassFDR": the task
-                // declares this file in neither Outputs nor its ValidityKey, so re-running it over
-                // a complete analysis reports its outputs valid and writes nothing.
+                // reads it. It is a declared FirstPassFDR output, so deleting the first-pass
+                // files the message names makes the next run rebuild it.
                 error = string.Format(
                     OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_,
-                    path, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
+                    path, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
                 return null;
             }
             return retained;

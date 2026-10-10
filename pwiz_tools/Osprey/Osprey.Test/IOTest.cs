@@ -784,6 +784,16 @@ namespace pwiz.Osprey.Test
                 // No record lost or double-counted across the window partition.
                 Assert.AreEqual(full.Ms2Spectra.Count, streamedTotal);
 
+                // One caller-kept buffer across every window, twice: after the first pass it is
+                // the largest block's size, so the second pass reads smaller blocks into a buffer
+                // whose tail still holds another window's bytes.
+                byte[] readBuffer = null;
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    foreach (var kvp in expected)
+                        AssertSpectraListEqual(kvp.Value, index.LoadWindowSerialRead(kvp.Key, ref readBuffer));
+                }
+
                 // Absent key -> empty list (matches the dictionary miss).
                 int absentKey = 1;
                 while (expected.ContainsKey(absentKey))
@@ -3886,7 +3896,7 @@ namespace pwiz.Osprey.Test
                     MakeFdrEntry(2, -3.3, 0.003, 0.08, proteinQvalue: 0.95),
                 };
 
-                FdrScoresSidecar.Write(path, entries, FdrScoresSidecar.Pass.FirstPass);
+                FdrScoresSidecar.Write(path, entries, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 // Cross-impl byte-parity hook: when the harness runs this test
                 // with OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT=<path> set, copy our
@@ -3900,7 +3910,8 @@ namespace pwiz.Osprey.Test
                 // File size sanity check.
                 long size = new FileInfo(path).Length;
                 Assert.AreEqual(
-                    FdrScoresSidecar.HeaderLength + entries.Count * FdrScoresSidecar.RecordLength,
+                    FdrScoresSidecar.HeaderLength + entries.Count * FdrScoresSidecar.RecordLength +
+                    BinarySidecarStamp.Encode(TestStamps.Any).Length,
                     size);
 
                 // Stubs with cleared FDR fields — TryRead must repopulate them.
@@ -3988,8 +3999,8 @@ namespace pwiz.Osprey.Test
 
                 string a = Path.Combine(dir, "a.bin");
                 string d = Path.Combine(dir, "d.bin");
-                Pass2CompetitionDecoys.Write(a, ascending);
-                Pass2CompetitionDecoys.Write(d, descending);
+                Pass2CompetitionDecoys.Write(a, ascending, TestStamps.Any);
+                Pass2CompetitionDecoys.Write(d, descending, TestStamps.Any);
                 CollectionAssert.AreEqual(File.ReadAllBytes(a), File.ReadAllBytes(d),
                     "the artifact must be a function of its contents, not of insertion order");
 
@@ -4007,7 +4018,7 @@ namespace pwiz.Osprey.Test
                 // base_id and the file would claim a target observation as a decoy best.
                 var target = new Dictionary<uint, (double score, uint entryId)> { { 3u, (0.5, 3u) } };
                 Assert.ThrowsException<InvalidOperationException>(
-                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "t.bin"), target));
+                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "t.bin"), target, TestStamps.Any));
 
                 // A key that does not match the entry_id it files means the map was assembled
                 // rather than serialized - the one error this format cannot survive.
@@ -4016,12 +4027,12 @@ namespace pwiz.Osprey.Test
                     { 3u, (0.5, DECOY_BIT | 4u) }
                 };
                 Assert.ThrowsException<InvalidOperationException>(
-                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "m.bin"), misfiled));
+                    () => Pass2CompetitionDecoys.Write(Path.Combine(dir, "m.bin"), misfiled, TestStamps.Any));
 
                 // Empty is a real answer and round trips as one - distinct from unreadable.
                 string empty = Path.Combine(dir, "empty.bin");
                 Pass2CompetitionDecoys.Write(empty,
-                    new Dictionary<uint, (double score, uint entryId)>());
+                    new Dictionary<uint, (double score, uint entryId)>(), TestStamps.Any);
                 var emptyMap = Pass2CompetitionDecoys.ReadMap(empty);
                 Assert.IsNotNull(emptyMap);
                 Assert.AreEqual(0, emptyMap.Count);
@@ -4194,9 +4205,10 @@ namespace pwiz.Osprey.Test
             accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
             Assert.AreEqual(3, accumulator.Count);
 
-            FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
+            FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
             Assert.AreEqual(
-                FdrExperimentSidecar.HeaderLength + 3 * FdrExperimentSidecar.RecordLength,
+                FdrExperimentSidecar.HeaderLength + 3 * FdrExperimentSidecar.RecordLength +
+                BinarySidecarStamp.Encode(TestStamps.Any).Length,
                 new FileInfo(path).Length);
             Assert.IsTrue(FdrExperimentSidecar.IsCurrentFormat(path, FdrScoresSidecar.Pass.FirstPass));
 
@@ -4248,7 +4260,7 @@ namespace pwiz.Osprey.Test
             var accumulator = new FdrExperimentAccumulator();
             accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0);
             accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0);
-            FdrExperimentSidecar.Write(path, accumulator.Records, pass);
+            FdrExperimentSidecar.Write(path, accumulator.Records, pass, TestStamps.Any);
             Assert.AreEqual(2, Pass2FdrSidecar.LoadExperimentRecordsFrom(path, pass).Count);
 
             // The same file asked for as the OTHER pass. It is present and it is not what the
@@ -4297,10 +4309,10 @@ namespace pwiz.Osprey.Test
             string experiment = Path.Combine(dir, "mix.1st-pass.fdr_experiment.bin");
             FdrScoresSidecar.Write(perFile,
                 new List<FdrEntry> { MakeFdrEntry(1, -1.0, 0.01, 0.02) },
-                FdrScoresSidecar.Pass.FirstPass);
+                FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
             var accumulator = new FdrExperimentAccumulator();
             accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0);
-            FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
+            FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
             Assert.IsFalse(FdrExperimentSidecar.IsCurrentFormat(perFile, FdrScoresSidecar.Pass.FirstPass));
             Assert.IsNull(FdrExperimentSidecar.ReadMap(perFile, FdrScoresSidecar.Pass.FirstPass));
@@ -4330,15 +4342,16 @@ namespace pwiz.Osprey.Test
                 new FdrScoreRecord(3, -2.0, 0.01, 0.02, 31.5),
                 new FdrScoreRecord(77, -1.0, 0.03, 0.04, 42.25),
             };
-            FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass);
-            FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass);
+            FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass, TestStamps.Any);
+            FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass, TestStamps.Any);
             CollectionAssert.AreEqual(File.ReadAllBytes(first), File.ReadAllBytes(second));
 
             // The record is exactly entry_id + score + the two RUN q-values + the apex RT.
             // Every one of those is RUN-scope and per-observation; an experiment-scope column
             // reappearing here would widen it, and that is what this pins.
             Assert.AreEqual(sizeof(uint) + 4 * sizeof(double), FdrScoresSidecar.RecordLength);
-            Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength,
+            Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength +
+                            BinarySidecarStamp.Encode(TestStamps.Any).Length,
                 new FileInfo(first).Length);
 
             var read = new List<FdrScoreRecord>();
@@ -4354,12 +4367,12 @@ namespace pwiz.Osprey.Test
             AssertBitEqual(42.25, read[1].ApexRt);
 
             // WRITE-ONCE. Rewriting a sidecar inside one run is the defect class this whole
-            // change exists to remove: the file no longer matches the validity sidecar that
-            // attests it, and a separate experiment-wide node has only what the per-file node
+            // change exists to remove: the file no longer matches the stamp first written with
+            // it, and a separate experiment-wide node has only what the per-file node
             // left behind. Asserted here rather than trusted to the contract, because the
             // contract WAS stated - in a commit title - and drifted for a sprint regardless.
             Assert.ThrowsException<InvalidOperationException>(
-                () => FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass));
+                () => FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass, TestStamps.Any));
         }
 
         /// <summary>Bit-exact double comparison, so a rounded value cannot pass.</summary>
@@ -4425,7 +4438,7 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
                 FdrScoresSidecar.Write(path,
                     new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 // entry_id=99 is the gap-fill stub (no sidecar record).
                 var entries = new List<FdrEntry>
@@ -4479,7 +4492,7 @@ namespace pwiz.Osprey.Test
                     var written = new List<FdrEntry>(count);
                     for (int i = 0; i < count; i++)
                         written.Add(MakeFdrEntry((uint)i, -i * 0.5, i * 1.0e-6, 0.0));
-                    FdrScoresSidecar.Write(path, written, FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Write(path, written, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                     var loaded = new List<FdrEntry>(count);
                     for (int i = 0; i < count; i++)
@@ -4536,7 +4549,7 @@ namespace pwiz.Osprey.Test
                 // don't contain entry_id=0 — only entry_id=42.
                 FdrScoresSidecar.Write(path,
                     new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var unrelated = new List<FdrEntry> { MakeFdrEntry(42, 0.0, 0.0, 0.0) };
                 Assert.IsFalse(FdrScoresSidecar.TryRead(path, unrelated, FdrScoresSidecar.Pass.FirstPass));
@@ -4569,7 +4582,7 @@ namespace pwiz.Osprey.Test
                 // and overwrite headerCount with ulong.MaxValue.
                 FdrScoresSidecar.Write(path,
                     new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
                 byte[] header = File.ReadAllBytes(path);
                 Array.Resize(ref header, FdrScoresSidecar.HeaderLength);
                 BitConverter.GetBytes(ulong.MaxValue).CopyTo(header, 16);
@@ -4607,7 +4620,7 @@ namespace pwiz.Osprey.Test
                         MakeFdrEntry(0, -3.5, 0.001, 0.02),
                         MakeFdrEntry(1, -2.1, 0.005, 0.04),
                     },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var stubs = new List<FdrEntry>
                 {
@@ -4685,7 +4698,7 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(dir, "round_trip.reconciliation.json");
                 var file = MakeSampleReconciliationFile();
 
-                ReconciliationFile.Save(path, file);
+                ReconciliationFile.Save(path, file, TestStamps.Any);
 
                 if (!string.IsNullOrEmpty(OspreyEnvironment.CrossImplReconciliationOut))
                     File.Copy(path, OspreyEnvironment.CrossImplReconciliationOut, overwrite: true);
@@ -4748,7 +4761,7 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(string.Format(
                         OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
                         path, 99, ReconciliationFile.CurrentFormatVersion, "format_version",
-                        OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)), ex.Message);
+                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN), ex.Message);
                 }
             }
             finally
@@ -4918,7 +4931,7 @@ namespace pwiz.Osprey.Test
                     MakeFdrEntry(102, -3.3, 0.003, 0.08, proteinQvalue: 0.44),
                 };
                 FdrScoresSidecar.Write(sidecarPath, sidecarEntries,
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 // 3. Build a reconciliation.json envelope: one
                 //    UseCwtPeak action on entry 100, one ForcedIntegration
@@ -4964,7 +4977,7 @@ namespace pwiz.Osprey.Test
                         },
                     },
                 };
-                ReconciliationFile.Save(reconPath, reconFile);
+                ReconciliationFile.Save(reconPath, reconFile, TestStamps.Any);
 
                 // 4. Hydrate.
                 var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
@@ -5065,7 +5078,7 @@ namespace pwiz.Osprey.Test
                     new Dictionary<string, string> { { "osprey.version", "1.0.0" } });
                 FdrScoresSidecar.Write(sidecarPath,
                     new List<FdrEntry> { MakeFdrEntry(100, -3.5, 0.001, 0.02) },
-                    FdrScoresSidecar.Pass.FirstPass);
+                    FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 // entry_id 999 is NOT in the parquet/sidecar — drift!
                 var reconFile = new ReconciliationFile
@@ -5086,7 +5099,7 @@ namespace pwiz.Osprey.Test
                     ForcedIntegrationActions = new List<ForcedIntegrationEntry>(),
                     GapFillTargets = new List<GapFillEntry>(),
                 };
-                ReconciliationFile.Save(reconPath, reconFile);
+                ReconciliationFile.Save(reconPath, reconFile, TestStamps.Any);
 
                 try
                 {
@@ -5103,7 +5116,7 @@ namespace pwiz.Osprey.Test
                 {
                     Assert.AreEqual(string.Format(
                         OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
-                        reconPath, 999, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)), ex.Message);
+                        reconPath, 999, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN), ex.Message);
                 }
             }
             finally
@@ -5317,7 +5330,7 @@ namespace pwiz.Osprey.Test
             ParquetScoreCache.WriteScoresParquet(parquetPath, scored,
                 new Dictionary<string, string> { { "osprey.version", "1.0.0" } });
             FdrScoresSidecar.Write(FdrScoresSidecar.Pass1Path(mzmlSynthetic), sidecarEntries,
-                FdrScoresSidecar.Pass.FirstPass);
+                FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
             var reconFile = new ReconciliationFile
             {
@@ -5343,7 +5356,7 @@ namespace pwiz.Osprey.Test
                     ApexRt = 5.07, CandidateIdx = 1, EndRt = 5.40, EntryId = 102u, StartRt = 4.70,
                 });
             }
-            ReconciliationFile.Save(ReconciliationFile.PathForInput(mzmlSynthetic), reconFile);
+            ReconciliationFile.Save(ReconciliationFile.PathForInput(mzmlSynthetic), reconFile, TestStamps.Any);
             return parquetPath;
         }
 
@@ -5576,33 +5589,31 @@ namespace pwiz.Osprey.Test
 
         #endregion
 
-        #region TaskValiditySidecar Tests
-
-        private const string TASK_NAME = PerFileScoringTask.TASK_NAME;
-        private const string TASK_VERSION = "26.6.0";
+        #region ArtifactStamp Tests
 
         /// <summary>
-        /// Write a sidecar with a known validity_key, then confirm
-        /// <see cref="TaskValiditySidecar.IsValid"/> reports true when
-        /// queried with the same key. Baseline round-trip.
+        /// The validity stamp every pipeline artifact embeds in itself (replacing the
+        /// <c>.osprey.task</c> file that used to sit beside it). Covers the serialized form, the
+        /// "may this run reuse it" rule, and that every artifact family round-trips its stamp
+        /// through its own slot - and that a damaged or unstamped artifact reads as "no stamp"
+        /// rather than throwing, because "I cannot tell" has to resolve to recomputing.
         /// </summary>
         [TestMethod]
-        public void TestTaskValiditySidecarRoundTrip()
+        public void TestArtifactStampEmbedding()
         {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_rt_" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "artifact_stamp_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                File.WriteAllText(output, "stub");
-                const string key = "search=abc123;library=def456";
-
-                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
-                    new[] { Path.Combine(dir, "in.mzML"), Path.Combine(dir, "lib.tsv") });
-
-                Assert.IsTrue(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key + "_modified"));
+                // A key carrying every character that could confuse the serialized form or a
+                // JSON / HTML slot: the field separators, quotes, backslashes, control characters.
+                const string key = "search=abc;library=def;path=C:\\proj\\ai;q=\"x\";ctrl=\b\f\n\r\t\u0001";
+                var stamp = ArtifactStamp.ForCurrentBuild(PerFileScoringTask.TASK_NAME, key);
+                AssertStampSerialization(stamp, key);
+                AssertStampCurrency(stamp, key);
+                AssertBinaryStamps(dir, stamp);
+                AssertTextStamps(dir, stamp);
+                AssertParquetAndBlibStamps(dir, stamp);
             }
             finally
             {
@@ -5610,175 +5621,144 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        /// <summary>
-        /// Validity keys containing quotes, backslashes, newlines, and
-        /// other control characters must round-trip exactly through the
-        /// JSON escape/unescape path. A naive writer would emit invalid
-        /// JSON; a naive reader would scramble the key. Either failure
-        /// would silently invalidate every sidecar with a path-derived
-        /// key on Windows (backslashes in paths).
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarJsonEscapes()
+        private static void AssertStampSerialization(ArtifactStamp stamp, string key)
         {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_esc_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
+            var parsed = ArtifactStamp.Parse(stamp.ToString());
+            Assert.IsNotNull(parsed);
+            Assert.AreEqual(stamp.Task, parsed.Task);
+            Assert.AreEqual(stamp.Version, parsed.Version);
+            Assert.AreEqual(key, parsed.Key);
+            foreach (string garbage in new[]
+                     {
+                         null, string.Empty, "not a stamp",
+                         ArtifactStamp.PREFIX + ";task=T;version=V",          // no key field
+                         ArtifactStamp.PREFIX + ";version=V;task=T;key=K",    // fields out of order
+                         ArtifactStamp.PREFIX + ";task=;version=V;key=K",     // empty task
+                         "osprey-validity/2;task=T;version=V;key=K",          // unknown layout
+                     })
             {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                // Mix of every escape branch in TaskValiditySidecar.JsonString:
-                // quote, backslash, \b \f \n \r \t, and a sub-0x20 control
-                // character ("\u0001") that exercises the \u escape branch.
-                const string key = "k=\"v\";path=C:\\proj\\ai;ctrl=\b\f\n\r\t\u0001";
-
-                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
-                    new[] { "path with \"quotes\".mzML", "C:\\path\\with\\slashes.tsv" });
-
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
+                Assert.IsNull(ArtifactStamp.Parse(garbage), garbage);
             }
         }
 
-        /// <summary>
-        /// A missing sidecar must yield <c>IsValid == false</c> without
-        /// throwing. "I can't tell" is the conservative answer; throwing
-        /// would crash the pipeline driver on its first invocation.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarMissingFile()
+        private static void AssertStampCurrency(ArtifactStamp stamp, string key)
         {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_miss_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "never_written.scores.parquet");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, "any-key"));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
+            Assert.IsTrue(stamp.IsCurrent(PerFileScoringTask.TASK_NAME, key));
+            Assert.IsFalse(stamp.IsCurrent(PerFileRescoreTask.TASK_NAME, key));
+            Assert.IsFalse(stamp.IsCurrent(PerFileScoringTask.TASK_NAME, key + "_modified"));
+            // Another build's artifact is never current: a version change invalidates.
+            var otherBuild = new ArtifactStamp(PerFileScoringTask.TASK_NAME, OspreyVersion.Current + ".1", key);
+            Assert.IsFalse(otherBuild.IsCurrent(PerFileScoringTask.TASK_NAME, key));
         }
 
-        /// <summary>
-        /// Malformed sidecar contents (truncated mid-field, missing
-        /// validity_key, raw garbage) must yield
-        /// <c>IsValid == false</c> without throwing. Each shape exercises
-        /// a different reader path: truncated → unterminated string;
-        /// missing field → ExtractStringField returns null; garbage →
-        /// the field-name needle is never found.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarMalformedRejected()
+        private static void AssertBinaryStamps(string dir, ArtifactStamp stamp)
         {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_bad_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                string sidecar = TaskValiditySidecar.PathFor(output, TASK_NAME);
-                const string key = "the-key";
+            var records = new List<FdrScoreRecord> { new FdrScoreRecord(7, 1.5, 0.01, 0.02, 12.5) };
+            string pass1 = Path.Combine(dir, "run.1st-pass.fdr_scores.bin");
+            string pass2 = Path.Combine(dir, "run.2nd-pass.fdr_scores.bin");
+            FdrScoresSidecar.Write(pass1, records, FdrScoresSidecar.Pass.FirstPass, stamp);
+            FdrScoresSidecar.Write(pass2, records, FdrScoresSidecar.Pass.SecondPass, stamp);
+            AssertStampRead(pass1, stamp);
+            AssertStampRead(pass2, stamp);
+            // The records still read at their fixed offsets with the stamp after them.
+            var read = new List<FdrScoreRecord>();
+            Assert.IsTrue(FdrScoresSidecar.ReadRecords(pass1, FdrScoresSidecar.Pass.FirstPass, read.Add));
+            Assert.AreEqual(1, read.Count);
+            Assert.AreEqual(12.5, read[0].ApexRt);
 
-                // Truncated mid-key: writer wrote the validity_key opening
-                // quote and a few chars, then died. Unterminated string
-                // returns null (which IsValid maps to false).
-                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"validity_key\": \"the-");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+            string decoys = Path.Combine(dir, "run.2nd-pass" + Pass2CompetitionDecoys.EXT);
+            Pass2CompetitionDecoys.Write(decoys,
+                new Dictionary<uint, (double score, uint entryId)> { { 7u, (2.5, 0x80000007u) } }, stamp);
+            AssertStampRead(decoys, stamp);
+            Assert.AreEqual(1, Pass2CompetitionDecoys.ReadMap(decoys).Count);
 
-                // Missing validity_key field entirely.
-                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"version\": \"26.5.0\"\n}\n");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+            string experiment = Path.Combine(dir, "out.1st-pass" + FdrExperimentSidecar.EXT);
+            FdrExperimentSidecar.Write(experiment,
+                new Dictionary<uint, FdrExperimentRecord> { { 7u, new FdrExperimentRecord(7, 0.1, 0.2, 0.3, 4.0, 0.5) } },
+                FdrScoresSidecar.Pass.FirstPass, stamp);
+            AssertStampRead(experiment, stamp);
+            Assert.AreEqual(1, FdrExperimentSidecar.ReadMap(experiment, FdrScoresSidecar.Pass.FirstPass).Count);
 
-                // Not-JSON garbage.
-                File.WriteAllText(sidecar, "not json at all");
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+            string retained = Path.Combine(dir, "out.1st-pass" + RetainedBaseIdSidecar.EXT);
+            RetainedBaseIdSidecar.Write(retained, new[] { 3u, 1u, 2u }, stamp);
+            AssertStampRead(retained, stamp);
+            Assert.AreEqual(3, RetainedBaseIdSidecar.Read(retained).Count);
 
-                // Empty file.
-                File.WriteAllText(sidecar, string.Empty);
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
+            // A file cut short inside its stamp is damaged: neither the stamp nor the records
+            // may be trusted, so it reads as not current rather than as a shorter file.
+            byte[] bytes = File.ReadAllBytes(pass1);
+            File.WriteAllBytes(pass1, bytes.Take(bytes.Length - 3).ToArray());
+            Assert.IsNull(ArtifactValidity.ReadStamp(pass1));
+            Assert.IsFalse(FdrScoresSidecar.IsCurrentFormat(pass1, FdrScoresSidecar.Pass.FirstPass));
+            Assert.IsNull(ArtifactValidity.ReadStamp(Path.Combine(dir, "never_written" + FdrScoresSidecar.EXT)));
         }
 
-        /// <summary>
-        /// Two tasks writing sidecars for the same output path must not
-        /// trample each other. Naming includes the task name, so
-        /// PerFileScoring's sidecar and PerFileRescoring's sidecar are
-        /// distinct files on disk. This is the load-bearing property
-        /// that lets PerFileRescore overwrite a parquet in place while
-        /// PerFileScoring's "I produced this" record survives untouched.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarPerTaskNamingCollision()
+        private static void AssertTextStamps(string dir, ArtifactStamp stamp)
         {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_coll_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
+            // JSON: the stamp is the FIRST property, read without parsing the rest of a document
+            // far larger than the head the reader looks at.
+            string reconciliation = Path.Combine(dir, "run" + ReconciliationFile.EXT);
+            ReconciliationFile.Save(reconciliation, new ReconciliationFile
             {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                const string scoringKey = "scoring-key";
-                const string rescoreKey = "rescore-key";
+                FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                FileStems = new List<string> { "run" },
+                FirstPassBaseIds = Enumerable.Range(0, 200000).Select(i => (uint)i).ToArray(),
+            }, stamp);
+            Assert.IsTrue(new FileInfo(reconciliation).Length > 1024 * 1024);
+            AssertStampRead(reconciliation, stamp);
+            Assert.IsNotNull(ReconciliationFile.Load(reconciliation));
 
-                TaskValiditySidecar.Write(output, PerFileScoringTask.TASK_NAME, TASK_VERSION,
-                    scoringKey, new string[0]);
-                TaskValiditySidecar.Write(output, PerFileRescoreTask.TASK_NAME, TASK_VERSION,
-                    rescoreKey, new string[0]);
+            string calibration = Path.Combine(dir, "run" + CalibrationIO.EXT);
+            CalibrationIO.SaveCalibration(new CalibrationParams(), calibration, stamp);
+            AssertStampRead(calibration, stamp);
+            Assert.IsNotNull(CalibrationIO.LoadCalibration(calibration));
 
-                string scoringPath = TaskValiditySidecar.PathFor(output, PerFileScoringTask.TASK_NAME);
-                string rescorePath = TaskValiditySidecar.PathFor(output, PerFileRescoreTask.TASK_NAME);
-                Assert.AreNotEqual(scoringPath, rescorePath);
-                Assert.IsTrue(File.Exists(scoringPath));
-                Assert.IsTrue(File.Exists(rescorePath));
+            // A JSON document whose first property is anything else carries no stamp.
+            string unstamped = Path.Combine(dir, "unstamped.json");
+            File.WriteAllText(unstamped, "{\"format_version\": 3, \"" + ArtifactStamp.JSON_PROPERTY + "\": \"" + stamp + "\"}");
+            Assert.IsNull(ArtifactValidity.ReadStamp(unstamped));
 
-                // Each task's IsValid sees its own key, not the other's.
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, PerFileScoringTask.TASK_NAME, scoringKey));
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, PerFileRescoreTask.TASK_NAME, rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, PerFileScoringTask.TASK_NAME, rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, PerFileRescoreTask.TASK_NAME, scoringKey));
-            }
-            finally
-            {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
-            }
+            // HTML: an opening comment ahead of the DOCTYPE.
+            string html = Path.Combine(dir, "out.model-diagnostics.html");
+            File.WriteAllText(html, stamp.ToHtmlComment() + "\n<!DOCTYPE html><html></html>");
+            AssertStampRead(html, stamp);
+            File.WriteAllText(html, "<!DOCTYPE html><html></html>");
+            Assert.IsNull(ArtifactValidity.ReadStamp(html));
         }
 
-        /// <summary>
-        /// <see cref="TaskValiditySidecar.Delete"/> removes an existing
-        /// sidecar (subsequent IsValid → false) and is a silent no-op
-        /// when the sidecar is absent. The no-op contract matters because
-        /// task Run methods call Delete unconditionally before producing
-        /// outputs.
-        /// </summary>
-        [TestMethod]
-        public void TestTaskValiditySidecarDelete()
+        private static void AssertParquetAndBlibStamps(string dir, ArtifactStamp stamp)
         {
-            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_del_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
+            // One row: an empty entry list writes no parquet at all.
+            var entries = new List<CoelutionScoredEntry>
             {
-                string output = Path.Combine(dir, "out.scores.parquet");
-                const string key = "k";
+                new CoelutionScoredEntry
+                {
+                    EntryId = 1, Sequence = "PEPTIDE", ModifiedSequence = "PEPTIDE", Charge = 2,
+                    FileName = "run.mzML", PeakBounds = new XICPeakBounds(), Features = new CoelutionFeatureSet(),
+                },
+            };
+            string parquet = Path.Combine(dir, "run.scores.parquet");
+            ParquetScoreCache.WriteScoresParquet(parquet, entries, ParquetScoreCache.WithStamp(null, stamp));
+            AssertStampRead(parquet, stamp);
+            string unstampedParquet = Path.Combine(dir, "unstamped.scores.parquet");
+            ParquetScoreCache.WriteScoresParquet(unstampedParquet, entries, null);
+            Assert.IsNull(ArtifactValidity.ReadStamp(unstampedParquet));
 
-                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key, new string[0]);
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-
-                TaskValiditySidecar.Delete(output, TASK_NAME);
-                Assert.IsFalse(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
-
-                // Second Delete on the now-absent sidecar must not throw.
-                TaskValiditySidecar.Delete(output, TASK_NAME);
-            }
-            finally
+            string blib = Path.Combine(dir, "out.blib");
+            using (var writer = new BlibWriter(blib))
             {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
+                writer.AddStamp(stamp);
+                writer.FinalizeDatabase();
             }
+            AssertStampRead(blib, stamp);
+        }
+
+        private static void AssertStampRead(string path, ArtifactStamp expected)
+        {
+            var read = ArtifactValidity.ReadStamp(path);
+            Assert.IsNotNull(read, path);
+            Assert.AreEqual(expected.ToString(), read.ToString(), path);
+            Assert.IsTrue(ArtifactValidity.IsCurrent(path, expected.Task, expected.Key), path);
         }
 
         #endregion

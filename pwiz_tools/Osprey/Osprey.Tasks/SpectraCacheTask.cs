@@ -97,7 +97,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Deliberately empty, so the driver always calls <see cref="Run"/>. The
         /// caches ARE this task's durable output, but reporting them here would have
-        /// the driver skip the task wholesale on a validity sidecar; the per-file
+        /// the driver skip or run the task wholesale; the per-file
         /// cache-hit check inside <see cref="ScoringTaskShared.EnsureSpectraCache"/>
         /// already makes a re-run cheap, and it is per input rather than all-or-
         /// nothing, which is what a 164-file staging sweep interrupted partway
