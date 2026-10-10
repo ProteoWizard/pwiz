@@ -48,20 +48,22 @@ namespace pwiz.Osprey.IO
     /// <c>OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT</c> test hook.
     ///
     /// Format (<see cref="HeaderLength"/>-byte header + N × <see cref="RecordLength"/>-byte
-    /// records, all little-endian):
+    /// records + the validity stamp, all little-endian; see <see cref="BinarySidecarStamp"/>):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 7)
+    ///   version       [8]      = u8 (= 8)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
-    ///   reserved      [24..32] = 8 bytes (zero)
+    ///   stamp_length  [24..28] = u32
+    ///   reserved      [28..32] = 4 bytes (zero)
     ///   body          [32..]   = entry_count * 36 bytes:
     ///                            [0..4]   u32 entry_id
     ///                            [4..12]  f64 svm_score
     ///                            [12..20] f64 run_precursor_qvalue
     ///                            [20..28] f64 run_peptide_qvalue
     ///                            [28..36] f64 apex_rt
+    ///   stamp         [..end]  = stamp_length bytes, the writing task's <see cref="ArtifactStamp"/>
     /// </code>
     /// Records are written pre-compaction at the Stage 5 → Stage 6
     /// boundary: every input entry contributes one record so q-values are
@@ -147,6 +149,10 @@ namespace pwiz.Osprey.IO
     /// file, read sequentially - and deletes the column read, the inferred join
     /// and the assertion that policed it.
     ///
+    /// v7 -> v8 (2026-10-07): appended the writing task's <see cref="ArtifactStamp"/> after
+    /// the records, replacing the <c>.osprey.task</c> file that used to sit beside every
+    /// sidecar. The records keep their offsets; only the exact-length check now adds the stamp.
+    ///
     /// No conversion path is written: pre-first-public-release, an older sidecar
     /// simply fails <see cref="IsCurrentFormat"/> and is recomputed, which
     /// costs a re-run rather than risking a misread record. A version bump is
@@ -170,8 +176,8 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 7;
-        public const int HeaderLength = 32;
+        public const byte FormatVersion = 8;
+        public const int HeaderLength = BinarySidecarStamp.HEADER_LENGTH;
         public const int RecordLength = 36;
 
         /// <summary>
@@ -196,25 +202,22 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Compute <c>HeaderLength + headerCount * RecordLength</c> with
-        /// overflow detection. Returns false if the result would not fit
-        /// in <see cref="int"/> (a corrupt or malicious sidecar with a
-        /// huge headerCount would otherwise wrap silently and let the
-        /// size check pass spuriously, leading to out-of-bounds reads in
-        /// the record loop).
+        /// The record count and exact file length <paramref name="header"/> declares; false on a
+        /// count that would overflow (a corrupt or malicious sidecar would otherwise wrap and
+        /// pass the size check, leading to out-of-bounds reads in the record loop).
         /// </summary>
-        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
+        private static bool TryComputeExpectedLen(byte[] header, out int recordCount, out long expectedLen)
         {
-            try
-            {
-                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
-                return true;
-            }
-            catch (OverflowException)
-            {
-                expectedLen = 0;
-                return false;
-            }
+            return BinarySidecarStamp.TryComputeExpectedLength(header, RecordLength, out recordCount, out expectedLen);
+        }
+
+        /// <summary>
+        /// The validity stamp of the sidecar at <paramref name="path"/>, or null when it is
+        /// missing or not a current-format <paramref name="expectedPass"/> sidecar.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path, Pass expectedPass)
+        {
+            return IsCurrentFormat(path, expectedPass) ? BinarySidecarStamp.TryRead(path, RecordLength) : null;
         }
 
         /// <summary>
@@ -270,8 +273,7 @@ namespace pwiz.Osprey.IO
                 // ReadScalars throws on, so the caller that added this gate to refuse BEFORE
                 // mutating any survivor would still have thrown mid-stream with the pool half
                 // written. A gate that admits what the reader rejects is not a gate.
-                ulong headerCount = BitConverter.ToUInt64(header, 16);
-                return TryComputeExpectedLen(headerCount, out int expectedLen) && info.Length == expectedLen;
+                return TryComputeExpectedLen(header, out _, out long expectedLen) && info.Length == expectedLen;
             }
             catch (IOException)
             {
@@ -354,12 +356,15 @@ namespace pwiz.Osprey.IO
                 if (len < HeaderLength)
                     throw new IOException(string.Format(
                         OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_, len, path));
+                var header = new byte[HeaderLength];
+                if (!ReadFully(fs, header, HeaderLength))
+                    throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___, path));
                 // Reject a payload that is not a whole number of records instead of flooring.
                 // Flooring silently drops a trailing partial record, so a truncated sidecar
                 // returns fewer scalars than it has entries and reads as a short file rather
-                // than a corrupt one.
-                long payload = len - HeaderLength;
-                if (payload % RecordLength != 0)
+                // than a corrupt one. The validity stamp after the records is not payload.
+                long payload = len - HeaderLength - BinarySidecarStamp.ReadLength(header);
+                if (payload < 0 || payload % RecordLength != 0)
                 {
                     throw new IOException(string.Format(
                         OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_,
@@ -368,9 +373,6 @@ namespace pwiz.Osprey.IO
                 int n = (int)(payload / RecordLength);
                 entryIds = new uint[n];
                 scores = new double[n];
-                var header = new byte[HeaderLength];
-                if (!ReadFully(fs, header, HeaderLength))
-                    throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___, path));
                 for (int i = 0; i < Magic.Length; i++)
                 {
                     if (header[i] != Magic[i])
@@ -422,12 +424,12 @@ namespace pwiz.Osprey.IO
         /// distinguishes first- vs second-pass outputs at the Percolator
         /// level.
         /// </summary>
-        public static void Write(string path, IReadOnlyList<FdrEntry> entries, Pass pass)
+        public static void Write(string path, IReadOnlyList<FdrEntry> entries, Pass pass, ArtifactStamp stamp)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (entries == null) throw new ArgumentNullException(nameof(entries));
 
-            WriteInternal(path, entries.Count, pass, bw =>
+            WriteInternal(path, entries.Count, pass, stamp, bw =>
             {
                 foreach (var e in entries)
                 {
@@ -439,7 +441,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Projection-buffer counterpart of
-        /// <see cref="Write(string, IReadOnlyList{FdrEntry}, Pass)"/> (issue #4355
+        /// <see cref="Write(string, IReadOnlyList{FdrEntry}, Pass, ArtifactStamp)"/> (issue #4355
         /// struct-shrink S0): write the per-file sidecar from pre-assembled
         /// <see cref="FdrScoreRecord"/>s. Because the lean <c>FdrProjection</c> no longer
         /// carries the q-value outputs, the projection sidecar writers assemble each
@@ -451,12 +453,12 @@ namespace pwiz.Osprey.IO
         /// single-sourced with the FdrEntry overload via
         /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
         /// </summary>
-        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass)
+        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass, ArtifactStamp stamp)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (records == null) throw new ArgumentNullException(nameof(records));
 
-            WriteInternal(path, records.Count, pass, bw =>
+            WriteInternal(path, records.Count, pass, stamp, bw =>
             {
                 foreach (var r in records)
                 {
@@ -505,11 +507,13 @@ namespace pwiz.Osprey.IO
         /// sibling temp file and promote it to the destination on Commit; on
         /// exception the FileSaver disposes and deletes the temp without touching
         /// the destination. The FileStream is disposed before Commit so the file is
-        /// unlocked when File.Move runs.
+        /// unlocked when File.Move runs. <paramref name="stamp"/> is written after the body,
+        /// inside the same commit, so the file and its validity record land together.
         /// </summary>
         private static void WriteInternal(
-            string path, int entryCount, Pass pass, Action<BinaryWriter> writeBody)
+            string path, int entryCount, Pass pass, ArtifactStamp stamp, Action<BinaryWriter> writeBody)
         {
+            byte[] stampBytes = BinarySidecarStamp.Encode(stamp);
             AssertNotWrittenAlready(path);
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
@@ -517,7 +521,9 @@ namespace pwiz.Osprey.IO
 
             using (var saver = new FileSaver(path))
             {
-                using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
+                // 1 MB buffer: the body is millions of small records, and the default 4 KB buffer
+                // made a WriteFile call per 4 KB that left first-pass lanes blocked ~19 s per file.
+                using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 20))
                 using (var bw = new BinaryWriter(fs))
                 {
                     // Header
@@ -526,9 +532,10 @@ namespace pwiz.Osprey.IO
                     bw.Write((byte)pass);                             // [9]
                     bw.Write(new byte[6]);                            // [10..16] reserved
                     bw.Write((ulong)entryCount);                      // [16..24]
-                    bw.Write(new byte[8]);                            // [24..32] reserved
+                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes);  // [24..32]
 
                     writeBody(bw);
+                    bw.Write(stampBytes);
                 }
                 saver.Commit();
             }
@@ -551,7 +558,7 @@ namespace pwiz.Osprey.IO
         /// drifted for a whole sprint before anyone looked (issue #4486).</para>
         ///
         /// <para>Hard failure, not a warning: a file rewritten after it was stamped no longer
-        /// matches what its validity sidecar attests, and a consumer cannot tell. It fires on
+        /// matches what the stamp written with it attests, and a consumer cannot tell. It fires on
         /// every route, including straight-through, which is what makes it stronger than the
         /// harness check on the HPC legs - those only see cross-TASK modification, and this
         /// catches a task rewriting its own output too.</para>
@@ -573,8 +580,8 @@ namespace pwiz.Osprey.IO
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
                 @"FDR sidecar '{0}' was written twice in one run. These files are write-once: " +
                 @"whatever is computed for them must be complete when they are first written, " +
-                @"because a later rewrite no longer matches the validity sidecar that attests " +
-                @"them and a separate experiment-wide node has only what the per-file node left. " +
+                @"because a later rewrite no longer matches the stamp written with them " +
+                @"and a separate experiment-wide node has only what the per-file node left. " +
                 @"An experiment-scope value that is not knowable yet belongs in the experiment " +
                 @"sidecar, not in a second pass over this one. See issue #4486.", key));
         }
@@ -845,20 +852,18 @@ namespace pwiz.Osprey.IO
                     if (header[9] != (byte)expectedPass)
                         return false;
                     // bytes 10..16 reserved, ignored
-                    ulong headerCount = BitConverter.ToUInt64(header, 16);
                     // Reject sidecars whose declared count exceeds physical
-                    // record capacity. (headerCount can validly be < the caller's
+                    // record capacity. (The count can validly be < the caller's
                     // entry count - see the remarks on the callers for the
                     // pre-gap-fill / post-compaction cases.) Use checked
                     // arithmetic so a corrupt or malicious sidecar with a huge
-                    // headerCount is rejected loudly instead of wrapping int
+                    // count is rejected loudly instead of wrapping int
                     // silently.
-                    if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                    if (!TryComputeExpectedLen(header, out int remaining, out long expectedLen))
                         return false;
                     if (len != expectedLen)
                         return false;
                     var chunk = new byte[RECORDS_PER_CHUNK * RecordLength];
-                    int remaining = (int)headerCount;
                     while (remaining > 0)
                     {
                         int take = Math.Min(RECORDS_PER_CHUNK, remaining);
@@ -956,8 +961,7 @@ namespace pwiz.Osprey.IO
                         return false;
                     if (header[9] != (byte)expectedPass)
                         return false;
-                    ulong headerCount = BitConverter.ToUInt64(header, 16);
-                    if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                    if (!TryComputeExpectedLen(header, out int remaining, out long expectedLen))
                         return false;
                     if (src.Length != expectedLen)
                         return false;
@@ -966,7 +970,6 @@ namespace pwiz.Osprey.IO
                     // per 36-byte record was most of what this reader cost, and it now serves
                     // every per-file consumer of the first pass.
                     var chunk = new byte[RECORDS_PER_CHUNK * RecordLength];
-                    int remaining = (int)headerCount;
                     while (remaining > 0)
                     {
                         int take = Math.Min(RECORDS_PER_CHUNK, remaining);

@@ -247,7 +247,7 @@ namespace pwiz.Osprey
             OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true) { DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText } };
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
-        // --task plus the per-run validity sidecars, and two seams answering one question is
+        // --task plus each artifact's embedded validity stamp, and two seams answering one question is
         // what let --task ModelDiagnostics join the pipeline and demand state a diagnostics
         // fold never publishes. Every task now takes -i and derives its parquets from the
         // input stem, which is the direction every other sidecar already derives in.
