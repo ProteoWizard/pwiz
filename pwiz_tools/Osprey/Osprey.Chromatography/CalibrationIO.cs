@@ -41,12 +41,14 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         /// <param name="calibration">Calibration parameters to save.</param>
         /// <param name="path">Path to output JSON file.</param>
-        public static void SaveCalibration(CalibrationParams calibration, string path)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static void SaveCalibration(CalibrationParams calibration, string path, ArtifactStamp stamp)
         {
             if (calibration == null)
                 throw new ArgumentNullException(nameof(calibration));
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException(@"path must not be null or empty", nameof(path));
+            calibration.OspreyValidity = stamp?.ToString() ?? throw new ArgumentNullException(nameof(stamp));
 
             string json = JsonConvert.SerializeObject(calibration, Formatting.Indented);
             using (var saver = new FileSaver(path))

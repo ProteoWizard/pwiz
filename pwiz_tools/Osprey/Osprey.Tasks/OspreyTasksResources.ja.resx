@@ -1073,10 +1073,6 @@
     <value>{1:N0}個のプリカーサー候補の実験レベルFDR結果を{0}に書き込みました</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>{0}による{1}の完了を記録できませんでした：{2}。再開時にはこのステップがやり直されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_" xml:space="preserve">
     <value>「{0}」の第2パス中間ファイルの書き込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
@@ -1339,10 +1335,6 @@
   </data>
   <data name="PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_" xml:space="preserve">
     <value>{0:N0}個のターゲットは新しいピーク境界内にシグナルがなかったため、スコアがリセットされました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>{0}による{1}の完了を記録できませんでした：{2}。再開時にはこのステップがやり直されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">

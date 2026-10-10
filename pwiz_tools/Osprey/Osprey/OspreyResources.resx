@@ -127,9 +127,6 @@
   <data name="AnalysisPipeline_Run_Pipeline_failed___0_" xml:space="preserve">
     <value>Pipeline failed: {0}</value>
   </data>
-  <data name="AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>Failed to record that task {0} completed {1}: {2}. A resume will redo this step.</value>
-  </data>
   <data name="OspreyArgUsageProvider_AppliesToHeader_Applies_To" xml:space="preserve">
     <value>Applies To</value>
   </data>
@@ -294,6 +291,9 @@
   </data>
   <data name="Program_RunModelDiagnosticsTask__0___the_saved_model_diagnostics_data_for_this_analysis_could_not_be_read__so_the_report_" xml:space="preserve">
     <value>{0}: the saved model diagnostics data for this analysis could not be read, so the report was not built.</value>
+  </data>
+  <data name="Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_this_build_is__2___so_building_the_missing_" xml:space="preserve">
+    <value>{0}: this analysis was written by Osprey {1} and this build is {2}, so building the missing part of the report would re-run the analysis. Set {3}={1} to build it from the analysis as written.</value>
   </data>
   <data name="Program_RunModelDiagnosticsTask__0___there_is_no_completed_first_pass_to_describe__no_first_pass_intermediate_file_for_" xml:space="preserve">
     <value>{0}: there is no completed first pass to describe (no first-pass intermediate file for the whole experiment beside the output). Run the analysis at least as far as {1} first.</value>

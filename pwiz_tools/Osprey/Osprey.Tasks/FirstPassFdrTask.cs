@@ -280,15 +280,13 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(experimentPath))
                 yield return experimentPath;
 
-            // The analysis-wide retained base_id summary is deliberately NOT declared here,
-            // unlike its experiment-sidecar sibling above. Declaring it would oblige
-            // WriteRetainedBaseIdSummary to stamp it too, and until it has been stamped once,
-            // OnlyDiagnosticsProductOutstanding reads every completed analysis on disk as owing
-            // a first pass - so `--task ModelDiagnostics` on a finished 446-run cohort would
-            // re-run Stage 1-5 for hours instead of folding the report in seconds, which is the
-            // exact cost that arm exists to avoid. The absence is disclosed instead: Rehydrate
-            // warns and takes the all-runs bundle, the route master took. See the note on
-            // RetainedBaseIdSidecar.FormatVersion for what a version bump owes.
+            // The analysis-wide retained base_id summary, which PerFileRescoring reads. Declared
+            // so a summary from another build or other settings is rewritten rather than read;
+            // conditional on the output blib exactly as WriteRetainedBaseIdSummary is.
+            string retainedPath = RetainedBaseIdSidecar.PathFor(
+                ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config));
+            if (!string.IsNullOrEmpty(retainedPath))
+                yield return retainedPath;
 
             // The pass-1 diagnostics product, when --model-diagnostics is on. Declaring it is
             // what puts the report inside the resume driver's forward scan instead of beside
@@ -419,13 +417,11 @@ namespace pwiz.Osprey.Tasks
         /// Move the harness run's report off the DECLARED output path, to a sibling nothing
         /// declares or reads.
         ///
-        /// <para>Withholding the validity key is not enough on its own, and the first harness run
-        /// proved it: <c>AnalysisPipeline.WriteTaskSidecars</c> stamps every declared output that
-        /// EXISTS once the task returns, so a nine-minute measurement left a bed carrying a
-        /// full-looking stamp over a report with one panel in it. That same method skips an
-        /// output a task did not write - "A task may not have written every declared output ...
-        /// Skip those rather than failing" - so leaving the path EMPTY is the framework's own way
-        /// of saying "nothing durable here", and the next real run rebuilds it.</para>
+        /// <para>Withholding the validity key leaves the report unstamped, so it is never taken as
+        /// current. The move was first forced by a driver re-stamp of every declared output that
+        /// EXISTED once the task returned, which left a one-panel report carrying a full-looking
+        /// stamp; that re-stamp no longer exists. Leaving the path EMPTY still says "nothing
+        /// durable here", and the next real run rebuilds it.</para>
         /// </summary>
         private static void MoveHarnessProductAside(PipelineContext ctx, OspreyConfig config)
         {
@@ -440,13 +436,13 @@ namespace pwiz.Osprey.Tasks
                 File.Move(declared, aside);
                 ctx.LogInfo(string.Format(
                     @"{0}: harness report moved to {1}. The declared product " +
-                    @"path is left EMPTY on purpose, so nothing stamps or adopts it.",
+                    @"path is left EMPTY on purpose, so nothing adopts it.",
                     OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME), aside));
             }
             catch (Exception ex)
             {
                 // Loud, because the failure mode is the one this method exists to prevent: a
-                // partial report sitting at the declared path, about to be stamped as if it
+                // partial report sitting at the declared path, about to be adopted as if it
                 // described the cohort.
                 ctx.LogWarning(string.Format(
                     @"{0}: could not move the harness report off the declared " +
@@ -457,8 +453,12 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// True when the pass-1 diagnostics product is the single declared output this task
-        /// still owes: it is absent, and every other declared output exists with a current
-        /// validity stamp. The condition Run's fold arm turns on.
+        /// still owes: it is absent or not current, and every other declared output exists with
+        /// a current validity stamp. The condition Run's fold arm turns on.
+        ///
+        /// <para>"Not current" and not just "absent": a stale product left by another arm or
+        /// build made this decline, the gate route that FirstPassFDR then takes skips the
+        /// diagnostics, and nothing ever rebuilt it - every invocation re-ran the task.</para>
         ///
         /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
         /// output is covered without anyone remembering to add it here - the failure direction
@@ -468,9 +468,9 @@ namespace pwiz.Osprey.Tasks
         private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
         {
             string diagnosticsPath = ModelDiagnosticsReport.Pass1SidecarPath(ctx.Config);
-            if (string.IsNullOrEmpty(diagnosticsPath) || File.Exists(diagnosticsPath))
-                return false;
             string validityKey = ValidityKey(ctx);
+            if (string.IsNullOrEmpty(diagnosticsPath) || PerFileResumeDriver.IsCurrent(diagnosticsPath, Name, validityKey))
+                return false;
             var outputs = Outputs(ctx).ToList();
             foreach (string output in outputs)
             {
@@ -501,7 +501,7 @@ namespace pwiz.Osprey.Tasks
             // OSPREY_EXPERIMENT_AGG changes this task's OWN output (the experiment-wide precursor
             // and peptide q maps), so it has to invalidate the cache. Without it, re-running an A/B
             // arm in an output directory that already holds the other arm's results makes
-            // TaskValiditySidecar.IsValid return true, the driver skips Run entirely - taking the
+            // the outputs' embedded stamps read as current, the driver skips Run entirely - taking the
             // unrecognized-value warning with it, since that lives inside Run - and the previous
             // mode's q is silently reused and recorded as the new arm's measurement. The flag is
             // read from a process-wide static rather than the config, which is why it is not
@@ -570,9 +570,9 @@ namespace pwiz.Osprey.Tasks
             // pass at startup and be refused here - which is the point of checking twice, not a
             // drift to be eliminated.
             //
-            // This MUST stay above the sidecar deletion below. Deleting first meant an argument
-            // error destroyed the Stage-5 validity sidecars of a run that had computed no FDR at
-            // all, so the operator fixed the variable and paid for a full recompute - hours at 82
+            // This MUST stay above every writer below. When a marker deletion stood there, an
+            // argument error destroyed the Stage-5 validity records of a run that had computed no
+            // FDR at all, so the operator fixed the variable and paid for a full recompute - hours at 82
             // files. The damage concentrated exactly on the sweep workflow, because the arm is part
             // of ValidityKey, so a warm re-run into a directory holding a different arm always
             // takes this path. Nothing above this point writes or removes any output.
@@ -590,13 +590,11 @@ namespace pwiz.Osprey.Tasks
             // task had already finished - the only thing a per-file resume can read - so a run
             // interrupted at file 300 of 446 came back and re-scored all 446.
             //
-            // Staleness is handled where it can be handled correctly: each writer clears its own
-            // marker immediately before its own write and stamps it immediately after
-            // (FlushPartialSidecar, WriteFdrScoresSidecars, WriteExperimentSidecar,
-            // WriteReconciliationFiles). A marker therefore never outlives the file it vouches
-            // for, and one that survives a crash vouches for a file that really is complete.
-            //
-            // SecondPassFdrTask still has the blanket form and wants the same treatment.
+            // Staleness is handled where it can be handled correctly: each writer embeds its
+            // stamp in the same FileSaver commit as its content (FlushPartialSidecar,
+            // WriteFdrScoresSidecars, WriteExperimentSidecar, WriteReconciliationFile). A stamp
+            // therefore never outlives the content it vouches for, and a stale file is simply
+            // overwritten.
 
             // The diagnostics product is the ONLY outstanding output: every computational
             // artifact this task produces is already on disk and key-current, and the driver
@@ -608,8 +606,8 @@ namespace pwiz.Osprey.Tasks
             //
             // Placed ABOVE every writer below, because "runs the task" must mean "produces the
             // one missing output" and not "redoes the search". Getting this wrong is expensive
-            // and SILENT: a FirstPassFDR that genuinely re-ran would clear the stamps of outputs
-            // that are already correct and spend 4h46m on a 446-run cohort to produce a report -
+            // and SILENT: a FirstPassFDR that genuinely re-ran would rewrite outputs that are
+            // already correct and spend 4h46m on a 446-run cohort to produce a report -
             // and it would produce the RIGHT report, so no gate would ever report the cost.
             if (WillOnlyFoldDiagnostics(ctx))
             {
@@ -968,10 +966,8 @@ namespace pwiz.Osprey.Tasks
             //     the overlay builds the bundle from those without the summary. That arm
             //     completes, at O(files x entries), and it is the one to disclose.
             //
-            // No remedy is offered for the missing summary in either case that this task's own
-            // resume cannot deliver: FirstPassFDR declares the file in neither Outputs nor
-            // ValidityKey (see RetainedBaseIdSidecar.FormatVersion), so "re-run FirstPassFDR"
-            // over a complete analysis reports its outputs valid and writes nothing.
+            // The summary is a declared output of this task, so a missing one makes the task
+            // not current and the next run rebuilds it.
 
             // The bundle to adopt. In worker mode the upstream PerFileScoring
             // task hydrated it from sibling sidecars and published it. On a
@@ -1245,7 +1241,7 @@ namespace pwiz.Osprey.Tasks
                 // GuardResidentPool admits only when OSPREY_ALLOW_UNFIXED_RESIDENT names the
                 // token. With the non-Percolator FDR methods gone (#4543), only the developer
                 // A/B oracle OSPREY_FDR_PROJECTION=0 holds the resident pool. A fresh first pass
-                // (Run, not Rehydrate) never comes here, so deleting the FirstPassFDR task files
+                // (Run, not Rehydrate) never comes here, so deleting FirstPassFDR's outputs
                 // is a remedy that works.
                 ctx.LogError(string.Format(
                     @"The per-run rescore arm was reached with {0:N0} first-pass stubs still " +
@@ -2320,7 +2316,7 @@ namespace pwiz.Osprey.Tasks
             // leave behind the analysis-wide summaries --task PerFileRescoring then reads, and a
             // summary written only on the straight-through path would be missing in the one
             // configuration that exists to consume it.
-            if (!WriteRetainedBaseIdSummary(retainedBaseIds, perFileParquetPaths, config, ctx))
+            if (!WriteRetainedBaseIdSummary(retainedBaseIds, perFileParquetPaths, config, OutputStamp(ctx), ctx))
                 return false;
 
             if (config.StopAfterStage5)
@@ -2398,11 +2394,10 @@ namespace pwiz.Osprey.Tasks
         {
             int failures = 0;
             var experiment = new FdrExperimentAccumulator();
-            // Stamped per file as each sidecar lands, NOT left to the driver's post-Run pass.
-            // The driver stamps every declared output only after Run returns, so a task that
-            // writes 446 durable artifacts and then dies in a later step leaves all 446
-            // unmarked and the next invocation redoes work that is already complete and
-            // correct on disk. A 446-file run lost 3h45m of streaming ingest, Percolator and
+            // Stamped per file as each sidecar lands, in the same commit. When the driver
+            // stamped declared outputs only after Run returned, a task that wrote 446 durable
+            // artifacts and then died in a later step left all 446 unmarked, and the next
+            // invocation redid work that was complete and correct on disk. A 446-file run lost 3h45m of streaming ingest, Percolator and
             // protein FDR that way on 2026-09-01: it wrote every one of these sidecars at
             // 07:09 and was killed at 08:41 in the survivor reload that follows.
             //
@@ -2410,7 +2405,7 @@ namespace pwiz.Osprey.Tasks
             // mutated (#4621), so a file that exists is a file that is finished - there is no
             // partially-updated state for a marker to vouch for wrongly. That immutability is
             // the precondition; without it "present" would not imply "complete".
-            string validityKey = ValidityKey(ctx);
+            var stamp = OutputStamp(ctx);
             foreach (var kvp in perFileEntries)
             {
                 string fileName = kvp.Key;
@@ -2429,17 +2424,9 @@ namespace pwiz.Osprey.Tasks
                         e.ExperimentAggregateScore, e.Pep);
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
-                // Clear first so a marker from an earlier invocation cannot outlive the file it
-                // vouches for if this write throws halfway.
-                PerFileResumeDriver.ClearStale(fdrPath, Name);
                 try
                 {
-                    FdrScoresSidecar.Write(fdrPath, kvp.Value, FdrScoresSidecar.Pass.FirstPass);
-                    string parquetPath;
-                    perFileParquetPaths.TryGetValue(fileName, out parquetPath);
-                    PerFileResumeDriver.Stamp(fdrPath, Name, OspreyVersion.Current, validityKey,
-                        parquetPath == null ? Array.Empty<string>() : new[] { parquetPath },
-                        ctx.LogWarning);
+                    FdrScoresSidecar.Write(fdrPath, kvp.Value, FdrScoresSidecar.Pass.FirstPass, stamp);
                 }
                 catch (Exception ex)
                 {
@@ -2462,9 +2449,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         /// <returns>1 if the write failed or the analysis has no output blib to name it
         /// after, 0 on success.</returns>
-        // Not static: it stamps its own validity marker, which needs the task's Name and
-        // ValidityKey. This file is a declared Output, so leaving it unstamped would hold the
-        // whole task un-resumable no matter how many per-file sidecars were marked.
+        // Not static: it embeds this task's validity stamp, which needs the task's Name and
+        // ValidityKey. This file is a declared Output, so an unstamped one would hold the
+        // whole task un-resumable no matter how many per-file sidecars were current.
         private int WriteExperimentSidecar(FdrExperimentAccumulator experiment,
             FdrScoresSidecar.Pass pass, OspreyConfig config, PipelineContext ctx)
         {
@@ -2477,15 +2464,12 @@ namespace pwiz.Osprey.Tasks
                         LibrarySource.EXT_BLIB));
                 return 1;
             }
-            PerFileResumeDriver.ClearStale(path, Name);
             try
             {
-                FdrExperimentSidecar.Write(path, experiment.Records, pass);
+                FdrExperimentSidecar.Write(path, experiment.Records, pass, OutputStamp(ctx));
                 ctx.LogVerbose(string.Format(
                     OspreyTasksResources.FirstPassFdrTask_WriteExperimentSidecar_Wrote_experiment_level_FDR_results_for__1__precursor_candidates_to__0_,
                     path, experiment.Count));
-                PerFileResumeDriver.Stamp(path, Name, OspreyVersion.Current, ValidityKey(ctx),
-                    Array.Empty<string>(), ctx.LogWarning);
                 return 0;
             }
             catch (Exception ex)
@@ -2588,10 +2572,9 @@ namespace pwiz.Osprey.Tasks
                 filePlan.GapFill ?? Array.Empty<GapFillTarget>(),
                 filePlan.RefinedCalibration,
                 state.SearchHash, state.LibraryHash, state.JoinFileStems, filePlan.GlobalBaseIds);
-            PerFileResumeDriver.ClearStale(reconPath, Name);
             try
             {
-                ReconciliationFile.Save(reconPath, reconFile);
+                ReconciliationFile.Save(reconPath, reconFile, OutputStamp(ctx));
                 // Skyline's peak-boundary-imputation vocabulary: use_cwt re-picks a peak, forced
                 // integration imputes its boundaries, and a gap-fill target is a missing peak.
                 // Only when planning ran: without a cross-run consensus (a single file) every
@@ -2605,10 +2588,6 @@ namespace pwiz.Osprey.Tasks
                         reconFile.ForcedIntegrationActions.Count,
                         reconFile.GapFillTargets.Count));
                 }
-                // The third declared Output kind. All three must be stamped as they land or
-                // the task stays un-resumable on whichever one was missed.
-                PerFileResumeDriver.Stamp(reconPath, Name, OspreyVersion.Current,
-                    ValidityKey(ctx), Array.Empty<string>(), ctx.LogWarning);
             }
             catch (Exception ex)
             {
@@ -2678,6 +2657,7 @@ namespace pwiz.Osprey.Tasks
             HashSet<uint> retainedBaseIds,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
+            ArtifactStamp stamp,
             PipelineContext ctx)
         {
             string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
@@ -2686,7 +2666,7 @@ namespace pwiz.Osprey.Tasks
                 return true;
             try
             {
-                RetainedBaseIdSidecar.Write(path, retainedBaseIds);
+                RetainedBaseIdSidecar.Write(path, retainedBaseIds, stamp);
             }
             catch (Exception ex)
             {
@@ -3126,20 +3106,18 @@ namespace pwiz.Osprey.Tasks
                 return;
             // Sorted and serialized ONCE. The copies are byte-identical, and at 446 files a
             // ~0.9 M-id stratum re-rendered per file is several GB of writes for nothing.
-            string stratumJson = FirstPassModelIO.SerializeStratum(_proteinCompactStratum);
+            string stratumJson = FirstPassModelIO.SerializeStratum(_proteinCompactStratum,
+                ArtifactStamp.ForCurrentBuild(Name, validityKey));
             if (stratumJson == null)
                 return;
             int stratumWrites = 0;
             foreach (var kvp in perFileParquetPaths)
             {
                 string path = FirstPassModelIO.StratumPathFor(kvp.Value, kvp.Key);
-                PerFileResumeDriver.ClearStale(path, Name);
                 try
                 {
                     FirstPassModelIO.WriteText(path, stratumJson);
                     stratumWrites++;
-                    PerFileResumeDriver.Stamp(path, Name, OspreyVersion.Current, validityKey,
-                        new[] { kvp.Value }, ctx.LogWarning);
                 }
                 catch (Exception ex)
                 {
@@ -3243,9 +3221,10 @@ namespace pwiz.Osprey.Tasks
             // and the Stage 6 worker read identical bytes; it returns a per-file failure
             // count the sink accumulates (sink.PartialWriteFailures) for the
             // StopAfterStage5 gate. Phase 2 patches [52..60] after protein FDR (below).
-            // Hoisted: the sidecar stamp below runs once per file inside the score pass, and
+            // Hoisted: the sidecar stamp below is written once per file inside the score pass, and
             // recomputing the key per file would hash the search + library identity 446 times.
             string sidecarValidityKey = ValidityKey(ctx);
+            var sidecarStamp = ArtifactStamp.ForCurrentBuild(Name, sidecarValidityKey);
 
             int FlushPartialSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
             {
@@ -3257,27 +3236,16 @@ namespace pwiz.Osprey.Tasks
                     return 1;
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
-                // Cleared BEFORE the write so a marker from an earlier invocation can never
-                // outlive the file it vouches for, and stamped AFTER, so the marker's presence
-                // means this build finished this file. FdrScoresSidecar.Write commits through
-                // FileSaver, i.e. an atomic rename, so the sidecar is absent or complete and
-                // never half-written; the marker adds the one thing existence cannot say, which
-                // is WHICH task and which validity key produced it.
+                // The sidecar carries its own validity stamp - WHICH task, build and key produced
+                // it - in the same atomic FileSaver commit as its records, so it is absent or
+                // complete-and-identified, never one without the other.
                 //
-                // Per file, at write time, on purpose. The driver stamps declared outputs only
-                // after Run returns, and this score pass takes 137 minutes over 446 files - so a
-                // machine lost partway (the Windows-Update case) previously left every finished
-                // sidecar unmarked and unusable, and the restart re-scored all 446. Stamping
-                // here makes recovery proportional to work completed.
-                PerFileResumeDriver.ClearStale(fdrPath, Name);
+                // Per file, at write time, on purpose: this score pass takes 137 minutes over 446
+                // files, so a machine lost partway (the Windows-Update case) must resume
+                // proportional to the files it finished, not to the phase.
                 try
                 {
-                    FdrScoresSidecar.Write(fdrPath, records, FdrScoresSidecar.Pass.FirstPass);
-                    string parquetPath;
-                    perFileParquetPaths.TryGetValue(fileName, out parquetPath);
-                    PerFileResumeDriver.Stamp(fdrPath, Name, OspreyVersion.Current, sidecarValidityKey,
-                        parquetPath == null ? Array.Empty<string>() : new[] { parquetPath },
-                        ctx.LogWarning);
+                    FdrScoresSidecar.Write(fdrPath, records, FdrScoresSidecar.Pass.FirstPass, sidecarStamp);
                 }
                 catch (Exception ex)
                 {
@@ -3305,9 +3273,9 @@ namespace pwiz.Osprey.Tasks
             // entry_id (format v5, issue #4486). Protein FDR fills its protein q below, then
             // the whole thing is written once beside the blib.
             // PER-FILE RESUME GATE. Which files already carry a 1st-pass sidecar stamped with this
-            // task's validity key - this arm and this cohort? Those need no re-scoring: the sidecar
-            // holds their scores and run q-values, and the sink can be fed from it. (The stamp also
-            // records the build that wrote it, but nothing compares that yet - issue #4764.)
+            // task's validity key, by this build - this arm and this cohort? Those need no
+            // re-scoring: the sidecar holds their scores and run q-values, and the sink can be fed
+            // from it.
             //
             // Per FILE rather than per phase on purpose. A phase-level gate still redoes a
             // 99%-complete phase, and this score pass is 137 minutes over 446 files - so a
@@ -3779,6 +3747,13 @@ namespace pwiz.Osprey.Tasks
                 refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model,
                     FirstPassModelIO.EXT_MODEL));
             }
+            else if (modelSidecar.Stamp == null || !modelSidecar.Stamp.IsCurrent(Name, validityKey))
+            {
+                // A model left by an earlier run under another key - this run's own model write
+                // failed - must not be published as this run's first pass.
+                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___0___is_not_up_to_date,
+                    FirstPassModelIO.EXT_MODEL));
+            }
             else
             {
                 bool runUsesTrees = config.FdrClassifier == FdrClassifier.Gbdt;
@@ -3899,7 +3874,8 @@ namespace pwiz.Osprey.Tasks
             string modelJson;
             try
             {
-                modelJson = FirstPassModelIO.Serialize(results, OspreyEnvironment.ExperimentAgg);
+                modelJson = FirstPassModelIO.Serialize(results, OspreyEnvironment.ExperimentAgg,
+                    ArtifactStamp.ForCurrentBuild(Name, validityKey));
             }
             catch (Exception ex)
             {
@@ -3911,12 +3887,10 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in perFileParquetPaths)
             {
                 string path = FirstPassModelIO.PathFor(kvp.Value, kvp.Key);
-                // Cleared before the write and stamped after, so a marker can never outlive the
-                // file it vouches for. WriteText commits through FileSaver, so the artifact itself
-                // is absent or complete; the marker adds which task, build and validity key made
-                // it. Cleared even when Serialize declined, so a declined model leaves no marker
-                // attesting whatever an earlier run wrote there.
-                PerFileResumeDriver.ClearStale(path, Name);
+                // WriteText commits through FileSaver and the JSON carries its own validity stamp
+                // (which task, build and key made it), so the artifact is absent or complete and
+                // identified. A model left by an earlier run is current only if this build wrote
+                // it with this key, so a declined model here cannot be mistaken for it.
                 if (modelJson == null)
                     continue;
                 try
@@ -3924,8 +3898,6 @@ namespace pwiz.Osprey.Tasks
                     FirstPassModelIO.WriteText(path, modelJson);
                     modelWrites++;
                     firstPath = firstPath ?? path;
-                    PerFileResumeDriver.Stamp(path, Name, OspreyVersion.Current, validityKey,
-                        new[] { kvp.Value }, ctx.LogWarning);
                 }
                 catch (Exception ex)
                 {

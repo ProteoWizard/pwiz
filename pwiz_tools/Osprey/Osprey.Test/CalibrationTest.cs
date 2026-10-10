@@ -594,7 +594,7 @@ namespace pwiz.Osprey.Test
                 calibration.Ms1Calibration.Mean = -1.5;
                 calibration.Ms1Calibration.Calibrated = true;
 
-                CalibrationIO.SaveCalibration(calibration, tempPath);
+                CalibrationIO.SaveCalibration(calibration, tempPath, TestStamps.Any);
                 var loaded = CalibrationIO.LoadCalibration(tempPath);
 
                 Assert.IsTrue(loaded.IsCalibrated);

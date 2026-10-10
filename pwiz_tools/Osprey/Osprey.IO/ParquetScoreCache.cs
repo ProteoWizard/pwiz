@@ -2340,6 +2340,43 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The validity stamp in a parquet artifact's footer (<see cref="ArtifactStamp.PARQUET_KEY"/>),
+        /// read from the footer alone. Null when the file is missing, unreadable or unstamped -
+        /// never throws, because "I cannot tell" resolves to recomputing the artifact.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return null;
+            try
+            {
+                return LoadFooterMetadata(path).TryGetValue(ArtifactStamp.PARQUET_KEY, out string text)
+                    ? ArtifactStamp.Parse(text)
+                    : null;
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Footer metadata extended with <paramref name="stamp"/> under
+        /// <see cref="ArtifactStamp.PARQUET_KEY"/> - what a parquet writer passes so the file
+        /// carries its own validity record.
+        /// </summary>
+        public static Dictionary<string, string> WithStamp(Dictionary<string, string> metadata, ArtifactStamp stamp)
+        {
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
+            var result = metadata != null
+                ? new Dictionary<string, string>(metadata)
+                : new Dictionary<string, string>();
+            result[ArtifactStamp.PARQUET_KEY] = stamp.ToString();
+            return result;
+        }
+
+        /// <summary>
         /// Parse a Skyline-scheme "YEAR.ORDINAL.BRANCH.DOY" version string into
         /// its four integer components. Returns false if any component is missing
         /// or non-numeric. Used by <see cref="CheckParquetMetadata"/>.

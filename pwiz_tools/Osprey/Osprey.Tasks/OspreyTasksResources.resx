@@ -445,6 +445,9 @@
   <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___" xml:space="preserve">
     <value>no readable first-pass model file ({0}) was found beside the inputs' {1} files</value>
   </data>
+  <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___0___is_not_up_to_date" xml:space="preserve">
+    <value>the first-pass model file ({0}) is not up to date</value>
+  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">
     <value>the first-pass model file ({0}) holds no model</value>
   </data>
@@ -829,9 +832,6 @@
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_for__1__precursor_candidates_to__0_" xml:space="preserve">
     <value>Wrote experiment-level FDR results for {1:N0} precursor candidates to {0}</value>
   </data>
-  <data name="Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>Failed to record that {0} completed {1}: {2}. A resume will redo this step.</value>
-  </data>
   <data name="Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_" xml:space="preserve">
     <value>Failed to write the second-pass intermediate file for '{0}': {1}</value>
   </data>
@@ -1035,9 +1035,6 @@
   </data>
   <data name="PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_" xml:space="preserve">
     <value>{0:N0} targets had no signal within their new peak boundaries; their scores were reset.</value>
-  </data>
-  <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>Failed to record that {0} completed {1}: {2}. A resume will redo this step.</value>
   </data>
   <data name="PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_" xml:space="preserve">
     <value>Decoys with no fragment distinct from their target: {0:N0} of {1:N0} ({2:P1}), generated from the library {3}. Those targets have no real decoy competition; check that the library has b and y fragment annotations with fragment numbers.</value>

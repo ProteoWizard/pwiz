@@ -231,18 +231,17 @@ function Get-RegressionData {
 
 .DESCRIPTION
     Shared by regression.ps1 (mode 2) and the ai-side cumulative-coverage
-    harness so there is ONE definition of what "resume" invalidates. The
-    patterns key off the task Name values the C# tasks stamp into their
-    validity sidecars: FirstPassFdrTask.Name is "FirstPassFDR" and
-    SecondPassFdrTask.Name is "SecondPassFDR" - the same words as the class
-    names, differing only in the Fdr/FDR casing used for type names.
-    They did NOT always agree: the classes were FirstJoinTask and MergeNodeTask
-    until issue #4535, and a private copy of this function that used those class
-    names matched zero files and silently produced a run that never resumed.
+    harness so there is ONE definition of what "resume" invalidates. Every
+    artifact carries its validity stamp inside itself, so invalidating a task
+    means removing its products: FirstPassFDR's are every '*.1st-pass.*' file
+    (per-run score sidecars, model, stratum, the experiment sidecar and the
+    retained base ids) and every '*.reconciliation.json'; SecondPassFDR's is
+    output.blib. PerFileScoring's and PerFileRescoring's products stay, so
+    those tasks must report cache hits while the two joins re-run.
 
-    Deleting nothing is therefore treated as a hard failure: if the tokens
-    ever drift from the C# Name values again, this throws instead of
-    yielding a green "resume" leg that only re-ran SecondPassFDR.
+    Deleting nothing is treated as a hard failure: if the artifact names ever
+    drift, this throws instead of yielding a green "resume" leg that resumed
+    nothing.
 
 .PARAMETER WorkDir
     The straight-through run directory to invalidate in place.
@@ -251,15 +250,45 @@ function Invoke-ResumeInvalidation {
     param([Parameter(Mandatory=$true)][string]$WorkDir)
 
     $targets = Get-ChildItem -Path $WorkDir -File | Where-Object {
-        $_.Name -like '*.FirstPassFDR.osprey.task' -or
-        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
+        $_.Name -like '*.1st-pass.*' -or $_.Name -like '*.reconciliation.json' -or
+        $_.Name -eq 'output.blib'
     }
     if (-not $targets) {
         throw (("Invoke-ResumeInvalidation matched no files in '{0}'. The resume leg " +
-                "would not have resumed. Expected '*.FirstPassFDR.osprey.task' (FirstPassFdrTask.Name) " +
-                "and 'output.blib' + 'output.blib.SecondPassFDR.osprey.task' (SecondPassFdrTask.Name); " +
-                "check those Name values have not changed.") -f $WorkDir)
+                "would not have resumed. Expected FirstPassFDR's '*.1st-pass.*' and " +
+                "'*.reconciliation.json' products and SecondPassFDR's 'output.blib'; " +
+                "check those artifact names have not changed.") -f $WorkDir)
     }
     $targets | Remove-Item -Force
 }
 
+<#
+.SYNOPSIS
+    Whether the Osprey binary sidecar at -Path (the OSPRY* family: .fdr_scores.bin,
+    .fdr_decoys.bin, ...) was written by -Task, read from the validity stamp the file
+    carries after its records.
+
+.DESCRIPTION
+    The stamp's byte length is the u32 at header bytes [24..28], and the stamp is the
+    file's last that-many bytes: 'osprey-validity/1;task=<Task>;version=...;key=...'.
+    A file too short to hold a header, or with no stamp, is $false.
+#>
+function Test-ProducedBy {
+    param([Parameter(Mandatory=$true)][string]$Path,
+          [Parameter(Mandatory=$true)][string]$Task)
+
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        if ($stream.Length -lt 32) { return $false }
+        $header = New-Object byte[] 32
+        if ($stream.Read($header, 0, 32) -ne 32) { return $false }
+        $stampLength = [BitConverter]::ToUInt32($header, 24)
+        if ($stampLength -eq 0 -or $stampLength -gt ($stream.Length - 32)) { return $false }
+        $stamp = New-Object byte[] $stampLength
+        [void]$stream.Seek(-[long]$stampLength, [System.IO.SeekOrigin]::End)
+        if ($stream.Read($stamp, 0, $stampLength) -ne $stampLength) { return $false }
+        return [System.Text.Encoding]::UTF8.GetString($stamp).StartsWith("osprey-validity/1;task=$Task;")
+    } finally {
+        $stream.Dispose()
+    }
+}

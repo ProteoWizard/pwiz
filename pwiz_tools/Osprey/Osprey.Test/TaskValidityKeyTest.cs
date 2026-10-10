@@ -164,9 +164,8 @@ namespace pwiz.Osprey.Test
         /// - while another run's export, the task key and the task's other outputs do not move.
         /// The q-value sidecar is the second-pass one only when PerFileRescoring wrote it - its
         /// stamp and its decoys file. One SecondPassFDR writes after the export (a run with no
-        /// Stage 6 work, or no readable first-pass model) is not read and must not key it, even
-        /// once the driver has stamped it under PerFileRescoring's name, or the export flips to
-        /// it on a later invocation of the same command.
+        /// Stage 6 work, or no readable first-pass model) is not read and must not key it, or the
+        /// export flips to it on a later invocation of the same command.
         /// </summary>
         private static void AssertTrainingExportKeyFollowsEachRunsInputs()
         {
@@ -205,21 +204,44 @@ namespace pwiz.Osprey.Test
                 }
 
                 string pass2 = FdrScoresSidecar.Pass2Path(runA);
-                File.WriteAllText(pass2, @"SecondPassFDR's");
+                WritePass2Sidecar(pass2, SecondPassFdrTask.TASK_NAME, 1);
                 Assert.AreEqual(current, RunKey(runA), @"a second-pass sidecar PerFileRescoring did not write is not read, so it must not key the export");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out var pass));
                 Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
-                // The driver stamps every declared output that exists after a PerFileRescoring
-                // run, so SecondPassFDR's sidecar can carry a PerFileRescoring stamp it did not
-                // earn. The worker's decoys file is what the driver cannot supply.
-                File.WriteAllText(TaskValiditySidecar.PathFor(pass2, PerFileRescoreTask.TASK_NAME), @"stamp");
-                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring stamp without the worker's decoys must not flip the export to the second pass");
+                // The worker's stamp alone is not enough: the worker also writes the decoys file,
+                // and a sidecar without it is not the worker's complete answer.
+                WritePass2Sidecar(pass2, PerFileRescoreTask.TASK_NAME, 1);
+                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring sidecar without the worker's decoys must not flip the export to the second pass");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass));
-                File.WriteAllText(Pass2CompetitionDecoys.PathFor(runA), @"decoys");
+                // The worker's answer is the pair carrying the stamp of the reconciled parquet
+                // beside it. A pair from a run under another key is not this run's answer.
+                var workerStamp = ArtifactStamp.ForCurrentBuild(PerFileRescoreTask.TASK_NAME, @"key");
+                // One row: an empty entry list writes no parquet at all.
+                ParquetScoreCache.WriteScoresParquet(ParquetScoreCache.GetReconciledScoresPath(runA),
+                    new List<CoelutionScoredEntry>
+                    {
+                        new CoelutionScoredEntry
+                        {
+                            EntryId = 1, Sequence = @"PEPTIDE", ModifiedSequence = @"PEPTIDE", Charge = 2,
+                            FileName = @"a.mzML", PeakBounds = new XICPeakBounds(), Features = new CoelutionFeatureSet(),
+                        },
+                    },
+                    ParquetScoreCache.WithStamp(null, workerStamp));
+                current = RunKey(runA);
+                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
+                    new Dictionary<uint, (double score, uint entryId)>(),
+                    ArtifactStamp.ForCurrentBuild(PerFileRescoreTask.TASK_NAME, @"another-key"));
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"decoys stamped by a run under another key are not this run's worker answer");
+                Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
+                    new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
                 Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
                 Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
                 Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
-                current = AssertRewritesInvalidate(pass2, RunKey(runA), () => RunKey(runA));
+                current = RunKey(runA);
+                WritePass2Sidecar(pass2, PerFileRescoreTask.TASK_NAME, 2);
+                Assert.AreNotEqual(current, RunKey(runA), @"the worker's sidecar rewritten must invalidate the run's export");
+                current = RunKey(runA);
                 File.WriteAllText(FdrScoresSidecar.Pass1Path(runA), @"no longer read");
                 Assert.AreEqual(current, RunKey(runA), @"the first-pass sidecar is not read once the second pass is");
                 Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
@@ -235,6 +257,18 @@ namespace pwiz.Osprey.Test
                 ArtifactPaths.CacheDir = savedCache;
                 Directory.Delete(dir, true);
             }
+        }
+
+        /// <summary>
+        /// A real second-pass sidecar of <paramref name="records"/> records whose embedded stamp
+        /// names <paramref name="producerTask"/> as the task that wrote it.
+        /// </summary>
+        private static void WritePass2Sidecar(string path, string producerTask, int records)
+        {
+            FdrScoresSidecar.BeginRun();
+            FdrScoresSidecar.Write(path,
+                Enumerable.Range(1, records).Select(i => new FdrScoreRecord((uint)i, 0.5, 0.01, 0.01, 10.0)).ToList(),
+                FdrScoresSidecar.Pass.SecondPass, ArtifactStamp.ForCurrentBuild(producerTask, @"key"));
         }
 
         /// <summary>
