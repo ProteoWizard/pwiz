@@ -145,6 +145,12 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             _demux.Initialize(_inner, _pmc);
 
             _indexMapper = new DemuxIndexMapper(_inner, _pmc);
+            _inner.ReleaseIdentities();
+
+            // A block reads about three cycles of spectra, more with DemuxBlockExtra; a smaller
+            // cache decodes each spectrum several times. One extra per cycle for the MS1.
+            int cycles = CACHE_CYCLES + (int)System.Math.Ceiling(System.Math.Max(0, p.DemuxBlockExtra));
+            _inner.EnsureCapacity(cycles * (_pmc.SpectraPerCycle + 1));
 
             // Build the data-processing chain; the "PRISM Demultiplexing" UserParam is what
             // SpectrumWorkerThreads keys on in cpp, and the mzML writer surfaces it.
@@ -349,6 +355,9 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         }
     }
 
+    // Acquisition cycles the spectrum cache holds: the source cycle, one either side, one spare.
+    private const int CACHE_CYCLES = 4;
+
     private readonly record struct DemuxRequestIndex(
         int MsLevel,
         int SpectrumOriginalIndex,
@@ -360,7 +369,7 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         public List<DemuxRequestIndex> IndexMap { get; } = new();
         public List<SpectrumIdentity> SpectrumIdentities { get; } = new();
 
-        public DemuxIndexMapper(ISpectrumList inner, IPrecursorMaskCodec pmc)
+        public DemuxIndexMapper(DemuxSpectrumCache inner, IPrecursorMaskCodec pmc)
         {
             // Find the first / last non-removed demux windows for clamping isolation slices.
             var removed = pmc.DemuxWindowEdgesRemoved;
@@ -373,23 +382,22 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             double lowestMz = pmc.GetIsolationWindow(lowestMzWindow).LowMz;
             double highestMz = pmc.GetIsolationWindow(highestMzWindow).HighMz;
 
+            // The cache's summaries, rather than a second metadata sweep of the run.
             for (int i = 0; i < inner.Count; i++)
-            {
-                var spec = inner.GetSpectrum(i, getBinaryData: false);
-                int msLevel = spec.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
-                PushSpectrum(spec, msLevel, pmc.PrecursorsPerSpectrum, pmc.OverlapsPerCycle, lowestMz, highestMz);
-            }
+                PushSpectrum(inner.GetSummary(i), inner.GetIdentity(i), pmc.PrecursorsPerSpectrum,
+                    pmc.OverlapsPerCycle, lowestMz, highestMz);
         }
 
-        private void PushSpectrum(Spectrum spec, int msLevel, int numPrecursors, int numOverlap,
-            double lowestMz, double highestMz)
+        private void PushSpectrum(DemuxSpectrumCache.SpectrumSummary summary, SpectrumIdentity spec,
+            int numPrecursors, int numOverlap, double lowestMz, double highestMz)
         {
+            int msLevel = summary.MsLevel;
             int spectrumOriginalIndex = spec.Index;
             int numDemuxIndices = numPrecursors * numOverlap;
-            if (msLevel != 2 || spec.Precursors.Count == 0) numDemuxIndices = 1;
+            if (msLevel != 2 || summary.PrecursorCount == 0) numDemuxIndices = 1;
 
-            double isoLowMz = spec.Precursors.Count == 0 ? lowestMz : DemuxHelpers.PrecursorMzLow(spec.Precursors[0]);
-            double isoHighMz = spec.Precursors.Count == 0 ? highestMz : DemuxHelpers.PrecursorMzHigh(spec.Precursors[0]);
+            double isoLowMz = summary.PrecursorCount == 0 ? lowestMz : summary.PrecursorLowMz;
+            double isoHighMz = summary.PrecursorCount == 0 ? highestMz : summary.PrecursorHighMz;
 
             int demuxIndex = isoLowMz < lowestMz ? 1 : 0;
             if (isoHighMz > highestMz) numDemuxIndices--;
