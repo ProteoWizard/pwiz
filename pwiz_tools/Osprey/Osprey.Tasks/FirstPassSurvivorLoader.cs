@@ -173,7 +173,7 @@ namespace pwiz.Osprey.Tasks
                     error = string.Format(
                         OspreyTasksResources.FirstPassSurvivorLoader_Load__0__was_written_by_an_older_Osprey_build_and_cannot_be_matched_to_its__scores_parquet__,
                         parquetPathOverride, ParquetScoreCache.EXT_SCORES,
-                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
+                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
                     return null;
                 }
                 parquetPath = parquetPathOverride;

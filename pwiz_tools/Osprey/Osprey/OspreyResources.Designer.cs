@@ -151,16 +151,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to record that task {0} completed {1}: {2}. A resume will redo this step..
-        /// </summary>
-        public static string AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_ {
-            get {
-                return ResourceManager.GetString("AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1___" +
-                        "_2___A_resume_will_redo_this_step_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Applies To.
         /// </summary>
         public static string OspreyArgUsageProvider_AppliesToHeader_Applies_To {
@@ -959,7 +949,17 @@ namespace pwiz.Osprey {
                         "__no_first_pass_intermediate_file_for_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: this analysis was written by Osprey {1} and this build is {2}, so building the missing part of the report would re-run the analysis. Set {3}={1} to build it from the analysis as written..
+        /// </summary>
+        public static string Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_this_build_is__2___so_building_the_missing_ {
+            get {
+                return ResourceManager.GetString("Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_" +
+                        "this_build_is__2___so_building_the_missing_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0}, {1} and {2} apply only with {3}..
         /// </summary>
