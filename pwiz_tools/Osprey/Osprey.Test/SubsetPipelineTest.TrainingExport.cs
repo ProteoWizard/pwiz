@@ -46,8 +46,6 @@ namespace pwiz.Osprey.Test
         private const string RUN_Q_PASS_FIRST = @"1";
         private const string RUN_Q_PASS_SECOND = @"2";
         private const double EXPORT_MAX_Q = 0.01;
-        // The exception text SecondPassFDR stops with when Stage 6 re-scored nothing (#4729).
-        private const string ISSUE_4729_ERROR = @"No second-pass experiment-scope records were published";
 
         /// <summary>
         /// Stellar: the flag up front, the flag added to a finished analysis, the same command
@@ -199,42 +197,65 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A one-run analysis, which re-scores nothing in Stage 6, so its run never reaches the
-        /// per-run second pass: the export selects on the first-pass run q, says so in its footer
-        /// and a warning, and two more invocations of the same command leave it as it is.
+        /// A one-run analysis, which re-scores nothing in Stage 6 - no multi-charge consensus,
+        /// no cross-run reconciliation, no gap-fill - under both pass-2 modes (#4729, #4665).
         ///
-        /// <para>SecondPassFDR cannot yet finish an analysis that re-scores nothing (#4729), so an
-        /// invocation may fail there, after PerFileRescoring has written the export; that one
-        /// known error is accepted. Once #4729 is fixed every invocation finishes, and the second
-        /// one then leaves SecondPassFDR's second-pass sidecar on disk - which must not move
-        /// the export on the third (the rule TaskValidityKeyTest checks in isolation).</para>
+        /// <para>Such an analysis used to fail in SecondPassFDR ("No second-pass experiment-scope
+        /// records were published"): the run never reached the per-run second pass, because the
+        /// worker answered only the runs it re-scored, and Stage 7 published nothing when nothing
+        /// was re-scored anywhere. Now the worker answers every run, so the run's second pass
+        /// comes from PerFileRescoring like any other: the analysis finishes, the run's
+        /// .2nd-pass.fdr_scores.bin names PerFileRescoring as its producer, and the export
+        /// selects on the second-pass run q. Two more invocations of the same command leave the
+        /// export as it is.</para>
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetTrainingExportSingleRun()
         {
-            string workDir = CreateDir(@"export-single-run");
             string run = RUN_NAMES[0];
             var inputs = DataInputs().Take(1).ToArray();
-            string log = RunSingleRunExport(workDir, inputs);
-            var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_FIRST);
-            StringAssert.Contains(log, string.Format(
-                OspreyTasksResources.TrainingExportWriter_ExportRun__0___selected_by_the_first_pass_run_q_values__this_run_s_second_pass__if_the_analysis_computes_one__comes_from__1__,
-                run, SecondPassFdrTask.TASK_NAME));
-
-            for (int invocation = 2; invocation <= 3; invocation++)
+            foreach (string mode in new[] { OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT, OspreyEnvironment.PASS2_QVALUE_TRANSFER })
             {
-                log = RunSingleRunExport(workDir, inputs);
-                Assert.IsFalse(HasLine(log, ExportLine(run)),
-                    string.Format(@"invocation {0} of the same command wrote the export again", invocation) + Environment.NewLine + log);
-                AssertExportsEqual(hashes, workDir);
+                string workDir = CreateDir(@"export-single-run-" + mode);
+                RunSingleRunExport(workDir, inputs, mode);
+                // The no-work path, asserted rather than assumed: a run Stage 6 re-scored would
+                // reach the worker the ordinary way and test nothing new.
+                Assert.AreEqual(@"0", ParquetScoreCache.LoadFooterMetadata(Path.Combine(workDir,
+                        run + ParquetScoreCache.EXT_SCORES_RECONCILED))[@"osprey.rescored"],
+                    mode + @": Stage 6 re-scored this run, so the no-work path was not taken");
+                string pass2Path = Path.Combine(workDir,
+                    PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
+                Assert.AreEqual(PerFileRescoreTask.TASK_NAME,
+                    FdrScoresSidecar.ReadStamp(pass2Path, FdrScoresSidecar.Pass.SecondPass)?.Task,
+                    mode + @": the run's second-pass sidecar was not written by re-scoring");
+                Assert.IsTrue(BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra") > 0,
+                    mode + @": the one-run analysis reported no precursors");
+                var hashes = AssertExports(workDir, new[] { run }, RUN_Q_PASS_SECOND);
+
+                for (int invocation = 2; invocation <= 3; invocation++)
+                {
+                    string log = RunSingleRunExport(workDir, inputs, mode);
+                    Assert.IsFalse(HasLine(log, ExportLine(run)),
+                        string.Format(@"{0}: invocation {1} of the same command wrote the export again", mode, invocation) +
+                        Environment.NewLine + log);
+                    AssertExportsEqual(hashes, workDir);
+                }
             }
+
+            // The protein-compact directory re-run under the other pass-2 mode, a parameter both
+            // second-pass halves are keyed on, must report what a clean run of that mode does: a
+            // per-run answer left by the first mode must be replaced, never folded (#4729).
+            string rerunDir = Path.Combine(_testDir, @"export-single-run-" + OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT);
+            RunSingleRunExport(rerunDir, inputs, OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+            AssertBlibsEqual(Path.Combine(_testDir, @"export-single-run-" + OspreyEnvironment.PASS2_QVALUE_TRANSFER, BLIB_FILE),
+                Path.Combine(rerunDir, BLIB_FILE));
         }
 
         /// <summary>
-        /// The export command for a one-run analysis: PerFileRescoring must finish, and the run
-        /// either succeeds or stops with the one SecondPassFDR error #4729 describes.
+        /// The export command for a one-run analysis under <paramref name="pass2Mode"/>, which
+        /// must finish.
         /// </summary>
-        private string RunSingleRunExport(string workDir, IEnumerable<string> inputs)
+        private string RunSingleRunExport(string workDir, IEnumerable<string> inputs, string pass2Mode)
         {
             var args = InputArgs(inputs).Concat(new[]
             {
@@ -242,19 +263,15 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
             }).Concat(CommonArgs()).Concat(ExportArgs()).ToArray();
+            var variables = Verifier(false).ToDictionary(kv => kv.Key, kv => kv.Value);
+            variables[@"OSPREY_PASS2_QVALUE"] = pass2Mode;
             string output;
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            using (OspreyEnvironment.OverrideVariables(variables))
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
-            AssertHasLine(output, TaskLine(PerFileRescoreTask.TASK_NAME, @"done"));
-            if (exitCode != Program.EXIT_CODE_SUCCESS)
-            {
-                var errors = SplitLines(output).Where(CommandStatusWriter.IsErrorLine).ToList();
-                Assert.IsTrue(errors.Count == 1 && errors[0].Contains(ISSUE_4729_ERROR),
-                    @"a failure other than the known SecondPassFDR one (#4729)" + Environment.NewLine + output);
-            }
+            Assert.AreEqual(Program.EXIT_CODE_SUCCESS, exitCode, pass2Mode + Environment.NewLine + output);
             return output;
         }
 

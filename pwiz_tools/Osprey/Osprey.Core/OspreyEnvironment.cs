@@ -797,9 +797,9 @@ namespace pwiz.Osprey.Core
         ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
         ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
         ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
-        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time. No
-        ///     retrain, no reduced-pool null. Restores calibration while keeping the
-        ///     re-scoring ID gain.
+        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time, in
+        ///     PerFileRescoring like the default (#4665). No retrain, no reduced-pool null.
+        ///     Restores calibration while keeping the re-scoring ID gain.
         ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
         ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see

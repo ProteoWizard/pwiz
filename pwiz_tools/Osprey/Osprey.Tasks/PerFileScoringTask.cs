@@ -1500,8 +1500,8 @@ namespace pwiz.Osprey.Tasks
             // is still exactly NeedsResidentPool, while "may this load
             // go lean" additionally excludes the reconciled-input merge. Do not "fix" this by
             // copying the builder decision: the merge does not read Features off these stubs -
-            // both pass-2 shapes reload them per file from the reconciled parquet
-            // (ComputePass2TransferCompeteFull's own read, or ComputePass2Resident's), which
+            // both pass-2 modes reload them per file from the reconciled parquet, in
+            // Pass2PerFileWorker (and in ComputePass2TransferCompeteFull's verifier), which
             // Stage 6 writes for every run, so the reload does not depend on hasReconSidecars
             // either.
             bool loadFeatures = needsResidentPool;
