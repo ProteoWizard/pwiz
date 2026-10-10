@@ -411,6 +411,23 @@ namespace pwiz.Osprey
                     // treats a missing one as "trust the cache". That makes
                     // delete-the-sources-after-caching a supported way to halve the
                     // disk a large cohort needs.
+                    // With --demux auto, so is its demultiplexed cache, but only while its
+                    // descriptor matches. Without the source it cannot be rebuilt, and the
+                    // .spectra.bin of a multiplexed run cannot stand in for it, so that case is
+                    // reported here, at start-up, rather than searched as acquired.
+                    var demuxRejection = DemuxCache.Check(inputFile, config);
+                    if (demuxRejection == SpectraCacheRejection.None)
+                    {
+                        cacheOnlyInputs++;
+                        continue;
+                    }
+                    if (DemuxCache.IsDemultiplexedRun(inputFile, config))
+                    {
+                        LogError(string.Format(
+                            OspreyResources.Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_,
+                            inputFile, SpectraCacheException.Describe(demuxRejection)));
+                        return EXIT_CODE_FAILURE_TO_START;
+                    }
                     if (File.Exists(SpectraCache.GetCachePath(inputFile)))
                     {
                         cacheOnlyInputs++;

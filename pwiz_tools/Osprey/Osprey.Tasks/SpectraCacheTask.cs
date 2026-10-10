@@ -216,7 +216,8 @@ namespace pwiz.Osprey.Tasks
 
             // The cache writer already said what it saved, in words; this is the per-file
             // time for a measurement, not a second report of the same numbers.
-            string cachePath = SpectraCache.GetCachePath(inputFile);
+            // The cache the search will read: the .spectra.bin, or the demultiplexed cache.
+            string cachePath = index.CachePath;
             var cacheInfo = new FileInfo(cachePath);
             ctx.LogInfo(LogTag.TIMING, @"Spectra cache {0}: ms2={1} ms1={2} {3:F2} GB in {4:F1}s",
                 Path.GetFileName(cachePath), index.Ms2Count, index.Ms1Spectra.Count,

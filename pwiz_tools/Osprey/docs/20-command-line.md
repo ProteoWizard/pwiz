@@ -110,6 +110,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--fragment-tolerance` | `<value>` | `10` | Fragment m/z tolerance (ignored at unit resolution). |
 | `--fragment-unit` | `ppm \| mz` | `ppm` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
+| `--demux` | `off \| auto` | `off` | Demultiplex overlapping-window (staggered) or MSX DIA with ProteoWizard's demultiplexer while the source is read, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` reads a run that is not multiplexed as acquired. With `off`, a multiplexed run is searched as acquired, with a warning suggesting `--demux auto`. Give every task of an HPC chain the same value. Osprey-only. |
 
 ### FDR & Protein Inference
 
