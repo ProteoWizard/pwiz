@@ -26,8 +26,8 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         OverlapOnly,
     }
 
-    /// <summary>Tunable parameters.</summary>
-    public sealed class Params
+    /// <summary>Tunable parameters. A record, so callers copy it with <c>with { ... }</c>.</summary>
+    public sealed record Params
     {
         /// <summary>Mass tolerance for MS/MS peak extraction (default 10 ppm).</summary>
         public MZTolerance MassError { get; init; } = new(10, MZToleranceUnits.Ppm);
@@ -76,6 +76,74 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
     {
         ArgumentNullException.ThrowIfNull(inner);
         _impl = new DemuxImpl(inner, p ?? new Params(), Inner.DataProcessing);
+    }
+
+    /// <summary>The multiplexing scheme of a spectrum list, as this demultiplexer represents it.</summary>
+    /// <param name="SpectraPerCycle">MS2 spectra per acquisition cycle.</param>
+    /// <param name="PrecursorsPerSpectrum">Isolation windows per MS2 spectrum: above 1 is MSX.</param>
+    /// <param name="OverlapsPerSpectrum">Demux windows each isolation window covers: above 1 is
+    /// overlapping (staggered) windows.</param>
+    /// <param name="DemuxWindows">Narrow windows the spectra are demultiplexed into.</param>
+    public sealed record Scheme(int SpectraPerCycle, int PrecursorsPerSpectrum, int OverlapsPerSpectrum, int DemuxWindows)
+    {
+        /// <summary>The demux algorithm for this scheme: overlap demultiplexing for overlapping
+        /// windows, MSX demultiplexing for several precursors per spectrum.</summary>
+        public Optimization Optimization => PrecursorsPerSpectrum > 1 ? Optimization.None : Optimization.OverlapOnly;
+    }
+
+    /// <summary>
+    /// The multiplexing scheme of <paramref name="spectra"/>, or null when it is not multiplexed
+    /// in a way this demultiplexer can represent: ordinary DIA, DDA, or a file with no MS2.
+    /// Reads the metadata of the first few acquisition cycles only.
+    /// </summary>
+    /// <remarks>
+    /// Multiplexed means several precursors per MS2 spectrum (MSX) or overlapping windows, AND
+    /// every MS2 spectrum of the first two cycles maps onto the same number of demux windows.
+    /// The second condition rejects ordinary DIA whose adjacent windows overlap by a margin:
+    /// its body windows cover three demux windows while its edge windows cover two.
+    /// </remarks>
+    public static Scheme? DetectScheme(ISpectrumList spectra, Params? p = null)
+    {
+        ArgumentNullException.ThrowIfNull(spectra);
+        p ??= new Params();
+        PrecursorMaskCodec codec;
+        try
+        {
+            codec = new PrecursorMaskCodec(spectra, new PrecursorMaskCodec.Params
+            {
+                VariableFill = p.VariableFill,
+                MinimumWindowSize = p.MinimumWindowSize,
+                RemoveNonOverlappingEdges = p.RemoveNonOverlappingEdges,
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            // No MS2, no repeating cycle, or a varying number of precursors per spectrum.
+            return null;
+        }
+        if (codec.PrecursorsPerSpectrum <= 1 && codec.OverlapsPerCycle <= 1)
+            return null;
+
+        var indices = new List<int>();
+        int checkedMs2 = 0;
+        for (int i = 0; i < spectra.Count && checkedMs2 < 2 * codec.SpectraPerCycle; i++)
+        {
+            var spectrum = spectra.GetSpectrum(i, getBinaryData: false);
+            if (spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) != 2)
+                continue;
+            try
+            {
+                // Throws when this spectrum maps onto a different number of demux windows.
+                codec.SpectrumToIndices(spectrum, indices);
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
+            checkedMs2++;
+        }
+        return new Scheme(codec.SpectraPerCycle, codec.PrecursorsPerSpectrum, codec.OverlapsPerCycle,
+            codec.NumDemuxWindows);
     }
 
     /// <inheritdoc/>

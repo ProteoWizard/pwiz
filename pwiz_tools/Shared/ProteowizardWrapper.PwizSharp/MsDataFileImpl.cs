@@ -103,6 +103,9 @@ namespace pwiz.ProteowizardWrapper
         private readonly bool _requireVendorCentroidedMS1;
         private readonly bool _requireVendorCentroidedMS2;
 
+        private readonly SpectrumListDemux.Params _demultiplexParams; // null: never demultiplex
+        private SpectrumListDemux.Scheme _demultiplexScheme; // null: not demultiplexed
+
         private readonly bool _trimNativeID;
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
@@ -187,7 +190,8 @@ namespace pwiz.ProteowizardWrapper
             bool combineIonMobilitySpectra = true, // Ask for IMS data in 3-array format by default (not guaranteed)
             bool trimNativeId = true,
             bool passEntireDiaPasefFrame = false, // Ask for Bruker DiaPASEF frames as a single chunk
-            int mzmlDecodeThreads = 1 // >1 decodes mzML binary arrays on a thread pool
+            int mzmlDecodeThreads = 1, // >1 decodes mzML binary arrays on a thread pool
+            SpectrumListDemux.Params demultiplex = null // Demultiplex overlapping-window or MSX DIA, when the run is multiplexed
             )
         {
 
@@ -228,8 +232,25 @@ namespace pwiz.ProteowizardWrapper
                 FULL_READER_LIST.Read(path, _msDataFile, sampleIndex, _config);
                 _requireVendorCentroidedMS1 = requireVendorCentroidedMS1;
                 _requireVendorCentroidedMS2 = requireVendorCentroidedMS2;
+                _demultiplexParams = demultiplex;
                 _trimNativeID = trimNativeId;
             }
+        }
+
+        /// <summary>
+        /// The multiplexing scheme of this run (see <see cref="SpectrumListDemux.DetectScheme"/>),
+        /// or null when it is not multiplexed. Reads only the metadata of the first few cycles,
+        /// so a caller can ask before deciding how to read the run. When demultiplex settings
+        /// were given, this is <see cref="DemultiplexScheme"/>.
+        /// </summary>
+        public SpectrumListDemux.Scheme DetectDemultiplexScheme(SpectrumListDemux.Params demultiplex = null)
+        {
+            if (_demultiplexParams != null)
+                return DemultiplexScheme;
+            var spectra = SpectrumList;
+            if (spectra == null || HasSrmSpectraInList())
+                return null;
+            return SpectrumListDemux.DetectScheme(spectra, demultiplex);
         }
 
         // Uncomment to run leak check for C++/CLI objects
@@ -272,6 +293,21 @@ namespace pwiz.ProteowizardWrapper
 
         public bool RequireVendorCentoridedMs1 => _requireVendorCentroidedMS1;
         public bool RequireVendorCentoridedMs2 => _requireVendorCentroidedMS2;
+
+        /// <summary>
+        /// The multiplexing scheme the spectra were demultiplexed from, or null when they are
+        /// read as acquired: no <c>demultiplex</c> settings were given, or the run is not
+        /// multiplexed. When set, every spectrum and the spectrum count are those of the
+        /// demultiplexed run.
+        /// </summary>
+        public SpectrumListDemux.Scheme DemultiplexScheme
+        {
+            get
+            {
+                _ = SpectrumList; // Building the spectrum list decides it
+                return _demultiplexScheme;
+            }
+        }
 
         public DateTime? RunStartTime
         {
@@ -828,6 +864,18 @@ namespace pwiz.ProteowizardWrapper
                             _lockmassParameters.LockmassTolerance ?? LockMassParameters.LOCKMASS_TOLERANCE_DEFAULT);
 #endif
                     }
+                    // Demultiplex after centroiding and lockmass, as msconvert orders the filters.
+                    // Only a run with a scheme the demultiplexer can represent is wrapped, so the
+                    // same settings can be passed for every file.
+                    if (_demultiplexParams != null && _spectrumList != null && !hasSrmSpectra)
+                    {
+                        _demultiplexScheme = SpectrumListDemux.DetectScheme(_spectrumList, _demultiplexParams);
+                        if (_demultiplexScheme != null)
+                        {
+                            _spectrumList = new SpectrumListDemux(_spectrumList,
+                                _demultiplexParams with { Optimization = _demultiplexScheme.Optimization });
+                        }
+                    }
                     // Ion mobility info
                     if (_spectrumList != null) // No ion mobility for chromatogram-only files
                     {
@@ -870,7 +918,9 @@ namespace pwiz.ProteowizardWrapper
 
         public SpectrumMetadata GetSpectrumMetadata(int spectrumIndex)
         {
-            return GetSpectrumMetadata(_msDataFile.Run.SpectrumList.GetSpectrum(spectrumIndex, DetailLevel.FullMetadata));
+            // A demultiplexed run is indexed by its demultiplexed spectra.
+            var spectra = _demultiplexParams != null && DemultiplexScheme != null ? SpectrumList : _msDataFile.Run.SpectrumList;
+            return GetSpectrumMetadata(spectra.GetSpectrum(spectrumIndex, DetailLevel.FullMetadata));
         }
 
         public double? GetMaxIonMobility()
