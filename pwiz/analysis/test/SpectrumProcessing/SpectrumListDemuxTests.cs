@@ -242,6 +242,136 @@ public class SpectrumListDemuxTests
                 $"cpp parity: intensity[{i}]");
     }
 
+    // ============================================================================
+    //   DetectScheme
+    // ============================================================================
+
+    [TestMethod]
+    public void DetectScheme_OverlapTest_IsOverlapOnly()
+    {
+        var scheme = SpectrumListDemux.DetectScheme(LoadFixture("OverlapTest.mzML"));
+        Assert.IsNotNull(scheme, "staggered-window fixture should be detected as multiplexed");
+        Assert.AreEqual(1, scheme.PrecursorsPerSpectrum, "overlap DIA has one precursor per spectrum");
+        Assert.IsTrue(scheme.OverlapsPerSpectrum > 1,
+            $"overlap DIA windows should cover several demux windows (got {scheme.OverlapsPerSpectrum})");
+        Assert.AreEqual(SpectrumListDemux.Optimization.OverlapOnly, scheme.Optimization);
+        Assert.IsTrue(scheme.SpectraPerCycle > 0, $"SpectraPerCycle {scheme.SpectraPerCycle}");
+        Assert.IsTrue(scheme.DemuxWindows > scheme.SpectraPerCycle,
+            $"demux windows {scheme.DemuxWindows} should outnumber the {scheme.SpectraPerCycle} isolation windows");
+    }
+
+    [TestMethod]
+    public void DetectScheme_MsxTest_IsMsx()
+    {
+        var scheme = SpectrumListDemux.DetectScheme(LoadFixture("MsxTest.mzML"));
+        Assert.IsNotNull(scheme, "MSX fixture should be detected as multiplexed");
+        Assert.IsTrue(scheme.PrecursorsPerSpectrum > 1,
+            $"MSX spectra carry several precursors (got {scheme.PrecursorsPerSpectrum})");
+        Assert.AreEqual(SpectrumListDemux.Optimization.None, scheme.Optimization);
+    }
+
+    [TestMethod]
+    public void DetectScheme_SyntheticStaggered_IsOverlapOnly()
+    {
+        // Positive control for the synthetic builders the null cases below use.
+        var scheme = SpectrumListDemux.DetectScheme(
+            BuildSingleOverlapList(numCycles: 5, scansPerHalf: 25, mzStart: 400, mzEnd: 600));
+        Assert.IsNotNull(scheme, "synthetic staggered windows should be detected as multiplexed");
+        Assert.AreEqual(50, scheme.SpectraPerCycle);
+        Assert.AreEqual(1, scheme.PrecursorsPerSpectrum);
+        Assert.AreEqual(2, scheme.OverlapsPerSpectrum);
+        Assert.AreEqual(SpectrumListDemux.Optimization.OverlapOnly, scheme.Optimization);
+    }
+
+    [TestMethod]
+    public void DetectScheme_WindowsChangePartway_IsNull()
+    {
+        // Staggered 400-600 m/z, then a second method segment over 600-800: the demultiplexer
+        // would fail mid-run, so the run is not reported as multiplexed.
+        var list = BuildSingleOverlapList(numCycles: 6, scansPerHalf: 25, mzStart: 400, mzEnd: 600);
+        foreach (var s in BuildSingleOverlapList(numCycles: 6, scansPerHalf: 25, mzStart: 600, mzEnd: 800).Spectra)
+        {
+            s.Index = list.Spectra.Count;
+            list.Spectra.Add(s);
+        }
+        Assert.IsNull(SpectrumListDemux.DetectScheme(list));
+    }
+
+    [TestMethod]
+    public void DetectScheme_NoRepeatingCycle_ReadsOnlyTheHead()
+    {
+        // DDA-like: every MS2 isolates a new precursor, so no cycle repeats.
+        var dda = new SpectrumListSimple();
+        for (int i = 0; i < 3 * SpectrumListDemux.DetectHeadSpectra; i++)
+            dda.Spectra.Add(MakeMs2(i, scanTimeSec: i * 0.01, isoCenter: 400 + i * 0.01, halfWidth: 0.5));
+        var counting = new CountingSpectrumList(dda);
+        Assert.IsNull(SpectrumListDemux.DetectScheme(counting));
+        Assert.IsTrue(counting.Reads < 2 * SpectrumListDemux.DetectHeadSpectra + 10,
+            $"read {counting.Reads} spectra of {dda.Count}");
+    }
+
+    private sealed class CountingSpectrumList : SpectrumListWrapper
+    {
+        public CountingSpectrumList(ISpectrumList inner) : base(inner) { }
+
+        public int Reads { get; private set; }
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        {
+            Reads++;
+            return base.GetSpectrum(index, getBinaryData);
+        }
+    }
+
+    [TestMethod]
+    public void DetectScheme_OrdinaryDia_IsNull()
+    {
+        // Ordinary DIA whose adjacent windows overlap by a 1 Th margin (399.5-425.5, 424.5-450.5,
+        // ...): the margins become thin demux windows, but the body windows cover three demux
+        // windows and the edge windows two, so it is not a scheme the demultiplexer represents.
+        Assert.IsNull(SpectrumListDemux.DetectScheme(BuildOrdinaryDiaList(numCycles: 4, windows: 8, margin: 0.5)),
+            "DIA with 1 Th overlap margins must not be detected as multiplexed");
+        // Exactly abutting windows (400-425, 425-450, ...).
+        Assert.IsNull(SpectrumListDemux.DetectScheme(BuildOrdinaryDiaList(numCycles: 4, windows: 8, margin: 0)),
+            "DIA with abutting windows must not be detected as multiplexed");
+        // Asking with explicit params changes nothing.
+        Assert.IsNull(SpectrumListDemux.DetectScheme(BuildOrdinaryDiaList(numCycles: 4, windows: 8, margin: 0.5),
+                new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly }),
+            "explicit params: DIA with 1 Th overlap margins must not be detected as multiplexed");
+        // MS1 only: nothing to demultiplex.
+        var ms1Only = new SpectrumListSimple();
+        for (int i = 0; i < 5; i++)
+            ms1Only.Spectra.Add(MakeMs1(i, scanTimeSec: i));
+        Assert.IsNull(SpectrumListDemux.DetectScheme(ms1Only), "a run with no MS2 is not multiplexed");
+    }
+
+    /// <summary>The raw (uncentroided) spectrum list of a cpp demux fixture.</summary>
+    private static ISpectrumList LoadFixture(string fixtureName)
+    {
+        string path = Path.Combine(FindDemuxTestDataRoot(), fixtureName);
+        using var fs = File.OpenRead(path);
+        return new MzmlReader().Read(fs).Run.SpectrumList!;
+    }
+
+    /// <summary>Ordinary DIA: <paramref name="windows"/> 25 Th windows from 400 m/z per cycle,
+    /// each widened by <paramref name="margin"/> on both sides (so adjacent windows overlap by
+    /// twice that), one MS1 per cycle.</summary>
+    private static SpectrumListSimple BuildOrdinaryDiaList(int numCycles, int windows, double margin)
+    {
+        var sl = new SpectrumListSimple();
+        int idx = 0;
+        for (int cycle = 0; cycle < numCycles; cycle++)
+        {
+            sl.Spectra.Add(MakeMs1(idx++, scanTimeSec: cycle * 10.0));
+            for (int w = 0; w < windows; w++)
+            {
+                sl.Spectra.Add(MakeMs2(idx++, scanTimeSec: cycle * 10.0 + 0.5 + w * 0.1,
+                    isoCenter: 412.5 + 25 * w, halfWidth: 12.5 + margin));
+            }
+        }
+        return sl;
+    }
+
     /// <summary>Reads <paramref name="fixtureName"/> from the cpp test-data dir, runs centroid
     /// peak picking + demux, returns the centroided source list and the demuxed wrapper.</summary>
     private static (ISpectrumList Centroided, SpectrumListDemux Demuxed) LoadAndWrap(
