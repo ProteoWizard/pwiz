@@ -154,6 +154,11 @@ namespace pwiz.Osprey.IO
                 sourceMtimeMs = 0;
             }
 
+            // A descriptor the reader would refuse would make a cache nothing can reopen.
+            byte[] descriptorBytes = demuxDescriptor == null ? null : Encoding.UTF8.GetBytes(demuxDescriptor);
+            if (descriptorBytes != null && descriptorBytes.Length > MAX_DESCRIPTOR_BYTES)
+                throw new ArgumentOutOfRangeException(nameof(demuxDescriptor));
+
             int nMs2 = ms2Spectra.Count;
 
             // Group MS2 record indices by isolation-window key, preserving acquisition
@@ -193,9 +198,8 @@ namespace pwiz.Osprey.IO
                     w.Write(sourceMtimeMs);
                     w.Write((uint)nMs2);
                     w.Write((uint)ms1Spectra.Count);
-                    if (demuxDescriptor != null)
+                    if (descriptorBytes != null)
                     {
-                        byte[] descriptorBytes = Encoding.UTF8.GetBytes(demuxDescriptor);
                         w.Write((uint)descriptorBytes.Length);
                         w.Write(descriptorBytes);
                     }

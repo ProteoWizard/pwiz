@@ -194,13 +194,27 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The run's demultiplexed cache when one exists, otherwise its <c>.spectra.bin</c>: the
-        /// larger of the two a run can be searched from, for sizing a run without its source.
+        /// The larger of the run's <c>.spectra.bin</c> and demultiplexed cache, either of which it
+        /// can be searched from, for sizing a run without its source; the <c>.spectra.bin</c>
+        /// path when neither exists.
         /// </summary>
         internal static string GetLargestCachePath(string inputFile)
         {
+            string plainPath = SpectraCache.GetCachePath(inputFile);
             string demuxPath = SpectraCache.GetDemuxCachePath(inputFile);
-            return File.Exists(demuxPath) ? demuxPath : SpectraCache.GetCachePath(inputFile);
+            return FileLengthOrZero(demuxPath) > FileLengthOrZero(plainPath) ? demuxPath : plainPath;
+        }
+
+        private static long FileLengthOrZero(string path)
+        {
+            try
+            {
+                return File.Exists(path) ? new FileInfo(path).Length : 0;
+            }
+            catch (IOException)
+            {
+                return 0;
+            }
         }
 
         /// <summary>
