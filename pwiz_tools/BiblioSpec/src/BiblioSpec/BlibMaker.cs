@@ -760,6 +760,25 @@ public class BlibMaker : IDisposable
     }
 
     /// <summary>
+    /// Adds an <see cref="OptionalColumn"/> to the library being built, if it is not there already.
+    /// </summary>
+    public void AddOptionalColumn(OptionalColumn column)
+    {
+        ArgumentNullException.ThrowIfNull(column);
+        if (!TableColumnExists("main", column.Table, column.Name))
+            SqlStmt($"ALTER TABLE {column.Table} ADD COLUMN {column.Name} {column.Type}");
+    }
+
+    /// <summary>
+    /// The members of <paramref name="columns"/> that the named schema's library has.
+    /// </summary>
+    public List<OptionalColumn> GetOptionalColumns(string schemaName, IReadOnlyList<OptionalColumn> columns)
+    {
+        ArgumentNullException.ThrowIfNull(columns);
+        return columns.Where(c => TableColumnExists(schemaName, c.Table, c.Name)).ToList();
+    }
+
+    /// <summary>
     /// cpp <c>getFileId</c>. Looks up an existing SpectrumSourceFiles row by fileName,
     /// caching the (id, cutoff) pair. If the cached cutoff disagrees, the row's cutoff is
     /// reset to -1 (cpp parity at BlibMaker.cpp:1037-1041).
