@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Osprey.Core;
@@ -273,6 +274,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (nMapped != survivors.Count)
                 {
+                    // Exception text for internal diagnostics, not displayed to user
                     throw new InvalidOperationException(string.Format(
                         @"Second-pass transfer for '{0}': {1} of {2} precursor candidates have no " +
                         @"features in {3}, which was written from these same entries. See issue #4665.",
@@ -291,10 +293,9 @@ namespace pwiz.Osprey.Tasks
             // be written with run q-values nobody computed.
             if (tally.FilesDone != 1)
             {
-                throw new InvalidOperationException(string.Format(
-                    @"Second-pass transfer for '{0}': the first-pass intermediate file {1} could not " +
-                    @"be read, so this run's q-values cannot be transferred. See issue #4665.",
-                    fileName, pass1SidecarPath));
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.Pass2PerFileWorker_TransferAndStamp_The_first_pass_intermediate_file__0__could_not_be_read__so_the_run_level_q_values_of__1__cannot_be_carried_into_second_pass_FDR__Run__2__again_,
+                    pass1SidecarPath, fileName, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
             }
             lock (_transferTallyLock)
             {
@@ -449,9 +450,7 @@ namespace pwiz.Osprey.Tasks
                 lock (_transferTallyLock)
                     tally = _transferTally;
                 ctx.LogInfo(string.Format(
-                    @"OSPREY_PASS2_QVALUE=transfer over {0:N0} files: {1:N0} peaks keep their first-pass " +
-                    @"q-values, {2:N0} peaks moved by cross-run reconciliation and {3:N0} missing peaks get " +
-                    @"a new run-level q-value.",
+                    OspreyTasksResources.Pass2PerFileWorker_LogSummary_Second_pass_FDR_over__0__files_kept_the_first_pass_q_values_of__1__peaks__gave__2__peaks_moved_by_cross_run_reconciliation_and__3__missing_peaks_new_run_level_q_values_,
                     tally.FilesDone, tally.Unchanged, tally.Moved, tally.GapFill));
                 return;
             }

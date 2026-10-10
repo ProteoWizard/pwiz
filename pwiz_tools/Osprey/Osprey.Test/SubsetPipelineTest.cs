@@ -187,24 +187,16 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The four-task HPC chain, each phase in its own directory holding only the files the
         /// previous phase shipped, as separate computers would run it. The chain's library and
-        /// every FDR sidecar it wrote must equal the straight-through run's.
+        /// every FDR sidecar it wrote must equal the straight-through run's. Under both pass-2
+        /// modes: the transfer's per-file half runs on the phase-3 workers like the default's
+        /// (#4665), so phase 4 is shipped no first-pass file in either.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetHpcTaskChain()
         {
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES));
-        }
-
-        /// <summary>
-        /// The same chain under OSPREY_PASS2_QVALUE=transfer. Its per-file half runs on the
-        /// phase-3 workers like the default's (#4665), so phase 4 is shipped no first-pass file
-        /// and the chain must still equal the straight run.
-        /// </summary>
-        [TestMethod, DoNotParallelize]
-        public void TestSubsetHpcTaskChainTransfer()
-        {
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES,
-                OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+                OspreyEnvironment.PASS2_QVALUE_TRANSFER), OspreyEnvironment.PASS2_QVALUE_TRANSFER + @"-");
         }
 
         /// <summary>
@@ -968,49 +960,52 @@ namespace pwiz.Osprey.Test
         /// Run <paramref name="data"/> straight through, then as the four-task chain, and assert
         /// the chain reproduced the straight run's library and FDR sidecars.
         /// </summary>
-        private void AssertHpcChainMatchesStraight(Subset data)
+        /// <param name="data">The subset and pass-2 mode.</param>
+        /// <param name="dirPrefix">Prefixes every directory, so two chains in one test do not
+        /// share any.</param>
+        private void AssertHpcChainMatchesStraight(Subset data, string dirPrefix = @"")
         {
             // The straight run verifies the second pass's worker answers and the chain folds them
             // unverified, so the two legs cover different second-pass paths.
-            string straightDir = CreateDir(@"straight");
+            string straightDir = CreateDir(dirPrefix + @"straight");
             string straightLog = RunOsprey(data.AnalysisArgs(straightDir), data.Variables(true));
             string straightBlib = Path.Combine(straightDir, BLIB_FILE);
 
             // Phase 1, one worker per run: score it from its mzML.
             foreach (string run in data.Runs)
             {
-                string phaseDir = CreateDir(@"phase1_" + run);
+                string phaseDir = CreateDir(dirPrefix + @"phase1_" + run);
                 File.Copy(Path.Combine(data.DataDir, run + MZML_EXTENSION), Path.Combine(phaseDir, run + MZML_EXTENSION));
                 RunTask(data, phaseDir, PerFileScoringTask.TASK_NAME, run);
             }
 
             // Phase 2, one node over every run: first-pass FDR from the scores and calibrations.
-            string phase2Dir = CreateDir(@"phase2");
+            string phase2Dir = CreateDir(dirPrefix + @"phase2");
             foreach (string run in data.Runs)
             {
-                ShipFiles(@"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
+                ShipFiles(dirPrefix + @"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
             }
             RunTask(data, phase2Dir, FirstPassFdrTask.TASK_NAME, data.Runs);
 
             // Phase 3, one worker per run: rescore with the first pass's answer.
             foreach (string run in data.Runs)
             {
-                string phaseDir = CreateDir(@"phase3_" + run);
-                ShipFiles(@"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
+                string phaseDir = CreateDir(dirPrefix + @"phase3_" + run);
+                ShipFiles(dirPrefix + @"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
                     run + CalibrationIO.EXT);
-                ShipFiles(@"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT), run + ReconciliationFile.EXT,
+                ShipFiles(dirPrefix + @"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT), run + ReconciliationFile.EXT,
                     OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
-                ShipFilesIfPresent(@"phase2", phaseDir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM,
+                ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM,
                     ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
             }
 
             // Phase 4, one node over every run: second-pass FDR and the library.
-            string phase4Dir = CreateDir(@"phase4");
+            string phase4Dir = CreateDir(dirPrefix + @"phase4");
             foreach (string run in data.Runs)
             {
-                string phase3 = @"phase3_" + run;
+                string phase3 = dirPrefix + @"phase3_" + run;
                 ShipFiles(phase3, phase4Dir, run + ParquetScoreCache.EXT_SCORES_RECONCILED, run + CalibrationIO.EXT,
                     run + ReconciliationFile.EXT);
                 ShipFilesIfPresent(phase3, phase4Dir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM);
@@ -1022,8 +1017,8 @@ namespace pwiz.Osprey.Test
                 if (data.Pass2Mode == null)
                     ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
-            ShipFiles(@"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
-            ShipFilesIfPresent(@"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
+            ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
+            ShipFilesIfPresent(dirPrefix + @"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
                 OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
             string phase4Log = RunTask(data, phase4Dir, SecondPassFdrTask.TASK_NAME, data.Runs);
             AssertHasLine(phase4Log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
@@ -1039,7 +1034,7 @@ namespace pwiz.Osprey.Test
             // first-pass sidecars are compared where the phase-3 workers read them.
             foreach (string run in data.Runs)
             {
-                AssertFdrSidecarsEqual(straightDir, Path.Combine(_testDir, @"phase3_" + run),
+                AssertFdrSidecarsEqual(straightDir, Path.Combine(_testDir, dirPrefix + @"phase3_" + run),
                     FdrScoresSidecar.Pass.FirstPass, run);
             }
             AssertFdrSidecarsEqual(straightDir, phase4Dir, FdrScoresSidecar.Pass.SecondPass, data.Runs);

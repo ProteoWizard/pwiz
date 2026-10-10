@@ -2267,6 +2267,28 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Second-pass FDR over {0:N0} files kept the first-pass q-values of {1:N0} peaks, and gave {2:N0} peaks moved by cross-run reconciliation and {3:N0} missing peaks new run-level q-values..
+        /// </summary>
+        public static string Pass2PerFileWorker_LogSummary_Second_pass_FDR_over__0__files_kept_the_first_pass_q_values_of__1__peaks__gave__2__peaks_moved_by_cross_run_reconciliation_and__3__missing_peaks_new_run_level_q_values_ {
+            get {
+                return ResourceManager.GetString("Pass2PerFileWorker_LogSummary_Second_pass_FDR_over__0__files_kept_the_first_pass_" +
+                        "q_values_of__1__peaks__gave__2__peaks_moved_by_cross_run_reconciliation_and__3__" +
+                        "missing_peaks_new_run_level_q_values_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The first-pass intermediate file {0} could not be read, so the run-level q-values of {1} cannot be carried into second-pass FDR. Run {2} again..
+        /// </summary>
+        public static string Pass2PerFileWorker_TransferAndStamp_The_first_pass_intermediate_file__0__could_not_be_read__so_the_run_level_q_values_of__1__cannot_be_carried_into_second_pass_FDR__Run__2__again_ {
+            get {
+                return ResourceManager.GetString("Pass2PerFileWorker_TransferAndStamp_The_first_pass_intermediate_file__0__could_no" +
+                        "t_be_read__so_the_run_level_q_values_of__1__cannot_be_carried_into_second_pass_F" +
+                        "DR__Run__2__again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to could not read {0}.
         /// </summary>
         public static string PeakCoAssignmentSource_AddFile_could_not_read__0_ {

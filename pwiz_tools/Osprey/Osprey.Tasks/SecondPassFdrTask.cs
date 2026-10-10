@@ -435,23 +435,12 @@ namespace pwiz.Osprey.Tasks
 
             ReleaseUnscorableLibraryFragments(rescored.FileCount, fullLibrary, ctx);
 
-            // Second-pass FDR. ALWAYS runs, because it always has a file to write.
-            //
-            // What is conditional is the RECOMPUTE, not the artifact: the second Percolator
-            // pass fires only when Stage 6 reconciliation / multi-charge consensus / gap-fill
-            // actually rescored entries - the C# analog of Rust's `total_rescored > 0` gate
-            // (pipeline.rs:5209), and INDEPENDENT of protein FDR. That test lives inside
-            // ComputeAndPersist now. A run with no rescore work still writes every file's
-            // .2nd-pass.fdr_scores.bin, carrying the standing values, because those ARE its
-            // second-pass answer - and because a missing file cannot be told apart from a
-            // failed write (see Outputs).
-            //
-            // This gate used to wrap the whole call. Before that it was wrongly nested inside
-            // the ProteinFdr.HasValue block, so a run without --protein-fdr wrote the blib from
-            // stale first-pass (pre-reconciliation) scores. ComputeAndPersist reloads the
-            // reconciled features, reruns Percolator, writes the .2nd-pass sidecars, and
-            // reloads them onto the stubs so downstream protein FDR + blib see the 2nd-pass
-            // q-values.
+            // Second-pass FDR: fold every run's per-run answer into the experiment scope. Each
+            // answer was computed and written by PerFileRescoring, in every pass-2 mode and for
+            // every run, including one Stage 6 had no work for (#4665). This stage requires them
+            // (a run without a current one stops the analysis), recomputes none and writes no
+            // per-run file; ComputeAndPersist folds them and puts the second-pass values back on
+            // the survivors, so downstream protein FDR and the blib see the 2nd-pass q-values.
             Pass2FdrSidecar.ComputeAndPersist(
                 ctx, rescored, perFileParquetPaths, Name, ValidityKey(ctx));
             // From here on, every fold must see the SECOND pass's answer. On the resident pool

@@ -1887,6 +1887,7 @@ namespace pwiz.Osprey.Tasks
                 // silently get no 2nd-pass sidecar, and the join reads a missing file as a
                 // file that contributed nothing - lowering nothing, reporting nothing, and
                 // leaving its precursors to be represented by other runs alone.
+                // Exception text for internal diagnostics, not displayed to user
                 throw new InvalidOperationException(string.Format(
                     @"Second-pass per-file competition for '{0}': no scores parquet is mapped " +
                     @"for this file, so its reconciled parquet cannot be located. See issue #4486.",
