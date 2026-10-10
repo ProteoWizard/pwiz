@@ -617,9 +617,10 @@ driver writes nothing, so it cannot certify a stale file as current.
 
 The per-file tasks ask ONE question per input file over all of that file's outputs:
 `PerFileScoring` requires `.calibration.json` and `.scores.parquet` both current
-(`PerFileScoringTask.IsFileCurrent`); `PerFileRescoring`'s second pass is done when
-`.2nd-pass.fdr_scores.bin` and `.2nd-pass.fdr_decoys.bin` both carry a current
-`PerFileRescoring` stamp (`Pass2ArtifactsCurrent`), plus the reconciled parquet. A kill between
+(`PerFileScoringTask.IsFileCurrent`); `PerFileRescoring` is done for a run when its reconciled
+parquet is current and its `.2nd-pass.fdr_scores.bin` - with `.2nd-pass.fdr_decoys.bin` under
+protein-compact - carries the same `PerFileRescoring` stamp (`IsFileRescored`), for every run
+whether or not Stage 6 had work for it (#4665). A kill between
 two writes leaves one output stale or missing, so the file recomputes. `FirstPassFDR` keeps
 progressive per-file completion: each per-file product carries its stamp from the moment it
 lands, so a stopped run resumes in proportion to the files it finished. `FirstPassFDR` also
@@ -627,9 +628,10 @@ declares `<blib-stem>.1st-pass.retained_base_ids.bin` as an output; it was once 
 left undeclared, because declaring it would have invalidated every finished directory, which
 version invalidation makes moot.
 
-Cross-task "who wrote this" reads the same stamp. `Pass2FdrSidecar.HasWorkerStamp` is true when
-a run's `.2nd-pass.fdr_scores.bin` stamp names `PerFileRescoring` and this build's version; it
-deliberately does not compare the key, because `PerFileRescoring`'s key carries a leg-dependent
+Cross-task "is this run answered" reads the same stamp. `Pass2FdrSidecar.HasWorkerStamp` is true
+when a run's 2nd-pass binaries carry the stamp of the reconciled parquet beside them, naming
+`PerFileRescoring` and this build's version; `SecondPassFDR` refuses a run for which it is not.
+It deliberately does not compare against a key recomputed in the reading process, because `PerFileRescoring`'s key carries a leg-dependent
 `LibraryFragmentRelease` suffix in A/B configurations (see 00, "Rows that are not what they
 look like").
 

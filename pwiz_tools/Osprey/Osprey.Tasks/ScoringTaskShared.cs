@@ -875,29 +875,15 @@ namespace pwiz.Osprey.Tasks
             // StellarGenDecoyEntrap and Astral, so while it stood here mode 3's phase 4 took the
             // resident path on three of the four datasets and a streamed-arm defect needing
             // library decoys, entrapment or hram data passed the suite green.
-            // The pass-2 mode has to be the one whose per-run half already ran in the
-            // fan-out. protein-compact owns its whole per-file cycle in Stage 6 and Stage 7
-            // folds the written answers; every other mode still computes the per-file half HERE,
-            // over the whole pool - RestorePass1Scalars, the resident second pass and the
-            // projection sink's per-file protein-q map all index it. Streaming underneath them
-            // does not make them per-run, it just takes their input away: something streams
-            // first and drops the pool, and ComputeAndPersist then throws "Value was read after
-            // StreamFiles dropped the survivor pool" hours into Stage 7.
-            //
-            // The fragment release used to be the concrete first-streamer quoted here. It is
-            // not any more (#4650): it reads its retained set from the analysis-wide summary and
-            // touches no pool. The term stands on its other grounds, which are the real ones -
-            // RestorePass1Scalars, the resident second pass, the projection sink's per-file map.
-            // Named because the illustration going away is exactly how a term gets relaxed on
-            // the strength of a fixed ordering, and then fails hours into Stage 7 for the
-            // reasons that never moved.
-            //
-            // Not a guess about which modes are safe - the same predicate ComputeAndPersist
-            // itself branches on for `frozenCompetition`. When transfer's per-run half moves to
-            // Pass2PerFileWorker this term becomes "any mode with a worker" and the two move
-            // together.
-            if (!OspreyEnvironment.Pass2ProteinCompact)
-                return false;
+            // The pass-2 mode is NOT a term, and that is #4665. A mode is admissible here only
+            // if its per-run half already ran in the fan-out, because Stage 7 then just folds
+            // the written answers; a mode that computed its per-file half in Stage 7, over the
+            // whole pool, would have its input taken away by the first streamer and fail hours
+            // into the stage ("Value was read after StreamFiles dropped the survivor pool").
+            // OSPREY_PASS2_QVALUE=transfer was that mode until its per-file half moved into
+            // Pass2PerFileWorker. Every mode has a worker now, and SecondPassFDR computes no
+            // per-run answer in any of them - so a term that reappears here means a mode has
+            // started doing per-run work in the join again, which is the defect to fix.
             return PerRunSurvivorLoaderAvailable(config);
         }
 
@@ -908,11 +894,9 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>ALL, not any. The fold rebuilds each run from its own reconciled parquet, so
         /// one run without a readable one is a run the fold cannot produce - and admitting the
-        /// stage on "some run has one" would fail at that run, hours in. The sibling question
-        /// "did Stage 6 rescore anything", which decides whether a second Percolator pass is
-        /// owed, is <c>SecondPassFdrTask.AnyReconciledParquet</c> and is deliberately not this:
-        /// a file with no rescore work still gets a faithful copy written for it, which is what
-        /// makes "all present" reachable on any route.</para>
+        /// stage on "some run has one" would fail at that run, hours in. A file with no rescore
+        /// work still gets a faithful copy written for it, which is what makes "all present"
+        /// reachable on any route.</para>
         ///
         /// <para>Empty or absent inputs return FALSE rather than vacuously true. There is no
         /// pool to bound on a run with no inputs, so the streamed arm buys nothing there, and
@@ -925,8 +909,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
             foreach (var input in config.InputFiles)
             {
-                // From the INPUT stem, the same derivation AnyReconciledParquet uses, so this
-                // reads identically in the in-process pipeline (Stage 6 has just written the
+                // From the INPUT stem, so this reads identically in the in-process pipeline (Stage 6 has just written the
                 // parquets) and on a --task SecondPassFDR node (a Stage 6 worker wrote them).
                 if (!ParquetScoreCache.IsCurrentReconciledSurvivorSubset(
                         ParquetScoreCache.GetReconciledScoresPath(input)))

@@ -949,7 +949,7 @@ namespace pwiz.Osprey {
                         "__no_first_pass_intermediate_file_for_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to {0}: this analysis was written by Osprey {1} and this build is {2}, so building the missing part of the report would re-run the analysis. Set {3}={1} to build it from the analysis as written..
         /// </summary>
@@ -959,23 +959,13 @@ namespace pwiz.Osprey {
                         "this_build_is__2___so_building_the_missing_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to {0}, {1} and {2} apply only with {3}..
         /// </summary>
         public static string Program_TrainingExportError__0____1__and__2__apply_only_with__3__ {
             get {
                 return ResourceManager.GetString("Program_TrainingExportError__0____1__and__2__apply_only_with__3__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} cannot run with {1}: that mode computes the run q-values in {2}, after the per-run export is written. Leave out {0}, or run without {1}..
-        /// </summary>
-        public static string Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_ {
-            get {
-                return ResourceManager.GetString("Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q" +
-                        "_values_in__2__after_the_per_run_export_", resourceCulture);
             }
         }
         

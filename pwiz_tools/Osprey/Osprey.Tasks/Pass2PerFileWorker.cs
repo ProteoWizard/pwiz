@@ -53,6 +53,15 @@ namespace pwiz.Osprey.Tasks
     /// which is the same hazard larger - every value that used to arrive implicitly, in the
     /// enclosing scope, is now something the worker must obtain explicitly. So every input it
     /// cannot obtain fails the run rather than being defaulted.</para>
+    ///
+    /// <para><b>Every pass-2 mode has a per-file half, and this is where each one runs</b>
+    /// (#4665). protein-compact competes the file over its stratum; <c>transfer</c> re-maps the
+    /// file's run q-values through its own 1st-pass score-to-q table
+    /// (<see cref="Pass2FdrSidecar.TransferOneFile"/>). Transfer does LESS per-file work than the
+    /// competition and used to be the one mode that held every run's survivors resident in
+    /// Stage 7 - not for any reason in its workload, but because its per-file half lived there.
+    /// With both here, PerFileRescoring writes every run's <c>.2nd-pass.fdr_scores.bin</c> and
+    /// SecondPassFDR writes no per-run file.</para>
     /// </summary>
     internal sealed class Pass2PerFileWorker : IDisposable
     {
@@ -60,6 +69,21 @@ namespace pwiz.Osprey.Tasks
         private readonly int _nFeatures;
         private readonly HashSet<uint> _stratumBaseIds;
         private readonly Action<string> _logWarning;
+
+        /// <summary>
+        /// True under <c>OSPREY_PASS2_QVALUE=transfer</c>: re-map run q through the file's own
+        /// 1st-pass table instead of competing. There is no competition, so no decoy side is
+        /// written either.
+        /// </summary>
+        private readonly bool _transfer;
+
+        /// <summary>The analysis-wide 1st-pass experiment records the transfer carries forward.</summary>
+        private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _pass1Experiment;
+
+        /// <summary>The transfer's run-wide counts, summed across the parallel file loop.</summary>
+        private Pass2FdrSidecar.TransferTally _transferTally;
+
+        private readonly object _transferTallyLock = new object();
 
         /// <summary>
         /// One seeder PER WORKER THREAD, not per file and not one shared.
@@ -96,8 +120,17 @@ namespace pwiz.Osprey.Tasks
         private readonly Action<string, IReadOnlyList<FdrScoreRecord>,
             IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
 
+        /// <param name="scorer">The frozen 1st-pass model.</param>
+        /// <param name="transfer">True for <c>OSPREY_PASS2_QVALUE=transfer</c>, false for the
+        /// protein-compact competition.</param>
+        /// <param name="stratumBaseIds">The protein stratum the competition is constrained to;
+        /// unused by the transfer.</param>
+        /// <param name="pass1Experiment">The analysis-wide 1st-pass experiment records.</param>
+        /// <param name="writeAnswer">Persists one file's records, and its competition decoys
+        /// when there was a competition (null under transfer).</param>
+        /// <param name="logWarning">Where a per-file warning goes.</param>
         public Pass2PerFileWorker(
-            FrozenModelScorer scorer, HashSet<uint> stratumBaseIds,
+            FrozenModelScorer scorer, bool transfer, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
             Action<string, IReadOnlyList<FdrScoreRecord>,
                 IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
@@ -106,7 +139,9 @@ namespace pwiz.Osprey.Tasks
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
             _nFeatures = scorer.NumFeatures;
+            _transfer = transfer;
             _stratumBaseIds = stratumBaseIds;
+            _pass1Experiment = pass1Experiment ?? throw new ArgumentNullException(nameof(pass1Experiment));
             _logWarning = logWarning ?? throw new ArgumentNullException(nameof(logWarning));
             _seeders = new ThreadLocal<Pass2FdrSidecar.Pass1ScalarSeeder>(() =>
             {
@@ -118,9 +153,11 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Compete one file and stamp its survivors with the run q it just earned.
+        /// Compute one file's second-pass answer, stamp its survivors with it, and write the
+        /// file's <c>.2nd-pass.fdr_scores.bin</c> - competing it under protein-compact,
+        /// transferring its run q-values under <c>transfer</c>.
         ///
-        /// <para>Returns the file's competition so the caller can write the sidecar from the same
+        /// <para>Returns the file's answer so the caller can write the sidecar from the same
         /// entries it stamped. The heavy per-entry payload is still live at the call site - the
         /// reconciled parquet has just been written and the release is gated behind it - which is
         /// exactly why the hook point is there and not later.</para>
@@ -130,10 +167,18 @@ namespace pwiz.Osprey.Tasks
         /// <param name="effectiveParquetPath">Its reconciled parquet, or its Stage 4 parquet when
         /// reconciliation produced none.</param>
         /// <param name="survivors">This file's post-rescore survivors. Stamped in place.</param>
-        public Pass2FileResult CompeteStampAndWrite(
+        public Pass2FileResult ComputeStampAndWrite(
             string fileName, string pass1SidecarPath, string effectiveParquetPath,
             List<FdrEntry> survivors)
         {
+            if (_transfer)
+            {
+                var transferred = TransferAndStamp(
+                    fileName, pass1SidecarPath, effectiveParquetPath, survivors);
+                // No decoy side: nothing competed, so there is no null to carry to the join.
+                _writeAnswer(fileName, transferred.Records, null);
+                return transferred;
+            }
             var result = CompeteAndStamp(
                 fileName, pass1SidecarPath, effectiveParquetPath, survivors);
             // The competition's BestDecoy is serialized as the worker COMPUTED it, never
@@ -195,6 +240,70 @@ namespace pwiz.Osprey.Tasks
             return new Pass2FileResult(
                 competition,
                 BuildRecords(survivors, fileName, effectiveParquetPath));
+        }
+
+        /// <summary>
+        /// The transfer's per-file half: re-score every survivor with the frozen model on its
+        /// RECONCILED features and map the score through this file's own 1st-pass score-to-q
+        /// table (<see cref="Pass2FdrSidecar.TransferOneFile"/>, unchanged from when Stage 7 ran
+        /// it over the whole pool).
+        ///
+        /// <para>The features come from the reconciled parquet just written, keyed by
+        /// <c>score_index</c>, which is what Stage 7 used to reload them from - so the scores,
+        /// and the UNCHANGED / MOVED / GAP-FILL classification that compares them bit for bit
+        /// against the 1st-pass record, are the same. Every survivor must resolve: this file's
+        /// parquet was written from these entries moments ago, so one that does not is a defect,
+        /// not a stub mismatch to warn about and skip.</para>
+        ///
+        /// <para>The features are borrowed onto the entries for the transfer and each entry's own
+        /// array is put back afterwards: lean stubs get their null back, while a resident pool
+        /// that loaded features on purpose (<c>OSPREY_FDR_PROJECTION=0</c>) keeps its own.</para>
+        /// </summary>
+        private Pass2FileResult TransferAndStamp(
+            string fileName, string pass1SidecarPath, string effectiveParquetPath,
+            List<FdrEntry> survivors)
+        {
+            var featByScoreIndex = Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
+            var ownFeatures = new double[survivors.Count][];
+            for (int i = 0; i < survivors.Count; i++)
+                ownFeatures[i] = survivors[i].Features;
+            int nMapped = Pass2FdrSidecar.MapFeaturesByScoreIndex(survivors, featByScoreIndex);
+            var tally = new Pass2FdrSidecar.TransferTally();
+            try
+            {
+                if (nMapped != survivors.Count)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Second-pass transfer for '{0}': {1} of {2} precursor candidates have no " +
+                        @"features in {3}, which was written from these same entries. See issue #4665.",
+                        fileName, survivors.Count - nMapped, survivors.Count, effectiveParquetPath));
+                }
+                Pass2FdrSidecar.TransferOneFile(fileName, pass1SidecarPath, survivors, _scorer,
+                    _pass1Experiment, _logWarning, ref tally);
+            }
+            finally
+            {
+                for (int i = 0; i < survivors.Count; i++)
+                    survivors[i].Features = ownFeatures[i];
+            }
+            // TransferOneFile declines a file whose 1st-pass sidecar it cannot read, leaving its
+            // survivors unadjusted. In Stage 7 that was a warning; here it is a file that would
+            // be written with run q-values nobody computed.
+            if (tally.FilesDone != 1)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"Second-pass transfer for '{0}': the first-pass intermediate file {1} could not " +
+                    @"be read, so this run's q-values cannot be transferred. See issue #4665.",
+                    fileName, pass1SidecarPath));
+            }
+            lock (_transferTallyLock)
+            {
+                _transferTally.FilesDone += tally.FilesDone;
+                _transferTally.Unchanged += tally.Unchanged;
+                _transferTally.Moved += tally.Moved;
+                _transferTally.GapFill += tally.GapFill;
+            }
+            return new Pass2FileResult(null, BuildRecords(survivors, fileName, effectiveParquetPath));
         }
 
         /// <summary>
@@ -319,37 +428,44 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Report what the seeders restored, ONCE and DETERMINISTICALLY, after the file loop.
+        /// Report what this worker did, ONCE and DETERMINISTICALLY, after the file loop - what
+        /// the transfer moved, or what the competition's seeders restored.
         ///
-        /// <para>Aggregated across the thread-local instances rather than logged per instance,
-        /// and the file names sorted, because which seeder holds which file name is decided by
-        /// which thread happened to take that file. Logging per instance would emit the same
-        /// facts in a run-to-run varying order and with a varying split - identical inputs
-        /// producing differing output, which is the invariant this project holds for testing and
-        /// for scientific review. The COMPUTED values were never at risk (each entry is seeded
-        /// from its own file's record, looked up by entry_id), but "the run is deterministic"
-        /// has to include what it says about itself.</para>
+        /// <para>Summed across the thread-local seeders rather than logged per instance, because
+        /// which seeder took which file is decided by which thread happened to take it. Logging
+        /// per instance would emit the same facts with a run-to-run varying split - identical
+        /// inputs producing differing output, which is the invariant this project holds for
+        /// testing and for scientific review. The COMPUTED values were never at risk (each entry
+        /// is seeded from its own file's record, looked up by entry_id), but "the run is
+        /// deterministic" has to include what it says about itself.</para>
         /// </summary>
         public void LogSummary(PipelineContext ctx)
         {
-            var unreadable = new List<string>();
+            if (_transfer)
+            {
+                // The transfer seeds nothing - every survivor takes its values from the transfer
+                // itself - so its summary is what the transfer did, not what a seeder restored.
+                Pass2FdrSidecar.TransferTally tally;
+                lock (_transferTallyLock)
+                    tally = _transferTally;
+                ctx.LogInfo(string.Format(
+                    @"OSPREY_PASS2_QVALUE=transfer over {0:N0} files: {1:N0} peaks keep their first-pass " +
+                    @"q-values, {2:N0} peaks moved by cross-run reconciliation and {3:N0} missing peaks get " +
+                    @"a new run-level q-value.",
+                    tally.FilesDone, tally.Unchanged, tally.Moved, tally.GapFill));
+                return;
+            }
             int restored = 0;
             int filesRead = 0;
             lock (_seederListLock)
             {
                 foreach (var seeder in _allSeeders)
                 {
-                    unreadable.AddRange(seeder.Unreadable);
                     restored += seeder.Restored;
                     filesRead += seeder.FilesRead;
                 }
             }
-            // Ordinal AND stable, so the text is byte-stable across runs and machines.
-            // OrderBy rather than List.Sort: the latter is introsort and reorders ties, which is
-            // the wrong tool to reach for in the one method whose entire purpose is to stop this
-            // output varying between runs - even though equal file names make the tie moot here.
-            unreadable = unreadable.OrderBy(s => s, StringComparer.Ordinal).ToList();
-            Pass2FdrSidecar.Pass1ScalarSeeder.LogSeedSummary(ctx, unreadable, restored, filesRead);
+            Pass2FdrSidecar.Pass1ScalarSeeder.LogSeedSummary(ctx, restored, filesRead);
         }
 
         public void Dispose()

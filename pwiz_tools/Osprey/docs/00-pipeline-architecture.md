@@ -446,12 +446,12 @@ is the defect, so the fix is one predicate, not a second check.
 That predicate is now per input file and covers ALL of that file's outputs, each judged by
 the validity stamp it carries inside itself (P9): `PerFileScoring` is done for a file when
 its `.calibration.json` and `.scores.parquet` are both current, `PerFileRescoring` when its
-reconciled parquet is current and, where the protein-compact worker answers for the file, both
-2nd-pass binaries (`.2nd-pass.fdr_scores.bin` and `.2nd-pass.fdr_decoys.bin`) carry that
-parquet's own stamp. A file whose parquet records no rescore work (`osprey.rescored=0`) gets
-no worker pair and Stage 7 answers for it, so it is done without one; Stage 7 likewise folds a
-pair as the worker's only when it carries the stamp of the parquet beside it, so a pair left
-under another key is recomputed rather than folded. A kill between two writes leaves one output stale or
+reconciled parquet is current and its 2nd-pass answer - `.2nd-pass.fdr_scores.bin`, plus
+`.2nd-pass.fdr_decoys.bin` under protein-compact - carries that parquet's own stamp. That holds
+for EVERY run, including one Stage 6 had no work for: the pass-2 worker answers every run in
+every mode (#4665), so there is no run whose answer Stage 7 owes. Stage 7 folds an answer only
+when it carries the stamp of the parquet beside it, and refuses the run otherwise, so an answer
+left under another key is never folded. A kill between two writes leaves one output stale or
 missing, so the file reads as not done and is recomputed. Outputs becoming valid together
 therefore holds by construction, not by the order the writer happens to use (P14).
 `FirstPassFDR` keeps progressive per-file completion the same way: each per-file product
@@ -801,13 +801,13 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
-| `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` or where no worker answer exists | with the run |
+| `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
 | `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
 | `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
-| `<stem>.2nd-pass.fdr_decoys.bin` | per-run product | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
-| `<stem>.2nd-pass.fdr_scores.bin` | per-run product | `PerFileRescoring` (pass-2 worker), else `SecondPassFDR` | `SecondPassFDR`; `PerFileRescoring`'s training export when the worker wrote it | with the run |
+| `<stem>.2nd-pass.fdr_decoys.bin` | per-run product, protein-compact only | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
+| `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
 | `<stem>.training.parquet` | per-run product (`--training-export`) | `PerFileRescoring` (Stage 6), in flight or on its export-only arm | terminal: the consumer that trains on it (CarafeSharp) | n/a |
 | `<blib-stem>.2nd-pass.fdr_experiment.bin` | experiment product | `SecondPassFDR` | `SecondPassFDR` on a resume | n/a |
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
@@ -881,17 +881,21 @@ one artifact meant one relay hop and one reload site.
 > `regression.ps1`. When that branch lands, this becomes a fourth experiment-wide artifact
 > that must relay with the other three.
 
-**`<stem>.2nd-pass.fdr_scores.bin` has two possible writers, and the file's own stamp says
-which.** When `PerFileRescoring` runs the pass-2 per-run worker it writes this file
-stamped with its *own* task and key - the artifact belongs to the task that produced it,
-so it must be invalidated by whatever invalidates that task. Stamping `SecondPassFDR`'s key
-at production time would leave a file that outlives the inputs it was computed from, which
-is the one staleness a resume cannot detect by looking. Where no worker ran, `SecondPassFDR`
-writes the file itself, under its own stamp.
+**`<stem>.2nd-pass.fdr_scores.bin` has one writer, in every pass-2 mode.** `PerFileRescoring`'s
+pass-2 per-run worker writes it for every run - the protein-compact competition and the
+`transfer` re-map alike, and a run Stage 6 had no work for as well as one it re-scored (#4665).
+It is stamped with the worker's *own* task and key - the artifact belongs to the task that
+produced it, so it must be invalidated by whatever invalidates that task. Stamping
+`SecondPassFDR`'s key at production time would leave a file that outlives the inputs it was
+computed from, which is the one staleness a resume cannot detect by looking. `SecondPassFDR`
+used to write it too - for `transfer`, for a run the worker had not answered, and from the pool
+when nothing was re-scored - and writes no per-run file now.
 
-`SecondPassFDR` then decides fold-versus-recompute on whether the binary's embedded stamp
-names `PerFileRescoring` and this build's version (`Pass2FdrSidecar.HasWorkerStamp`) - never
-by re-deriving that task's key, which it deliberately does not compare. The stamp already
+`SecondPassFDR` checks that every run's binary is the worker's current answer before it folds
+any (`Pass2FdrSidecar.RequireWorkerAnswers`), and refuses the run otherwise. The test is
+whether the embedded stamp names `PerFileRescoring` and this build's version and matches the
+stamp of the reconciled parquet beside it (`Pass2FdrSidecar.HasWorkerStamp`) - never a
+re-derivation of that task's key, which it deliberately does not compare. The stamp already
 says who wrote the binary, which is the whole point of stamping it. Recomputing the producer's
 key from the consumer's process was tried and failed exactly where it mattered:
 `PerFileRescoreTask.ValidityKey` folds in a per-leg flag, so a `--task SecondPassFDR`
@@ -1234,9 +1238,8 @@ The final join needs every run's reconciled output:
 
 Per run, for **every** run in the cohort:
 - `<stem>.scores-reconciled.parquet`
-- `<stem>.2nd-pass.fdr_scores.bin` and `<stem>.2nd-pass.fdr_decoys.bin`, where the
-  rescore node ran the pass-2 worker - the scores binary's embedded stamp is how this task
-  learns the worker produced them and folds them instead of recomputing
+- `<stem>.2nd-pass.fdr_scores.bin`, and under protein-compact `<stem>.2nd-pass.fdr_decoys.bin`
+  - the pass-2 worker's answer, which this task folds and never recomputes
 - `<stem>.reconciliation.json` - read here for the gap-fill entry ids on the Stage-7 fold
 - `<stem>.calibration.json` - isolation-window coverage, so a node with no mzML still has it
 
@@ -1266,23 +1269,19 @@ remove - so every consumer here **fails** on absence instead. The rule survived 
 round as "read the reconciled parquet, Stage 4's only as the per-file fallback"; the fallback
 half is retired, and the code carries no path to it.
 
-Not needed on the default path: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
-what issue #4486 was for - an orchestrator hands a `SecondPassFDR` node the per-run
-second-pass artifacts and the analysis-wide experiment sidecar, and nothing per-run from
-the first pass on the **default** mode. Two exceptions: `OSPREY_PASS2_VERIFY_WORKER`, a
-test instrument; and `OSPREY_PASS2_QVALUE=transfer`, which reads every run's copy to build
-its score-to-run-q table. Under `transfer` a missing sidecar is **not** fatal - it logs that
-the run's per-run q is left unadjusted and continues, so trimming these files and later
-running a transfer arm yields a whole cohort of reconciliation-moved peaks carrying
-pre-reconciliation q-values, in a success-shaped run. Ship them unless you know no transfer
-arm will follow.
+Not needed, in any pass-2 mode: `<stem>.1st-pass.fdr_scores.bin`. Establishing that is
+what issues #4486 and #4665 were for - an orchestrator hands a `SecondPassFDR` node the
+per-run second-pass artifacts and the analysis-wide experiment sidecar, and nothing per-run
+from the first pass. The one exception is `OSPREY_PASS2_VERIFY_WORKER`, a test instrument.
+`OSPREY_PASS2_QVALUE=transfer` used to be a second: it built each run's score-to-run-q table
+here, from every run's copy, and it now does that in the rescore worker.
 
 The worker's stamp is not optional bookkeeping here. It travels inside
 `<stem>.2nd-pass.fdr_scores.bin`, so it arrives whenever the file does; but a binary that
 reaches this node without a stamp naming `PerFileRescoring` and this build - written by
-another build, say -
-reads as no worker answer, and `SecondPassFDR` recomputes the pass-2 files from survivors
-only, which is not the same answer (P10).
+another build, say - or one that does not match its reconciled parquet's stamp is not a
+current answer, and `SecondPassFDR` stops and names the runs, because it has nothing to
+recompute them with (P10).
 
 
 ---
@@ -1358,15 +1357,13 @@ the text says so rather than describing the current shape as though it were the 
    all-runs-at-once. That is why the arms are required to produce identical bytes, and why
    an arm is a call-shape change rather than a second algorithm.
 
-   One route still cannot stream: a pass-2 mode whose per-file half has no worker
-   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). It is
-   `ScoringTaskShared.Stage7StreamAdmittedBeforeRescore` that declines there, on
-   `!OspreyEnvironment.Pass2ProteinCompact`, and no token records it - a run with no streamed
-   alternative has nothing for a token to admit. That is the one operator-chosen route into
-   the resident fold left standing, and it ends when `TransferOneFile` moves into
-   `Pass2PerFileWorker`; `SecondPassFdrTask.WarnResidentStage7Join` discloses it meanwhile.
-   The other routes in are `NeedsResidentPool`'s, which the first-pass guard names and
-   tokens.
+   Every pass-2 mode streams. The last that could not was `OSPREY_PASS2_QVALUE=transfer`,
+   whose per-file half ran over the whole pool in Stage 7, so
+   `ScoringTaskShared.Stage7StreamAdmittedBeforeRescore` declined it on
+   `!OspreyEnvironment.Pass2ProteinCompact`; #4665 moved `TransferOneFile` into
+   `Pass2PerFileWorker` and the term went with it. The routes into the resident fold now are
+   `NeedsResidentPool`'s, which the first-pass guard names and tokens, and
+   `SecondPassFdrTask.WarnResidentStage7Join` discloses them.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
    the route line `[PATH] second-pass-join: per-run` rather than inferred -

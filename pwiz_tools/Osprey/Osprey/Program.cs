@@ -970,15 +970,9 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
             if (export.ClaimantQ.HasValue && !(export.ClaimantQ.Value > 0 && export.ClaimantQ.Value <= 1))
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
-            // The transfer arm computes every run's second-pass q in SecondPassFDR, after
-            // PerFileRescoring has written the export, so the export would have no second-pass
-            // values for any run to select on.
-            if (export.Enabled && OspreyEnvironment.Pass2TransferQ)
-            {
-                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
-                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                    SecondPassFdrTask.TASK_NAME);
-            }
+            // No pass-2 mode is refused here any more. OSPREY_PASS2_QVALUE=transfer was, while it
+            // computed every run's second-pass q in SecondPassFDR after the export was written;
+            // its per-run half runs in PerFileRescoring now (#4665), before the export.
             return null;
         }
 

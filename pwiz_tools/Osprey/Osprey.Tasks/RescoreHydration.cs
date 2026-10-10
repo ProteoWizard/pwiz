@@ -869,23 +869,20 @@ namespace pwiz.Osprey.Tasks
         /// same bytes: this is the state <c>HydrateCompactedStreaming</c> leaves a run in, reached
         /// by the same calls in the same order. The difference is only how long the list lives.</para>
         ///
-        /// <para><paramref name="overlayFirstPass"/> is the Boundary 3 -&gt; 4 contract made a
-        /// parameter. FALSE for a run that already carries a current
-        /// <c>.2nd-pass.fdr_scores.bin</c>: that file holds every scalar the join reads, so
-        /// opening the first-pass one would reach back across a boundary issue #4486 exists to
-        /// establish - and would do it for every run in the cohort, on precisely the leg where an
-        /// orchestrator is entitled not to have shipped them. TRUE where there is no second-pass
-        /// answer yet, which is a mode whose per-run half still runs in the join and is the
-        /// exception the boundary already documents rather than a new one.</para>
+        /// <para>No first-pass file is opened: the Boundary 3 -&gt; 4 contract. Every run
+        /// carries a current <c>.2nd-pass.fdr_scores.bin</c>, which holds every scalar the join
+        /// reads, so opening the first-pass one would reach back across the boundary issue #4486
+        /// established - for every run in the cohort, on precisely the leg where an orchestrator
+        /// is entitled not to have shipped them. It used to be opened for a run with no
+        /// second-pass answer yet, which was a mode whose per-run half still ran in the join;
+        /// none does since #4665.</para>
         /// </summary>
         public static void RefillOneRunSurvivors(
             string fileName,
             string parquetPath,
             List<FdrEntry> survivors,
             HashSet<uint> retainedBaseIds,
-            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            Func<string, string, List<FdrEntry>> loadStubs,
-            bool overlayFirstPass)
+            Func<string, string, List<FdrEntry>> loadStubs)
         {
             if (survivors == null)
                 throw new ArgumentNullException(nameof(survivors));
@@ -899,16 +896,6 @@ namespace pwiz.Osprey.Tasks
             {
                 throw new InvalidOperationException(string.Format(
                     @"RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
-            }
-            if (overlayFirstPass)
-            {
-                string syntheticInput = SyntheticInputFromParquet(parquetPath);
-                // Overlay then compact, in that order, for the reason the two siblings state:
-                // the sidecar covers the whole PRE-compaction row set, so the filter has to
-                // name the records that legitimately have no entry to land on and leave every
-                // other miss reportable as the parquet drift it is.
-                OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
-                    id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
             }
             // Kept even where the reconciled parquet is already the survivor subset and this
             // removes nothing. It is the analysis-wide compaction predicate, it is the same

@@ -302,7 +302,7 @@ namespace pwiz.Osprey.Test
                 FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var tally = new Pass2FdrSidecar.TransferTally();
-                Pass2FdrSidecar.TransferOneFile(@"run1", inputFile, survivors, scorer,
+                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer,
                     new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
 
                 Assert.AreEqual(1, tally.FilesDone);

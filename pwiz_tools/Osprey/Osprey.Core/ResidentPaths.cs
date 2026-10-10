@@ -128,12 +128,10 @@ namespace pwiz.Osprey.Core
         // streamed arm byte for byte apart from generatedUtc. Not to be re-added - a second arm
         // kept alive only to keep it matching is a standing test cost, and every extra option
         // raises the testing burden. The fold's resident consumer survives for now, reached
-        // where NeedsResidentPool already forces it (projection-off) - and,
-        // NOT by any token here, under OSPREY_PASS2_QVALUE=transfer,
-        // which leaves Pass2ProteinCompact false so Stage7StreamAdmittedBeforeRescore declines.
-        // That last one is operator-chosen and untokened, exempt because transfer computes its
-        // per-file half inside Stage 7 over the whole pool; it ends when that half moves to
-        // Pass2PerFileWorker. So: mostly by declaration, and in exactly one place by choice.
+        // only where NeedsResidentPool already forces it (projection-off). It was also reached,
+        // untokened and by operator choice, under OSPREY_PASS2_QVALUE=transfer, whose per-file
+        // half ran inside Stage 7 over the whole pool; #4665 moved that half to
+        // Pass2PerFileWorker, and transfer now streams like every other mode.
 
 
         /// <summary>
