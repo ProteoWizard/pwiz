@@ -1181,14 +1181,6 @@
     <value>第二轮 FDR 将从该文件自己的中间文件读取该文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_" xml:space="preserve">
-    <value>第二轮 FDR 每次从各自的中间文件读取一个文件（{0:N0} 个文件）；{1:N0} 个保留的目标-诱饵对列表只读取一次，{0:N0} 个文件中已有 {2:N0} 个具有第二轮结果。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_" xml:space="preserve">
-    <value>第二轮 FDR 从该文件自己的中间文件读取该文件；{1:N0} 个保留的目标-诱饵对列表只读取一次，1 个文件中已有 {2:N0} 个具有第二轮结果。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_" xml:space="preserve">
     <value>正在并行重新评分 {0:N0} 个文件：</value>
     <comment>Needs Review:New resource</comment>

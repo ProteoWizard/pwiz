@@ -358,6 +358,8 @@ These are the deliberate, output-preserving architectural choices in the C# port
 
 7. **HPC task naming redesign.** The Rust `--no-join`/`--join-at-pass`/`--join-only` flag family is replaced by a single `--task {PerFileScoring|FirstPassFDR|PerFileRescoring|SecondPassFDR}` selector with one membership rule over the selection (`OspreyConfig.Includes`) and lazy byproduct rehydration; boundary files stay byte-identical. Related: Stage 6 writes a separate `.scores-reconciled.parquet` sibling (crash-safety) rather than rewriting in place, and reconciliation is carried through a serialized `reconciliation.json` (format_version 3) envelope. (docs 10, 11, 14, 15)
 
+8. **The second pass answers every run, including when Stage 6 re-scored nothing.** Rust skips its second pass when no run was re-scored (`total_rescored > 0`, pipeline.rs:5209) and reports the first-pass values. C# computes each run's second-pass answer in the per-run rescore worker (`Pass2PerFileWorker`), which cannot see whether any OTHER run had Stage 6 work, so it answers every run from that run's own peaks, and the join folds them all (#4665). A cohort with re-score work anywhere is unaffected - C# already recomputed every run there, as Rust does. A cohort with none at all (a single-run search with one charge state per peptide, say) differs: Rust keeps first-pass q-values, C# reports the second pass computed over unchanged peaks - identical under `transfer`, a fresh stratum competition under `protein-compact`. Before #4665 C# failed on that cohort (#4729). (doc 12)
+
 ---
 
 ## Document index

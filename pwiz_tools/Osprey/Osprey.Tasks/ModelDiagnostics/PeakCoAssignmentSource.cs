@@ -191,7 +191,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                         continue;   // phase 2 reports the missing input and abandons the panel
                     int fileIdx = f;   // a for-loop variable is captured by reference, not per iteration
                     // ReadRecords returns false AFTER having invoked the callback, with the partial
-                    // effects the caller must discard - the sibling RestorePass1Scalars stages into a
+                    // effects the caller must discard - the second pass's record fold stages into a
                     // buffer and applies only `if (ok)` for exactly this reason. Discarding the bool
                     // here meant a truncated or mid-write sidecar streamed N of M records into
                     // ObserveCutoff and then had SealRunCutoff called on the partial bests. Because

@@ -1181,14 +1181,6 @@
     <value>第2パスFDRは、ファイルをその中間ファイルから読み取ります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_" xml:space="preserve">
-    <value>第2パスFDRは、各ファイルをその中間ファイルから1ファイルずつ（{0:N0}個のファイル）読み取ります。保持された{1:N0}個のターゲット-デコイペアのリストは1回だけ読み取り、{0:N0}個のファイルのうち{2:N0}個にはすでに第2パスの結果があります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_" xml:space="preserve">
-    <value>第2パスFDRは、ファイルをその中間ファイルから読み取ります。保持された{1:N0}個のターゲット-デコイペアのリストは1回だけ読み取り、1個のファイルのうち{2:N0}個にはすでに第2パスの結果があります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_" xml:space="preserve">
     <value>{0:N0}個のファイルを並列で再スコアリング中：</value>
     <comment>Needs Review:New resource</comment>

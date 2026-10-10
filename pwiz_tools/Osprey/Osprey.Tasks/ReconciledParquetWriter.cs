@@ -81,10 +81,11 @@ namespace pwiz.Osprey.Tasks
             // 3. Reconciliation metadata (mirrors Rust build_reconciled_metadata).
             //    Whether this file had rescore work at all is recorded here, because the
             //    artifact's mere existence stopped answering that question once every file
-            //    started getting one. SecondPassFdrTask gates the 2nd Percolator pass on it
-            //    as the C# analog of Rust's total_rescored > 0, and a faithful copy must not
-            //    read as work. The condition is exactly BuildOverlay's two outputs being
-            //    empty - no re-scored row to overlay and no gap-fill row to append.
+            //    started getting one. It is provenance now: the second pass answers every run
+            //    alike (#4665), so nothing branches on it - it used to gate both the second
+            //    Percolator pass (Rust's total_rescored > 0) and whether a run owed a per-file
+            //    answer. The condition is exactly BuildOverlay's two outputs being empty - no
+            //    re-scored row to overlay and no gap-fill row to append.
             var metadata = ParquetScoreCache.WithStamp(BuildReconciliationMetadata(config, joinFileStems,
                 rescored: overlayByIndex.Count > 0 || gapFill.Count > 0), stamp);
 
@@ -218,18 +219,6 @@ namespace pwiz.Osprey.Tasks
                 // when there was work, so its existence meant the same thing.
                 { META_RESCORED, rescored ? @"1" : @"0" },
             };
-        }
-
-        /// <summary>
-        /// Whether the reconciled parquet at <paramref name="reconciledPath"/> records rescore
-        /// work (<c>osprey.rescored</c> other than <c>0</c>). A parquet written before the key
-        /// existed reads as work, because back then it was only written when there was some.
-        /// </summary>
-        internal static bool RecordsRescoreWork(string reconciledPath)
-        {
-            var footer = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
-            return !footer.TryGetValue(META_RESCORED, out string rescored) ||
-                   !string.Equals(rescored, @"0", StringComparison.Ordinal);
         }
     }
 }

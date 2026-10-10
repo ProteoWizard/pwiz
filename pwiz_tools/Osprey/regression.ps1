@@ -365,10 +365,10 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 # asked for a token. #4486 was the standing example while it was open: the survivor
 # buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
 # path, and no guard covered it because it was not a resume or a mode - it was what Stage
-# 7 took as input. That is now closed (#4486): every default leg folds run by run, and the
-# one route that still takes the pool is the transfer pass-2 mode, tracked as #4665 in the
-# row below. Zero tokens therefore does NOT mean zero gaps, and this table keeps that
-# legible.
+# 7 took as input. That is now closed (#4486): every leg folds run by run. The last route
+# that still took the pool - the transfer pass-2 mode, whose per-file half ran in Stage 7 -
+# was this table's last row until #4665 moved that half into Pass2PerFileWorker. Zero tokens
+# still does NOT mean zero gaps in general, and this table is where the next one goes.
 #
 # Printed in the run summary (not just parked in a comment) so every CI log states the
 # outstanding gaps, and so a fixed entry left here shows up as a stale line in output
@@ -384,41 +384,12 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 #     handoff like every other leg and resume-survivor-handoff - the last entry here - came out
 #     with it. Zero is the invariant, not a milestone: a new entry below is a regression
 #     to justify in review, not a line to add and move on.
-$knownResidentGaps = @(
-    # Untokened by nature, which is exactly why it belongs here: no guard demands a token
-    # for it, so a token audit cannot see it and a green gate printed "none" while every
-    # leg walked it. Measured 2026-08-09 on 82 files rather than estimated - the preamble
-    # above names it, and a table that omits the one gap the preamble names is worse than
-    # no table. Token NONE, so it does not inflate the required-token count below.
-    @{
-        Issue = '#4665'
-        Token = 'NONE'
-        Path  = 'Transfer pass-2 (OSPREY_PASS2_QVALUE=transfer) computes its per-file half in Stage 7 over the whole pool (TransferOneFile runs from TransferPerRunQ, not from Pass2PerFileWorker); resident for the whole of Stage 7. #4486, the original tracker, is closed.'
-        # One model, stated explicitly: a fixed library term plus a per-file slope, both from
-        # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
-        # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
-        # not 0.197), which is unreadable in a summary that prints on every CI run.
-        # NOT every leg any more, and saying so mattered: this gate's own mode-3 SecondPassFDR
-        # phase takes the streamed join, which is the fix for this gap being exercised rather
-        # than merely described. The note below about hpc-merge already said that; this line
-        # still said "every leg", so the summary printed the stale half on every CI run.
-        #
-        # The model is now CONFIRMED rather than projected: 4.4 + 0.197*446 = 92.3 GB predicts
-        # the 91.1 GB private measured on the 446-run CHS cohort (2026-09-08), which is the
-        # first endpoint past 82 files. Quoted as a check on the model, not as a second model -
-        # see the note above about three numbers no single model reproduced.
-        # The set has SHRUNK from "every leg except mode 3's join phase" to one pass-2 mode.
-        # CanStreamStage7Join's first term was config.ExpectReconciledInput, which only
-        # --task SecondPassFDR sets, so the ordinary run could not stream BY CONSTRUCTION;
-        # derived from the reconciled parquets on disk it is route-independent, and the cold
-        # run and both resume arms now fold run by run (asserted per leg, not projected).
-        # What is left is the pass-2 mode with no per-file worker: transfer still computes
-        # its per-file half in Stage 7, over the whole pool. Moving TransferOneFile into
-        # Pass2PerFileWorker is what empties this row - and then the guard's
-        # streamingAvailable exemption has no subject either, so the two go together.
-        Legs  = 'ONLY a pass-2 mode with no per-file worker (OSPREY_PASS2_QVALUE=transfer, exercised per commit by SubsetPipelineTest''s transfer arm since #4728; no leg of this gate runs it). Every default leg - cold straight-through, the resume, and mode 3''s SecondPassFDR phase - folds run by run. ~4.4 GB library + 0.197 GB/file live post-GC where it is still taken: ~20 GB at 82 files, and 92.3 GB predicted vs 91.1 GB measured at 446.'
-    }
-)
+# EMPTY since #4665. Its last row was the transfer pass-2 mode (OSPREY_PASS2_QVALUE=transfer),
+# untokened by nature because no guard demanded a token for it: its per-file half ran in
+# Stage 7 over the whole pool, ~4.4 GB library + 0.197 GB/file live post-GC - 92.3 GB
+# predicted against 91.1 GB measured at 446 runs. Transfer now streams like every other mode,
+# exercised per commit by SubsetPipelineTest's transfer arm (no leg of this gate runs it).
+$knownResidentGaps = @()
 # Reachable only outside this gate, tokened, each with an open issue: NONE. The last one,
 # fdrbench-pass1 (#4507), is GONE: the pass-1 emitter streams off the per-file sidecars and
 # mode 12 covers it - the ratchet shrinking a fifth time. hpc-merge went with #4486 (the
@@ -2527,26 +2498,22 @@ foreach ($name in $selected) {
             -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
         $chainFold = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
-        # And the chain must have folded a worker answer for EVERY file. "Verification off" is
-        # not the same as "the shipped path ran": a node given no 2nd-pass artifacts also has the
-        # verifier off, and silently recomputes every file from 1st-pass sidecars. That is exactly
-        # what a SEA-AD measurement did for hours while reporting the shipped path (2026-08-31).
-        # Only the modes with a per-file half make this claim. OSPREY_PASS2_QVALUE=transfer and
-        # the retrain modes compute the second pass in Stage 7 by definition, so there is no
-        # worker answer to fold and demanding one would fail them for a contract they never
-        # made. Detected from the worker's own validity stamp reaching phase 4 - the producer
-        # named inside the shipped 2nd-pass sidecar - not from the mode flag.
-        $chainHasWorkerOutput = @(Get-ChildItem -File -Path $chainDir -Filter '*.2nd-pass.fdr_scores.bin' `
-            -ErrorAction SilentlyContinue | Where-Object { Test-ProducedBy $_.FullName 'PerFileRescoring' }).Count -gt 0
-        $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
-            -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ answered=(\d+)/\1\b') -Quiet
-        if (-not $chainHasWorkerOutput) {
-            $summaryLines.Add("$name mode3 (shipped fold): SKIP (mode has no per-file half)")
-        } elseif (-not $chainAllAnswered) {
+        # And the chain must have folded the worker answers. "Verification off" is not the same
+        # as "the shipped path ran": a node given no 2nd-pass artifacts also has the verifier off.
+        # It used to silently recompute every file from 1st-pass sidecars - exactly what a SEA-AD
+        # measurement did for hours while reporting the shipped path (2026-08-31). Since #4665 it
+        # refuses instead, because SecondPassFDR computes no per-run answer in any mode, so this
+        # asserts the two things that make the fold real: every 2nd-pass sidecar phase 4 read
+        # names PerFileRescoring as its producer, and phase 4 reported the fold.
+        $chainSidecars = @(Get-ChildItem -File -Path $chainDir -Filter '*.2nd-pass.fdr_scores.bin' -ErrorAction SilentlyContinue)
+        $chainWorkerSidecars = @($chainSidecars | Where-Object { Test-ProducedBy $_.FullName 'PerFileRescoring' })
+        $chainFolded = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ runs=\d+\b') -Quiet
+        if ($chainSidecars.Count -eq 0 -or $chainWorkerSidecars.Count -ne $chainSidecars.Count -or -not $chainFolded) {
             $overallFail = $true
-            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - phase 4 did not report a worker " +
-                "answer for ALL files, so it recomputed some from 1st-pass sidecars rather than " +
-                "folding what the workers wrote.")
+            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - $($chainWorkerSidecars.Count) of " +
+                "$($chainSidecars.Count) 2nd-pass sidecars were written by PerFileRescoring, and phase 4 " +
+                "reported the fold: $([bool]$chainFolded).")
             $summaryLines.Add("$name mode3 (shipped fold): FAIL")
         } else {
             $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
@@ -2589,10 +2556,10 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (streamed join): PASS (per-run fold, no all-runs pool)")
         }
 
-        # Scoped for the same reason as the shipped-fold check above: the verifier only exists on
-        # the frozen-competition path, so OSPREY_PASS2_QVALUE=transfer and the retrain modes emit
-        # NEITHER fold line and there is no split to assert. Detected from the straight leg having
-        # emitted a fold line at all, rather than from the mode flag.
+        # Scoped to the competition: the verifier only exists on the protein-compact fold, so
+        # OSPREY_PASS2_QVALUE=transfer emits NEITHER fold line and there is no split to assert.
+        # Detected from the straight leg having emitted a fold line at all, rather than from the
+        # mode flag.
         $straightUsedFrozenPath = Select-String -Path (Join-Path $straightDir 'straight.log') `
             -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
         if (-not $straightUsedFrozenPath) {

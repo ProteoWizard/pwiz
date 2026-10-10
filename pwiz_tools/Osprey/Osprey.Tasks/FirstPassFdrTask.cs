@@ -520,7 +520,7 @@ namespace pwiz.Osprey.Tasks
             // The sidecar FORMAT VERSION belongs here because this task's output is the
             // .1st-pass.fdr_scores.bin every later stage reads back. Resuming a directory written
             // before a format bump would find this task still valid, skip it, and then have every
-            // v4 reader refuse the v3 file by version - leaving RestorePass1Scalars to seed
+            // v4 reader refuse the v3 file by version - which once left the second pass to seed
             // nothing and write ResetScores defaults into the 2nd-pass sidecars under only a
             // warning. Including the version turns that silent-wrong-output path into a clean
             // recompute.

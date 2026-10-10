@@ -280,9 +280,8 @@ namespace pwiz.Osprey.IO
         /// question the refusal asks, or a run is admitted to a fold it then aborts.</para>
         ///
         /// <para>Says nothing about whether Stage 6 did any rescore WORK on the file - that is
-        /// the <c>osprey.rescored</c> footer key and a different question, deciding whether a
-        /// second Percolator pass is owed. This one asks only whether the rows are readable in
-        /// the shape a survivor rebuild needs.</para>
+        /// the <c>osprey.rescored</c> footer key, a different question. This one asks only
+        /// whether the rows are readable in the shape a survivor rebuild needs.</para>
         /// </summary>
         public static bool IsCurrentReconciledSurvivorSubset(string path)
         {

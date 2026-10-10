@@ -1220,7 +1220,7 @@ namespace pwiz.Osprey.Tasks {
                         "_to_date", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to the first-pass model file ({0}) holds no model.
         /// </summary>
@@ -2365,6 +2365,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0:N0} of {1:N0} runs have no current second-pass results file ({3}), which {4} writes for every run. Second-pass FDR combines those files and computes none of its own. Run {5} for them. Missing: [{2}]..
+        /// </summary>
+        public static string Pass2FdrSidecar_RequireWorkerAnswers__0__of__1__runs_have_no_current_second_pass_results_file___3____which__4__writes_for_every_run_ {
+            get {
+                return ResourceManager.GetString("Pass2FdrSidecar_RequireWorkerAnswers__0__of__1__runs_have_no_current_second_pass_" +
+                        "results_file___3____which__4__writes_for_every_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Restoring first-pass scores for {0:N0} files.
         /// </summary>
         public static string Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for__0__files {
@@ -2738,22 +2748,22 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR reads one file at a time ({0:N0} files) from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once, and {2:N0} of {0:N0} files already have second-pass results..
+        ///   Looks up a localized string similar to Second-pass FDR reads one file at a time ({0:N0} files) from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once..
         /// </summary>
-        public static string PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_ {
+        public static string PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_list_is_read_once_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_ti" +
-                        "me___0__files__from_its_own_intermediate_files__the_", resourceCulture);
+                        "me___0__files__from_its_own_intermediate_files__the_list_is_read_once_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR reads the file from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once, and {2:N0} of 1 file already has second-pass results..
+        ///   Looks up a localized string similar to Second-pass FDR reads the file from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once..
         /// </summary>
-        public static string PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_ {
+        public static string PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_pairs_is_read_once_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_it" +
-                        "s_own_intermediate_files__the_list_of__1__kept_", resourceCulture);
+                        "s_own_intermediate_files__the_list_of__1__kept_pairs_is_read_once_", resourceCulture);
             }
         }
         
@@ -4553,7 +4563,7 @@ namespace pwiz.Osprey.Tasks {
                 return ResourceManager.GetString("SpectraCacheTask_Run_Caching__0__files___1__at_a_time_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Caching spectra {0}/{1}: {2}.
         /// </summary>

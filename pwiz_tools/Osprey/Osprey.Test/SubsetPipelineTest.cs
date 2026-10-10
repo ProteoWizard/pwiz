@@ -525,6 +525,9 @@ namespace pwiz.Osprey.Test
                 });
                 AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
                 AssertHasLine(transferLog, PathLine(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
+                // Transfer's per-file half runs in the rescore worker like every other mode
+                // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
+                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             }
             finally
             {
@@ -540,6 +543,11 @@ namespace pwiz.Osprey.Test
             {
                 string sidecar = Path.Combine(transferDir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
                 Assert.IsTrue(File.Exists(sidecar), @"the transfer arm wrote no second-pass sidecar: " + sidecar);
+                // Written by PerFileRescoring, not by SecondPassFDR: the per-run 2nd-pass sidecar
+                // has one producer in every pass-2 mode (#4665).
+                Assert.AreEqual(PerFileRescoreTask.TASK_NAME,
+                    FdrScoresSidecar.ReadStamp(sidecar, FdrScoresSidecar.Pass.SecondPass)?.Task,
+                    @"the transfer arm's second-pass sidecar was not written by re-scoring: " + sidecar);
             }
 
             // Calibration from a sample of the library, as on a full-size library: sampled
@@ -994,25 +1002,22 @@ namespace pwiz.Osprey.Test
                 ShipFiles(phase3, phase4Dir, run + ParquetScoreCache.EXT_SCORES_RECONCILED, run + CalibrationIO.EXT,
                     run + ReconciliationFile.EXT);
                 ShipFilesIfPresent(phase3, phase4Dir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM);
-                string pass2Scores = PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT);
-                string pass2Decoys = PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT);
-                if (File.Exists(Path.Combine(_testDir, phase3, pass2Scores)))
-                {
-                    ShipFiles(phase3, phase4Dir, pass2Scores, pass2Decoys);
-                }
-                else
-                {
-                    ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT));
-                }
+                // Every run's second-pass answer, and nothing from its first pass: PerFileRescoring
+                // writes the answer for every run (#4665), so a SecondPassFDR node needs no
+                // per-run 1st-pass file.
+                ShipFiles(phase3, phase4Dir,
+                    PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT),
+                    PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
             ShipFiles(@"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
             ShipFilesIfPresent(@"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
                 OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
             string phase4Log = RunTask(data, phase4Dir, SecondPassFdrTask.TASK_NAME, data.Runs);
             AssertHasLine(phase4Log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            // Every run's per-file worker answer was folded, none recomputed here.
+            // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
+            // otherwise, so the fold line is the evidence it ran.
             var fold = new Regex(Regex.Escape(PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, string.Empty)) +
-                                 @"verify=\w+ answered=(\d+)/\1\b");
+                                 @"verify=\w+ runs=" + data.Runs.Length + @"\b");
             Assert.IsTrue(fold.IsMatch(phase4Log), @"second pass did not fold every worker answer" +
                                                    Environment.NewLine + phase4Log);
             // The verifier split: if the variable stopped reaching a run, both legs would take

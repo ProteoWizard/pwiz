@@ -123,7 +123,7 @@ Under `--task PerFileRescoring` the membership rule includes only this stage (th
 
 `SecondPassFdrTask` (`Osprey.Tasks/SecondPassFdrTask.cs`). The terminal aggregator. `Run` (`:115-235`):
 
-1. Second-pass Percolator FDR whenever any reconciled parquet exists on disk (`AnyReconciledParquet`, `:284-294` — the C# analog of Rust's `total_rescored > 0`), via `Pass2FdrSidecar.ComputeAndPersist` (`:149`), which reloads reconciled features, reruns Percolator, writes `<stem>.2nd-pass.fdr_scores.bin`, and reloads them onto the stubs.
+1. Second-pass FDR, via `Pass2FdrSidecar.ComputeAndPersist`, which folds every run's `<stem>.2nd-pass.fdr_scores.bin` - written by `PerFileRescoring`'s pass-2 worker for every run, in every pass-2 mode (#4665) - into the analysis-wide experiment scope and puts the second-pass q-values onto the stubs. It writes no per-run file.
 2. Second-pass protein FDR — always runs (parsimony + picked-protein at `config.RunFdr`), `RunProteinFdr` (`:249-273`).
 3. Re-clamp experiment q to best run q (`PercolatorEngine.ClampExperimentQToBestRun`, `:177`).
 4. Write the BiblioSpecLite `.blib` (`WriteBlibOutput`, `:299-370`; see 13-blib-output-schema.md).
@@ -176,7 +176,7 @@ every node - is the sidecar file contract in
 [00-pipeline-architecture.md](00-pipeline-architecture.md). It is verified row by row against
 the path-building code; the table that used to sit here had drifted (it attributed
 `<stem>.2nd-pass.fdr_scores.bin` to Stage 7, when `PerFileRescoring`'s pass-2 worker writes it
-whenever that worker runs).
+for every run).
 
 Per-run notes worth keeping alongside the contract:
 

@@ -913,12 +913,6 @@
   <data name="PerFileRescoreTask_BuildRunPerRunSource_Second_pass_FDR_will_read_the_file_from_its_own_intermediate_files_" xml:space="preserve">
     <value>Second-pass FDR will read the file from its own intermediate files.</value>
   </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_" xml:space="preserve">
-    <value>Second-pass FDR reads one file at a time ({0:N0} files) from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once, and {2:N0} of {0:N0} files already have second-pass results.</value>
-  </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_" xml:space="preserve">
-    <value>Second-pass FDR reads the file from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once, and {2:N0} of 1 file already has second-pass results.</value>
-  </data>
   <data name="PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_" xml:space="preserve">
     <value>Re-scoring {0:N0} files in parallel:</value>
   </data>
@@ -1584,5 +1578,14 @@
   </data>
   <data name="TrainingExportWriter_ExportRun_Exporting_isolation_windows" xml:space="preserve">
     <value>Exporting isolation windows</value>
+  </data>
+  <data name="Pass2FdrSidecar_RequireWorkerAnswers__0__of__1__runs_have_no_current_second_pass_results_file___3____which__4__writes_for_every_run_" xml:space="preserve">
+    <value>{0:N0} of {1:N0} runs have no current second-pass results file ({3}), which {4} writes for every run. Second-pass FDR combines those files and computes none of its own. Run {5} for them. Missing: [{2}].</value>
+  </data>
+  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_pairs_is_read_once_" xml:space="preserve">
+    <value>Second-pass FDR reads the file from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once.</value>
+  </data>
+  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_list_is_read_once_" xml:space="preserve">
+    <value>Second-pass FDR reads one file at a time ({0:N0} files) from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once.</value>
   </data>
 </root>
