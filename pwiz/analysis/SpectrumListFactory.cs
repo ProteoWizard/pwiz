@@ -917,14 +917,15 @@ public static class SpectrumListFactory
             MinimumWindowSize = double.Parse(TakeKeyValue(ref args, "minWindowSize=", "0.2"), NumberStyles.Float, CultureInfo.InvariantCulture),
             RemoveNonOverlappingEdges = bool.Parse(TakeKeyValue(ref args, "removeNonOverlappingEdges=", "false")),
             Optimization = ParseOptimization(TakeKeyValue(ref args, "optimization=", "none")),
+            SolveThreads = int.Parse(TakeKeyValue(ref args, "solveThreads=", "1"), CultureInfo.InvariantCulture),
         };
 
         args = args.Trim();
         if (!string.IsNullOrEmpty(args))
             throw new ArgumentException($"demultiplex: unhandled text in argument string: \"{args}\"");
 
-        if (p.MassError.Value <= 0 || p.NnlsEps <= 0 || p.DemuxBlockExtra < 0)
-            throw new ArgumentException("demultiplex: massError and nnlsEps must be > 0; demuxBlockExtra must be ≥ 0");
+        if (p.MassError.Value <= 0 || p.NnlsEps <= 0 || p.DemuxBlockExtra < 0 || p.SolveThreads < 1)
+            throw new ArgumentException("demultiplex: massError and nnlsEps must be > 0; demuxBlockExtra must be ≥ 0; solveThreads must be ≥ 1");
 
         return new SpectrumListDemux(inner, p);
     }
