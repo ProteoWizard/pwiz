@@ -55,20 +55,24 @@ namespace pwiz.Osprey.IO
     /// is named after one of the input files - which is a real configuration, and a guard that
     /// cannot fire is better than one that has to be checked.</para>
     ///
-    /// Format (32-byte header + N x 36-byte records, all little-endian):
+    /// Format (32-byte header + N x 44-byte records + the validity stamp, all little-endian;
+    /// see <see cref="BinarySidecarStamp"/>):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYEXP"
-    ///   version       [8]      = u8 (= 1)
+    ///   version       [8]      = u8 (= 3)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
-    ///   reserved      [24..32] = 8 bytes (zero)
-    ///   body          [32..]   = entry_count * 36 bytes:
+    ///   stamp_length  [24..28] = u32
+    ///   reserved      [28..32] = 4 bytes (zero)
+    ///   body          [32..]   = entry_count * 44 bytes:
     ///                            [0..4]   u32 entry_id
     ///                            [4..12]  f64 experiment_precursor_qvalue
     ///                            [12..20] f64 experiment_peptide_qvalue
     ///                            [20..28] f64 experiment_protein_qvalue
     ///                            [28..36] f64 experiment_aggregate_score
+    ///                            [36..44] f64 pep
+    ///   stamp         [..end]  = stamp_length bytes, the writing task's <see cref="ArtifactStamp"/>
     /// </code>
     ///
     /// <para>The magic differs from the per-file sidecar's <c>OSPRYFDR</c> deliberately: the two
@@ -89,8 +93,8 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'E', (byte)'X', (byte)'P' };
 
-        public const byte FormatVersion = 2;
-        public const int HeaderLength = 32;
+        public const byte FormatVersion = 3;
+        public const int HeaderLength = BinarySidecarStamp.HEADER_LENGTH;
         public const int RecordLength = 44;
 
         /// <summary>
@@ -155,9 +159,9 @@ namespace pwiz.Osprey.IO
                     if (!ReadFully(fs, header, HeaderLength))
                         return false;
                 }
-                if (!HeaderOk(header, expectedPass, out ulong headerCount))
+                if (!HeaderOk(header, expectedPass))
                     return false;
-                return TryComputeExpectedLen(headerCount, out int expectedLen) &&
+                return BinarySidecarStamp.TryComputeExpectedLength(header, RecordLength, out _, out long expectedLen) &&
                        info.Length == expectedLen;
             }
             catch (IOException)
@@ -184,10 +188,12 @@ namespace pwiz.Osprey.IO
         /// Commit, so a failure leaves any existing destination untouched.
         /// </summary>
         public static void Write(string path,
-            IReadOnlyDictionary<uint, FdrExperimentRecord> byEntryId, FdrScoresSidecar.Pass pass)
+            IReadOnlyDictionary<uint, FdrExperimentRecord> byEntryId, FdrScoresSidecar.Pass pass,
+            ArtifactStamp stamp)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (byEntryId == null) throw new ArgumentNullException(nameof(byEntryId));
+            byte[] stampBytes = BinarySidecarStamp.Encode(stamp);
 
             // Canonical order, so the file is a function of its contents and not of the order
             // the producer walked its inputs (the straight-through and distributed routes do
@@ -204,7 +210,8 @@ namespace pwiz.Osprey.IO
 
             using (var saver = new FileSaver(path))
             {
-                using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
+                // 1 MB buffer for the same reason as FdrScoresSidecar: millions of small records.
+                using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 20))
                 using (var bw = new BinaryWriter(fs))
                 {
                     bw.Write(Magic);                    // [0..8]
@@ -212,7 +219,7 @@ namespace pwiz.Osprey.IO
                     bw.Write((byte)pass);               // [9]
                     bw.Write(new byte[6]);              // [10..16] reserved
                     bw.Write((ulong)ids.Length);        // [16..24]
-                    bw.Write(new byte[8]);              // [24..32] reserved
+                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes); // [24..32]
 
                     foreach (uint id in ids)
                     {
@@ -224,6 +231,7 @@ namespace pwiz.Osprey.IO
                         bw.Write(r.ExperimentAggregateScore);       // [28..36]
                         bw.Write(r.Pep);                            // [36..44]
                     }
+                    bw.Write(stampBytes);
                 }
                 saver.Commit();
             }
@@ -231,7 +239,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Stream every record to <paramref name="onRecord"/> in stored (ascending entry_id)
-        /// order, one 36-byte record resident at a time. Returns false - with whatever partial
+        /// order, one <see cref="RecordLength"/>-byte record resident at a time. Returns false - with whatever partial
         /// callback effects the caller must then discard - on a missing file or any header /
         /// size mismatch.
         /// </summary>
@@ -250,16 +258,16 @@ namespace pwiz.Osprey.IO
                     var header = new byte[HeaderLength];
                     if (!ReadFully(src, header, HeaderLength))
                         return false;
-                    if (!HeaderOk(header, expectedPass, out ulong headerCount))
+                    if (!HeaderOk(header, expectedPass))
                         return false;
-                    if (!TryComputeExpectedLen(headerCount, out int expectedLen) ||
+                    if (!BinarySidecarStamp.TryComputeExpectedLength(header, RecordLength, out int recordCount, out long expectedLen) ||
                         src.Length != expectedLen)
                     {
                         return false;
                     }
 
                     var record = new byte[RecordLength];
-                    for (ulong rec = 0; rec < headerCount; rec++)
+                    for (int rec = 0; rec < recordCount; rec++)
                     {
                         if (!ReadFully(src, record, RecordLength))
                             return false;
@@ -303,40 +311,26 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The validity stamp of the experiment sidecar at <paramref name="path"/>, or null when
+        /// it is missing or not a current-format <paramref name="expectedPass"/> sidecar.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path, FdrScoresSidecar.Pass expectedPass)
+        {
+            return IsCurrentFormat(path, expectedPass) ? BinarySidecarStamp.TryRead(path, RecordLength) : null;
+        }
+
+        /// <summary>
         /// Validate the 32-byte header: magic, current version, expected pass byte. Shared by
         /// every entry point so they cannot drift on what they accept.
         /// </summary>
-        private static bool HeaderOk(byte[] header, FdrScoresSidecar.Pass expectedPass,
-            out ulong headerCount)
+        private static bool HeaderOk(byte[] header, FdrScoresSidecar.Pass expectedPass)
         {
-            headerCount = 0;
             for (int i = 0; i < Magic.Length; i++)
             {
                 if (header[i] != Magic[i])
                     return false;
             }
-            if (header[8] != FormatVersion || header[9] != (byte)expectedPass)
-                return false;
-            headerCount = BitConverter.ToUInt64(header, 16);
-            return true;
-        }
-
-        /// <summary>
-        /// Compute <c>HeaderLength + headerCount * RecordLength</c> with overflow detection, so
-        /// a corrupt count cannot wrap int and let the size check pass spuriously.
-        /// </summary>
-        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
-        {
-            try
-            {
-                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
-                return true;
-            }
-            catch (OverflowException)
-            {
-                expectedLen = 0;
-                return false;
-            }
+            return header[8] == FormatVersion && header[9] == (byte)expectedPass;
         }
 
         /// <summary>

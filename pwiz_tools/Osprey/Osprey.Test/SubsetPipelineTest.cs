@@ -26,6 +26,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
@@ -155,7 +156,7 @@ namespace pwiz.Osprey.Test
 
             // Mode 2: invalidate the join and the library, and resume from the spectra caches
             // alone - the inputs are named in the work directory, where no mzML exists.
-            DeleteFiles(straightDir, Path.GetFileName(TaskValiditySidecar.PathFor(@"*", FirstPassFdrTask.TASK_NAME)));
+            DeleteFiles(straightDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
             DeleteSecondPassOutputs(blib);
             log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(true));
             AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
@@ -321,7 +322,7 @@ namespace pwiz.Osprey.Test
             string ReferenceOf(string product) => Path.Combine(referenceDir, Path.GetFileName(product));
 
             // Mode 5: the rehydrated second pass re-emits the pass-2 product and the report,
-            // unchanged. Deleted first: a product left in place would be restamped as current and
+            // unchanged. Deleted first: a product left in place would be adopted as current and
             // compared against itself.
             DeleteSecondPassOutputs(blib);
             DeleteDiagnosticsProducts(workDir, pass2, report);
@@ -364,7 +365,7 @@ namespace pwiz.Osprey.Test
             foreach (string changed in ChangedFiles(before, workDir))
             {
                 Assert.IsTrue(changed == Path.GetFileName(pass1) || changed == Path.GetFileName(pass2) ||
-                              changed == Path.GetFileName(report) || changed.EndsWith(TaskValiditySidecar.EXT, StringComparison.Ordinal),
+                              changed == Path.GetFileName(report),
                     @"the pay-later fold touched an artifact other than the report: " + changed);
             }
 
@@ -997,9 +998,7 @@ namespace pwiz.Osprey.Test
                 string pass2Decoys = PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT);
                 if (File.Exists(Path.Combine(_testDir, phase3, pass2Scores)))
                 {
-                    ShipFiles(phase3, phase4Dir, pass2Scores, pass2Decoys,
-                        Path.GetFileName(TaskValiditySidecar.PathFor(pass2Scores, PerFileRescoreTask.TASK_NAME)),
-                        Path.GetFileName(TaskValiditySidecar.PathFor(pass2Decoys, PerFileRescoreTask.TASK_NAME)));
+                    ShipFiles(phase3, phase4Dir, pass2Scores, pass2Decoys);
                 }
                 else
                 {
@@ -1212,10 +1211,9 @@ namespace pwiz.Osprey.Test
 
         private static void DeleteSecondPassOutputs(string blib)
         {
-            string stamp = TaskValiditySidecar.PathFor(blib, SecondPassFdrTask.TASK_NAME);
-            Assert.IsTrue(File.Exists(blib) && File.Exists(stamp), @"no second-pass outputs to invalidate");
+            Assert.AreEqual(SecondPassFdrTask.TASK_NAME, ArtifactValidity.ReadStamp(blib)?.Task,
+                @"no second-pass outputs to invalidate");
             File.Delete(blib);
-            File.Delete(stamp);
         }
 
         /// <summary>
@@ -1236,7 +1234,6 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(workDir, product);
                 Assert.IsTrue(File.Exists(path), @"no rescore product to cut: " + path);
                 File.Delete(path);
-                File.Delete(TaskValiditySidecar.PathFor(path, PerFileRescoreTask.TASK_NAME));
             }
         }
 
@@ -1512,6 +1509,42 @@ namespace pwiz.Osprey.Test
             {
                 return sha.ComputeHash(stream);
             }
+        }
+
+        /// <summary>
+        /// The hash of an artifact's bytes with its embedded validity stamp blanked: the content
+        /// every route must reproduce byte for byte, without the provenance record, whose key can
+        /// legitimately differ - a training export's key names its inputs' file identities, and
+        /// two analyses in two directories wrote those inputs at different times. The stamp keeps
+        /// its length (the identity terms are fixed-width hashes), so everything else in the file
+        /// is still compared at the same offsets.
+        /// </summary>
+        private static byte[] HashArtifactContent(string path)
+        {
+            byte[] bytes = File.ReadAllBytes(path);
+            var stamp = ArtifactValidity.ReadStamp(path);
+            Assert.IsNotNull(stamp, path + @" carries no validity stamp");
+            byte[] stampBytes = Encoding.UTF8.GetBytes(stamp.ToString());
+            int at = IndexOf(bytes, stampBytes);
+            Assert.IsTrue(at >= 0, path + @": the stamp is not stored verbatim");
+            Array.Clear(bytes, at, stampBytes.Length);
+            using (var sha = SHA256.Create())
+            {
+                return sha.ComputeHash(bytes);
+            }
+        }
+
+        private static int IndexOf(byte[] haystack, byte[] needle)
+        {
+            for (int i = haystack.Length - needle.Length; i >= 0; i--)
+            {
+                int j = 0;
+                while (j < needle.Length && haystack[i + j] == needle[j])
+                    j++;
+                if (j == needle.Length)
+                    return i;
+            }
+            return -1;
         }
 
         /// <summary>

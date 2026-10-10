@@ -98,7 +98,7 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ### Step 7 — Metadata
 
-`WriteMetadata` (BlibOutputWriter.cs:264-272) writes four `OspreyMetadata` key/value rows (via `INSERT OR REPLACE`): `osprey_version`, `search_mode = coelution`, `run_fdr`, `experiment_fdr`.
+`WriteMetadata` (BlibOutputWriter.cs:264-272) writes four `OspreyMetadata` key/value rows (via `INSERT OR REPLACE`): `osprey_version`, `search_mode = coelution`, `run_fdr`, `experiment_fdr`. A fifth row, Key `osprey.validity`, holds the blib's embedded validity stamp (`BlibWriter.AddStamp` / `ReadStamp`; see [14](14-intermediate-files.md) section 8). It is C#-only and provenance, not content: the blib comparisons (`BlibComparer` in Osprey.Test, `Regression/BlibGolden.ps1`) exclude it, and so must any cross-impl comparison.
 
 ### Step 8 — Finalize
 

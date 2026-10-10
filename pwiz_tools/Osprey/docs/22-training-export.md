@@ -26,7 +26,7 @@ Osprey decides nothing from this evidence. The consumer applies its own masking 
 | Shape | per run, inside the fan-out: one run's artifacts at a time, and the spectra of the isolation windows in flight - one per worker thread, so up to `--threads` windows |
 | Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes; every other `--task` accepts the flag, because a wrapper hands every node the same options, and ignores it, and the startup line says where the export is written |
 | Reads | the run's `.scores-reconciled.parquet`, one q-value sidecar (below), `.calibration.json` and `.spectra.bin`; the run's data file for the instrument footer, when it is there; the library, and `<blib-stem>.1st-pass.retained_base_ids.bin` when it loads the library itself |
-| Writes | `<stem>.training.parquet` per run, and its `.PerFileRescoring.osprey.task` stamp. Nothing else |
+| Writes | `<stem>.training.parquet` per run, its validity stamp in its own footer (`osprey.validity`). Nothing else |
 
 **Off means absent.** With the option off the export is not a declared output, so nothing is
 written, stamped or logged, and every other artifact of the run is byte-identical to a run
@@ -55,14 +55,15 @@ survivor, so none loses its spectrum.
 **What it checks before reading a run.** The reconciled parquet's footer, as
 `--task SecondPassFDR` checks it (`ParquetScoreCache.ValidateScoresParquetGroup`): this build's
 version, this search and library, and `osprey.reconciled`. A mismatch fails the run with the
-file named. A file written by another build of Osprey is named as such: adding the flag to an
-analysis a different build ran fails every export, because every other stage skips by its
-validity key, which carries no build, while the export reads the file. Add the flag with the
-build that ran the analysis, or run the analysis again with this one.
+file named. A file written by another build of Osprey is named as such. Adding the flag to an
+analysis a different build ran does not reach that check by resume: every artifact's validity
+stamp names the build that wrote it, and another build's artifacts are never current, so this
+build re-runs the analysis rather than exporting from it. Add the flag with the build that ran
+the analysis to export without re-running it.
 
 **When one run's export fails.** The failure is recorded and the other runs still export. The
 task then reports each failed run with its reason, sets exit code 1 and fails, so the analysis
-stops before `SecondPassFDR` writes the blib. Every other output is stamped as it lands, so a
+stops before `SecondPassFDR` writes the blib. Every other output carries its stamp from the moment it lands, so a
 re-run of the same command retries only the failed exports. An export that was asked for and
 not written is a failed run, not a warning; a run that needs the blib regardless drops the flag.
 
@@ -106,11 +107,10 @@ One row per exported precursor per run, in ascending `entry_id` order:
   otherwise (`TrainingExportWriter.RunQPath`); the footer's `osprey.training_export.run_q_pass`
   says which. That is every run of an ordinary analysis, a single-run one included (measured on
   Stellar: the worker wrote the second pass, and three runs of one command left the export
-  unchanged). "PerFileRescoring wrote it" means both its stamp beside the sidecar, the test
-  `SecondPassFDR` folds by, and the worker's `<stem>.2nd-pass.fdr_decoys.bin`, which only the
-  worker writes: the driver stamps every declared output that exists after a PerFileRescoring
-  run, a sidecar `SecondPassFDR` wrote included, so the stamp alone would flip the export on a
-  later invocation of the same command.
+  unchanged). "PerFileRescoring wrote it" means both the stamp embedded in the sidecar names
+  `PerFileRescoring` and this build (`Pass2FdrSidecar.HasWorkerStamp`, the test `SecondPassFDR`
+  folds by) and the worker's `<stem>.2nd-pass.fdr_decoys.bin` exists, which only the worker
+  writes: a worker sidecar without its decoys is not the worker's complete answer.
   The first pass is used for two cases, and the export warns when it is. A run with no Stage 6
   work never reaches the worker, and a `PerFileRescoring` with no readable saved first-pass model
   has no worker at all; either way `SecondPassFDR` computes the run's second pass after the
@@ -409,7 +409,7 @@ source metadata: they come from the spectra themselves (`IN_SCAN_RANGE` above).
 
 ## Resume and validity
 
-Each run's parquet is a declared output of `PerFileRescoring` and is stamped with that task's
+Each run's parquet is a declared output of `PerFileRescoring` and its embedded stamp carries that task's
 key plus the export's own terms (`PerFileRescoreTask.OutputValidityKey`):
 
 | Term | Why |
@@ -431,9 +431,14 @@ no cohort (P4) - no reconciliation hash beyond the one the task key already carr
 list - so an HPC node handed any subset of runs computes the key a straight-through run does.
 
 A rewritten input redoes that run's export and no other, and never re-scores. Resume is per run:
-a run whose parquet exists with a matching stamp is skipped, a stale stamp is cleared before its
-run is recomputed, and each run is stamped as it lands, so a killed export loses only the run in
-flight.
+a run whose parquet carries a current stamp is skipped, a stale one is simply overwritten when its
+run is recomputed, and each run's parquet carries its stamp from the commit that writes it, so a
+killed export loses only the run in flight.
+
+The stamp is provenance, not content: the reproducibility tests that compare two exports hash
+each file with the stamp bytes blanked, because the key names its inputs' file identities
+(name + size + mtime), which differ between two directories that wrote identical inputs at
+different times.
 
 ### HPC relay
 

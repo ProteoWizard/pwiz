@@ -160,7 +160,7 @@ namespace pwiz.Osprey.Test
                 string export = ExportPath(nodeDir, run);
                 if (withDataFile)
                 {
-                    CollectionAssert.AreEqual(straight[run], HashFile(export), run + @": the node's export differs from the straight-through one");
+                    CollectionAssert.AreEqual(straight[run], HashArtifactContent(export), run + @": the node's export differs from the straight-through one");
                     continue;
                 }
                 var records = TrainingExportParquet.Read(export, out var footer);
@@ -206,9 +206,8 @@ namespace pwiz.Osprey.Test
         /// <para>SecondPassFDR cannot yet finish an analysis that re-scores nothing (#4729), so an
         /// invocation may fail there, after PerFileRescoring has written the export; that one
         /// known error is accepted. Once #4729 is fixed every invocation finishes, and the second
-        /// one is then the one whose driver stamps SecondPassFDR's second-pass sidecar under
-        /// PerFileRescoring's name - which must not move the export on the third (the rule
-        /// TaskValidityKeyTest checks in isolation).</para>
+        /// one then leaves SecondPassFDR's second-pass sidecar on disk - which must not move
+        /// the export on the third (the rule TaskValidityKeyTest checks in isolation).</para>
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetTrainingExportSingleRun()
@@ -269,7 +268,6 @@ namespace pwiz.Osprey.Test
             string run = RUN_NAMES[0];
             string export = ExportPath(workDir, run);
             File.Delete(export);
-            File.Delete(TaskValiditySidecar.PathFor(export, PerFileRescoreTask.TASK_NAME));
             Directory.CreateDirectory(export);
             string blib = Path.Combine(workDir, BLIB_FILE);
             byte[] blibHash = HashFile(blib);
@@ -345,7 +343,7 @@ namespace pwiz.Osprey.Test
                     run + @": the export did not reproduce the scored median polish cosine");
                 Assert.AreNotEqual(@"0", footer[@"osprey.source_ms2_sampled"], run + @": the data file was not read");
                 AssertMassAnalyzers(footer, run);
-                hashes[run] = HashFile(path);
+                hashes[run] = HashArtifactContent(path);
             }
             return hashes;
         }
@@ -370,7 +368,7 @@ namespace pwiz.Osprey.Test
         {
             foreach (var pair in expected)
             {
-                CollectionAssert.AreEqual(pair.Value, HashFile(ExportPath(workDir, pair.Key)),
+                CollectionAssert.AreEqual(pair.Value, HashArtifactContent(ExportPath(workDir, pair.Key)),
                     pair.Key + @": the export differs from the up-front one");
             }
         }

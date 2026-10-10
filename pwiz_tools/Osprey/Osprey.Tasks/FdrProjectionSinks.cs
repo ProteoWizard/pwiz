@@ -262,7 +262,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Not an optimization - a correctness requirement. These sidecars are write-once
         /// (<c>FdrScoresSidecar</c> fails hard on a second write in one run), because a file
-        /// rewritten after it was stamped no longer matches the validity marker attesting it.
+        /// rewritten after it was stamped no longer matches the stamp first written with it.
         /// The rows still flow through <see cref="AcceptOutput"/>, which is what keeps the
         /// experiment accumulator, the [COUNT] tally and the diagnostics report covering every
         /// row whether its score was computed here or read back.</para>
