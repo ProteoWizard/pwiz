@@ -115,27 +115,30 @@ public class SpectrumListDemuxTests
     private const int MsxOriginalIndex = 21;
     private const int MsxDeconvCount = 5;
 
-    // Hard-coded intensity vector from cpp's testOverlapOnly() at TEST_SPECTRUM_OVERLAP_DEMUX_INDEX = 128.
+    // Cpp's testOverlapOnly() intensities at TEST_SPECTRUM_OVERLAP_DEMUX_INDEX = 128, except [18], [25],
+    // [26] and [30] (cpp 46296.34, 44635.87, 28415.64, 43483.74), which the full search span changes.
     private static readonly double[] OverlapGoldStandardIntensities = new[]
     {
         62715.75, 10856.38, 26514.10, 15964.11, 35976.23,
         24815.48, 10131.85, 21044.27, 34393.21, 9127.96,
         50067.90, 10287.26, 11103.65, 19305.24, 9583.66,
-        11572.70, 9995.09, 29599.00, 46296.34, 32724.88,
+        11572.70, 9995.09, 29599.00, 38228.79, 32724.88,
         9292.13, 8167.25, 1111.66, 25497.61, 23860.40,
-        44635.87, 28415.64, 9848.89, 18376.83, 24337.12,
-        43483.74, 26286.20, 40075.65,
+        28433.71, 26008.71, 9848.89, 18376.83, 24337.12,
+        5594.79, 26286.20, 40075.65,
     };
 
-    // Hard-coded intensity vector from cpp's testMSXOnly() at TEST_SPECTRUM_MSX_DEMUX_INDEX = 105.
+    // Intensities at TEST_SPECTRUM_MSX_DEMUX_INDEX = 105 with the full search span (regression values;
+    // the extractor itself is checked by SpectrumPeakExtractorTests). Cpp's testMSXOnly() has 29 peaks
+    // here: with the full windows the solve assigns more peaks to one window, zeroing them in others.
     private static readonly double[] MsxGoldStandardIntensities = new[]
     {
-        931.31, 550.11, 650.53, 1870.50, 62.58,
-        2767.20, 4917.47, 1525.37, 923.80, 726.35,
-        1421.49, 1699.59, 3126.18, 25833.26, 23554.24,
-        10017.21, 900.55, 26146.96, 9478.34, 2643.12,
-        5988.79, 1562.70, 1952.92, 1392.36, 1354.70,
-        5745.34, 1891.37, 2545.78, 4131.52,
+        2305.29, 912.86, 480.24, 1870.50, 2006.70,
+        2767.20, 4189.77, 2183.44, 720.22, 728.97,
+        1421.49, 195.37, 740.24, 25800.27, 8947.44,
+        10017.21, 7548.32, 6817.35, 4373.10, 3277.52,
+        1562.70, 1951.14, 1392.36, 1483.15, 2411.16,
+        4166.85,
     };
 
     [TestMethod]
@@ -168,7 +171,7 @@ public class SpectrumListDemuxTests
     }
 
     [TestMethod]
-    public void Demux_OverlapTest_AbsoluteIntensities_MatchCppGoldStandard()
+    public void Demux_OverlapTest_AbsoluteIntensities_MatchGoldStandard()
     {
         var (_, demuxList) = LoadAndWrap("OverlapTest.mzML",
             new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly });
@@ -177,10 +180,10 @@ public class SpectrumListDemuxTests
         var actual = demuxed.GetIntensityArray()!.Data;
 
         Assert.AreEqual(OverlapGoldStandardIntensities.Length, actual.Count,
-            "cpp parity: demuxed intensity-array length");
+            "gold: demuxed intensity-array length");
         for (int i = 0; i < OverlapGoldStandardIntensities.Length; i++)
             Assert.AreEqual(OverlapGoldStandardIntensities[i], actual[i], 0.1,
-                $"cpp parity: intensity[{i}]");
+                $"gold: intensity[{i}]");
     }
 
     [TestMethod]
@@ -227,7 +230,7 @@ public class SpectrumListDemuxTests
     }
 
     [TestMethod]
-    public void Demux_MsxTest_AbsoluteIntensities_MatchCppGoldStandard()
+    public void Demux_MsxTest_AbsoluteIntensities_MatchGoldStandard()
     {
         var (_, demuxList) = LoadAndWrap("MsxTest.mzML",
             new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.None });
@@ -236,10 +239,10 @@ public class SpectrumListDemuxTests
         var actual = demuxed.GetIntensityArray()!.Data;
 
         Assert.AreEqual(MsxGoldStandardIntensities.Length, actual.Count,
-            "cpp parity: demuxed intensity-array length");
+            "gold: demuxed intensity-array length");
         for (int i = 0; i < MsxGoldStandardIntensities.Length; i++)
             Assert.AreEqual(MsxGoldStandardIntensities[i], actual[i], 0.1,
-                $"cpp parity: intensity[{i}]");
+                $"gold: intensity[{i}]");
     }
 
     /// <summary>Reads <paramref name="fixtureName"/> from the cpp test-data dir, runs centroid
@@ -314,19 +317,20 @@ public class SpectrumListDemuxTests
 
     /// <summary>
     /// Real staggered-window data cut down to four fragment m/z whose NNLS reaches the iteration
-    /// limit in some spectra, against cpp msconvert's output (see the data folder's README).
+    /// limit in some spectra, against C#'s output with the full search span (see the data folder's README).
     /// </summary>
     [TestMethod]
-    public void Demux_EclipseNnlsFixture_MatchesCppPeakByPeak()
+    public void Demux_EclipseNnlsFixture_MatchesGoldPeakByPeak()
     {
         string root = FindDemuxTestDataRoot();
         var spectra = ReadEclipseFixture(Path.Combine(root, "EclipseNnlsFixture.tsv"), out var notCompared);
         var demuxList = new SpectrumListDemux(spectra,
             new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly });
 
-        // Below 1 are rounding-level near-zeros that cpp (QR) and C# (Cholesky) resolve differently.
+        // Below 1 are rounding-level near-zeros (cpp's QR and C#'s Cholesky resolve them differently),
+        // left out of both expected files alike.
         var expected = new Dictionary<(string Scan, string Demux), List<(double Mz, double Intensity)>>();
-        foreach (var line in File.ReadLines(Path.Combine(root, "EclipseNnlsFixture.expected.tsv")))
+        foreach (var line in File.ReadLines(Path.Combine(root, "EclipseNnlsFixture.expected-full-span.tsv")))
         {
             if (line.StartsWith('#')) continue;
             var f = line.Split('\t');
@@ -360,7 +364,7 @@ public class SpectrumListDemuxTests
                 compared++;
             }
         }
-        Assert.AreEqual(expected.Values.Sum(p => p.Count), compared, "every expected cpp peak compared");
+        Assert.AreEqual(expected.Values.Sum(p => p.Count), compared, "every expected peak compared");
     }
 
     private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;

@@ -2,10 +2,11 @@
 
 | File | Used by | What it is |
 |---|---|---|
-| `OverlapTest.mzML` | `SpectrumListDemuxTests` | Overlapping-window DIA, with gold-standard intensities from cpp |
-| `MsxTest.mzML` | `SpectrumListDemuxTests` | MSX DIA, with gold-standard intensities from cpp |
-| `EclipseNnlsFixture.tsv` | `Demux_EclipseNnlsFixture_MatchesCppPeakByPeak` | Real staggered-window MS2, cut down to four fragment m/z |
-| `EclipseNnlsFixture.expected.tsv` | the same | cpp msconvert's demultiplexed intensities for those peaks |
+| `OverlapTest.mzML` | `SpectrumListDemuxTests` | Overlapping-window DIA, with gold-standard intensities (cpp's, except where the search-span fix changes them) |
+| `MsxTest.mzML` | `SpectrumListDemuxTests` | MSX DIA, the same |
+| `EclipseNnlsFixture.tsv` | `Demux_EclipseNnlsFixture_MatchesGoldPeakByPeak` | Real staggered-window MS2, cut down to four fragment m/z |
+| `EclipseNnlsFixture.expected-full-span.tsv` | the same | C#'s demultiplexed intensities for those peaks, with the full search span |
+| `EclipseNnlsFixture.expected.tsv` | (record) | cpp msconvert's demultiplexed intensities for those peaks |
 
 ## EclipseNnlsFixture
 
@@ -33,11 +34,21 @@ exactly the solves of the full spectra for those peaks. In some spectra these co
 50-iteration limit; cpp keeps the last feasible solution, and a C# port that zeroed it lost peaks of up to
 5e7. The same m/z converge normally in the other spectra.
 
-Each spectrum also keeps its highest-m/z peak, marked `M`. `SpectrumPeakExtractor` (cpp and C# alike)
-starts its bin search at `query - maxDelta`, where `maxDelta` is the largest bin half-width in the
-spectrum, so the highest peak decides whether the upper half of a high bin's tolerance window is
-searched. Without it, 1081.53 would be the highest peak and lose the upper half of its window. The `M`
-peaks are not compared.
+Each spectrum also keeps its highest-m/z peak, marked `M`. Cpp's `SpectrumPeakExtractor` starts its bin
+search at `query - maxDelta`, where `maxDelta` is the largest bin half-width in the spectrum, so the
+highest peak decided whether the upper half of a high bin's tolerance window was searched; the `M` peaks
+kept the cut-down input faithful to that. The `M` peaks are not compared.
+
+## Departure from cpp: the full search span
+
+`maxDelta` is a half-width, so cpp drops the upper part of the window of every bin above half the
+spectrum's highest m/z. Skyline's original demultiplexer (`TransitionBinner`), whose loop cpp's
+extractor otherwise follows, searches the full width. The C# extractor now searches the full width and uses half-open bins, so its
+output departs from cpp here: on this fixture 243 of 246 peaks are unchanged, 2 change intensity and 1
+moves to the other demux window. `EclipseNnlsFixture.expected-full-span.tsv` is C#'s output after that
+change, written by the test's own pipeline (double precision, the same `>= 1` rule, `M` peaks left out);
+`EclipseNnlsFixture.expected.tsv` stays as the cpp record, which C# matched peak by peak before it (pwiz
+PR #4805). A peak on a snapped shared edge counts in the upper bin only; an unshared upper edge is closed.
 
 `EclipseNnlsFixture.expected.tsv` holds cpp's demultiplexed peaks at those m/z with intensity of at least 1.
 Smaller values are rounding around a true zero, which cpp (Householder QR) and C# (Cholesky) resolve

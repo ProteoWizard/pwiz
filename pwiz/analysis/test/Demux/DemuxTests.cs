@@ -313,6 +313,43 @@ public static class DemuxTests
         }
 
         [TestMethod]
+        public void UpperHalfOfHighBin_IsSearched()
+        {
+            // 1000 +/- 0.01 is the widest bin, so cpp's search start (query - 0.01) skipped it for a
+            // peak above 1000; the full window is searched.
+            double[] peakMzs = { 100.0, 1000.0 };
+            var ext = new SpectrumPeakExtractor(peakMzs, new MZTolerance(10, MZToleranceUnits.Ppm));
+            var matrix = DenseMatrix.Create(1, ext.NumPeaks, 0);
+            ext.Extract(MakeSpectrumPlain(new[] { 1000.008 }, new[] { 1.0 }), matrix, rowNum: 0);
+            Assert.AreEqual(1.0, matrix[0, 1], 1e-12);
+        }
+
+        [TestMethod]
+        public void PeakOnSharedEdge_CountsOnce()
+        {
+            // 512 +/- 0.5 and 512.5 +/- 0.5 snap to a shared edge at 512.25 (exact in binary); a peak
+            // there belongs to the upper bin only. With the full search span a closed lower bin would
+            // take it too.
+            double[] peakMzs = { 512.0, 512.5 };
+            var ext = new SpectrumPeakExtractor(peakMzs, new MZTolerance(0.5, MZToleranceUnits.Mz));
+            var matrix = DenseMatrix.Create(1, ext.NumPeaks, 0);
+            ext.Extract(MakeSpectrumPlain(new[] { 512.25 }, new[] { 1.0 }), matrix, rowNum: 0);
+            Assert.AreEqual(0.0, matrix[0, 0], 1e-12, "lower bin");
+            Assert.AreEqual(1.0, matrix[0, 1], 1e-12, "upper bin");
+        }
+
+        [TestMethod]
+        public void PeakOnUnsharedUpperEdge_IsKept()
+        {
+            // 100 +/- 0.5 shares no edge, so 100.5 stays in it.
+            double[] peakMzs = { 100.0, 200.0 };
+            var ext = new SpectrumPeakExtractor(peakMzs, new MZTolerance(0.5, MZToleranceUnits.Mz));
+            var matrix = DenseMatrix.Create(1, ext.NumPeaks, 0);
+            ext.Extract(MakeSpectrumPlain(new[] { 100.5 }, new[] { 1.0 }), matrix, rowNum: 0);
+            Assert.AreEqual(1.0, matrix[0, 0], 1e-12);
+        }
+
+        [TestMethod]
         public void OutOfRangePeaks_AreIgnored()
         {
             double[] peakMzs = { 100.0, 200.0 };
