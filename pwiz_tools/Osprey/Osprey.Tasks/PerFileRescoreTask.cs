@@ -1348,9 +1348,13 @@ namespace pwiz.Osprey.Tasks
             if (!transfer && (sidecar.StratumBaseIds == null || sidecar.StratumBaseIds.Count == 0))
             {
                 throw new InvalidOperationException(string.Format(
-                    OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
-                    OspreyArgNames.Text(OspreyArgNames.TASK)));
+                    OspreyTasksResources.PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__,
+                    OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
             }
+            // The transfer carries each precursor's pass-1 experiment values, and the loader reads
+            // an absent sidecar as an empty map - every run would be written at q = 1.0.
+            if (transfer)
+                Pass2FdrSidecar.RequireTransferExperimentSidecar(config);
             return new Pass2PerFileWorker(
                 scorer,
                 transfer,

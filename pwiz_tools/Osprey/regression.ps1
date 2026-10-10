@@ -2036,14 +2036,11 @@ function Invoke-HpcChain {
         # below, so without this the files the comparison needs would be gone.
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
 
-        # WITHHELD ONLY WHEN THE WORKER ANSWERED. The modes with a per-file half
-        # (protein-compact) leaves a 2nd-pass sidecar here, and phase 4 folds it
-        # without opening anything from the first pass - that is the contract issue #4486
-        # establishes, and withholding is how it is proven. OSPREY_PASS2_QVALUE=transfer and the
-        # retrain modes have NO per-file half, so Stage 7 legitimately recomputes and legitimately
-        # needs these files; withholding them there would fail a mode for a contract it never
-        # claimed. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
-        # future mode gets the right answer without editing this line.
+        # WITHHELD ONLY WHEN THE WORKER ANSWERED. Every pass-2 mode's worker leaves a 2nd-pass
+        # sidecar here (#4665), and phase 4 folds it without opening anything from the first
+        # pass - that is the contract issue #4486 establishes, and withholding is how it is
+        # proven. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
+        # run whose worker did not answer still has what it would need to be diagnosed.
         if (-not (Test-Path (Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"))) {
             Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
         }
@@ -2200,11 +2197,11 @@ foreach ($name in $selected) {
     # gone - --fdrbench-pass 1 streamed with #4507, and the non-Percolator --fdr-method went
     # with #4543, which removed the argument and the simple FDR method. OSPREY_FDR_MODEL=gbdt
     # does not belong here: trees run the same Percolator framework and stream.
+    # The pass-2 mode is NOT a term since #4665: transfer's per-file half runs in the rescore
+    # worker, so every mode streams the join, and a transfer arm must be held to the marker.
     $cannotStreamJoin =
         ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-        ($env:OSPREY_FDR_PROJECTION -eq '0') -or
-        (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
-         $env:OSPREY_PASS2_QVALUE -ne 'protein-compact')
+        ($env:OSPREY_FDR_PROJECTION -eq '0')
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     # GoldenFolder, not Folder: StellarLibDecoy shares the stellar mzML folder,
     # so keying the golden on Folder alone would collide with Stellar's.
@@ -2507,9 +2504,14 @@ foreach ($name in $selected) {
         # names PerFileRescoring as its producer, and phase 4 reported the fold.
         $chainSidecars = @(Get-ChildItem -File -Path $chainDir -Filter '*.2nd-pass.fdr_scores.bin' -ErrorAction SilentlyContinue)
         $chainWorkerSidecars = @($chainSidecars | Where-Object { Test-ProducedBy $_.FullName 'PerFileRescoring' })
+        # The fold line is the competition's (it carries the verifier state); the transfer fold
+        # emits none, so it is demanded only where the straight leg emitted one too.
         $chainFolded = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ runs=\d+\b') -Quiet
-        if ($chainSidecars.Count -eq 0 -or $chainWorkerSidecars.Count -ne $chainSidecars.Count -or -not $chainFolded) {
+        $foldLineExpected = Select-String -Path (Join-Path $straightDir 'straight.log') `
+            -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
+        if ($chainSidecars.Count -eq 0 -or $chainWorkerSidecars.Count -ne $chainSidecars.Count -or
+            ($foldLineExpected -and -not $chainFolded)) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - $($chainWorkerSidecars.Count) of " +
                 "$($chainSidecars.Count) 2nd-pass sidecars were written by PerFileRescoring, and phase 4 " +

@@ -1850,66 +1850,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The first-pass intermediate file ({2}) is missing or unreadable for 1 file: {1}. Treat the protein-level results of this run as unreliable..
-        /// </summary>
-        public static string Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_missing_or_unreadable_for_ {
-            get {
-                return ResourceManager.GetString("Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_" +
-                        "missing_or_unreadable_for_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The first-pass intermediate files ({2}) are missing or unreadable for {0:N0} files: {1}. Treat the protein-level results of this run as unreliable..
-        /// </summary>
-        public static string Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__are_missing_or_unreadable_ {
-            get {
-                return ResourceManager.GetString("Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__ar" +
-                        "e_missing_or_unreadable_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {2}: {0:N0} files from the first pass are not among the inputs of this run and will be skipped: [{1}]. This usually means an input was renamed or moved between the first-pass and second-pass tasks..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_" +
-                        "pass_are_not_among_the_inputs_of_this_run_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0:N0} files from the first pass are not among the inputs of this run, so no second-pass intermediate file is written for them: [{1}]..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist__0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run__so_no_second_pass_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist__0__files_from_the_first_pass_are_not_among_the" +
-                        "_inputs_of_this_run__so_no_second_pass_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {1:N0} of {0:N0} files had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist__1__of__0__files_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist__1__of__0__files_had_no_saved_second_pass_FDR_s" +
-                        "cores___2__have_scores_written_by_per_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {1:N0} of 1 file had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist__1__of_1_file_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_re_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist__1__of_1_file_had_no_saved_second_pass_FDR_scor" +
-                        "es___2__have_scores_written_by_per_file_re_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Computing second-pass FDR scores for {0:N0} files..
         /// </summary>
         public static string Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for__0__files_ {
@@ -1929,118 +1869,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Left the second-pass FDR scores file of 1 file untouched ({1} writes only the report).
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_" +
-                        "untouched____task_ModelDiagnostics_writes_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Left the second-pass FDR scores files of {0:N0} files untouched ({1} writes only the report).
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__fi" +
-                        "les_untouched____task_ModelDiagnostics_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Writing second-pass FDR scores for {0:N0} files.
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for__0__files {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Writing second-pass FDR scores for 1 file.
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for_1_file {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Wrote second-pass FDR scores for {0:N0} files.
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for__0__files {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Wrote second-pass FDR scores for 1 file.
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for_1_file {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Second-pass FDR cannot run: the saved first-pass model, a first-pass intermediate file, or the list of precursor candidates from proteins with 2 or more detections is missing or unreadable (a warning above names the file when one is at fault). Run the analysis straight through without {0}..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__ {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_sav" +
                         "ed_first_pass_model__a_first_pass_intermediate_file__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reloading re-scored peak features from {0:N0} files.
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from__0__files {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from__0__f" +
-                        "iles", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reloading re-scored peak features from 1 file.
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from_1_file {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from_1_fil" +
-                        "e", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: could not read the re-scored intermediate file {0}: {1}.
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__could_not_read_the_re_scored_intermediate_file__0____1_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__could_not_read_the_re_score" +
-                        "d_intermediate_file__0____1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: no {2} file is known for &apos;{0}&apos;, so {1:N0} precursor candidates will be scored without features..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so__1__precursor_candidates_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_" +
-                        "known_for___0____so__1__precursor_candidates_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: the re-scored intermediate file &apos;{3}&apos; does not match the first-pass intermediate file for &apos;{0}&apos; ({1:N0} rows, {2:N0} expected); {4:N0} precursor candidates will be scored without features..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_file___3___does_not_match_the_first_pass_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_" +
-                        "file___3___does_not_match_the_first_pass_", resourceCulture);
             }
         }
         
@@ -2185,52 +2019,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR has no results from re-scoring for the file, so they are recomputed from its first-pass intermediate files..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_no_results_from_re_scoring_for_the_file__so_they_are_recomputed_from_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_no_results_fr" +
-                        "om_re_scoring_for_the_file__so_they_are_recomputed_from_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR has results from re-scoring for {1:N0} of {0:N0} files; the other {2:N0} are recomputed from their first-pass intermediate files..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_results_from_re_scoring_for__1__of__0__files__the_other__2__are_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_results_from_" +
-                        "re_scoring_for__1__of__0__files__the_other__2__are_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_ {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__r" +
                         "ecomputing_q_values_for__1__precursor_candidates_from_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR uses the results written during re-scoring for all {0:N0} files..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_all__0__files_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_" +
-                        "written_during_re_scoring_for_all__0__files_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR uses the results written during re-scoring for the file..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_the_file_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_" +
-                        "written_during_re_scoring_for_the_file_", resourceCulture);
             }
         }
         
@@ -2365,30 +2159,22 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Second-pass FDR needs the whole-experiment first-pass intermediate file {0}, which is missing. Run {1} first..
+        /// </summary>
+        public static string Pass2FdrSidecar_RequireTransferExperimentSidecar_Second_pass_FDR_needs_the_whole_experiment_first_pass_intermediate_file__0___which_is_missing__Run__1__first_ {
+            get {
+                return ResourceManager.GetString("Pass2FdrSidecar_RequireTransferExperimentSidecar_Second_pass_FDR_needs_the_whole_" +
+                        "experiment_first_pass_intermediate_file__0___which_is_missing__Run__1__first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:N0} of {1:N0} runs have no current second-pass results file ({3}), which {4} writes for every run. Second-pass FDR combines those files and computes none of its own. Run {5} for them. Missing: [{2}]..
         /// </summary>
         public static string Pass2FdrSidecar_RequireWorkerAnswers__0__of__1__runs_have_no_current_second_pass_results_file___3____which__4__writes_for_every_run_ {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_RequireWorkerAnswers__0__of__1__runs_have_no_current_second_pass_" +
                         "results_file___3____which__4__writes_for_every_run_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Restoring first-pass scores for {0:N0} files.
-        /// </summary>
-        public static string Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for__0__files {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Restoring first-pass scores for 1 file.
-        /// </summary>
-        public static string Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for_1_file {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for_1_file", resourceCulture);
             }
         }
         
@@ -2477,16 +2263,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_fo" +
                         "r__1__precursor_candidates_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to write the second-pass intermediate file for &apos;{0}&apos;: {1}.
-        /// </summary>
-        public static string Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_ {
-            get {
-                return ResourceManager.GetString("Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____" +
-                        "1_", resourceCulture);
             }
         }
         
@@ -2768,6 +2544,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The saved first-pass model carries no list of precursor candidates from proteins with 2 or more detections, which second-pass FDR needs. Run {0} again..
+        /// </summary>
+        public static string PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_o" +
+                        "f_precursor_candidates_from_proteins_with_2_or_more_detections__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Re-scoring {0:N0} files in parallel:.
         /// </summary>
         public static string PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_ {
@@ -3017,26 +2803,6 @@ namespace pwiz.Osprey.Tasks {
         public static string PerFileRescoreTask_TryAssembleRescoreTargets_Re_scoring_file__0___1____2_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_TryAssembleRescoreTargets_Re_scoring_file__0___1____2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No readable saved first-pass model, so the per-file part of second-pass FDR runs in {0} for this run..
-        /// </summary>
-        public static string PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_th" +
-                        "e_per_file_part_of_second_pass_FDR_runs_in_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The saved first-pass model cannot be used, so the per-file part of second-pass FDR runs in {0} for this run..
-        /// </summary>
-        public static string PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used__so_the_per_file_part_of_second_pass_FDR_runs_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used" +
-                        "__so_the_per_file_part_of_second_pass_FDR_runs_", resourceCulture);
             }
         }
         

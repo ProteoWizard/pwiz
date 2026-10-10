@@ -643,65 +643,14 @@
   <data name="Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_in_1_file_" xml:space="preserve">
     <value>Restored the first-pass scores of {1:N0} kept precursor candidate peaks in 1 file.</value>
   </data>
-  <data name="Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_missing_or_unreadable_for_" xml:space="preserve">
-    <value>The first-pass intermediate file ({2}) is missing or unreadable for 1 file: {1}. Treat the protein-level results of this run as unreliable.</value>
-  </data>
-  <data name="Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__are_missing_or_unreadable_" xml:space="preserve">
-    <value>The first-pass intermediate files ({2}) are missing or unreadable for {0:N0} files: {1}. Treat the protein-level results of this run as unreliable.</value>
-  </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for_1_file_" xml:space="preserve">
     <value>Computing second-pass FDR scores for 1 file.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for__0__files_" xml:space="preserve">
     <value>Computing second-pass FDR scores for {0:N0} files.</value>
   </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_" xml:space="preserve">
-    <value>Left the second-pass FDR scores file of 1 file untouched ({1} writes only the report)</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_" xml:space="preserve">
-    <value>Left the second-pass FDR scores files of {0:N0} files untouched ({1} writes only the report)</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for_1_file" xml:space="preserve">
-    <value>Writing second-pass FDR scores for 1 file</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for__0__files" xml:space="preserve">
-    <value>Writing second-pass FDR scores for {0:N0} files</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for_1_file" xml:space="preserve">
-    <value>Wrote second-pass FDR scores for 1 file</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for__0__files" xml:space="preserve">
-    <value>Wrote second-pass FDR scores for {0:N0} files</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run__so_no_second_pass_" xml:space="preserve">
-    <value>{0:N0} files from the first pass are not among the inputs of this run, so no second-pass intermediate file is written for them: [{1}].</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__1__of_1_file_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_re_" xml:space="preserve">
-    <value>{1:N0} of 1 file had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__1__of__0__files_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_" xml:space="preserve">
-    <value>{1:N0} of {0:N0} files had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_" xml:space="preserve">
-    <value>{2}: {0:N0} files from the first pass are not among the inputs of this run and will be skipped: [{1}]. This usually means an input was renamed or moved between the first-pass and second-pass tasks.</value>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__" xml:space="preserve">
     <value>Second-pass FDR cannot run: the saved first-pass model, a first-pass intermediate file, or the list of precursor candidates from proteins with 2 or more detections is missing or unreadable (a warning above names the file when one is at fault). Run the analysis straight through without {0}.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from_1_file" xml:space="preserve">
-    <value>Reloading re-scored peak features from 1 file</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from__0__files" xml:space="preserve">
-    <value>Reloading re-scored peak features from {0:N0} files</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__could_not_read_the_re_scored_intermediate_file__0____1_" xml:space="preserve">
-    <value>Second-pass FDR: could not read the re-scored intermediate file {0}: {1}</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so__1__precursor_candidates_" xml:space="preserve">
-    <value>Second-pass FDR: no {2} file is known for '{0}', so {1:N0} precursor candidates will be scored without features.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_file___3___does_not_match_the_first_pass_" xml:space="preserve">
-    <value>Second-pass FDR: the re-scored intermediate file '{3}' does not match the first-pass intermediate file for '{0}' ({1:N0} rows, {2:N0} expected); {4:N0} precursor candidates will be scored without features.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
     <value>Applied the recomputed q-values to {0:N0} precursor candidate peaks ({1:N0} scored with the first-pass model) in {2:F1}s.</value>
@@ -742,20 +691,8 @@
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__the_saved_first_pass_model_cannot_be_used_" xml:space="preserve">
     <value>Second-pass FDR: the saved first-pass model cannot be used.</value>
   </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_no_results_from_re_scoring_for_the_file__so_they_are_recomputed_from_" xml:space="preserve">
-    <value>Second-pass FDR has no results from re-scoring for the file, so they are recomputed from its first-pass intermediate files.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_results_from_re_scoring_for__1__of__0__files__the_other__2__are_" xml:space="preserve">
-    <value>Second-pass FDR has results from re-scoring for {1:N0} of {0:N0} files; the other {2:N0} are recomputed from their first-pass intermediate files.</value>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_" xml:space="preserve">
     <value>Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor candidates from proteins with 2 or more detections; other candidates keep their first-pass q-values.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_all__0__files_" xml:space="preserve">
-    <value>Second-pass FDR uses the results written during re-scoring for all {0:N0} files.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_the_file_" xml:space="preserve">
-    <value>Second-pass FDR uses the results written during re-scoring for the file.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_experiment_level_q_values_could_not_be_written_for__0__files____1____Stopping_" xml:space="preserve">
     <value>Second-pass experiment-level q-values could not be written for {0:N0} files: [{1}]. Stopping, because protein FDR would otherwise read values that are not second-pass values.</value>
@@ -799,12 +736,6 @@
   <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2__of__0__files" xml:space="preserve">
     <value>Reloaded second-pass FDR scores ({1}) for {2:N0} of {0:N0} files</value>
   </data>
-  <data name="Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for_1_file" xml:space="preserve">
-    <value>Restoring first-pass scores for 1 file</value>
-  </data>
-  <data name="Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for__0__files" xml:space="preserve">
-    <value>Restoring first-pass scores for {0:N0} files</value>
-  </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_" xml:space="preserve">
     <value>Could not read the re-scored results for {0}: {1}</value>
   </data>
@@ -831,9 +762,6 @@
   </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_for__1__precursor_candidates_to__0_" xml:space="preserve">
     <value>Wrote experiment-level FDR results for {1:N0} precursor candidates to {0}</value>
-  </data>
-  <data name="Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_" xml:space="preserve">
-    <value>Failed to write the second-pass intermediate file for '{0}': {1}</value>
   </data>
   <data name="PeakCoAssignmentSource_AddFile_could_not_read__0_" xml:space="preserve">
     <value>could not read {0}</value>
@@ -999,12 +927,6 @@
   </data>
   <data name="PerFileRescoreTask_TryAssembleRescoreTargets____0__peaks_to_re_score_at_new_boundaries___1__missing_peaks" xml:space="preserve">
     <value>{0:N0} peaks to re-score at new boundaries, {1:N0} missing peaks</value>
-  </data>
-  <data name="PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_" xml:space="preserve">
-    <value>No readable saved first-pass model, so the per-file part of second-pass FDR runs in {0} for this run.</value>
-  </data>
-  <data name="PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used__so_the_per_file_part_of_second_pass_FDR_runs_" xml:space="preserve">
-    <value>The saved first-pass model cannot be used, so the per-file part of second-pass FDR runs in {0} for this run.</value>
   </data>
   <data name="PerFileRescoreTask_TryResumeRescoredFile_File__0___1____2__was_already_re_scored__keeping_it_" xml:space="preserve">
     <value>File {0:N0}/{1:N0}: {2} was already re-scored; keeping it.</value>
@@ -1587,5 +1509,11 @@
   </data>
   <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_list_is_read_once_" xml:space="preserve">
     <value>Second-pass FDR reads one file at a time ({0:N0} files) from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once.</value>
+  </data>
+  <data name="Pass2FdrSidecar_RequireTransferExperimentSidecar_Second_pass_FDR_needs_the_whole_experiment_first_pass_intermediate_file__0___which_is_missing__Run__1__first_" xml:space="preserve">
+    <value>Second-pass FDR needs the whole-experiment first-pass intermediate file {0}, which is missing. Run {1} first.</value>
+  </data>
+  <data name="PerFileRescoreTask_CreatePass2Worker_The_saved_first_pass_model_carries_no_list_of_precursor_candidates_from_proteins_with_2_or_more_detections__" xml:space="preserve">
+    <value>The saved first-pass model carries no list of precursor candidates from proteins with 2 or more detections, which second-pass FDR needs. Run {0} again.</value>
   </data>
 </root>

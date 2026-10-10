@@ -901,7 +901,7 @@ namespace pwiz.Osprey.Tasks
             /// <summary>
             /// Survivors this instance restored, for a caller that owns SEVERAL seeders and has
             /// to report them as one run-wide total - the rescore worker keeps one per THREAD.
-            /// </summary>            /// <summary>Survivors this instance restored, for the same aggregation.</summary>
+            /// </summary>
             public int Restored
             {
                 get { return _nRestored; }
@@ -1800,19 +1800,30 @@ namespace pwiz.Osprey.Tasks
         private static void ComputePass2TransferFold(PipelineContext ctx, RescoredEntries rescored,
             OspreyConfig config, Pass2SidecarWriter writer)
         {
-            string pass1ExperimentPath = FdrExperimentSidecar.PathFor(config.OutputBlib,
-                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass);
-            if (string.IsNullOrEmpty(pass1ExperimentPath) || !File.Exists(pass1ExperimentPath))
-            {
-                throw new InvalidOperationException(string.Format(
-                    OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
-                    OspreyArgNames.Text(OspreyArgNames.TASK)));
-            }
+            RequireTransferExperimentSidecar(config);
             var pass1Experiment = LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
             var floors = new ExperimentQFloors();
             WalkSurvivors(rescored, floors, null, null);
             FoldAndPublishExperimentScope(ctx, writer, rescored.FileNames, floors,
                 rec => CarryPass1Experiment(rec.EntryId, pass1Experiment));
+        }
+
+        /// <summary>
+        /// Stop unless the analysis-wide 1st-pass experiment sidecar the transfer carries forward
+        /// is on disk. Required, not defaulted: an absent one would carry every precursor forward
+        /// at q = 1.0 and drop it from the output, and its loader reads absence as an empty map.
+        /// Shared by both halves of the transfer - the rescore worker and the join - so they
+        /// refuse the same state with the same words.
+        /// </summary>
+        internal static void RequireTransferExperimentSidecar(OspreyConfig config)
+        {
+            string path = FdrExperimentSidecar.PathFor(config?.OutputBlib,
+                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass);
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                return;
+            throw new InvalidOperationException(string.Format(
+                OspreyTasksResources.Pass2FdrSidecar_RequireTransferExperimentSidecar_Second_pass_FDR_needs_the_whole_experiment_first_pass_intermediate_file__0___which_is_missing__Run__1__first_,
+                path ?? FdrExperimentSidecar.EXT, OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
         }
 
         /// <summary>

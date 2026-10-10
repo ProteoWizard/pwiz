@@ -255,15 +255,18 @@ namespace pwiz.Osprey.Tasks
         /// parquet was written from these entries moments ago, so one that does not is a defect,
         /// not a stub mismatch to warn about and skip.</para>
         ///
-        /// <para>The features are borrowed onto the entries for the transfer and dropped again
-        /// afterwards. The caller releases the rescore's payload right after this call, and a
-        /// file with no Stage 6 work holds lean stubs that never carried features at all.</para>
+        /// <para>The features are borrowed onto the entries for the transfer and each entry's own
+        /// array is put back afterwards: lean stubs get their null back, while a resident pool
+        /// that loaded features on purpose (<c>OSPREY_FDR_PROJECTION=0</c>) keeps its own.</para>
         /// </summary>
         private Pass2FileResult TransferAndStamp(
             string fileName, string pass1SidecarPath, string effectiveParquetPath,
             List<FdrEntry> survivors)
         {
             var featByScoreIndex = Pass2FdrSidecar.LoadReconciledFeaturesByScoreIndex(effectiveParquetPath);
+            var ownFeatures = new double[survivors.Count][];
+            for (int i = 0; i < survivors.Count; i++)
+                ownFeatures[i] = survivors[i].Features;
             int nMapped = Pass2FdrSidecar.MapFeaturesByScoreIndex(survivors, featByScoreIndex);
             var tally = new Pass2FdrSidecar.TransferTally();
             try
@@ -280,8 +283,8 @@ namespace pwiz.Osprey.Tasks
             }
             finally
             {
-                foreach (var e in survivors)
-                    e.Features = null;
+                for (int i = 0; i < survivors.Count; i++)
+                    survivors[i].Features = ownFeatures[i];
             }
             // TransferOneFile declines a file whose 1st-pass sidecar it cannot read, leaving its
             // survivors unadjusted. In Stage 7 that was a warning; here it is a file that would
