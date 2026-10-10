@@ -239,9 +239,9 @@ namespace pwiz.ProteowizardWrapper
 
         /// <summary>
         /// The multiplexing scheme of this run (see <see cref="SpectrumListDemux.DetectScheme"/>),
-        /// or null when it is not multiplexed. Reads only the metadata of the first few cycles,
-        /// so a caller can ask before deciding how to read the run. When demultiplex settings
-        /// were given, this is <see cref="DemultiplexScheme"/>.
+        /// or null when it is not multiplexed. Reads only metadata, so a caller can ask before
+        /// deciding how to read the run. When demultiplex settings were given to the constructor,
+        /// this is <see cref="DemultiplexScheme"/> and <paramref name="demultiplex"/> is not used.
         /// </summary>
         public SpectrumListDemux.Scheme DetectDemultiplexScheme(SpectrumListDemux.Params demultiplex = null)
         {
@@ -866,7 +866,8 @@ namespace pwiz.ProteowizardWrapper
                     }
                     // Demultiplex after centroiding and lockmass, as msconvert orders the filters.
                     // Only a run with a scheme the demultiplexer can represent is wrapped, so the
-                    // same settings can be passed for every file.
+                    // same settings can be passed for every file. The algorithm (Optimization)
+                    // follows the detected scheme, whatever the settings say.
                     if (_demultiplexParams != null && _spectrumList != null && !hasSrmSpectra)
                     {
                         _demultiplexScheme = SpectrumListDemux.DetectScheme(_spectrumList, _demultiplexParams);
@@ -919,7 +920,7 @@ namespace pwiz.ProteowizardWrapper
         public SpectrumMetadata GetSpectrumMetadata(int spectrumIndex)
         {
             // A demultiplexed run is indexed by its demultiplexed spectra.
-            var spectra = _demultiplexParams != null && DemultiplexScheme != null ? SpectrumList : _msDataFile.Run.SpectrumList;
+            var spectra = DemultiplexScheme != null ? SpectrumList : _msDataFile.Run.SpectrumList;
             return GetSpectrumMetadata(spectra.GetSpectrum(spectrumIndex, DetailLevel.FullMetadata));
         }
 

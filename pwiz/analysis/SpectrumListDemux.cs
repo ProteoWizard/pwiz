@@ -94,22 +94,33 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
     /// <summary>
     /// The multiplexing scheme of <paramref name="spectra"/>, or null when it is not multiplexed
     /// in a way this demultiplexer can represent: ordinary DIA, DDA, or a file with no MS2.
-    /// Reads the metadata of the first few acquisition cycles only.
+    /// Reads metadata only: at most the first <see cref="DetectHeadSpectra"/> spectra, plus two
+    /// cycles in the middle and at the end of the run.
     /// </summary>
     /// <remarks>
     /// Multiplexed means several precursors per MS2 spectrum (MSX) or overlapping windows, AND
-    /// every MS2 spectrum of the first two cycles maps onto the same number of demux windows.
-    /// The second condition rejects ordinary DIA whose adjacent windows overlap by a margin:
-    /// its body windows cover three demux windows while its edge windows cover two.
+    /// every MS2 spectrum of two cycles at the start, middle and end of the run maps onto the same
+    /// number of demux windows. That rejects ordinary DIA whose adjacent windows overlap by a margin
+    /// (body windows cover three demux windows, edge windows two) and a method whose windows change
+    /// partway, which the demultiplexer would otherwise fail on mid-run.
     /// </remarks>
     public static Scheme? DetectScheme(ISpectrumList spectra, Params? p = null)
     {
         ArgumentNullException.ThrowIfNull(spectra);
         p ??= new Params();
+        // A reader error should surface as itself, not as "not multiplexed": read up to the first
+        // MS2 spectrum outside the codec's catch below.
+        var head = new HeadSpectrumList(spectra, DetectHeadSpectra);
+        for (int i = 0; i < head.Count; i++)
+        {
+            if (head.GetSpectrum(i, getBinaryData: false).Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) == 2)
+                break;
+        }
         PrecursorMaskCodec codec;
         try
         {
-            codec = new PrecursorMaskCodec(spectra, new PrecursorMaskCodec.Params
+            // The head only, so a run with no repeating cycle (DDA) fails fast.
+            codec = new PrecursorMaskCodec(head, new PrecursorMaskCodec.Params
             {
                 VariableFill = p.VariableFill,
                 MinimumWindowSize = p.MinimumWindowSize,
@@ -124,9 +135,26 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         if (codec.PrecursorsPerSpectrum <= 1 && codec.OverlapsPerCycle <= 1)
             return null;
 
+        int span = 3 * (codec.SpectraPerCycle + 1);
+        foreach (int start in new[] { 0, spectra.Count / 2, System.Math.Max(0, spectra.Count - span) })
+        {
+            if (!MapsConsistently(spectra, codec, start, 2 * codec.SpectraPerCycle))
+                return null;
+        }
+        return new Scheme(codec.SpectraPerCycle, codec.PrecursorsPerSpectrum, codec.OverlapsPerCycle,
+            codec.NumDemuxWindows);
+    }
+
+    /// <summary>Spectra <see cref="DetectScheme"/> reads at most to infer the cycle.</summary>
+    public const int DetectHeadSpectra = 5000;
+
+    /// <summary>True when the first <paramref name="ms2Count"/> MS2 spectra from
+    /// <paramref name="start"/> each map onto the codec's number of demux windows.</summary>
+    private static bool MapsConsistently(ISpectrumList spectra, PrecursorMaskCodec codec, int start, int ms2Count)
+    {
         var indices = new List<int>();
         int checkedMs2 = 0;
-        for (int i = 0; i < spectra.Count && checkedMs2 < 2 * codec.SpectraPerCycle; i++)
+        for (int i = start; i < spectra.Count && checkedMs2 < ms2Count; i++)
         {
             var spectrum = spectra.GetSpectrum(i, getBinaryData: false);
             if (spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) != 2)
@@ -138,12 +166,24 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             }
             catch (InvalidOperationException)
             {
-                return null;
+                return false;
             }
             checkedMs2++;
         }
-        return new Scheme(codec.SpectraPerCycle, codec.PrecursorsPerSpectrum, codec.OverlapsPerCycle,
-            codec.NumDemuxWindows);
+        return true;
+    }
+
+    /// <summary>The first spectra of a list, for inferring its cycle without sweeping it.</summary>
+    private sealed class HeadSpectrumList : SpectrumListWrapper
+    {
+        private readonly int _count;
+
+        public HeadSpectrumList(ISpectrumList inner, int count) : base(inner)
+        {
+            _count = System.Math.Min(inner.Count, count);
+        }
+
+        public override int Count => _count;
     }
 
     /// <inheritdoc/>

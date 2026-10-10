@@ -284,6 +284,46 @@ public class SpectrumListDemuxTests
     }
 
     [TestMethod]
+    public void DetectScheme_WindowsChangePartway_IsNull()
+    {
+        // Staggered 400-600 m/z, then a second method segment over 600-800: the demultiplexer
+        // would fail mid-run, so the run is not reported as multiplexed.
+        var list = BuildSingleOverlapList(numCycles: 6, scansPerHalf: 25, mzStart: 400, mzEnd: 600);
+        foreach (var s in BuildSingleOverlapList(numCycles: 6, scansPerHalf: 25, mzStart: 600, mzEnd: 800).Spectra)
+        {
+            s.Index = list.Spectra.Count;
+            list.Spectra.Add(s);
+        }
+        Assert.IsNull(SpectrumListDemux.DetectScheme(list));
+    }
+
+    [TestMethod]
+    public void DetectScheme_NoRepeatingCycle_ReadsOnlyTheHead()
+    {
+        // DDA-like: every MS2 isolates a new precursor, so no cycle repeats.
+        var dda = new SpectrumListSimple();
+        for (int i = 0; i < 3 * SpectrumListDemux.DetectHeadSpectra; i++)
+            dda.Spectra.Add(MakeMs2(i, scanTimeSec: i * 0.01, isoCenter: 400 + i * 0.01, halfWidth: 0.5));
+        var counting = new CountingSpectrumList(dda);
+        Assert.IsNull(SpectrumListDemux.DetectScheme(counting));
+        Assert.IsTrue(counting.Reads < 2 * SpectrumListDemux.DetectHeadSpectra + 10,
+            $"read {counting.Reads} spectra of {dda.Count}");
+    }
+
+    private sealed class CountingSpectrumList : SpectrumListWrapper
+    {
+        public CountingSpectrumList(ISpectrumList inner) : base(inner) { }
+
+        public int Reads { get; private set; }
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
+        {
+            Reads++;
+            return base.GetSpectrum(index, getBinaryData);
+        }
+    }
+
+    [TestMethod]
     public void DetectScheme_OrdinaryDia_IsNull()
     {
         // Ordinary DIA whose adjacent windows overlap by a 1 Th margin (399.5-425.5, 424.5-450.5,
