@@ -32,23 +32,31 @@ namespace SharedBatch
             Type = type;
             _versionOutput = new List<string>();
 
+            bool skylineInnoInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineInnoCmdPath);
             bool skylineAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineAdminCmdPath);
             bool skylineWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineRunnerPath);
+            bool skylineDailyInnoInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineDailyInnoCmdPath);
             bool skylineDailyAdminInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineDailyAdminCmdPath);
             bool skylineDailyWebInstallation = !string.IsNullOrEmpty(Settings.Default.SkylineDailyRunnerPath);
 
             //_savedVersion = savedVersion;
 
+            // An Inno Setup install comes before a ClickOnce install. The Inno Setup installer does not remove
+            // a ClickOnce Skyline, and that one is the older version.
             switch (type)
             {
                 case SkylineType.Skyline:
-                    if (skylineWebInstallation)
+                    if (skylineInnoInstallation)
+                        CmdPath = Settings.Default.SkylineInnoCmdPath;
+                    else if (skylineWebInstallation)
                         CmdPath = Settings.Default.SkylineRunnerPath;
                     else if (skylineAdminInstallation)
                         CmdPath = Settings.Default.SkylineAdminCmdPath;
                     break;
                 case SkylineType.SkylineDaily:
-                    if (skylineDailyWebInstallation)
+                    if (skylineDailyInnoInstallation)
+                        CmdPath = Settings.Default.SkylineDailyInnoCmdPath;
+                    else if (skylineDailyWebInstallation)
                         CmdPath = Settings.Default.SkylineDailyRunnerPath;
                     else if (skylineDailyAdminInstallation)
                         CmdPath = Settings.Default.SkylineDailyAdminCmdPath;
