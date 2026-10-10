@@ -108,7 +108,8 @@ and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
 `RescoreOneFile` (`PerFileRescoreTask.cs:644`) does:
 
 1. **Resume probe** — `TryResumeRescoredFile` skips a file whose
-   `.scores-reconciled.parquet` + resume sidecar are already valid, overlaying the
+   `.scores-reconciled.parquet` (and, where the pass-2 worker runs, both 2nd-pass
+   binaries) already carry a current embedded validity stamp, overlaying the
    reconciled boundaries in place (`PerFileRescoreTask.cs:827`).
 2. **Assemble targets** — `TryAssembleRescoreTargets` (consensus + reconciliation
    dedup + gap-fill); bails on no-work files.
@@ -136,7 +137,7 @@ and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
    second-pass Percolator recomputes them.
 9. **Gap-fill two-pass** — `RunGapFillTwoPass` (see below).
 10. **Write-back** — `WriteReconciledAndStamp` (`PerFileRescoreTask.cs:944`) writes
-    the reconciled parquet and stamps the resume sidecar only on success.
+    the reconciled parquet, its validity stamp embedded in the same commit.
 
 ## How overrides work inside the scorer (step by step)
 

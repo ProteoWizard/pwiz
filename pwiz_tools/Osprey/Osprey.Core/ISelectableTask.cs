@@ -42,7 +42,7 @@ namespace pwiz.Osprey.Core
     {
         /// <summary>
         /// The task's stable name: the <c>--task</c> value, the <c>[TASK]</c> log token and
-        /// the <c>.osprey.task</c> sidecar stamp are all this one spelling.
+        /// the task in each artifact's embedded validity stamp are all this one spelling.
         /// </summary>
         string Name { get; }
 

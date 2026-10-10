@@ -1073,10 +1073,6 @@
     <value>已将 {1:N0} 个母离子候选的实验水平 FDR 结果写入 {0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>无法记录“{0}”已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_" xml:space="preserve">
     <value>写入“{0}”的第二轮中间文件失败：{1}</value>
     <comment>Needs Review:New resource</comment>
@@ -1339,10 +1335,6 @@
   </data>
   <data name="PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_" xml:space="preserve">
     <value>{0:N0} 个目标在其新峰边界内没有信号；已重置其得分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>无法记录“{0}”已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">

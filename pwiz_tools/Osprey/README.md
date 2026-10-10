@@ -120,10 +120,12 @@ reads is a property of the task — `FirstPassFDR` and `PerFileRescoring` read `
 directory. The data file itself need not still exist: a node whose `.spectra.bin` or scores
 parquet is staged is accepted without it.
 
-The driver also writes a `<output>.<TaskName>.osprey.task` validity
-sidecar next to each output; re-running a task whose outputs already exist
-with a matching validity key (search-parameter + library hashes, plus the
-reconciliation hash for `PerFileRescoring` and `SecondPassFDR`) skips the recompute.
+Every output carries a validity stamp inside itself (the task that wrote it, the Osprey
+version and the task's validity key); re-running a task whose outputs already exist with a
+matching stamp (search-parameter + library hashes, plus the reconciliation hash for
+`PerFileRescoring` and `SecondPassFDR`) skips the recompute. A different Osprey version
+always recomputes; `OSPREY_VERSION_OVERRIDE` pins the version for a developer who knows the
+formats are compatible.
 
 ### Worked example (Stellar 3-file: `s1.mzML s2.mzML s3.mzML`, library `hela.tsv`)
 

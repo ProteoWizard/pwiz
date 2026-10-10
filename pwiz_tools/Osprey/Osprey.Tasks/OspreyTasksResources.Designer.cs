@@ -1212,6 +1212,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to the first-pass model file ({0}) is not up to date.
+        /// </summary>
+        public static string FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___0___is_not_up_to_date {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___0___is_not_up" +
+                        "_to_date", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to the first-pass model file ({0}) holds no model.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model {
@@ -2461,16 +2471,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to record that {0} completed {1}: {2}. A resume will redo this step..
-        /// </summary>
-        public static string Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_ {
-            get {
-                return ResourceManager.GetString("Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_" +
-                        "will_redo_this_step_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to write the second-pass intermediate file for &apos;{0}&apos;: {1}.
         /// </summary>
         public static string Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_ {
@@ -3065,16 +3065,6 @@ namespace pwiz.Osprey.Tasks {
         public static string PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to record that {0} completed {1}: {2}. A resume will redo this step..
-        /// </summary>
-        public static string PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_ {
-            get {
-                return ResourceManager.GetString("PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___" +
-                        "A_resume_will_redo_this_step_", resourceCulture);
             }
         }
         

@@ -4958,7 +4958,7 @@ namespace pwiz.Osprey.Test
                 @"osprey_test_dcy_" + Guid.NewGuid().ToString(@"N") + @".bin");
             try
             {
-                Pass2CompetitionDecoys.Write(decoysPath, competed.BestDecoy);
+                Pass2CompetitionDecoys.Write(decoysPath, competed.BestDecoy, TestStamps.Any);
                 var readBack = Pass2CompetitionDecoys.ReadMap(decoysPath);
                 Assert.IsNotNull(readBack, @"the decoys artifact must read back");
                 var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, readBack);

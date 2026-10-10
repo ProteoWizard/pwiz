@@ -390,8 +390,8 @@ namespace pwiz.Osprey.Core
         /// blib-written is a SUBSET of what is retained here.</para>
         ///
         /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
-        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> deletes its own
-        /// validity sidecars. The suffix is still required - the release is a Run-only side
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> rewrites every
+        /// output. The suffix is still required - the release is a Run-only side
         /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
         /// and report a memory profile it never computed - but the escape hatch is not cheap.
         /// The suffix itself lives with the release
