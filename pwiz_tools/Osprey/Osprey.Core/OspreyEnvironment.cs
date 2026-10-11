@@ -326,25 +326,20 @@ namespace pwiz.Osprey.Core
                 SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file");
         }
 
-        /// <summary>
-        /// Stage 6 rebuilds each file's post-compaction survivors from that file's
-        /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
-        /// them again once its reconciled parquet is on disk - so the all-files survivor
-        /// buffer is not resident across the rescore loop.
-        ///
-        /// DEFAULT ON. That buffer is 88.9 M entries / 28 GB live at 163 files, held for
-        /// the 5.5 hours of Stage 6, and it grows super-linearly in file count because the
-        /// passing base_id set grows too (issue #4526). Set
-        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 to keep the resident buffer as the A/B
-        /// byte-identity oracle, the same role OSPREY_FDR_PROJECTION=0 plays for Stage 5.
-        /// A settable property (not a readonly field) so unit tests can A/B both paths.
-        /// </summary>
-        public static bool Stage6StreamSurvivors { get; set; } =
-            IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
+        // OSPREY_STAGE6_STREAM_SURVIVORS was removed here on 2026-10-10 and the streamed Stage 6
+        // handoff is the ONLY arm: each file's post-compaction survivors are rebuilt from its
+        // .scores.parquet + 1st-pass sidecar just before it is rescored and dropped once its
+        // reconciled parquet is on disk. Setting it to 0 kept the all-files survivor buffer
+        // resident across the rescore - 88.9 M entries / 28 GB at 163 files, held for the 5.5
+        // hours of Stage 6 (issue #4526) - as the A/B byte-identity oracle. It went without a
+        // final A/B because the arm no longer completed (it aborted in Stage 7, unseen, since no
+        // gate ran it); the committed golden is the oracle. A caller who still sets it is refused
+        // at startup (Program.cs), for the reason given for OSPREY_STAGE7_STREAM below.
+        public static bool Stage6StreamSurvivorsRetiredSet => IsSet(@"OSPREY_STAGE6_STREAM_SURVIVORS");
 
         // OSPREY_STAGE7_STREAM was removed here on 2026-09-10 and the streamed join is the ONLY
         // arm. It kept the resident Stage-7 join as an A/B byte-identity oracle - the role
-        // OSPREY_STAGE6_STREAM_SURVIVORS=0 still plays for the Stage 6 handoff - and went once
+        // OSPREY_STAGE6_STREAM_SURVIVORS=0 then played for the Stage 6 handoff - and went once
         // that A/B was banked: the resident arm passed the whole regression against the
         // committed golden at 1e-9, and the diagnostics HTML matched the streamed arm byte for
         // byte apart from generatedUtc. A second arm kept alive only to keep it matching is a
@@ -370,7 +365,7 @@ namespace pwiz.Osprey.Core
         /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
         /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
         /// keep the whole library resident as the A/B byte-identity oracle, the same role
-        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff.
+        /// OSPREY_FDR_PROJECTION=0 plays for Stage 5.
         ///
         /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
         /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
@@ -402,21 +397,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool ReleaseLibraryFragments { get; set; } =
             IsNotZero(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS");
-
-        /// <summary>
-        /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
-        /// so shipping this does not invalidate a single existing output directory; only the
-        /// resident opt-out adds a term.
-        ///
-        /// <para>Without it an in-place A/B of the two arms is not an A/B at all: the second
-        /// run finds the first run's reconciled parquets valid, skips Stage 6 entirely, and
-        /// reports a clean match it never computed. That is the exact failure mode the two arms
-        /// exist to detect, so leaving it out makes the oracle self-confirming.</para>
-        /// </summary>
-        public static string Stage6StreamSurvivorsValidityKeySuffix()
-        {
-            return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
-        }
 
         /// <summary>
         /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
@@ -907,10 +887,7 @@ namespace pwiz.Osprey.Core
         ///
         /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
         /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. An operator running the Stage 6 handoff A/B on a
-        /// configuration that is already resident for its own reason needs
-        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> alongside that run's own token.
-        /// A LIST keeps the property that matters - every admitted path is still named
+        /// impossible to perform at all. A LIST keeps the property that matters - every admitted path is still named
         /// individually, so nothing rides along unnamed the way the blanket boolean allowed -
         /// while a single value only ever prevented honest work.</para>
         ///

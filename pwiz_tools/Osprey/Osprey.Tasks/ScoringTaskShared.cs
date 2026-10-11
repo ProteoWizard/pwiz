@@ -927,9 +927,9 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>This is the guard's invariant reaching PAST THE COMPACTION LINE.
         /// <see cref="PerFileScoringTask.ResidentPoolGuardError"/> enforces "no unnamed
-        /// PRE-compaction pool" and stops there, which is why
-        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> had to be named rather than
-        /// refused - no token could reach it. The bundle guarded here is on the same far side of
+        /// PRE-compaction pool" and stops there, which is why the resident post-compaction
+        /// handoff (the retired <c>compacted-entries-buffer</c> token) had to be named rather
+        /// than refused - no token could reach it. The bundle guarded here is on the same far side of
         /// that line, and it was reachable with no token and no disclosure at all: a run took an
         /// O(files x entries) route without declaring it, which is the one shape the named-token
         /// ratchet exists to make impossible.</para>

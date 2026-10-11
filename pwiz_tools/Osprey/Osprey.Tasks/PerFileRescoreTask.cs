@@ -271,9 +271,6 @@ namespace pwiz.Osprey.Tasks
             // outputs. Same shared suffix, so the two cannot disagree.
             // Same shared suffix for the 2nd-pass mode, for the same reason: this task writes the
             // per-file 2nd-pass sidecar, whose q-values ARE the mode's output.
-            // The Stage 6 handoff arm joins them: the streamed and resident arms are supposed
-            // to write byte-identical reconciled parquets, and an in-place A/B that silently
-            // adopted the other arm's outputs would report that identity without testing it.
             // The sidecar format version belongs here too, not only in FirstPassFdrTask: this
             // task WRITES the 2nd-pass sidecar, so a record-layout change (v3 -> v4) invalidates
             // its output exactly as it invalidates the 1st-pass one. Without it, FirstPassFDR
@@ -290,7 +287,6 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
-                + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx)
                 // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
                 // model, so the classifier that trained it keys this task too (empty for the SVM).
@@ -504,7 +500,7 @@ namespace pwiz.Osprey.Tasks
             // The loader for the survivor lists FirstPassFDR released after planning
             // (issue #4526); null when this run kept the resident buffer, which leaves
             // nothing to refill and makes the deferred build below a no-op.
-            var survivorLoader = StreamedSurvivorLoader(ctx);
+            var survivorLoader = PublishedSurvivorLoader(ctx);
 
             // Publish the RescoredEntries milestone over the shared backing list
             // now, while we hold its reference. On the streamed default ExecuteRescore
@@ -526,7 +522,7 @@ namespace pwiz.Osprey.Tasks
             // is not a detail: a run that kept the resident buffer has no way to rebuild a file
             // it dropped, so streaming there would destroy the only copy of the survivors on
             // its way past. Null leaves StreamFiles walking the resident buffer, which is what
-            // the OSPREY_STAGE6_STREAM_SURVIVORS=0 A/B oracle needs it to do.
+            // the OSPREY_FDR_PROJECTION=0 A/B oracle needs it to do.
             // WITH a per-file source when this run can supply a re-enumerable one, which is
             // what makes the bounded join the DEFAULT rather than a property of
             // --task SecondPassFDR. The paragraph that stood here said this leg could not have
@@ -702,9 +698,8 @@ namespace pwiz.Osprey.Tasks
                 // features from the valid reconciled parquets on disk. So the streamed arm has
                 // to do exactly one thing: put back the contents FirstPassFDR released, which is
                 // the refill-only plan below. Overlaying the reconciled parquets as well (as
-                // this did) applied Stage-6 boundaries the resident arm never applies, which
-                // made OSPREY_STAGE6_STREAM_SURVIVORS=0 something other than a byte-identity
-                // oracle on this path - the one property the whole design rests on.
+                // this did) applied Stage-6 boundaries the resident arm never applies, so the
+                // two arms stopped writing the same answer on this path.
                 _poolPlan = RescoredPoolPlan.RefillOnly(_perFileEntries, survivorLoader);
                 return true;
             }
@@ -933,7 +928,7 @@ namespace pwiz.Osprey.Tasks
                 //
                 // Eager here, unlike Run: Rehydrate itself only ever executes because a
                 // consumer pulled this milestone, so the work is already lazy.
-                MaterializeAllResumedFiles(_perFileEntries, StreamedSurvivorLoader(ctx),
+                MaterializeAllResumedFiles(_perFileEntries, PublishedSurvivorLoader(ctx),
                     CurrentReconciledPaths(ctx),
                     // Lazy for the reason BuildResumePerRunSource states: with a survivor
                     // loader every run takes the load branch and the gap-fill map - order
@@ -2883,32 +2878,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The loader Stage 6 refills from, or null when this run keeps the resident
-        /// buffer. Non-null requires BOTH that FirstPassFDR published a source (only the
-        /// projection path computes the passing base_id set it needs) and that streaming
-        /// is enabled, which is what <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> turns off to
-        /// get the resident A/B oracle back.
-        /// </summary>
-        private static FirstPassSurvivorLoader StreamedSurvivorLoader(PipelineContext ctx)
-        {
-            if (!OspreyEnvironment.Stage6StreamSurvivors)
-                return null;
-            return PublishedSurvivorLoader(ctx);
-        }
-
-        /// <summary>
-        /// The per-run survivor loader FirstPassFDR published, WITHOUT the Stage-6 switch
-        /// <see cref="StreamedSurvivorLoader"/> applies.
-        ///
-        /// <para>Each stage answers its own question. <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> is
-        /// the A/B oracle for the RESCORE window - it asks Stage 6 to keep the buffer it would
-        /// have drained - and it says nothing about how Stage 7 should fold. Reading it through
-        /// the Stage-6 gate would make that oracle silently decide the Stage-7 arm as well, so
-        /// Stage 7 asks for the loader directly. That was the argument when Stage 7 had a switch
-        /// of its own (<c>OSPREY_STAGE7_STREAM</c>, removed 2026-09-10) and it does not depend on
-        /// one: the two stages still take their arms from different predicates, and routing
-        /// Stage 7's through Stage 6's oracle would couple them again. The object is the same one
-        /// either way - the gate withholds it, it does not unbuild it.</para>
+        /// The per-run survivor loader FirstPassFDR published, which Stage 6 refills from and
+        /// Stage 7 folds with, or null when this run keeps the resident buffer. Non-null
+        /// requires that FirstPassFDR published a source, and only the projection path
+        /// computes the passing base_id set it needs.
         /// </summary>
         private static FirstPassSurvivorLoader PublishedSurvivorLoader(PipelineContext ctx)
         {
@@ -3261,8 +3234,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>The overlay survives for one case, and it is not a fallback for a missing
         /// artifact: a list that still HOLDS its entries has its rows already, and re-reading
-        /// them would be the duplicate build <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c> exists to
-        /// avoid - so those rows take the reconciled values through the overlay instead. Both
+        /// them would be a duplicate build - so those rows (the <c>OSPREY_FDR_PROJECTION=0</c>
+        /// resident arm, which publishes no loader) take the reconciled values through the overlay instead. Both
         /// routes read the same one parquet.</para>
         /// </summary>
         private static void MaterializeResumedFile(string fileName, List<FdrEntry> entries,
@@ -3285,7 +3258,7 @@ namespace pwiz.Osprey.Tasks
                 //
                 // Guarded on the loader, which is what makes the clear safe: a run cleared here
                 // is rebuilt from disk on the next line. Where there is NO loader the entries
-                // are the only copy - the OSPREY_STAGE6_STREAM_SURVIVORS=0 resident oracle -
+                // are the only copy - the OSPREY_FDR_PROJECTION=0 resident oracle -
                 // and they take the reconciled values through the overlay instead.
                 entries.Clear();
                 MaterializeFileSurvivors(fileName, entries, loader, ctx, reconciledPath);

@@ -361,8 +361,8 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 # statement of health, and reading it as sufficient is the trap: a token is only
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
-# published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
-# asked for a token. #4486 was the standing example while it was open: the survivor
+# published no survivor loader, so the Stage 6 handoff guard (since retired with
+# OSPREY_STAGE6_STREAM_SURVIVORS) no-oped and nothing asked for a token. #4486 was the standing example while it was open: the survivor
 # buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
 # path, and no guard covered it because it was not a resume or a mode - it was what Stage
 # 7 took as input. That is now closed (#4486): every leg folds run by run. The last route
@@ -395,32 +395,33 @@ $knownResidentGaps = @()
 # mode 12 covers it - the ratchet shrinking a fifth time. hpc-merge went with #4486 (the
 # --task SecondPassFDR reconciled-input load takes the bounded streaming hydrate, so
 # mode 3's join node needs no token).
-# By design rather than unfinished, so no issue: projection-off and
-# compacted-entries-buffer (the A/B byte-identity oracles). non-percolator-fdr went with
-# #4543, which deleted the simple FDR method it named - the ratchet shrinking a sixth time.
+# By design rather than unfinished, so no issue: projection-off (the A/B byte-identity
+# oracle). non-percolator-fdr went with #4543, which deleted the simple FDR method it named -
+# the ratchet shrinking a sixth time - and compacted-entries-buffer with
+# OSPREY_STAGE6_STREAM_SURVIVORS (2026-10-10), the seventh.
 
 # Preserved and RESTORED at the end of the run (see the finally block): this mutates the
 # process environment, so a developer running the gate in their interactive shell would
 # otherwise silently lose an exported token for the rest of the session.
 $script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-# An operator running a deliberate A/B needs their token: OSPREY_STAGE6_STREAM_SURVIVORS=0
-# and OSPREY_FDR_PROJECTION=0 force resident paths ON PURPOSE, and clearing the token that
-# admits them would abort the gate on its first leg with a guard error - making the very
-# comparison this harness exists to support impossible to run. Ambient tokens are stripped
-# ONLY when no such switch is set, which is the case the clearing is aimed at.
+# An operator running a deliberate A/B needs their token: OSPREY_FDR_PROJECTION=0 forces a
+# resident path ON PURPOSE, and clearing the token that admits it would abort the gate on its
+# first leg with a guard error - making the very comparison this harness exists to support
+# impossible to run. Ambient tokens are stripped ONLY when no such switch is set, which is
+# the case the clearing is aimed at.
 #
-# OSPREY_STAGE7_STREAM=0 was in this set and is GONE (2026-09-10): the switch itself was
-# retired once its A/B was banked, so there is no Stage-7 arm left for an operator to
-# force and no token to keep. ResidentPaths.KNOWN_UNFIXED shrank from 5 to 4 with it.
+# OSPREY_STAGE7_STREAM=0 was in this set and is GONE (2026-09-10), and so is
+# OSPREY_STAGE6_STREAM_SURVIVORS=0 (2026-10-10): each switch was retired with its arm, so
+# there is nothing left for an operator to force and no token to keep. Osprey refuses
+# either name at startup.
 #
-$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-               ($env:OSPREY_FDR_PROJECTION -eq '0')
+$abSwitchSet = ($env:OSPREY_FDR_PROJECTION -eq '0')
 if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
     if ($abSwitchSet) {
         # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
         # formatted and '{0}' survives verbatim into the output.
         Write-Host (("Keeping inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - an A/B switch " +
-            "(OSPREY_STAGE6_STREAM_SURVIVORS/OSPREY_FDR_PROJECTION=0) is set and needs it.") `
+            "(OSPREY_FDR_PROJECTION=0) is set and needs it.") `
             -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
     } else {
         Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
@@ -2184,13 +2185,8 @@ foreach ($name in $selected) {
     # run could not stream by construction. Deriving the admission from the reconciled parquets
     # on disk is what puts every leg under one question.
     #
-    # OSPREY_STAGE6_STREAM_SURVIVORS=0 belongs here too, and its absence made this list
-    # wrong rather than merely incomplete. Under that switch BuildRunPerRunSource returns
-    # null (no loader, and the per-run lists are never cleared), so no marker reaches
-    # straight.log and the mode1 leg FAILS a run behaving exactly as instructed - while
-    # mode2 PASS, because BuildResumePerRunSource reads the loader through
-    # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
-    # red that reads like a genuine regression is the worst shape a gate can have.
+    # OSPREY_STAGE6_STREAM_SURVIVORS=0 was the other term, and went with that switch
+    # (2026-10-10).
     #
     # Reading env vars only is now COMPLETE for the resident-pool half: NeedsResidentPool's
     # one remaining trigger is OSPREY_FDR_PROJECTION=0, tested below. Its CLI/config triggers are
@@ -2199,9 +2195,7 @@ foreach ($name in $selected) {
     # does not belong here: trees run the same Percolator framework and stream.
     # The pass-2 mode is NOT a term since #4665: transfer's per-file half runs in the rescore
     # worker, so every mode streams the join, and a transfer arm must be held to the marker.
-    $cannotStreamJoin =
-        ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-        ($env:OSPREY_FDR_PROJECTION -eq '0')
+    $cannotStreamJoin = ($env:OSPREY_FDR_PROJECTION -eq '0')
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     # GoldenFolder, not Folder: StellarLibDecoy shares the stellar mzML folder,
     # so keying the golden on Folder alone would collide with Stellar's.

@@ -82,10 +82,11 @@ namespace pwiz.Osprey.Test
             // outrank; ResidentPoolTrigger still checks it first for when one is added.)
 
             // Naming a DIFFERENT path does not: the token grants one exemption, not amnesty.
-            // This is the property the former blanket boolean lacked. Nor does the retired
-            // token that admitted the non-Percolator FDR methods: it names nothing now.
+            // This is the property the former blanket boolean lacked. Nor do the retired
+            // tokens that admitted the resident Stage 6 handoff and the non-Percolator FDR
+            // methods: they name nothing now.
             Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(lean, needsResidentPool: true,
-                allowUnfixedResident: ResidentPaths.COMPACTED_ENTRIES_BUFFER, useFdrProjection: false));
+                allowUnfixedResident: "compacted-entries-buffer", useFdrProjection: false));
             Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(lean, needsResidentPool: true,
                 allowUnfixedResident: "non-percolator-fdr", useFdrProjection: false));
 
@@ -214,21 +215,21 @@ namespace pwiz.Osprey.Test
             // non-Percolator FDR method, which never used the projection framework. Mokapot was
             // never reachable and simple was deleted, so every method left is a classifier inside
             // the Percolator framework and streams; the gbdt assertion below pins that.
+            // 'compacted-entries-buffer' is GONE (2026-10-10) - the SEVENTH shrink. It named the
+            // resident Stage 6 handoff (OSPREY_STAGE6_STREAM_SURVIVORS=0), the A/B oracle for the
+            // streamed default, and went with that switch. No final A/B was possible: the arm
+            // had stopped completing, unnoticed because no gate ran it.
             CollectionAssert.AreEqual(
                 new[]
                 {
-                    "projection-off", "compacted-entries-buffer"
+                    "projection-off"
                 },
                 ResidentPaths.KNOWN_UNFIXED.ToArray());
 
-            // The POST-compaction handoff guard (issue #4526). The guard above stops at the
-            // compaction line, so the all-files survivor buffer Stage 5 hands to Stage 6 - 28 GB
-            // at 163 files, live for the whole rescore - was never named and no token could
-            // refuse it. Streaming it is the default; the resident opt-out is a named path.
-            AssertStage6HandoffGuard();
+            AssertTokenLists();
 
             // The ALL-RUNS reconciliation bundle, refused outright. Reaches PAST the compaction
-            // line like the Stage 6 guard above, but takes NO token: the bounded alternative
+            // line, but takes NO token: the bounded alternative
             // (the per-run survivor loader off the analysis-wide retained base_id summary)
             // exists on every route that gets here, so residency is a defect to fix and not a
             // path to name.
@@ -382,70 +383,22 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The Stage 6 post-compaction handoff guard: streaming (the default) is never guarded,
-        /// the resident opt-out is refused unless it is named, and a run that could not stream
-        /// in the first place is not asked for a second token on top of the one its own
-        /// resident path already requires.
+        /// OSPREY_ALLOW_UNFIXED_RESIDENT is a LIST. A run can legitimately trip more than one
+        /// resident path, and a single-value variable once made such a run impossible to perform
+        /// at all. Every admitted path is still named individually.
         /// </summary>
-        private static void AssertStage6HandoffGuard()
+        private static void AssertTokenLists()
         {
-            // Streaming: no error, whatever the token says.
-            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                streamingAvailable: true, streamingEnabled: true, allowUnfixedResident: null));
-            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, true, ResidentPaths.PROJECTION_OFF));
-
-            // OSPREY_STAGE6_STREAM_SURVIVORS=0 on a run that COULD stream: refused, and the
-            // message names the token to set rather than describing a symptom.
-            string err = PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, null);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err,
-                "OSPREY_ALLOW_UNFIXED_RESIDENT=" + ResidentPaths.COMPACTED_ENTRIES_BUFFER);
-
-            // Naming THIS path admits it - that is the A/B byte-identity oracle. Case-
-            // insensitive, matching the pre-compaction guard.
-            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, ResidentPaths.COMPACTED_ENTRIES_BUFFER));
-            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, ResidentPaths.COMPACTED_ENTRIES_BUFFER.ToUpperInvariant()));
-
-            // Naming a DIFFERENT path does not, and the message says which value was supplied
-            // so a stale token does not read like an unset one.
-            string wrongToken = PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, ResidentPaths.PROJECTION_OFF);
-            Assert.IsNotNull(wrongToken);
-            StringAssert.Contains(wrongToken, ResidentPaths.PROJECTION_OFF);
-
-            // A run that cannot stream at all (no per-file survivor source: the legacy resident
-            // path never computes the passing base_id set) is NOT guarded here. It is already
-            // resident for a reason carrying its own token, and demanding a second one would
-            // make a single decision need two environment variables.
-            //
-            // The RESUME is no longer in that category and must not drift back into it. Since
-            // #4536 the rehydrate builds its own survivor loader, so a resume arrives with
-            // streamingAvailable TRUE and is refused/admitted by the assertions above - the
-            // same ones a computed run gets. The interim resume-side guard and its dedicated
-            // resume-survivor-handoff token are gone with it; the KNOWN_UNFIXED assertion
-            // above is what keeps the token from coming back.
-            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(false, false, null));
-
-            // SEVERAL paths may be named at once. A run can legitimately trip more than one,
-            // and a single-value variable made that run impossible: an operator proving the
-            // streamed Stage 6 handoff bounded on a configuration that is already resident for
-            // its own reason needs that run's token AND compacted-entries-buffer, so the very
-            // A/B that establishes the bound aborted on its own guard. Both guards read the
-            // list, and every admitted path is still named individually.
-            string both = ResidentPaths.PROJECTION_OFF + "," + ResidentPaths.COMPACTED_ENTRIES_BUFFER;
-            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(true, false, both));
-            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(new OspreyConfig(), true, both, false));
+            var config = new OspreyConfig();
             // Separators are interchangeable and surrounding whitespace is tolerated - an
             // operator composing the value in a shell should not have to match a spelling.
-            Assert.IsNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, " projection-off ; compacted-entries-buffer "));
-            // A list still admits ONLY what it names: an unnamed path is refused as before, and a
-            // retired token beside a live one adds nothing.
-            Assert.IsNotNull(PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                true, false, ResidentPaths.PROJECTION_OFF + ",non-percolator-fdr"));
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(config, true,
+                ResidentPaths.PROJECTION_OFF + ",compacted-entries-buffer", false));
+            Assert.IsNull(PerFileScoringTask.ResidentPoolGuardError(config, true,
+                " compacted-entries-buffer ; projection-off ", false));
+            // A list still admits ONLY what it names: retired tokens add nothing on their own.
+            Assert.IsNotNull(PerFileScoringTask.ResidentPoolGuardError(config, true,
+                "compacted-entries-buffer,non-percolator-fdr", false));
         }
 
         /// <summary>

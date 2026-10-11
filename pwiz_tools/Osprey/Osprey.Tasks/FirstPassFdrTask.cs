@@ -849,19 +849,7 @@ namespace pwiz.Osprey.Tasks
             // survivor source and empties it again after that file's reconciled parquet
             // is written. Without this the 88.9 M entries stay live for the whole rescore
             // - 28 GB across 5.5 hours at 163 files, issue #4526.
-            // The post-compaction counterpart of the pre-compaction resident-pool guard: taking
-            // the resident handoff has to be NAMED, exactly as forcing the legacy first-pass
-            // pool does. Checked here because this is where the decision is made, and BEFORE
-            // the release so a refused run fails with an actionable message rather than an OOM
-            // five hours into Stage 6.
-            string handoffError = PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                _survivorLoader != null && !config.StopAfterStage5,
-                OspreyEnvironment.Stage6StreamSurvivors,
-                OspreyEnvironment.AllowUnfixedResident);
-            if (handoffError != null)
-                throw new InvalidOperationException(handoffError);
-
-            if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && !config.StopAfterStage5)
+            if (_survivorLoader != null && !config.StopAfterStage5)
             {
                 foreach (var kvp in perFileEntries)
                 {
@@ -1077,21 +1065,10 @@ namespace pwiz.Osprey.Tasks
             // not of resuming, and it is #4486's to remove. This issue bounds the RESCORE
             // window, which is the part Stage 6 owns.
             bool rescoreWillStream = !builtOwnBundle && !config.StopAfterStage5;
-            // Same call Run makes. streamingAvailable is "this run will stream", not "a loader
-            // exists": passing the latter would refuse an OSPREY_STAGE6_STREAM_SURVIVORS=0
-            // resume whose behaviour is identical either way, which is a guard inventing work
-            // for an operator rather than preventing any.
-            string handoffError = PerFileScoringTask.Stage6ResidentHandoffGuardError(
-                _survivorLoader != null && rescoreWillStream,
-                OspreyEnvironment.Stage6StreamSurvivors,
-                OspreyEnvironment.AllowUnfixedResident);
-            if (handoffError != null)
-                throw new InvalidOperationException(handoffError);
-
             // Drop the CONTENTS, keeping the outer per-file list (the shared buffer identity
             // every milestone wraps), exactly as Run does after planning. Consensus targets were
             // computed off the full buffer immediately above, which is its last all-files reader.
-            if (OspreyEnvironment.Stage6StreamSurvivors && _survivorLoader != null && rescoreWillStream)
+            if (_survivorLoader != null && rescoreWillStream)
             {
                 foreach (var kvp in perFileEntries)
                 {
@@ -1111,8 +1088,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The resume counterpart of the loader <see cref="ReloadFirstPassSurvivors"/> builds on
-        /// the projection path: rebuild any ONE file's post-compaction survivors from its
+        /// The resume counterpart of the loader <see cref="CompactFirstPass"/> builds on the
+        /// projection path: rebuild any ONE file's post-compaction survivors from its
         /// <c>.scores.parquet</c> plus its finalized <c>.1st-pass.fdr_scores.bin</c>, so Stage 6
         /// refills a file at a time instead of reading them off a buffer somebody had to hold
         /// for the whole rescore (issue #4536).
@@ -1131,10 +1108,9 @@ namespace pwiz.Osprey.Tasks
         /// other missing precondition returns false with
         /// <see cref="PipelineContext.ExitCode"/> set, rather than falling back to the resident
         /// handoff. That asymmetry is the point of the issue this fixes: a silent fallback is
-        /// how an O(files) path reached a default run in the first place, and
-        /// <c>Stage6ResidentHandoffGuardError</c> cannot catch it - it reads a null loader as
-        /// "this run could not stream" and exempts it. So the preconditions are faults here,
-        /// where they can still be reported.</para>
+        /// how an O(files) path reached a default run in the first place, and nothing
+        /// downstream can catch it - a null loader reads as "this run could not stream". So
+        /// the preconditions are faults here, where they can still be reported.</para>
         /// </summary>
         private static bool TryBuildResumeSurvivorLoader(
             PipelineContext ctx,
@@ -3976,70 +3952,16 @@ namespace pwiz.Osprey.Tasks
             }
             ScoringTaskShared.LogCompaction(ctx, beforeCount, afterCount, firstPassBaseIds.Count, null);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after Stage-5 CompactFirstPass");
-
-            // OSPREY_STAGE6_STREAM_SURVIVORS=0 keeps the materialized buffer: it is the A/B
-            // byte-identity oracle for the streamed default, and it can only be that if it
-            // still produces the buffer Stage 6 would read. It is guarded (and refused without
-            // OSPREY_ALLOW_UNFIXED_RESIDENT) precisely because it is the O(files) shape.
-            if (!OspreyEnvironment.Stage6StreamSurvivors)
-                return ReloadFirstPassSurvivors(projections, afterCount, ctx);
+            // The loads must sum to the count just reported. Only when every file has its own
+            // stem: the loader is keyed by stem, so two inputs sharing one would both rebuild
+            // from the same parquet (#4544) and the sum could not match.
+            if (perFileParquetPaths.Count == projections.PerFile.Count)
+                _survivorLoader.ExpectedSurvivorCount = afterCount;
 
             var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
             foreach (var kvp in projections.PerFile)
                 survivors.Add(new KeyValuePair<string, List<FdrEntry>>(kvp.Key, new List<FdrEntry>()));
             _survivorsStreamed = true;
-            return survivors;
-        }
-
-        /// <summary>
-        /// Collect every file's survivors into one buffer - the O(files) shape the streamed
-        /// default exists to avoid (289 M entries and ~100 GB at 446 files, issue #4526). Kept
-        /// only for <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c>, which is the A/B byte-identity
-        /// oracle for the streamed path and would be no oracle at all if it stopped producing
-        /// the buffer.
-        ///
-        /// <para><paramref name="expectedCount"/> is the survivor count the compaction gate
-        /// derived arithmetically, from rows-per-base_id summed over the passing set. This is
-        /// the one path that also has the materialized answer, so it checks the two against
-        /// each other: a mismatch means the gate's count is wrong on EVERY path, including the
-        /// streamed one where nothing else could notice.</para>
-        /// </summary>
-        private List<KeyValuePair<string, List<FdrEntry>>> ReloadFirstPassSurvivors(
-            FdrProjectionSet projections, int expectedCount, PipelineContext ctx)
-        {
-            var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
-            // Per-file progress: reloading each file's survivor stubs from parquet + the 1st-pass
-            // sidecar was the ~70 s silent "First-pass compaction" gap at 82 files. Console-only.
-            using (var reloadProgress = new ProgressReporter(
-                       CountText.Format(projections.PerFile.Count,
-                           OspreyTasksResources.FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from_1_file,
-                           OspreyTasksResources.FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files),
-                       projections.PerFile.Count))
-            {
-                int reloadDone = 0;
-                int loadedCount = 0;
-                foreach (var kvp in projections.PerFile)
-                {
-                    reloadProgress.Report(++reloadDone);
-                    var stubs = _survivorLoader.Load(kvp.Key, out string error);
-                    if (stubs == null)
-                    {
-                        ctx.LogError(error);
-                        ctx.ExitCode = 1;
-                        return null;
-                    }
-                    loadedCount += stubs.Count;
-                    survivors.Add(new KeyValuePair<string, List<FdrEntry>>(kvp.Key, stubs));
-                }
-                if (loadedCount != expectedCount)
-                {
-                    throw new InvalidOperationException(string.Format(
-                        @"First-pass compaction counted {0} survivors from the passing base_id set " +
-                        @"but the reload produced {1}. The reported compaction boundary is wrong on " +
-                        @"every path, including the streamed one that has nothing to compare against.",
-                        expectedCount, loadedCount));
-                }
-            }
             return survivors;
         }
 

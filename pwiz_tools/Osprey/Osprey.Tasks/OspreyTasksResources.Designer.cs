@@ -1023,26 +1023,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reloading the kept precursor candidates from {0:N0} files.
-        /// </summary>
-        public static string FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates" +
-                        "_from__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reloading the kept precursor candidates from 1 file.
-        /// </summary>
-        public static string FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from_1_file {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates" +
-                        "_from_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Model diagnostics: the first pass is already complete, so its report is built from the first-pass intermediate files. Nothing is re-run..
         /// </summary>
         public static string FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_ {

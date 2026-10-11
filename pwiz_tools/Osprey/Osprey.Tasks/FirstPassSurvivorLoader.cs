@@ -91,6 +91,14 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentRecords;
 
+        /// <summary>
+        /// Each file's survivor count from its first Stage 4 parquet load, one int per file.
+        /// Locked rather than concurrent for the reason <see cref="_sequencePool"/> is frozen:
+        /// <see cref="Load(string,out string)"/> runs inside a <c>Parallel.For</c> over files.
+        /// </summary>
+        private readonly Dictionary<string, int> _survivorCounts = new Dictionary<string, int>();
+        private long _survivorCountTotal;
+
         /// <param name="perFileParquetPaths">file name -> its original
         /// <c>.scores.parquet</c>, the same map Stage 5 resolves sidecar paths from.</param>
         /// <param name="config">Run config, for the sidecar base-path resolution.</param>
@@ -119,6 +127,19 @@ namespace pwiz.Osprey.Tasks
         /// decoy flag and peptide from instead of decoding them. Null reads them from the file.
         /// </summary>
         internal LibraryIdentity Identity { get; set; }
+
+        /// <summary>
+        /// The survivor count the compaction gate reported, derived arithmetically from
+        /// rows-per-base_id summed over the passing set, or null when the caller has no such
+        /// count to check against. Once every file has been loaded from its Stage 4 parquet,
+        /// the loads must sum to it.
+        ///
+        /// <para>Nothing materializes every file's survivors at once any more, so this is
+        /// where "the reported compaction boundary is what the rebuild produces" is checked
+        /// (#4544). A mismatch means the gate's count - or the parquet and sidecar it was
+        /// derived from - disagrees with what Stage 6 and Stage 7 actually read.</para>
+        /// </summary>
+        internal long? ExpectedSurvivorCount { get; set; }
 
         /// <summary>
         /// Load one file's survivors. Returns null with <paramref name="error"/> set
@@ -220,7 +241,45 @@ namespace pwiz.Osprey.Tasks
             // Array.Sort OK: SortCanonicalResolved verifies every stub's ParquetIndex is
             // resolved, so the terminal key is unique per file and the comparison never ties.
             FdrEntry.SortCanonicalResolved(stubs, fileName);
+            // Only a Stage 4 load is comparable: a reconciled parquet adds the gap-fill rows.
+            if (parquetPathOverride == null)
+                CheckSurvivorCount(fileName, stubs.Count);
             return stubs;
+        }
+
+        /// <summary>
+        /// Holds every Stage 4 load to two invariants: a file reloaded gives the count it gave
+        /// the first time, and once every file has loaded, the counts sum to
+        /// <see cref="ExpectedSurvivorCount"/>. Throws on a violation - it is a defect in the
+        /// compaction or the artifacts, never a condition an operator can act on.
+        /// </summary>
+        private void CheckSurvivorCount(string fileName, int count)
+        {
+            lock (_survivorCounts)
+            {
+                if (_survivorCounts.TryGetValue(fileName, out int firstCount))
+                {
+                    if (count != firstCount)
+                    {
+                        throw new InvalidOperationException(string.Format(
+                            @"Reloading the kept candidates of {0} produced {1} survivors where the " +
+                            @"first load produced {2}.", fileName, count, firstCount));
+                    }
+                    return;
+                }
+                _survivorCounts.Add(fileName, count);
+                _survivorCountTotal += count;
+                if (ExpectedSurvivorCount.HasValue &&
+                    _survivorCounts.Count == _perFileParquetPaths.Count &&
+                    _survivorCountTotal != ExpectedSurvivorCount.Value)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"First-pass compaction counted {0} survivors from the passing base_id set " +
+                        @"but loading every file produced {1}. The reported compaction boundary " +
+                        @"does not describe what re-scoring reads.",
+                        ExpectedSurvivorCount.Value, _survivorCountTotal));
+                }
+            }
         }
     }
 }
