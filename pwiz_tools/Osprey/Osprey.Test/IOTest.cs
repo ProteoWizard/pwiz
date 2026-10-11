@@ -481,10 +481,9 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Verifies the experiment-level columns of a search blib: absent until
-        /// <see cref="BlibWriter.AddSearchGlobalColumns"/> asks for them, then a precursor
-        /// q-value, precursor PEP and peptide q-value on each spectrum and a q-value on each
-        /// protein group, with a group
-        /// shared by two spectra written once and a spectrum linked to two groups.
+        /// <see cref="BlibWriter.AddSearchGlobalColumns"/> asks for them, then a q-value and PEP
+        /// for the precursor and the peptide on each spectrum and for each protein group, with a
+        /// group shared by two spectra written once and a spectrum linked to two groups.
         /// </summary>
         [TestMethod]
         public void TestSearchGlobalColumns()
@@ -498,17 +497,19 @@ namespace pwiz.Osprey.Test
                     Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PrecursorQValue"));
                     Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PrecursorPep"));
                     Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PeptideQValue"));
+                    Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PeptidePep"));
                     Assert.IsFalse(HasColumn(writer.Connection, "Proteins", "QValue"));
+                    Assert.IsFalse(HasColumn(writer.Connection, "Proteins", "Pep"));
 
                     writer.AddSearchGlobalColumns();
                     writer.BeginBatch();
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     refId2 = AddTestSpectrum(writer, fileId, 2);
                     refId3 = AddTestSpectrum(writer, fileId, 3);
-                    writer.SetGlobalValues(refId2, 0.003, 0.02, 0.004);
-                    writer.SetGlobalValues(refId3, 0.006, 0.05, 0.004);
-                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
-                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
+                    writer.SetGlobalValues(refId2, 0.003, 0.02, 0.004, 0.01);
+                    writer.SetGlobalValues(refId3, 0.006, 0.05, 0.004, 0.01);
+                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002, 0.007);
+                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0, 1.0);
                     writer.AddRefSpectraProtein(refId2, groupA);
                     writer.AddRefSpectraProtein(refId2, groupC);
                     writer.AddRefSpectraProtein(refId3, groupA);
@@ -524,9 +525,13 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(0.05, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.01, QueryDouble(conn, "SELECT PeptidePep FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.01, QueryDouble(conn, "SELECT PeptidePep FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
                     Assert.AreEqual(0.002, QueryDouble(conn,
                         "SELECT QValue FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(0.007, QueryDouble(conn,
+                        "SELECT Pep FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
                     Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM RefSpectraProteins WHERE RefSpectraID = " + refId2));
                     Assert.AreEqual(2L, QueryLong(conn,
                         "SELECT COUNT(*) FROM RefSpectraProteins rp JOIN Proteins p ON p.id = rp.ProteinID " +
@@ -4217,7 +4222,7 @@ namespace pwiz.Osprey.Test
         private static void AssertPartialUpdatePreservesEveryField()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25);
+            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25, 0.25);
             accumulator.SetProteinQvalue(7, 0.0042);
 
             var updated = accumulator.Records[7];
@@ -4247,10 +4252,10 @@ namespace pwiz.Osprey.Test
         private static void AssertRunQFloorsAreAppliedNotStored()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1);   // both floors bite
-            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2);   // neither floor bites
-            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3);   // only the precursor floor bites
-            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4);   // floors unknown
+            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1, 0.1);   // both floors bite
+            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2, 0.2);   // neither floor bites
+            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3, 0.3);   // only the precursor floor bites
+            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4, 0.4);   // floors unknown
 
             var floors = new Dictionary<uint, (double Entry, double Peptide)>
             {
@@ -4289,12 +4294,12 @@ namespace pwiz.Osprey.Test
             AssertRunQFloorsAreAppliedNotStored();
             string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0);
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
-            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 1.0);
+            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0, 1.0);
+            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 1.0, 1.0);
             // A repeat sighting of an entry_id already held, with identical values: the ordinary
             // case, since every observation of a precursor carries the same experiment values.
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0, 1.0);
             Assert.AreEqual(3, accumulator.Count);
 
             FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
@@ -4350,8 +4355,8 @@ namespace pwiz.Osprey.Test
             // Control: a valid file of the expected pass reads back with its records.
             string path = Path.Combine(dir, "unreadable-probe.2nd-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0);
-            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0);
+            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0, 1.0);
+            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0, 1.0);
             FdrExperimentSidecar.Write(path, accumulator.Records, pass, TestStamps.Any);
             Assert.AreEqual(2, Pass2FdrSidecar.LoadExperimentRecordsFrom(path, pass).Count);
 
@@ -4379,10 +4384,10 @@ namespace pwiz.Osprey.Test
         private static void AssertExperimentCollapseRejectsDisagreement()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0);
+            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0, 1.0);
             try
             {
-                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0);
+                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0, 1.0);
                 Assert.Fail("Disagreeing experiment values for one entry_id must throw.");
             }
             catch (InvalidOperationException)
@@ -4403,7 +4408,7 @@ namespace pwiz.Osprey.Test
                 new List<FdrEntry> { MakeFdrEntry(1, -1.0, 0.01, 0.02) },
                 FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0);
+            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0, 1.0);
             FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
             Assert.IsFalse(FdrExperimentSidecar.IsCurrentFormat(perFile, FdrScoresSidecar.Pass.FirstPass));
@@ -5766,7 +5771,7 @@ namespace pwiz.Osprey.Test
 
             string experiment = Path.Combine(dir, "out.1st-pass" + FdrExperimentSidecar.EXT);
             FdrExperimentSidecar.Write(experiment,
-                new Dictionary<uint, FdrExperimentRecord> { { 7u, new FdrExperimentRecord(7, 0.1, 0.2, 0.3, 4.0, 0.5) } },
+                new Dictionary<uint, FdrExperimentRecord> { { 7u, new FdrExperimentRecord(7, 0.1, 0.2, 0.3, 4.0, 0.5, 0.6) } },
                 FdrScoresSidecar.Pass.FirstPass, stamp);
             AssertStampRead(experiment, stamp);
             Assert.AreEqual(1, FdrExperimentSidecar.ReadMap(experiment, FdrScoresSidecar.Pass.FirstPass).Count);

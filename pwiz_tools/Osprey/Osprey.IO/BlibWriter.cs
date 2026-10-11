@@ -226,10 +226,10 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Add the experiment-level columns a search result fills:
-        /// <c>RefSpectra.PrecursorQValue</c>, <c>RefSpectra.PrecursorPep</c>,
-        /// <c>RefSpectra.PeptideQValue</c> and <c>Proteins.QValue</c>, the optional BiblioSpec
-        /// columns Skyline filters on. A blib gets these columns only when it has values for them,
+        /// Add the experiment-level columns a search result fills: the q-value and PEP of the
+        /// precursor (<c>RefSpectra.PrecursorQValue</c>, <c>PrecursorPep</c>), of the peptide
+        /// (<c>RefSpectra.PeptideQValue</c>, <c>PeptidePep</c>) and of the protein group
+        /// (<c>Proteins.QValue</c>, <c>Pep</c>), the optional BiblioSpec columns Skyline filters on. A blib gets these columns only when it has values for them,
         /// so a library export never calls this. Once it is called, every <c>Proteins</c> row is a
         /// protein group written by <see cref="AddProteinGroup"/>. Call before
         /// <see cref="BeginBatch"/>.
@@ -239,20 +239,24 @@ namespace pwiz.Osprey.IO
             ExecuteNonQuery(@"ALTER TABLE RefSpectra ADD COLUMN PrecursorQValue REAL");
             ExecuteNonQuery(@"ALTER TABLE RefSpectra ADD COLUMN PrecursorPep REAL");
             ExecuteNonQuery(@"ALTER TABLE RefSpectra ADD COLUMN PeptideQValue REAL");
+            ExecuteNonQuery(@"ALTER TABLE RefSpectra ADD COLUMN PeptidePep REAL");
             ExecuteNonQuery(@"ALTER TABLE Proteins ADD COLUMN QValue REAL");
+            ExecuteNonQuery(@"ALTER TABLE Proteins ADD COLUMN Pep REAL");
 
             _cmdSetGlobalValues = new SQLiteCommand(_conn);
-            _cmdSetGlobalValues.CommandText = @"UPDATE RefSpectra SET PrecursorQValue = @precursorQ, PrecursorPep = @precursorPep, PeptideQValue = @peptideQ WHERE id = @id";
+            _cmdSetGlobalValues.CommandText = @"UPDATE RefSpectra SET PrecursorQValue = @precursorQ, PrecursorPep = @precursorPep, PeptideQValue = @peptideQ, PeptidePep = @peptidePep WHERE id = @id";
             _cmdSetGlobalValues.Parameters.Add(@"@precursorQ", System.Data.DbType.Double);
             _cmdSetGlobalValues.Parameters.Add(@"@precursorPep", System.Data.DbType.Double);
             _cmdSetGlobalValues.Parameters.Add(@"@peptideQ", System.Data.DbType.Double);
+            _cmdSetGlobalValues.Parameters.Add(@"@peptidePep", System.Data.DbType.Double);
             _cmdSetGlobalValues.Parameters.Add(@"@id", System.Data.DbType.Int64);
             _cmdSetGlobalValues.Prepare();
 
             _cmdInsertProteinGroup = new SQLiteCommand(_conn);
-            _cmdInsertProteinGroup.CommandText = @"INSERT INTO Proteins (accession, QValue) VALUES (@acc, @q)";
+            _cmdInsertProteinGroup.CommandText = @"INSERT INTO Proteins (accession, QValue, Pep) VALUES (@acc, @q, @pep)";
             _cmdInsertProteinGroup.Parameters.Add(@"@acc", System.Data.DbType.String);
             _cmdInsertProteinGroup.Parameters.Add(@"@q", System.Data.DbType.Double);
+            _cmdInsertProteinGroup.Parameters.Add(@"@pep", System.Data.DbType.Double);
             _cmdInsertProteinGroup.Prepare();
         }
 
@@ -457,29 +461,33 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Set a spectrum's experiment-level precursor q-value, precursor PEP and peptide q-value.
-        /// The peptide q-value is one value per modified sequence, the same on every charge
-        /// state's row. Requires <see cref="AddSearchGlobalColumns"/>.
+        /// Set a spectrum's experiment-level precursor and peptide q-values and PEPs. The peptide
+        /// values are one per modified sequence, the same on every charge state's row. Requires
+        /// <see cref="AddSearchGlobalColumns"/>.
         /// </summary>
-        public void SetGlobalValues(long refId, double precursorQValue, double precursorPep, double peptideQValue)
+        public void SetGlobalValues(long refId, double precursorQValue, double precursorPep,
+            double peptideQValue, double peptidePep)
         {
             _cmdSetGlobalValues.Parameters[@"@precursorQ"].Value = precursorQValue;
             _cmdSetGlobalValues.Parameters[@"@precursorPep"].Value = precursorPep;
             _cmdSetGlobalValues.Parameters[@"@peptideQ"].Value = peptideQValue;
+            _cmdSetGlobalValues.Parameters[@"@peptidePep"].Value = peptidePep;
             _cmdSetGlobalValues.Parameters[@"@id"].Value = refId;
             _cmdSetGlobalValues.ExecuteNonQuery();
         }
 
         /// <summary>
         /// Add a protein group as one <c>Proteins</c> row: <paramref name="accessions"/> is the
-        /// group's members joined by semicolons, <paramref name="qValue"/> its experiment-level
-        /// protein group q-value. Returns the row ID, for <see cref="AddRefSpectraProtein"/>.
-        /// Requires <see cref="AddSearchGlobalColumns"/>.
+        /// group's members joined by semicolons, <paramref name="qValue"/> and
+        /// <paramref name="pep"/> its experiment-level protein group q-value and PEP. Returns the
+        /// row ID, for <see cref="AddRefSpectraProtein"/>. Requires
+        /// <see cref="AddSearchGlobalColumns"/>.
         /// </summary>
-        public long AddProteinGroup(string accessions, double qValue)
+        public long AddProteinGroup(string accessions, double qValue, double pep)
         {
             _cmdInsertProteinGroup.Parameters[@"@acc"].Value = accessions;
             _cmdInsertProteinGroup.Parameters[@"@q"].Value = qValue;
+            _cmdInsertProteinGroup.Parameters[@"@pep"].Value = pep;
             _cmdInsertProteinGroup.ExecuteNonQuery();
             return _conn.LastInsertRowId;
         }

@@ -36,9 +36,13 @@ as a consensus rescue gate.
 - `PeptideScore` (`ProteinFdr.cs:87`): per-peptide `Score` (best SVM
   discriminant), `IsDecoy`, and `BestQvalue` (best/lowest run-level **peptide**
   q-value across files — the Savitski target-side gate).
-- `ProteinFdrResult` (`ProteinFdr.cs:113`): `GroupQvalues` and `GroupScores`
-  (target winners only) + `PeptideQvalues`. There is intentionally **no**
-  `GroupPep` field — protein-level PEP is not computed (matches Rust).
+- `ProteinFdrResult` (`ProteinFdr.cs:113`): `GroupQvalues`, `GroupScores` and
+  `GroupPeps` (target winners only) + `PeptideQvalues`. `GroupPeps` is a C#
+  addition; Rust computes no protein-level PEP. Only the second-pass library
+  competition (`ComputeLibraryPickedProteinFdr`) fills it: a `PepEstimator`
+  fitted over all its winners, targets and decoys, evaluated at each target
+  winner's score. That competition gates neither side, so its winners are the
+  right population for the fit; the first pass's gated competition is not.
 
 Protein membership comes from `LibraryEntry.ProteinIds`
 (`Osprey.Core/LibraryEntry.cs:54`), a `List<string>` of accessions carried on
@@ -402,7 +406,7 @@ max SVM discriminant, not a sum (`ProteinFdr.cs:549-590`,
 `CollectBestPeptideScores` max/min at `:735-750`); gated target side / ungated
 decoy side (`ProteinFdr.cs:556` vs `:573`); pairwise picking, cumulative FDR with
 sorted-accessions tiebreak, backward monotonicity sweep, and min-across-groups
-peptide propagation (`ProteinFdr.cs:599-700`); no protein-level PEP
-(`ProteinFdrResult` has no `GroupPep`, `ProteinFdr.cs:113`); and the 1× Savitski
+peptide propagation (`ProteinFdr.cs:599-700`); a protein-group PEP that Rust
+does not compute (`ProteinFdrResult.GroupPeps`, a C# addition); and the 1× Savitski
 gate at `config.RunFdr` in both passes (`ProteinFdr.cs:824`,
 `ProteinFdrEngine.cs:203`).

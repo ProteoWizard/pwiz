@@ -269,9 +269,11 @@ namespace pwiz.Osprey.FDR
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
                     finalScores, labels, entryIds, applyExperimentAgg);
-            Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
-                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
+            // The peptide competition runs either way, for its PEP; its q is used only when
+            // multi-file, as before.
+            var expPeptCompetition = PercolatorQValues.ComputeExperimentPeptideQMap(
+                finalScores, labels, entryIds, peptides, out var peptidePepByPeptide, applyExperimentAgg);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile ? null : expPeptCompetition;
 
             // The score those experiment competitions ranked each entry on (sidecar v4, issue
             // #4522), persisted beside the q-values they produced. Built even on the
@@ -359,6 +361,7 @@ namespace pwiz.Osprey.FDR
                         epe = floorPept;
 
                     double pep = pepByEntryId.TryGetValue(entryIds[g], out double pv) ? pv : 1.0;
+                    double peptidePep = peptidePepByPeptide.TryGetValue(pept, out double ppv) ? ppv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
                         ? eav : finalScores[g];
@@ -370,7 +373,7 @@ namespace pwiz.Osprey.FDR
                         : double.NaN;
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
                         projRows[r].Charge, pept, finalScores[g], ea, apexRt,
-                        new FdrQValues(rp, rpe, ep, epe, pep));
+                        new FdrQValues(rp, rpe, ep, epe, pep, peptidePep));
                 }
                 wgi += count;
                 fileIdx++;
@@ -1086,8 +1089,10 @@ namespace pwiz.Osprey.FDR
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : streamingQ.BuildExperimentPrecursorQMap();
-            Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : streamingQ.BuildExperimentPeptideQMap();
+            // The peptide competition runs either way, for its PEP; its q is used only when
+            // multi-file, as before.
+            var expPeptCompetition = streamingQ.BuildExperimentPeptideQMap(out var peptidePepByPeptide);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile ? null : expPeptCompetition;
 
             // The score those competitions ranked each entry on (sidecar v4, issue #4522).
             // Built unconditionally -- see ScoreProjectionAndComputeFdrInPlace for why the
@@ -1180,6 +1185,7 @@ namespace pwiz.Osprey.FDR
                         file.ExperimentPrecursorQ[r] = ep;
                         file.ExperimentPeptideQ[r] = epe;
                         file.Pep[r] = pepByEntryId.TryGetValue(entryId, out double pv) ? pv : 1.0;
+                        file.PeptidePep[r] = pept != null && peptidePepByPeptide.TryGetValue(pept, out double ppv) ? ppv : 1.0;
                         file.ExperimentAggregate[r] = expAggByEntryId.TryGetValue(entryId, out double eav)
                             ? eav : scores[r];
                     }
@@ -1205,7 +1211,8 @@ namespace pwiz.Osprey.FDR
                         sink.Accept(f, r, rows.EntryIds[r], rows.IsDecoys[r], rows.Charges[r], rows.Peptides[r],
                             file.Scores[r], file.ExperimentAggregate[r], rows.ApexRts[r],
                             new FdrQValues(file.RunPrecursorQ[r], file.RunPeptideQ[r],
-                                file.ExperimentPrecursorQ[r], file.ExperimentPeptideQ[r], file.Pep[r]));
+                                file.ExperimentPrecursorQ[r], file.ExperimentPeptideQ[r], file.Pep[r],
+                                file.PeptidePep[r]));
                     }
                     // Once per file: a report per row is a lock taken 4 million times a file on
                     // the one thread every other lane is waiting on.
@@ -1548,6 +1555,7 @@ namespace pwiz.Osprey.FDR
                 ExperimentPrecursorQ = new double[count];
                 ExperimentPeptideQ = new double[count];
                 Pep = new double[count];
+                PeptidePep = new double[count];
                 ExperimentAggregate = new double[count];
             }
 
@@ -1558,6 +1566,7 @@ namespace pwiz.Osprey.FDR
             public double[] ExperimentPrecursorQ { get; }
             public double[] ExperimentPeptideQ { get; }
             public double[] Pep { get; }
+            public double[] PeptidePep { get; }
             public double[] ExperimentAggregate { get; }
 
             /// <summary>What <see cref="IFdrFileLaneSink.PrepareFile"/> returned for this file, if the
@@ -1567,7 +1576,7 @@ namespace pwiz.Osprey.FDR
             public FdrFileRows ToFileRows()
             {
                 return new FdrFileRows(Rows.EntryIds, Rows.IsDecoys, Rows.Charges, Rows.Peptides, Scores,
-                    RunPrecursorQ, RunPeptideQ, ExperimentPrecursorQ, ExperimentPeptideQ, Pep);
+                    RunPrecursorQ, RunPeptideQ, ExperimentPrecursorQ, ExperimentPeptideQ, Pep, PeptidePep);
             }
         }
 

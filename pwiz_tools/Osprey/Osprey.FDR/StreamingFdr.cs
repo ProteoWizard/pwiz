@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -60,7 +61,7 @@ namespace pwiz.Osprey.FDR
         /// q-values take the single-file shortcut (clone the per-run arrays) exactly
         /// as the direct path does.</item>
         /// </list>
-        /// The five outputs are returned as parallel arrays (index-aligned to the
+        /// The six outputs are returned as parallel arrays (index-aligned to the
         /// inputs); the caller either packs them into <see cref="PercolatorResult"/>s
         /// or writes them straight onto the projection rows.
         ///
@@ -77,7 +78,7 @@ namespace pwiz.Osprey.FDR
             string[] peptides, string[] fileNames,
             out double[] peps, out double[] runPrecursorQvalues,
             out double[] runPeptideQvalues, out double[] expPrecursorQvalues,
-            out double[] expPeptideQvalues, bool applyExperimentAgg = true)
+            out double[] expPeptideQvalues, out double[] peptidePeps, bool applyExperimentAgg = true)
         {
             int n = finalScores.Length;
 
@@ -103,7 +104,10 @@ namespace pwiz.Osprey.FDR
                 finalScores, labels, entryIds, fileNames, peptides);
 
             // Experiment-level q-values: single-file shortcut matches
-            // direct-path semantics.
+            // direct-path semantics. The peptide PEP comes from the experiment peptide
+            // competition either way: with one file that competition is the run's own.
+            var expPeptideCompetitionQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
+                finalScores, labels, entryIds, peptides, out peptidePeps, applyExperimentAgg);
             var uniqueFiles = new HashSet<string>(fileNames);
             bool isSingleFile = uniqueFiles.Count <= 1;
             if (isSingleFile)
@@ -115,8 +119,7 @@ namespace pwiz.Osprey.FDR
             {
                 expPrecursorQvalues = PercolatorQValues.ComputeExperimentPrecursorQvalues(
                     finalScores, labels, entryIds, applyExperimentAgg);
-                expPeptideQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
-                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
+                expPeptideQvalues = expPeptideCompetitionQvalues;
             }
 
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
@@ -917,6 +920,110 @@ namespace pwiz.Osprey.FDR
                     return 1.0;
                 return _pepEstimator.PosteriorError(loc.score);
             }
+
+            /// <summary>
+            /// The experiment-level PEPTIDE competition over the same per-entry aggregates the
+            /// precursor competition ranked, grouped by peptide. The first pass computes it in
+            /// <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>;
+            /// this is the same computation over the second pass's scores: each peptide's best
+            /// target and best decoy precursor, competed by base_id, conservative q, and a PEP
+            /// fitted on the winners. Before it existed the second pass gave each entry its
+            /// precursor q as its peptide q, so the charge states of one peptide could disagree.
+            ///
+            /// <para><paramref name="peptideForBaseId"/> names the TARGET peptide of a base_id, so
+            /// a decoy precursor groups with the other decoys of the same peptide, as the first
+            /// pass's decoy sequence groups them. It comes from the survivor entries rather than
+            /// the library, because a <c>--task SecondPassFDR</c> node has no generated decoys in
+            /// its library (see <see cref="ExperimentQFloors.ObserveIdentities"/>). A base_id it
+            /// cannot name is a peptide of its own.</para>
+            /// </summary>
+            public PeptideCompetition CompetePeptides(Func<uint, string> peptideForBaseId)
+            {
+                // Each peptide's best precursor per side; on a tied score the lower base_id, so
+                // the choice does not depend on dictionary order.
+                var bestByPeptide = new Dictionary<(string Peptide, bool IsDecoy), (double Score, uint BaseId)>();
+                foreach (var kvp in _aggByEntryId)
+                {
+                    uint baseId = kvp.Key & PercolatorEntry.BASE_ID_MASK;
+                    var key = (PeptideKey(peptideForBaseId, baseId), kvp.Key != baseId);
+                    if (!bestByPeptide.TryGetValue(key, out var cur) || kvp.Value > cur.Score ||
+                        (kvp.Value == cur.Score && baseId < cur.BaseId))
+                    {
+                        bestByPeptide[key] = (kvp.Value, baseId);
+                    }
+                }
+
+                var peptideKeys = new List<(string Peptide, bool IsDecoy)>(bestByPeptide.Count);
+                var targets = new Dictionary<uint, KeyValuePair<int, double>>();
+                var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
+                foreach (var kvp in bestByPeptide)
+                {
+                    var side = kvp.Key.IsDecoy ? decoys : targets;
+                    side[kvp.Value.BaseId] = new KeyValuePair<int, double>(peptideKeys.Count, kvp.Value.Score);
+                    peptideKeys.Add(kvp.Key);
+                }
+                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
+                    out int[] wi, out double[] ws, out bool[] wd, out uint[] wb);
+                var q = new double[ws.Length];
+                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+                var peps = PercolatorQValues.ComputeWinnerPeps(ws, wd, wb);
+
+                var winners = new Dictionary<(string Peptide, bool IsDecoy), (double QValue, double Pep)>(wi.Length);
+                for (int rank = 0; rank < wi.Length; rank++)
+                    winners[peptideKeys[wi[rank]]] = (q[rank], peps[rank]);
+                return new PeptideCompetition(winners, peptideForBaseId);
+            }
+
+            private static string PeptideKey(Func<uint, string> peptideForBaseId, uint baseId)
+            {
+                // A character no modified sequence contains, so an unnamed base_id cannot
+                // collide with a real peptide.
+                return peptideForBaseId(baseId) ?? @"#" + baseId.ToString(CultureInfo.InvariantCulture);
+            }
+
+            /// <summary>
+            /// The result of <see cref="CompetePeptides"/>: one q-value and PEP per peptide and
+            /// side, read by entry_id. Every precursor of a peptide reads the same values, which
+            /// is what makes this a peptide-level answer.
+            /// </summary>
+            public sealed class PeptideCompetition
+            {
+                private readonly Dictionary<(string Peptide, bool IsDecoy), (double QValue, double Pep)> _winners;
+                private readonly Func<uint, string> _peptideForBaseId;
+
+                internal PeptideCompetition(
+                    Dictionary<(string Peptide, bool IsDecoy), (double QValue, double Pep)> winners,
+                    Func<uint, string> peptideForBaseId)
+                {
+                    _winners = winners;
+                    _peptideForBaseId = peptideForBaseId;
+                }
+
+                /// <summary>
+                /// The experiment peptide q-value of this entry's peptide, or 1.0 when its side
+                /// lost the peptide competition.
+                /// </summary>
+                public double QValue(uint entryId)
+                {
+                    return Lookup(entryId).QValue;
+                }
+
+                /// <summary>
+                /// The experiment peptide PEP of this entry's peptide, or 1.0 when its side lost
+                /// the peptide competition.
+                /// </summary>
+                public double Pep(uint entryId)
+                {
+                    return Lookup(entryId).Pep;
+                }
+
+                private (double QValue, double Pep) Lookup(uint entryId)
+                {
+                    uint baseId = entryId & PercolatorEntry.BASE_ID_MASK;
+                    var key = (PeptideKey(_peptideForBaseId, baseId), entryId != baseId);
+                    return _winners.TryGetValue(key, out var v) ? v : (1.0, 1.0);
+                }
+            }
         }
 
         /// <summary>
@@ -1172,40 +1279,18 @@ namespace pwiz.Osprey.FDR
             /// <summary>
             /// Experiment-peptide <c>peptide -&gt; q</c>: materialize the best-per-peptide set
             /// sorted by ordinal (matching <see cref="PercolatorSampling.BestPrecursorPerPeptide"/>'s sort), compete
-            /// by base_id, conservative-q, keyed by the winner's peptide -- byte-identical to
+            /// by base_id, conservative-q, keyed by the winner's peptide, with each winning
+            /// peptide's PEP in <paramref name="pepByPeptide"/> -- byte-identical to
             /// <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>.
             /// </summary>
-            public Dictionary<string, double> BuildExperimentPeptideQMap()
+            public Dictionary<string, double> BuildExperimentPeptideQMap(
+                out Dictionary<string, double> pepByPeptide)
             {
                 if (_meanBestN >= 2)
-                    return BuildMeanBestNPeptideQMap();
+                    return BuildMeanBestNPeptideQMap(out pepByPeptide);
                 var best = new List<PeptideBest>(_peptBest.Values);
                 best.Sort((a, b) => a.G.CompareTo(b.G)); // Array.Sort OK: G is the unique streaming ordinal of each peptide's best row, so the comparator never ties -- reproduces BestPrecursorPerPeptide's result.Sort() on ascending global index
-                var targets = new Dictionary<uint, KeyValuePair<int, double>>();
-                var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
-                for (int i = 0; i < best.Count; i++)
-                {
-                    uint baseId = best[i].EntryId & PercolatorEntry.BASE_ID_MASK;
-                    var dict = best[i].IsDecoy ? decoys : targets;
-                    KeyValuePair<int, double> existing;
-                    if (dict.TryGetValue(baseId, out existing))
-                    {
-                        if (best[i].Score > existing.Value)
-                            dict[baseId] = new KeyValuePair<int, double>(i, best[i].Score);
-                    }
-                    else
-                    {
-                        dict[baseId] = new KeyValuePair<int, double>(i, best[i].Score);
-                    }
-                }
-                TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
-                    out int[] wi, out double[] ws, out bool[] wd, out _);
-                var q = new double[ws.Length];
-                PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
-                var map = new Dictionary<string, double>(wi.Length);
-                for (int rank = 0; rank < wi.Length; rank++)
-                    map[best[wi[rank]].Peptide] = q[rank];
-                return map;
+                return CompetePeptideBests(best, out pepByPeptide);
             }
 
             /// <summary>
@@ -1288,7 +1373,8 @@ namespace pwiz.Osprey.FDR
             /// <see cref="PercolatorSampling.BestPrecursorPerPeptide"/> over the per-row aggregate
             /// array reduces to exactly this per-peptide max.
             /// </summary>
-            private Dictionary<string, double> BuildMeanBestNPeptideQMap()
+            private Dictionary<string, double> BuildMeanBestNPeptideQMap(
+                out Dictionary<string, double> pepByPeptide)
             {
                 double floor = _floor.ComputeFloor();
                 var repByPeptide = new Dictionary<string, PeptideBest>();
@@ -1297,6 +1383,17 @@ namespace pwiz.Osprey.FDR
 
                 var best = new List<PeptideBest>(repByPeptide.Values);
                 best.Sort((a, b) => a.G.CompareTo(b.G)); // Array.Sort OK: G is each winning base_id's unique min ordinal, so the comparator never ties -- reproduces BestPrecursorPerPeptide's ascending-global-index sort
+                return CompetePeptideBests(best, out pepByPeptide);
+            }
+
+            /// <summary>
+            /// Compete the per-peptide bests (already sorted by ordinal) by base_id and return
+            /// the winning peptides' q-values, and in <paramref name="pepByPeptide"/> their PEPs.
+            /// The shared finish of both experiment-peptide builders.
+            /// </summary>
+            private static Dictionary<string, double> CompetePeptideBests(
+                List<PeptideBest> best, out Dictionary<string, double> pepByPeptide)
+            {
                 var targets = new Dictionary<uint, KeyValuePair<int, double>>();
                 var decoys = new Dictionary<uint, KeyValuePair<int, double>>();
                 for (int i = 0; i < best.Count; i++)
@@ -1315,12 +1412,17 @@ namespace pwiz.Osprey.FDR
                     }
                 }
                 TargetDecoyCompetition.CompeteFromDicts(targets, decoys,
-                    out int[] wi, out double[] ws, out bool[] wd, out _);
+                    out int[] wi, out double[] ws, out bool[] wd, out uint[] wb);
                 var q = new double[ws.Length];
                 PercolatorQValues.ComputeConservativeQvalues(ws, wd, q);
+                var peps = PercolatorQValues.ComputeWinnerPeps(ws, wd, wb);
                 var map = new Dictionary<string, double>(wi.Length);
+                pepByPeptide = new Dictionary<string, double>(wi.Length);
                 for (int rank = 0; rank < wi.Length; rank++)
+                {
                     map[best[wi[rank]].Peptide] = q[rank];
+                    pepByPeptide[best[wi[rank]].Peptide] = peps[rank];
+                }
                 return map;
             }
 
