@@ -1537,7 +1537,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Q value cutoff.
+        ///   Looks up a localized string similar to Cutoff.
         /// </summary>
         public static string GlobalQValueFilter_Cutoff {
             get {
@@ -1546,7 +1546,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Q value level.
+        ///   Looks up a localized string similar to Value.
         /// </summary>
         public static string GlobalQValueFilter_Level {
             get {
@@ -1852,7 +1852,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Q value filter.
+        ///   Looks up a localized string similar to Global cutoff.
         /// </summary>
         public static string ImportFastaSettings_QValueFilter {
             get {
@@ -5209,7 +5209,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Q value filter.
+        ///   Looks up a localized string similar to Global cutoff.
         /// </summary>
         public static string ViewLibrarySettings_QValueFilter {
             get {

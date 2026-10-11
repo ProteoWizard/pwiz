@@ -630,7 +630,22 @@ namespace pwiz.Skyline.SettingsUI
         {
             var levels = _selectedLibrary?.GlobalQValueLevels ?? ImmutableList<GlobalQValueLevel>.EMPTY;
             QValueFilterControls.Levels = levels;
-            comboQValueLevel.Visible = textQValueCutoff.Visible = levels.Count > 0;
+            flowGlobalCutoff.Visible = levels.Count > 0;
+            WidenToFitAddAllOptions();
+        }
+
+        /// <summary>
+        /// Widens the form when the controls between Add All and Close would overlap Close.
+        /// </summary>
+        private void WidenToFitAddAllOptions()
+        {
+            const int gap = 6;
+            panel2.PerformLayout();
+            var overlap = flowAddAllOptions.Right + gap - btnCancel.Left;
+            if (overlap <= 0 || WindowState != FormWindowState.Normal)
+                return;
+            // The graph pane gets only its share of the extra width
+            Width += (int) Math.Ceiling((double) overlap * splitMain.Width / Math.Max(1, splitMain.Panel2.Width));
         }
 
         private bool HasLibraryProteinGroups
@@ -2305,7 +2320,7 @@ namespace pwiz.Skyline.SettingsUI
             if (numQValueFiltered > 0)
             {
                 msg = TextUtil.LineSeparate(msg, string.Empty, string.Format(
-                    SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_q_value_cutoff_and_will_not_be_added,
+                    SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added,
                     numQValueFiltered));
             }
             var dlg = new MultiButtonMsgDlg(msg, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Add_All)

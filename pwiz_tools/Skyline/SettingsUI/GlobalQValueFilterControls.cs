@@ -135,11 +135,11 @@ namespace pwiz.Skyline.SettingsUI
                 switch (Level)
                 {
                     case GlobalQValueLevel.protein:
-                        return SettingsUIResources.GlobalQValueFilterControls_LevelItem_Protein;
+                        return SettingsUIResources.GlobalQValueFilterControls_LevelItem_Protein_q_value;
                     case GlobalQValueLevel.peptide:
-                        return SettingsUIResources.GlobalQValueFilterControls_LevelItem_Peptide;
+                        return SettingsUIResources.GlobalQValueFilterControls_LevelItem_Peptide_q_value;
                     default:
-                        return SettingsUIResources.GlobalQValueFilterControls_LevelItem_Precursor;
+                        return SettingsUIResources.GlobalQValueFilterControls_LevelItem_Precursor_q_value;
                 }
             }
         }

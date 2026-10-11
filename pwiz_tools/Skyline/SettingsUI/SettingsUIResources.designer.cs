@@ -2187,29 +2187,29 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Peptide.
+        ///   Looks up a localized string similar to Peptide q-value.
         /// </summary>
-        public static string GlobalQValueFilterControls_LevelItem_Peptide {
+        public static string GlobalQValueFilterControls_LevelItem_Peptide_q_value {
             get {
-                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Peptide", resourceCulture);
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Peptide_q_value", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Precursor.
+        ///   Looks up a localized string similar to Precursor q-value.
         /// </summary>
-        public static string GlobalQValueFilterControls_LevelItem_Precursor {
+        public static string GlobalQValueFilterControls_LevelItem_Precursor_q_value {
             get {
-                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Precursor", resourceCulture);
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Precursor_q_value", resourceCulture);
             }
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Protein.
+        ///   Looks up a localized string similar to Protein q-value.
         /// </summary>
-        public static string GlobalQValueFilterControls_LevelItem_Protein {
+        public static string GlobalQValueFilterControls_LevelItem_Protein_q_value {
             get {
-                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Protein", resourceCulture);
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Protein_q_value", resourceCulture);
             }
         }
 
@@ -3009,11 +3009,11 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to {0} library entries fail the q-value cutoff and will not be added..
+        ///   Looks up a localized string similar to {0} library entries fail the global cutoff and will not be added..
         /// </summary>
-        public static string ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_q_value_cutoff_and_will_not_be_added {
+        public static string ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added {
             get {
-                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_q_value_cutoff_and_will_not_be_added", resourceCulture);
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added", resourceCulture);
             }
         }
 

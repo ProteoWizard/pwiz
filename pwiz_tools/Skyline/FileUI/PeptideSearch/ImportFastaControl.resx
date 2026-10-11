@@ -740,10 +740,10 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="panelQValueFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>300, 354</value>
+    <value>282, 354</value>
   </data>
   <data name="panelQValueFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 62</value>
+    <value>110, 62</value>
   </data>
   <data name="panelQValueFilter.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -776,7 +776,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>0</value>
   </data>
   <data name="labelQValueCutoff.Text" xml:space="preserve">
-    <value>&amp;Q-value cutoff:</value>
+    <value>&amp;Global cutoff:</value>
   </data>
   <data name="&gt;&gt;labelQValueCutoff.Name" xml:space="preserve">
     <value>labelQValueCutoff</value>
@@ -794,13 +794,13 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>0, 16</value>
   </data>
   <data name="comboQValueLevel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>88, 21</value>
+    <value>108, 21</value>
   </data>
   <data name="comboQValueLevel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="comboQValueLevel.ToolTip" xml:space="preserve">
-    <value>The level of the library's global q-value to filter the imported targets on</value>
+    <value>The library's experiment-wide value to filter the imported targets on</value>
   </data>
   <data name="&gt;&gt;comboQValueLevel.Name" xml:space="preserve">
     <value>comboQValueLevel</value>
@@ -824,7 +824,7 @@ Can be a decimal number like 0.5 or 2.5.</value>
     <value>2</value>
   </data>
   <data name="textQValueCutoff.ToolTip" xml:space="preserve">
-    <value>Only targets whose library entry has a global q-value at or below this cutoff are imported. Leave empty to import every target.</value>
+    <value>Only targets whose library entry has an experiment-wide value at or below this cutoff are imported. Leave empty to import every target.</value>
   </data>
   <data name="&gt;&gt;textQValueCutoff.Name" xml:space="preserve">
     <value>textQValueCutoff</value>

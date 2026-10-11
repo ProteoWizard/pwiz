@@ -757,12 +757,12 @@
     <value>DIA-NN</value>
   </data>
   <data name="GlobalQValueLevel_protein" xml:space="preserve">
-    <value>Protein</value>
+    <value>Protein q-value</value>
   </data>
   <data name="GlobalQValueLevel_peptide" xml:space="preserve">
-    <value>Peptide</value>
+    <value>Peptide q-value</value>
   </data>
   <data name="GlobalQValueLevel_precursor" xml:space="preserve">
-    <value>Precursor</value>
+    <value>Precursor q-value</value>
   </data>
 </root>
