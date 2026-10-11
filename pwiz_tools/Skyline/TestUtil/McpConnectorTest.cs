@@ -88,6 +88,23 @@ namespace pwiz.SkylineTestUtil
             return id;
         }
 
+        /// <summary>
+        /// Shows a form with an in-process action, as <see cref="AbstractFunctionalTest.ShowDialog{TDlg}"/> does, and
+        /// waits until the connector can see it too. Returns the form, to inspect or close in-process, and its
+        /// connector form id in <paramref name="formId"/>, to drive it the way an MCP client does.
+        ///
+        /// <para>Use this, not ShowDialog followed by <see cref="GetOpenFormId{TForm}"/>. ShowDialog returns as soon
+        /// as the form is Created, which is before Windows shows it (its OnLoad runs in between), while the connector
+        /// lists only visible windows. A lookup right after ShowDialog therefore failed now and then in nightly
+        /// tests with "Expected a form of type ... to be open, but it was not" (TestMcpConnectorShowForm).</para>
+        /// </summary>
+        protected TForm ShowMcpConnectorForm<TForm>(Action act, out string formId) where TForm : Form
+        {
+            var form = ShowDialog<TForm>(act);
+            formId = WaitForMcpConnectorForm<TForm>();
+            return form;
+        }
+
         /// <summary>Asserts that a connector action reported it completed by the time the verb returned (see
         /// <see cref="ActionResult.Completed"/>) -- for an action the caller expects to finish synchronously.
         /// Fails with the action's message (e.g. the dialog it unexpectedly left open) when it did not, so a
@@ -122,7 +139,8 @@ namespace pwiz.SkylineTestUtil
         /// <summary>Resolves a form of the given WinForms type from the connector's open forms RIGHT NOW, without
         /// waiting -- the counterpart to <see cref="WaitForMcpConnectorForm{TForm}"/> for when a preceding action was
         /// expected to have already opened it. Fails if it is not open yet, revealing an action that did not open
-        /// its dialog synchronously.</summary>
+        /// its dialog synchronously. Not for a form the test has just shown in-process: that may not be visible to
+        /// the connector yet, so show it with <see cref="ShowMcpConnectorForm{TForm}"/> instead.</summary>
         protected string GetOpenFormId<TForm>() where TForm : Form =>
             GetOpenFormId(typeof(TForm).Name);
 

@@ -84,9 +84,7 @@ namespace pwiz.SkylineTestFunctional
         // ClickFormButton clicks a CheckBox -- the AutoCheck=false "Enable audit logging" one.
         private AuditLogForm ClickCheckBox()
         {
-            RunUI(() => SkylineWindow.ShowAuditLog());
-            var auditLogForm = WaitForOpenForm<AuditLogForm>();
-            string auditFormId = GetOpenFormId<AuditLogForm>();
+            var auditLogForm = ShowMcpConnectorForm<AuditLogForm>(() => SkylineWindow.ShowAuditLog(), out var auditFormId);
 
             bool before = SkylineWindow.Document.Settings.DataSettings.AuditLogging;
             // The checkbox is created in code from a string-table entry, so match it by that same string.
@@ -101,9 +99,7 @@ namespace pwiz.SkylineTestFunctional
         // nav-bar toolstrip; it walks the "Reports" dropdown (items built on demand) to switch the report.
         private void ClickToolStripDropDownItem()
         {
-            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
-            var documentGrid = WaitForOpenForm<DocumentGridForm>();
-            string gridId = GetOpenFormId<DocumentGridForm>();
+            var documentGrid = ShowMcpConnectorForm<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true), out var gridId);
 
             // The dropdown button's caption comes from the NavBar's resources; the built-in report names
             // are the localized row-source names SkylineViewContext.GetDocumentGridRowSources assigns,
@@ -124,8 +120,7 @@ namespace pwiz.SkylineTestFunctional
         // A select_tab action on the (caption-less) TabControl selects a tab by its visible text.
         private void ClickTab()
         {
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            string settingsId = GetOpenFormId<PeptideSettingsUI>();
+            var peptideSettings = ShowMcpConnectorForm<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, out var settingsId);
 
             RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
             var tabControl = new UiElementPath(
