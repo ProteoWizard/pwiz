@@ -265,28 +265,6 @@ namespace pwiz.Osprey.Core
         public static readonly string CrossImplReconciliationOut = GetVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
         /// <summary>
-        /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
-        /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
-        /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
-        /// resident across first-pass Percolator + protein FDR + the sidecar write
-        /// + compaction. <c>FirstPassFdrTask</c> materializes the projection from the
-        /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
-        /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
-        /// the just-written 1st-pass sidecar after compaction.
-        ///
-        /// DEFAULT ON: Osprey cannot process real (large) file counts without this --
-        /// the legacy resident path OOMs -- so streaming is the production default and
-        /// byte-identical to the legacy path (Stellar regression mode1/2/3). Set
-        /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
-        /// path as a transitional A/B / byte-identity oracle. Model-diagnostics (#4505)
-        /// and FDRBench pass 1 (#4507) both stream from the persisted per-file scores
-        /// now, and the non-Percolator simple FDR method that also took the legacy path is
-        /// gone (#4543), so this oracle is the legacy path's only remaining user. A settable
-        /// property (not a readonly field) so unit tests can A/B both paths.
-        /// </summary>
-        public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
-
-        /// <summary>
         /// DIAGNOSTIC. <c>OSPREY_DROP_BETWEEN_TASKS=1</c> makes each task release every byproduct
         /// but the library when it finishes, so the next task reloads what it needs from disk -
         /// the dataflow an HPC chain gets for free from process boundaries. Default OFF; the
@@ -337,6 +315,23 @@ namespace pwiz.Osprey.Core
         // at startup (Program.cs), for the reason given for OSPREY_STAGE7_STREAM below.
         public static bool Stage6StreamSurvivorsRetiredSet => IsSet(@"OSPREY_STAGE6_STREAM_SURVIVORS");
 
+        // OSPREY_FDR_PROJECTION was removed here on 2026-10-10 and the projection first pass is
+        // the ONLY arm: FirstPassFDR streams the first-pass FDR peak through the thin
+        // FdrProjection buffer and reloads the survivors from parquet + the 1st-pass sidecar.
+        // Setting it to 0 forced the legacy resident FdrEntry-buffer first pass as the A/B
+        // byte-identity oracle. No final A/B could be banked: the arm aborted in Stage 7 on
+        // every dataset, the same failure as the Stage 6 oracle; the committed golden is the
+        // oracle. A caller who still sets it is refused at startup (Program.cs), for the reason
+        // given for OSPREY_STAGE7_STREAM below.
+        public static bool FdrProjectionRetiredSet => IsSet(@"OSPREY_FDR_PROJECTION");
+
+        // OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were removed with it (2026-10-10).
+        // The cs_stage5_percolator.tsv bisection dump needed the all-files pre-compaction
+        // FdrEntry pool, which only the resident first pass held. A caller who still sets
+        // either is refused at startup rather than handed a run with no dump.
+        public static bool PercolatorDumpRetiredSet =>
+            IsSet(@"OSPREY_DUMP_PERCOLATOR") || IsSet(@"OSPREY_PERCOLATOR_ONLY");
+
         // OSPREY_STAGE7_STREAM was removed here on 2026-09-10 and the streamed join is the ONLY
         // arm. It kept the resident Stage-7 join as an A/B byte-identity oracle - the role
         // OSPREY_STAGE6_STREAM_SURVIVORS=0 then played for the Stage 6 handoff - and went once
@@ -364,8 +359,7 @@ namespace pwiz.Osprey.Core
         ///
         /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
         /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
-        /// keep the whole library resident as the A/B byte-identity oracle, the same role
-        /// OSPREY_FDR_PROJECTION=0 plays for Stage 5.
+        /// keep the whole library resident as the A/B byte-identity oracle.
         ///
         /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
         /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
@@ -872,9 +866,9 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=projection-off</c>. Legal values are
-        /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
-        /// that is not on that list, is refused no matter what this is set to.
+        /// take. Legal values are exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>, which has
+        /// been EMPTY since projection-off left it (2026-10-10), so no value admits anything;
+        /// any resident path is refused no matter what this is set to.
         ///
         /// This REPLACES the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c>, which granted
         /// amnesty to every trigger at once. That is not a hypothetical failure: it let

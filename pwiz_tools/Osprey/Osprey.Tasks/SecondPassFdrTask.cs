@@ -299,8 +299,9 @@ namespace pwiz.Osprey.Tasks
             //
             // The one operator-chosen route into the resident arm that outlived it -
             // OSPREY_PASS2_QVALUE=transfer, whose per-file half ran here over the whole pool - went
-            // with #4665, which moved that half to Pass2PerFileWorker. Every route in now is
-            // NeedsResidentPool's, which the first-pass guard already names and tokens.
+            // with #4665, which moved that half to Pass2PerFileWorker. The routes left in are
+            // disk-state ones (no current retained summary, or a stale reconciled parquet), which
+            // the sprint retiring O(files x entries) structures is deciding route by route.
 
             // The pass-2 diagnostics product is the ONLY outstanding output: every
             // computational artifact this task produces is already on disk and key-current, and

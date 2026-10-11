@@ -521,8 +521,7 @@ namespace pwiz.Osprey.Tasks
             // The per-file source is handed over only when a loader exists, and that condition
             // is not a detail: a run that kept the resident buffer has no way to rebuild a file
             // it dropped, so streaming there would destroy the only copy of the survivors on
-            // its way past. Null leaves StreamFiles walking the resident buffer, which is what
-            // the OSPREY_FDR_PROJECTION=0 A/B oracle needs it to do.
+            // its way past. Null leaves StreamFiles walking the resident buffer.
             // WITH a per-file source when this run can supply a re-enumerable one, which is
             // what makes the bounded join the DEFAULT rather than a property of
             // --task SecondPassFDR. The paragraph that stood here said this leg could not have
@@ -2782,9 +2781,8 @@ namespace pwiz.Osprey.Tasks
                 // r, but not copying it leaves every reconciled peak on its 1st-pass
                 // value - and ReleaseRescoredPayload then nulls Features, destroying the
                 // only fresh copy. Stage 7 reads it straight off the buffer
-                // (PercolatorEntryBuilder's basic-feature fallback, and best-per-precursor
-                // selection), so a path that skipped this would train on a different subset
-                // than the resident oracle.
+                // (the basic-feature fallback, and best-per-precursor selection), so a path
+                // that skipped this would train on a different subset.
                 entry.CoelutionSum = r.CoelutionSum;
                 entry.ApexRt = r.ApexRt;
                 entry.StartRt = r.StartRt;
@@ -3235,9 +3233,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>The overlay survives for one case, and it is not a fallback for a missing
         /// artifact: a list that still HOLDS its entries has its rows already, and re-reading
-        /// them would be a duplicate build - so those rows (the <c>OSPREY_FDR_PROJECTION=0</c>
-        /// resident arm, which publishes no loader) take the reconciled values through the
-        /// overlay instead. Both routes read the same one parquet.</para>
+        /// them would be a duplicate build - so those rows (a resident arm, which publishes no
+        /// loader) take the reconciled values through the overlay instead. Both routes read the same one parquet.</para>
         /// </summary>
         private static void MaterializeResumedFile(string fileName, List<FdrEntry> entries,
             FirstPassSurvivorLoader loader,
@@ -3259,8 +3256,8 @@ namespace pwiz.Osprey.Tasks
                 //
                 // Guarded on the loader, which is what makes the clear safe: a run cleared here
                 // is rebuilt from disk on the next line. Where there is NO loader the entries
-                // are the only copy - the OSPREY_FDR_PROJECTION=0 resident oracle -
-                // and they take the reconciled values through the overlay instead.
+                // are the only copy, and they take the reconciled values through the overlay
+                // instead.
                 entries.Clear();
                 MaterializeFileSurvivors(fileName, entries, loader, ctx, reconciledPath);
                 return;

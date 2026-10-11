@@ -2421,7 +2421,7 @@ namespace pwiz.Osprey.Tasks
                 // The precursor's analysis-wide pass-1 experiment record, which supplies
                 // every disposition: an UNCHANGED or MOVED peak carries these values through,
                 // and a gap-fill peak (no 1st-pass run-scope record) takes them so
-                // ClampExperimentQToBestRun - a floor that only raises - lands it at the
+                // the experiment-q clamp - a floor that only raises - lands it at the
                 // precursor's best-run q. A precursor with no record anywhere gets the
                 // default 1.0 q-values and a 0.0 aggregate, which pair correctly: never
                 // competed, never accepted, so nothing reads it.
