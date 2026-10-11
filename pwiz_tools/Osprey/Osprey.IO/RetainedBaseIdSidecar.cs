@@ -54,12 +54,14 @@ namespace pwiz.Osprey.IO
     /// two analysis-wide summaries stay recognizably one family:</para>
     /// <code>
     ///   magic        [0..8]   = b"OSPRYRET"
-    ///   version      [8]      = u8 (= 1)
+    ///   version      [8]      = u8 (= 2)
     ///   pass         [9]      = u8 (1 = first-pass)
     ///   reserved     [10..16] = 6 bytes (zero)
     ///   base_id_count[16..24] = u64
-    ///   reserved     [24..32] = 8 bytes (zero)
+    ///   stamp_length [24..28] = u32
+    ///   reserved     [28..32] = 4 bytes (zero)
     ///   body         [32..]   = base_id_count * 4 bytes: u32 base_id
+    ///   stamp        [..end]  = stamp_length bytes, the writing task's <see cref="ArtifactStamp"/>
     /// </code>
     ///
     /// <para>The magic differs from both sibling sidecars deliberately, for the reason
@@ -80,21 +82,11 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'R', (byte)'E', (byte)'T' };
 
-        // BUMPING THIS OWES THREE MORE EDITS, because nothing in the resume machinery
-        // regenerates this file today: declare it in FirstPassFdrTask.Outputs, stamp it in
-        // FirstPassFdrTask.WriteRetainedBaseIdSummary, and add the version to that task's
-        // ValidityKey. Without them a field summary written by the old build is present but
-        // unreadable, the task reads as done, nothing rewrites it, and the resume falls to the
-        // all-runs reconciliation bundle - O(files x entries), with a warning as its only
-        // symptom.
-        //
-        // Deliberately not carried ahead of a bump. Declaring an output that has never been
-        // stamped makes every completed analysis on disk read as owing a first pass, so
-        // `--task ModelDiagnostics` on a finished cohort re-runs Stage 1-5 for hours instead of
-        // folding its report in seconds. That price is worth paying once, WITH the bump that
-        // makes those directories stale anyway - not before it, when it buys nothing.
-        public const byte FormatVersion = 1;
-        public const int HeaderLength = 32;
+        // v2 carries the writing task's ArtifactStamp after the records, and FirstPassFdrTask
+        // declares the file as an output, so a summary from another build or other settings
+        // reads as stale and is rewritten like every other first-pass artifact.
+        public const byte FormatVersion = 2;
+        public const int HeaderLength = BinarySidecarStamp.HEADER_LENGTH;
         public const int RecordLength = 4;
 
         /// <summary>
@@ -149,9 +141,9 @@ namespace pwiz.Osprey.IO
                     if (!ReadFully(fs, header, HeaderLength))
                         return false;
                 }
-                if (!HeaderOk(header, out ulong headerCount))
+                if (!HeaderOk(header))
                     return false;
-                return TryComputeExpectedLen(headerCount, out int expectedLen) &&
+                return BinarySidecarStamp.TryComputeExpectedLength(header, RecordLength, out _, out long expectedLen) &&
                        info.Length == expectedLen;
             }
             catch (IOException)
@@ -177,10 +169,11 @@ namespace pwiz.Osprey.IO
         /// <see cref="FileSaver"/>: the temp file is promoted on Commit, so a failure leaves any
         /// existing destination untouched.
         /// </summary>
-        public static void Write(string path, IReadOnlyCollection<uint> baseIds)
+        public static void Write(string path, IReadOnlyCollection<uint> baseIds, ArtifactStamp stamp)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (baseIds == null) throw new ArgumentNullException(nameof(baseIds));
+            byte[] stampBytes = BinarySidecarStamp.Encode(stamp);
 
             // Canonical order, so the file is a function of its contents and not of the order
             // the planner walked its runs (the straight-through and distributed routes do not
@@ -205,10 +198,11 @@ namespace pwiz.Osprey.IO
                     bw.Write((byte)FdrScoresSidecar.Pass.FirstPass); // [9]
                     bw.Write(new byte[6]);                          // [10..16] reserved
                     bw.Write((ulong)ids.Length);                    // [16..24]
-                    bw.Write(new byte[8]);                          // [24..32] reserved
+                    BinarySidecarStamp.WriteHeaderField(bw, stampBytes); // [24..32]
 
                     foreach (uint id in ids)
                         bw.Write(id);
+                    bw.Write(stampBytes);
                 }
                 saver.Commit();
             }
@@ -230,11 +224,14 @@ namespace pwiz.Osprey.IO
                 using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     var header = new byte[HeaderLength];
-                    if (!ReadFully(fs, header, HeaderLength) || !HeaderOk(header, out ulong count))
+                    if (!ReadFully(fs, header, HeaderLength) || !HeaderOk(header) ||
+                        !BinarySidecarStamp.TryComputeExpectedLength(header, RecordLength, out int count, out _))
+                    {
                         return null;
+                    }
                     var result = new HashSet<uint>();
                     var record = new byte[RecordLength];
-                    for (ulong i = 0; i < count; i++)
+                    for (int i = 0; i < count; i++)
                     {
                         if (!ReadFully(fs, record, RecordLength))
                             return null;
@@ -254,39 +251,26 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The validity stamp of the summary at <paramref name="path"/>, or null when it is
+        /// missing or not in the current format.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path)
+        {
+            return IsCurrentFormat(path) ? BinarySidecarStamp.TryRead(path, RecordLength) : null;
+        }
+
+        /// <summary>
         /// Validate the 32-byte header: magic, current version, first-pass pass byte. Shared by
         /// every entry point so they cannot drift on what they accept.
         /// </summary>
-        private static bool HeaderOk(byte[] header, out ulong headerCount)
+        private static bool HeaderOk(byte[] header)
         {
-            headerCount = 0;
             for (int i = 0; i < Magic.Length; i++)
             {
                 if (header[i] != Magic[i])
                     return false;
             }
-            if (header[8] != FormatVersion || header[9] != (byte)FdrScoresSidecar.Pass.FirstPass)
-                return false;
-            headerCount = BitConverter.ToUInt64(header, 16);
-            return true;
-        }
-
-        /// <summary>
-        /// Compute <c>HeaderLength + headerCount * RecordLength</c> with overflow detection, so a
-        /// corrupt count cannot wrap int and let the size check pass spuriously.
-        /// </summary>
-        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
-        {
-            try
-            {
-                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
-                return true;
-            }
-            catch (OverflowException)
-            {
-                expectedLen = 0;
-                return false;
-            }
+            return header[8] == FormatVersion && header[9] == (byte)FdrScoresSidecar.Pass.FirstPass;
         }
 
         /// <summary>

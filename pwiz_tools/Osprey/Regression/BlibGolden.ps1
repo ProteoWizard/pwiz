@@ -175,7 +175,9 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
     },
     @{
         Name = 'OspreyMetadata'; Scope = 'Full'
-        Sql = 'SELECT Key, Value FROM OspreyMetadata'
+        # Without the validity stamp (osprey.validity): it names the build and key that wrote
+        # the library, which is provenance, not a search result to hold against a golden.
+        Sql = "SELECT Key, Value FROM OspreyMetadata WHERE Key <> 'osprey.validity'"
         Key = @('Key')
         Numeric = @()
         Exact = @('Value')

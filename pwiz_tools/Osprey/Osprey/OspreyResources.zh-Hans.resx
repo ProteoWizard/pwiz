@@ -136,10 +136,6 @@
     <value>流程失败：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>无法记录任务 {0} 已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="OspreyArgUsageProvider_AppliesToHeader_Applies_To" xml:space="preserve">
     <value>适用于</value>
     <comment>Needs Review:New resource</comment>

@@ -45,11 +45,9 @@ namespace pwiz.Osprey.FDR
     {
         /// <summary>
         /// The streaming competition + PEP + per-run / experiment q-value math, over
-        /// the flat per-observation arrays that both the <see cref="PercolatorEntry"/>
-        /// score pass (<see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>) and the
-        /// projection-native score pass
-        /// (<see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/>) produce. Extracted as a
-        /// single source of truth (issue #4355 step (b) increment iii) so the two
+        /// the flat per-observation arrays the score passes produce (the projection-native
+        /// <see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/> among them).
+        /// Extracted as a single source of truth (issue #4355 step (b) increment iii) so the
         /// buffer shapes cannot drift on the byte-parity-locked ordering. UNCHANGED
         /// math relative to the pre-extraction inline block:
         /// <list type="bullet">

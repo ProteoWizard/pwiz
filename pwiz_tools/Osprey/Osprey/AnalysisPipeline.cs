@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
 
@@ -159,19 +158,15 @@ namespace pwiz.Osprey
         /// The skip-if-outputs-valid decision now lives in the driver loop
         /// (<see cref="PipelineContext.CanRehydrate"/>): this is only called
         /// for a task that is included and whose outputs are not already on
-        /// disk. The task is run and fresh <c>.osprey.task</c> sidecars are
-        /// written next to each declared output on success.
+        /// disk. Each output's writer embeds its validity stamp in the same
+        /// commit as its content; the driver writes nothing after Run.
         /// </summary>
         private static bool RunTask(OspreyTask task, PipelineContext ctx)
         {
-            // Note: stale-sidecar cleanup is the responsibility of each
-            // task body. A task-level pre-Run delete here would wipe the
-            // per-file sidecars that <see cref="PerFileScoringTask"/>
-            // relies on for its within-task per-file skip; deletion has
-            // to happen on per-file granularity for tasks that produce
-            // per-file outputs. Tasks that produce a single coarse output
-            // (e.g. SecondPassFdrTask's output.blib) delete their own
-            // sidecars at the start of Run.
+            // Note: nothing is cleared before Run. A stale output is simply
+            // overwritten, stamp and all, and a pre-Run delete here would
+            // wipe the per-file outputs that <see cref="PerFileScoringTask"/>
+            // relies on for its within-task per-file skip.
 
             var sw = Stopwatch.StartNew();
             ctx.LogInfo(LogTag.TASK, @"{0}:starting", task.Name);
@@ -216,41 +211,7 @@ namespace pwiz.Osprey
                     stageName, sw.Elapsed.TotalSeconds);
             }
 
-            // Write sidecars whenever the task ran without setting a
-            // non-zero exit code. Several tasks intentionally return
-            // false on success to stop the pipeline at a configured
-            // boundary (PerFileScoringTask under --task PerFileScoring, FirstPassFdrTask
-            // under --task FirstPassFDR with StopAfterStage5); gating on
-            // keepGoing alone would skip sidecar writes for those
-            // successful early-exit modes and break resume.
-            if (ctx.ExitCode == 0)
-                WriteTaskSidecars(task, ctx);
-
             return keepGoing;
-        }
-
-        private static void WriteTaskSidecars(OspreyTask task, PipelineContext ctx)
-        {
-            string key = task.ValidityKey(ctx);
-            var inputs = new List<string>(task.Inputs(ctx));
-            foreach (var output in task.Outputs(ctx))
-            {
-                // A task may not have written every declared output (e.g. a
-                // task that emits an output only when an optional config field
-                // is set). Skip those rather than failing.
-                if (!File.Exists(output)) continue;
-                try
-                {
-                    TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current,
-                        task.OutputValidityKey(ctx, key, output), task.OutputInputs(ctx, inputs, output));
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        OspreyResources.AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_,
-                        task.Name, output, ex.Message));
-                }
-            }
         }
 
         private static string FormatDuration(TimeSpan duration)
