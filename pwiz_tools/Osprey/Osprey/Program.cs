@@ -601,6 +601,16 @@ namespace pwiz.Osprey
                         @"FDR now always processes one run at a time where the analysis allows it.");
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // OSPREY_STAGE6_STREAM_SURVIVORS was REMOVED (2026-10-10) on the same terms: the
+                // streamed Stage 6 handoff is the only arm, and a stale script still setting it
+                // would file the streamed arm's numbers under the resident one.
+                if (OspreyEnvironment.Stage6StreamSurvivorsRetiredSet)
+                {
+                    LogError(
+                        @"OSPREY_STAGE6_STREAM_SURVIVORS was removed and has no effect. Unset it. " +
+                        @"Re-scoring now always reloads one run's kept candidates at a time.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
                 // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
                 // its reconciled-input load, making it the first previously-VALID token to
@@ -621,7 +631,7 @@ namespace pwiz.Osprey
                     // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
                     // reconciled-input load and the pass-1 FDRBench emitter both stream and need
                     // no allowance. 'non-percolator-fdr' was retired with the simple FDR method
-                    // it named.
+                    // it named, and 'compacted-entries-buffer' with OSPREY_STAGE6_STREAM_SURVIVORS.
                     LogWarning(string.Format(
                         @"OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
                         @"have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +

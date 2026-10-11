@@ -489,14 +489,6 @@
     <value>使用中间文件中保存的第一轮 q 值；不再重新运行第一轮 Percolator。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>正在从 1 个文件重新加载保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>正在从 {0:N0} 个文件重新加载保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
     <value>无法写入“{0}”的第一轮中间文件：无法根据其输入路径确定位置。</value>
     <comment>Needs Review:New resource</comment>

@@ -48,7 +48,8 @@ namespace pwiz.Osprey.Test
         // The startup-checked variables the cases below set.
         private static readonly string[] STARTUP_VARIABLES =
         {
-            @"OSPREY_PASS2_QVALUE", @"OSPREY_STAGE7_STREAM", @"OSPREY_ALLOW_UNFIXED_RESIDENT"
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_STAGE7_STREAM", @"OSPREY_STAGE6_STREAM_SURVIVORS",
+            @"OSPREY_ALLOW_UNFIXED_RESIDENT"
         };
 
         private string _testDir;
@@ -144,6 +145,9 @@ namespace pwiz.Osprey.Test
             output = RunCommandAndValidateError(Variable(@"OSPREY_STAGE7_STREAM", @"1"),
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_STAGE7_STREAM");
+            output = RunCommandAndValidateError(Variable(@"OSPREY_STAGE6_STREAM_SURVIVORS", @"0"),
+                InputLibraryOutput(input, library));
+            StringAssert.Contains(output, @"OSPREY_STAGE6_STREAM_SURVIVORS");
             // A retired allowance token is a warning, not an error: the run goes on, here to
             // the ModelDiagnostics error above, which stays the only error line.
             output = RunCommandAndValidateError(Variable(@"OSPREY_ALLOW_UNFIXED_RESIDENT", @"hpc-merge"),
