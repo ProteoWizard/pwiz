@@ -510,7 +510,9 @@ namespace pwiz.Osprey.Tasks
                 config.EffectiveProteinFdr));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PROTEIN_FDR, @"running"));
             var swProtein = Stopwatch.StartNew();
-            RunProteinFdr(rescored, perFileParquetPaths, fullLibrary, config, ctx);
+            // Kept for the blib, which writes the protein groups and their q-values. It is
+            // O(detected peptides + groups), not O(observations).
+            var proteinFdr = RunProteinFdr(rescored, perFileParquetPaths, fullLibrary, config, ctx);
             swProtein.Stop();
             ctx.LogInfo(LogTag.STAGE_WALL, @"stage7: {0:F1}s",
                 swProtein.Elapsed.TotalSeconds);
@@ -554,7 +556,7 @@ namespace pwiz.Osprey.Tasks
             {
                 try
                 {
-                    WriteBlibOutput(rescored, nFiles, fullLibrary, libraryById, config, ctx);
+                    WriteBlibOutput(rescored, nFiles, libraryById, proteinFdr, config, ctx);
                 }
                 catch (BlibOutputException ex)
                 {
@@ -1086,9 +1088,9 @@ namespace pwiz.Osprey.Tasks
         /// <c>Stage7ProteinFdrOnly</c> early-exit can stay in this Tasks facade --
         /// Osprey.FDR cannot reference Osprey.Diagnostics (the
         /// Diagnostics project references FDR), so the dump / Environment.Exit
-        /// cannot move into the engine.
+        /// cannot move into the engine. The blib writes the returned groups and q-values.
         /// </summary>
-        private void RunProteinFdr(
+        private SecondPassProteinFdrResult RunProteinFdr(
             RescoredEntries rescored,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
@@ -1153,6 +1155,7 @@ namespace pwiz.Osprey.Tasks
                 OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config,
                     ctx, ctx.LogWarning);
             }
+            return result;
         }
 
         /// <summary>
@@ -1254,8 +1257,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private void WriteBlibOutput(
             RescoredEntries rescored, int nFiles,
-            List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            SecondPassProteinFdrResult proteinFdr,
             OspreyConfig config,
             PipelineContext ctx)
         {
@@ -1325,7 +1328,7 @@ namespace pwiz.Osprey.Tasks
 
             ctx.LogInfo(LogTag.COUNT, @"Cross-file observations to write: {0}", passingEntries.Count);
 
-            BlibOutputWriter.Write(config, rescored.FileNames, libraryById, bestByPrecursor,
+            BlibOutputWriter.Write(config, rescored.FileNames, libraryById, proteinFdr, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);
 
             // One spectrum per passing precursor (its best run); the peaks are every run's

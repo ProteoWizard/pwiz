@@ -480,6 +480,94 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Verifies the experiment-level q-value columns of a search blib: absent until
+        /// <see cref="BlibWriter.AddSearchQValueColumns"/> asks for them, then a precursor and
+        /// peptide q-value on each spectrum and a q-value on each protein group, with a group
+        /// shared by two spectra written once and a spectrum linked to two groups.
+        /// </summary>
+        [TestMethod]
+        public void TestSearchQValueColumns()
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                long refId2, refId3;
+                using (var writer = new BlibWriter(path))
+                {
+                    Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PrecursorQValue"));
+                    Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PeptideQValue"));
+                    Assert.IsFalse(HasColumn(writer.Connection, "Proteins", "QValue"));
+
+                    writer.AddSearchQValueColumns();
+                    writer.BeginBatch();
+                    long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    refId2 = AddTestSpectrum(writer, fileId, 2);
+                    refId3 = AddTestSpectrum(writer, fileId, 3);
+                    writer.SetGlobalQValues(refId2, 0.003, 0.004);
+                    writer.SetGlobalQValues(refId3, 0.006, 0.004);
+                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
+                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
+                    writer.AddRefSpectraProtein(refId2, groupA);
+                    writer.AddRefSpectraProtein(refId2, groupC);
+                    writer.AddRefSpectraProtein(refId3, groupA);
+                    writer.Commit();
+                }
+
+                using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    Assert.AreEqual(0.003, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.006, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
+                    Assert.AreEqual(0.002, QueryDouble(conn,
+                        "SELECT QValue FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM RefSpectraProteins WHERE RefSpectraID = " + refId2));
+                    Assert.AreEqual(2L, QueryLong(conn,
+                        "SELECT COUNT(*) FROM RefSpectraProteins rp JOIN Proteins p ON p.id = rp.ProteinID " +
+                        "WHERE p.accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"));
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        private static long AddTestSpectrum(BlibWriter writer, long fileId, int charge)
+        {
+            return writer.AddSpectrum("PEPTIDE", "PEPTIDE", 800.0 / charge, charge,
+                10.0, 9.0, 11.0, new[] { 300.0 }, new[] { 100.0f }, 0.01, fileId, 1, 0.0);
+        }
+
+        private static bool HasColumn(SQLiteConnection conn, string table, string column)
+        {
+            using (var cmd = new SQLiteCommand("PRAGMA table_info(" + table + ")", conn))
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    if (reader.GetString(1) == column)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static double QueryDouble(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToDouble(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        private static long QueryLong(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToInt64(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Verifies that StripFlankingChars correctly removes flanking amino acid notation.
         /// </summary>
         [TestMethod]
