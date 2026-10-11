@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -70,20 +69,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, ResidentPaths.KNOWN_UNFIXED.Count,
                 "a token was added back to KNOWN_UNFIXED - the ratchet is running backwards");
 
-            // Retired tokens name nothing an operator can still be granted. With the list empty,
-            // a value carrying any of them - alone or as a list, in any case - matches no legal
-            // token, which is what the startup warning reports as unrecognized.
-            foreach (string retired in new[]
-                     {
-                         "projection-off", "compacted-entries-buffer", "non-percolator-fdr",
-                         "fdrbench-pass1", "stage7-stream-off", "hpc-merge"
-                     })
-            {
-                Assert.IsFalse(ResidentPaths.KNOWN_UNFIXED.Any(t => OspreyEnvironment.NamesResidentPath(retired, t)),
-                    retired);
-                Assert.IsFalse(ResidentPaths.KNOWN_UNFIXED.Any(t => OspreyEnvironment.NamesResidentPath(
-                    " " + retired.ToUpperInvariant() + " ; anything ", t)), retired);
-            }
             // The list parsing the startup warning relies on still works on its own terms:
             // separators are interchangeable, whitespace is tolerated, matching ignores case.
             Assert.IsTrue(OspreyEnvironment.NamesResidentPath(" alpha ; BETA ", "beta"));

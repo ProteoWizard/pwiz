@@ -861,8 +861,9 @@ namespace pwiz.Osprey.Tasks
             // recomputed off perFileEntries, which by that point holds only survivors - the
             // same reason the lean projection path reads them off its score-pass sink. The
             // --model-diagnostics report is streamed off the same load for the same reason,
-            // and its accumulator is null only where the RESIDENT twin ran, which is exactly
-            // where perFileEntries still IS the pre-compaction pool the batch report reads.
+            // and its accumulator is null only where the bundle came from the batch
+            // reconciliation overlay, where perFileEntries still IS the pre-compaction pool the
+            // batch report reads.
             LogFirstPassResultsAndReport(perFileEntries, config, ctx,
                 bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator);
             // The accumulator holds the whole run's --model-diagnostics reduction (~1-2 GB
@@ -1070,11 +1071,23 @@ namespace pwiz.Osprey.Tasks
         private bool RehydrateForPerRunRescore(
             PipelineContext ctx, List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
         {
-            // The lists this arm republishes as CompactedEntries are EMPTY, because every load
-            // that reaches it (the lean --input-files load and the per-run --input-scores names
-            // load) leaves them so, and each run is compacted against the retained set as it is
-            // hydrated. A guard used to refuse non-empty lists here; their only source was the
-            // resident load removed with OSPREY_FDR_PROJECTION (2026-10-10).
+            // The lists this arm republishes as CompactedEntries must be EMPTY: every load that
+            // reaches it (the lean --input-files load and the per-run --input-scores names load)
+            // leaves them so, and each run is compacted against the retained set as it is
+            // hydrated. Checked rather than assumed. The stubs-only resident load and this arm
+            // each ask CanHydratePerRun, whose last term reads disk, so a disagreement between
+            // the two would publish uncompacted stubs and fold the second pass over every
+            // pre-compaction row - a wrong report with no error. O(files) to count.
+            long residentStubs = 0;
+            foreach (var kvp in perFileEntries)
+                residentStubs += kvp.Value.Count;
+            if (residentStubs > 0)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"The per-run rescore arm was reached with {0:N0} first-pass stubs still " +
+                    @"resident across {1} runs, which the per-run survivor loader cannot serve.",
+                    residentStubs, perFileEntries.Count));
+            }
             var retainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(ctx.Config, out string error);
             if (retainedBaseIds == null)
             {
