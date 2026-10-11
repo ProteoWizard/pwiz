@@ -362,8 +362,8 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
 # published no survivor loader, so the Stage 6 handoff guard (since retired with
-# OSPREY_STAGE6_STREAM_SURVIVORS) no-oped and nothing asked for a token. #4486 was the standing example while it was open: the survivor
-# buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
+# OSPREY_STAGE6_STREAM_SURVIVORS) no-oped and nothing asked for a token. #4486 was the
+# standing example while it was open: the survivor buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
 # path, and no guard covered it because it was not a resume or a mode - it was what Stage
 # 7 took as input. That is now closed (#4486): every leg folds run by run. The last route
 # that still took the pool - the transfer pass-2 mode, whose per-file half ran in Stage 7 -

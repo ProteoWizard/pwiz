@@ -887,9 +887,10 @@ namespace pwiz.Osprey.Core
         ///
         /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
         /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. A LIST keeps the property that matters - every admitted path is still named
-        /// individually, so nothing rides along unnamed the way the blanket boolean allowed -
-        /// while a single value only ever prevented honest work.</para>
+        /// impossible to perform at all. A LIST keeps the property that matters - every
+        /// admitted path is still named individually, so nothing rides along unnamed the way
+        /// the blanket boolean allowed - while a single value only ever prevented honest
+        /// work.</para>
         ///
         /// Re-read on each access, like <see cref="Pass2QValue"/>. Intended for local testing. The standing
         /// <c>regression.ps1</c> gate names NO token on any leg - #4536 removed the last one -

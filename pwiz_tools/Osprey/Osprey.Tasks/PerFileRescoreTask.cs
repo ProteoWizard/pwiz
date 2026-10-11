@@ -1422,7 +1422,8 @@ namespace pwiz.Osprey.Tasks
         /// identity is not.</para>
         ///
         /// <para>Safe under the parallel file loop: each call touches only its own file's
-        /// list, and the loader holds no per-file state.</para>
+        /// list, and the loader's only per-file state is its survivor-count check, which
+        /// locks.</para>
         ///
         /// <para><c>loadError</c> is set when this file's survivors could not be refilled, so
         /// the caller can fail the whole rescore with an actionable message AFTER the parallel
@@ -3235,8 +3236,8 @@ namespace pwiz.Osprey.Tasks
         /// <para>The overlay survives for one case, and it is not a fallback for a missing
         /// artifact: a list that still HOLDS its entries has its rows already, and re-reading
         /// them would be a duplicate build - so those rows (the <c>OSPREY_FDR_PROJECTION=0</c>
-        /// resident arm, which publishes no loader) take the reconciled values through the overlay instead. Both
-        /// routes read the same one parquet.</para>
+        /// resident arm, which publishes no loader) take the reconciled values through the
+        /// overlay instead. Both routes read the same one parquet.</para>
         /// </summary>
         private static void MaterializeResumedFile(string fileName, List<FdrEntry> entries,
             FirstPassSurvivorLoader loader,
