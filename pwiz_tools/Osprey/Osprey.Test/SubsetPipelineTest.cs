@@ -925,6 +925,11 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorQValue IS NULL"));
             // The precursor q-value is the one in score.
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorQValue <> score"));
+            // The precursor PEP is a probability, and the reported precursors are not all at the
+            // default of 1.0 a PEP that never reached the entry would leave.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 0 OR PrecursorPep > 1"));
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 1") > 0);
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptideQValue IS NULL"));
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"QValue IS NULL"));
             Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"peptideModSeq IN (" +

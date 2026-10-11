@@ -58,7 +58,7 @@ namespace pwiz.Osprey.IO
         private SQLiteCommand _cmdInsertRunScores;
         private SQLiteCommand _cmdInsertExperimentScores;
         private SQLiteCommand _cmdInsertCoefficient;
-        private SQLiteCommand _cmdSetGlobalQValues;
+        private SQLiteCommand _cmdSetGlobalValues;
         private SQLiteCommand _cmdInsertProteinGroup;
 
         /// <summary>
@@ -226,25 +226,28 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Add the experiment-level q-value columns a search result fills:
-        /// <c>RefSpectra.PrecursorQValue</c>, <c>RefSpectra.PeptideQValue</c> and
-        /// <c>Proteins.QValue</c>, the optional BiblioSpec columns Skyline filters on. A blib gets
-        /// these columns only when it has values for them, so a library export never calls this.
-        /// Once it is called, every <c>Proteins</c> row is a protein group written by
-        /// <see cref="AddProteinGroup"/>. Call before <see cref="BeginBatch"/>.
+        /// Add the experiment-level columns a search result fills:
+        /// <c>RefSpectra.PrecursorQValue</c>, <c>RefSpectra.PrecursorPep</c>,
+        /// <c>RefSpectra.PeptideQValue</c> and <c>Proteins.QValue</c>, the optional BiblioSpec
+        /// columns Skyline filters on. A blib gets these columns only when it has values for them,
+        /// so a library export never calls this. Once it is called, every <c>Proteins</c> row is a
+        /// protein group written by <see cref="AddProteinGroup"/>. Call before
+        /// <see cref="BeginBatch"/>.
         /// </summary>
-        public void AddSearchQValueColumns()
+        public void AddSearchGlobalColumns()
         {
             ExecuteNonQuery(@"ALTER TABLE RefSpectra ADD COLUMN PrecursorQValue REAL");
+            ExecuteNonQuery(@"ALTER TABLE RefSpectra ADD COLUMN PrecursorPep REAL");
             ExecuteNonQuery(@"ALTER TABLE RefSpectra ADD COLUMN PeptideQValue REAL");
             ExecuteNonQuery(@"ALTER TABLE Proteins ADD COLUMN QValue REAL");
 
-            _cmdSetGlobalQValues = new SQLiteCommand(_conn);
-            _cmdSetGlobalQValues.CommandText = @"UPDATE RefSpectra SET PrecursorQValue = @precursorQ, PeptideQValue = @peptideQ WHERE id = @id";
-            _cmdSetGlobalQValues.Parameters.Add(@"@precursorQ", System.Data.DbType.Double);
-            _cmdSetGlobalQValues.Parameters.Add(@"@peptideQ", System.Data.DbType.Double);
-            _cmdSetGlobalQValues.Parameters.Add(@"@id", System.Data.DbType.Int64);
-            _cmdSetGlobalQValues.Prepare();
+            _cmdSetGlobalValues = new SQLiteCommand(_conn);
+            _cmdSetGlobalValues.CommandText = @"UPDATE RefSpectra SET PrecursorQValue = @precursorQ, PrecursorPep = @precursorPep, PeptideQValue = @peptideQ WHERE id = @id";
+            _cmdSetGlobalValues.Parameters.Add(@"@precursorQ", System.Data.DbType.Double);
+            _cmdSetGlobalValues.Parameters.Add(@"@precursorPep", System.Data.DbType.Double);
+            _cmdSetGlobalValues.Parameters.Add(@"@peptideQ", System.Data.DbType.Double);
+            _cmdSetGlobalValues.Parameters.Add(@"@id", System.Data.DbType.Int64);
+            _cmdSetGlobalValues.Prepare();
 
             _cmdInsertProteinGroup = new SQLiteCommand(_conn);
             _cmdInsertProteinGroup.CommandText = @"INSERT INTO Proteins (accession, QValue) VALUES (@acc, @q)";
@@ -454,23 +457,24 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Set a spectrum's experiment-level precursor q-value and peptide q-value. The peptide
-        /// q-value is one value per modified sequence, the same on every charge state's row.
-        /// Requires <see cref="AddSearchQValueColumns"/>.
+        /// Set a spectrum's experiment-level precursor q-value, precursor PEP and peptide q-value.
+        /// The peptide q-value is one value per modified sequence, the same on every charge
+        /// state's row. Requires <see cref="AddSearchGlobalColumns"/>.
         /// </summary>
-        public void SetGlobalQValues(long refId, double precursorQValue, double peptideQValue)
+        public void SetGlobalValues(long refId, double precursorQValue, double precursorPep, double peptideQValue)
         {
-            _cmdSetGlobalQValues.Parameters[@"@precursorQ"].Value = precursorQValue;
-            _cmdSetGlobalQValues.Parameters[@"@peptideQ"].Value = peptideQValue;
-            _cmdSetGlobalQValues.Parameters[@"@id"].Value = refId;
-            _cmdSetGlobalQValues.ExecuteNonQuery();
+            _cmdSetGlobalValues.Parameters[@"@precursorQ"].Value = precursorQValue;
+            _cmdSetGlobalValues.Parameters[@"@precursorPep"].Value = precursorPep;
+            _cmdSetGlobalValues.Parameters[@"@peptideQ"].Value = peptideQValue;
+            _cmdSetGlobalValues.Parameters[@"@id"].Value = refId;
+            _cmdSetGlobalValues.ExecuteNonQuery();
         }
 
         /// <summary>
         /// Add a protein group as one <c>Proteins</c> row: <paramref name="accessions"/> is the
         /// group's members joined by semicolons, <paramref name="qValue"/> its experiment-level
         /// protein group q-value. Returns the row ID, for <see cref="AddRefSpectraProtein"/>.
-        /// Requires <see cref="AddSearchQValueColumns"/>.
+        /// Requires <see cref="AddSearchGlobalColumns"/>.
         /// </summary>
         public long AddProteinGroup(string accessions, double qValue)
         {
@@ -665,7 +669,7 @@ namespace pwiz.Osprey.IO
                 if (_cmdInsertRunScores != null) { _cmdInsertRunScores.Dispose(); _cmdInsertRunScores = null; }
                 if (_cmdInsertExperimentScores != null) { _cmdInsertExperimentScores.Dispose(); _cmdInsertExperimentScores = null; }
                 if (_cmdInsertCoefficient != null) { _cmdInsertCoefficient.Dispose(); _cmdInsertCoefficient = null; }
-                if (_cmdSetGlobalQValues != null) { _cmdSetGlobalQValues.Dispose(); _cmdSetGlobalQValues = null; }
+                if (_cmdSetGlobalValues != null) { _cmdSetGlobalValues.Dispose(); _cmdSetGlobalValues = null; }
                 if (_cmdInsertProteinGroup != null) { _cmdInsertProteinGroup.Dispose(); _cmdInsertProteinGroup = null; }
                 if (_conn != null)
                 {

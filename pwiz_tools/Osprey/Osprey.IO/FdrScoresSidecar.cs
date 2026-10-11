@@ -776,12 +776,16 @@ namespace pwiz.Osprey.IO
                 // the second-pass protein FDR has yet to write its value, so an entry is
                 // entitled to the pass-1 protein q it already carries - which is exactly what
                 // the pre-split sidecar column held here too.
+                //
+                // The PEP is applied with the precursor q because the blib reports the two side
+                // by side, and the record's PEP comes from the same competition as its q.
                 if (experimentRecords != null &&
                     experimentRecords.TryGetValue(recordEntryId, out var exp))
                 {
                     e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    e.Pep                       = exp.Pep;
                 }
                 return true;
             });

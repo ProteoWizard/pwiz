@@ -41,7 +41,8 @@ namespace pwiz.Osprey.Tasks
     /// sequential per-best-precursor RefSpectra + modifications + protein group +
     /// RetentionTimes + Osprey extension-table emission, then metadata and
     /// finalize. Adds the experiment-level <c>RefSpectra.PrecursorQValue</c>,
-    /// <c>RefSpectra.PeptideQValue</c> and <c>Proteins.QValue</c> columns, and its
+    /// <c>RefSpectra.PrecursorPep</c>, <c>RefSpectra.PeptideQValue</c> and
+    /// <c>Proteins.QValue</c> columns, and its
     /// <c>Proteins</c> rows are protein groups. Drives the low-level <see cref="BlibWriter"/> (the SQLite layer);
     /// this type owns only the per-spectrum row composition.
     ///
@@ -82,7 +83,7 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var writer = OpenBlibWriter(saver.SafeName, config.OutputBlib))
                 {
-                    writer.AddSearchQValueColumns();
+                    writer.AddSearchGlobalColumns();
                     writer.BeginBatch();
 
                     var sourceFileIds = CreateSourceFiles(writer, config, fileNames, fdrThreshold);
@@ -326,10 +327,11 @@ namespace pwiz.Osprey.Tasks
                     long refId = writer.AddSpectrum(spectrum,
                         sharedApex, sharedStart, sharedEnd,
                         scoreQvalue, fileId, nRunsDetected);
-                    // The precursor q-value is the one in score. ExperimentPeptideQvalue is
-                    // computed once per modified sequence, so every charge state's row gets the
-                    // same value.
-                    writer.SetGlobalQValues(refId, scoreQvalue, entry.ExperimentPeptideQvalue);
+                    // The precursor q-value is the one in score. Pep is one value per entry for
+                    // the whole analysis, so any observation of the precursor carries it.
+                    // ExperimentPeptideQvalue is computed once per modified sequence, so every
+                    // charge state's row gets the same value.
+                    writer.SetGlobalValues(refId, scoreQvalue, entry.Pep, entry.ExperimentPeptideQvalue);
                     proteinGroups.AddMappings(refId, entry.ModifiedSequence);
 
                     refIdByPrecursor[lookupKey] = refId;

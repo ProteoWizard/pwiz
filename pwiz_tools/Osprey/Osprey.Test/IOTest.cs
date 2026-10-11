@@ -480,13 +480,14 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Verifies the experiment-level q-value columns of a search blib: absent until
-        /// <see cref="BlibWriter.AddSearchQValueColumns"/> asks for them, then a precursor and
-        /// peptide q-value on each spectrum and a q-value on each protein group, with a group
+        /// Verifies the experiment-level columns of a search blib: absent until
+        /// <see cref="BlibWriter.AddSearchGlobalColumns"/> asks for them, then a precursor
+        /// q-value, precursor PEP and peptide q-value on each spectrum and a q-value on each
+        /// protein group, with a group
         /// shared by two spectra written once and a spectrum linked to two groups.
         /// </summary>
         [TestMethod]
-        public void TestSearchQValueColumns()
+        public void TestSearchGlobalColumns()
         {
             string path = Path.GetTempFileName();
             try
@@ -495,16 +496,17 @@ namespace pwiz.Osprey.Test
                 using (var writer = new BlibWriter(path))
                 {
                     Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PrecursorQValue"));
+                    Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PrecursorPep"));
                     Assert.IsFalse(HasColumn(writer.Connection, "RefSpectra", "PeptideQValue"));
                     Assert.IsFalse(HasColumn(writer.Connection, "Proteins", "QValue"));
 
-                    writer.AddSearchQValueColumns();
+                    writer.AddSearchGlobalColumns();
                     writer.BeginBatch();
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     refId2 = AddTestSpectrum(writer, fileId, 2);
                     refId3 = AddTestSpectrum(writer, fileId, 3);
-                    writer.SetGlobalQValues(refId2, 0.003, 0.004);
-                    writer.SetGlobalQValues(refId3, 0.006, 0.004);
+                    writer.SetGlobalValues(refId2, 0.003, 0.02, 0.004);
+                    writer.SetGlobalValues(refId3, 0.006, 0.05, 0.004);
                     long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
                     long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
                     writer.AddRefSpectraProtein(refId2, groupA);
@@ -518,6 +520,8 @@ namespace pwiz.Osprey.Test
                     conn.Open();
                     Assert.AreEqual(0.003, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
                     Assert.AreEqual(0.006, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.02, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.05, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
                     Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
                     Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
