@@ -23,9 +23,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -488,8 +488,8 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Driver-owned skip predicate: <c>true</c> when every file
         /// <paramref name="task"/> declares in <see cref="OspreyTask.Outputs"/>
-        /// already exists on disk with a matching
-        /// <see cref="OspreyTask.ValidityKey"/> sidecar — i.e. the task's work
+        /// already exists on disk carrying an embedded stamp current for this task, this
+        /// build and its <see cref="OspreyTask.OutputValidityKey"/> - i.e. the task's work
         /// is durably present and need not be recomputed. A task that declares
         /// no outputs can never be skipped (returns <c>false</c>), matching the
         /// "purely-in-memory transformation" posture documented on
@@ -506,8 +506,8 @@ namespace pwiz.Osprey.Tasks
             string key = task.ValidityKey(this);
             foreach (var output in outputs)
             {
-                if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, task.OutputValidityKey(this, key, output))) return false;
+                if (!ArtifactValidity.IsCurrent(output, task.Name, task.OutputValidityKey(this, key, output)))
+                    return false;
             }
             return true;
         }

@@ -44,6 +44,9 @@ namespace pwiz.Osprey.Core
         public const string TASK = @"task";
         public const string MODEL_DIAGNOSTICS = @"model-diagnostics";
         public const string PARALLEL_FILES = @"parallel-files";
+        public const string PARALLEL_FILES_CACHING = @"parallel-files-caching";
+        public const string PARALLEL_FILES_SCORING = @"parallel-files-scoring";
+        public const string PARALLEL_FILES_RESCORING = @"parallel-files-rescoring";
         public const string VERBOSE = @"verbose";
         public const string TRAINING_EXPORT = @"training-export";
 

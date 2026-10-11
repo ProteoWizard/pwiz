@@ -390,8 +390,8 @@ namespace pwiz.Osprey.Core
         /// blib-written is a SUBSET of what is retained here.</para>
         ///
         /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
-        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> deletes its own
-        /// validity sidecars. The suffix is still required - the release is a Run-only side
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> rewrites every
+        /// output. The suffix is still required - the release is a Run-only side
         /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
         /// and report a memory profile it never computed - but the escape hatch is not cheap.
         /// The suffix itself lives with the release
@@ -797,9 +797,9 @@ namespace pwiz.Osprey.Core
         ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
         ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
         ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
-        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time. No
-        ///     retrain, no reduced-pool null. Restores calibration while keeping the
-        ///     re-scoring ID gain.
+        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time, in
+        ///     PerFileRescoring like the default (#4665). No retrain, no reduced-pool null.
+        ///     Restores calibration while keeping the re-scoring ID gain.
         ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
         ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see

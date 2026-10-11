@@ -869,23 +869,20 @@ namespace pwiz.Osprey.Tasks
         /// same bytes: this is the state <c>HydrateCompactedStreaming</c> leaves a run in, reached
         /// by the same calls in the same order. The difference is only how long the list lives.</para>
         ///
-        /// <para><paramref name="overlayFirstPass"/> is the Boundary 3 -&gt; 4 contract made a
-        /// parameter. FALSE for a run that already carries a current
-        /// <c>.2nd-pass.fdr_scores.bin</c>: that file holds every scalar the join reads, so
-        /// opening the first-pass one would reach back across a boundary issue #4486 exists to
-        /// establish - and would do it for every run in the cohort, on precisely the leg where an
-        /// orchestrator is entitled not to have shipped them. TRUE where there is no second-pass
-        /// answer yet, which is a mode whose per-run half still runs in the join and is the
-        /// exception the boundary already documents rather than a new one.</para>
+        /// <para>No first-pass file is opened: the Boundary 3 -&gt; 4 contract. Every run
+        /// carries a current <c>.2nd-pass.fdr_scores.bin</c>, which holds every scalar the join
+        /// reads, so opening the first-pass one would reach back across the boundary issue #4486
+        /// established - for every run in the cohort, on precisely the leg where an orchestrator
+        /// is entitled not to have shipped them. It used to be opened for a run with no
+        /// second-pass answer yet, which was a mode whose per-run half still ran in the join;
+        /// none does since #4665.</para>
         /// </summary>
         public static void RefillOneRunSurvivors(
             string fileName,
             string parquetPath,
             List<FdrEntry> survivors,
             HashSet<uint> retainedBaseIds,
-            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            Func<string, string, List<FdrEntry>> loadStubs,
-            bool overlayFirstPass)
+            Func<string, string, List<FdrEntry>> loadStubs)
         {
             if (survivors == null)
                 throw new ArgumentNullException(nameof(survivors));
@@ -899,16 +896,6 @@ namespace pwiz.Osprey.Tasks
             {
                 throw new InvalidOperationException(string.Format(
                     @"RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
-            }
-            if (overlayFirstPass)
-            {
-                string syntheticInput = SyntheticInputFromParquet(parquetPath);
-                // Overlay then compact, in that order, for the reason the two siblings state:
-                // the sidecar covers the whole PRE-compaction row set, so the filter has to
-                // name the records that legitimately have no entry to land on and leave every
-                // other miss reportable as the parquet drift it is.
-                OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
-                    id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
             }
             // Kept even where the reconciled parquet is already the survivor subset and this
             // removes nothing. It is the analysis-wide compaction predicate, it is the same
@@ -1036,7 +1023,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     throw new InvalidDataException(string.Format(
                         OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
-                        reconPath, action.EntryId, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
+                        reconPath, action.EntryId, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
                 }
                 reconciliationActions[(fileName, vecIdx)] = action.Action;
             }
@@ -1166,7 +1153,7 @@ namespace pwiz.Osprey.Tasks
                     throw new InvalidDataException(string.Format(
                         OspreyTasksResources.RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_,
                         reconPath, LibraryHash, envelope.LibraryHash, SearchHash, envelope.SearchHash,
-                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
+                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
                 }
 
                 // ReconciliationFile.Load already rejects any envelope whose format_version
@@ -1186,7 +1173,7 @@ namespace pwiz.Osprey.Tasks
                         reconPath,
                         string.Join(@", ", JoinFileStems),
                         string.Join(@", ", envelopeStems),
-                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
+                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
                 }
             }
         }

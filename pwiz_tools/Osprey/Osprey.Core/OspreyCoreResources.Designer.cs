@@ -171,17 +171,17 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: 1 (sequential default; pass {1} to score {0} files concurrently).
+        ///   Looks up a localized string similar to File parallelism: 1 (sequential default; pass {1} to run {0} files at once).
         /// </summary>
-        public static string FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_ {
+        public static string FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass__1__to_run__0__files_at_once_ {
             get {
-                return ResourceManager.GetString("FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___p" +
-                        "arallel_files_to_score__0__files_", resourceCulture);
+                return ResourceManager.GetString("FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass__1_" +
+                        "_to_run__0__files_at_once_", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: {0} (auto: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} cores / {6} files).
+        ///   Looks up a localized string similar to File parallelism: {0} (auto {7}: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} cores / {6} files).
         /// </summary>
         public static string FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__ {
             get {
@@ -191,7 +191,7 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File parallelism: {0} (auto, CPU-bound: {1} cores, {2} files; memory estimate unavailable).
+        ///   Looks up a localized string similar to File parallelism: {0} (auto {3}, CPU-bound: {1} cores, {2} files; memory estimate unavailable).
         /// </summary>
         public static string FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_ {
             get {

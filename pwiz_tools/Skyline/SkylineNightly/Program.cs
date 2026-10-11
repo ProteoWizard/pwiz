@@ -18,9 +18,12 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using SkylineNightly.Properties;
 
 namespace SkylineNightly
@@ -100,6 +103,76 @@ namespace SkylineNightly
         }
 
         /// <summary>
+        /// Copies this machine's settings (nightly folder, start time, runs) from the most recently
+        /// written settings file of an earlier SkylineNightly build, when this build's own settings
+        /// are new. Upgrade() cannot: it looks only in this build's settings folder, and the folder
+        /// name depends on the build. The .NET Framework build used
+        /// %LOCALAPPDATA%\University_of_Washington\SkylineNightly.exe_Url_*\&lt;version&gt;; .NET uses
+        /// %LOCALAPPDATA%\SkylineNightly\SkylineNightly_Path_* (single-file) or SkylineNightly_Url_*.
+        /// Without this, the first .NET run on every nightly machine starts from defaults, with no
+        /// nightly folder and the default run. Never fails startup: on any error the defaults stay.
+        /// </summary>
+        private static void ImportEarlierSettings()
+        {
+            try
+            {
+                var ownPath = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
+                var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var candidates = new[]
+                    {
+                        Tuple.Create(Path.Combine(localAppData, @"University_of_Washington"), @"SkylineNightly.exe_*"),
+                        Tuple.Create(Path.Combine(localAppData, @"SkylineNightly"), @"SkylineNightly_*")
+                    }
+                    .Where(root => Directory.Exists(root.Item1))
+                    .SelectMany(root => Directory.GetDirectories(root.Item1, root.Item2))
+                    .SelectMany(dir => Directory.GetFiles(dir, @"user.config", SearchOption.AllDirectories))
+                    .Where(file => !string.Equals(Path.GetFullPath(file), Path.GetFullPath(ownPath), StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(File.GetLastWriteTimeUtc);
+                foreach (var file in candidates)
+                {
+                    var values = ReadSettingsFile(file);
+                    // A file that cannot be read, or never had a nightly folder set, holds nothing
+                    // worth carrying over; an older one may.
+                    if (values == null || !values.TryGetValue(nameof(Settings.NightlyFolder), out var folder) || string.IsNullOrEmpty(folder))
+                        continue;
+                    foreach (var pair in values)
+                    {
+                        var property = Settings.Default.Properties[pair.Key];
+                        if (property != null && property.PropertyType == typeof(string) &&
+                            pair.Key != nameof(Settings.SettingsUpgradeRequired))
+                        {
+                            Settings.Default[pair.Key] = pair.Value;
+                        }
+                    }
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                // Keep the defaults; the developer can set them in the SkylineNightly window
+            }
+        }
+
+        /// <summary>
+        /// The SkylineNightly settings in one user.config, by name, or null when the file cannot
+        /// be read or parsed (a partly written file, a duplicated setting).
+        /// </summary>
+        private static Dictionary<string, string> ReadSettingsFile(string file)
+        {
+            try
+            {
+                return XDocument.Load(file)
+                    .Descendants(@"setting")
+                    .Where(s => s.Parent?.Name.LocalName == @"SkylineNightly.Properties.Settings")
+                    .ToDictionary(s => (string) s.Attribute(@"name") ?? string.Empty, s => s.Element(@"value")?.Value ?? string.Empty);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
@@ -108,6 +181,7 @@ namespace SkylineNightly
             if (Settings.Default.SettingsUpgradeRequired)
             {
                 Settings.Default.Upgrade();
+                ImportEarlierSettings();
                 Settings.Default.SettingsUpgradeRequired = false;
                 Settings.Default.Save();
             }

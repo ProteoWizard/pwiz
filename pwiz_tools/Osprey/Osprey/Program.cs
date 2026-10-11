@@ -766,6 +766,19 @@ namespace pwiz.Osprey
                 return EXIT_CODE_FAILURE_TO_START;
             }
 
+            // A product is outstanding, so the report needs a fold through the pipeline - which
+            // reads the analysis's intermediate files, and those are current only for the build
+            // that wrote them. Under another build every stage would recompute for hours under a
+            // command that writes nothing but the report, so refuse and name the override.
+            string analysisVersion = ModelDiagnosticsReport.FirstPassVersion(config);
+            if (analysisVersion != null &&
+                !string.Equals(analysisVersion, OspreyVersion.Current, StringComparison.Ordinal))
+            {
+                LogError(string.Format(OspreyResources.Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_this_build_is__2___so_building_the_missing_,
+                    ModelDiagnosticsTaskText, analysisVersion, OspreyVersion.Current, OspreyVersion.ENV_OVERRIDE));
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
             // rather than the re-analysis this task used to refuse to start.
@@ -897,7 +910,7 @@ namespace pwiz.Osprey
 
             // No --task: the full pipeline. A cold run scores from Stage 1; a resume over a
             // directory that already holds each run's artifacts skips to whichever stage is
-            // outstanding, which the per-task validity sidecars decide - not the input kind.
+            // outstanding, which the artifacts' embedded validity stamps decide - not the input kind.
             if (!hasInputFiles)
                 return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, USAGE_INPUT);
             if (config.LibrarySource == null)
@@ -957,15 +970,9 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
             if (export.ClaimantQ.HasValue && !(export.ClaimantQ.Value > 0 && export.ClaimantQ.Value <= 1))
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
-            // The transfer arm computes every run's second-pass q in SecondPassFDR, after
-            // PerFileRescoring has written the export, so the export would have no second-pass
-            // values for any run to select on.
-            if (export.Enabled && OspreyEnvironment.Pass2TransferQ)
-            {
-                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
-                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                    SecondPassFdrTask.TASK_NAME);
-            }
+            // No pass-2 mode is refused here any more. OSPREY_PASS2_QVALUE=transfer was, while it
+            // computed every run's second-pass q in SecondPassFDR after the export was written;
+            // its per-run half runs in PerFileRescoring now (#4665), before the export.
             return null;
         }
 

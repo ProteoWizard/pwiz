@@ -28,4 +28,10 @@
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\msdata\MsData.csproj" />
   </ItemGroup>
 
+  <!-- Same symbol Analysis.Tests defines, so the vendor-format cases can gate on it: without
+       vendor support the Sciex reader cannot open a .wiff. -->
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+
 </Project>

@@ -40,10 +40,8 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -344,23 +342,16 @@ namespace pwiz.Skyline
 
                 try
                 {
-                    // If this is a new installation copy over installed external tools from previous installation location.
-                    var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
-                    if (!Directory.Exists(toolsDirectory))
-                    {
-                        using (var longWaitDlg = new LongWaitDlg())
-                        {
-                            longWaitDlg.Text = Name;
-                            longWaitDlg.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
-                            longWaitDlg.ProgressValue = 0;
-                            longWaitDlg.PerformWork(null, 1000*3, broker => CopyOldTools(toolsDirectory, broker));
-                        }
-                    }
+                    // Tests run out of a build folder, and would otherwise be offered whatever the
+                    // developer happens to have installed.
+                    if (!UnitTest && !FunctionalTest)
+                        new FirstLaunchImport().Run(null);
+                    SharedSettingsMerger.ForSharedSettings()?.MergeIfChanged();
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
                 {
-                    
+
                 }
 
                 if (ReportShutdownDlg.HadUnexpectedShutdown())
@@ -619,90 +610,6 @@ namespace pwiz.Skyline
         private static void DocumentChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
             MainToolService.SendDocumentChange();
-        }
-
-        private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
-        {
-            //Copy tools to a different folder then Directory.Move if successful.
-            string tempOuterToolsFolderPath = string.Concat(outerToolsFolderPath, @"_installing");
-            if (Directory.Exists(tempOuterToolsFolderPath))
-            {
-                DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
-                // Not sure this is necessay, but just to be safe
-                if (Directory.Exists(tempOuterToolsFolderPath))
-                    throw new Exception(SkylineResources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
-            }
-            
-            // Must create the tools directory to avoid ending up here again next time
-            Directory.CreateDirectory(tempOuterToolsFolderPath);
-
-            int numTools = Settings.Default.ToolList.Count + Settings.Default.SearchToolList.Count;
-            const int endValue = 100;
-            int progressValue = 0;
-            // ReSharper disable once UselessBinaryOperation (in case we decide to start at progress>0 for display purposes)
-            int increment = (endValue - progressValue) / (numTools + 1);
-            
-            CopyOldExternalTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
-            CopyOldSearchTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
-            
-            Directory.Move(tempOuterToolsFolderPath, outerToolsFolderPath);
-        }
-        
-        private static void CopyOldExternalTools(string outerToolsFolderPath, string tempOuterToolsFolderPath, ILongWaitBroker broker, int increment)
-        {
-            ToolList toolList = Settings.Default.ToolList;
-            foreach (var tool in toolList)
-            {
-                string toolDirPath = tool.ToolDirPath;
-                if (!string.IsNullOrEmpty(toolDirPath) && Directory.Exists(toolDirPath))
-                {
-                    string foldername = Path.GetFileName(toolDirPath);
-                    string newDir = Path.Combine(outerToolsFolderPath, foldername);
-                    string tempNewDir = Path.Combine(tempOuterToolsFolderPath, foldername);
-                    if (!Directory.Exists(tempNewDir))
-                        DirectoryEx.DirectoryCopy(toolDirPath, tempNewDir, true);
-                    tool.ToolDirPath = newDir; // Update the tool to point to its new directory.
-                    tool.ArgsCollectorDllPath = tool.ArgsCollectorDllPath.Replace(toolDirPath, newDir);
-                }
-                if (broker.IsCanceled)
-                {
-                    // Don't leave around a corrupted directory
-                    DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
-                    return;
-                }
-
-                broker.ProgressValue += increment;
-            }
-            Settings.Default.ToolList = ToolList.CopyTools(toolList);
-        }
-        
-        private static void CopyOldSearchTools(string outerToolsFolderPath, string tempOuterToolsFolderPath, ILongWaitBroker broker, int increment)
-        {
-            var toolList = Settings.Default.SearchToolList;
-            foreach (var tool in toolList)
-            {
-                string toolDirPath = tool.InstallPath; // old path like: C:\path\to\old\Skyline\Tools\searchTool
-                // if tool was AutoInstalled, copy it to new path like C:\path\to\new\Skyline\Tools\
-                if (!string.IsNullOrEmpty(toolDirPath) && tool.AutoInstalled && Directory.Exists(toolDirPath))
-                {
-                    string foldername = Path.GetFileName(toolDirPath);
-                    string newDir = Path.Combine(outerToolsFolderPath, foldername);
-                    string tempNewDir = Path.Combine(tempOuterToolsFolderPath, foldername);
-                    if (!Directory.Exists(tempNewDir))
-                        DirectoryEx.DirectoryCopy(toolDirPath, tempNewDir, true);
-                    tool.InstallPath = newDir; // Update the tool to point to its new directory.
-                    tool.Path = tool.Path.Replace(toolDirPath, newDir);
-                }
-                if (broker.IsCanceled)
-                {
-                    // Don't leave around a corrupted directory
-                    DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
-                    return;
-                }
-
-                broker.ProgressValue += increment;
-            }
-            Settings.Default.SearchToolList = SearchToolList.CopyTools(toolList);
         }
 
         /// <summary>
