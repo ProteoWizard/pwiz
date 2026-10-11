@@ -57,6 +57,26 @@ namespace pwiz.Skyline.SettingsUI
         public int MatchedPeptideCount { get; private set; }
         public int SkippedPeptideCount { get; private set; }
 
+        /// <summary>
+        /// Library entries that fail this filter are not matched or added. Null matches every entry.
+        /// </summary>
+        public GlobalQValueFilter QValueFilter { get; set; }
+
+        /// <summary>
+        /// The number of library entries <see cref="QValueFilter"/> rejected in the last <see cref="MatchAllPeptides"/>.
+        /// </summary>
+        public int QValueFilteredCount { get; private set; }
+
+        /// <summary>
+        /// Associate peptides with the library's own protein groups instead of a background proteome.
+        /// </summary>
+        public bool UseLibraryProteinGroups { get; set; }
+
+        private bool AssociatesProteins
+        {
+            get { return _backgroundProteome != null || UseLibraryProteinGroups; }
+        }
+
         public SrmSettings Settings { get { return _document.Settings; } }
 
         public SrmDocument DocAllPeptides { get; set; }
@@ -155,6 +175,7 @@ namespace pwiz.Skyline.SettingsUI
 
             PeptideMatches = null;
             MatchedPeptideCount = 0;
+            QValueFilteredCount = 0;
 
             int peptides = 0;
             int totalPeptides = _libraryPepInfos.Count;
@@ -167,6 +188,12 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (broker.IsCanceled)
                         return;
+
+                    if (QValueFilter != null && !QValueFilter.Accepts(_selectedLibrary.GetGlobalScores(pepInfo.Key)))
+                    {
+                        QValueFilteredCount++;
+                        continue;
+                    }
 
                     var charge = pepInfo.Key.Adduct;
                     // Find the matching peptide.
@@ -182,8 +209,12 @@ namespace pwiz.Skyline.SettingsUI
                             IList<ProteinInfo> matchedProteins = null;
 
                             var target = nodePepMatched.Peptide.Target;
-                            // This is only set if the user has checked the associate peptide box. 
-                            if (target.IsProteomic && _backgroundProteome != null)
+                            // This is only set if the user has checked the associate peptide box.
+                            if (target.IsProteomic && UseLibraryProteinGroups)
+                            {
+                                matchedProteins = GetLibraryProteinGroups(pepInfo);
+                            }
+                            else if (target.IsProteomic && _backgroundProteome != null)
                             {
                                 var sequence = target.Sequence;
                                 // We want to query the background proteome as little as possible,
@@ -250,6 +281,12 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private IList<ProteinInfo> GetLibraryProteinGroups(ViewLibraryPepInfo pepInfo)
+        {
+            return _selectedLibrary.GetGlobalScores(pepInfo.Key).ProteinGroups
+                .Select(group => new ProteinInfo(group.Name)).ToList();
+        }
+
         public bool MatchesFilter(PeptideDocNode nodePep, Adduct charge)
         {
             if (nodePep.IsProteomic)
@@ -282,8 +319,12 @@ namespace pwiz.Skyline.SettingsUI
             var target = nodePep.Peptide.Target;
             if (pepInfo.Target.IsProteomic)
             {
-                // This is only set if the user has checked the associate peptide box. 
-                if (_backgroundProteome != null)
+                if (UseLibraryProteinGroups)
+                {
+                    matchedProteins = GetLibraryProteinGroups(pepInfo);
+                }
+                // This is only set if the user has checked the associate peptide box.
+                else if (_backgroundProteome != null)
                 {
                     using (var proteomeDb = _backgroundProteome.OpenProteomeDb())
                     {
@@ -418,7 +459,12 @@ namespace pwiz.Skyline.SettingsUI
 
             // If there is an associated background proteome, add peptides that can be
             // matched to the proteins from the background proteom.
-            if (_backgroundProteome != null)
+            if (UseLibraryProteinGroups)
+            {
+                newDocument = AddLibraryProteinGroupPeptides(newDocument, dictCopy, broker,
+                    toPath, out selectedPath);
+            }
+            else if (_backgroundProteome != null)
             {
                 newDocument = AddProteomePeptides(newDocument, dictCopy, broker,
                     toPath, out selectedPath);
@@ -426,7 +472,7 @@ namespace pwiz.Skyline.SettingsUI
             toPath = selectedPath;
 
             // Add all remaining peptides as a peptide list.
-            if (_backgroundProteome == null ||  Properties.Settings.Default.LibraryPeptidesAddUnmatched)
+            if (!AssociatesProteins || Properties.Settings.Default.LibraryPeptidesAddUnmatched)
             {
                 var listPeptidesToAdd = dictCopy.Values.ToList();
                 listPeptidesToAdd.RemoveAll(match => match.Proteins != null && match.Proteins.Count > 0);
@@ -736,6 +782,85 @@ namespace pwiz.Skyline.SettingsUI
             return document;
         }
 
+        /// <summary>
+        /// Adds the peptides to a peptide list per library protein group, named by the group's
+        /// accessions. The groups carry no protein sequence. A peptide in several groups follows
+        /// <see cref="FilterMultipleProteinMatches"/>, as with a background proteome.
+        /// </summary>
+        private SrmDocument AddLibraryProteinGroupPeptides(SrmDocument document,
+                                                           Dictionary<PeptideSequenceModKey, PeptideMatch> dictCopy,
+                                                           ILongWaitBroker broker,
+                                                           IdentityPath toPath,
+                                                           out IdentityPath selectedPath)
+        {
+            selectedPath = toPath;
+            var peptidesByGroupName = new Dictionary<string, List<PeptideDocNode>>();
+            int startPercent = broker?.ProgressValue ?? 0;
+            int processedCount = 0;
+            foreach (var pepMatch in dictCopy.Values)
+            {
+                if (broker != null)
+                {
+                    if (broker.IsCanceled)
+                        return document;
+                    processedCount++;
+                    broker.ProgressValue = startPercent + processedCount * (100 - startPercent) / dictCopy.Count;
+                }
+                if (pepMatch.Proteins == null || pepMatch.Proteins.Count == 0 ||
+                    (FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.NoDuplicates && pepMatch.Proteins.Count > 1))
+                {
+                    continue;
+                }
+                var proteins = FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.FirstOccurence
+                    ? pepMatch.Proteins.Take(1)
+                    : pepMatch.Proteins;
+                bool copyIds = false;
+                foreach (var protein in proteins)
+                {
+                    var nodePep = (PeptideDocNode) pepMatch.NodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                    // The same peptide in a second group needs its own identities
+                    if (copyIds)
+                        nodePep = CopyIds(nodePep);
+                    copyIds = true;
+                    var name = protein.ProteinMetadata.Name;
+                    if (!peptidesByGroupName.TryGetValue(name, out var peptides))
+                    {
+                        peptides = new List<PeptideDocNode>();
+                        peptidesByGroupName.Add(name, peptides);
+                    }
+                    peptides.Add(nodePep);
+                }
+            }
+
+            var newGroups = new List<PeptideGroupDocNode>();
+            foreach (var name in peptidesByGroupName.Keys.OrderBy(name => name))
+            {
+                var peptides = peptidesByGroupName[name];
+                var existingGroup = document.MoleculeGroups.FirstOrDefault(nodeGroup =>
+                    nodeGroup.Name == name && nodeGroup.PeptideGroup.Sequence == null);
+                if (existingGroup != null)
+                {
+                    var children = existingGroup.Children.Concat(peptides).ToList();
+                    document = (SrmDocument) document.ReplaceChild(existingGroup.ChangeChildren(children).ChangeAutoManageChildren(false));
+                }
+                else
+                {
+                    newGroups.Add((PeptideGroupDocNode) new PeptideGroupDocNode(new PeptideGroup(), name, string.Empty,
+                        peptides.ToArray()).ChangeAutoManageChildren(false));
+                }
+            }
+            if (newGroups.Count > 0)
+                document = document.AddPeptideGroups(newGroups, false, toPath, out selectedPath, out _);
+            return document;
+        }
+
+        private static PeptideDocNode CopyIds(PeptideDocNode nodePep)
+        {
+            var newChildren = nodePep.TransitionGroups.Select(nodeGroup =>
+                (DocNode) ((DocNodeParent) nodeGroup.CopyId()).ChangeChildren(nodeGroup.Children.Select(nodeTran => nodeTran.CopyId()).ToList()));
+            return (PeptideDocNode) ((DocNodeParent) nodePep.CopyId()).ChangeChildren(newChildren.ToList());
+        }
+
         private static SrmDocument AddPeptidesToLibraryGroup(SrmDocument document,
                                                              ICollection<PeptideMatch> listMatches,
                                                              ILongWaitBroker broker,
@@ -870,6 +995,15 @@ namespace pwiz.Skyline.SettingsUI
                 ProteinMetadata = protein.ProteinMetadata;
                 Sequence = protein.Sequence;
                 Alternatives = ImmutableList.ValueOf(protein.AlternativeNames);
+            }
+
+            /// <summary>
+            /// A library protein group, known only by name.
+            /// </summary>
+            public ProteinInfo(string name)
+            {
+                ProteinMetadata = new ProteinMetadata(name, null);
+                Alternatives = ImmutableList<ProteinMetadata>.EMPTY;
             }
             public string Sequence { get; private set; }
             public ProteinMetadata ProteinMetadata { get; private set; }

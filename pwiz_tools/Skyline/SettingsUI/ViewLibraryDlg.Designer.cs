@@ -80,6 +80,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRedundantSpectra = new System.Windows.Forms.ComboBox();
             this.labelRT = new System.Windows.Forms.Label();
             this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
+            this.comboQValueLevel = new System.Windows.Forms.ComboBox();
+            this.textQValueCutoff = new System.Windows.Forms.TextBox();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -456,6 +458,8 @@ namespace pwiz.Skyline.SettingsUI
             this.panel2.Controls.Add(this.btnAdd);
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
+            this.panel2.Controls.Add(this.comboQValueLevel);
+            this.panel2.Controls.Add(this.textQValueCutoff);
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
             // 
@@ -515,7 +519,21 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
+            //
+            // comboQValueLevel
+            //
+            resources.ApplyResources(this.comboQValueLevel, "comboQValueLevel");
+            this.comboQValueLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboQValueLevel.FormattingEnabled = true;
+            this.comboQValueLevel.Name = "comboQValueLevel";
+            this.toolTip1.SetToolTip(this.comboQValueLevel, resources.GetString("comboQValueLevel.ToolTip"));
+            //
+            // textQValueCutoff
+            //
+            resources.ApplyResources(this.textQValueCutoff, "textQValueCutoff");
+            this.textQValueCutoff.Name = "textQValueCutoff";
+            this.toolTip1.SetToolTip(this.textQValueCutoff, resources.GetString("textQValueCutoff.ToolTip"));
+            //
             // ViewLibraryPanel
             // 
             this.ViewLibraryPanel.Controls.Add(this.splitMain);
@@ -787,6 +805,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnAddAll;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.CheckBox cbAssociateProteins;
+        private System.Windows.Forms.ComboBox comboQValueLevel;
+        private System.Windows.Forms.TextBox textQValueCutoff;
         private System.Windows.Forms.ToolStripMenuItem chargesContextMenuItem;
         private System.Windows.Forms.Label labelRT;
         private System.Windows.Forms.Button btnLibDetails;

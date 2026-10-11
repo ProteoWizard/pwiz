@@ -736,4 +736,106 @@ Can be a decimal number like 0.5 or 2.5.</value>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="panelQValueFilter.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="panelQValueFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>300, 354</value>
+  </data>
+  <data name="panelQValueFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 62</value>
+  </data>
+  <data name="panelQValueFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="panelQValueFilter.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelQValueFilter.Name" xml:space="preserve">
+    <value>panelQValueFilter</value>
+  </data>
+  <data name="&gt;&gt;panelQValueFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelQValueFilter.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelQValueFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelQValueCutoff.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="labelQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>78, 13</value>
+  </data>
+  <data name="labelQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelQValueCutoff.Text" xml:space="preserve">
+    <value>&amp;Q-value cutoff:</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.Name" xml:space="preserve">
+    <value>labelQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.Parent" xml:space="preserve">
+    <value>panelQValueFilter</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboQValueLevel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 16</value>
+  </data>
+  <data name="comboQValueLevel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>88, 21</value>
+  </data>
+  <data name="comboQValueLevel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="comboQValueLevel.ToolTip" xml:space="preserve">
+    <value>The level of the library's global q-value to filter the imported targets on</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Name" xml:space="preserve">
+    <value>comboQValueLevel</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.Parent" xml:space="preserve">
+    <value>panelQValueFilter</value>
+  </data>
+  <data name="&gt;&gt;comboQValueLevel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 41</value>
+  </data>
+  <data name="textQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 20</value>
+  </data>
+  <data name="textQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="textQValueCutoff.ToolTip" xml:space="preserve">
+    <value>Only targets whose library entry has a global q-value at or below this cutoff are imported. Leave empty to import every target.</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Name" xml:space="preserve">
+    <value>textQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Parent" xml:space="preserve">
+    <value>panelQValueFilter</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
 </root>

@@ -52,6 +52,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             InitializeComponent();
 
+            QValueFilterControls = new GlobalQValueFilterControls(comboQValueLevel, textQValueCutoff);
             ImportFastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, helpTipFasta);
 
             tbxFastaHeightDifference = Height - (panelError.Bottom - tbxFasta.Top);
@@ -111,6 +112,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
+
+        /// <summary>
+        /// Filters the imported targets on a global q-value of the document's libraries.
+        /// </summary>
+        public GlobalQValueFilterControls QValueFilterControls { get; }
+
+        /// <summary>
+        /// Offers the q-value filter when the document's libraries have global q-values.
+        /// </summary>
+        public void UpdateQValueFilterControls()
+        {
+            var levels = GlobalQValueFilterControls.GetLevels(DocumentContainer.Document.Settings.PeptideSettings.Libraries.Libraries);
+            QValueFilterControls.Levels = levels;
+            panelQValueFilter.Visible = levels.Count > 0;
+        }
 
         public bool IsDDASearch
         {
@@ -440,6 +456,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             }
 
+            if (!QValueFilterControls.TryGetFilter(WizardForm, out var qValueFilter))
+                return false;
+
             bool hasExistingProteinAssociations = DocumentContainer.Document.PeptideGroups.Any(p => p.IsProtein);
 
             if (!ContainsFastaContent) // The user didn't specify any FASTA content
@@ -539,7 +558,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_);
                         return false;
                     }
-                    
+
+                    // Before protein association, so its peptide counts and decoys see only what passed
+                    if (qValueFilter != null)
+                        docNew = qValueFilter.FilterDocument(docNew, newPeptideGroups);
+
                     // Filter proteins based on number of peptides and add decoys
                     using (var dlg = new AssociateProteinsDlg(docNew, fastaFilepath, irtStandard, DecoyGenerationMethod,
                                NumDecoys ?? 0, !_fastaFile, hasExistingProteinAssociations))
