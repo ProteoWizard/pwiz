@@ -601,6 +601,36 @@ namespace pwiz.Osprey
                         @"FDR now always processes one run at a time where the analysis allows it.");
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // OSPREY_STAGE6_STREAM_SURVIVORS was REMOVED (2026-10-10) on the same terms: the
+                // streamed Stage 6 handoff is the only arm, and a stale script still setting it
+                // would file the streamed arm's numbers under the resident one.
+                if (OspreyEnvironment.Stage6StreamSurvivorsRetiredSet)
+                {
+                    LogError(
+                        @"OSPREY_STAGE6_STREAM_SURVIVORS was removed and has no effect. Unset it. " +
+                        @"Re-scoring now always reloads one run's kept candidates at a time.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // OSPREY_FDR_PROJECTION was REMOVED (2026-10-10) on the same terms: the projection
+                // first pass is the only arm, and a stale script still setting it would file the
+                // projection arm's numbers under the legacy resident one.
+                if (OspreyEnvironment.FdrProjectionRetiredSet)
+                {
+                    LogError(
+                        @"OSPREY_FDR_PROJECTION was removed and has no effect. Unset it. " +
+                        @"First-pass FDR now always streams its scores from the per-run files.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were REMOVED with it: the dump
+                // needed the resident first-pass pool, and a bisection harness still setting them
+                // would get a run with no dump, or no early exit, and no error.
+                if (OspreyEnvironment.PercolatorDumpRetiredSet)
+                {
+                    LogError(
+                        @"OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were removed and have no " +
+                        @"effect. Unset them. The first-pass Percolator dump is no longer written.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
                 // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
                 // its reconciled-input load, making it the first previously-VALID token to
@@ -613,21 +643,24 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
                 {
                     // Name the UNRECOGNIZED tokens, not the whole value: the flag is a comma
-                    // separated list and NamesResidentPath tests each token independently, so
-                    // 'projection-off,hpc-merge' still grants projection-off. Condemning the
+                    // separated list and NamesResidentPath tests each token independently, so a
+                    // recognized token beside a retired one is still granted. Condemning the
                     // whole value would push the operator to rewrite or unset a variable whose
                     // valid half the run still needs, and the run then aborts on a guard the
                     // warning said was not engaged.
                     // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
                     // reconciled-input load and the pass-1 FDRBench emitter both stream and need
                     // no allowance. 'non-percolator-fdr' was retired with the simple FDR method
-                    // it named.
+                    // it named, 'compacted-entries-buffer' with OSPREY_STAGE6_STREAM_SURVIVORS,
+                    // and 'projection-off' with OSPREY_FDR_PROJECTION, which left the list empty.
                     LogWarning(string.Format(
                         @"OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
                         @"have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
                         @"is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
-                        string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
+                        ResidentPaths.KNOWN_UNFIXED.Count == 0
+                            ? @"none"
+                            : string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
                 }
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
@@ -766,6 +799,19 @@ namespace pwiz.Osprey
                 return EXIT_CODE_FAILURE_TO_START;
             }
 
+            // A product is outstanding, so the report needs a fold through the pipeline - which
+            // reads the analysis's intermediate files, and those are current only for the build
+            // that wrote them. Under another build every stage would recompute for hours under a
+            // command that writes nothing but the report, so refuse and name the override.
+            string analysisVersion = ModelDiagnosticsReport.FirstPassVersion(config);
+            if (analysisVersion != null &&
+                !string.Equals(analysisVersion, OspreyVersion.Current, StringComparison.Ordinal))
+            {
+                LogError(string.Format(OspreyResources.Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_this_build_is__2___so_building_the_missing_,
+                    ModelDiagnosticsTaskText, analysisVersion, OspreyVersion.Current, OspreyVersion.ENV_OVERRIDE));
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
             // rather than the re-analysis this task used to refuse to start.
@@ -897,7 +943,7 @@ namespace pwiz.Osprey
 
             // No --task: the full pipeline. A cold run scores from Stage 1; a resume over a
             // directory that already holds each run's artifacts skips to whichever stage is
-            // outstanding, which the per-task validity sidecars decide - not the input kind.
+            // outstanding, which the artifacts' embedded validity stamps decide - not the input kind.
             if (!hasInputFiles)
                 return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, USAGE_INPUT);
             if (config.LibrarySource == null)
@@ -957,15 +1003,9 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
             if (export.ClaimantQ.HasValue && !(export.ClaimantQ.Value > 0 && export.ClaimantQ.Value <= 1))
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
-            // The transfer arm computes every run's second-pass q in SecondPassFDR, after
-            // PerFileRescoring has written the export, so the export would have no second-pass
-            // values for any run to select on.
-            if (export.Enabled && OspreyEnvironment.Pass2TransferQ)
-            {
-                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
-                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                    SecondPassFdrTask.TASK_NAME);
-            }
+            // No pass-2 mode is refused here any more. OSPREY_PASS2_QVALUE=transfer was, while it
+            // computed every run's second-pass q in SecondPassFDR after the export was written;
+            // its per-run half runs in PerFileRescoring now (#4665), before the export.
             return null;
         }
 
