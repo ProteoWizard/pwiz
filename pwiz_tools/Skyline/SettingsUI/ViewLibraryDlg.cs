@@ -630,7 +630,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             var levels = _selectedLibrary?.GlobalQValueLevels ?? ImmutableList<GlobalQValueLevel>.EMPTY;
             QValueFilterControls.Levels = levels;
-            flowGlobalCutoff.Visible = levels.Count > 0;
+            // These start visible in the designer so their handles exist before Load. A control
+            // whose handle is created when it is first shown moves within its parent's Controls
+            // collection, and the FlowLayoutPanel lays out in that order.
+            var visible = levels.Count > 0;
+            labelGlobalCutoff.Visible = comboQValueLevel.Visible = textQValueCutoff.Visible = visible;
             WidenToFitAddAllOptions();
         }
 
