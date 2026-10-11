@@ -91,13 +91,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private readonly IReadOnlyDictionary<uint, FdrExperimentRecord> _experimentRecords;
 
-        /// <summary>
-        /// Each file's survivor count from its first Stage 4 parquet load, one int per file.
-        /// Locked rather than concurrent for the reason <see cref="_sequencePool"/> is frozen:
-        /// <see cref="Load(string,out string)"/> runs inside a <c>Parallel.For</c> over files.
-        /// </summary>
-        private readonly Dictionary<string, int> _survivorCounts = new Dictionary<string, int>();
-        private long _survivorCountTotal;
+        private readonly SurvivorCountCheck _countCheck;
 
         /// <param name="perFileParquetPaths">file name -> its original
         /// <c>.scores.parquet</c>, the same map Stage 5 resolves sidecar paths from.</param>
@@ -116,6 +110,7 @@ namespace pwiz.Osprey.Tasks
             _config = config;
             _firstPassBaseIds = firstPassBaseIds;
             _sequencePool = sequencePool;
+            _countCheck = new SurvivorCountCheck(perFileParquetPaths?.Count ?? 0);
             _experimentRecords = FdrExperimentSidecar.ReadMap(
                 FdrExperimentSidecar.PathFor(config?.OutputBlib,
                     ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
@@ -132,14 +127,13 @@ namespace pwiz.Osprey.Tasks
         /// The survivor count the compaction gate reported, derived arithmetically from
         /// rows-per-base_id summed over the passing set, or null when the caller has no such
         /// count to check against. Once every file has been loaded from its Stage 4 parquet,
-        /// the loads must sum to it.
-        ///
-        /// <para>Nothing materializes every file's survivors at once any more, so this is
-        /// where "the reported compaction boundary is what the rebuild produces" is checked
-        /// (#4544). A mismatch means the gate's count - or the parquet and sidecar it was
-        /// derived from - disagrees with what Stage 6 and Stage 7 actually read.</para>
+        /// the loads must sum to it - see <see cref="SurvivorCountCheck"/>.
         /// </summary>
-        internal long? ExpectedSurvivorCount { get; set; }
+        internal long? ExpectedSurvivorCount
+        {
+            get { return _countCheck.Expected; }
+            set { _countCheck.Expected = value; }
+        }
 
         /// <summary>
         /// Load one file's survivors. Returns null with <paramref name="error"/> set
@@ -244,43 +238,8 @@ namespace pwiz.Osprey.Tasks
             // Only a Stage 4 load is comparable: a reconciled parquet adds the gap-fill rows.
             if (parquetPathOverride != null)
                 return stubs;
-            error = CheckSurvivorCount(fileName, stubs.Count);
+            error = _countCheck.Check(fileName, stubs.Count);
             return error == null ? stubs : null;
-        }
-
-        /// <summary>
-        /// Holds every Stage 4 load to two invariants: a file reloaded gives the count it gave
-        /// the first time, and once every file has loaded, the counts sum to
-        /// <see cref="ExpectedSurvivorCount"/>. Returns the violation, or null. Reported through
-        /// <see cref="Load(string,out string)"/>'s error rather than thrown, because its callers
-        /// run it inside parallel file loops, where a thrown message is lost.
-        /// </summary>
-        private string CheckSurvivorCount(string fileName, int count)
-        {
-            lock (_survivorCounts)
-            {
-                if (_survivorCounts.TryGetValue(fileName, out int firstCount))
-                {
-                    if (count == firstCount)
-                        return null;
-                    return string.Format(
-                        @"Reloading the kept candidates of {0} produced {1} survivors where the " +
-                        @"first load produced {2}.", fileName, count, firstCount);
-                }
-                _survivorCounts.Add(fileName, count);
-                _survivorCountTotal += count;
-                if (ExpectedSurvivorCount.HasValue &&
-                    _survivorCounts.Count == _perFileParquetPaths.Count &&
-                    _survivorCountTotal != ExpectedSurvivorCount.Value)
-                {
-                    return string.Format(
-                        @"First-pass compaction counted {0} survivors from the passing base_id set " +
-                        @"but loading every file produced {1}. The reported compaction boundary " +
-                        @"does not describe what re-scoring reads.",
-                        ExpectedSurvivorCount.Value, _survivorCountTotal);
-                }
-                return null;
-            }
         }
     }
 }

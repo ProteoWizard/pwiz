@@ -336,11 +336,18 @@ namespace pwiz.Osprey.Test
                 @"the rehydrated second pass wrote a different pass-2 diagnostics product");
 
             // Mode 7: regenerating the report rewrites the report and nothing else.
+            // Backdated first, or the rewrite can be invisible: NTFS stamps a write from the coarse
+            // system tick (up to ~15.6 ms), the regeneration takes a few milliseconds, and the page
+            // is byte-identical by design - so the previous write and this one could share a size
+            // AND a timestamp, and the fingerprint would report that nothing changed.
+            File.SetLastWriteTimeUtc(report, File.GetLastWriteTimeUtc(report).AddHours(-1));
             var before = FingerprintDir(workDir);
             log = RunDiagnostics(ModelDiagnosticsTask.TASK_NAME);
             Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)), log);
-            CollectionAssert.AreEqual(new[] { Path.GetFileName(report) }, ChangedFiles(before, workDir),
-                @"regeneration changed something other than the report" + Environment.NewLine + log);
+            var regenerated = ChangedFiles(before, workDir);
+            CollectionAssert.AreEqual(new[] { Path.GetFileName(report) }, regenerated,
+                @"regeneration changed something other than the report: " + string.Join(@", ", regenerated) +
+                Environment.NewLine + log);
             CollectionAssert.AreEqual(File.ReadAllBytes(ReferenceOf(report)), File.ReadAllBytes(report),
                 @"the regenerated report differs from the one the analysis wrote");
 
