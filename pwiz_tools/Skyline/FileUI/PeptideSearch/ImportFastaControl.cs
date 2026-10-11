@@ -126,7 +126,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             var levels = GlobalQValueFilterControls.GetLevels(DocumentContainer.Document.Settings.PeptideSettings.Libraries.Libraries);
             QValueFilterControls.Levels = levels;
-            panelQValueFilter.Visible = levels.Count > 0;
+            groupBoxQValueFilter.Visible = levels.Count > 0;
         }
 
         public bool IsDDASearch
