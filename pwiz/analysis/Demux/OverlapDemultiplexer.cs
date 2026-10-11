@@ -29,10 +29,13 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
         /// <summary>Interpolate each multiplexed-spectrum row to the demuxed spectrum's RT via
         /// cubic Hermite splines. Cpp default true.</summary>
         public bool InterpolateRetentionTime { get; init; } = true;
+
+        /// <summary>How rows are interpolated when <see cref="InterpolateRetentionTime"/> is true.
+        /// Default <see cref="DemuxInterpolation.NaturalSpline"/>, as cpp.</summary>
+        public DemuxInterpolation Interpolation { get; init; } = DemuxInterpolation.NaturalSpline;
     }
 
     private const int OverlapRegionsInApprox = 7;
-    private const int CyclesInBlock = 3;
 
     private readonly Params _params;
     private ISpectrumList? _spectrumList;
@@ -129,19 +132,20 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
                 ?? throw new InvalidOperationException(
                     "BuildDeconvBlock() MS2 spectrum missing scan_start_time required for interpolation.");
 
-            // For each chosen mux spectrum, find CyclesInBlock cycles' worth of identically-isolated
+            // For each chosen mux spectrum, find cyclesInBlock cycles' worth of identically-isolated
             // spectra (stride = SpectraPerCycle), record their (RT, binned-intensities) pairs, and
             // interpolate to the demuxed spectrum's RT.
             int specPerCycle = _maskCodec.SpectraPerCycle;
+            int cyclesInBlock = RetentionTimeInterpolator.Samples(_params.Interpolation);
             var binnedIntensitiesCache = new List<Matrix<double>>();
             var scanTimesCache = new List<double[]>();
             for (int row = 0; row < scansInDeconv.Count; row++)
             {
-                var binMatrix = DenseMatrix.Create(CyclesInBlock, numTransitions, 0);
-                var times = new double[CyclesInBlock];
+                var binMatrix = DenseMatrix.Create(cyclesInBlock, numTransitions, 0);
+                var times = new double[cyclesInBlock];
                 var interpolationIndices = new List<int>();
                 if (!DemuxHelpers.FindNearbySpectra(interpolationIndices, _spectrumList,
-                    scansInDeconv[row], CyclesInBlock, specPerCycle))
+                    scansInDeconv[row], cyclesInBlock, specPerCycle))
                     throw new InvalidOperationException(
                         "BuildDeconvBlock() Not enough spectra to interpolate for the overlap.");
 
@@ -159,7 +163,7 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
 
             for (int row = 0; row < OverlapRegionsInApprox; row++)
                 InterpolateMuxRegion(signal, row, deconvStartTime,
-                    binnedIntensitiesCache[row], scanTimesCache[row]);
+                    binnedIntensitiesCache[row], scanTimesCache[row], _params.Interpolation);
         }
         else
         {
@@ -205,14 +209,34 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
     }
 
     private static void InterpolateMuxRegion(Matrix<double> signal, int rowToFill,
-        double timeToInterpolate, Matrix<double> intensities, double[] scanTimes)
+        double timeToInterpolate, Matrix<double> intensities, double[] scanTimes,
+        DemuxInterpolation interpolation)
     {
         int numTransitions = intensities.ColumnCount;
+        if (interpolation == DemuxInterpolation.NaturalSpline)
+        {
+            for (int transition = 0; transition < numTransitions; transition++)
+            {
+                var values = new double[scanTimes.Length];
+                for (int i = 0; i < values.Length; i++) values[i] = intensities[i, transition];
+                double interp = InterpolateOne(timeToInterpolate, scanTimes, values);
+                signal[rowToFill, transition] = System.Math.Max(0.0, interp);
+            }
+            return;
+        }
+
+        // scanTimes is in FindNearbySpectra's order (center, earlier, later); sort it once for
+        // every transition. Acquisition times are distinct, so the unstable sort is safe.
+        int n = scanTimes.Length;
+        var order = new int[n];
+        for (int i = 0; i < n; i++) order[i] = i;
+        var sortedTimes = (double[])scanTimes.Clone();
+        Array.Sort(sortedTimes, order);
+        var sortedValues = new double[n];
         for (int transition = 0; transition < numTransitions; transition++)
         {
-            var values = new double[scanTimes.Length];
-            for (int i = 0; i < values.Length; i++) values[i] = intensities[i, transition];
-            double interp = InterpolateOne(timeToInterpolate, scanTimes, values);
+            for (int i = 0; i < n; i++) sortedValues[i] = intensities[order[i], transition];
+            double interp = RetentionTimeInterpolator.Interpolate(interpolation, sortedTimes, sortedValues, timeToInterpolate);
             signal[rowToFill, transition] = System.Math.Max(0.0, interp);
         }
     }

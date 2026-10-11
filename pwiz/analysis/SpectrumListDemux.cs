@@ -58,6 +58,10 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         /// <summary>Interpolate signal rows to the demuxed spectrum's RT (overlap mode only).</summary>
         public bool InterpolateRetentionTime { get; init; } = true;
 
+        /// <summary>How rows are interpolated to the demuxed spectrum's RT (overlap mode only).
+        /// Default <see cref="DemuxInterpolation.NaturalSpline"/>, as cpp.</summary>
+        public DemuxInterpolation Interpolation { get; init; } = DemuxInterpolation.NaturalSpline;
+
         /// <summary>Choice of demultiplexer algorithm.</summary>
         public Optimization Optimization { get; init; } = Optimization.None;
 
@@ -291,7 +295,10 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             // spectra, PrecursorsPerSpectrum cycles or more. More with DemuxBlockExtra. A smaller
             // cache decodes each spectrum several times. One extra per cycle for the MS1.
             int spectraPerCycle = _pmc.SpectraPerCycle + 1;
-            int cycles = System.Math.Max(CACHE_CYCLES, _pmc.DemuxBlockSize / _pmc.SpectraPerCycle + 1) +
+            // Interpolation reads Samples(...) acquisitions around a mux spectrum up to a cycle away.
+            int interpolationCycles = RetentionTimeInterpolator.Samples(p.Interpolation) + 1;
+            int cycles = System.Math.Max(System.Math.Max(CACHE_CYCLES, interpolationCycles),
+                             _pmc.DemuxBlockSize / _pmc.SpectraPerCycle + 1) +
                 (int)System.Math.Ceiling(System.Math.Max(0, p.DemuxBlockExtra));
             _prefetchMargin = (cycles + 1) / 2 * spectraPerCycle;
             _solveAhead = p.SolveThreads > 1 ? p.SolveThreads * SOLVE_AHEAD_PER_THREAD : 1;
@@ -444,6 +451,7 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
                 Optimization.OverlapOnly => new OverlapDemultiplexer(new OverlapDemultiplexer.Params
                 {
                     InterpolateRetentionTime = _params.InterpolateRetentionTime,
+                    Interpolation = _params.Interpolation,
                     ApplyWeighting = _params.ApplyWeighting,
                     MassError = _params.MassError,
                 }),
