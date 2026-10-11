@@ -257,8 +257,8 @@ namespace pwiz.Osprey.Tasks
         /// not a stub mismatch to warn about and skip.</para>
         ///
         /// <para>The features are borrowed onto the entries for the transfer and each entry's own
-        /// array is put back afterwards: lean stubs get their null back, while a resident pool
-        /// that loaded features on purpose (<c>OSPREY_FDR_PROJECTION=0</c>) keeps its own.</para>
+        /// array is put back afterwards: lean stubs get their null back, and an entry that
+        /// already carried features keeps its own.</para>
         /// </summary>
         private Pass2FileResult TransferAndStamp(
             string fileName, string pass1SidecarPath, string effectiveParquetPath,

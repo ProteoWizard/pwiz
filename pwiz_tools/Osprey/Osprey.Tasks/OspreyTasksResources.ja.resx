@@ -337,14 +337,6 @@
     <value>{0:N0}個のタンパク質の検出数が2以上です（検出されたペプチド{1:N0}個）。これらの{2:N0}個のプリカーサー候補は第2パスFDRに進みます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates__1_file_" xml:space="preserve">
-    <value>第1パスの結果を、保持されたプリカーサー候補に絞り込み中（1個のファイル）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates___0__files_" xml:space="preserve">
-    <value>第1パスの結果を、保持されたプリカーサー候補に絞り込み中（{0:N0}個のファイル）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
     <value>「{0}」の第1パス中間ファイルが見つかりません。</value>
     <comment>Needs Review:New resource</comment>
@@ -487,14 +479,6 @@
   </data>
   <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
     <value>中間ファイルに保存された第1パスのQ値を使用します。第1パスPercolatorは再実行されません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>1個のファイルから保持されたプリカーサー候補を再読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから保持されたプリカーサー候補を再読み込み中</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
@@ -655,14 +639,6 @@
   </data>
   <data name="FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files" xml:space="preserve">
     <value>{0:N0}個のファイルの第1パスFDRBench入力を書き込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
-    <value>「{0}」の第1パス中間ファイルを書き込めません：入力パスから場所を導出できませんでした。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Failed_to_write_the_first_pass_intermediate_file_for__0____1_" xml:space="preserve">
-    <value>{0}の第1パス中間ファイルの書き込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_" xml:space="preserve">
@@ -1345,14 +1321,6 @@
     <value>{0:N0}個の第1パスプリカーサー候補ピークを読み込みました（ここではフィーチャーは不要）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features" xml:space="preserve">
-    <value>{0:N0}個の第1パスプリカーサー候補ピークをフィーチャーと共に読み込みました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candidate_peaks_but__2__feature_rows_" xml:space="preserve">
-    <value>{0}には{1:N0}個のプリカーサー候補ピークがありますが、フィーチャー行は{2:N0}行です。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_" xml:space="preserve">
     <value>{0}にはフィーチャー列がないため、有効なOspreyスコアファイルではありません。削除して再実行し、書き直してください。</value>
     <comment>Needs Review:New resource</comment>
@@ -1445,14 +1413,6 @@
     <value>{0}には{1:N0}行ありますが、このバージョンのOspreyで処理できる行数（{2:N0}）を超えています。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from_1_file" xml:space="preserve">
-    <value>1個のファイルから第1パスのプリカーサー候補ピークを読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから第1パスのプリカーサー候補ピークを読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_Run_Scoring__0__files_in_parallel_" xml:space="preserve">
     <value>{0:N0}個のファイルを並列でスコアリング中：</value>
     <comment>Needs Review:New resource</comment>
@@ -1473,16 +1433,8 @@
     <value>再開：{0}には{1:N0}個のプリカーサー候補ピークがありますが、フィーチャー行は{2:N0}行です。再度スコアリングします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_" xml:space="preserve">
-    <value>再開：{0}には{1:N0}個のプリカーサー候補ピークがありますが、フィーチャー行は{2:N0}行のため、保存されたスコアを読み込めません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_" xml:space="preserve">
     <value>再開：{0}の読み込みに失敗しました：{1}。再度スコアリングします。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_" xml:space="preserve">
-    <value>再開：{0}から保存されたスコアの読み込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">

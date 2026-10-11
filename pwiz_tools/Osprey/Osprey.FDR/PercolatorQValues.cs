@@ -110,8 +110,8 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Memory-bounded flat form of <see cref="PercolatorEngine.ClampExperimentQToBestRun"/>
-        /// (issue #4378): floor each experiment q up to the entry's best (min-over-runs)
+        /// Memory-bounded flat form of the experiment-q clamp
+        /// (<see cref="PercolatorEngine.AccumulateExperimentQFloors"/>, issue #4378): floor each experiment q up to the entry's best (min-over-runs)
         /// combined run q (<c>runBoth = max(runPrecursorQ, runPeptideQ)</c>), keyed by EntryId
         /// for the precursor floor and by <c>(peptide, isDecoy)</c> for the peptide floor (an
         /// empty peptide is skipped). Operates on the flat score-pass scalar arrays the FDR math
@@ -311,7 +311,7 @@ namespace pwiz.Osprey.FDR
         /// file names, all index-aligned, with the reconciled minority's scores already
         /// overwritten by the caller -- run the global target-decoy competition and compute
         /// per-run + experiment PRECURSOR q-values and PEP over that full population. Same
-        /// competition/PEP/q math as <see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>, but takes
+        /// competition/PEP/q math as <see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/>, but takes
         /// pre-computed scores (no features, no model application), so the 2nd pass can
         /// recompete over the persisted full-population scalars from
         /// <c>.1st-pass.fdr_scores.bin</c> -- with only the ~0.4% reconciled scores swapped in
@@ -871,7 +871,7 @@ namespace pwiz.Osprey.FDR
             // acceptance boundary built from the accepted set onto the DECOY's scale (the
             // --model-diagnostics decoy row read 15.7x its definition because of them).
             //
-            // This is the same rule ClampExperimentQToBestRun already states for the run-level
+            // This is the same rule the experiment-q clamp already states for the run-level
             // floors: "never the shared base_id / bare sequence - a target must not inherit its
             // paired decoy's good run". The loser of a competition is not in the ranking, so it
             // keeps the 1.0 default, which is what TDC means.

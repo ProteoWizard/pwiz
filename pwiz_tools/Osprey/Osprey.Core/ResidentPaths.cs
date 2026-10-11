@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace pwiz.Osprey.Core
@@ -61,8 +62,8 @@ namespace pwiz.Osprey.Core
         // so `both` never matched and silently wrote pass 2 only - memory-safe by a type
         // confusion. The emitter now streams off each file's .1st-pass.fdr_scores.bin joined
         // to the parquet scalars and the experiment-scope map, on the projection path and on
-        // the compaction-gate resume, and is byte-identical to the resident one (which stays
-        // as the projection-off oracle). Not to be re-added: the file needs nothing that is
+        // the compaction-gate resume, and was byte-identical to the resident one while the
+        // projection-off oracle existed. Not to be re-added: the file needs nothing that is
         // not already persisted per file or reduced to O(distinct entries).
 
         // mdiag-full-resume is GONE (#4505), and this note is the record of the ratchet
@@ -80,40 +81,23 @@ namespace pwiz.Osprey.Core
         // framework, so none takes this path and no token can name one. Not to be re-added - an
         // FDR method that cannot stream its first pass is a defect to fix, not a path to name.
 
-        /// <summary>
-        /// <c>OSPREY_FDR_PROJECTION=0</c>: the operator explicitly forced the legacy
-        /// <c>FdrEntry</c>-buffer implementation, so the whole run is resident by request. This
-        /// is the A/B byte-identity oracle that proves the streaming path did not change
-        /// results, and it is deliberately COARSE - naming it exempts the run wholesale, because
-        /// residency is the thing being asked for rather than a symptom to diagnose.
-        ///
-        /// <para>It still has to be named. The previous blanket bypass let this switch silently
-        /// exempt every OTHER resident trigger too, which is the same masking property that hid
-        /// the transfer regression. This entry leaves the list last: it can only go when the
-        /// legacy path itself does. #4507 (FDRBench pass 1) was the last PERCOLATOR-framework
-        /// consumer that needed that path, and #4543 retired the non-Percolator FDR methods,
-        /// its other consumer, with their <c>non-percolator-fdr</c> token. This oracle is now
-        /// the only trigger left for the legacy first-pass implementation.</para>
-        /// </summary>
-        public static readonly string PROJECTION_OFF = @"projection-off";
+        // projection-off was removed here on 2026-10-10, the ratchet shrinking an eighth time and
+        // leaving the list EMPTY. It named the operator-forced legacy FdrEntry-buffer first pass
+        // (OSPREY_FDR_PROJECTION=0), the whole run resident by request, kept as the A/B
+        // byte-identity oracle for the projection first pass. No final A/B could be banked: the
+        // arm aborted in Stage 7 on every dataset, the same failure as the Stage 6 oracle; the
+        // committed golden is the oracle. Not to be re-added - a first pass that cannot stream
+        // is a defect to fix, not a path to name.
 
-        /// <summary>
-        /// <c>OSPREY_STAGE6_STREAM_SURVIVORS=0</c>: the operator forced the resident
-        /// POST-compaction handoff, where the all-files survivor buffer built by Stage 5 stays
-        /// live across the whole Stage 6 rescore - 88.9 M entries / 28 GB at 163 files, held
-        /// for 5.5 hours, growing super-linearly in file count because the passing base_id set
-        /// grows too (issue #4526). Like <see cref="PROJECTION_OFF"/> this is the A/B
-        /// byte-identity oracle for the streamed default, and it is named for the same reason.
-        ///
-        /// <para>This entry ADDS to the list, which the class remarks say must only shrink.
-        /// The justification is that it names a path which was previously unnamed rather than
-        /// re-admitting one that had been fixed: the older guard's invariant stops at the
-        /// compaction line - it enforces "no unnamed PRE-compaction pool", and this buffer is
-        /// built after it, so no token could refuse it and none was required. Naming it is the
-        /// ratchet reaching further, not running backwards. It goes when the resident handoff
-        /// itself goes.</para>
-        /// </summary>
-        public static readonly string COMPACTED_ENTRIES_BUFFER = @"compacted-entries-buffer";
+        // compacted-entries-buffer was removed here on 2026-10-10, the ratchet shrinking again.
+        // It named the operator-forced RESIDENT post-compaction handoff
+        // (OSPREY_STAGE6_STREAM_SURVIVORS=0), where the all-files survivor buffer stayed live
+        // across the whole Stage 6 rescore - 88.9 M entries / 28 GB at 163 files (issue #4526) -
+        // kept as the A/B byte-identity oracle for the streamed default. No final A/B could be
+        // banked: by then the arm aborted in Stage 7 on every dataset, a breakage no gate saw
+        // because none ran it - which is the case against keeping an oracle arm at all. The
+        // committed golden is the oracle. Not to be re-added - a run that cannot stream the
+        // Stage 6 handoff is a defect to fix, not a path to name.
 
         // resume-survivor-handoff was removed here by #4536, which gave FirstPassFdrTask's
         // rehydrate its own per-file survivor loader: the arm streams like any computed run, so
@@ -127,20 +111,18 @@ namespace pwiz.Osprey.Core
         // regression against the committed golden at 1e-9, and the diagnostics HTML matched the
         // streamed arm byte for byte apart from generatedUtc. Not to be re-added - a second arm
         // kept alive only to keep it matching is a standing test cost, and every extra option
-        // raises the testing burden. The fold's resident consumer survives for now, reached
-        // only where NeedsResidentPool already forces it (projection-off). It was also reached,
-        // untokened and by operator choice, under OSPREY_PASS2_QVALUE=transfer, whose per-file
-        // half ran inside Stage 7 over the whole pool; #4665 moved that half to
-        // Pass2PerFileWorker, and transfer now streams like every other mode.
+        // raises the testing burden. The fold's resident consumer was reached afterwards only
+        // under projection-off, now gone too. It was also reached, untokened and by operator
+        // choice, under OSPREY_PASS2_QVALUE=transfer, whose per-file half ran inside Stage 7
+        // over the whole pool; #4665 moved that half to Pass2PerFileWorker, and transfer now
+        // streams like every other mode.
 
 
         /// <summary>
         /// Every legal <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> value. Pinned by
         /// <c>ResidentPoolGuardTest</c> - see the class remarks for why it may only shrink.
+        /// EMPTY since projection-off left it: no first-pass resident path remains to name.
         /// </summary>
-        public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
-        {
-            PROJECTION_OFF, COMPACTED_ENTRIES_BUFFER
-        };
+        public static readonly IReadOnlyList<string> KNOWN_UNFIXED = Array.Empty<string>();
     }
 }

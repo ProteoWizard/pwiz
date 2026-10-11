@@ -648,26 +648,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Trimming first-pass results to the kept precursor candidates ({0:N0} files).
-        /// </summary>
-        public static string FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates___0__files_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precurs" +
-                        "or_candidates___0__files_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Trimming first-pass results to the kept precursor candidates (1 file).
-        /// </summary>
-        public static string FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates__1_file_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precurs" +
-                        "or_candidates__1_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cannot locate the first-pass intermediate files for &apos;{0}&apos;..
         /// </summary>
         public static string FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___ {
@@ -1019,26 +999,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_" +
                         "calibrations_from_1_cross_run_reconciliation_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reloading the kept precursor candidates from {0:N0} files.
-        /// </summary>
-        public static string FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates" +
-                        "_from__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reloading the kept precursor candidates from 1 file.
-        /// </summary>
-        public static string FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from_1_file {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates" +
-                        "_from_1_file", resourceCulture);
             }
         }
         
@@ -1447,26 +1407,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDR" +
                         "Bench_input_for_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot write the first-pass intermediate file for &apos;{0}&apos;: no location could be derived from its input path..
-        /// </summary>
-        public static string FirstPassFdrTask_WriteFdrScoresSidecars_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_WriteFdrScoresSidecars_Cannot_write_the_first_pass_intermediate_" +
-                        "file_for___0____no_location_could_be_derived_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to write the first-pass intermediate file for {0}: {1}.
-        /// </summary>
-        public static string FirstPassFdrTask_WriteFdrScoresSidecars_Failed_to_write_the_first_pass_intermediate_file_for__0____1_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_WriteFdrScoresSidecars_Failed_to_write_the_first_pass_intermedia" +
-                        "te_file_for__0____1_", resourceCulture);
             }
         }
         
@@ -3082,16 +3022,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows..
-        /// </summary>
-        public static string PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candidate_peaks_but__2__feature_rows_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candi" +
-                        "date_peaks_but__2__feature_rows_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} is missing the feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again..
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_ {
@@ -3108,16 +3038,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate" +
                         "_peaks__features_not_needed_here_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loaded {0:N0} first-pass precursor candidate peaks with their features.
-        /// </summary>
-        public static string PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate" +
-                        "_peaks_with_their_features", resourceCulture);
             }
         }
         
@@ -3431,25 +3351,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading first-pass precursor candidate peaks from {0:N0} files.
-        /// </summary>
-        public static string PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from__0__files {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from__0__file" +
-                        "s", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading first-pass precursor candidate peaks from 1 file.
-        /// </summary>
-        public static string PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from_1_file {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Scoring {0:N0} files in parallel:.
         /// </summary>
         public static string PerFileScoringTask_Run_Scoring__0__files_in_parallel_ {
@@ -3498,32 +3399,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows, so its saved scores cannot be loaded..
-        /// </summary>
-        public static string PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_c" +
-                        "andidate_peaks_but__2__feature_rows__so_its_saved_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Resuming: failed to load {0}: {1}; scoring it again..
         /// </summary>
         public static string PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_ {
             get {
                 return ResourceManager.GetString("PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1_" +
                         "__scoring_it_again_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Resuming: failed to load the saved scores from {0}: {1}.
-        /// </summary>
-        public static string PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_save" +
-                        "d_scores_from__0____1_", resourceCulture);
             }
         }
         

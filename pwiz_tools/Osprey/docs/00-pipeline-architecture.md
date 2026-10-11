@@ -1322,11 +1322,16 @@ the text says so rather than describing the current shape as though it were the 
    `perFileEntries` and `reconciliationActions`) in
    `ai/todos/active/TODO-20260901_osprey_stage5_reload_materialization.md`.
 
-4. **Retiring the resident survivor handoff.** `OSPREY_STAGE6_STREAM_SURVIVORS=0` still
-   selects the resident path, where Stage 5's all-runs survivor buffer stays live across
-   the whole Stage 6 rescore instead of being refilled one run at a time from each run's
-   `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
-   goes when the resident one does.
+4. ~~**Retiring the resident survivor handoff.**~~ **DONE** 2026-10-10.
+   `OSPREY_STAGE6_STREAM_SURVIVORS=0` selected the resident path, where Stage 5's all-runs
+   survivor buffer stayed live across the whole Stage 6 rescore instead of being refilled
+   one run at a time from each run's `.scores.parquet` and first-pass sidecar. It was removed
+   with its `compacted-entries-buffer` token; setting the name now fails at startup. No final
+   A/B could be banked: by then the resident arm aborted in Stage 7 on every dataset (an
+   experiment-fold scope violation), a breakage nothing saw because no gate ran the arm. The
+   committed golden is the oracle. The count check
+   the resident reload used to make - compaction's reported survivor count against what the
+   rebuild produces - moved into `FirstPassSurvivorLoader`, which sums each run's first load.
 
    **Stage 7 had the same sibling switch and no longer does.** `OSPREY_STAGE7_STREAM=0`
    selected the resident second-pass join, where `RescoredEntries` held every run's survivors
@@ -1361,9 +1366,10 @@ the text says so rather than describing the current shape as though it were the 
    whose per-file half ran over the whole pool in Stage 7, so
    `ScoringTaskShared.Stage7StreamAdmittedBeforeRescore` declined it on
    `!OspreyEnvironment.Pass2ProteinCompact`; #4665 moved `TransferOneFile` into
-   `Pass2PerFileWorker` and the term went with it. The routes into the resident fold now are
-   `NeedsResidentPool`'s, which the first-pass guard names and tokens, and
-   `SecondPassFdrTask.WarnResidentStage7Join` discloses them.
+   `Pass2PerFileWorker` and the term went with it. The last route into the resident fold,
+   `OSPREY_FDR_PROJECTION=0`, was removed on 2026-10-10 with its `projection-off` token, which
+   left `ResidentPaths.KNOWN_UNFIXED` empty; `SecondPassFdrTask.WarnResidentStage7Join` still
+   discloses any run that reaches the resident fold.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
    the route line `[PATH] second-pass-join: per-run` rather than inferred -

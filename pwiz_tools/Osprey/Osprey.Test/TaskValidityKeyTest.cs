@@ -667,8 +667,7 @@ namespace pwiz.Osprey.Test
                 {
                     OspreyEnvironment.PickValidityKeySuffix(),
                     OspreyEnvironment.Pass2QValueValidityKeySuffix(),
-                    OspreyEnvironment.ExperimentAggValidityKeySuffix(),
-                    OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
+                    OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 })
                 {
                     Assert.AreNotEqual(libfrag, other,

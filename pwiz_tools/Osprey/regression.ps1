@@ -361,9 +361,9 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 # statement of health, and reading it as sufficient is the trap: a token is only
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
-# published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
-# asked for a token. #4486 was the standing example while it was open: the survivor
-# buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
+# published no survivor loader, so the Stage 6 handoff guard (since retired with
+# OSPREY_STAGE6_STREAM_SURVIVORS) no-oped and nothing asked for a token. #4486 was the
+# standing example while it was open: the survivor buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
 # path, and no guard covered it because it was not a resume or a mode - it was what Stage
 # 7 took as input. That is now closed (#4486): every leg folds run by run. The last route
 # that still took the pool - the transfer pass-2 mode, whose per-file half ran in Stage 7 -
@@ -395,39 +395,27 @@ $knownResidentGaps = @()
 # mode 12 covers it - the ratchet shrinking a fifth time. hpc-merge went with #4486 (the
 # --task SecondPassFDR reconciled-input load takes the bounded streaming hydrate, so
 # mode 3's join node needs no token).
-# By design rather than unfinished, so no issue: projection-off and
-# compacted-entries-buffer (the A/B byte-identity oracles). non-percolator-fdr went with
-# #4543, which deleted the simple FDR method it named - the ratchet shrinking a sixth time.
+# non-percolator-fdr went with #4543, which deleted the simple FDR method it named - the
+# ratchet shrinking a sixth time - compacted-entries-buffer with
+# OSPREY_STAGE6_STREAM_SURVIVORS (2026-10-10), the seventh, and projection-off (the A/B
+# byte-identity oracle, kept by design) with OSPREY_FDR_PROJECTION (2026-10-10), the eighth,
+# which left the token list empty.
 
 # Preserved and RESTORED at the end of the run (see the finally block): this mutates the
 # process environment, so a developer running the gate in their interactive shell would
 # otherwise silently lose an exported token for the rest of the session.
 $script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-# An operator running a deliberate A/B needs their token: OSPREY_STAGE6_STREAM_SURVIVORS=0
-# and OSPREY_FDR_PROJECTION=0 force resident paths ON PURPOSE, and clearing the token that
-# admits them would abort the gate on its first leg with a guard error - making the very
-# comparison this harness exists to support impossible to run. Ambient tokens are stripped
-# ONLY when no such switch is set, which is the case the clearing is aimed at.
-#
-# OSPREY_STAGE7_STREAM=0 was in this set and is GONE (2026-09-10): the switch itself was
-# retired once its A/B was banked, so there is no Stage-7 arm left for an operator to
-# force and no token to keep. ResidentPaths.KNOWN_UNFIXED shrank from 5 to 4 with it.
-#
-$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-               ($env:OSPREY_FDR_PROJECTION -eq '0')
+# Every A/B switch that forced a resident path ON PURPOSE, and so needed its token kept, is
+# gone: OSPREY_STAGE7_STREAM (2026-09-10), OSPREY_STAGE6_STREAM_SURVIVORS (2026-10-10) and
+# OSPREY_FDR_PROJECTION (2026-10-10) were each retired with their arm, and Osprey refuses all
+# three names at startup. So an inherited allowance is always cleared.
 if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
-    if ($abSwitchSet) {
-        # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
-        # formatted and '{0}' survives verbatim into the output.
-        Write-Host (("Keeping inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - an A/B switch " +
-            "(OSPREY_STAGE6_STREAM_SURVIVORS/OSPREY_FDR_PROJECTION=0) is set and needs it.") `
-            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
-    } else {
-        Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
-            "gate may run under an ambient resident-pool allowance.") `
-            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
-        Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-    }
+    # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
+    # formatted and '{0}' survives verbatim into the output.
+    Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
+        "gate may run under an ambient resident-pool allowance.") `
+        -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
+    Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
 }
 
 # The goldens are captured under the shipped first-pass SVM C selection, so an inherited
@@ -2171,37 +2159,11 @@ foreach ($name in $selected) {
     $dataFp = Get-DirFingerprint -Dir $inputs.Dir
 
     $straightDir = Join-Path $runRoot "$name\straight"
-    # Whether this run was ASKED for a configuration that cannot stream the Stage-7 join, so
-    # the legs below can tell "took the resident join" from "was told to". These are
-    # CanStreamStage7Join's OWN terms, not a mode list: the switch that forces the resident
-    # join, the one that makes NeedsResidentPool true, and any pass-2 mode other than
-    # protein-compact (transfer still computes its per-file half in Stage 7). Enumerated
-    # rather than inferred from the log, because a resident run says nothing about WHY it was
-    # resident - and a silent SKIP for the wrong reason is what these legs exist to prevent.
-    #
-    # ExpectReconciledInput is not among them, and used to be the whole answer: it was
-    # CanStreamStage7Join's first term, and only --task SecondPassFDR sets it, so the ordinary
-    # run could not stream by construction. Deriving the admission from the reconciled parquets
-    # on disk is what puts every leg under one question.
-    #
-    # OSPREY_STAGE6_STREAM_SURVIVORS=0 belongs here too, and its absence made this list
-    # wrong rather than merely incomplete. Under that switch BuildRunPerRunSource returns
-    # null (no loader, and the per-run lists are never cleared), so no marker reaches
-    # straight.log and the mode1 leg FAILS a run behaving exactly as instructed - while
-    # mode2 PASS, because BuildResumePerRunSource reads the loader through
-    # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
-    # red that reads like a genuine regression is the worst shape a gate can have.
-    #
-    # Reading env vars only is now COMPLETE for the resident-pool half: NeedsResidentPool's
-    # one remaining trigger is OSPREY_FDR_PROJECTION=0, tested below. Its CLI/config triggers are
-    # gone - --fdrbench-pass 1 streamed with #4507, and the non-Percolator --fdr-method went
-    # with #4543, which removed the argument and the simple FDR method. OSPREY_FDR_MODEL=gbdt
-    # does not belong here: trees run the same Percolator framework and stream.
-    # The pass-2 mode is NOT a term since #4665: transfer's per-file half runs in the rescore
-    # worker, so every mode streams the join, and a transfer arm must be held to the marker.
-    $cannotStreamJoin =
-        ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-        ($env:OSPREY_FDR_PROJECTION -eq '0')
+    # No configuration this gate can be asked for declines the streamed Stage-7 join any more,
+    # so every leg's streamed-join assertion is unconditional. The terms that once excused one
+    # were the switches that forced a resident join or a resident first-pass pool
+    # (OSPREY_STAGE7_STREAM, OSPREY_STAGE6_STREAM_SURVIVORS, OSPREY_FDR_PROJECTION=0), each
+    # retired with its arm, and the pass-2 mode, which stopped being a term with #4665.
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     # GoldenFolder, not Folder: StellarLibDecoy shares the stellar mzML folder,
     # so keying the golden on Folder alone would collide with Stellar's.
@@ -2535,20 +2497,13 @@ foreach ($name in $selected) {
         # the suite green. That term is gone from the predicate (the pass-2 report is folded run
         # by run through ModelDiagnosticsData.Accumulator), so the scoping goes with it.
         #
-        # Nothing else in the predicate varies across these datasets: --fdrbench is never passed
-        # here, so NeedsResidentPool is false, and protein-compact is the default pass-2 mode, so
-        # every mode-3 chain meets the remaining conditions structurally. A dataset that ever
-        # needs a narrower rule should name the condition rather than restore a blanket skip.
-        # ...unless the run was asked for a configuration that cannot stream, in which case it
-        # is doing exactly what it was told and demanding the marker would fail it for
-        # complying. $cannotStreamJoin, computed once per dataset above, is that question; it
-        # governs every leg's copy of this assertion rather than each one enumerating the
-        # terms again.
+        # Nothing else in the predicate varies across these datasets: protein-compact is the
+        # default pass-2 mode, so every mode-3 chain meets the remaining conditions
+        # structurally. A dataset that ever needs a narrower rule should name the condition
+        # rather than restore a blanket skip.
         $chainStreamed = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern $stage7StreamMarker -SimpleMatch -Quiet
-        if ($cannotStreamJoin) {
-            $summaryLines.Add("$name mode3 (streamed join): SKIP (this configuration cannot stream the join)")
-        } elseif (-not $chainStreamed) {
+        if (-not $chainStreamed) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (streamed join): FAIL - phase 4 did not report the " +
                 "per-run fold, so SecondPassFDR built the whole-run survivor pool. Output is " +
@@ -2869,10 +2824,7 @@ foreach ($name in $selected) {
         @{ Log = 'resume.log';    Mode = 'mode2'; What = 'the resume'; ModeNumber = 2 })) {
         if (Test-ModeCut $cfg $streamLeg.ModeNumber) { continue }
         $legPath = Join-Path $straightDir $streamLeg.Log
-        if ($cannotStreamJoin) {
-            $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): SKIP " +
-                '(this configuration cannot stream the join)'))
-        } elseif (-not (Test-Path -LiteralPath $legPath)) {
+        if (-not (Test-Path -LiteralPath $legPath)) {
             $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): SKIP (leg not run)")
         } else {
             $legStream = Test-LogMarker -LogPath $legPath -Marker $stage7StreamMarker `

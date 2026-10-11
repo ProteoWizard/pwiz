@@ -796,11 +796,7 @@ namespace pwiz.Osprey.Tasks
         /// route-independent, which is also what lets <c>--input-scores</c> retire without
         /// taking the streamed join with it.</para>
         ///
-        /// <para>No consumer may read PIN features off these stubs
-        /// (<c>PerFileScoringTask.NeedsResidentPool</c>:
-        /// <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
-        /// the entries those consumers index. And the analysis-wide retained base_id summary has
-        /// to be on disk, because it IS the compaction predicate every refill applies; without
+        /// <para>The analysis-wide retained base_id summary has to be on disk, because it IS the compaction predicate every refill applies; without
         /// it a refilled run would carry the pre-compaction pool and the fold would run over a
         /// set ~52x too large. Its absence returns false here rather than failing, for the
         /// reason its sibling gives.</para>
@@ -861,11 +857,9 @@ namespace pwiz.Osprey.Tasks
                 return false;
             // OSPREY_STAGE7_STREAM=0 was the second term and is GONE (2026-09-10). It let an
             // operator force the resident join as an A/B oracle; that A/B is banked and the
-            // switch retired, so the streamed join is the only arm anyone can ask for. What is
-            // left below is not a choice - it is the set of configurations that already hold a
-            // resident pool for a declared reason, and they are named by token.
-            if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
-                return false;
+            // switch retired, so the streamed join is the only arm anyone can ask for.
+            // OSPREY_FDR_PROJECTION=0 was the third, the one configuration that held a resident
+            // first-pass pool for a declared reason, and went with that switch (2026-10-10).
             // --model-diagnostics WAS the fourth requirement, and is no longer one. The pass-2
             // report is now folded run by run through ModelDiagnosticsData.Accumulator - the
             // same accumulator the pass-1 report uses - with the co-assignment panel's two
@@ -926,10 +920,10 @@ namespace pwiz.Osprey.Tasks
         /// 446-run cohort, past a 63.7 GB box by file ~310.
         ///
         /// <para>This is the guard's invariant reaching PAST THE COMPACTION LINE.
-        /// <see cref="PerFileScoringTask.ResidentPoolGuardError"/> enforces "no unnamed
-        /// PRE-compaction pool" and stops there, which is why
-        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> had to be named rather than
-        /// refused - no token could reach it. The bundle guarded here is on the same far side of
+        /// The retired first-pass resident-pool guard enforced "no unnamed
+        /// PRE-compaction pool" and stopped there, which is why the resident post-compaction
+        /// handoff (the retired <c>compacted-entries-buffer</c> token) had to be named rather
+        /// than refused - no token could reach it. The bundle guarded here is on the same far side of
         /// that line, and it was reachable with no token and no disclosure at all: a run took an
         /// O(files x entries) route without declaring it, which is the one shape the named-token
         /// ratchet exists to make impossible.</para>
