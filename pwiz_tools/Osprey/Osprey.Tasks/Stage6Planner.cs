@@ -111,34 +111,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Resident overload: adapts an already-materialized all-files buffer to the streaming
-        /// one below. Used by the legacy / rehydrate first-pass paths, which hold the buffer
-        /// for their own reasons; the loader simply hands back the list they already have, so
-        /// this costs nothing and there is only ever ONE implementation of the phases.
-        /// </summary>
-        internal Stage6Plan Plan(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            IReadOnlyDictionary<(string ModifiedSequence, byte Charge),
-                (uint TargetEntryId, uint DecoyEntryId)> libLookup,
-            IReadOnlyDictionary<uint, double> libPrecursorMz,
-            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
-            OspreyConfig config,
-            Stage6FilePlanned onFilePlanned)
-        {
-            var byName = new Dictionary<string, IReadOnlyList<FdrEntry>>(StringComparer.Ordinal);
-            var fileNames = new List<string>(perFileEntries.Count);
-            foreach (var kvp in perFileEntries)
-            {
-                fileNames.Add(kvp.Key);
-                byName[kvp.Key] = kvp.Value;
-            }
-            return Plan(fileNames, name => byName[name], perFileCalibrations, perFileParquetPaths,
-                libLookup, libPrecursorMz, perFileIsolationMz, config, onFilePlanned);
-        }
-
-        /// <summary>
         /// Run the four Stage 6 planning phases and return the plan, loading each file's
         /// survivors twice rather than holding all of them once. Phase order matches Rust
         /// pipeline.rs:3217 -- multi-charge consensus first (independent), then cross-run

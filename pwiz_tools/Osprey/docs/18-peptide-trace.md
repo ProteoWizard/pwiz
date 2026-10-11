@@ -166,10 +166,9 @@ target surfaces as a forced-integration `ReconcileAction` row rather than a dist
 
 Closest C# dumps:
 
-- First pass: `OSPREY_DUMP_PERCOLATOR` → `WriteStage5PercolatorDump`
-  (`IOspreyDiagnostics.cs:191`, gate `DumpPercolator` at `OspreyFileDiagnostics.cs:150`).
-  Emits `cs_stage5_percolator.tsv`: per-precursor `score`, `pep`, and the four q-values
-  after first-pass Percolator FDR and before protein FDR / compaction.
+- First pass: none. `OSPREY_DUMP_PERCOLATOR` (`cs_stage5_percolator.tsv`) was removed on
+  2026-10-10 with the resident first-pass pool it read; the per-file
+  `.1st-pass.fdr_scores.bin` sidecars carry the same score / pep / q-values.
 - Second pass: `OSPREY_DUMP_RESCORED` → `WriteStage6RescoredDump`
   (`IOspreyDiagnostics.cs:193`, gate `DumpRescored` at `OspreyFileDiagnostics.cs:200`).
   Emits `cs_stage6_rescored.tsv` with the same column shape after the Stage 6 rescore
@@ -229,7 +228,6 @@ default **off** (unset), so a production run carries no diagnostic state.
 | `OSPREY_DUMP_INV_PREDICT` (`OspreyFileDiagnostics.cs:318`) | off | `cs_stage6_inv_predict.tsv` — per-detection `(apex_rt, library_rt, weight)` into consensus (Rust trace stage 2 per-detection analog). |
 | `OSPREY_DUMP_RECONCILIATION` (`OspreyFileDiagnostics.cs:287`) | off | `cs_stage6_reconciliation.tsv` — per-entry `ReconcileAction` (Rust trace stage 3/4 analog). |
 | `OSPREY_DUMP_MULTICHARGE` (`OspreyFileDiagnostics.cs:264`) | off | `cs_stage6_multicharge.tsv` — per-file rescore targets. |
-| `OSPREY_DUMP_PERCOLATOR` (`OspreyFileDiagnostics.cs:150`) | off | `cs_stage5_percolator.tsv` — first-pass per-precursor score/pep/q-values (Rust trace stage 5 first-pass analog). |
 | `OSPREY_DUMP_RESCORED` (`OspreyFileDiagnostics.cs:200`) | off | `cs_stage6_rescored.tsv` — second-pass per-precursor score/pep/q-values (Rust trace stage 5 second-pass analog). |
 | `OSPREY_DIAG_XIC_ENTRY_ID=<id>` (`OspreyFileDiagnostics.cs:379`) | unset | `cs_xic_entry_<ID>.txt` for one entry during calibration; exits after dump. |
 | `OSPREY_DIAG_XIC_PASS={1,2}` (`OspreyFileDiagnostics.cs:386`) | 1 | Selects the calibration pass for the XIC dump. |

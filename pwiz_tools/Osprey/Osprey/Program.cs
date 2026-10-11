@@ -611,6 +611,26 @@ namespace pwiz.Osprey
                         @"Re-scoring now always reloads one run's kept candidates at a time.");
                     return EXIT_CODE_FAILURE_TO_START;
                 }
+                // OSPREY_FDR_PROJECTION was REMOVED (2026-10-10) on the same terms: the projection
+                // first pass is the only arm, and a stale script still setting it would file the
+                // projection arm's numbers under the legacy resident one.
+                if (OspreyEnvironment.FdrProjectionRetiredSet)
+                {
+                    LogError(
+                        @"OSPREY_FDR_PROJECTION was removed and has no effect. Unset it. " +
+                        @"First-pass FDR now always streams its scores from the per-run files.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
+                // OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were REMOVED with it: the dump
+                // needed the resident first-pass pool, and a bisection harness still setting them
+                // would get a run with no dump, or no early exit, and no error.
+                if (OspreyEnvironment.PercolatorDumpRetiredSet)
+                {
+                    LogError(
+                        @"OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were removed and have no " +
+                        @"effect. Unset them. The first-pass Percolator dump is no longer written.");
+                    return EXIT_CODE_FAILURE_TO_START;
+                }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
                 // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
                 // its reconciled-input load, making it the first previously-VALID token to
@@ -623,21 +643,24 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
                 {
                     // Name the UNRECOGNIZED tokens, not the whole value: the flag is a comma
-                    // separated list and NamesResidentPath tests each token independently, so
-                    // 'projection-off,hpc-merge' still grants projection-off. Condemning the
+                    // separated list and NamesResidentPath tests each token independently, so a
+                    // recognized token beside a retired one is still granted. Condemning the
                     // whole value would push the operator to rewrite or unset a variable whose
                     // valid half the run still needs, and the run then aborts on a guard the
                     // warning said was not engaged.
                     // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
                     // reconciled-input load and the pass-1 FDRBench emitter both stream and need
                     // no allowance. 'non-percolator-fdr' was retired with the simple FDR method
-                    // it named, and 'compacted-entries-buffer' with OSPREY_STAGE6_STREAM_SURVIVORS.
+                    // it named, 'compacted-entries-buffer' with OSPREY_STAGE6_STREAM_SURVIVORS,
+                    // and 'projection-off' with OSPREY_FDR_PROJECTION, which left the list empty.
                     LogWarning(string.Format(
                         @"OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
                         @"have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
                         @"is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
-                        string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
+                        ResidentPaths.KNOWN_UNFIXED.Count == 0
+                            ? @"none"
+                            : string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
                 }
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));

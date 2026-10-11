@@ -1366,9 +1366,10 @@ the text says so rather than describing the current shape as though it were the 
    whose per-file half ran over the whole pool in Stage 7, so
    `ScoringTaskShared.Stage7StreamAdmittedBeforeRescore` declined it on
    `!OspreyEnvironment.Pass2ProteinCompact`; #4665 moved `TransferOneFile` into
-   `Pass2PerFileWorker` and the term went with it. The routes into the resident fold now are
-   `NeedsResidentPool`'s, which the first-pass guard names and tokens, and
-   `SecondPassFdrTask.WarnResidentStage7Join` discloses them.
+   `Pass2PerFileWorker` and the term went with it. The last route into the resident fold,
+   `OSPREY_FDR_PROJECTION=0`, was removed on 2026-10-10 with its `projection-off` token, which
+   left `ResidentPaths.KNOWN_UNFIXED` empty; `SecondPassFdrTask.WarnResidentStage7Join` still
+   discloses any run that reaches the resident fold.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
    the route line `[PATH] second-pass-join: per-run` rather than inferred -

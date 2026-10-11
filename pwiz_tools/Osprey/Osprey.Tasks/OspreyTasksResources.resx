@@ -277,12 +277,6 @@
   <data name="FirstPassFdrTask_BuildProteinCompactStratum__0__proteins_have_2_or_more_detections___1__detected_peptides___their__2__precursor_" xml:space="preserve">
     <value>{0:N0} proteins have 2 or more detections ({1:N0} detected peptides); their {2:N0} precursor candidates go to second-pass FDR.</value>
   </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates__1_file_" xml:space="preserve">
-    <value>Trimming first-pass results to the kept precursor candidates (1 file)</value>
-  </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates___0__files_" xml:space="preserve">
-    <value>Trimming first-pass results to the kept precursor candidates ({0:N0} files)</value>
-  </data>
   <data name="FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
     <value>Cannot locate the first-pass intermediate files for '{0}'.</value>
   </data>
@@ -513,12 +507,6 @@
   </data>
   <data name="FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files" xml:space="preserve">
     <value>Writing first-pass FDRBench input for {0:N0} files</value>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
-    <value>Cannot write the first-pass intermediate file for '{0}': no location could be derived from its input path.</value>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Failed_to_write_the_first_pass_intermediate_file_for__0____1_" xml:space="preserve">
-    <value>Failed to write the first-pass intermediate file for {0}: {1}</value>
   </data>
   <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_" xml:space="preserve">
     <value>Could not locate the intermediate files for {0}, so its cross-run reconciliation file was not written.</value>
@@ -1063,12 +1051,6 @@
   <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
     <value>Loaded {0:N0} first-pass precursor candidate peaks (features not needed here)</value>
   </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features" xml:space="preserve">
-    <value>Loaded {0:N0} first-pass precursor candidate peaks with their features</value>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candidate_peaks_but__2__feature_rows_" xml:space="preserve">
-    <value>{0} has {1:N0} precursor candidate peaks but {2:N0} feature rows.</value>
-  </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_" xml:space="preserve">
     <value>{0} is missing the feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again.</value>
   </data>
@@ -1138,12 +1120,6 @@
   <data name="PerFileScoringTask_RowCountAsInt__0__holds__1__rows__more_than_this_version_of_Osprey_can_process___2___" xml:space="preserve">
     <value>{0} holds {1:N0} rows, more than this version of Osprey can process ({2:N0}).</value>
   </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from_1_file" xml:space="preserve">
-    <value>Loading first-pass precursor candidate peaks from 1 file</value>
-  </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from__0__files" xml:space="preserve">
-    <value>Loading first-pass precursor candidate peaks from {0:N0} files</value>
-  </data>
   <data name="PerFileScoringTask_Run_Scoring__0__files_in_parallel_" xml:space="preserve">
     <value>Scoring {0:N0} files in parallel:</value>
   </data>
@@ -1159,14 +1135,8 @@
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__scoring_it_again_" xml:space="preserve">
     <value>Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows; scoring it again.</value>
   </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_" xml:space="preserve">
-    <value>Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows, so its saved scores cannot be loaded.</value>
-  </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_" xml:space="preserve">
     <value>Resuming: failed to load {0}: {1}; scoring it again.</value>
-  </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_" xml:space="preserve">
-    <value>Resuming: failed to load the saved scores from {0}: {1}</value>
   </data>
   <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">
     <value>This configuration</value>
