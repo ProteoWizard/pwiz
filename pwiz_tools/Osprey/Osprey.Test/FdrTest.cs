@@ -2571,6 +2571,46 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryPickedProteinFdr()
+        {
+            // Decoys as a library supplies them: reversed sequences with their own accessions,
+            // paired with their targets only by base id.
+            var library = new List<LibraryEntry>
+            {
+                MakeLibEntry(1, "PEPTIDEA", new[] { "P1" }, false),
+                MakeLibEntry(2, "PEPTIDEB", new[] { "P2" }, false),
+                MakeLibEntry(3, "PEPTIDEC", new[] { "P3" }, false),
+                MakeLibEntry(1 | LibraryEntry.DECOY_ID_BIT, "AEDITPEP", new[] { "rev_P1" }, true),
+                MakeLibEntry(2 | LibraryEntry.DECOY_ID_BIT, "BEDITPEP", new[] { "rev_P2" }, true),
+                MakeLibEntry(3 | LibraryEntry.DECOY_ID_BIT, "CEDITPEP", new[] { "rev_P3" }, true)
+            };
+            // Nothing was detected from P3, so it is in no parsimony group.
+            var parsimony = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.All,
+                new HashSet<string> { "PEPTIDEA", "PEPTIDEB" });
+
+            var scores = new LibraryProteinScores(library);
+            scores.Add(1, 5.0);
+            scores.Add(1 | LibraryEntry.DECOY_ID_BIT, 1.0);
+            scores.Add(2, 2.0);
+            scores.Add(2 | LibraryEntry.DECOY_ID_BIT, 1.0);
+            scores.Add(3, 0.5);
+            scores.Add(3 | LibraryEntry.DECOY_ID_BIT, 4.0);
+
+            var fdrResult = ProteinFdr.ComputeLibraryPickedProteinFdr(parsimony, scores.ByProtein());
+
+            // Winners by score: P1 target (5), P3 decoy (4), P2 target (2). P2 is the second
+            // target behind one decoy, so q = 1/2; competing only the detected groups would have
+            // given it 0.
+            var p1Group = parsimony.Groups.First(g => g.Accessions.Contains("P1"));
+            var p2Group = parsimony.Groups.First(g => g.Accessions.Contains("P2"));
+            Assert.AreEqual(2, parsimony.Groups.Count);
+            Assert.AreEqual(0.0, fdrResult.GroupQvalues[p1Group.Id], 1e-12);
+            Assert.AreEqual(0.5, fdrResult.GroupQvalues[p2Group.Id], 1e-12);
+            Assert.AreEqual(2.0, fdrResult.GroupScores[p2Group.Id], 1e-12);
+            Assert.AreEqual(0.5, fdrResult.PeptideQvalues["PEPTIDEB"], 1e-12);
+        }
+
+        [TestMethod]
         public void TestDecoyEntriesExcludedFromParsimony()
         {
             var library = new List<LibraryEntry>

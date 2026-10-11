@@ -1285,6 +1285,9 @@
   <data name="SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR" xml:space="preserve">
     <value>Collecting best scores for protein FDR</value>
   </data>
+  <data name="SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_" xml:space="preserve">
+    <value>Protein FDR could not read the first-pass scores in {0}. Run the FirstPassFDR task again to rewrite it.</value>
+  </data>
   <data name="SecondPassFdrTask_Run_1_of__1__re_scored_intermediate_files_was_written_by_an_older_Osprey_build_and_cannot_be_" xml:space="preserve">
     <value>1 of {1:N0} re-scored intermediate files was written by an older Osprey build and cannot be read by second-pass FDR, nor can the intermediate files beside it. Delete this analysis's {3} files and run the first pass again. Older file: {2}.</value>
   </data>

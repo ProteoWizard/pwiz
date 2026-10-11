@@ -103,9 +103,9 @@ namespace pwiz.Osprey.Tasks
             }
 
             // The ANALYSIS-WIDE 1st-pass experiment sidecar IS an input, on every path: it is
-            // where the scope split put Pep and ExperimentAggregateScore, and it is how
+            // where the scope split put Pep and ExperimentAggregateScore, it is how
             // OSPREY_PASS2_QVALUE=transfer obtains its experiment values without competing at
-            // all. One file per analysis, not one per run - which is the distinction that makes
+            // all, and protein FDR scores every library protein from it. One file per analysis, not one per run - which is the distinction that makes
             // it compatible with a node that never sees the inputs.
             string pass1Experiment = FdrExperimentSidecar.PathFor(
                 ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config),
@@ -1072,7 +1072,8 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var result = ProteinFdrEngine.RunSecondPass(
-                rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR), fullLibrary, config, ctx);
+                rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR), fullLibrary,
+                ReadFirstPassProteinScores(fullLibrary, config), config, ctx);
 
             // The 2nd-pass sidecar was written BEFORE this protein FDR ran - it is one of its
             // inputs - so the protein column it carries is still the pass-1 value at this point.
@@ -1130,6 +1131,32 @@ namespace pwiz.Osprey.Tasks
                 OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config,
                     ctx, ctx.LogWarning);
             }
+        }
+
+        /// <summary>
+        /// Every library protein's best first-pass score on each side, from the analysis-wide
+        /// 1st-pass experiment sidecar: one aggregate score per entry_id over every scored
+        /// precursor, decoys included, recorded before compaction dropped most of them.
+        ///
+        /// <para>Absence is FATAL. There is no second source - the pool in hand has lost those
+        /// decoys - and a protein FDR without them reports q-values far below the real error
+        /// rate.</para>
+        /// </summary>
+        private static LibraryProteinScores ReadFirstPassProteinScores(List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            string path = FdrExperimentSidecar.PathFor(config.OutputBlib,
+                ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass);
+            var scores = new LibraryProteinScores(fullLibrary);
+            if (string.IsNullOrEmpty(path) ||
+                !FdrExperimentSidecar.ReadRecords(path, FdrScoresSidecar.Pass.FirstPass,
+                    record => scores.Add(record.EntryId, record.ExperimentAggregateScore)))
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_,
+                    path ?? FdrExperimentSidecar.EXT));
+            }
+            return scores;
         }
 
         /// <summary>
