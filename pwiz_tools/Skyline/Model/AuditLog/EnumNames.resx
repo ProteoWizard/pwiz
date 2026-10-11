@@ -756,4 +756,13 @@
   <data name="SearchEngine_DIANN" xml:space="preserve">
     <value>DIA-NN</value>
   </data>
+  <data name="GlobalQValueLevel_protein" xml:space="preserve">
+    <value>Protein</value>
+  </data>
+  <data name="GlobalQValueLevel_peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="GlobalQValueLevel_precursor" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
 </root>

@@ -88,6 +88,26 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool TryGetFilter(IWin32Window owner, out GlobalQValueFilter filter)
         {
+            if (!TryParseFilter(out filter))
+            {
+                MessageDlg.Show(owner, SettingsUIResources.GlobalQValueFilterControls_TryGetFilter_The_q_value_cutoff_must_be_a_number_between_0_and_1__or_empty_to_add_every_entry);
+                _textCutoff.Focus();
+                _textCutoff.SelectAll();
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The filter for the audit log, null when there is none or the cutoff is not valid.
+        /// </summary>
+        public GlobalQValueFilter Filter
+        {
+            get { return TryParseFilter(out var filter) ? filter : null; }
+        }
+
+        private bool TryParseFilter(out GlobalQValueFilter filter)
+        {
             filter = null;
             var level = Level;
             if (!level.HasValue || string.IsNullOrWhiteSpace(_textCutoff.Text))
@@ -95,9 +115,6 @@ namespace pwiz.Skyline.SettingsUI
             if (!double.TryParse(_textCutoff.Text, NumberStyles.Float, LocalizationHelper.CurrentCulture, out var cutoff) ||
                 cutoff < 0 || cutoff > 1)
             {
-                MessageDlg.Show(owner, SettingsUIResources.GlobalQValueFilterControls_TryGetFilter_The_q_value_cutoff_must_be_a_number_between_0_and_1__or_empty_to_add_every_entry);
-                _textCutoff.Focus();
-                _textCutoff.SelectAll();
                 return false;
             }
             filter = new GlobalQValueFilter(level.Value, cutoff);

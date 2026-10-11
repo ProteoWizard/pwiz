@@ -1537,6 +1537,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Q value cutoff.
+        /// </summary>
+        public static string GlobalQValueFilter_Cutoff {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilter_Cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q value level.
+        /// </summary>
+        public static string GlobalQValueFilter_Level {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilter_Level", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value to compare against.
         /// </summary>
         public static string GroupComparisonDef_CaseValue {
@@ -1830,6 +1848,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportFastaSettings_NumDecoys {
             get {
                 return ResourceManager.GetString("ImportFastaSettings_NumDecoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q value filter.
+        /// </summary>
+        public static string ImportFastaSettings_QValueFilter {
+            get {
+                return ResourceManager.GetString("ImportFastaSettings_QValueFilter", resourceCulture);
             }
         }
         
@@ -5178,6 +5205,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ViewLibrarySettings_AssociateProteins {
             get {
                 return ResourceManager.GetString("ViewLibrarySettings_AssociateProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q value filter.
+        /// </summary>
+        public static string ViewLibrarySettings_QValueFilter {
+            get {
+                return ResourceManager.GetString("ViewLibrarySettings_QValueFilter", resourceCulture);
             }
         }
         

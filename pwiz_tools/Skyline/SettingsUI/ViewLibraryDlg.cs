@@ -2028,18 +2028,25 @@ namespace pwiz.Skyline.SettingsUI
 
         public ViewLibrarySettings FormSettings
         {
-            get { return new ViewLibrarySettings(cbAssociateProteins.Checked); }
+            get { return new ViewLibrarySettings(cbAssociateProteins.Checked, null); }
         }
 
         public class ViewLibrarySettings : AuditLogOperationSettings<ViewLibrarySettings>//, IAuditLogComparable
         {
-            public ViewLibrarySettings(bool associateProteins)
+            public ViewLibrarySettings(bool associateProteins, GlobalQValueFilter qValueFilter)
             {
                 AssociateProteins = associateProteins;
+                QValueFilter = qValueFilter;
             }
 
             [Track(defaultValues:typeof(DefaultValuesFalse))]
             public bool AssociateProteins { get; private set; }
+
+            /// <summary>
+            /// The filter Add All applied, null when adding a single entry or when there was none.
+            /// </summary>
+            [TrackChildren(defaultValues: typeof(DefaultValuesNull))]
+            public GlobalQValueFilter QValueFilter { get; private set; }
 
             /*public object GetDefaultObject(ObjectInfo<object> info)
             {
@@ -2230,7 +2237,7 @@ namespace pwiz.Skyline.SettingsUI
             };
 
             var entryCreatorList = new AuditLogEntryCreatorList();
-            entryCreatorList.Add(FormSettings.EntryCreator);
+            entryCreatorList.Add(new ViewLibrarySettings(cbAssociateProteins.Checked, qValueFilter).EntryCreator);
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher, true, entryCreatorList))
                 return;
             pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;

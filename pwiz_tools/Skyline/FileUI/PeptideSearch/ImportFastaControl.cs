@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -151,17 +152,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             public ImportFastaSettings(ImportFastaControl control) : this(control.Enzyme, control.MaxMissedCleavages,
                 control.FastaFile, control.FastaText, control.FastaImportTargetsFile, control.DecoyGenerationMethod, control.NumDecoys,
-                control.AutoTrain)
+                control.AutoTrain, control.QValueFilterControls.Filter)
             {
             }
 
             public static ImportFastaSettings GetDefault(PeptideSettings peptideSettings)
             {
                 return new ImportFastaSettings(peptideSettings.Enzyme,
-                    peptideSettings.DigestSettings.MaxMissedCleavages, null, null, null, string.Empty, null, false);
+                    peptideSettings.DigestSettings.MaxMissedCleavages, null, null, null, string.Empty, null, false, null);
             }
 
-            public ImportFastaSettings(Enzyme enzyme, int maxMissedCleavages, string fastaFile, string fastaText, string fastaImportTargetsFile, string decoyGenerationMethod, double? numDecoys, bool autoTrain)
+            public ImportFastaSettings(Enzyme enzyme, int maxMissedCleavages, string fastaFile, string fastaText, string fastaImportTargetsFile, string decoyGenerationMethod, double? numDecoys, bool autoTrain,
+                GlobalQValueFilter qValueFilter)
             {
                 Enzyme = enzyme;
                 MaxMissedCleavages = maxMissedCleavages;
@@ -171,6 +173,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 DecoyGenerationMethod = decoyGenerationMethod;
                 NumDecoys = numDecoys;
                 AutoTrain = autoTrain;
+                QValueFilter = qValueFilter;
             }
 
             private class FastaTextDefault : DefaultValues
@@ -197,6 +200,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public double? NumDecoys { get; private set; }
             [Track]
             public bool AutoTrain { get; private set; }
+            [TrackChildren(defaultValues: typeof(DefaultValuesNull))]
+            public GlobalQValueFilter QValueFilter { get; private set; }
         }
 
         public Enzyme Enzyme

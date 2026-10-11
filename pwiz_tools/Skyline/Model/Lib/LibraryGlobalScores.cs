@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Lib
@@ -128,7 +129,9 @@ namespace pwiz.Skyline.Model.Lib
             Cutoff = cutoff;
         }
 
+        [Track]
         public GlobalQValueLevel Level { get; }
+        [Track]
         public double Cutoff { get; }
 
         public bool Accepts(LibraryGlobalScores globalScores)
