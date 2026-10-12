@@ -584,51 +584,22 @@ namespace pwiz.Osprey
                     LogInfo(string.Format(@"First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
                         OspreyEnvironment.SvmCSelectionTolerance.ToString(CultureInfo.InvariantCulture)));
                 }
-                // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
-                // only arm there is. Setting it to 0 used to select the RESIDENT join, so a sweep
-                // script still passing it would measure the streamed arm and file the numbers
-                // under the resident one - the misattribution case these variables have to be
-                // strict about, and the reason this is an error rather than a warning. Checked at
-                // startup so a stale script dies in seconds instead of after Stage 1-5.
-                // It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the
-                // streamed default; that A/B was banked (the resident arm matched the committed
-                // golden at 1e-9 with a byte-identical diagnostics report). The configurations
-                // that still take the resident arm do so by their own declaration (ResidentPaths).
-                if (OspreyEnvironment.Stage7StreamRetiredSet)
+                // An OSPREY_* variable this build does not read is refused, as an unrecognized
+                // argument is (OspreyEnvironment.KnownVariables). Silence was the bad outcome
+                // for every kind of name this catches: a retired switch (OSPREY_STAGE7_STREAM,
+                // OSPREY_FDR_PROJECTION and the rest) would have the default arm's numbers filed
+                // under the arm it used to select; a Rust-only dump left in a bisection shell
+                // would produce a run with no dump; and a misspelling would change nothing while
+                // its caller believed it had. Checked at startup, so it costs seconds rather
+                // than Stages 1-5.
+                var unrecognizedVariables = OspreyEnvironment.UnrecognizedVariables();
+                if (unrecognizedVariables.Count > 0)
                 {
-                    LogError(
-                        @"OSPREY_STAGE7_STREAM was removed and has no effect. Unset it. Second-pass " +
-                        @"FDR now always processes one run at a time where the analysis allows it.");
-                    return EXIT_CODE_FAILURE_TO_START;
-                }
-                // OSPREY_STAGE6_STREAM_SURVIVORS was REMOVED (2026-10-10) on the same terms: the
-                // streamed Stage 6 handoff is the only arm, and a stale script still setting it
-                // would file the streamed arm's numbers under the resident one.
-                if (OspreyEnvironment.Stage6StreamSurvivorsRetiredSet)
-                {
-                    LogError(
-                        @"OSPREY_STAGE6_STREAM_SURVIVORS was removed and has no effect. Unset it. " +
-                        @"Re-scoring now always reloads one run's kept candidates at a time.");
-                    return EXIT_CODE_FAILURE_TO_START;
-                }
-                // OSPREY_FDR_PROJECTION was REMOVED (2026-10-10) on the same terms: the projection
-                // first pass is the only arm, and a stale script still setting it would file the
-                // projection arm's numbers under the legacy resident one.
-                if (OspreyEnvironment.FdrProjectionRetiredSet)
-                {
-                    LogError(
-                        @"OSPREY_FDR_PROJECTION was removed and has no effect. Unset it. " +
-                        @"First-pass FDR now always streams its scores from the per-run files.");
-                    return EXIT_CODE_FAILURE_TO_START;
-                }
-                // OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were REMOVED with it: the dump
-                // needed the resident first-pass pool, and a bisection harness still setting them
-                // would get a run with no dump, or no early exit, and no error.
-                if (OspreyEnvironment.PercolatorDumpRetiredSet)
-                {
-                    LogError(
-                        @"OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were removed and have no " +
-                        @"effect. Unset them. The first-pass Percolator dump is no longer written.");
+                    LogError(string.Format(
+                        @"Osprey does not recognize the environment variable(s) {0}. Unset them. A variable that " +
+                        @"was removed no longer has any effect, and one that only Rust osprey reads is never " +
+                        @"honored here.",
+                        string.Join(@", ", unrecognizedVariables)));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // A token that names nothing admits nothing, so the run proceeds - but say so

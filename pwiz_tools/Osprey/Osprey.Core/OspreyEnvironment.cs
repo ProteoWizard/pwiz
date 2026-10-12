@@ -51,6 +51,99 @@ namespace pwiz.Osprey.Core
         // Variables a test has overridden (OverrideVariables); null in production.
         private static IReadOnlyDictionary<string, string> _overrides;
 
+        // How the platform compares environment variable names: case-insensitively on Windows,
+        // exactly elsewhere. The registry and the scan must agree with it, or a Linux node would
+        // accept 'osprey_log_memory' here and then never read it as OSPREY_LOG_MEMORY.
+        private static readonly StringComparison VariableNameComparison =
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        private static readonly StringComparer VariableNameComparer =
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+        /// <summary>
+        /// Every OSPREY_* variable this build reads, wherever it reads it - here, in
+        /// OspreyDiagnostics / OspreyFileDiagnostics, FdrDiagnostics, OspreyVersion and the
+        /// scoring and IO layers. <see cref="UnrecognizedVariables"/> treats any other set
+        /// OSPREY_* name as an error, as an unrecognized command-line argument is.
+        ///
+        /// <para>One list, kept in step with the readers by
+        /// <c>CodeInspectionTest.TestOspreyVariablesAreRegistered</c>: a literal
+        /// <c>@"OSPREY_..."</c> in production code that is missing here fails it, and so does a
+        /// name here that nothing reads any more. Retiring a variable is therefore deleting its
+        /// reader and its line here; the startup check then refuses it with every other name
+        /// this build does not know. That replaced a per-variable refusal for each retired
+        /// switch (OSPREY_STAGE7_STREAM, OSPREY_STAGE6_STREAM_SURVIVORS, OSPREY_FDR_PROJECTION,
+        /// OSPREY_DUMP_PERCOLATOR / _ONLY), which grew by one hand-written check per
+        /// retirement and missed every misspelling.</para>
+        ///
+        /// <para>Names only Rust osprey reads (e.g. OSPREY_TRACE_PEPTIDE, OSPREY_DUMP_RESCORED)
+        /// are deliberately absent: this build would not honor them, so a run that sets one
+        /// would not do what its caller asked. A cross-implementation harness sets them for the
+        /// Rust process only.</para>
+        /// </summary>
+        public static readonly ISet<string> KnownVariables = new HashSet<string>(VariableNameComparer)
+        {
+            @"OSPREY_ALLOW_UNFIXED_RESIDENT", @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
+            @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
+            @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
+            @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
+            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
+            @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
+            @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
+            @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
+            @"OSPREY_DUMP_COASSIGN_ROWS", @"OSPREY_DUMP_CONSENSUS", @"OSPREY_DUMP_CWT_PATH",
+            @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
+            @"OSPREY_DUMP_LOESS_FIT", @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
+            @"OSPREY_DUMP_MS2_CAL_ERRORS", @"OSPREY_DUMP_PERC_INPUT", @"OSPREY_DUMP_PREDICT_RT",
+            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_REFIT", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
+            @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
+            @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
+            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
+            @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
+            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
+            @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST", @"OSPREY_LOESS_FIT_ONLY",
+            @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
+            @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
+            @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
+            @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
+            @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_REFIT_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
+            @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
+            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
+            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
+            @"OSPREY_VERSION_OVERRIDE"
+        };
+
+        /// <summary>
+        /// The OSPREY_* variables set to a non-empty value in this process - its environment, or
+        /// a test's <see cref="OverrideVariables"/> - that are not in <see cref="KnownVariables"/>,
+        /// sorted. An empty value reads as unset, as it does everywhere else in this class: a
+        /// cleared <c>export</c> or a blanked CI parameter is not a request for anything.
+        /// </summary>
+        public static IReadOnlyList<string> UnrecognizedVariables()
+        {
+            const string prefix = @"OSPREY_";
+            var names = new SortedSet<string>(VariableNameComparer);
+            foreach (string name in Environment.GetEnvironmentVariables().Keys)
+            {
+                if (name.StartsWith(prefix, VariableNameComparison))
+                    names.Add(name);
+            }
+            if (_overrides != null)
+            {
+                foreach (string name in _overrides.Keys)
+                {
+                    if (name.StartsWith(prefix, VariableNameComparison))
+                        names.Add(name);
+                }
+            }
+            return names.Where(name => !KnownVariables.Contains(name) && !string.IsNullOrEmpty(GetVariable(name)))
+                .ToList();
+        }
+
         /// <summary>
         /// OSPREY_MAX_PARALLEL_FILES: legacy back-compat cap on concurrent file
         /// processing, superseded by the <c>--parallel-files</c> CLI argument
@@ -303,53 +396,6 @@ namespace pwiz.Osprey.Core
                 SerialWindowReads ? @"serial" : @"parallel (OSPREY_SERIAL_WINDOW_READS=0)",
                 SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file");
         }
-
-        // OSPREY_STAGE6_STREAM_SURVIVORS was removed here on 2026-10-10 and the streamed Stage 6
-        // handoff is the ONLY arm: each file's post-compaction survivors are rebuilt from its
-        // .scores.parquet + 1st-pass sidecar just before it is rescored and dropped once its
-        // reconciled parquet is on disk. Setting it to 0 kept the all-files survivor buffer
-        // resident across the rescore - 88.9 M entries / 28 GB at 163 files, held for the 5.5
-        // hours of Stage 6 (issue #4526) - as the A/B byte-identity oracle. It went without a
-        // final A/B because the arm no longer completed (it aborted in Stage 7, unseen, since no
-        // gate ran it); the committed golden is the oracle. A caller who still sets it is refused
-        // at startup (Program.cs), for the reason given for OSPREY_STAGE7_STREAM below.
-        public static bool Stage6StreamSurvivorsRetiredSet => IsSet(@"OSPREY_STAGE6_STREAM_SURVIVORS");
-
-        // OSPREY_FDR_PROJECTION was removed here on 2026-10-10 and the projection first pass is
-        // the ONLY arm: FirstPassFDR streams the first-pass FDR peak through the thin
-        // FdrProjection buffer and reloads the survivors from parquet + the 1st-pass sidecar.
-        // Setting it to 0 forced the legacy resident FdrEntry-buffer first pass as the A/B
-        // byte-identity oracle. No final A/B could be banked: the arm aborted in Stage 7 on
-        // every dataset, the same failure as the Stage 6 oracle; the committed golden is the
-        // oracle. A caller who still sets it is refused at startup (Program.cs), for the reason
-        // given for OSPREY_STAGE7_STREAM below.
-        public static bool FdrProjectionRetiredSet => IsSet(@"OSPREY_FDR_PROJECTION");
-
-        // OSPREY_DUMP_PERCOLATOR and OSPREY_PERCOLATOR_ONLY were removed with it (2026-10-10).
-        // The cs_stage5_percolator.tsv bisection dump needed the all-files pre-compaction
-        // FdrEntry pool, which only the resident first pass held. A caller who still sets
-        // either is refused at startup rather than handed a run with no dump.
-        public static bool PercolatorDumpRetiredSet =>
-            IsSet(@"OSPREY_DUMP_PERCOLATOR") || IsSet(@"OSPREY_PERCOLATOR_ONLY");
-
-        // OSPREY_STAGE7_STREAM was removed here on 2026-09-10 and the streamed join is the ONLY
-        // arm. It kept the resident Stage-7 join as an A/B byte-identity oracle - the role
-        // OSPREY_STAGE6_STREAM_SURVIVORS=0 then played for the Stage 6 handoff - and went once
-        // that A/B was banked: the resident arm passed the whole regression against the
-        // committed golden at 1e-9, and the diagnostics HTML matched the streamed arm byte for
-        // byte apart from generatedUtc. A second arm kept alive only to keep it matching is a
-        // standing test cost against a report that is expected to keep moving. The measurement
-        // that argues for the streamed join moved with the decision, to
-        // ScoringTaskShared.CanStreamStage7Join, rather than being deleted along with the
-        // switch that no longer makes it.
-        //
-        // The NAME is still read, at startup, for the only thing a removed spelling owes: a caller who
-        // still sets it is refused at startup (Program.cs) rather than handed the streamed arm's
-        // numbers under the resident arm's name. That is the "reporting one arm's numbers as
-        // another's" case the env-var doctrine makes strict. IsSet, not a null test: an EMPTY
-        // value (a cleared `export`, a blanked CI parameter) reads as unset everywhere else in
-        // this class, and refusing it here would be the one predicate that disagrees.
-        public static bool Stage7StreamRetiredSet => IsSet(@"OSPREY_STAGE7_STREAM");
 
         /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library

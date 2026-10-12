@@ -287,6 +287,22 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
+
+            // An older build's reconciled parquet under a stamp this build accepts, as
+            // OSPREY_VERSION_OVERRIDE produces: --task SecondPassFDR must refuse it before loading
+            // any run, and a resume must re-score that run alone. Both once took it as current,
+            // loaded every run, and then died on it with a stack trace.
+            ForgeOlderBuildReconciledParquet(workDir, cutRun);
+            DeleteSecondPassOutputs(blib);
+            log = RunAnalysisExpecting(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true),
+                Program.EXIT_CODE_FAILURE_TO_START,
+                args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, SecondPassFdrTask.TASK_NAME }).ToArray());
+            AssertNoAllRunsLoad(log);
+            Assert.IsTrue(SplitLines(log).Any(line => CommandStatusWriter.IsErrorLine(line) && line.Contains(cutRun)),
+                @"the refusal did not name the run" + Environment.NewLine + log);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
+            AssertRescoredOnly(log, 1);
+            AssertBlibsEqual(uninterruptedBlib, blib);
         }
 
         /// <summary>
@@ -1084,13 +1100,23 @@ namespace pwiz.Osprey.Test
         private string RunAnalysis(string workDir, IEnumerable<string> inputs, string libraryFile,
             IReadOnlyDictionary<string, string> variables, params string[] extraArgs)
         {
+            return RunAnalysisExpecting(workDir, inputs, libraryFile, variables, Program.EXIT_CODE_SUCCESS, extraArgs);
+        }
+
+        /// <summary>
+        /// The same, exiting with <paramref name="expectedExitCode"/> - a designed refusal when
+        /// it is not success, with one "Error:" line and no stack trace.
+        /// </summary>
+        private string RunAnalysisExpecting(string workDir, IEnumerable<string> inputs, string libraryFile,
+            IReadOnlyDictionary<string, string> variables, int expectedExitCode, params string[] extraArgs)
+        {
             var args = InputArgs(inputs).Concat(new[]
             {
                 OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, libraryFile),
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
             }).Concat(CommonArgs()).Concat(extraArgs);
-            return RunOsprey(args.ToArray(), variables);
+            return RunOspreyExpecting(args.ToArray(), variables, expectedExitCode);
         }
 
         /// <summary>
@@ -1265,6 +1291,39 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(File.Exists(path), @"no rescore product to cut: " + path);
                 File.Delete(path);
             }
+        }
+
+        /// <summary>
+        /// Replace <paramref name="run"/>'s reconciled parquet with the generation written before
+        /// #4486 - every Stage 4 row, marked <c>"true"</c> rather than as a survivor subset -
+        /// keeping the current file's stamp, so only the shape says it is from an older build.
+        /// Written by the real producer from the run's own Stage 4 parquet.
+        /// </summary>
+        private static void ForgeOlderBuildReconciledParquet(string workDir, string run)
+        {
+            string reconciled = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES_RECONCILED);
+            var metadata = ParquetScoreCache.LoadFooterMetadata(reconciled);
+            Assert.IsTrue(metadata.ContainsKey(ArtifactStamp.PARQUET_KEY), @"no stamp to keep: " + reconciled);
+            metadata[ParquetScoreCache.META_RECONCILED] = @"true";
+            File.Delete(reconciled);
+            ParquetScoreCache.StreamReconciledScoresParquet(Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES),
+                reconciled, null, null, metadata, null, run + MZML_EXTENSION, null,
+                PerFileRescoreTask.TASK_NAME, null, null);
+            Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciled));
+        }
+
+        /// <summary>
+        /// No route held every run's precursor candidates at once.
+        /// </summary>
+        private static void AssertNoAllRunsLoad(string log)
+        {
+            foreach (string key in new[] { LogKey.ROUTE_ALL_RUNS_BUNDLE, LogKey.ROUTE_SURVIVOR_POOL })
+            {
+                Assert.IsFalse(HasLine(log, PathLine(key, string.Empty)),
+                    key + @" loaded every run" + Environment.NewLine + log);
+            }
+            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_PRE_COMPACTION_POOL, @"resident")),
+                @"a resident pre-compaction pool" + Environment.NewLine + log);
         }
 
         /// <summary>

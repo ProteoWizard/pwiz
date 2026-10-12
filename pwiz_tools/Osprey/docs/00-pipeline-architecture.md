@@ -1368,8 +1368,10 @@ the text says so rather than describing the current shape as though it were the 
    `!OspreyEnvironment.Pass2ProteinCompact`; #4665 moved `TransferOneFile` into
    `Pass2PerFileWorker` and the term went with it. The last route into the resident fold,
    `OSPREY_FDR_PROJECTION=0`, was removed on 2026-10-10 with its `projection-off` token, which
-   left `ResidentPaths.KNOWN_UNFIXED` empty; `SecondPassFdrTask.WarnResidentStage7Join` still
-   discloses any run that reaches the resident fold.
+   left `ResidentPaths.KNOWN_UNFIXED` empty. The resident fold itself was deleted on 2026-10-11:
+   a `--task SecondPassFDR` directory that cannot be folded run by run is refused before any run
+   is loaded, and `SecondPassFdrTask.RequireStreamedJoin` fails any other route that arrives
+   without a per-run source.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
    the route line `[PATH] second-pass-join: per-run` rather than inferred -

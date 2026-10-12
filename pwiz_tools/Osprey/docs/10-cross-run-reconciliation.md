@@ -214,7 +214,7 @@ Because the C# port runs as HPC stages, the Stage 5 plan is serialized per-file 
 | `--experiment-fdr <threshold>` | `0.01` | The second-pass (Stage 7) experiment FDR threshold; not consumed by planning itself. |
 | `OspreyEnvironment.LoessClassicalRobust` (`CalibrationRefit.cs:97`) | `true` | Must match Stage 4 initial calibration; drives refit robustness iterations for cross-impl parity. |
 | `OSPREY_DUMP_INV_PREDICT` (+ `_ONLY`) | off | Diagnostic: dumps one `InvPredictRecord` per consensus detection (apex_rt, library_rt, weight) for cross-impl bisection (`Stage6Planner.cs:168-184`). |
-| `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT` (+ each `_ONLY`) | off | Stage 6 cross-impl bisection dumps for each planning phase (`Stage6Planner.cs`). |
+| `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT` (+ each `_ONLY`) | off | Stage 6 cross-impl bisection dumps for each planning phase (`Stage6Planner.cs`). `OSPREY_DUMP_RECONCILIATION` and `OSPREY_DUMP_MULTICHARGE` (+ `_ONLY`) are Rust-only: removed from C# on 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic). |
 | `OSPREY_TRACE_PEPTIDE` | off | Per-peptide trace through consensus, planning, and gap-fill (18-peptide-trace.md). |
 
 ---

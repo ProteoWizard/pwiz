@@ -246,7 +246,7 @@ compiler when a machine lacks it). Like the ProteoWizard-Sharp installer it asks
 for a per-user or per-machine install and offers a "version-specific" install
 that keeps its own folder and Start Menu shortcuts beside other versions instead
 of being replaced by the next one. Authenticode signing is available behind `-Sign`
-(off by default -- see the script header for the `OSPREY_SIGN*` env vars). CI
+(off by default -- see the script header for the `OSPREYDEV_SIGN*` env vars). CI
 runs this via `tcpackage.bat`. This is the official artifact downstream tools
 (e.g. Carafe) should consume rather than building their own Osprey publish.
 

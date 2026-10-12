@@ -304,11 +304,14 @@ computed by Stage 6 planning. The flags that affect this stage:
 | `--protein-fdr <v>` | optional (`EffectiveProteinFdr`) | Feeds the protein-rescue gate into consensus RT computation (`Stage6Planner.cs:176`), affecting which entries become reconciliation targets. |
 
 Diagnostic env vars that dump this stage (each with a `*_ONLY=1` early-exit
-variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
-`OSPREY_DUMP_INV_PREDICT`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT`,
-`OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_RESCORED`, plus the per-entry
+variant): `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_INV_PREDICT`,
+`OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT`, plus the per-entry
 `OSPREY_DIAG_SEARCH_ENTRY_IDS` search-XIC dump and `OSPREY_DUMP_CWT_PATH`
-(`Stage6Planner.cs`, `PerFileRescoreTask.cs:297`, `PeakDataExtractor.cs:154`).
+(`Stage6Planner.cs`, `PeakDataExtractor.cs:154`). The multicharge,
+reconciliation, and rescored dumps (`OSPREY_DUMP_MULTICHARGE`,
+`OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_RESCORED`) were removed from C# on
+2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic) and are
+Rust-only.
 `OSPREY_TRACE_PEPTIDE` per-peptide tracing is documented in 18-peptide-trace.md.
 
 ## Divergences from the Rust documentation
