@@ -87,13 +87,16 @@ spectrum, so an MSX run cannot be recognized this way (see [Limitations](#limita
 The spectra in `<stem>.demux.spectra.bin` are those msconvert writes for
 
 ```
-msconvert run.raw --filter "peakPicking vendor msLevel=1-" --filter "demultiplex optimization=overlap_only massError=10.0ppm"
+msconvert run.raw --filter "peakPicking vendor msLevel=1-" --filter "demultiplex optimization=overlap_only massError=10.0ppm interpolation=makima poissonWeights=true"
 ```
 
 Osprey requests vendor centroiding for both MS levels, and `MsDataFileImpl` applies the
 demultiplexer after centroiding (and lockmass correction), in msconvert's filter order. The
-settings (`DemuxCache.CreateParams`) are msconvert's defaults with `optimization=overlap_only`
-and a 10 ppm mass error. For an MSX scheme `MsDataFileImpl` switches to ProteoWizard's MSX
+settings (`DemuxCache.CreateParams`) are msconvert's defaults with `optimization=overlap_only`, a
+10 ppm mass error, and two options from Mike MacCoss's demultiplexer in #4710, added to
+ProteoWizard by pwiz #4827: makima interpolation, and a Poisson-weighted refit of each NNLS
+solution (row weights 1 / max(A x, floor) from the unweighted fit). The refit is what #4710's
+identification gain came from (see [Results](#results)). For an MSX scheme `MsDataFileImpl` switches to ProteoWizard's MSX
 demultiplexer, as `Scheme.Optimization` selects.
 
 The one difference is speed. The solve was made parallel on this branch (below); the output is
@@ -122,7 +125,7 @@ The **descriptor** (`DemuxCache.Descriptor`) names the descriptor version and ev
 changes the demultiplexed spectra. With the current settings it is:
 
 ```
-pwiz-demux/1;massError=10Ppm;interpolateRT=True;weighting=True;sumNormalize=True;variableFill=False;nnlsMaxIter=50;nnlsEps=1E-10;blockExtra=0;minWindowSize=0.2;removeNonOverlappingEdges=False
+pwiz-demux/1;massError=10Ppm;interpolateRT=True;weighting=True;sumNormalize=True;variableFill=False;nnlsMaxIter=50;nnlsEps=1E-10;blockExtra=0;minWindowSize=0.2;removeNonOverlappingEdges=False;interpolation=Makima;poissonWeights=True
 ```
 
 The thread count is left out, because the output does not depend on it. `DESCRIPTOR_VERSION` is
@@ -157,14 +160,15 @@ bumped when ProteoWizard's demultiplexer changes its output under the same setti
 
 One Orbitrap Eclipse staggered run (EV13: 1.24 GB `.raw`, 101 x 12 Th windows at 2-fold
 overlap, demultiplexed into 102 bins of 6 Th and 158,700 MS2 spectra), vendor file to spectra
-cache (`--task SpectraCache --demux auto`), on an idle 32-thread machine, three runs each,
-interleaved:
+cache (`--task SpectraCache --demux auto`), on an idle 32-thread machine, five runs each,
+interleaved, median:
 
 | Demultiplexer | Time | Peak working set |
 |---|---|---|
-| ProteoWizard's (this branch) | 23.9-24.0 s | 4.4 GB |
-| #4710, default (weighted) engine | 41.4-45.2 s | 9.4 GB |
-| #4710, msconvert-style engine | 21.9-23.1 s | 3.0 GB |
+| ProteoWizard's, makima + Poisson refit (`--demux auto`) | 19.6 s | 4.7 GB |
+| ProteoWizard's, msconvert's default interpolation (natural spline) | 23.2 s | 4.4 GB |
+| #4710, default (weighted) engine | 43.7 s | 9.1 GB |
+| #4710, msconvert-style engine (2026-10-10, three runs) | 21.9-23.1 s | 3.0 GB |
 | msconvert's demultiplexer before these changes, single-threaded | 214.6 s | |
 
 `SpectrumListDemux` solves ahead when `SolveThreads` is above 1 (Osprey passes its thread count):
@@ -175,22 +179,28 @@ so the output is byte-identical at any thread count.
 
 Until pwiz #4817 the read took 40 s: the Thermo reader's precursor lookup walked back to the
 first scan of the run for every spectrum carrying "Master Scan Number: 0" (every DIA scan), 22 s
-of the serial read path. With it fixed the solve is the larger cost (about 13 s of 32 threads),
-nearly half of it building MathNet natural splines in `OverlapDemultiplexer`.
+of the serial read path. Makima is faster than the MathNet natural spline it replaces here
+(MathNet builds a general spline for every value); the refit adds about 1.4 s.
 
 ## Results
 
-Six Eclipse staggered runs (EV13-15, Total01-03), one human Carafe library with 1:1
-entrapment, three Percolator seeds per demultiplexer at a 1.5M-row training cap (at the default
-300k cap the seed alone moves a search 6-11%, pwiz #4812), experiment level at q <= 0.01:
+Six Eclipse staggered runs per set, three Percolator seeds per demultiplexer at a 1.5M-row
+training cap (at the default 300k cap the seed alone moves a search 6-11%, pwiz #4812),
+experiment level at q <= 0.01, entrapment FDP from 1:1 entrapment. Mean precursors (entrapment
+FDP range):
 
-| Demultiplexer | Precursors (seeds 42 / 1 / 2) | Mean | Entrapment FDP |
-|---|---|---|---|
-| ProteoWizard's (this branch) | 37,436 / 37,928 / 37,468 | 37,611 | 0.47-0.52% |
-| #4710, weighted | 38,513 / 36,478 / 36,523 | 37,171 | 0.47-0.57% |
-| #4710, msconvert-style | 37,318 / 37,355 / 37,178 | 37,284 | 0.43-0.48% |
+| Demultiplexer | Webinar 27 runs, Mike MacCoss's library | EV13-15 + Total01-03, human Carafe library |
+|---|---|---|
+| ProteoWizard's, `--demux auto` (makima + Poisson refit) | **43,514** (0.38-0.40%) | **39,033** (0.44-0.47%) |
+| ProteoWizard's, msconvert's settings | 42,188 (0.32-0.37%) | 37,611 (0.47-0.52%) |
+| #4710, weighted | 43,481 (0.32-0.40%) | 37,171 (0.47-0.57%) |
+| #4710, weighted with its Poisson refit switched off | 42,260 (0.30-0.34%) | |
+| #4710, msconvert-style | 42,767 (0.38-0.41%) | 37,284 (0.43-0.48%) |
 
-The three are equivalent within the seed spread.
+The Poisson refit alone gives +2.3% and +2.4%, and makima adds +0.8% and +1.3%. Replicate
+precision is unchanged (median peak-area CV over EV13-15 0.028, against 0.029 with msconvert's
+settings and 0.030 for #4710 weighted). Measured on the runs' own fragment chromatograms,
+makima's apex bias equals the 3-point natural spline's; its advantage is lower noise.
 
 ## Limitations
 
@@ -219,7 +229,9 @@ uses ProteoWizard's demultiplexer instead, applied while the vendor file is read
   and descriptor in the header, the descriptor in every task's validity key, and the start-up
   check of a demultiplexed cache standing in for a missing source;
 - the `SpectraWindowIndex` fix that lists every distinct isolation window, not only the first
-  cycle's.
+  cycle's;
+- in ProteoWizard (pwiz #4827): the Poisson-weighted NNLS refit and makima interpolation, which
+  `--demux auto` uses.
 
 Two behaviours differ: with `--demux off` a multiplexed run is searched as acquired with a
 warning, where #4710 refuses it; and the demultiplexed cache is built from the source, where

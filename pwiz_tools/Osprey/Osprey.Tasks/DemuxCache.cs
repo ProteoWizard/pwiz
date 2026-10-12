@@ -25,6 +25,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Pwiz.Analysis;
+using Pwiz.Analysis.Demux;
 using Pwiz.Util.Chemistry;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -64,7 +65,9 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The demultiplexing settings for a run, or null when <c>--demux</c> is off. msconvert's
-        /// <c>demultiplex optimization=overlap_only massError=10ppm</c>, solved on the search's
+        /// <c>demultiplex optimization=overlap_only massError=10ppm interpolation=makima
+        /// poissonWeights=true</c>: makima and the Poisson-weighted refit are Mike MacCoss's, from
+        /// #4710, and the refit is what its identification gain came from. Solved on the search's
         /// threads shared among the <paramref name="concurrentReads"/> files being read at once
         /// (one, except on <c>--task SpectraCache</c> lanes): each solve thread holds blocks.
         /// </summary>
@@ -76,6 +79,8 @@ namespace pwiz.Osprey.Tasks
             {
                 Optimization = SpectrumListDemux.Optimization.OverlapOnly,
                 MassError = new MZTolerance(MASS_ERROR_PPM, MZToleranceUnits.Ppm),
+                Interpolation = DemuxInterpolation.Makima,
+                PoissonWeights = true,
                 SolveThreads = Math.Max(1, config.NThreads / Math.Max(1, concurrentReads)),
             };
         }
@@ -90,11 +95,12 @@ namespace pwiz.Osprey.Tasks
             var ic = CultureInfo.InvariantCulture;
             return string.Format(ic,
                 @"pwiz-demux/{0};massError={1}{2};interpolateRT={3};weighting={4};sumNormalize={5};" +
-                @"variableFill={6};nnlsMaxIter={7};nnlsEps={8};blockExtra={9};minWindowSize={10};removeNonOverlappingEdges={11}",
+                @"variableFill={6};nnlsMaxIter={7};nnlsEps={8};blockExtra={9};minWindowSize={10};removeNonOverlappingEdges={11};" +
+                @"interpolation={12};poissonWeights={13}",
                 DESCRIPTOR_VERSION, p.MassError.Value.ToString(@"R", ic), p.MassError.Units,
                 p.InterpolateRetentionTime, p.ApplyWeighting, p.RegularizeSums, p.VariableFill,
                 p.NnlsMaxIter, p.NnlsEps.ToString(@"R", ic), p.DemuxBlockExtra.ToString(@"R", ic),
-                p.MinimumWindowSize.ToString(@"R", ic), p.RemoveNonOverlappingEdges);
+                p.MinimumWindowSize.ToString(@"R", ic), p.RemoveNonOverlappingEdges, p.Interpolation, p.PoissonWeights);
         }
 
         /// <summary>

@@ -94,12 +94,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(DEMUX_WINDOW_WIDTH, spectrum.IsolationWindow.UpperBound - spectrum.IsolationWindow.LowerBound, 0.01);
 
             // The output does not depend on the threads that solved it.
-            var serial = SpectrumFileReader.LoadAllSpectra(staggeredPath, new SpectrumListDemux.Params
-            {
-                Optimization = demuxParams.Optimization,
-                MassError = demuxParams.MassError,
-                SolveThreads = 1,
-            });
+            var serial = SpectrumFileReader.LoadAllSpectra(staggeredPath, demuxParams with { SolveThreads = 1 });
             AssertSpectraIdentical(serial.Ms2Spectra, demuxed.Ms2Spectra);
 
             CheckAgainstPwizDemux(staggeredPath, demuxParams, demuxed.Ms2Spectra);
