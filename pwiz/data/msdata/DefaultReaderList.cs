@@ -262,7 +262,8 @@ public sealed class ReaderList : IReader
 
     /// <summary>
     /// A reader list pre-populated with the built-in format readers in priority order:
-    /// mzML → mzMLb → MGF.
+    /// mzML, mzMLb, mz5, mzXML, the MSn family, BTDX, MGF, followed by any
+    /// <see cref="AdditionalReaders"/>.
     /// </summary>
     /// <remarks>
     /// mzMLb comes after mzML in this list, but Identify is content-driven (HDF5
