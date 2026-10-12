@@ -6,7 +6,8 @@ namespace Pwiz.Analysis.Demux;
 
 /// <summary>
 /// Bins centroided peaks from a spectrum into a fixed grid of m/z windows. Port of cpp's
-/// <c>pwiz/analysis/demux/SpectrumPeakExtractor.cpp</c>.
+/// <c>pwiz/analysis/demux/SpectrumPeakExtractor.cpp</c>, except that it searches each bin's full
+/// window (cpp drops part of it above half the top m/z) and a snapped shared edge belongs to one bin.
 /// </summary>
 /// <remarks>
 /// Used by the demux algorithms to assemble the right-hand side <c>b</c> of the NNLS problem:
@@ -18,7 +19,6 @@ namespace Pwiz.Analysis.Demux;
 public sealed class SpectrumPeakExtractor
 {
     private readonly (double Low, double High)[] _ranges;
-    private readonly double _maxDelta;
     private readonly double _minValue;
     private readonly double _maxValue;
 
@@ -36,17 +36,14 @@ public sealed class SpectrumPeakExtractor
 
         int n = peakMzList.Count;
         _ranges = new (double, double)[n];
-        double maxDelta = 0;
         for (int i = 0; i < n; i++)
         {
             double peakMz = peakMzList[i];
             // cpp: deltaMz = peakMz - (peakMz - massError) — the absolute Da equivalent of the
             // tolerance applied at this m/z (handles ppm vs. mz units transparently).
             double deltaMz = peakMz - SubtractTolerance(peakMz, massError);
-            if (deltaMz > maxDelta) maxDelta = deltaMz;
             _ranges[i] = (peakMz - deltaMz, peakMz + deltaMz);
         }
-        _maxDelta = maxDelta;
         _minValue = _ranges[0].Low;
         _maxValue = _ranges[n - 1].High;
 
@@ -91,17 +88,17 @@ public sealed class SpectrumPeakExtractor
             if (query < _minValue) continue;
             if (query > _maxValue) break;
 
-            double minStart = query - _maxDelta;
-            // Advance binStartIndex past bins whose entire range is below the query window.
-            for (; binStartIndex < _ranges.Length; binStartIndex++)
-            {
-                if (_ranges[binStartIndex].Low >= minStart) break;
-            }
-            // Add this peak's intensity to every bin whose [Low, High] contains it.
+            // Skip only bins that end below the query. Cpp starts at query - maxDelta, the
+            // largest HALF-width, which drops the upper part of every bin above half the
+            // spectrum's top m/z; Skyline's original binner used the full width.
+            while (binStartIndex < _ranges.Length && _ranges[binStartIndex].High < query)
+                binStartIndex++;
+            // A peak on an edge snapped to the next bin's start belongs to the next bin only.
             for (int b = binStartIndex; b < _ranges.Length; b++)
             {
                 if (_ranges[b].Low > query) break;
-                if (_ranges[b].Low <= query && query <= _ranges[b].High)
+                bool sharedEdge = b + 1 < _ranges.Length && _ranges[b + 1].Low == _ranges[b].High;
+                if (query < _ranges[b].High || (query == _ranges[b].High && !sharedEdge))
                     matrix[rowNum, b] += inten[q];
             }
         }
