@@ -26,6 +26,7 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
+| `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v8**, 32-byte header + 36-byte records + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8) |
@@ -68,7 +69,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | Writer | Artifact |
 |---|---|
 | `CalibrationIO` | `<stem>.calibration.json` |
-| `SpectraCache` | `<stem>.spectra.bin` |
+| `SpectraCache` | `<stem>.spectra.bin`, `<stem>.demux.spectra.bin` |
 | `LibraryCache` | `<library-leaf>.libcache` |
 | `ParquetScoreCache` (2 sites) | `<stem>.scores.parquet`, `<stem>.scores-reconciled.parquet` |
 | `FdrScoresSidecar` | `<stem>.{1st,2nd}-pass.fdr_scores.bin` |
@@ -230,6 +231,51 @@ nothing to re-parse, and the fingerprint check that would have caught a mismatch
 skipped precisely because there is nothing left to compare against. So validate the caches
 against their sources — magic, version, fingerprint, and that the index offset agrees with
 `n_ms2` — **before** deleting either, and treat the caches as data from then on.
+
+### Demultiplexed spectra cache (`<stem>.demux.spectra.bin`)
+
+**C# source**: `Osprey.IO/SpectraCache.cs` (format), `Osprey.Tasks/DemuxCache.cs` (descriptor,
+open, start-up check). Path: `SpectraCache.GetDemuxCachePath` = `<stem>.demux.spectra.bin` in
+`ArtifactPaths.ResolveCacheDir(inputFile)`, beside the `.spectra.bin`. Written only with
+`--demux auto`, and only for a run ProteoWizard detects as multiplexed. Osprey-only; Rust has no
+counterpart. How it is built and searched is in [23-demultiplexing.md](23-demultiplexing.md);
+this section is its bytes.
+
+`SaveSpectraCache` writes it with the same VERSION 4 layout, given a non-null descriptor:
+
+```
+[magic:             8 bytes  "OSPRDMX\0"]
+[version:           uint32   = 4]
+[source_size:       uint64   as above]
+[source_mtime:      int64    as above]
+[n_ms2:             uint32   demultiplexed MS2 records]
+[n_ms1:             uint32]
+[descriptor_length: uint32   bytes; above 64 KiB is refused as a truncated header]
+[descriptor:        UTF-8, no terminator, e.g. "pwiz-demux/1;massError=10Ppm;interpolateRT=True;..."]
+[MS2 records, grouped by window]
+[MS1 records, acquisition order]
+[index: n_ms2 x 40 bytes, acquisition order: record_offset:i64, iso_center:f64,
+        iso_lower_offset:f64, iso_upper_offset:f64, retention_time:f64]
+[footer: ms1_section_offset:i64, index_offset:i64]
+```
+
+Everything after the header is addressed by the absolute offsets in the index and footer, so
+`LoadSpectraCache` and `SpectraWindowIndex` decode it unchanged. Each MS2 record is one demux
+window of one acquired spectrum: it keeps its parent's scan number and retention time, and its
+isolation window is the demux window. `TryReadHeader` refuses it with `DemuxSettingsChanged`
+when it is read where a plain cache is expected, when a plain cache is read where a
+demultiplexed one is expected, or when its descriptor differs (ordinal comparison) from
+`DemuxCache.Descriptor` of the current settings. It records the **source** file's fingerprint,
+so a missing source is handled as above.
+
+**Rebuildable only from the source.** Unlike the `.spectra.bin`, a stale demultiplexed cache
+cannot be rebuilt once the source is gone: the start-up check (`DemuxCache.Check`, header only)
+reports it as an error before any task runs.
+
+`SpectraWindowIndex.IsolationWindows` lists every distinct window of either kind of cache, each
+as its first record's window, sorted by center. It used to stop at the first repeated key (the
+first cycle), which drops the top bin of a demultiplexed run, because that bin first appears
+after the cycle repeats.
 
 ---
 
@@ -755,6 +801,8 @@ run:
   whose sources were deleted after staging (the supported way to halve a large cohort's disk),
   this file is not an intermediate at all — it is the data, and deleting it loses the run.
   Prune caches only where the source is still on disk.
+- `<stem>.demux.spectra.bin` — the same rule: recreated by reading the source with
+  `--demux auto`, and only then. It is never derived from the `.spectra.bin`.
 - `<stem>.scores.parquet` / `<stem>.scores-reconciled.parquet` — recreated by re-scoring.
 - `<stem>.{1st,2nd}-pass.fdr_scores.bin` — first-pass required by the Stage 6 worker; deleting
   forces a Stage 5 re-join.
