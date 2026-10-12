@@ -2830,24 +2830,10 @@ foreach ($name in $selected) {
             $legStream = Test-LogMarker -LogPath $legPath -Marker $stage7StreamMarker `
                 -Description ("$($streamLeg.What) folding Stage 7 one run at a time instead " +
                     'of rebuilding every run''s survivors at once')
-            # PRESENCE OF THE MARKER IS NOT ENOUGH, and this is the hole it left. The marker is
-            # logged when the per-run source is BUILT, not when anything folds through it. A
-            # consumer that reads RescoredEntries.Value instead of streaming routes to
-            # MaterializeAllFromSource, which builds every run at once - the exact O(runs x
-            # entries) peak, 91.1 GB at 446 - while Streams stays true, so the marker is present,
-            # WarnResidentStage7Join stays silent, and this leg reported PASS on a resident run.
-            # MaterializeAllFromSource has always logged its own warning; nothing asserted its
-            # absence. Assert it here: the marker says a source was offered, this says nothing
-            # took the whole pool anyway.
-            $legPooled = Select-String -LiteralPath $legPath -SimpleMatch -Quiet `
-                -Pattern '[PATH] survivor-pool: materialized'
-            if ($legPooled) {
-                $overallFail = $true
-                Write-Problem-Tc ("$name $($streamLeg.Mode) (streamed join): FAIL - a per-run " +
-                    'source was published AND a consumer then pulled the whole pool through it, ' +
-                    'so the fold did not bound anything. The marker alone cannot see this.')
-                $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): FAIL")
-            } elseif ($legStream.Pass) {
+            # The marker is logged when the per-run source is BUILT, not when anything folds
+            # through it. That is enough now: RescoredEntries.Value refuses, so a consumer cannot
+            # pull the whole pool through the source instead of streaming it.
+            if ($legStream.Pass) {
                 $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): PASS " +
                     '(per-run fold, no all-runs pool)'))
             } else {

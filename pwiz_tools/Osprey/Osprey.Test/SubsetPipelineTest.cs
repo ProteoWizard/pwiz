@@ -186,8 +186,8 @@ namespace pwiz.Osprey.Test
             // --task FirstPassFDR over the finished directory, with its retained summary deleted
             // so the task owes an output. The cross-run reconciliation files the finished run left
             // beside each parquet once sent it down the resident route: every run's first-pass
-            // candidates, plus an all-runs reconciliation bundle the training never reads. It
-            // must take the lean load and rebuild the same summary.
+            // candidates, plus an all-runs reconciliation bundle the training never reads. That
+            // route is gone; the re-run must take the lean load and rebuild the same summary.
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(straightDir, @"*" + ReconciliationFile.EXT).Length,
                 @"no cross-run reconciliation files to tempt the resident route");
             string summary = Path.Combine(straightDir,
@@ -196,7 +196,6 @@ namespace pwiz.Osprey.Test
             File.Delete(summary);
             log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(false),
                 OspreyCommandArgs.ARG_TASK.ArgumentText, FirstPassFdrTask.TASK_NAME);
-            AssertNoAllRunsLoad(log);
             CollectionAssert.AreEqual(summaryHash, HashFile(summary), @"the re-run wrote a different retained summary");
         }
 
@@ -313,7 +312,6 @@ namespace pwiz.Osprey.Test
             log = RunAnalysisExpecting(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true),
                 Program.EXIT_CODE_FAILURE_TO_START,
                 args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, SecondPassFdrTask.TASK_NAME }).ToArray());
-            AssertNoAllRunsLoad(log);
             Assert.IsTrue(SplitLines(log).Any(line => CommandStatusWriter.IsErrorLine(line) && line.Contains(cutRun)),
                 @"the refusal did not name the run" + Environment.NewLine + log);
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
@@ -375,7 +373,6 @@ namespace pwiz.Osprey.Test
             File.SetLastWriteTimeUtc(report, File.GetLastWriteTimeUtc(report).AddHours(-1));
             var before = FingerprintDir(workDir);
             log = RunDiagnostics(ModelDiagnosticsTask.TASK_NAME);
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)), log);
             var regenerated = ChangedFiles(before, workDir);
             CollectionAssert.AreEqual(new[] { Path.GetFileName(report) }, regenerated,
                 @"regeneration changed something other than the report: " + string.Join(@", ", regenerated) +
@@ -391,8 +388,7 @@ namespace pwiz.Osprey.Test
                 PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty),
                 PathLine(LogKey.ROUTE_SCORED_ENTRIES, @"resident"),
                 @"[" + LogTag.STAGE_WALL + @"] second-pass-fdr",
-                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty),
-                PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)
+                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty)
             };
             string foldPass1 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass1");
             string foldPass2 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass2");
@@ -952,8 +948,6 @@ namespace pwiz.Osprey.Test
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on"));
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, string.Empty)),
-                @"the second pass materialized an all-runs survivor pool");
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
             {
@@ -1328,26 +1322,12 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// No route held every run's precursor candidates at once.
-        /// </summary>
-        private static void AssertNoAllRunsLoad(string log)
-        {
-            foreach (string key in new[] { LogKey.ROUTE_ALL_RUNS_BUNDLE, LogKey.ROUTE_SURVIVOR_POOL })
-            {
-                Assert.IsFalse(HasLine(log, PathLine(key, string.Empty)),
-                    key + @" loaded every run" + Environment.NewLine + log);
-            }
-        }
-
-        /// <summary>
-        /// Stage 7 folded the survivors run by run: the per-run source was published and nothing
-        /// then pulled the whole pool through it. The output is the same either way.
+        /// Stage 7 folded the survivors run by run: the per-run source was published. The output
+        /// is the same either way.
         /// </summary>
         private static void AssertStreamedJoin(string log)
         {
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, string.Empty)),
-                @"a consumer pulled the whole survivor pool through the per-run source" + Environment.NewLine + log);
         }
 
         /// <summary>

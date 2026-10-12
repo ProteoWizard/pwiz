@@ -766,12 +766,6 @@
   <data name="PerFileRescoreTask_BuildPerRunHydrate_Re_scoring_loads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_target_" xml:space="preserve">
     <value>Re-scoring loads the file from its own intermediate files; the list of {1:N0} kept target-decoy pairs is read once.</value>
   </data>
-  <data name="PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>Rebuilding the kept precursor candidates from 1 file</value>
-  </data>
-  <data name="PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>Rebuilding the kept precursor candidates from {0:N0} files</value>
-  </data>
   <data name="PerFileRescoreTask_BuildResumePerRunSource_Second_pass_FDR_reads_the_re_scored_results_of_the_file___1__of_1_current__" xml:space="preserve">
     <value>Second-pass FDR reads the re-scored results of the file ({1:N0} of 1 current).</value>
   </data>
@@ -819,21 +813,6 @@
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">
     <value>Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}</value>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>Loading the kept precursor candidates from 1 file</value>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>Loading the kept precursor candidates from {0:N0} files</value>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_all__0__files_into_memory_at_" xml:space="preserve">
-    <value>Second-pass FDR is loading the kept precursor candidates of all {0:N0} files into memory at once; memory grows with the number of files.</value>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_the_file_into_memory_" xml:space="preserve">
-    <value>Second-pass FDR is loading the kept precursor candidates of the file into memory.</value>
-  </data>
-  <data name="PerFileRescoreTask_OverlayReconciledIntoBuffer_Failed_to_reload_the_re_scored_results_file__0____1_" xml:space="preserve">
-    <value>Failed to reload the re-scored results file {0}: {1}</value>
   </data>
   <data name="PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_" xml:space="preserve">
     <value>Second-pass FDR: run '{0}' has no current re-scored results file ({1}), which {2} writes for every run. Its {3} file cannot be used instead, because it holds only first-pass peaks. Run {4} for it.</value>

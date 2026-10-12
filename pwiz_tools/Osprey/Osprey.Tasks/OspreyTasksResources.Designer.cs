@@ -2258,26 +2258,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Rebuilding the kept precursor candidates from {0:N0} files.
-        /// </summary>
-        public static string PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from__0__files {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_fro" +
-                        "m__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Rebuilding the kept precursor candidates from 1 file.
-        /// </summary>
-        public static string PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from_1_file {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_fro" +
-                        "m_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Second-pass FDR reads the re-scored results of the file ({1:N0} of 1 current)..
         /// </summary>
         public static string PerFileRescoreTask_BuildResumePerRunSource_Second_pass_FDR_reads_the_re_scored_results_of_the_file___1__of_1_current__ {
@@ -2363,56 +2343,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectr" +
                         "a_from_cache_for__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading the kept precursor candidates from {0:N0} files.
-        /// </summary>
-        public static string PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from__0__files {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates" +
-                        "_from__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading the kept precursor candidates from 1 file.
-        /// </summary>
-        public static string PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from_1_file {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates" +
-                        "_from_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR is loading the kept precursor candidates of all {0:N0} files into memory at once; memory grows with the number of files..
-        /// </summary>
-        public static string PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_all__0__files_into_memory_at_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_p" +
-                        "recursor_candidates_of_all__0__files_into_memory_at_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR is loading the kept precursor candidates of the file into memory..
-        /// </summary>
-        public static string PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_the_file_into_memory_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_p" +
-                        "recursor_candidates_of_the_file_into_memory_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to reload the re-scored results file {0}: {1}.
-        /// </summary>
-        public static string PerFileRescoreTask_OverlayReconciledIntoBuffer_Failed_to_reload_the_re_scored_results_file__0____1_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_OverlayReconciledIntoBuffer_Failed_to_reload_the_re_scored_res" +
-                        "ults_file__0____1_", resourceCulture);
             }
         }
         
