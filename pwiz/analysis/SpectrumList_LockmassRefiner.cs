@@ -39,6 +39,9 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListWrapper
     private readonly double _tolerance;
     private readonly DataProcessing? _dp;
 
+    /// <summary>The wrapped list.</summary>
+    public new ISpectrumList Inner => base.Inner;
+
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => _dp;
 

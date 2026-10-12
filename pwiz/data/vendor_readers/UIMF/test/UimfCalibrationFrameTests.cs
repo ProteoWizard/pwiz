@@ -25,7 +25,11 @@ public class UimfCalibrationFrameTests
     public void CalibrationFramesLeaveSpectraTicAndFileContent()
     {
         string fixture = PwizSharpPaths.CppVendorTestData("UIMF", "BSA_10ugml_CID.UIMF");
-        if (!File.Exists(fixture)) { Assert.Inconclusive($"{fixture} not present."); return; }
+        if (!File.Exists(fixture))
+        {
+            Assert.Inconclusive($"{fixture} not present.");
+            return;
+        }
 
         string dir = Path.Combine(Path.GetTempPath(), $"uimf-calibration-{Guid.NewGuid():N}");
         Directory.CreateDirectory(dir);
