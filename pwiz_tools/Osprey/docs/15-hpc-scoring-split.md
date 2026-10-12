@@ -98,8 +98,8 @@ Under `--task PerFileScoring` the task is included because it is the selection (
 
 1. Reads the pre-compaction shared entry buffer (`ctx.Get<ScoredEntries>()`, `:203`).
 2. Runs first-pass Percolator SVM FDR (`RunFdr` / `RunFirstPassProjection`, `:269-286`) with per-file PIN features streamed back on demand from each `.scores.parquet` (`loadFileFeatures`, `:244-249`).
-3. Runs first-pass picked-protein FDR on the full pre-compaction pool (`RunFirstPassProteinFdr`, `:309`) — unconditional, not gated on `--protein-fdr` (see 07-fdr-control.md, 08-protein-parsimony.md).
-4. Persists the per-file `<stem>.1st-pass.fdr_scores.bin` sidecars **before** compaction, so every stub carries its q-values (`WriteFdrScoresSidecars`, `:322`, `:827-858`).
+3. Runs first-pass picked-protein FDR on the full pre-compaction pool (`RunFirstPassProteinFdrStreaming`) — unconditional, not gated on `--protein-fdr` (see 07-fdr-control.md, 08-protein-parsimony.md).
+4. Persists the per-file `<stem>.1st-pass.fdr_scores.bin` sidecars **before** compaction, so every stub carries its q-values (written by the score pass's sink, then patched with the protein q-values).
 5. Compacts each file's stub list to the passing base_ids (`CompactFirstPass`, `:367`, `:657-720`): keep a base_id if `RunPeptideQvalue ≤ ReconciliationCompactionFdr` OR `RunProteinQvalue ≤ EffectiveProteinFdr`.
 6. Stage 6 **planning** (`PlanStage6`, `:387-392`, `:736-808`): multi-charge consensus, cross-run consensus RTs, per-file calibration refit, reconciliation planning, then writes each `<stem>.reconciliation.json` envelope (`WriteReconciliationFiles`, `:878-1039`).
 
@@ -123,9 +123,9 @@ Under `--task PerFileRescoring` the membership rule includes only this stage (th
 
 `SecondPassFdrTask` (`Osprey.Tasks/SecondPassFdrTask.cs`). The terminal aggregator. `Run` (`:115-235`):
 
-1. Second-pass Percolator FDR whenever any reconciled parquet exists on disk (`AnyReconciledParquet`, `:284-294` — the C# analog of Rust's `total_rescored > 0`), via `Pass2FdrSidecar.ComputeAndPersist` (`:149`), which reloads reconciled features, reruns Percolator, writes `<stem>.2nd-pass.fdr_scores.bin`, and reloads them onto the stubs.
+1. Second-pass FDR, via `Pass2FdrSidecar.ComputeAndPersist`, which folds every run's `<stem>.2nd-pass.fdr_scores.bin` - written by `PerFileRescoring`'s pass-2 worker for every run, in every pass-2 mode (#4665) - into the analysis-wide experiment scope and puts the second-pass q-values onto the stubs. It writes no per-run file.
 2. Second-pass protein FDR — always runs (parsimony + picked-protein at `config.RunFdr`), `RunProteinFdr` (`:249-273`).
-3. Re-clamp experiment q to best run q (`PercolatorEngine.ClampExperimentQToBestRun`, `:177`).
+3. Re-clamp experiment q to best run q (`ExperimentQFloors`, over `PercolatorEngine.AccumulateExperimentQFloors` / `ApplyExperimentQFloors`).
 4. Write the BiblioSpecLite `.blib` (`WriteBlibOutput`, `:299-370`; see 13-blib-output-schema.md).
 
 Under `--task SecondPassFDR` (`config.ExpectReconciledInput`), `Rehydrate` (`:317-455`) hydrates from the reconciled parquets + sidecars **without** materializing `FirstPassFdrTask` (which would wrongly re-run Stage 5 Percolator on the reconciled parquets), applies its own compaction, and lets `SecondPassFdrTask.Run` do 2nd-pass FDR + protein FDR + blib. The strict reconciled-input gate asserts every run's reconciled parquet carries `osprey.reconciled = "true"` (`ParquetScoreCache.ValidateScoresParquetGroup`). `ValidateSelection` (the base default) requires `--input` plus `--library` + `--output`.
@@ -176,7 +176,7 @@ every node - is the sidecar file contract in
 [00-pipeline-architecture.md](00-pipeline-architecture.md). It is verified row by row against
 the path-building code; the table that used to sit here had drifted (it attributed
 `<stem>.2nd-pass.fdr_scores.bin` to Stage 7, when `PerFileRescoring`'s pass-2 worker writes it
-whenever that worker runs).
+for every run).
 
 Per-run notes worth keeping alongside the contract:
 
@@ -194,7 +194,7 @@ formats.
 
 ## Cross-implementation compatibility and bisection dumps
 
-The parquet cache and `reconciliation.json` boundary file are shared with Rust Osprey at each pipeline seam. Cross-impl byte-parity is validated via env-var-gated diagnostic dumps routed through `ctx.Diagnostics` (`Osprey.Diagnostics/IOspreyDiagnostics.cs`). The C# port exposes the Stage 5/6 dumps the Rust doc lists, including `OSPREY_DUMP_PERCOLATOR` (`DumpPercolator`, written pre-compaction so the diff sees targets + decoys, `FirstPassFdrTask.cs:551-554`), `OSPREY_DUMP_STANDARDIZER`, `OSPREY_DUMP_SUBSAMPLE`, `OSPREY_DUMP_SVM_WEIGHTS`, `OSPREY_DUMP_CALIBRATION`, `OSPREY_DUMP_PROTEIN_FDR`, `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_INV_PREDICT`, `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_REFIT`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_MP_INPUTS`, and the Stage 6 rescore dump `OSPREY_DUMP_RESCORED` (`PerFileRescoreTask.cs:297-313`). Each has an `_ONLY` companion that exits after writing. **`OSPREY_DUMP_PREDICT_RT` is declared but its scoring-hotspot call site is disabled** in the C# port for performance (`PerFileRescoreTask.cs:715-726`; see Divergences and 18-peptide-trace.md).
+The parquet cache and `reconciliation.json` boundary file are shared with Rust Osprey at each pipeline seam. Cross-impl byte-parity is validated via env-var-gated diagnostic dumps routed through `ctx.Diagnostics` (`Osprey.Diagnostics/IOspreyDiagnostics.cs`). The C# port exposes the Stage 5/6 dumps the Rust doc lists, including `OSPREY_DUMP_STANDARDIZER`, `OSPREY_DUMP_SUBSAMPLE`, `OSPREY_DUMP_SVM_WEIGHTS`, `OSPREY_DUMP_CALIBRATION`, `OSPREY_DUMP_PROTEIN_FDR`, `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_INV_PREDICT`, `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_REFIT`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_MP_INPUTS`, and the Stage 6 rescore dump `OSPREY_DUMP_RESCORED` (`PerFileRescoreTask.cs:297-313`). Each has an `_ONLY` companion that exits after writing. **`OSPREY_DUMP_PREDICT_RT` is declared but its scoring-hotspot call site is disabled** in the C# port for performance (`PerFileRescoreTask.cs:715-726`; see Divergences and 18-peptide-trace.md). The first-pass Percolator dump (`OSPREY_DUMP_PERCOLATOR` / `OSPREY_PERCOLATOR_ONLY`, `cs_stage5_percolator.tsv`) was removed on 2026-10-10 with the resident first pass it read; setting either name now fails at startup.
 
 ## Safe concurrent writes
 
