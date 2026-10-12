@@ -56,7 +56,6 @@ namespace pwiz.Osprey
             @"OSPREY_DUMP_MS2_CAL_ERRORS",
             @"OSPREY_DUMP_LDA_SCORES",
             @"OSPREY_DUMP_LOESS_INPUT",
-            @"OSPREY_DUMP_PERCOLATOR",
             @"OSPREY_DUMP_RESCORED",
             @"OSPREY_DUMP_CWT_PATH",
             @"OSPREY_DUMP_CONSENSUS",

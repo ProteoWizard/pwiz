@@ -280,9 +280,8 @@ namespace pwiz.Osprey.IO
         /// question the refusal asks, or a run is admitted to a fold it then aborts.</para>
         ///
         /// <para>Says nothing about whether Stage 6 did any rescore WORK on the file - that is
-        /// the <c>osprey.rescored</c> footer key and a different question, deciding whether a
-        /// second Percolator pass is owed. This one asks only whether the rows are readable in
-        /// the shape a survivor rebuild needs.</para>
+        /// the <c>osprey.rescored</c> footer key, a different question. This one asks only
+        /// whether the rows are readable in the shape a survivor rebuild needs.</para>
         /// </summary>
         public static bool IsCurrentReconciledSurvivorSubset(string path)
         {
@@ -1358,8 +1357,7 @@ namespace pwiz.Osprey.IO
         /// has a column for one (format v7, issue #4522). Not the 2nd pass, which this used to
         /// claim, and NOT a cost the ordinary pipeline pays: a default run takes the lean arm
         /// (<c>PerFileScoringTask.CanUseLeanProjection</c>), so reaching this read means the run
-        /// asked for the resident pool - <c>OSPREY_FDR_PROJECTION=0</c> - or carries
-        /// reconciled input. The STREAMING first pass needs none
+        /// carries reconciled input. The STREAMING first pass needs none
         /// of it: it already has each row's apex RT in hand from the same stream that produced
         /// its score, which is the point of putting the column in the sidecar at all.</para>
         /// </summary>
