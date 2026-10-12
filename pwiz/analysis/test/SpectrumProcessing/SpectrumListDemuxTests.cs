@@ -312,6 +312,116 @@ public class SpectrumListDemuxTests
         return false;
     }
 
+    /// <summary>
+    /// Real staggered-window data cut down to four fragment m/z whose NNLS reaches the iteration
+    /// limit in some spectra, against cpp msconvert's output (see the data folder's README).
+    /// </summary>
+    [TestMethod]
+    public void Demux_EclipseNnlsFixture_MatchesCppPeakByPeak()
+    {
+        string root = FindDemuxTestDataRoot();
+        var spectra = ReadEclipseFixture(Path.Combine(root, "EclipseNnlsFixture.tsv"), out var notCompared);
+        var demuxList = new SpectrumListDemux(spectra,
+            new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly });
+
+        // Below 1 are rounding-level near-zeros that cpp (QR) and C# (Cholesky) resolve differently.
+        var expected = new Dictionary<(string Scan, string Demux), List<(double Mz, double Intensity)>>();
+        foreach (var line in File.ReadLines(Path.Combine(root, "EclipseNnlsFixture.expected.tsv")))
+        {
+            if (line.StartsWith('#')) continue;
+            var f = line.Split('\t');
+            var key = (f[0], f[1]);
+            if (!expected.TryGetValue(key, out var peaks)) expected[key] = peaks = new();
+            peaks.Add((double.Parse(f[2], Invariant), double.Parse(f[3], Invariant)));
+        }
+
+        int compared = 0;
+        for (int i = 0; i < demuxList.Count; i++)
+        {
+            var spectrum = demuxList.GetSpectrum(i, getBinaryData: true);
+            Assert.IsTrue(TryGetIdToken(spectrum.Id, "originalScan", out var scan));
+            Assert.IsTrue(TryGetIdToken(spectrum.Id, "demux", out var demux));
+            var mzs = spectrum.GetMZArray()?.Data ?? new List<double>();
+            var intensities = spectrum.GetIntensityArray()?.Data ?? new List<double>();
+            var actual = new List<(double Mz, double Intensity)>();
+            notCompared.TryGetValue(scan, out double skipMz);
+            for (int k = 0; k < mzs.Count; k++)
+            {
+                if (intensities[k] >= 1 && mzs[k] != skipMz)
+                    actual.Add((mzs[k], intensities[k]));
+            }
+            var want = expected.TryGetValue((scan, demux), out var w) ? w : new();
+            Assert.AreEqual(want.Count, actual.Count, $"peak count of originalScan={scan} demux={demux}");
+            for (int k = 0; k < want.Count; k++)
+            {
+                Assert.AreEqual(want[k].Mz, actual[k].Mz, 1e-6, $"m/z in originalScan={scan} demux={demux}");
+                Assert.AreEqual(want[k].Intensity, actual[k].Intensity, want[k].Intensity * 1e-5,
+                    $"intensity at {want[k].Mz:F4} in originalScan={scan} demux={demux}");
+                compared++;
+            }
+        }
+        Assert.AreEqual(expected.Values.Sum(p => p.Count), compared, "every expected cpp peak compared");
+    }
+
+    private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+    /// <summary>Reads the Eclipse fixture (format in the data folder's README); <paramref name="notCompared"/>
+    /// gets each spectrum's <c>M</c> peak m/z by scan.</summary>
+    private static SpectrumListSimple ReadEclipseFixture(string path, out Dictionary<string, double> notCompared)
+    {
+        var list = new SpectrumListSimple();
+        notCompared = new Dictionary<string, double>();
+        string currentScan = string.Empty;
+        Spectrum? current = null;
+        var mzs = new List<double>();
+        var intensities = new List<double>();
+        void Finish()
+        {
+            if (current is null) return;
+            current.SetMZIntensityArrays(mzs.ToArray(), intensities.ToArray(), CVID.MS_number_of_detector_counts);
+            list.Spectra.Add(current);
+            mzs.Clear();
+            intensities.Clear();
+        }
+        foreach (var line in File.ReadLines(path))
+        {
+            if (line.Length == 0 || line.StartsWith('#')) continue;
+            var f = line.Split('\t');
+            if (f[0] == "S")
+            {
+                Finish();
+                currentScan = f[1];
+                current = new Spectrum { Index = list.Spectra.Count, Id = $"scan={f[1]}" };
+                current.Params.Set(CVID.MS_ms_level, 2);
+                var precursor = new Precursor();
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, double.Parse(f[3], Invariant), CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, double.Parse(f[4], Invariant), CVID.MS_m_z);
+                precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, double.Parse(f[5], Invariant), CVID.MS_m_z);
+                current.Precursors.Add(precursor);
+                var scan = new Scan();
+                scan.Set(CVID.MS_scan_start_time, double.Parse(f[2], Invariant), CVID.UO_minute);
+                current.ScanList.Scans.Add(scan);
+            }
+            else if (current is null)
+            {
+                Assert.Fail($"peak line before the first spectrum in {Path.GetFileName(path)}: {line}");
+            }
+            else if (f[0] == "M")
+            {
+                mzs.Add(double.Parse(f[1], Invariant));
+                intensities.Add(double.Parse(f[2], Invariant));
+                notCompared[currentScan] = mzs[^1];
+            }
+            else
+            {
+                mzs.Add(double.Parse(f[0], Invariant));
+                intensities.Add(double.Parse(f[1], Invariant));
+            }
+        }
+        Finish();
+        return list;
+    }
+
     // ---------- helpers ----------
 
     /// <summary>Builds a single-precursor / single-overlap synthetic DIA list. Mirrors the
