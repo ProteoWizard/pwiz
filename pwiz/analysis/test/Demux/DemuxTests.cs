@@ -1,4 +1,5 @@
 using System.Globalization;
+using MathNet.Numerics.Interpolation;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using Pwiz.Analysis.Demux;
@@ -459,6 +460,75 @@ public static class DemuxTests
             Assert.AreEqual(3.0, matrix[0, 1], 1e-9, "bin @4");
             for (int i = 2; i < binMzs.Length; i++)
                 Assert.AreEqual(1.0, matrix[0, i], 1e-9, $"bin @{binMzs[i]}");
+        }
+    }
+
+    // ============================================================================
+    //   RetentionTimeInterpolator - closed-form 3-point natural spline vs MathNet
+    // ============================================================================
+
+    [TestClass]
+    public class RetentionTimeInterpolatorTests
+    {
+        [TestMethod]
+        public void NaturalThreePoint_MatchesMathNetNaturalSpline()
+        {
+            // Random uneven 3-point configurations at RT scale (minutes, with spacings from
+            // sub-second to many seconds), intensities over many orders of magnitude. Queries
+            // inside each segment, exactly at and just beside the knots, and up to one span past
+            // either end, where both extend the end segment's cubic.
+            var random = new Random(4822);
+            double maxInsideError = 0, maxOutsideError = 0;
+            for (int config = 0; config < 10000; config++)
+            {
+                double x0 = random.NextDouble() * 120;
+                double x1 = x0 + RandomSpacing(random);
+                double x2 = x1 + RandomSpacing(random);
+                var times = new[] { x0, x1, x2 };
+                double scale = System.Math.Pow(10, random.Next(0, 8));
+                var values = new double[3];
+                for (int i = 0; i < 3; i++)
+                    values[i] = random.Next(4) == 0 ? 0 : random.NextDouble() * scale;
+
+                var spline = CubicSpline.InterpolateNatural(times, values);
+                double span = x2 - x0;
+                var queries = new List<double> { x0, x1, x2, x0 - span, x2 + span };
+                foreach (double knot in times)
+                {
+                    queries.Add(knot - 1e-9);
+                    queries.Add(knot + 1e-9);
+                }
+                for (int q = 0; q < 10; q++)
+                    queries.Add(x0 + random.NextDouble() * span);
+                for (int q = 0; q < 4; q++)
+                    queries.Add(x0 + (random.NextDouble() * 3 - 1) * span);
+
+                // Error relative to the largest sample, the scale rounding works at. Past the ends
+                // the cubic term amplifies rounding in the coefficients (measured ~2e-10 against
+                // ~3e-14 inside), so extrapolation gets a looser bound.
+                double yMax = System.Math.Max(1, System.Math.Max(values[0], System.Math.Max(values[1], values[2])));
+                foreach (double t in queries)
+                {
+                    double expected = spline.Interpolate(t);
+                    double actual = RetentionTimeInterpolator.Interpolate(
+                        DemuxInterpolation.NaturalThreePoint, times, values, t);
+                    double relError = System.Math.Abs(actual - expected) / yMax;
+                    bool inside = x0 <= t && t <= x2;
+                    if (inside)
+                        maxInsideError = System.Math.Max(maxInsideError, relError);
+                    else
+                        maxOutsideError = System.Math.Max(maxOutsideError, relError);
+                    Assert.IsTrue(relError < (inside ? 1e-12 : 1e-9),
+                        $"config {config} t={t:R}: closed form {actual:R}, MathNet {expected:R}");
+                }
+            }
+            Console.WriteLine($"Max error relative to largest sample: {maxInsideError:E2} inside, {maxOutsideError:E2} outside");
+        }
+
+        private static double RandomSpacing(Random random)
+        {
+            // 0.005 to 0.5 min: 0.3 s to 30 s.
+            return 0.005 * System.Math.Pow(100, random.NextDouble());
         }
     }
 
