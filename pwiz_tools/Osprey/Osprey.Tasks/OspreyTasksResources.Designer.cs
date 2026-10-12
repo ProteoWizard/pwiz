@@ -1632,16 +1632,6 @@ namespace pwiz.Osprey.Tasks {
         /// <summary>
         ///   Looks up a localized string similar to The second-pass results could not be added to the model diagnostics report: {0}.
         /// </summary>
-        public static string ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_ {
-            get {
-                return ResourceManager.GetString("ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be" +
-                        "_added_to_the_model_diagnostics_report___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The second-pass results could not be added to the model diagnostics report: {0}.
-        /// </summary>
         public static string ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_ {
             get {
                 return ResourceManager.GetString("ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_resul" +
@@ -2055,46 +2045,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____" +
                         "1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Checking second-pass intermediate files for {0:N0} files.
-        /// </summary>
-        public static string Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for__0__files {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for__" +
-                        "0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Checking second-pass intermediate files for 1 file.
-        /// </summary>
-        public static string Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1_file {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1" +
-                        "_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reloaded second-pass FDR scores ({1}) for {2:N0} of {0:N0} files.
-        /// </summary>
-        public static string Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2__of__0__files {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2_" +
-                        "_of__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reloaded second-pass FDR scores ({1}) for 1 file.
-        /// </summary>
-        public static string Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for_1_file {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for_1_f" +
-                        "ile", resourceCulture);
             }
         }
         
@@ -2571,26 +2521,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_p" +
                         "recursor_candidates_of_the_file_into_memory_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Rebuilding the kept precursor candidates from {0:N0} files.
-        /// </summary>
-        public static string PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from__0__files {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candi" +
-                        "dates_from__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Rebuilding the kept precursor candidates from 1 file.
-        /// </summary>
-        public static string PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from_1_file {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candi" +
-                        "dates_from_1_file", resourceCulture);
             }
         }
         
@@ -4074,16 +4004,6 @@ namespace pwiz.Osprey.Tasks {
         public static string SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR {
             get {
                 return ResourceManager.GetString("SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR will hold the precursor candidates of all {0:N0} runs in memory at once (about {1:N0} GB)..
-        /// </summary>
-        public static string SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_candidates_of_all__0__runs_in_memory_at_once__ {
-            get {
-                return ResourceManager.GetString("SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_" +
-                        "candidates_of_all__0__runs_in_memory_at_once__", resourceCulture);
             }
         }
         

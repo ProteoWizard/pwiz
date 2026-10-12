@@ -1362,23 +1362,6 @@ namespace pwiz.Osprey.Tasks
             var joinLeanNames = new List<string>();
             var joinLeanCounts = new List<int>();
 
-            // The --input-files paths THROW on the same O(files) situation. This one must not:
-            // every configuration that still reaches the resident branch worked before the
-            // streaming hydrate landed - a --task FirstPassFDR re-run over parquets whose
-            // sidecars are already on disk. (The --task SecondPassFDR merge was another until
-            // #4486 streamed it.) Throwing would break it. Warn with the consumer named
-            // instead, so an operator who meets the O(files) peak at scale knows which knob
-            // put them on it. When the streaming hydrate below takes the load the pool is
-            // bounded and there is nothing to say.
-            // Warn on exactly the condition that SELECTS the resident loop below, rather than
-            // on a hand-listed set of configs that can drift from it (#4486): a
-            // reconciled-input merge whose inputs are missing a .reconciliation.json takes
-            // the resident loop with hasReconSidecars false and streamCompaction false, and a
-            // hand-listed test let that O(files) load happen SILENTLY. The resident loop runs
-            // iff it neither streams nor takes the lean projection, so that is what this asks.
-            if (!streamCompaction && !useLeanProjection)
-                WarnPreCompactionPool(config, hasReconSidecars, ctx);
-
             // The per-run rescore hydrates each run inside its own iteration, so building ANY
             // all-runs structure here is work whose product that loop overwrites. Publish the
             // run names, their parquet paths and their calibrations - the run-count-independent
@@ -1396,6 +1379,17 @@ namespace pwiz.Osprey.Tasks
             // consumer so a reader of the run log can tell which leg took this path.
             bool perRunRescore = ScoringTaskShared.CanHydratePerRun(config);
             bool perRunJoin = !perRunRescore && ScoringTaskShared.CanStreamStage7Join(config);
+            // --task SecondPassFDR that cannot fold run by run is a directory Stage 7 cannot
+            // read, so it is refused here, naming what is missing, before any run is loaded. It
+            // once fell through to the all-runs load below, and then failed in Stage 7 on the
+            // same missing or older-build file, with a stack trace.
+            if (config.ExpectReconciledInput && !perRunRescore && !perRunJoin)
+            {
+                ctx.LogError(ScoringTaskShared.UnstreamableJoinError(config));
+                ctx.ExitCode = 1;
+                hydrationFailed = true;
+                return null;
+            }
             if (perRunRescore || perRunJoin)
             {
                 loadsPerRun = true;
@@ -1406,6 +1400,27 @@ namespace pwiz.Osprey.Tasks
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
                 return null;
             }
+
+            // AFTER the per-run arms and the refusal above, which read no rows: warning here on
+            // their condition would announce an O(files) load that never happens - the false
+            // "every file in memory" line and resident route the HPC --task SecondPassFDR node
+            // used to log, because its withheld 1st-pass sidecars make hasReconSidecars false.
+            // The --input-files paths THROW on the same O(files) situation. This one must not:
+            // every configuration that still reaches the resident branch worked before the
+            // streaming hydrate landed - a --task FirstPassFDR re-run over parquets whose
+            // sidecars are already on disk. (The --task SecondPassFDR merge was another until
+            // #4486 streamed it.) Throwing would break it. Warn with the consumer named
+            // instead, so an operator who meets the O(files) peak at scale knows which knob
+            // put them on it. When the streaming hydrate below takes the load the pool is
+            // bounded and there is nothing to say.
+            // Warn on exactly the condition that SELECTS the resident loop below, rather than
+            // on a hand-listed set of configs that can drift from it (#4486): a
+            // reconciled-input merge whose inputs are missing a .reconciliation.json takes
+            // the resident loop with hasReconSidecars false and streamCompaction false, and a
+            // hand-listed test let that O(files) load happen SILENTLY. The resident loop runs
+            // iff it neither streams nor takes the lean projection, so that is what this asks.
+            if (!streamCompaction && !useLeanProjection)
+                WarnPreCompactionPool(config, hasReconSidecars, ctx);
 
             // Bounded reconciled-bundle rehydrate: hand the per-file stub load to the
             // streaming hydrate, which compacts each file before touching the next, so the
@@ -1780,7 +1795,6 @@ namespace pwiz.Osprey.Tasks
                 fileNames[i] = Path.GetFileNameWithoutExtension(config.InputFiles[i]) ?? string.Empty;
             return fileNames;
         }
-
         /// <summary>
         /// Best-effort per-file calibration JSON load for Stage 6 reconciliation: the refined
         /// RT calibration plus the isolation-window coverage the gap-fill m/z filter needs.

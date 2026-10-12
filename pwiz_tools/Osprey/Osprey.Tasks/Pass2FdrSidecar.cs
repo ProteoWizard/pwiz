@@ -130,22 +130,16 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.STAGE_WALL, @"second-pass-fdr: {0:F1}s",
                 swPass2.Elapsed.TotalSeconds);
 
-            // Put the answers back on a RESIDENT pool, which every later fold of this stage reads.
-            // RunProteinFdr's detected_peptides gate filters on ExperimentPrecursorQvalue, which
-            // has to be the 2nd-pass value to match Rust pipeline.rs:4480-4494's
-            // reload-then-second-pass-FDR sequence; without it single-file --task SecondPassFDR
-            // runs include ~19 borderline peptides whose 1st-pass q passes 1% and whose 2nd-pass q
-            // does not, a 1-protein delta in the picked-protein output cross-impl.
-            //
-            // A STREAMED pool has no entries to overlay: they are dropped as each run is folded.
-            // The same overlay is installed as a per-run hook instead (InstallStreamedPass2Overlay,
-            // called by the stage right after this method), so every later fold rebuilds a run and
-            // immediately gets its second-pass values.
-            if (!rescored.Streams)
-            {
-                ReloadPass2Sidecars(ctx, pass2Writer, rescored.Value, @"post-fold",
-                    LazyPass2ExperimentRecords(ctx));
-            }
+            // Every later fold of this stage reads the second-pass answers, and the pool has no
+            // entries to put them on: they are dropped as each run is folded. The overlay is
+            // installed as a per-run hook instead (InstallStreamedPass2Overlay, called by the
+            // stage right after this method), so every later fold rebuilds a run and immediately
+            // gets its second-pass values. RunProteinFdr's detected_peptides gate filters on
+            // ExperimentPrecursorQvalue, which has to be the 2nd-pass value to match Rust
+            // pipeline.rs:4480-4494's reload-then-second-pass-FDR sequence; without it
+            // single-file --task SecondPassFDR runs include ~19 borderline peptides whose
+            // 1st-pass q passes 1% and whose 2nd-pass q does not, a 1-protein delta in the
+            // picked-protein output cross-impl.
         }
 
         /// <summary>
@@ -291,139 +285,53 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The RESIDENT sibling of <see cref="InstallStreamedPass2Overlay"/>: overlay every
-        /// file's second-pass sidecar onto a resident survivor pool. A no-op on the streamed
-        /// arm, where the installed per-run overlay already does it.
-        ///
-        /// <para>Needed by the pass-2 diagnostics fold and by nothing else. Every other caller
-        /// arrives here having just run <see cref="ComputeAndPersist"/>, which stamps the
-        /// second-pass values onto the resident entries as it computes them; the fold skips
-        /// that compute by definition, so on the resident arm its pool would otherwise still
-        /// carry the FIRST pass's q-values - and the report would describe pass 1 while
-        /// labelling it pass 2. That failure is invisible to every other check: the page is
-        /// complete, every card is populated, and the numbers are real, just from the wrong
-        /// pass. Only a byte-comparison against the flag-up-front report catches it, which is
-        /// why P16 makes that comparison half of the requirement.</para>
-        /// </summary>
-        internal static void OverlayPass2OntoResidentPool(
-            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey,
-            Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>> experimentRecords)
-        {
-            if (rescored.Streams)
-                return;
-            var writer = new Pass2SidecarWriter(ctx.Config, taskName, taskValidityKey);
-            ReloadPass2Sidecars(ctx, writer, rescored.Value, @"diagnostics-fold", experimentRecords);
-        }
-
-        private static void ReloadPass2Sidecars(
-            PipelineContext ctx,
-            Pass2SidecarWriter writer,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            string phase,
-            Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>> lazyExperimentRecords)
-        {
-            int filesReloaded = 0;
-            int filesMissing = 0;
-            // Resolved once for the whole reload; the overlay applies them per file, to the
-            // records that file's own sidecar carries (format v5, issue #4486).
-            var experimentRecords = lazyExperimentRecords.Value;
-            // Per-file progress: reads back every file's sidecar and rebuilds an entry_id map
-            // over that file's survivors. Silent, and the second half of the 38s gap between
-            // the competition's [STAGE-WALL] line and the next probe (#4486); the write loop is
-            // the first half.
-            using (var reloadProgress = new ProgressReporter(
-                CountText.Format(perFileEntries.Count, OspreyTasksResources.Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1_file,
-                    OspreyTasksResources.Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for__0__files),
-                perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
-            {
-                long nReloadReported = 0;
-                var byEntryId = new Dictionary<uint, FdrEntry>();
-                foreach (var kvp in perFileEntries)
-                {
-                    reloadProgress.Report(++nReloadReported);
-                    if (OverlayPass2SidecarOntoFile(
-                            writer, kvp.Key, kvp.Value, experimentRecords, ctx.LogWarning, byEntryId))
-                    {
-                        filesReloaded++;
-                    }
-                    else
-                    {
-                        filesMissing++;
-                    }
-                }
-            }
-            if (filesReloaded > 0)
-            {
-                ctx.LogVerbose(CountText.Format(filesReloaded + filesMissing,
-                    OspreyTasksResources.Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for_1_file,
-                    OspreyTasksResources.Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2__of__0__files,
-                    phase, filesReloaded));
-            }
-        }
-
-        /// <summary>
         /// Overlay ONE run's <c>.2nd-pass.fdr_scores.bin</c> - plus the analysis-wide 2nd-pass
-        /// experiment records - onto that run's entries. The body of
-        /// <see cref="ReloadPass2Sidecars"/>' loop, extracted because a STREAMED Stage 7 has to
-        /// apply it once per run per pass rather than once per run in total: the entries are
-        /// rebuilt from disk carrying their 1st-pass values, so without this every fold after
-        /// the second pass would read pass-1 q-values off pass-2 rows.
+        /// experiment records - onto that run's entries. Stage 7 applies it once per run per
+        /// pass: the entries are rebuilt from disk carrying their 1st-pass values, so without
+        /// this every fold after the second pass would read pass-1 q-values off pass-2 rows.
         ///
-        /// <para>Returns false when the run has no readable current sidecar - the caller decides
-        /// whether that is the legitimate absence (a first run with no rescore work) or the
-        /// failed write it is on the post-write pass, which is why the disposition is not taken
-        /// here.</para>
+        /// <para>A run with no current sidecar keeps EXACTLY the entries it arrived with - its
+        /// first-pass state, freshly rebuilt - rather than having them reset; nothing here
+        /// invents a value. A sidecar that is present but unreadable is warned about.</para>
         ///
-        /// <para>A missing sidecar leaves the entries EXACTLY as they arrived rather than
-        /// resetting them. On the resident path that is the standing first-pass state, which is
-        /// what the loop's own contract says such a run keeps; on the streamed path it is the
-        /// same state, freshly rebuilt. The two agree because neither invents a value.</para>
+        /// <para>The join index is the CALLER's, reused across files and cleared here. It used to
+        /// be allocated per call and sized to the file
+        /// (<c>new Dictionary&lt;uint, FdrEntry&gt;(entries.Count)</c>), which at cohort scale
+        /// is a ~4.2 M-entry bucket and entry array on the large-object heap per file - and this
+        /// overlay runs once per file per STREAMED PASS: three times over a 446-run cohort in
+        /// SecondPassFDR alone. Clearing keeps the capacity of the largest file seen and
+        /// allocates nothing after it, which is the answer <see cref="Pass1ScalarSeeder"/>
+        /// already gives for its own per-file buffers.</para>
         /// </summary>
-        /// <summary>
-        /// Overlay one file's 2nd-pass FDR sidecar onto its entries, returning false when the file
-        /// has no current sidecar (the caller reports it and the run keeps 1st-pass q-values).
-        ///
-        /// <para>The join index is the CALLER's, reused across files and cleared here. It used to be allocated
-        /// per call and sized to the file (<c>new Dictionary&lt;uint, FdrEntry&gt;(entries.Count)</c>),
-        /// which at cohort scale is a ~4.2 M-entry bucket and entry array on the large-object heap
-        /// per file - and this overlay is a post-materialize hook, so it runs once per file per
-        /// STREAMED PASS: three times over a 446-run cohort in SecondPassFDR alone. Clearing keeps
-        /// the capacity of the largest file seen and allocates nothing after it, which is the
-        /// answer <see cref="Pass1ScalarSeeder"/> already gives for its own per-file buffers.</para>
-        /// </summary>
-        private static bool OverlayPass2SidecarOntoFile(
+        private static void OverlayPass2SidecarOntoFile(
             Pass2SidecarWriter writer, string fileName, List<FdrEntry> entries,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Action<string> logWarning, Dictionary<uint, FdrEntry> byEntryId)
         {
             string inputFile = writer.InputFor(fileName);
             if (inputFile == null)
-                return false;
+                return;
             string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
             if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
-                return false;
+                return;
             byEntryId.Clear();
             foreach (var e in entries)
                 byEntryId[e.EntryId] = e;
-            if (FdrScoresSidecar.TryReadOverlay(
+            if (!FdrScoresSidecar.TryReadOverlay(
                     pass2Path, byEntryId, FdrScoresSidecar.Pass.SecondPass, experimentRecords))
             {
-                return true;
+                logWarning(string.Format(
+                    OspreyTasksResources.Pass2FdrSidecar_OverlayPass2SidecarOntoFile_Failed_to_reload_the_second_pass_intermediate_file_for___0_____1____protein_FDR_will_use_, fileName, pass2Path));
             }
-            logWarning(string.Format(
-                OspreyTasksResources.Pass2FdrSidecar_OverlayPass2SidecarOntoFile_Failed_to_reload_the_second_pass_intermediate_file_for___0_____1____protein_FDR_will_use_, fileName, pass2Path));
-            return false;
         }
 
         /// <summary>
         /// Make every fold that runs AFTER the second pass see the second pass's answer, on a
         /// Stage 7 whose runs are rebuilt from disk one at a time (#4486).
         ///
-        /// <para>On the resident pool <see cref="ReloadPass2Sidecars"/> stamps the entries once
-        /// and every later pass reads the stamps. A streamed pool has no entries to stamp
-        /// between passes, so the same overlay is installed as a per-run hook and re-applied to
-        /// each run as it is rebuilt. Same operation, same rows, same result - once per run per
-        /// pass instead of once per run, which is the price of not holding the pool.</para>
+        /// <para>The pool has no entries to stamp between passes, so the overlay is installed as
+        /// a per-run hook and re-applied to each run as it is rebuilt - once per run per pass,
+        /// which is the price of not holding the pool.</para>
         ///
         /// <para>The experiment records arrive as a DEFERRED resolution the caller owns - see
         /// <see cref="LazyPass2ExperimentRecords"/> for why resolving it once, late, and shared
@@ -435,8 +343,6 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey,
             Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>> experimentRecords)
         {
-            if (!rescored.Streams)
-                return;
             var writer = new Pass2SidecarWriter(ctx.Config, taskName, taskValidityKey);
             // ONE join index per thread rather than per file: the cohort does not pay a
             // large-object dictionary per file per pass. Per thread, not one shared: StreamFiles
@@ -1335,17 +1241,7 @@ namespace pwiz.Osprey.Tasks
             // the only walk that sees entries - and the FLOORS themselves from the per-file
             // second-pass records read much further down, which carry run q but no sequence.
             var floors = new ExperimentQFloors();
-            // The resident survivor lists by file. It holds one REFERENCE per file, not a
-            // copy, so it costs nothing beyond the whole-run buffer Stage 7 has already
-            // built by the time this pass runs. Only where the pool is going to stay: on a
-            // streamed source those lists are emptied the moment the fold moves on, so a map of
-            // references to them would hand the competition empty runs - the failure that looks
-            // like a cohort with no survivors rather than like a bug. There LoadOneFile rebuilds
-            // the run it is asked for instead.
-            var residentByFile =
-                new Dictionary<string, List<FdrEntry>>(fileNames.Count, StringComparer.Ordinal);
-            long survivorObservations = WalkSurvivors(rescored, floors,
-                rescored.Streams ? null : residentByFile, survivorEntryIds);
+            long survivorObservations = WalkSurvivors(rescored, floors, survivorEntryIds);
 
             // 2. Per-file scalar sidecar paths. Validate every sidecar up front so we fail fast
             //    (and fall back to the retrain) before streaming any file.
@@ -1538,21 +1434,11 @@ namespace pwiz.Osprey.Tasks
                 var pass1Records = new List<FdrScoreRecord>();
                 var survivorIds = new HashSet<uint>();
 
-                // ONE file's post-rescore survivors, off the resident buffer. The list may be
-                // stamped and then dropped, and those stamps are also visible on the pool -
-                // which is why the sidecar, not the entry, is what carries this pass's
-                // results forward.
+                // ONE file's post-rescore survivors, rebuilt from this run's own artifacts. The
+                // sidecar, not the entry, is what carries this pass's results forward.
                 List<FdrEntry> LoadOneFile(string fileKey)
                 {
-                    // Rebuilt from this run's own artifacts on a streamed source, taken off the
-                    // resident buffer when there is one. Either way it is ONE run, which is what
-                    // this pass was already written to hold - the streamed source only makes
-                    // that true of the stage around it as well.
-                    if (rescored.Streams)
-                        return rescored.MaterializeFile(fileKey);
-                    return residentByFile.TryGetValue(fileKey, out var resident)
-                        ? resident
-                        : new List<FdrEntry>();
+                    return rescored.MaterializeFile(fileKey);
                 }
 
                 // ownSurvivorIds is this file's own survivor entry_ids, which is what
@@ -1646,13 +1532,12 @@ namespace pwiz.Osprey.Tasks
                     // here: pipeline artifacts are immutable once written, and this stage owns
                     // none of the per-run ones (#4665).
                     sidecarsFolded.Add(fileKey);
-                    // DROP the run here, on a streamed source: its answer is on disk and step 4
-                    // patches the sidecar rather than the entries, so this is the last line that
-                    // reads them. Without it the pass would refill run after run and never let
-                    // one go - the whole-run pool rebuilt one run at a time, which is the shape
-                    // that looks like a fix in the code and like no fix at all in the profile.
-                    if (rescored.Streams)
-                        rescored.DropFile(fileKey);
+                    // DROP the run here: its answer is on disk and step 4 patches the sidecar
+                    // rather than the entries, so this is the last line that reads them. Without
+                    // it the pass would refill run after run and never let one go - the whole-run
+                    // pool rebuilt one run at a time, which is the shape that looks like a fix in
+                    // the code and like no fix at all in the profile.
+                    rescored.DropFile(fileKey);
                     currentKey = null;
                     currentEntries = null;
                 }
@@ -1803,7 +1688,7 @@ namespace pwiz.Osprey.Tasks
             RequireTransferExperimentSidecar(config);
             var pass1Experiment = LoadExperimentRecords(config, FdrScoresSidecar.Pass.FirstPass);
             var floors = new ExperimentQFloors();
-            WalkSurvivors(rescored, floors, null, null);
+            WalkSurvivors(rescored, floors, null);
             FoldAndPublishExperimentScope(ctx, writer, rescored.FileNames, floors,
                 rec => CarryPass1Experiment(rec.EntryId, pass1Experiment));
         }
@@ -1862,11 +1747,9 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         /// <param name="rescored">The survivor source.</param>
         /// <param name="floors">Receives the peptide identities.</param>
-        /// <param name="residentByFile">Receives a reference to each run's list, or null. Only
-        /// for a pool that stays resident - see the caller.</param>
         /// <param name="survivorEntryIds">Receives every survivor entry_id, or null.</param>
         private static long WalkSurvivors(RescoredEntries rescored, ExperimentQFloors floors,
-            Dictionary<string, List<FdrEntry>> residentByFile, HashSet<uint> survivorEntryIds)
+            HashSet<uint> survivorEntryIds)
         {
             long survivorObservations = 0;
             int fileCount = rescored.FileCount;
@@ -1879,8 +1762,6 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kvp in rescored.StreamFiles())
                 {
                     mergeProgress.Report(++mergeIdx);
-                    if (residentByFile != null)
-                        residentByFile[kvp.Key] = kvp.Value;
                     survivorObservations += kvp.Value.Count;
                     if (survivorEntryIds != null)
                     {

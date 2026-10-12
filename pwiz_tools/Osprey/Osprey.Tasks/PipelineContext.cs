@@ -170,8 +170,8 @@ namespace pwiz.Osprey.Tasks
         /// <c>null</c> when diagnostics are off (no <c>-d</c> / no OSPREY_DUMP_*
         /// env var) -- the common case. Tasks read the gate flags and emit their
         /// byte-stable dumps through the null-conditional operator (e.g.
-        /// <c>ctx.Diagnostics?.DumpRescored ?? false</c>,
-        /// <c>ctx.Diagnostics?.WriteStage6RescoredDump(...)</c>) instead of the
+        /// <c>ctx.Diagnostics?.DumpConsensus ?? false</c>,
+        /// <c>ctx.Diagnostics?.WriteStage6ConsensusDump(...)</c>) instead of the
         /// exe-only <c>OspreyDiagnostics</c> static facade, so the task layer does
         /// not depend on the top-level exe project. Null-by-default is deliberate:
         /// the <c>?.</c> short-circuit is a single null check -- no virtual call,
