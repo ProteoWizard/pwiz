@@ -132,17 +132,6 @@ namespace pwiz.Osprey
         public bool LoessInputOnly { get; } = IsOne(@"OSPREY_LOESS_INPUT_ONLY");
 
         /// <summary>
-        /// OSPREY_DUMP_PERCOLATOR: dump per-precursor Stage 5 state
-        /// (score, pep, 4 q-values) after first-pass Percolator FDR
-        /// completes and before first-pass protein FDR / compaction.
-        /// Cross-impl parity gate (cs_stage5_percolator.tsv).
-        /// </summary>
-        public bool DumpPercolator { get; } = IsOne(@"OSPREY_DUMP_PERCOLATOR");
-
-        /// <summary>OSPREY_PERCOLATOR_ONLY: exit after cs_stage5_percolator.tsv dump.</summary>
-        public bool PercolatorOnly { get; } = IsOne(@"OSPREY_PERCOLATOR_ONLY");
-
-        /// <summary>
         /// OSPREY_DUMP_STANDARDIZER: dump the fitted Stage 5 feature standardizer
         /// (mean/scale per feature) right after FeatureStandardizer.FitTransform.
         /// </summary>
@@ -182,7 +171,7 @@ namespace pwiz.Osprey
         /// OSPREY_DUMP_RESCORED: dump per-precursor state AFTER the
         /// per-file Stage 6 rescore loop completes (consensus +
         /// reconciliation overlay, plus gap-fill stubs once Phase 2
-        /// lands). Same column shape as DumpPercolator so
+        /// lands). Same column shape as Rust's stage 5 Percolator dump so
         /// Compare-Percolator.ps1 reuses for the diff. Output:
         /// cs_stage6_rescored.tsv. Mirrors Rust's
         /// dump_stage6_rescored / OSPREY_DUMP_RESCORED gate.
@@ -401,7 +390,7 @@ namespace pwiz.Osprey
             DumpCalSample || CalSampleOnly || DumpCalWindows || CalWindowsOnly ||
             DumpCalMatch || CalMatchOnly || DumpMs2CalErrors || Ms2CalErrorsOnly ||
             DumpLdaScores || LdaScoresOnly || DumpLoessInput || LoessInputOnly ||
-            DumpPercolator || PercolatorOnly || DumpStandardizer || StandardizerOnly ||
+            DumpStandardizer || StandardizerOnly ||
             DumpPercInput || PercInputOnly || DumpSubsample || SubsampleOnly ||
             DumpSvmWeights || SvmWeightsOnly || DumpRescored || RescoredOnly ||
             DumpMpInputs || DumpPredictRt || DumpCwtPath || DumpConsensus ||
@@ -1595,73 +1584,11 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// Dump per-precursor Stage 5 (first-pass Percolator FDR) state to
-        /// cs_stage5_percolator.tsv, mirroring Rust's rust_stage5_percolator.tsv.
-        /// All four q-values plus score and pep are populated on every FdrEntry
-        /// at this point (before compaction or first-pass protein FDR), so the
-        /// cross-impl diff sees both targets and decoys.
-        ///
-        /// Columns: file_name, entry_id, charge, modified_sequence, is_decoy,
-        /// score, pep, run_precursor_q, run_peptide_q, experiment_precursor_q,
-        /// experiment_peptide_q. Rows sorted by (file_name, entry_id) for
-        /// stable human inspection; Compare-Percolator.ps1 hash-joins on the
-        /// composite key and is sort-order-agnostic. Floats use G17 (17-digit
-        /// roundtrippable) to avoid .NET Framework's historical "R"-format
-        /// roundtrip bugs.
-        /// </summary>
-        public void WriteStage5PercolatorDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
-        {
-            const string path = @"cs_stage5_percolator.tsv";
-            var inv = CultureInfo.InvariantCulture;
-
-            var rows = new List<KeyValuePair<string, FdrEntry>>();
-            foreach (var kvp in perFileEntries)
-            {
-                string fileName = kvp.Key;
-                foreach (var e in kvp.Value)
-                    rows.Add(new KeyValuePair<string, FdrEntry>(fileName, e));
-            }
-            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            {
-                int cmp = string.CompareOrdinal(a.Key, b.Key);
-                if (cmp != 0) return cmp;
-                return a.Value.EntryId.CompareTo(b.Value.EntryId);
-            });
-
-            using (var saver = new FileSaver(path))
-            {
-                using (var sw = new StreamWriter(saver.SafeName))
-                {
-                    sw.NewLine = TextUtil.LF;
-                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"charge", @"modified_sequence", @"is_decoy", @"score", @"pep", @"run_precursor_q", @"run_peptide_q", @"experiment_protein_q", @"experiment_precursor_q", @"experiment_peptide_q" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var row in rows)
-                    {
-                        var e = row.Value;
-                        sw.Write(row.Key);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.EntryId.ToString(inv));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.Charge.ToString(inv));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.ModifiedSequence ?? string.Empty);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.IsDecoy.ToLowerText());
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
-                    }
-                }
-                saver.Commit();
-            }
-            Log.LogInfo(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
-        }
-
-        /// <summary>
         /// Dump per-precursor state AFTER the Stage 6 per-file rescore
         /// loop completes (consensus + reconciliation overlay applied,
-        /// gap-fill stubs appended once Phase 2 lands). Same columns as
-        /// <see cref="WriteStage5PercolatorDump"/> + same sort + same
-        /// G17 / FormatF64Roundtrip formatting so Compare-Percolator.ps1
+        /// gap-fill stubs appended once Phase 2 lands). Columns: file_name, entry_id,
+        /// charge, modified_sequence, is_decoy, score, pep and the q-values, sorted by
+        /// (file_name, entry_id), with G17 / FormatF64Roundtrip formatting so Compare-Percolator.ps1
         /// can be reused for the diff. Output: cs_stage6_rescored.tsv,
         /// matching Rust's rust_stage6_rescored.tsv from
         /// dump_stage6_rescored.

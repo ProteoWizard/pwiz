@@ -91,10 +91,10 @@ namespace pwiz.Osprey.FDR
         /// models + standardizer and returns early -- skips CV/averaged
         /// scoring of the input entries, PEP estimation, q-value
         /// computation, and per-file FDR logging. Used by the streaming
-        /// path in <c>AnalysisPipeline.RunPercolatorStreaming</c>, where
-        /// the caller pre-dedups + subsamples the entries for training,
-        /// then invokes <see cref="PercolatorScorer.ScorePopulationAndComputeFdr"/>
-        /// on the full per-file FdrEntry population. Mirrors Rust's
+        /// paths, where the caller pre-dedups + subsamples the entries for
+        /// training, then scores the full population itself
+        /// (<see cref="PercolatorScorer.ScoreProjectionAndComputeFdrInPlace"/> or the
+        /// streamed first pass). Mirrors Rust's
         /// <c>PercolatorConfig::train_only</c>.
         /// </summary>
         public bool TrainOnly { get; set; }

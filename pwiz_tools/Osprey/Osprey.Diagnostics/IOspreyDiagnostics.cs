@@ -64,8 +64,6 @@ namespace pwiz.Osprey
         bool LdaScoresOnly { get; }
         bool DumpLoessInput { get; }
         bool LoessInputOnly { get; }
-        bool DumpPercolator { get; }
-        bool PercolatorOnly { get; }
         bool DumpStandardizer { get; }
         bool StandardizerOnly { get; }
         bool DumpPercInput { get; }
@@ -195,8 +193,6 @@ namespace pwiz.Osprey
         void CloseAll();
 
         // ----- Stages 5-7: join, rescore, reconciliation, protein FDR dumps -----
-
-        void WriteStage5PercolatorDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries);
 
         void WriteStage6RescoredDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries);
 
