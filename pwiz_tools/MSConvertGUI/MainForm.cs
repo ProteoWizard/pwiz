@@ -645,9 +645,6 @@ namespace MSConvertGUI
                 case "mzMLb":
                     commandLine.Append("--mzMLb|");
                     break;
-                case "mz5":
-                    commandLine.Append("--mz5|");
-                    break;
                 case "mgf":
                     commandLine.Append("--mgf|");
                     break;
@@ -747,7 +744,6 @@ namespace MSConvertGUI
                         break;
                     case "--mzXML":
                     case "--mzMLb":
-                    case "--mz5":
                     case "--mgf":
                     case "--text":
                     case "--ms1":

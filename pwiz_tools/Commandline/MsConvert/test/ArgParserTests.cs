@@ -58,13 +58,15 @@ public class ArgParserTests
     {
         // Each format flag selects its OutputFormat enum value.
         Assert.AreEqual(WriteFormat.MzXml, Invoke("x", "--mzXML").WriteConfig.Format);
-        Assert.AreEqual(WriteFormat.Mz5, Invoke("x", "--mz5").WriteConfig.Format);
         Assert.AreEqual(WriteFormat.MzMLb, Invoke("x", "--mzMLb").WriteConfig.Format);
         Assert.AreEqual(WriteFormat.Text, Invoke("x", "--text").WriteConfig.Format);
         Assert.AreEqual(WriteFormat.Ms1, Invoke("x", "--ms1").WriteConfig.Format);
         Assert.AreEqual(WriteFormat.Cms1, Invoke("x", "--cms1").WriteConfig.Format);
         Assert.AreEqual(WriteFormat.Ms2, Invoke("x", "--ms2").WriteConfig.Format);
         Assert.AreEqual(WriteFormat.Cms2, Invoke("x", "--cms2").WriteConfig.Format);
+
+        // mz5 is read-only; there is no writer, so the flag is not offered.
+        Assert.ThrowsException<ArgumentException>(() => Invoke("x", "--mz5"));
     }
 
     [TestMethod]

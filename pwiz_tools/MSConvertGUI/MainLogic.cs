@@ -139,7 +139,6 @@ namespace MSConvertGUI
             var formatMzMl = false;
             var formatMzMlB = false;
             var formatMzXml = false;
-            var formatMz5 = false;
             var formatMgf = false;
             var formatMs1 = false;
             var formatCms1 = false;
@@ -180,9 +179,6 @@ namespace MSConvertGUI
                         break;
                     case "--mzXML":
                         formatMzXml = true;
-                        break;
-                    case "--mz5":
-                        formatMz5 = true;
                         break;
                     case "--mgf":
                         formatMgf = true;
@@ -380,7 +376,6 @@ namespace MSConvertGUI
             var count = (formatText ? 1 : 0) 
                 + (formatMzMl ? 1 : 0)
                 + (formatMzXml ? 1 : 0)
-                + (formatMz5 ? 1 : 0)
                 + (formatMzMlB ? 1 : 0)
                 + (formatMgf ? 1 : 0)
                 + (formatMs1 ? 1 : 0)
@@ -391,7 +386,6 @@ namespace MSConvertGUI
             if (formatText) config.WriteConfig.Format = WriteFormat.Text;
             if (formatMzMl) config.WriteConfig.Format = WriteFormat.Mzml;
             if (formatMzXml) config.WriteConfig.Format = WriteFormat.MzXml;
-            if (formatMz5) config.WriteConfig.Format = WriteFormat.Mz5;
             if (formatMzMlB) config.WriteConfig.Format = WriteFormat.MzMLb;
             if (formatMgf) config.WriteConfig.Format = WriteFormat.Mgf;
             if (formatMs1) config.WriteConfig.Format = WriteFormat.Ms1;
@@ -413,9 +407,6 @@ namespace MSConvertGUI
                         break;
                     case WriteFormat.MzXml:
                         config.Extension = ".mzXML";
-                        break;
-                    case WriteFormat.Mz5:
-                        config.Extension = ".mz5";
                         break;
                     case WriteFormat.MzMLb:
                         config.Extension = ".mzMLb";
@@ -582,7 +573,6 @@ namespace MSConvertGUI
                                 msg = "Note: input contains only chromatogram data.";
                                 switch (config.WriteConfig.Format)
                                 {
-                                    case WriteFormat.Mz5:
                                     case WriteFormat.MzMLb:
                                     case WriteFormat.Mzml:
                                         break;

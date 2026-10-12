@@ -15,8 +15,6 @@ public enum WriteFormat
     MzXml,
     /// <summary>Mascot Generic Format — MS/MS peak lists only.</summary>
     Mgf,
-    /// <summary>mz5 HDF5 format (unimplemented).</summary>
-    Mz5,
     /// <summary>mzMLb HDF5 format (unimplemented).</summary>
     MzMLb,
     /// <summary>pwiz internal text format (unimplemented).</summary>
