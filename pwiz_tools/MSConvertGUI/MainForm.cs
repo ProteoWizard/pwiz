@@ -864,6 +864,13 @@ namespace MSConvertGUI
                 return;
             }
             string cmdline = File.ReadAllText(cfgFileName);
+            if (cmdline.Split('|').Contains("--mz5"))
+            {
+                MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) +
+                                "\" uses mz5 output, which is no longer supported (mz5 files can still be read). " +
+                                "The preset was not loaded. Choose another output format and save the preset again.");
+                return;
+            }
             SetControlsFromCommandline(cmdline);
         }
 

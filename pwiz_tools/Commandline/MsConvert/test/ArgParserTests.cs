@@ -65,8 +65,9 @@ public class ArgParserTests
         Assert.AreEqual(WriteFormat.Ms2, Invoke("x", "--ms2").WriteConfig.Format);
         Assert.AreEqual(WriteFormat.Cms2, Invoke("x", "--cms2").WriteConfig.Format);
 
-        // mz5 is read-only; there is no writer, so the flag is not offered.
-        Assert.ThrowsException<ArgumentException>(() => Invoke("x", "--mz5"));
+        // mz5 is read-only; there is no writer, so the flag is rejected with an explanation.
+        var mz5Error = Assert.ThrowsException<ArgumentException>(() => Invoke("x", "--mz5"));
+        StringAssert.Contains(mz5Error.Message, "no longer supported");
     }
 
     [TestMethod]

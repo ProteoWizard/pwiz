@@ -67,6 +67,9 @@ internal static class ArgParser
                 case "--mzMLb":
                     config.WriteConfig.Format = WriteFormat.MzMLb;
                     break;
+                case "--mz5":
+                    throw new ArgumentException(
+                        "--mz5 is no longer supported: msconvert reads mz5 files but no longer writes them. Use --mzML or --mzMLb instead.");
                 case "--mgf":
                 case "--MGF":
                     config.WriteConfig.Format = WriteFormat.Mgf;
