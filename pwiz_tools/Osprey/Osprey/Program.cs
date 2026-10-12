@@ -602,37 +602,6 @@ namespace pwiz.Osprey
                         string.Join(@", ", unrecognizedVariables)));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
-                // A token that names nothing admits nothing, so the run proceeds - but say so
-                // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
-                // its reconciled-input load, making it the first previously-VALID token to
-                // become invalid, and committed automation still passes it. Silence there is
-                // the bad outcome: the operator believes they granted an allowance, and if the
-                // run later needs a real one the guard says only "does not name this path",
-                // which reads as a typo rather than a retirement. A warning, not an error -
-                // unlike OSPREY_PASS2_QVALUE above, a stale allowance cannot change any
-                // reported number, it can only fail to permit something.
-                if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
-                {
-                    // Name the UNRECOGNIZED tokens, not the whole value: the flag is a comma
-                    // separated list and NamesResidentPath tests each token independently, so a
-                    // recognized token beside a retired one is still granted. Condemning the
-                    // whole value would push the operator to rewrite or unset a variable whose
-                    // valid half the run still needs, and the run then aborts on a guard the
-                    // warning said was not engaged.
-                    // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
-                    // reconciled-input load and the pass-1 FDRBench emitter both stream and need
-                    // no allowance. 'non-percolator-fdr' was retired with the simple FDR method
-                    // it named, 'compacted-entries-buffer' with OSPREY_STAGE6_STREAM_SURVIVORS,
-                    // and 'projection-off' with OSPREY_FDR_PROJECTION, which left the list empty.
-                    LogWarning(string.Format(
-                        @"OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
-                        @"have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
-                        @"is still honored.",
-                        OspreyEnvironment.UnrecognizedResidentTokens,
-                        ResidentPaths.KNOWN_UNFIXED.Count == 0
-                            ? @"none"
-                            : string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
-                }
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
                 // Machine twins of the banner: the liveness anchor a route assertion needs

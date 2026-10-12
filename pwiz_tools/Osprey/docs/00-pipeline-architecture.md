@@ -1373,7 +1373,11 @@ the text says so rather than describing the current shape as though it were the 
    left `ResidentPaths.KNOWN_UNFIXED` empty. The resident fold itself was deleted on 2026-10-11:
    a `--task SecondPassFDR` directory that cannot be folded run by run is refused before any run
    is loaded, and `SecondPassFdrTask.RequireStreamedJoin` fails any other route that arrives
-   without a per-run source.
+   without a per-run source. On 2026-10-12 the last whole-run builds went too - the one behind
+   `RescoredEntries.Value`, which now refuses, the all-runs reconciliation bundle and the
+   resident first-pass projection - and with them the token list: `ResidentPaths` and
+   `OSPREY_ALLOW_UNFIXED_RESIDENT` no longer exist, and the variable is refused at startup like
+   any other unknown `OSPREY_*` name.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
    the route line `[PATH] second-pass-join: per-run` rather than inferred -

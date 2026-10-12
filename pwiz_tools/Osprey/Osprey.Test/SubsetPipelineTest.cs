@@ -1213,7 +1213,6 @@ namespace pwiz.Osprey.Test
             return new Dictionary<string, string>
             {
                 { @"OSPREY_PASS2_VERIFY_WORKER", on ? @"1" : string.Empty },
-                { @"OSPREY_ALLOW_UNFIXED_RESIDENT", string.Empty },
                 { @"OSPREY_PASS2_QVALUE", string.Empty },
                 { FDR_FILE_LANES, string.Empty }
             };

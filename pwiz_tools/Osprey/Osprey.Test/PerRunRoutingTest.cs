@@ -31,53 +31,24 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Unit tests for what is left of the resident first-pass pool ratchet after
-    /// <c>OSPREY_FDR_PROJECTION</c> was removed (2026-10-10): the token list
-    /// (<see cref="ResidentPaths.KNOWN_UNFIXED"/>) pinned EMPTY, and the guards past the
-    /// compaction line. The first-pass guard itself went with the last path it
-    /// could admit: with no resident first-pass path left, there is nothing for it to refuse
-    /// or name.
+    /// Unit tests for the predicates that route a run one at a time: the Stage 7 join admission
+    /// and first-pass membership. The resident-path ratchet that stood here
+    /// (<c>ResidentPaths.KNOWN_UNFIXED</c> and its <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c> tokens)
+    /// went with the last resident route on 2026-10-12, after shrinking from five tokens to
+    /// none; the variable is now refused at startup like any other unknown OSPREY_* name.
     /// </summary>
     [TestClass]
-    public class ResidentPoolGuardTest
+    public class PerRunRoutingTest
     {
+        /// <summary>
+        /// The Stage-7 join ADMISSION, which is what decides whether a run folds per run at all.
+        /// It used to be config.ExpectReconciledInput - one CLI flag - and is now the disk
+        /// question that flag stood in for, so the rules it must not lose are pinned here rather
+        /// than left to the end-to-end gate.
+        /// </summary>
         [TestMethod]
-        public void TestResidentPathRatchet()
+        public void TestStage7StreamAdmission()
         {
-            // The high-water mark itself. This list may SHRINK as paths are streamed; it must
-            // never GROW. Asserting the WHOLE set rather than membership is the point: an
-            // addition then shows up in review as the ratchet running backwards, instead of
-            // as an environment variable somebody set months ago and nobody re-examined.
-            // 'mdiag-full-resume' is GONE (#4505), 'resume-survivor-handoff' is GONE (#4536,
-            // the rehydrate got its own survivor loader), and 'hpc-merge' is GONE (#4486, the
-            // reconciled-input merge streams its load) - the ratchet shrinking three times.
-            // 'stage7-stream-off' is GONE too (2026-09-10) - the FOURTH shrink, with
-            // OSPREY_STAGE7_STREAM, after its A/B was banked at 1e-9 against the golden.
-            // 'fdrbench-pass1' is GONE (#4507) - the FIFTH shrink. The pass-1 FDRBench emitter
-            // streams off the per-file sidecars and the experiment map.
-            // 'non-percolator-fdr' is GONE (#4543) - the SIXTH shrink. Every FDR method left is a
-            // classifier inside the Percolator framework and streams.
-            // 'compacted-entries-buffer' is GONE (2026-10-10) - the SEVENTH shrink, with
-            // OSPREY_STAGE6_STREAM_SURVIVORS.
-            // 'projection-off' is GONE (2026-10-10) - the EIGHTH shrink, and the list is now
-            // EMPTY. It named the legacy resident first pass (OSPREY_FDR_PROJECTION=0), the A/B
-            // oracle for the projection path, and went with that switch. No final A/B was
-            // possible: the arm aborted in Stage 7 on every dataset, the same failure as the
-            // Stage 6 oracle; the committed golden is the oracle.
-            Assert.AreEqual(0, ResidentPaths.KNOWN_UNFIXED.Count,
-                "a token was added back to KNOWN_UNFIXED - the ratchet is running backwards");
-
-            // The list parsing the startup warning relies on still works on its own terms:
-            // separators are interchangeable, whitespace is tolerated, matching ignores case.
-            Assert.IsTrue(OspreyEnvironment.NamesResidentPath(" alpha ; BETA ", "beta"));
-            Assert.IsTrue(OspreyEnvironment.NamesResidentPath("alpha,beta", "alpha"));
-            Assert.IsFalse(OspreyEnvironment.NamesResidentPath("alpha,beta", "gamma"));
-            Assert.IsFalse(OspreyEnvironment.NamesResidentPath(null, "alpha"));
-
-            // The Stage-7 join ADMISSION, which is what decides whether a run folds per run at
-            // all. It used to be config.ExpectReconciledInput - one CLI flag - and
-            // is now the disk question that flag stood in for, so the rules it must not lose
-            // are pinned here rather than left to the end-to-end gate.
             AssertStage7StreamAdmission();
         }
 

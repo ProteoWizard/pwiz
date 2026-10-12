@@ -347,81 +347,10 @@ $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 # chain's output against the straight leg's.
 $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 
-# No leg of this gate may run under a resident-pool allowance, so clear any INHERITED
-# one rather than merely declining to set it. A TeamCity agent, or a developer shell
-# that just ran a Stage 6 A/B, can have OSPREY_ALLOW_UNFIXED_RESIDENT exported; every
-# leg of every dataset would then run under that blanket and a regression back onto an
-# O(files) resident pool would pass fully green. That is the ten-day
-# OSPREY_PASS2_QVALUE=transfer failure the named-token ratchet was built to stop, so
-# "the gate sets it nowhere" has to mean the variable is UNSET when Osprey reads it,
-# not just that this script never assigns it. Announced rather than silent: an operator
-# who deliberately exported it should see why their run behaves differently here.
-# --- Known O(files) resident gaps, stated where the gate can be read -----------
-# "No leg sets OSPREY_ALLOW_UNFIXED_RESIDENT" is necessary but NOT sufficient as a
-# statement of health, and reading it as sufficient is the trap: a token is only
-# required where a guard demands one, so a resident path that no guard covers is
-# invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
-# published no survivor loader, so the Stage 6 handoff guard (since retired with
-# OSPREY_STAGE6_STREAM_SURVIVORS) no-oped and nothing asked for a token. #4486 was the
-# standing example while it was open: the survivor buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
-# path, and no guard covered it because it was not a resume or a mode - it was what Stage
-# 7 took as input. That is now closed (#4486): every leg folds run by run. The last route
-# that still took the pool - the transfer pass-2 mode, whose per-file half ran in Stage 7 -
-# was this table's last row until #4665 moved that half into Pass2PerFileWorker. Zero tokens
-# still does NOT mean zero gaps in general, and this table is where the next one goes.
-#
-# Printed in the run summary (not just parked in a comment) so every CI log states the
-# outstanding gaps, and so a fixed entry left here shows up as a stale line in output
-# rather than as a comment nobody re-reads.
-#
-# Rules, from ai/docs/osprey-development-guide.md:
-#   * token + warning = an operator asked for residency and was told what they got
-#   * warning alone on a default path = INSUFFICIENT, allowed only as an interim
-#     tripwire with an open issue against it
-#   * any token this gate REQUIRES must have an open issue to remove it, and the token
-#     comes OUT of the gate when the issue lands. NONE is required today: #4536 gave the
-#     rehydrate its own per-file survivor loader, so the rehydrate streams the Stage 6
-#     handoff like every other leg and resume-survivor-handoff - the last entry here - came out
-#     with it. Zero is the invariant, not a milestone: a new entry below is a regression
-#     to justify in review, not a line to add and move on.
-# EMPTY since #4665. Its last row was the transfer pass-2 mode (OSPREY_PASS2_QVALUE=transfer),
-# untokened by nature because no guard demanded a token for it: its per-file half ran in
-# Stage 7 over the whole pool, ~4.4 GB library + 0.197 GB/file live post-GC - 92.3 GB
-# predicted against 91.1 GB measured at 446 runs. Transfer now streams like every other mode,
-# exercised per commit by SubsetPipelineTest's transfer arm (no leg of this gate runs it).
-$knownResidentGaps = @()
-# Reachable only outside this gate, tokened, each with an open issue: NONE. The last one,
-# fdrbench-pass1 (#4507), is GONE: the pass-1 emitter streams off the per-file sidecars and
-# mode 12 covers it - the ratchet shrinking a fifth time. hpc-merge went with #4486 (the
-# --task SecondPassFDR reconciled-input load takes the bounded streaming hydrate, so
-# mode 3's join node needs no token).
-# non-percolator-fdr went with #4543, which deleted the simple FDR method it named - the
-# ratchet shrinking a sixth time - compacted-entries-buffer with
-# OSPREY_STAGE6_STREAM_SURVIVORS (2026-10-10), the seventh, and projection-off (the A/B
-# byte-identity oracle, kept by design) with OSPREY_FDR_PROJECTION (2026-10-10), the eighth,
-# which left the token list empty.
-
-# Preserved and RESTORED at the end of the run (see the finally block): this mutates the
-# process environment, so a developer running the gate in their interactive shell would
-# otherwise silently lose an exported token for the rest of the session.
-$script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-# Every A/B switch that forced a resident path ON PURPOSE, and so needed its token kept, is
-# gone: OSPREY_STAGE7_STREAM (2026-09-10), OSPREY_STAGE6_STREAM_SURVIVORS (2026-10-10) and
-# OSPREY_FDR_PROJECTION (2026-10-10) were each retired with their arm, and Osprey refuses all
-# three names at startup. So an inherited allowance is always cleared.
-if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
-    # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
-    # formatted and '{0}' survives verbatim into the output.
-    Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
-        "gate may run under an ambient resident-pool allowance.") `
-        -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
-    Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-}
-
 # The goldens are captured under the shipped first-pass SVM C selection, so an inherited
 # OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
 # under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
-# golden. Cleared, announced, and restored in the finally block like the allowance above.
+# golden. Cleared, announced, and restored in the finally block.
 $script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
 if (-not [string]::IsNullOrEmpty($env:OSPREY_SVM_C_TOLERANCE)) {
     Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
@@ -2629,9 +2558,6 @@ foreach ($name in $selected) {
     if (-not $SkipWarmRerun) {
         Write-Progress-Tc "${name}: warm re-run cache hits (mode 4)"
         $warmBefore = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
-        # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, for mode 3's reason: a healthy warm
-        # re-run runs NO task, so it can reach no resident path, and pre-setting the
-        # opt-in could only mask the regression this leg exists to catch.
         $rWarm = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
             -WorkDir $straightDir -LogName 'warm.log' -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench)
         $warmAfter = (Get-FileHash $straightBlib -Algorithm SHA256).Hash
@@ -2706,18 +2632,6 @@ foreach ($name in $selected) {
     if (-not $SkipResume -and -not (Test-ModeCut $cfg 2)) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
         Invoke-ResumeInvalidation -WorkDir $straightDir
-        # No OSPREY_ALLOW_UNFIXED_RESIDENT opt-in, and this leg is the reason the variable is
-        # now unset on EVERY leg of the gate. It used to name mdiag-full-resume: the
-        # invalidation leaves every <stem>.1st-pass.fdr_scores.bin on disk, so under
-        # --model-diagnostics Stage 5 held the RESIDENT per-file entries for the batch
-        # ModelDiagnosticsReport.Write to read, which is O(files) and genuinely needed
-        # suppressing at 3 files. #4505 streamed that report off FirstPassFDR's own per-file load,
-        # so the trigger is gone and so is the token.
-        #
-        # Nothing here replaces it. An opt-in on this leg would mask exactly the regression the
-        # leg exists to catch, which is why mode 3 and mode 4 never had one either: the former
-        # blanket OSPREY_ALLOW_UNBOUNDED_MEMORY=1 wrapped a whole leg and let a transfer
-        # regression ride along unnoticed for ten days.
         # The inputs this leg names DO NOT EXIST: same file names, but under the work dir,
         # where an mzML is never placed - only the .spectra.bin is. The sources stay in the
         # read-only Perftests tree, untouched.
@@ -3001,11 +2915,6 @@ catch {
 }
 finally {
     # Restore the operator's environment, whatever happened above.
-    if ([string]::IsNullOrWhiteSpace($script:priorAllowResident)) {
-        Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-    } else {
-        $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $script:priorAllowResident
-    }
     if (-not [string]::IsNullOrEmpty($script:priorSvmCTolerance)) {
         $env:OSPREY_SVM_C_TOLERANCE = $script:priorSvmCTolerance
     }
@@ -3074,26 +2983,6 @@ if ($phaseMarks.Count -eq 0) {
                  "staging that precede the first phase") -f $phaseTotal, $phaseCosts.Count)
 }
 
-# The gaps this gate KNOWS it still traverses. Printed green-or-red runs alike: these
-# are not failures (the legs above passed), they are the O(files) paths a passing gate
-# is nonetheless walking, and a passing gate is exactly when nobody goes looking.
-Write-Host ""
-Write-Host "=== Known O(files) resident paths this gate still traverses ===" -ForegroundColor Cyan
-if ($knownResidentGaps.Count -eq 0) {
-    Write-Host "  none" -ForegroundColor Green
-} else {
-    foreach ($g in $knownResidentGaps) {
-        Write-Host ("  {0}  token: {1}" -f $g.Issue, $g.Token) -ForegroundColor Yellow
-        Write-Host ("      {0}" -f $g.Path)
-        Write-Host ("      {0}" -f $g.Legs)
-    }
-    # DERIVED, not typed. A literal count reads identically before and after a gap is
-    # closed, so it can never report the invariant it claims to state - and a hardcoded 0
-    # sitting three lines under a table naming a required token is worse than no line.
-    $requiredTokens = @($knownResidentGaps | Where-Object { $_.Token -and $_.Token -ne 'NONE' })
-    Write-Host (("  Tokens REQUIRED by this gate: {0} (target: 0). Each must have an open " +
-        "issue to remove it.") -f $requiredTokens.Count)
-}
 # No artifacts are published (the downloaded raw input data is kept; what happens to
 # the run's scratch is $retainOutput's call). A red gate's diagnosis lives in the build
 # log (every per-file log is Tee'd to the console TeamCity captures) and the
