@@ -1239,7 +1239,7 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// Post the latest results to the server.
+        /// Post the latest results to the server, or the given run's XML, with that run's log.
         /// </summary>
         public string Post(RunSpec runSpec, string xmlFile = null)
         {
@@ -1252,8 +1252,10 @@ namespace SkylineNightly
             }
             
             var xml = File.ReadAllText(xmlFile);
-            var logFile = GetLatestLog();
-            if (logFile != null)
+            // The log of the run being posted, not the newest log: posting an earlier run's XML must not carry
+            // the latest run's log, from which the server reads the last test and would report a hang in it.
+            var logFile = Path.ChangeExtension(xmlFile, ".log");
+            if (File.Exists(logFile))
             {
                 var log = File.ReadAllText(logFile);
                 XDocument doc = XDocument.Parse(xml);
