@@ -1243,18 +1243,22 @@ namespace SkylineNightly
         /// </summary>
         public string Post(RunSpec runSpec, string xmlFile = null)
         {
+            string logFile;
             if (xmlFile == null)
             {
-                xmlFile = GetLatestLog();    // Change extension to .xml below
-                if (xmlFile == null)
+                logFile = GetLatestLog();
+                if (logFile == null)
                     return string.Empty;
-                xmlFile = Path.ChangeExtension(xmlFile, ".xml"); // In case it's actually the log file name
+                xmlFile = Path.ChangeExtension(logFile, ".xml");
             }
-            
+            else
+            {
+                // The log of the run being posted, not the newest log: posting an earlier run's XML must not carry
+                // the latest run's log, from which the server reads the last test and would report a hang in it.
+                logFile = Path.ChangeExtension(xmlFile, ".log");
+            }
+
             var xml = File.ReadAllText(xmlFile);
-            // The log of the run being posted, not the newest log: posting an earlier run's XML must not carry
-            // the latest run's log, from which the server reads the last test and would report a hang in it.
-            var logFile = Path.ChangeExtension(xmlFile, ".log");
             if (File.Exists(logFile))
             {
                 var log = File.ReadAllText(logFile);
@@ -1271,6 +1275,10 @@ namespace SkylineNightly
                         Xml.ShowXmlExceptionDetailsAndDie(e, log);
                     }
                 }
+            }
+            else
+            {
+                Log(string.Format("No log {0} to post with the results", logFile));
             }
 
             if (string.IsNullOrEmpty(xml) || !xml.Contains("<test id"))
