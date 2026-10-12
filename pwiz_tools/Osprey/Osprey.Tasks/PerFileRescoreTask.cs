@@ -567,15 +567,14 @@ namespace pwiz.Osprey.Tasks
             // from every materialization path - Run with its own _didPlan, Rehydrate with false.
             //
             // The false value is the FIRST of two gates behind defect (b): a straight-through
-            // resume of a Stage-5-only directory reads false here AND has no worker
-            // RescoreBundle, so it self-gates to a refill-only no-op and leaves SecondPassFDR
+            // resume of a Stage-5-only directory reads false here, so it self-gated to a
+            // refill-only no-op and left SecondPassFDR
             // nothing to fold. Publishing true instead does NOT fix it - the rescore still has
             // no execution path for a self-built bundle - so the fix belongs here, in telling
             // "no rescore needed because the outputs exist" apart from "no rescore possible
             // because nobody supplied a bundle". See
             // TODO-20260901_osprey_firstpassfdr_resume.md.
             bool didPlan = ctx.Get<PlanningPerformed>().Value;
-            var rescoreBundle = ctx.Get<RescoreBundle>().Value;
             // EVERY file, not the first one found. This short-circuited on the first current
             // pass-2 sidecar and treated that as proof the whole rescore was done - but a
             // PARTIALLY completed cohort is the normal state of every resume, which is the case
@@ -622,10 +621,10 @@ namespace pwiz.Osprey.Tasks
                     pass2Present, pass2Expected - pass2Present));
             }
 
-            // A THIRD source of "there is a plan to execute", alongside FirstPassFDR's in-process
-            // planning (didPlan) and a worker-supplied bundle. When the rescore hydrates per run
+            // The second source of "there is a plan to execute", alongside FirstPassFDR's
+            // in-process planning (didPlan). When the rescore hydrates per run
             // the plan is not held anywhere at this point - it is read from each run's own
-            // reconciliation.json inside its iteration - so both older signals are legitimately
+            // reconciliation.json inside its iteration - so the older signal is legitimately
             // false and the gate below would self-gate a run that has every input it needs.
             //
             // That is not hypothetical: removing the experiment-wide bundle made this gate fire
@@ -646,7 +645,7 @@ namespace pwiz.Osprey.Tasks
             // file with a current sidecar); this is the same defect in the other half, which no
             // amount of counting reaches. Fail loudly instead - a resume that cannot finish is
             // exactly the case an operator must be told about, not one to paper over.
-            bool noRescorePossible = rescoreBundle == null && !perRunPlanAvailable;
+            bool noRescorePossible = !perRunPlanAvailable;
             // A plan this process COULD execute is not a plan it WILL, and the gate has to ask
             // the second question. --task ModelDiagnostics re-renders a COMPLETED analysis and
             // writes no artifact but the report (DiagnosticsOnly), so it never re-scores whatever
@@ -669,8 +668,8 @@ namespace pwiz.Osprey.Tasks
                 // under it either. An operator told that would drop the flag, re-run for hours
                 // and hit the identical refusal. The TASK is a different matter: it is the whole
                 // reason this run will not re-score, so it is named.
-                // Not DiagnosticsOnly: FirstPassFDR did not plan in this process, no worker bundle
-                // was supplied, and the per-run hydrate is unavailable.
+                // Not DiagnosticsOnly: FirstPassFDR did not plan in this process and the
+                // per-run hydrate is unavailable.
                 string reason = ctx.Config.DiagnosticsOnly
                     ? string.Format(OspreyTasksResources.PerFileRescoreTask_Run___task_ModelDiagnostics_only_builds_the_report_for_a_completed_analysis__Finish_the_,
                         OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME))
@@ -711,11 +710,8 @@ namespace pwiz.Osprey.Tasks
             // Join file stems for the reconciled parquet metadata hash.
             // In the in-process pipeline _perFileEntries has every file in
             // the run; in worker mode (--task PerFileRescoring) it has
-            // a single file and the planner's full set comes from
-            // RescoreInputs.JoinFileStems (read from reconciliation.json
-            // v2+). Pass _perFileEntries keys when there's more than one;
-            // else fall through to the bundle's JoinFileStems. Null /
-            // empty means "let ExecuteRescore fall back to the
+            // a single file. Pass _perFileEntries keys when there's more
+            // than one; null means "let ExecuteRescore fall back to the
             // InputFiles-derived hash" (preserves v1 behavior).
             IReadOnlyList<string> joinFileStems = null;
             if (_perFileEntries != null && _perFileEntries.Count > 1)
@@ -724,12 +720,6 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in _perFileEntries)
                     stems.Add(kv.Key);
                 joinFileStems = stems;
-            }
-            else if (rescoreBundle != null
-                     && rescoreBundle.JoinFileStems != null
-                     && rescoreBundle.JoinFileStems.Count > 0)
-            {
-                joinFileStems = rescoreBundle.JoinFileStems;
             }
 
             // On the per-run path these four are dead weight, and on a straight-through run they

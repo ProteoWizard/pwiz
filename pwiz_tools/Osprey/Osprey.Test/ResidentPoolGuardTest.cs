@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -75,22 +74,8 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(OspreyEnvironment.NamesResidentPath("alpha,beta", "gamma"));
             Assert.IsFalse(OspreyEnvironment.NamesResidentPath(null, "alpha"));
 
-            // The ALL-RUNS reconciliation bundle, refused outright. Reaches PAST the compaction
-            // line, but takes NO token: the bounded alternative
-            // (the per-run survivor loader off the analysis-wide retained base_id summary)
-            // exists on every route that gets here, so residency is a defect to fix and not a
-            // path to name.
-            //
-            // Unit-tested rather than gate-tested BY NECESSITY, and that is the point. No
-            // regression leg reaches this guard - verified, the message appears on zero legs -
-            // because the routing fix left it with no caller. A guard nothing exercises is a
-            // guard that can rot unnoticed, so its message is pinned here: it must name the
-            // shape, the measured cost, and the bounded alternative, or the operator who trips
-            // it in a year gets a refusal with no way forward.
-            AssertAllRunsBundleGuard();
-
-            // The Stage-7 join ADMISSION, which is what decides whether that guard has a
-            // subject at all. It used to be config.ExpectReconciledInput - one CLI flag - and
+            // The Stage-7 join ADMISSION, which is what decides whether a run folds per run at
+            // all. It used to be config.ExpectReconciledInput - one CLI flag - and
             // is now the disk question that flag stood in for, so the rules it must not lose
             // are pinned here rather than left to the end-to-end gate.
             AssertStage7StreamAdmission();
@@ -128,69 +113,6 @@ namespace pwiz.Osprey.Test
                         Path.Combine(absent, "a.mzML"), Path.Combine(absent, "b.mzML")
                     }
                 }));
-        }
-
-        /// <summary>
-        /// The all-runs reconciliation bundle guard: refuses the run that HAD the bounded
-        /// alternative and declined it, and stays out of the way of the run that never had one.
-        ///
-        /// <para>That distinction is the test. The guard first refused unconditionally, which
-        /// reads as caution and is not: the arm it guards is also reached when this analysis has
-        /// no retained base_id summary at all - no <c>-o</c> blib, or one written by a build
-        /// with another <c>FormatVersion</c>. Under a resident token master completes those runs
-        /// through the overlay, which needs no summary; on the default load the streamed bundle
-        /// fails one call later with its own remedy. Either way an unconditional refusal here
-        /// adds nothing but a wrong instruction - use a loader that is built from the very file
-        /// whose absence sent the run down this arm. So both halves are pinned, and the null
-        /// half is the one that would otherwise regress silently.</para>
-        ///
-        /// <para>The refusing half also asserts a supplied token is named back, so nobody burns
-        /// an afternoon hunting the environment variable that would let it through. The wording
-        /// is user text and is not asserted.</para>
-        /// </summary>
-        private static void AssertAllRunsBundleGuard()
-        {
-            // No output blib: nothing names the summary, so the per-run loader cannot exist and
-            // there is nothing to refuse - the load that follows decides the outcome.
-            Assert.IsNull(
-                ScoringTaskShared.AllRunsBundleGuardError(new OspreyConfig(), null),
-                "a run with no bounded alternative must not be refused");
-
-            string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_bundle_guard_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            try
-            {
-                var config = new OspreyConfig
-                {
-                    InputFiles = new List<string> { Path.Combine(dir, "a.mzML") },
-                    OutputBlib = Path.Combine(dir, "out.blib")
-                };
-
-                // Named but not written: the summary is what the loader is built from, so a
-                // path with no file behind it is still "no bounded alternative".
-                Assert.IsNull(ScoringTaskShared.AllRunsBundleGuardError(config, null),
-                    "a missing retained base_id summary is disk state, not a declined route");
-
-                // Written and current: the bounded route existed and this arm was reached
-                // anyway, which is the --task ModelDiagnostics defect shape.
-                RetainedBaseIdSidecar.Write(
-                    RetainedBaseIdSidecar.PathFor(config.OutputBlib, config.InputFiles[0]),
-                    new[] { 1u, 2u, 3u }, TestStamps.Any);
-                string err = ScoringTaskShared.AllRunsBundleGuardError(config, null);
-                Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
-
-                // A supplied token changes the wording but not the answer. Naming the value back
-                // is what stops a stale or misspelled token reading exactly like an unset one.
-                string named = ScoringTaskShared.AllRunsBundleGuardError(
-                    config, "projection-off");
-                Assert.IsNotNull(named, "no token admits the all-runs bundle");
-                StringAssert.Contains(named, "projection-off");
-            }
-            finally
-            {
-                Directory.Delete(dir, true);
-            }
         }
 
         /// <summary>

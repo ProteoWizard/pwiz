@@ -211,20 +211,6 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// The probe-the-disk reconciliation bundle PerFileScoring hydrates from
-    /// sibling sidecars in worker mode, or <c>null</c> at a Stage-5 entry / any
-    /// straight-through run that wrote no bundle. The wrapper is always
-    /// published once (presence == "PerFileScoring has been materialized"); its
-    /// <see cref="Value"/> is the nullable bundle, so a consumer distinguishes
-    /// "no bundle" (Value == null) from "producer not yet run" (cache miss).
-    /// </summary>
-    internal sealed class RescoreBundle
-    {
-        public RescoreInputs Value { get; }
-        public RescoreBundle(RescoreInputs value) { Value = value; }
-    }
-
-    /// <summary>
     /// Stage 6 multi-charge consensus rescore targets per file (post-compaction
     /// apex/start/end by stub index), produced by FirstPassFDR's planning step.
     /// </summary>

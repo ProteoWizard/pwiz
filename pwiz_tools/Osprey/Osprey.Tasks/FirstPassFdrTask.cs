@@ -212,30 +212,6 @@ namespace pwiz.Osprey.Tasks
         private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
             = new Dictionary<string, List<GapFillTarget>>();
 
-        // Bundle.PerFileConsensusTargets is null at hydration time (consensus
-        // is meaningful only post-compaction); compute on demand from the
-        // post-compaction stub list. Matches the worker's RunWorker-side
-        // multi-charge selection so the worker entry-path collapse keeps
-        // identical consensus output regardless of which producer task
-        // owned the hydration. Takes the already-resolved bundle so it serves
-        // both the worker-published bundle and the straight-through-resume
-        // bundle this task builds from its own sidecars.
-        private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>
-            ConsensusTargetsFromBundle(PipelineContext ctx, RescoreInputs bundle)
-        {
-            if (bundle == null) return _perFileConsensusTargets;
-            if (bundle.PerFileConsensusTargets != null) return bundle.PerFileConsensusTargets;
-            var computed = new Dictionary<string,
-                IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
-            foreach (var kvp in bundle.PerFileEntries)
-            {
-                computed[kvp.Key] =
-                    MultiChargeConsensus.SelectRescoreTargets(kvp.Value, ctx.Config.RunFdr);
-            }
-            bundle.PerFileConsensusTargets = computed;
-            return computed;
-        }
-
         // Phase B resume surface. Reads each file's .scores.parquet,
         // writes the .1st-pass.fdr_scores.bin sidecars and the
         // .reconciliation.json envelopes (the latter only when
@@ -782,7 +758,7 @@ namespace pwiz.Osprey.Tasks
             // Re-running any of them here would re-train SVMs / re-plan on
             // identical inputs and drift vs the sidecars (mirrors Rust's
             // compute_fdr_from_stubs skip, pipeline.rs:3916). All that remains
-            // is to adopt a post-Stage-5 bundle and compact. The compute
+            // is to publish the per-run survivor loader. The compute
             // counterpart is Run.
             var config = ctx.Config;
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
@@ -802,223 +778,25 @@ namespace pwiz.Osprey.Tasks
             if (ScoringTaskShared.CanHydratePerRun(config))
                 return RehydrateForPerRunRescore(ctx, perFileEntries);
 
-            // Everything below builds the ALL-RUNS bundle, which is O(files x entries). Refuse
-            // it rather than let a run discover the cost at file ~310 of 446: the failure this
-            // replaces was silent, produced the RIGHT report, and only ran out of memory - so
-            // nothing short of the box refused it. See AllRunsBundleGuardError for why it takes
-            // no token, and why it refuses only the runs that HAD the bounded alternative.
-            string bundleError = ScoringTaskShared.AllRunsBundleGuardError(
-                config, OspreyEnvironment.AllowUnfixedResident);
-            if (bundleError != null)
-            {
-                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"refused"));
-                ctx.LogError(bundleError);
-                ctx.ExitCode = 1;
-                return false;
-            }
-
-            // Null means this analysis has no retained base_id summary to build the per-run
-            // loader from. Every load that reaches here left the lists empty or already
-            // compacted, so the bundle is streamed from disk - and that stream needs the same
-            // summary, so it fails one call later with its own error naming the producer.
-            // Warning here first that the run is "taking the bundle route" would promise a
-            // route it cannot take and put a second, contradictory remedy above the real one.
+            // No per-run route, so there is no state this task can rebuild. The all-runs
+            // reconciliation bundle that stood here, every run's first-pass survivors at once, had
+            // no route left that could finish: without the analysis-wide retained base_id summary
+            // it needed that same summary to compact against, and with it the per-run route above
+            // is the one every task that consumes this state takes. Refused before any run is
+            // read, naming what is missing.
             //
-            // The summary is a declared output of this task, so a missing one makes the task
-            // not current and the next run rebuilds it.
-
-            // The bundle to adopt. In worker mode the upstream PerFileScoring
-            // task hydrated it from sibling sidecars and published it. On a
-            // straight-through resume it published null (no bundle): the driver
-            // skipped THIS task's Run because its own 1st-pass + reconciliation
-            // sidecars were already valid on disk (CanRehydrate) and a
-            // downstream task is the first to touch its state. Build the
-            // equivalent bundle here from those own outputs rather than
-            // deferring to Run -- so a lazy Demand loads, never computes, and
-            // Run stays outer-loop-only.
-            var bundle = ctx.Get<RescoreBundle>().Value;
-            bool builtOwnBundle = bundle == null;
-            if (builtOwnBundle)
+            // The summary is a declared output of this task, so a missing one makes the task not
+            // current and a full re-run rebuilds it.
+            if (ScoringTaskShared.PerRunSurvivorLoaderAvailable(config))
             {
-                bundle = LoadOwnReconciliationBundle(ctx, perFileEntries);
-                if (bundle == null)
-                    return false;  // load failure; ExitCode already set
+                throw new InvalidOperationException(string.Format(
+                    @"First-pass state was demanded by a selection that does not rehydrate per run, although the retained base_id summary is on disk: {0}",
+                    RetainedBaseIdSidecar.PathFor(config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config))));
             }
-
-            ctx.LogVerbose(OspreyTasksResources.FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_);
-
-            // The bundle's PreCompactionTallies are non-null only when the hydrate that
-            // produced it STREAMED (compacting each file as it loaded, so it never held the
-            // all-files pre-compaction pool) - either the upstream worker-mode load or this
-            // task's own LoadOwnReconciliationBundle on a lean resume. The per-file
-            // passing-target counts below are then read from those tallies rather than
-            // recomputed off perFileEntries, which by that point holds only survivors - the
-            // same reason the lean projection path reads them off its score-pass sink. The
-            // --model-diagnostics report is streamed off the same load for the same reason.
-            LogFirstPassResultsAndReport(perFileEntries, config, ctx,
-                bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator);
-            // The accumulator holds the whole run's --model-diagnostics reduction (~1-2 GB
-            // at 82 files) and has exactly one reader, the WriteFromAccumulator call the
-            // line above just made. It reached here on the published RescoreBundle, whose
-            // byproduct slot lives for the process, so leaving the property set would pin
-            // that memory through Stage 6 and SecondPassFDR for nothing.
-            bundle.ModelDiagnosticsAccumulator = null;
-
-            // Compaction delegates to RescoreCompaction.Apply on the bundle
-            // path so the pre-compaction (file, vec_idx) keys in
-            // bundle.ReconciliationActions get rebuilt to post-compaction
-            // indices for PerFileRescoreTask.
-            CompactFirstPass(perFileEntries, bundle, ctx);
-
-            // Publish the SAME four planning byproducts as Run, but sourced from
-            // the adopted bundle (post-compaction). A consumer pulls
-            // ctx.Get<ReconciliationActions>() etc. without knowing whether this
-            // task computed them (Run), adopted them from the worker bundle, or
-            // rebuilt them from its own sidecars (straight-through resume) --
-            // the dual-source getter fallback collapses into one slot.
-            ctx.Publish(new ReconciliationActions(bundle.ReconciliationActions));
-            ctx.Publish(new RefinedCalibrations(bundle.RefinedCalibrations));
-            ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
-            // Release here too, not just on Run. This path is a RESUME - which is exactly what
-            // an operator does after the OOM this release exists to prevent - so skipping it
-            // would leave the whole library resident in the one run that most needs it lean.
-            // The bundle carries both halves of the retained set: the base_id set below, and
-            // PerFileGapFill just published above.
-            //
-            // RetainedBaseIds, not GlobalFirstPassBaseIds: the compaction retains the global set
-            // UNION the planner's action targets, so the global set alone can be a strict subset
-            // of what survives. Releasing on the smaller set could free the library spectrum of
-            // an entry Stage 6 still rescores. That gap is believed unreachable today - the
-            // planner runs after compaction on the computed path, so its targets are already in
-            // the envelope's set - but the relationship is not symmetric: the retained set is a
-            // superset, so using it is safe whether or not the union is empty, and using the
-            // other one is safe only while the argument holds. Falls back for an empty join,
-            // where Apply never ran and nothing survived to release against.
-            _firstPassBaseIds = bundle.RetainedBaseIds ?? bundle.GlobalFirstPassBaseIds;
-            _perFileGapFillForRescore = bundle.PerFileGapFill;
-            ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
-            ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
-            ctx.Publish(new CompactedEntries(perFileEntries));
-
-            // The same per-file survivor source Run publishes, so an arm that rescores streams
-            // exactly as a computed run does (issue #4536). Before this the slot was published
-            // null here, and PerFileRescore's streamed branches are all gated on it, so the
-            // all-files survivor buffer stayed live across the whole rescore. What a resume
-            // lacked was only the passing base_id set to rebuild from, and the compaction just
-            // above now hands that back on the bundle.
-            if (!TryBuildResumeSurvivorLoader(ctx, bundle, perFileEntries, out _survivorLoader))
-                return false;  // missing parquet path; ExitCode already set
-            ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
-
-            // ... but only an arm that actually RESCORES gets anything from releasing the
-            // buffer, and this task's own bundle source is what says which arm this is. With a
-            // worker-supplied RescoreBundle, Stage 6 runs the rescore and refills one file at a
-            // time from the source above. Having built the bundle from our OWN sidecars, there
-            // is no rescore to run at all: PerFileRescore self-gates to a no-op (didPlan is
-            // false and RescoreBundle is null) and its refill is the whole of the deferred
-            // pool build, so releasing here would cost a full extra parquet + sidecar pass
-            // over every file to undo.
-            //
-            // Since #4597 that refill happens on SecondPassFDR's pull rather than at the end
-            // of Stage 6, so releasing here WOULD buy a real window on this arm - the width
-            // of the rescore that does not happen. Left alone deliberately: the arm's own
-            // point is that there is no rescore to bound, and paying a whole-run reload to
-            // free a buffer Stage 7 immediately rebuilds is the trade #4526 was careful not
-            // to make. Reconsider only alongside #4486, which is what makes Stage 7's
-            // whole-run input smaller rather than moving it.
-            //
-            // The buffer is therefore still resident from here to the end of Stage 7 on that
-            // arm - as it is on EVERY arm, because that whole-run pool is what Stage 7 takes
-            // as input, however it is built. That residency is a property of Stage 7's input,
-            // not of resuming, and it is #4486's to remove. This issue bounds the RESCORE
-            // window, which is the part Stage 6 owns.
-            bool rescoreWillStream = !builtOwnBundle && !config.StopAfterStage5;
-            // Drop the CONTENTS, keeping the outer per-file list (the shared buffer identity
-            // every milestone wraps), exactly as Run does after planning. Consensus targets were
-            // computed off the full buffer immediately above, which is its last all-files reader.
-            if (_survivorLoader != null && rescoreWillStream)
-            {
-                foreach (var kvp in perFileEntries)
-                {
-                    kvp.Value.Clear();
-                    kvp.Value.TrimExcess();
-                }
-                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"resume-handoff-released",
-                    string.Format(@"(post-GC, survivors released after rehydrate, files={0})",
-                        perFileEntries.Count));
-            }
-            // The bundle-adopt / resume path never plans, so the rescore gate is
-            // false (PerFileRescore falls back to the no-op unless a worker
-            // RescoreBundle is present). Mirrors the old "FirstPassFDR rehydrates ->
-            // DidPlan is false" semantics, now as a published slot.
-            ctx.Publish(new PlanningPerformed(false));
-            return true;
-        }
-
-        /// <summary>
-        /// The resume counterpart of the loader <see cref="CompactFirstPass"/> builds on the
-        /// projection path: rebuild any ONE file's post-compaction survivors from its
-        /// <c>.scores.parquet</c> plus its finalized <c>.1st-pass.fdr_scores.bin</c>, so Stage 6
-        /// refills a file at a time instead of reading them off a buffer somebody had to hold
-        /// for the whole rescore (issue #4536).
-        ///
-        /// <para>The set to filter to is <see cref="RescoreInputs.RetainedBaseIds"/>, taken off
-        /// the bundle the compaction just ran on rather than
-        /// <see cref="RescoreInputs.GlobalFirstPassBaseIds"/>. The two are NOT the same set:
-        /// compaction retains the global one UNION the base_ids of every planner action target,
-        /// and a target rescued by a sibling file's evidence is in the second term only.
-        /// Filtering to the global set alone would drop exactly those entries on the rebuild,
-        /// leaving them their stale Stage 4 boundaries in the blib - the divergence
-        /// <see cref="RescoreCompaction"/>'s union step exists to prevent.</para>
-        ///
-        /// <para>Returns true with a NULL loader ONLY for an empty join, which is also the only
-        /// case where a null loader costs nothing: there is no survivor buffer to bound. Any
-        /// other missing precondition returns false with
-        /// <see cref="PipelineContext.ExitCode"/> set, rather than falling back to the resident
-        /// handoff. That asymmetry is the point of the issue this fixes: a silent fallback is
-        /// how an O(files) path reached a default run in the first place, and nothing
-        /// downstream can catch it - a null loader reads as "this run could not stream". So
-        /// the preconditions are faults here, where they can still be reported.</para>
-        /// </summary>
-        private static bool TryBuildResumeSurvivorLoader(
-            PipelineContext ctx,
-            RescoreInputs bundle,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            out FirstPassSurvivorLoader loader)
-        {
-            loader = null;
-            if (bundle.RetainedBaseIds == null)
-            {
-                // Null means CompactFirstPass skipped RescoreCompaction.Apply, which it does
-                // only for an empty join. Checked rather than assumed: if some later change
-                // gives Apply a second skip, the loader would go null on a populated run and
-                // Stage 6 would silently take the resident buffer again - the exact regression
-                // shape that produced this issue, and one no guard downstream can see.
-                if (perFileEntries.Count == 0)
-                    return true;
-                // RescoreCompaction.Apply must run whenever any file is joined; reaching here
-                // with files means it did not, and the Stage 6 survivor handoff cannot stream.
-                ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__the_first_pass_intermediate_files_for__0__files_are_missing_the_list_of_,
-                    perFileEntries.Count, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
-                ctx.ExitCode = 1;
-                return false;
-            }
-            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
-            foreach (var kvp in perFileEntries)
-            {
-                if (perFileParquetPaths != null && perFileParquetPaths.ContainsKey(kvp.Key))
-                    continue;
-                ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__no__scores_parquet_file_is_known_for__0___so_its_first_pass_precursor_, kvp.Key,
-                    ParquetScoreCache.EXT_SCORES));
-                ctx.ExitCode = 1;
-                return false;
-            }
-            loader = new FirstPassSurvivorLoader(
-                perFileParquetPaths, ctx.Config, bundle.RetainedBaseIds,
-                ctx.Get<SequencePool>().Value);
-            return true;
+            ScoringTaskShared.ReadRetainedBaseIds(config, out string retainedError);
+            ctx.LogError(retainedError);
+            ctx.ExitCode = 1;
+            return false;
         }
 
         /// <summary>
@@ -1036,14 +814,6 @@ namespace pwiz.Osprey.Tasks
         /// a "recompute instead" case. The stubs it loads carry no PIN features, which
         /// is what keeps PerFileRescore's "Features != null means rescored" parquet
         /// criterion and SecondPassFDR's feature reload correct.
-        ///
-        /// <para>Stage 5's load publishes one EMPTY stub list per scored file, so the bundle
-        /// loads each file's stubs from its own <c>.scores.parquet</c> through
-        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>, which compacts each file
-        /// before touching the next and so never holds more than ONE file's pre-compaction
-        /// pool (~1.19 GB per file). That is also what lets <c>--model-diagnostics</c> report
-        /// off this path (issue #4505): the accumulator is fed from the pass that already
-        /// reads every sidecar, so the report comes off the PRE-compaction rows.</para>
         /// </summary>
         private bool RehydrateForPerRunRescore(
             PipelineContext ctx, List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
@@ -1165,208 +935,11 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Build the post-Stage-6 rescore bundle from THIS task's own
-        /// sidecars for a straight-through resume. See the class remarks on the
-        /// bundle-adopt path.
-        /// </summary>
-        private RescoreInputs LoadOwnReconciliationBundle(
-            PipelineContext ctx,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
-        {
-            // Resolve each loaded file's own .scores.parquet path in perFileEntries
-            // order so both hydrates' index-correspondence contract (entries[i] <->
-            // parquetPaths[i]) holds; PerFileScoring published these paths as
-            // PerFileParquetPaths.
-            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
-            var parquetPaths = new List<string>(perFileEntries.Count);
-            long residentStubs = 0;
-            foreach (var kvp in perFileEntries)
-            {
-                if (!perFileParquetPaths.TryGetValue(kvp.Key, out var path))
-                {
-                    ctx.LogError(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__no__scores_parquet_file_is_known_for__0__, kvp.Key,
-                        ParquetScoreCache.EXT_SCORES));
-                    ctx.ExitCode = 1;
-                    return null;
-                }
-                parquetPaths.Add(path);
-                residentStubs += kvp.Value.Count;
-            }
-
-            // Zero stubs across every file IS the lean load's signature: it appends a keyed
-            // entry per scored file with an empty list. The streaming hydrate below requires
-            // exactly that, and the only load that ever handed this method real stubs - the
-            // --input-scores stubs-only loop, every run's pre-compaction pool at once - is
-            // gone, so stubs here are a routing defect rather than a second shape to serve.
-            if (residentStubs > 0)
-            {
-                throw new InvalidOperationException(string.Format(
-                    @"The first-pass resume was reached with {0:N0} first-pass stubs already " +
-                    @"resident across {1} runs; only the lean load reaches it.",
-                    residentStubs, perFileEntries.Count));
-            }
-
-            try
-            {
-                // No PIN features to clear afterwards: these stubs come from
-                // LoadFdrStubsFromParquet, which never assigns Features, so PerFileRescore's
-                // "Features != null means this entry was rescored" criterion holds as loaded.
-                return StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths);
-            }
-            catch (InvalidDataException ex)
-            {
-                ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__the_first_pass_intermediate_files_could_not_be_read___0_,
-                    ex.Message));
-                ctx.ExitCode = 1;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// The file-count-bounded arm of <see cref="LoadOwnReconciliationBundle"/>: load
-        /// each file's stubs from its own <c>.scores.parquet</c> inside
-        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>, so one file's
-        /// pre-compaction pool is resident at a time rather than all of them.
-        ///
-        /// <para><paramref name="perFileEntries"/> arrives holding the lean load's empty
-        /// per-file lists and is CLEARED here, because the streaming hydrate appends the
-        /// survivors itself and requires an empty buffer on entry. The list OBJECT is
-        /// kept - it is the published <c>ScoredEntries</c> buffer that
-        /// <see cref="Rehydrate"/> goes on to compact and republish as
-        /// <c>CompactedEntries</c> - so clearing rather than replacing it is what keeps
-        /// those consumers pointed at the same buffer.</para>
-        ///
-        /// <para>The per-file hook is the run's one look at each file's PRE-compaction
-        /// pool, and both reductions taken there are the ones a resident pool used to
-        /// serve afterwards: the run-level passing-target count Stage 5 reports per file,
-        /// and the <c>--model-diagnostics</c> report reduction. The report needs those
-        /// rows specifically - compaction discards ~52x of them, mostly the decoys and
-        /// entrapment its FDP and calibration views are built from - so feeding it here
-        /// is what makes the streamed report identical to the batch one rather than a
-        /// plausible-looking survivors-only page.</para>
-        ///
-        /// <para>COST, stated rather than hidden: this is the SECOND full pass over every
-        /// <c>.scores.parquet</c> on a lean resume. Stage 5 already streamed all five scalar
-        /// columns of every file to build the counts-only projection - whose only consumer
-        /// is <see cref="Run"/>, so on this path its surviving product is a log line and the
-        /// empty-set gate - and this method then re-opens each file for the full stub read.
-        /// The pre-#4505 mdiag full resume read each parquet ONCE, fat. The trade is
-        /// deliberate: one extra sequential scan per file buys an O(files) -> O(1-file)
-        /// pre-compaction pool, which is the whole point at 82 files. Removing the
-        /// redundancy means making the Stage 5 lean load lazy about work only Run consumes,
-        /// which is a separate change.</para>
-        /// </summary>
-        private RescoreInputs StreamOwnReconciliationBundle(
-            PipelineContext ctx,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IList<string> parquetPaths)
-        {
-            var config = ctx.Config;
-            // File names in load order. The accumulator is seeded with them so its per-run
-            // report rows are keyed by the same index the hook reports, and the streaming
-            // hydrate rederives its own names from the parquet stems (checked below).
-            var fileNames = perFileEntries.ConvertAll(kv => kv.Key);
-            // The [PATH] line is what SubsetPipelineTest's rehydrate leg asserts on. It has to come from
-            // THIS arm: Rehydrate's own "Bundle hydration" line is emitted before the bundle
-            // source is even known, so a worker-supplied bundle logs it too and it cannot
-            // witness the own-sidecar streaming path.
-            ctx.LogInfo(CountText.Format(fileNames.Count, OspreyTasksResources.FirstPassFdrTask_StreamOwnReconciliationBundle_Resuming__reloading_first_pass_intermediate_files_for_1_file_,
-                OspreyTasksResources.FirstPassFdrTask_StreamOwnReconciliationBundle_Resuming__reloading_first_pass_intermediate_files_for__0__files_));
-            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_FIRST_PASS_FDR, @"own-bundle-stream files={0}",
-                fileNames.Count));
-
-            // Diagnostics must never take down a real run - the invariant
-            // ModelDiagnosticsReport states three times and enforces with catch-all guards
-            // around its own builders. This path calls one of those builders directly
-            // (BuildClassificationFromLibrary reads the --decoy-pairing-manifest through a
-            // StreamReader and allocates multi-million-entry dictionaries), and the only
-            // enclosing handler catches InvalidDataException, so an IOException or an OOM
-            // would kill a search for the sake of an opt-in HTML page - where the batch write
-            // it replaces logged and swallowed it. A failure here drops the report, not the
-            // run: the accumulator stays null and LogFirstPassResultsAndReport skips it.
-            ModelDiagnosticsData.Accumulator mdiagAccumulator = null;
-            if (config.ModelDiagnostics)
-            {
-                try
-                {
-                    mdiagAccumulator = BuildModelDiagnosticsAccumulator(
-                        fileNames, ctx.Get<LibraryById>().Value, config, ctx);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_StreamOwnReconciliationBundle___model_diagnostics__could_not_prepare_the_report_on_this_resume__so_no_report_will_be_,
-                        ex.Message, OspreyArgNames.Text(OspreyArgNames.MODEL_DIAGNOSTICS)));
-                }
-            }
-            // Hydrate into a LOCAL buffer, then swap the contents in only on success.
-            // perFileEntries is the PUBLISHED ScoredEntries list, and the streaming hydrate
-            // appends per file, so clearing it up front would leave it holding a partial
-            // survivor set with the original keys gone if any file threw midway. The list
-            // OBJECT still has to be the one that was published (Rehydrate compacts and
-            // republishes it as CompactedEntries), which is why the contents are copied
-            // rather than the reference replaced.
-            // The analysis-wide retained set this task itself wrote when planning ended. A
-            // resume reads it back rather than rebuilding the union from every run's envelope,
-            // which is what makes the rehydrate below a single pass. InvalidDataException so it
-            // joins the one graceful-failure policy the caller already applies to this hydrate.
-            var resumeRetainedBaseIds = ScoringTaskShared.ReadRetainedBaseIds(config, out string retainedError);
-            if (resumeRetainedBaseIds == null)
-                throw new InvalidDataException(retainedError);
-
-            var hydrated = new List<KeyValuePair<string, List<FdrEntry>>>(fileNames.Count);
-            var bundle = RescoreHydration.HydrateCompactedStreaming(
-                hydrated, parquetPaths,
-                (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
-                    ctx.Get<SequencePool>().Value),
-                (fileIdx, fileName, stubs, tally) =>
-                {
-                    ScoringTaskShared.TallyPreCompaction(config, stubs, tally);
-                    if (mdiagAccumulator != null)
-                        ScoringTaskShared.FeedModelDiagnostics(mdiagAccumulator, fileIdx, stubs);
-                },
-                LoadFirstPassExperimentRecords(config, ctx),
-                resumeRetainedBaseIds,
-                ctx.Get<SequencePool>().Value, ctx);
-
-            // The hydrate re-derived every key from its parquet stem, while the accumulator
-            // above and the published PerFileParquetPaths map are keyed by the ORIGINAL
-            // ScoredEntries stems. They agree today because GetScoresPath appends exactly
-            // ".scores.parquet" and SyntheticInputFromParquet strips it - a round trip, not a
-            // guarantee. Left unchecked, a divergence is SILENT: PerFileRescore looks its
-            // parquet up by the new key, misses, and that file keeps its 1st-pass boundaries
-            // all the way into the blib. Assert the coupling instead of relying on it.
-            for (int i = 0; i < hydrated.Count; i++)
-            {
-                if (!string.Equals(hydrated[i].Key, fileNames[i], StringComparison.Ordinal))
-                {
-                    throw new InvalidOperationException(string.Format(
-                        @"Resume rehydrate: file {0} is keyed '{1}' by the loaded scores but " +
-                        @"'{2}' by its parquet stem. The rescore looks parquet paths up by " +
-                        @"the loaded key, so proceeding would silently leave this file " +
-                        @"un-rescored.", i, fileNames[i], hydrated[i].Key));
-                }
-            }
-
-            perFileEntries.Clear();
-            perFileEntries.AddRange(hydrated);
-            bundle.PerFileEntries = perFileEntries;
-            bundle.ModelDiagnosticsAccumulator = mdiagAccumulator;
-            return bundle;
-        }
-
-        /// <summary>
-        /// One file's stub load for <see cref="StreamOwnReconciliationBundle"/>, with any
-        /// parquet fault wrapped as <see cref="InvalidDataException"/>.
-        ///
-        /// <para><see cref="LoadOwnReconciliationBundle"/> catches exactly that type and
-        /// promises an operator-facing "failed to hydrate reconciliation bundle from own
-        /// sidecars" line plus <c>ExitCode = 1</c>. This load opens a parquet, so a truncated or locked
-        /// <c>.scores.parquet</c> would otherwise throw <c>IOException</c> straight out of
-        /// <c>Rehydrate</c> with no exit code and none of that text. Mirrors both upstream
-        /// resume loaders, which wrap for the same reason.</para>
+        /// One file's stub load for <see cref="FoldDiagnosticsOnly"/>, with any parquet fault
+        /// wrapped as <see cref="InvalidDataException"/>, so a truncated or locked
+        /// <c>.scores.parquet</c> reaches the caller as an operator-facing error naming the file
+        /// rather than as an <c>IOException</c> with no exit code. Mirrors both upstream resume
+        /// loaders, which wrap for the same reason.
         /// </summary>
         private static List<FdrEntry> LoadResumeStubs(string fileName, string parquetPath,
             LibraryStringInterner sequencePool)
@@ -1380,80 +953,6 @@ namespace pwiz.Osprey.Tasks
                 throw new InvalidDataException(string.Format(
                     OspreyTasksResources.FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_,
                     fileName, parquetPath, ex.Message), ex);
-            }
-        }
-
-        /// <summary>
-        /// Stage 5 reporting for <see cref="Rehydrate"/>: log per-file first-pass passing
-        /// counts, then the pass-1 <c>--model-diagnostics</c> report.
-        ///
-        /// <paramref name="preCompactionTallies"/> non-null says the hydrate that produced
-        /// <paramref name="perFileEntries"/> compacted each file as it loaded, so this list
-        /// holds SURVIVORS, not the pre-compaction pool, and the per-file counts come from the
-        /// tallies.
-        ///
-        /// <paramref name="mdiagAccumulator"/> is the streamed
-        /// <c>--model-diagnostics</c> reduction the bounded reconciled-bundle rehydrate
-        /// folded every PRE-compaction row into as it loaded (see
-        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>), non-null only there.
-        /// It is what lets that path report at all: <paramref name="perFileEntries"/> has
-        /// already lost the ~52x non-survivors - mostly the decoys and entrapment the FDP
-        /// and calibration views are built from - so building the report off it would
-        /// silently produce a plausible WRONG page. Every bundle this method is handed came
-        /// from that streaming hydrate, so the accumulator is present whenever the report is
-        /// requested. The batch report that built off a resident pool went with the last
-        /// load that produced one.
-        ///
-        /// <para>The OSPREY_DUMP_PERCOLATOR / OSPREY_PERCOLATOR_ONLY dump that used to be
-        /// written here was removed on 2026-10-10.</para>
-        /// </summary>
-        private void LogFirstPassResultsAndReport(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config,
-            PipelineContext ctx,
-            IReadOnlyList<PreCompactionTally> preCompactionTallies,
-            ModelDiagnosticsData.Accumulator mdiagAccumulator)
-        {
-            LogFirstPassResults(perFileEntries, config, ctx, preCompactionTallies);
-
-            // --model-diagnostics: emit the self-contained interactive HTML
-            // report from the just-scored, pre-compaction first-pass entries
-            // (decoys + entrapment still present) and the trained model. Opt-in
-            // and off the default output path, so it can't affect any other
-            // output; a failure is logged and swallowed inside the writer.
-            if (config.ModelDiagnostics)
-            {
-                // Same file order either way: the accumulator was seeded with the input-file
-                // order and perFileEntries keeps every file's key even once compacted.
-                var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
-                var libraryById = ctx.Get<LibraryById>().Value;
-                if (mdiagAccumulator == null)
-                {
-                    throw new InvalidOperationException(
-                        @"The first-pass report was requested from a bundle loaded without its diagnostics accumulator.");
-                }
-                // The peak co-assignment panel (issue #4522) is built from the per-file FDR
-                // sidecars, NOT from perFileEntries - the same source the projection path
-                // uses, so there is one implementation of this panel rather than two.
-                //
-                // The remarks on this method say why perFileEntries cannot be the source: it
-                // "has already lost the ~52x non-survivors - mostly the decoys and entrapment",
-                // so building the report off it "would silently produce a plausible WRONG
-                // page". That is precisely what an earlier resident build did here. It agreed
-                // with the sidecar build on the acceptance boundary (0.0120) and on the accepted
-                // count (28,926) and still reported 72 detected decoys against 468, because
-                // compaction had already dropped the rest - target denominators intact, decoy
-                // class quietly gutted. The regression then overwrote the straight-through
-                // report with this one, so every measurement taken after a full run was the
-                // wrong page.
-                var coAssignment = PeakCoAssignmentSource.Build(
-                    perFileEntries.ConvertAll(kv => kv.Key),
-                    ctx.Get<PerFileParquetPaths>().Value, config,
-                    mdiagAccumulator.ClassByBaseId, libraryById,
-                    LoadFirstPassExperimentRecords(config, ctx), ctx);
-                ModelDiagnosticsReport.WriteFromAccumulator(
-                    mdiagAccumulator, null, cal, config, ctx, coAssignment,
-                    ValidityKey(ctx));
             }
         }
 
@@ -1530,10 +1029,9 @@ namespace pwiz.Osprey.Tasks
         /// entrapment classification from the searched library, logged once, and seeds the
         /// accumulator with the input-file order plus the run FDR level.
         ///
-        /// Two row sources share it: the projection path's score-pass sink (fed as first-pass
-        /// Percolator scores each row) and the streaming reconciled-bundle rehydrate
-        /// (<see cref="RescoreHydration.HydrateCompactedStreaming"/>, fed per file after the
-        /// 1st-pass sidecar overlay and before compaction discards the non-survivors). Both feed
+        /// Row sources share it: the projection path's score-pass sink (fed as first-pass
+        /// Percolator scores each row), the diagnostics-only fold (fed per file after the
+        /// 1st-pass sidecar overlay) and SecondPassFdrTask's pass-2 fold. They feed
         /// rows in the same nested (file, row) order the batch <c>ModelDiagnosticsData.Build</c>
         /// test oracle walks, which is what keeps the streamed report identical to it.
         /// <paramref name="libraryById"/> is passed rather than pulled from the context because
@@ -1560,63 +1058,6 @@ namespace pwiz.Osprey.Tasks
             return new ModelDiagnosticsData.Accumulator(
                 runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr,
                 config.FdrLevel, pass);
-        }
-
-        /// <summary>
-        /// Log per-file and total first-pass passing-target counts at the
-        /// configured run-level FDR. <paramref name="preCompactionTallies"/>, when present,
-        /// is indexed positionally against <paramref name="perFileEntries"/> and is COMPLETE
-        /// - one tally per file - so a short list is an inconsistency, not a fallback case.
-        /// </summary>
-        private void LogFirstPassResults(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config,
-            PipelineContext ctx,
-            IReadOnlyList<PreCompactionTally> preCompactionTallies = null)
-        {
-            int passingTargets = 0;
-            for (int fileIdx = 0; fileIdx < perFileEntries.Count; fileIdx++)
-            {
-                var kvp = perFileEntries[fileIdx];
-                // Prefer the tally the streaming hydrate reduced while this file's full
-                // PRE-compaction stub list was resident: these counts are pre-compaction on
-                // every other path too, and kvp.Value has already lost the non-survivors
-                // when the tallies are present. Identical predicate either way.
-                int fileTargets;
-                if (preCompactionTallies != null)
-                {
-                    // Falling back to counting kvp.Value here would silently report the
-                    // POST-compaction survivor count (~52x too small) as if it were the
-                    // pre-compaction one. The tallies are built one per file in this same
-                    // order, so a missing entry means hydrate and join disagree about the
-                    // file set - stop rather than publish a plausible wrong number.
-                    if (fileIdx >= preCompactionTallies.Count)
-                    {
-                        throw new InvalidOperationException(string.Format(
-                            @"First-pass results: no pre-compaction tally for {0} (file {1} of {2}, " +
-                            @"but the streaming hydrate captured only {3}). The tallies must cover " +
-                            @"every joined file.",
-                            kvp.Key, fileIdx + 1, perFileEntries.Count, preCompactionTallies.Count));
-                    }
-                    fileTargets = preCompactionTallies[fileIdx].PassingTargets;
-                }
-                else
-                {
-                    fileTargets = 0;
-                    foreach (var entry in kvp.Value)
-                    {
-                        if (!entry.IsDecoy &&
-                            entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
-                        {
-                            fileTargets++;
-                        }
-                    }
-                }
-                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR,
-                    kvp.Key, fileTargets, config.RunFdr));
-                passingTargets += fileTargets;
-            }
-            LogRunLevelTotal(ctx, passingTargets, perFileEntries.Count);
         }
 
         /// <summary>
@@ -1758,40 +1199,6 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.STAGE_WALL, @"fdrbench-pass1: {0:F1}s",
                 swFdrBench.Elapsed.TotalSeconds);
             return true;
-        }
-
-        /// <summary>
-        /// First-pass compaction on the adopted bundle: drop entries whose base_id (entry_id
-        /// with the decoy bit masked off) does not pass either the peptide-q or protein-q gate.
-        /// Target and paired decoy share base_id and are kept or dropped together. Delegates to
-        /// RescoreCompaction.Apply so the pre-compaction (file, vec_idx) keys in
-        /// bundle.ReconciliationActions get rebuilt to post-compaction indices. Without this
-        /// rebuild, PerFileRescoreTask's ExecuteRescore would look up reconcile actions at stale
-        /// indices and overlay boundaries onto the wrong entries. Mirrors Rust
-        /// pipeline.rs:3094-3132. The compute path compacts from the sidecars instead
-        /// (<see cref="CompactFromSidecars"/>); the in-memory twin that compacted a resident
-        /// pool was removed with OSPREY_FDR_PROJECTION (2026-10-10).
-        /// </summary>
-        private static void CompactFirstPass(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            RescoreInputs bundle,
-            PipelineContext ctx)
-        {
-            if (perFileEntries.Count == 0)
-                return;
-            var stats = RescoreCompaction.Apply(bundle, ScoringTaskShared.IsSingleFileSearch(ctx.Config));
-            // When the bundle was hydrated by the streaming path, Apply saw an
-            // already-compacted buffer and re-derived the same retain set, so it
-            // removed nothing and its EntriesBefore == EntriesAfter. Report the real
-            // pre-compaction total from the per-file tallies that hydrate captured,
-            // so this line means the same thing on both paths.
-            // long: at ~4.2 M pre-compaction stubs a file this total overflows an
-            // int past ~505 files.
-            long entriesBefore = bundle.PreCompactionTallies != null
-                ? bundle.TotalPreCompactionStubs
-                : stats.EntriesBefore;
-            ScoringTaskShared.LogCompaction(ctx, entriesBefore, stats.EntriesAfter,
-                stats.FirstPassBaseIds, stats.DroppedActions);
         }
 
         /// <summary>
@@ -2125,7 +1532,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Add the base_id of every action target in one run's plan to the analysis-wide retained
         /// set. Masked to the base_id (decoy bit stripped) for the reason
-        /// <see cref="RescoreCompaction"/> masks: a target and its paired decoy share a base_id,
+        /// the first-pass compaction masks: a target and its paired decoy share a base_id,
         /// so retaining the base_id keeps both and preserves the target-decoy invariant.
         ///
         /// <para>A null <see cref="Stage6FilePlan.Actions"/> means planning did not run for this
@@ -3360,8 +2767,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Projection-buffer counterpart of <see cref="LogFirstPassResults"/>: log
-        /// per-file and total first-pass passing-target counts from the projection
+        /// Log per-file and total first-pass passing-target counts from the projection
         /// rows.
         /// </summary>
         private void LogFirstPassResultsProjection(
