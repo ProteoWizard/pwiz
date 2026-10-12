@@ -142,7 +142,7 @@ public sealed class SpectrumList_ChargeStateCalculator : SpectrumListWrapper
 
     /// <summary>Cpp default singly-charged check: fraction of TIC at or below precursor m/z is
     /// ≥ <c>_singleChargeFractionTic</c>.</summary>
-    private bool IsSinglyChargedTicFraction(IReadOnlyList<double> mz, IReadOnlyList<double> intensity, double precursorMz)
+    private bool IsSinglyChargedTicFraction(List<double> mz, List<double> intensity, double precursorMz)
     {
         double tic = 0;
         for (int i = 0; i < intensity.Count; i++) tic += intensity[i];
@@ -165,7 +165,7 @@ public sealed class SpectrumList_ChargeStateCalculator : SpectrumListWrapper
 
     /// <summary>MakeMS2-style singly-charged check: ratio of intensity above (precursor + 20)
     /// to below (precursor - 20), corrected by the position of the highest-mass observed peak.</summary>
-    private bool IsSinglyChargedMakeMs2(IReadOnlyList<double> mz, IReadOnlyList<double> intensity, double precursorMz)
+    private bool IsSinglyChargedMakeMs2(List<double> mz, List<double> intensity, double precursorMz)
     {
         // sum intensities where m/z < precursor - 20 (cpp: upper_bound returns first > precursor - 20)
         int leftEnd = UpperBound(mz, precursorMz - 20);
@@ -184,7 +184,7 @@ public sealed class SpectrumList_ChargeStateCalculator : SpectrumListWrapper
         return rightSum / leftSum < _singleChargeFractionTic * correctionFactor;
     }
 
-    private static int LowerBound(IReadOnlyList<double> sorted, double key)
+    private static int LowerBound(List<double> sorted, double key)
     {
         int lo = 0, hi = sorted.Count;
         while (lo < hi)
@@ -196,7 +196,7 @@ public sealed class SpectrumList_ChargeStateCalculator : SpectrumListWrapper
         return lo;
     }
 
-    private static int UpperBound(IReadOnlyList<double> sorted, double key)
+    private static int UpperBound(List<double> sorted, double key)
     {
         int lo = 0, hi = sorted.Count;
         while (lo < hi)

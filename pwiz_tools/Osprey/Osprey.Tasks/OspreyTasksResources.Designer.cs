@@ -548,6 +548,42 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is demultiplexed, but its demultiplexed spectra cache &apos;{1}&apos; is missing or stale. Re-run {2} with {3} auto to rebuild it..
+        /// </summary>
+        public static string DemuxCache_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_ {
+            get {
+                return ResourceManager.GetString("DemuxCache_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Demultiplexed spectra cache {0} is not usable: {1}..
+        /// </summary>
+        public static string DemuxCache_TryOpen_Demultiplexed_spectra_cache__0__is_not_usable___1__ {
+            get {
+                return ResourceManager.GetString("DemuxCache_TryOpen_Demultiplexed_spectra_cache__0__is_not_usable___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to index demultiplexed spectra cache {0}: {1}.
+        /// </summary>
+        public static string DemuxCache_TryOpen_Failed_to_index_demultiplexed_spectra_cache__0____1_ {
+            get {
+                return ResourceManager.GetString("DemuxCache_TryOpen_Failed_to_index_demultiplexed_spectra_cache__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Streaming demultiplexed spectra from cache: {0}.
+        /// </summary>
+        public static string DemuxCache_TryOpen_Streaming_demultiplexed_spectra_from_cache___0_ {
+            get {
+                return ResourceManager.GetString("DemuxCache_TryOpen_Streaming_demultiplexed_spectra_from_cache___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Excluded {0:N0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics..
         /// </summary>
         public static string EntrapmentPairing_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_ {
@@ -3158,6 +3194,15 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Demultiplexed {0}: {1:N0} isolation windows per cycle into {2:N0} narrower windows, {3:N0} MS/MS spectra.
+        /// </summary>
+        public static string ScoringTaskShared_EnsureSpectraCache_Demultiplexed__0____1__isolation_windows_per_cycle_into__2__narrower_windows___3__MS_MS_spectra {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_EnsureSpectraCache_Demultiplexed__0____1__isolation_windows_per_cycle_into__2__narrower_windows___3__MS_MS_spectra", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to index spectra cache: {0}. Re-parsing the input..
         /// </summary>
         public static string ScoringTaskShared_EnsureSpectraCache_Failed_to_index_spectra_cache___0___Re_parsing_the_input_ {
@@ -3212,6 +3257,15 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("ScoringTaskShared_EnsureSpectraCache_The_spectra_cache___0___cannot_be_used_and_c" +
                         "annot_be_rebuilt__because_its_source___1___is_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} was acquired with overlapping isolation windows and is searched as acquired, so a precursor can be scored in more than one window. Use {1} auto to demultiplex it..
+        /// </summary>
+        public static string ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired", resourceCulture);
             }
         }
         

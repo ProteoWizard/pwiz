@@ -464,6 +464,11 @@ namespace MSConvertGUI
                     if (DemuxRemoveNonOverlappingEdgesCheckbox.Checked)
                         demuxArgs += " removeNonOverlappingEdges=true";
 
+                    // The filter validates it, as it does the mass error.
+                    string solveThreads = DemuxSolveThreadsValue.Text.Trim();
+                    if (!String.IsNullOrEmpty(solveThreads) && solveThreads != "1")
+                        demuxArgs += String.Format(" solveThreads={0}", solveThreads);
+
                     FilterDGV.Rows.Add(new[]
                         {
                             "demultiplex",
@@ -1091,6 +1096,9 @@ namespace MSConvertGUI
             setToolTip(this.DemuxMassErrorValue, massErrorHelp);
             setToolTip(this.DemuxMassErrorTypeBox, massErrorHelp);
             setToolTip(this.DemuxMassErrorLabel, massErrorHelp);
+            string solveThreadsHelp = "Threads solving each file's demultiplexing. Multiplies with the number of files converted in parallel.";
+            setToolTip(this.DemuxSolveThreadsValue, solveThreadsHelp);
+            setToolTip(this.DemuxSolveThreadsLabel, solveThreadsHelp);
             setToolTip(this.DemuxTypeBox, "Specify the type of multiplexing that was used to acquire the data.");
 
             string outputHelp = "Choose the directory for writing the converted file(s).";

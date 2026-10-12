@@ -1339,4 +1339,22 @@
   <data name="TrainingExportWriter_ExportRun_Exporting_isolation_windows" xml:space="preserve">
     <value>Exporting isolation windows</value>
   </data>
+  <data name="DemuxCache_TryOpen_Streaming_demultiplexed_spectra_from_cache___0_" xml:space="preserve">
+    <value>Streaming demultiplexed spectra from cache: {0}</value>
+  </data>
+  <data name="DemuxCache_TryOpen_Demultiplexed_spectra_cache__0__is_not_usable___1__" xml:space="preserve">
+    <value>Demultiplexed spectra cache {0} is not usable: {1}.</value>
+  </data>
+  <data name="DemuxCache_TryOpen_Failed_to_index_demultiplexed_spectra_cache__0____1_" xml:space="preserve">
+    <value>Failed to index demultiplexed spectra cache {0}: {1}</value>
+  </data>
+  <data name="DemuxCache_ThrowIfDemuxCacheMissing___0___is_demultiplexed__but_its_demultiplexed_spectra_cache___1___is_missing_or_stale_" xml:space="preserve">
+    <value>'{0}' is demultiplexed, but its demultiplexed spectra cache '{1}' is missing or stale. Re-run {2} with {3} auto to rebuild it.</value>
+  </data>
+  <data name="ScoringTaskShared_EnsureSpectraCache_Demultiplexed__0____1__isolation_windows_per_cycle_into__2__narrower_windows___3__MS_MS_spectra" xml:space="preserve">
+    <value>Demultiplexed {0}: {1:N0} isolation windows per cycle into {2:N0} narrower windows, {3:N0} MS/MS spectra</value>
+  </data>
+  <data name="ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired" xml:space="preserve">
+    <value>{0} was acquired with overlapping isolation windows and is searched as acquired, so a precursor can be scored in more than one window. Use {1} auto to demultiplex it.</value>
+  </data>
 </root>

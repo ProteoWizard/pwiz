@@ -99,10 +99,12 @@ public class SpectrumListWrapperTests
     //   and nested one inside the other, and asserts the original list is left alone.
     // ============================================================================
 
-    private static IComparable ByDefaultArrayLength(ISpectrumList list, int index) =>
+    // Typed as SpectrumListSorter's key delegate: a method returning int cannot convert to a
+    // delegate returning IComparable (no return-type variance for value types).
+    private static readonly Func<ISpectrumList, int, IComparable> ByDefaultArrayLength = (list, index) =>
         list.GetSpectrum(index, getBinaryData: false).DefaultArrayLength;
 
-    private static IComparable ByMsLevel(ISpectrumList list, int index) =>
+    private static readonly Func<ISpectrumList, int, IComparable> ByMsLevel = (list, index) =>
         list.GetSpectrum(index, getBinaryData: false).Params.CvParam(CVID.MS_ms_level).ValueAs<int>();
 
     private static (MSData msd, ISpectrumList list) TinyList()
