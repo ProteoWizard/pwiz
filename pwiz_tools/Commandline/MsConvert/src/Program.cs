@@ -33,6 +33,17 @@ public static class Program
             Console.Error.WriteLine(ArgParser.Usage());
             return 2;
         }
+        catch (Exception ex)
+        {
+            // The C++ msconvert's report for an unexpected error, with the exception's full text
+            // in place of its what() so the stack trace still reaches the report.
+            Console.Error.WriteLine(ex.ToString());
+            Console.Error.WriteLine("Please report this error to support@proteowizard.org.");
+            Console.Error.WriteLine("Attach the command output and this version information in your report:");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine(VersionInfo.Block);
+            return 1;
+        }
     }
 
     private static string BuildCommandLineString(string[] args)

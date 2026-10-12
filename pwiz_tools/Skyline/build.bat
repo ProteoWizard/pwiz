@@ -254,6 +254,16 @@ if %BUILDONLY%==0 (
 )
 
 REM # ------------------------------------------------------------------------
+REM # Submodules: Hardklor, MSToolkit and DocumentConverter live under this
+REM # directory as git submodules. Update them before building, or a pull that
+REM # moves a submodule pointer builds stale sources and a fresh clone has none.
+REM # ------------------------------------------------------------------------
+echo ##teamcity[progressMessage 'git submodule update']
+git submodule update --init --recursive
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=git submodule update failed & goto error)
+
+REM # ------------------------------------------------------------------------
 REM # Native Hardklor.exe (C++). `dotnet build` (the .NET SDK MSBuild) cannot
 REM # build a C++ vcxproj, so build it here with VS MSBuild (located via
 REM # vswhere). The vcxproj is x64, static, self-extracts its bundled zlib/expat

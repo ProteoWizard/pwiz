@@ -50,9 +50,9 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Whether the "#32770" is a modern Save file dialog, identified by its file-name Edit. Mutually exclusive
-        /// with <see cref="NativeOpenFileDialog.IsOpenFileDialog"/>, which is checked first: the Open dialog has the
-        /// classic combo (control id 1148) and this one does not.
+        /// Whether the "#32770" is a modern Save file dialog, identified by its file-name Edit. Checked after
+        /// <see cref="NativeOpenFileDialog.IsOpenFileDialog"/>; see <see cref="NativeFileDialog.Classify"/> for why
+        /// that order holds although the Save dialog briefly carries the Open dialog's combo.
         /// </summary>
         public static bool IsSaveFileDialog(IntPtr hwnd)
         {

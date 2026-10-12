@@ -122,15 +122,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_" xml:space="preserve">
-    <value>ファイル並列度：{0}（自動、CPUバウンド：{1}コア、{2}ファイル、メモリ推定値なし）</value>
+    <value>ファイル並列度：{0}（自動 {3}、CPUバウンド：{1}コア、{2}ファイル、メモリ推定値なし）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__" xml:space="preserve">
-    <value>ファイル並列度：{0}（自動：空き{1:F1} GB x {2:P0} / ファイルあたり推定~{3:F1} GB -&gt; RAMにより{4}、上限{5}コア / {6}ファイル）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_" xml:space="preserve">
-    <value>ファイル並列度：1（デフォルトは逐次処理。{0}個のファイルを同時にスコアリングするには{1}を指定）</value>
+    <value>ファイル並列度：{0}（自動 {7}：空き{1:F1} GB x {2:P0} / ファイルあたり推定~{3:F1} GB -&gt; RAMにより{4}、上限{5}コア / {6}ファイル）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_" xml:space="preserve">

@@ -45,9 +45,8 @@ namespace pwiz.Osprey.Tasks
     ///
     /// Phase B adds <see cref="Inputs"/> / <see cref="Outputs"/> /
     /// <see cref="ValidityKey"/> for the resume-on-restart capability:
-    /// the pipeline driver checks each task's outputs against
-    /// <c>.&lt;TaskName&gt;.osprey.task</c> sidecar validity keys and
-    /// skips Run when every output exists with a matching key. The
+    /// the pipeline driver checks the validity stamp embedded in each
+    /// task output and skips Run when every output carries a current one. The
     /// same skip-if-valid check applies to every CLI mode — cross-impl
     /// / worker-mode invocations (<c>--input-scores</c> /
     /// <c>--task &lt;Name&gt;</c>) flow through the same driver, so
@@ -72,8 +71,8 @@ namespace pwiz.Osprey.Tasks
         public const string BLIB_READER_TERM = @";blibreader=" + BlibLoader.READER_VERSION;
 
         /// <summary>
-        /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
-        /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
+        /// Short identifier used in pipeline log lines, the <c>--task</c> selector and each
+        /// output's validity stamp. Each task returns its own <c>TASK_NAME</c> constant, the one
         /// spelling the CLI value list and the tests reference too.
         /// </summary>
         public abstract string Name { get; }
@@ -160,27 +159,20 @@ namespace pwiz.Osprey.Tasks
         public virtual IEnumerable<Type> Publishes => Array.Empty<Type>();
 
         /// <summary>
-        /// File paths this task reads as inputs. Reported in the
-        /// <c>.osprey.task</c> sidecar so a human inspecting a
-        /// completed-output sidecar can see what the task consumed.
+        /// File paths this task reads as inputs. Documentation only: it
+        /// states what the task consumes, and nothing reads it at run time.
         /// Default empty; tasks override to list their input files
         /// (mzML, library, upstream sidecars, etc.).
         /// </summary>
         public virtual IEnumerable<string> Inputs(PipelineContext ctx) => Array.Empty<string>();
 
         /// <summary>
-        /// File paths this task produces as outputs. The driver checks
-        /// these for existence and matching validity-key sidecars before
-        /// running; if all exist and match, the task's
-        /// <see cref="Run"/> is skipped. After a successful Run, the
-        /// driver writes a <c>&lt;output&gt;.&lt;TaskName&gt;.osprey.task</c>
-        /// sidecar next to each output file. The per-task naming lets
-        /// two tasks that produce the same output path keep distinct
-        /// validity records. (Historically PerFileScoring wrote the initial
-        /// <c>.scores.parquet</c> and PerFileRescore overwrote it in place;
-        /// Stage 6 now writes a separate <c>.scores-reconciled.parquet</c>, so
-        /// they no longer share an output -- the per-task naming remains for any
-        /// future same-path producers.)
+        /// File paths this task produces as outputs. Before running, the
+        /// driver checks the validity stamp embedded in each one; if every
+        /// output carries a current stamp, the task's <see cref="Run"/> is
+        /// skipped. Each writer embeds that stamp in the same commit as the
+        /// content, and the driver writes nothing after Run. The stamp names
+        /// its task, so a file another task wrote is never taken as current.
         ///
         /// A task that returns no Outputs cannot be skipped; the driver
         /// always invokes <see cref="Run"/> for it. Use that posture
@@ -192,9 +184,9 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Identifier that distinguishes "outputs from a different
         /// invocation that happens to share these paths" from "outputs
-        /// from this invocation that I should reuse." Written into each
-        /// output's <c>.osprey.task</c> sidecar after Run; checked on
-        /// the next invocation before deciding whether to skip Run.
+        /// from this invocation that I should reuse." Embedded in each
+        /// output's stamp by its writer; checked on the next invocation
+        /// before deciding whether to skip Run.
         ///
         /// Default includes <see cref="SearchIdentity.SearchParameterHash"/>
         /// and <see cref="SearchIdentity.LibraryIdentityHash"/> — the
@@ -229,12 +221,23 @@ namespace pwiz.Osprey.Tasks
         public virtual string OutputValidityKey(PipelineContext ctx, string taskKey, string output) => taskKey;
 
         /// <summary>
-        /// The inputs one declared output's stamp records: <paramref name="taskInputs"/> (this
-        /// task's <see cref="Inputs"/>, listed once by the caller) for every output built from
-        /// all of them. An output whose <see cref="OutputValidityKey"/> follows its own run's
-        /// artifacts names those instead, so its stamp says what it was built from.
+        /// The <see cref="ArtifactStamp"/> this task embeds in an output it writes now: this
+        /// task's name, this build's version and its <see cref="ValidityKey"/>. A writer passes
+        /// it into the same atomic commit as the content, so the two cannot disagree.
         /// </summary>
-        public virtual IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output) => taskInputs;
+        public ArtifactStamp OutputStamp(PipelineContext ctx)
+        {
+            return ArtifactStamp.ForCurrentBuild(Name, ValidityKey(ctx));
+        }
+
+        /// <summary>
+        /// The stamp for one declared output whose key is its own
+        /// (<see cref="OutputValidityKey"/>) rather than the task's.
+        /// </summary>
+        public ArtifactStamp OutputStamp(PipelineContext ctx, string output)
+        {
+            return ArtifactStamp.ForCurrentBuild(Name, OutputValidityKey(ctx, ValidityKey(ctx), output));
+        }
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
