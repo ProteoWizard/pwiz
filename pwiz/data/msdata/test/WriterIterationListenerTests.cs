@@ -123,11 +123,13 @@ public class WriterIterationListenerTests
     {
         private readonly ISpectrumList _inner;
         private readonly int _badIndex;
+        private readonly Func<Exception> _failure;
 
-        public UnreadableSpectrumList(ISpectrumList inner, int badIndex)
+        public UnreadableSpectrumList(ISpectrumList inner, int badIndex, Func<Exception>? failure = null)
         {
             _inner = inner;
             _badIndex = badIndex;
+            _failure = failure ?? (() => new InvalidOperationException("unreadable scan"));
         }
 
         public override int Count => _inner.Count;
@@ -136,8 +138,30 @@ public class WriterIterationListenerTests
 
         public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
             index == _badIndex
-                ? throw new InvalidOperationException("unreadable scan")
+                ? throw _failure()
                 : _inner.GetSpectrum(index, getBinaryData);
+    }
+
+    /// <summary>Chromatogram counterpart of <see cref="UnreadableSpectrumList"/>.</summary>
+    private sealed class UnreadableChromatogramList : ChromatogramListBase
+    {
+        private readonly IChromatogramList _inner;
+        private readonly int _badIndex;
+
+        public UnreadableChromatogramList(IChromatogramList inner, int badIndex)
+        {
+            _inner = inner;
+            _badIndex = badIndex;
+        }
+
+        public override int Count => _inner.Count;
+
+        public override ChromatogramIdentity ChromatogramIdentity(int index) => _inner.ChromatogramIdentity(index);
+
+        public override Chromatogram GetChromatogram(int index, bool getBinaryData = false) =>
+            index == _badIndex
+                ? throw new InvalidOperationException("unreadable chromatogram")
+                : _inner.GetChromatogram(index, getBinaryData);
     }
 
     // Every format with a writer that streams spectra one at a time. mzMLb shares MzmlWriter's loop.
@@ -146,10 +170,10 @@ public class WriterIterationListenerTests
 
     private const int BadIndex = 1;
 
-    private static MSData BuildDocWithUnreadableSpectrum()
+    private static MSData BuildDocWithUnreadableSpectrum(Func<Exception>? failure = null)
     {
         var msd = BuildMsnDocWithSpectra(3);
-        msd.Run.SpectrumList = new UnreadableSpectrumList(msd.Run.SpectrumList!, BadIndex);
+        msd.Run.SpectrumList = new UnreadableSpectrumList(msd.Run.SpectrumList!, BadIndex, failure);
         return msd;
     }
 
@@ -241,5 +265,43 @@ public class WriterIterationListenerTests
                 $"{format}: an unreadable spectrum must stop the write");
             Assert.IsInstanceOfType<InvalidOperationException>(ex.InnerException, $"{format}: inner exception");
         }
+    }
+
+    [TestMethod]
+    public void AllWriters_Cancellation_PropagatesUnwrappedWithOrWithoutContinueOnError()
+    {
+        // A cancelled conversion is not an unreadable spectrum: it must neither be skipped (which
+        // would finish a truncated file that looks complete) nor wrapped as EnumerationException
+        // (which would have msconvert suggest --continueOnError).
+        foreach (var format in s_streamedFormats)
+        {
+            foreach (bool continueOnError in new[] { false, true })
+            {
+                Assert.ThrowsException<OperationCanceledException>(
+                    () => WriteThroughMSDataFile(BuildDocWithUnreadableSpectrum(() => new OperationCanceledException()),
+                        format, continueOnError),
+                    $"{format}, continueOnError={continueOnError}: cancellation must stop the write");
+            }
+        }
+    }
+
+    [TestMethod]
+    public void Mzml_ContinueOnError_SkipsTheUnreadableChromatogramAndRenumbersTheRest()
+    {
+        var msd = BuildMsnDocWithSpectra(1);
+        var chroms = new ChromatogramListSimple();
+        for (int i = 0; i < 3; i++)
+            chroms.Chromatograms.Add(new Chromatogram { Index = i, Id = $"chrom-{i}" });
+        msd.Run.ChromatogramList = new UnreadableChromatogramList(chroms, BadIndex);
+
+        using var log = new StringWriter();
+        string mzml = new MzmlWriter { ContinueOnError = true, SkipLog = log }.Write(msd);
+        Assert.AreEqual("Skipping chromatogram 1 \"chrom-1\": unreadable chromatogram", log.ToString().TrimEnd());
+
+        var cl = new MzmlReader().Read(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(mzml))).Run.ChromatogramList!;
+        CollectionAssert.AreEqual(new[] { "chrom-0", "chrom-2" },
+            Enumerable.Range(0, cl.Count).Select(i => cl.GetChromatogram(i).Id).ToArray(), "surviving chromatograms");
+        for (int i = 0; i < cl.Count; i++)
+            Assert.AreEqual(i, cl.GetChromatogram(i).Index, $"index of survivor {i}");
     }
 }

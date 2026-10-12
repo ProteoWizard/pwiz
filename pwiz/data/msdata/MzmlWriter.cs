@@ -529,33 +529,23 @@ public sealed class MzmlWriter
         if (list.DataProcessing is not null)
             w.WriteAttributeString("defaultDataProcessingRef", XmlIdEncoding.Encode(list.DataProcessing.Id));
 
+        int skipped = 0;
         for (int i = 0; i < list.Count; i++)
         {
-            // Same per-item-fetch guard as the spectrum loop above. Matches cpp
-            // IO.cpp:3132-3149 chromatogram-write loop.
-            Chromatogram chrom;
-            try
+            // Same per-item-fetch guard and renumbering as the spectrum loop. Matches cpp
+            // IO.cpp:3132-3160 chromatogram-write loop.
+            var chrom = ContinueOnErrorPolicy.GetChromatogramOrSkip(list, i, ContinueOnError, SkipLog);
+            if (chrom is null)
             {
-                chrom = list.GetChromatogram(i, getBinaryData: true);
+                skipped++;
+                continue;
             }
-            catch (System.Exception ex)
-            {
-                if (ContinueOnError)
-                {
-                    string id;
-                    try { id = list.ChromatogramIdentity(i).Id; }
-                    catch { id = "?"; }
-                    SkipLog.WriteLine($"Skipping chromatogram {i} \"{id}\": {ex.Message}");
-                    continue;
-                }
-                throw new Pwiz.Util.Misc.EnumerationException(ex.Message, ex);
-            }
-            WriteChromatogram(w, chrom);
+            WriteChromatogram(w, chrom, i - skipped);
         }
         w.WriteEndElement();
     }
 
-    private void WriteChromatogram(XmlWriter w, Chromatogram chrom)
+    private void WriteChromatogram(XmlWriter w, Chromatogram chrom, int index)
     {
         // Chromatogram binary arrays sit in datasets prefixed "chromatogram_"
         // (vs. "spectrum_" for spectra) when an mzMLb sink is wired up.
@@ -565,7 +555,7 @@ public sealed class MzmlWriter
         _externalArrayContextPrefix = "chromatogram_";
         try
         {
-            WriteChromatogramInner(w, chrom);
+            WriteChromatogramInner(w, chrom, index);
         }
         finally
         {
@@ -573,11 +563,11 @@ public sealed class MzmlWriter
         }
     }
 
-    private void WriteChromatogramInner(XmlWriter w, Chromatogram chrom)
+    private void WriteChromatogramInner(XmlWriter w, Chromatogram chrom, int index)
     {
         ArmOffsetCapture(w);
         w.WriteStartElement("chromatogram");
-        w.WriteAttributeString("index", chrom.Index.ToString(CultureInfo.InvariantCulture));
+        w.WriteAttributeString("index", index.ToString(CultureInfo.InvariantCulture));
         // cpp IO.cpp:2833 emits chromatogram.id raw ("not an XML:ID"); reader IO.cpp doesn't
         // decode it either. Chromatogram ids are free-form ("TIC", "- SRM SIC Q1=309.0 ...").
         w.WriteAttributeString("id", chrom.Id);
@@ -738,8 +728,9 @@ public sealed class MzmlWriter
             }
             // Survivors are renumbered so a skip leaves no gap in the written indices
             // (cpp IO.cpp:3028). The index is written rather than assigned because the
-            // list may hand back the caller's own Spectrum.
-            WriteSpectrum(w, spec, spec.Index - skipped);
+            // list may hand back the caller's own Spectrum. The list's count attribute
+            // above still counts the skipped spectra, as cpp's does.
+            WriteSpectrum(w, spec, i - skipped);
 
             // Broadcast progress before moving on. Throttling is handled by the registry's
             // per-listener period/timer settings; we just push every spectrum.
