@@ -25,14 +25,18 @@ public sealed class NnlsSolver : IDemuxSolver
 {
     private readonly int _maxIter;
     private readonly double _epsilon;
+    private readonly bool _parallelColumns;
 
     /// <summary>Constructs an NNLS solver.</summary>
     /// <param name="maxIter">Maximum NNLS iterations per column (cpp default 50).</param>
     /// <param name="epsilon">Optimality tolerance (cpp default 1e-10).</param>
-    public NnlsSolver(int maxIter = 50, double epsilon = 1e-10)
+    /// <param name="parallelColumns">Solve the columns of B on the thread pool (default). False
+    /// solves them on the calling thread, for a caller already solving blocks in parallel.</param>
+    public NnlsSolver(int maxIter = 50, double epsilon = 1e-10, bool parallelColumns = true)
     {
         _maxIter = maxIter;
         _epsilon = epsilon;
+        _parallelColumns = parallelColumns;
     }
 
     /// <inheritdoc/>
@@ -65,14 +69,23 @@ public sealed class NnlsSolver : IDemuxSolver
         {
             int numCols = B.ColumnCount;
             int numRows = A.ColumnCount;
-            Parallel.For(0, numCols, fragIndex =>
+            void SolveColumn(int fragIndex)
             {
                 var solver = localNnls.Value!;
                 // Like cpp, keep the last feasible x even when Solve fails (e.g. at the iteration limit).
                 solver.Solve(AtB, fragIndex);
                 var sol = solver.X;
                 for (int i = 0; i < numRows; i++) X[i, fragIndex] = sol[i];
-            });
+            }
+            if (_parallelColumns)
+            {
+                Parallel.For(0, numCols, SolveColumn);
+            }
+            else
+            {
+                for (int fragIndex = 0; fragIndex < numCols; fragIndex++)
+                    SolveColumn(fragIndex);
+            }
         }
         finally
         {
