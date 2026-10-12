@@ -28,6 +28,15 @@ public sealed class MgfSerializer
     /// the MS1s that are skipped on output (so progress reflects work-done over the full input).</summary>
     public IterationListenerRegistry? IterationListenerRegistry { get; set; }
 
+    /// <summary>When true, a spectrum that fails to load is logged to <see cref="SkipLog"/> and
+    /// skipped; when false, the failure stops the write as an
+    /// <see cref="EnumerationException"/>. See <see cref="Mzml.MzmlWriter.ContinueOnError"/>.</summary>
+    public bool ContinueOnError { get; set; }
+
+    /// <summary>Sink for skipped-spectrum diagnostics under <see cref="ContinueOnError"/>.
+    /// Defaults to <see cref="Console.Error"/>.</summary>
+    public TextWriter SkipLog { get; set; } = Console.Error;
+
     // ---------- Write ----------
 
     /// <summary>Writes <paramref name="msd"/> as MGF text.</summary>
@@ -51,8 +60,8 @@ public sealed class MgfSerializer
         int scansWritten = 0;
         for (int i = 0; i < count; i++)
         {
-            var spec = msd.Run.SpectrumList.GetSpectrum(i, getBinaryData: true);
-            if (WriteSpectrum(w, spec)) scansWritten++;
+            var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(msd.Run.SpectrumList, i, ContinueOnError, SkipLog);
+            if (spec is not null && WriteSpectrum(w, spec)) scansWritten++;
             registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
     }

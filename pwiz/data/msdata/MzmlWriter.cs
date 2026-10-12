@@ -723,34 +723,23 @@ public sealed class MzmlWriter
 
         int count = list.Count;
         var registry = IterationListenerRegistry;
+        int skipped = 0;
         for (int i = 0; i < count; i++)
         {
             // Per-item fetch is the failure-prone step (vendor SDK throws during
             // GetSpectrum, e.g. a corrupted scan that can't be centroided). cpp
             // IO.cpp:3001-3017 wraps only the fetch; the actual write is not in
-            // the catch. ContinueOnError → log + skip; otherwise wrap as
-            // EnumerationException so msconvert can show the --continueOnError
-            // hint. Catches Exception because vendor SDKs throw arbitrary types
-            // (IOException, IndexOutOfRangeException, vendor-specific) with no
-            // shared base — same as cpp catching std::exception&.
-            Spectrum spec;
-            try
+            // the catch.
+            var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(list, i, ContinueOnError, SkipLog);
+            if (spec is null)
             {
-                spec = list.GetSpectrum(i, getBinaryData: true);
+                skipped++;
+                continue;
             }
-            catch (System.Exception ex)
-            {
-                if (ContinueOnError)
-                {
-                    string id;
-                    try { id = list.SpectrumIdentity(i).Id; }
-                    catch { id = "?"; }
-                    SkipLog.WriteLine($"Skipping spectrum {i} \"{id}\": {ex.Message}");
-                    continue;
-                }
-                throw new Pwiz.Util.Misc.EnumerationException(ex.Message, ex);
-            }
-            WriteSpectrum(w, spec);
+            // Survivors are renumbered so a skip leaves no gap in the written indices
+            // (cpp IO.cpp:3028). The index is written rather than assigned because the
+            // list may hand back the caller's own Spectrum.
+            WriteSpectrum(w, spec, spec.Index - skipped);
 
             // Broadcast progress before moving on. Throttling is handled by the registry's
             // per-listener period/timer settings; we just push every spectrum.
@@ -769,11 +758,11 @@ public sealed class MzmlWriter
         }
     }
 
-    private void WriteSpectrum(XmlWriter w, Spectrum spec)
+    private void WriteSpectrum(XmlWriter w, Spectrum spec, int index)
     {
         ArmOffsetCapture(w);
         w.WriteStartElement("spectrum");
-        w.WriteAttributeString("index", spec.Index.ToString(CultureInfo.InvariantCulture));
+        w.WriteAttributeString("index", index.ToString(CultureInfo.InvariantCulture));
         // cpp IO.cpp:2611 emits spectrum.id raw ("not an XML:ID"); reader IO.cpp:2716 skips
         // decode_xml_id. Vendor scan IDs (e.g. "scan=1", "merged=0 frame=0", "controllerType=0
         // controllerNumber=1 scan=1") are free-form strings, not constrained to NCName.

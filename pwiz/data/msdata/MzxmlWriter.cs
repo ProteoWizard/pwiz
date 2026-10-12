@@ -45,6 +45,15 @@ public sealed class MzxmlWriter
     /// once per scan during the scan-list write loop.</summary>
     public IterationListenerRegistry? IterationListenerRegistry { get; set; }
 
+    /// <summary>When true, a spectrum that fails to load is logged to <see cref="SkipLog"/> and
+    /// skipped; when false, the failure stops the write as an
+    /// <see cref="Pwiz.Util.Misc.EnumerationException"/>. See <see cref="Mzml.MzmlWriter.ContinueOnError"/>.</summary>
+    public bool ContinueOnError { get; set; }
+
+    /// <summary>Sink for skipped-spectrum diagnostics under <see cref="ContinueOnError"/>.
+    /// Defaults to <see cref="System.Console.Error"/>.</summary>
+    public TextWriter SkipLog { get; set; } = Console.Error;
+
     /// <summary>Creates a writer that encodes binary arrays per <paramref name="encoderConfig"/>.</summary>
     /// <remarks>
     /// mzXML always uses big-endian byte order regardless of caller config; we clone the config
@@ -305,9 +314,8 @@ public sealed class MzxmlWriter
         var registry = IterationListenerRegistry;
         for (int i = 0; i < count; i++)
         {
-            Spectrum spec;
-            try { spec = sl.GetSpectrum(i, getBinaryData: true); }
-            catch { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
+            var spec = ContinueOnErrorPolicy.GetSpectrumOrSkip(sl, i, ContinueOnError, SkipLog);
+            if (spec is null) { registry?.Broadcast(new IterationUpdate(i, count, "writing spectra")); continue; }
 
             // Skip Thermo non-MS spectra (cpp Serializer_mzXML.cpp:775-777).
             if (nativeIdFormat == CVID.MS_Thermo_nativeID_format

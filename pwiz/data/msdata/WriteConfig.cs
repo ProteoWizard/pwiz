@@ -82,8 +82,7 @@ public sealed class WriteConfig
     /// logged and the bad item is skipped instead of aborting the conversion. When false
     /// (default), the failure is wrapped in <see cref="Pwiz.Util.Misc.EnumerationException"/>
     /// and rethrown so callers (e.g. msconvert) can show the user the hint to retry with the
-    /// flag. Honored by mzML / mzMLb writers; other format writers stop on the first
-    /// failure regardless. Matches cpp <c>WriteConfig::continueOnError</c>.</summary>
+    /// flag. Honored by every implemented writer. Matches cpp <c>WriteConfig::continueOnError</c>.</summary>
     public bool ContinueOnError { get; set; }
 
     /// <summary>Shallow copy with a cloned <see cref="EncoderConfig"/>; lets callers tweak

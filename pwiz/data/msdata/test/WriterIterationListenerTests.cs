@@ -1,5 +1,6 @@
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Mgf;
+using Pwiz.Data.MsData.MSn;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.MzXml;
 using Pwiz.Data.MsData.Spectra;
@@ -11,7 +12,8 @@ namespace Pwiz.Data.MsData.Tests;
 /// Verifies that <see cref="MzmlWriter"/>, <see cref="MzxmlWriter"/>, and
 /// <see cref="MgfSerializer"/> broadcast a per-spectrum <see cref="IterationUpdate"/> through
 /// the configured <see cref="IterationListenerRegistry"/>. This is what powers
-/// msconvert-sharp's <c>-v</c> progress output.
+/// msconvert-sharp's <c>-v</c> progress output. Also covers how every writer's spectrum loop
+/// handles a spectrum that fails to load, with and without <see cref="WriteConfig.ContinueOnError"/>.
 /// </summary>
 [TestClass]
 public class WriterIterationListenerTests
@@ -112,5 +114,132 @@ public class WriterIterationListenerTests
 
         string mgf = new MgfSerializer().Write(msd);
         Assert.IsTrue(mgf.Contains("BEGIN IONS", StringComparison.Ordinal));
+    }
+
+    /// <summary>Decorates a healthy list and throws for one index, the way a vendor reader fails
+    /// on a scan it cannot read. Identity still resolves, as it does for a real reader that can
+    /// enumerate a scan it cannot load.</summary>
+    private sealed class UnreadableSpectrumList : SpectrumListBase
+    {
+        private readonly ISpectrumList _inner;
+        private readonly int _badIndex;
+
+        public UnreadableSpectrumList(ISpectrumList inner, int badIndex)
+        {
+            _inner = inner;
+            _badIndex = badIndex;
+        }
+
+        public override int Count => _inner.Count;
+
+        public override SpectrumIdentity SpectrumIdentity(int index) => _inner.SpectrumIdentity(index);
+
+        public override Spectrum GetSpectrum(int index, bool getBinaryData = false) =>
+            index == _badIndex
+                ? throw new InvalidOperationException("unreadable scan")
+                : _inner.GetSpectrum(index, getBinaryData);
+    }
+
+    // Every format with a writer that streams spectra one at a time. mzMLb shares MzmlWriter's loop.
+    private static readonly WriteFormat[] s_streamedFormats =
+        { WriteFormat.Mzml, WriteFormat.MzXml, WriteFormat.Mgf, WriteFormat.Ms2, WriteFormat.Cms2 };
+
+    private const int BadIndex = 1;
+
+    private static MSData BuildDocWithUnreadableSpectrum()
+    {
+        var msd = BuildMsnDocWithSpectra(3);
+        msd.Run.SpectrumList = new UnreadableSpectrumList(msd.Run.SpectrumList!, BadIndex);
+        return msd;
+    }
+
+    private static byte[] WriteThroughMSDataFile(MSData msd, WriteFormat format, bool continueOnError)
+    {
+        using var ms = new MemoryStream();
+        MSDataFile.Write(msd, ms, new WriteConfig { Format = format, ContinueOnError = continueOnError });
+        return ms.ToArray();
+    }
+
+    private static MSData ReadBack(byte[] bytes, WriteFormat format)
+    {
+        using var ms = new MemoryStream(bytes);
+        var msd = new MSData();
+        switch (format)
+        {
+            case WriteFormat.Mzml:
+                return new MzmlReader().Read(ms);
+            case WriteFormat.MzXml:
+                MzxmlReader.Read(ms, msd);
+                return msd;
+            case WriteFormat.Mgf:
+                using (var reader = new StreamReader(ms))
+                    return new MgfSerializer().Read(reader);
+            case WriteFormat.Ms2:
+                new SerializerMSn(MSnType.Ms2).Read(ms, msd);
+                return msd;
+            case WriteFormat.Cms2:
+                new SerializerMSn(MSnType.Cms2).Read(ms, msd);
+                return msd;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(format), format, null);
+        }
+    }
+
+    [TestMethod]
+    public void AllWriters_ContinueOnError_SkipTheUnreadableSpectrumAndKeepTheRest()
+    {
+        foreach (var format in s_streamedFormats)
+        {
+            byte[] bytes = WriteThroughMSDataFile(BuildDocWithUnreadableSpectrum(), format, continueOnError: true);
+
+            var sl = ReadBack(bytes, format).Run.SpectrumList!;
+            // The fixture's first peak is 100 + index, so it identifies which spectra survived
+            // in every format, including the ones that do not keep the nativeID.
+            var firstMzs = Enumerable.Range(0, sl.Count)
+                .Select(i => sl.GetSpectrum(i, getBinaryData: true).GetMZArray()!.Data[0])
+                .ToArray();
+            CollectionAssert.AreEqual(new[] { 100.0, 102.0 }, firstMzs, $"{format}: surviving spectra");
+
+            // mzML is the only one of these formats that stores spectrum indices, so it is the one
+            // that has to renumber the survivors to leave no gap.
+            if (format == WriteFormat.Mzml)
+            {
+                for (int i = 0; i < sl.Count; i++)
+                    Assert.AreEqual(i, sl.GetSpectrum(i).Index, $"{format}: index of survivor {i}");
+            }
+        }
+    }
+
+    [TestMethod]
+    public void AllWriters_ContinueOnError_LogTheSkippedSpectrumById()
+    {
+        const string expected = "Skipping spectrum 1 \"controllerType=0 controllerNumber=1 scan=2\": unreadable scan";
+        var writers = new (string Format, Action<MSData, TextWriter> Write)[]
+        {
+            ("mzML", (msd, log) => new MzmlWriter { ContinueOnError = true, SkipLog = log }.Write(msd)),
+            ("mzXML", (msd, log) => new MzxmlWriter { ContinueOnError = true, SkipLog = log }.Write(msd)),
+            ("MGF", (msd, log) => new MgfSerializer { ContinueOnError = true, SkipLog = log }.Write(msd)),
+            ("MS2", (msd, log) => new SerializerMSn(MSnType.Ms2) { ContinueOnError = true, SkipLog = log }.Write(msd, Stream.Null)),
+            ("CMS2", (msd, log) => new SerializerMSn(MSnType.Cms2) { ContinueOnError = true, SkipLog = log }.Write(msd, Stream.Null)),
+        };
+        foreach (var (format, write) in writers)
+        {
+            using var log = new StringWriter();
+            write(BuildDocWithUnreadableSpectrum(), log);
+            Assert.AreEqual(expected, log.ToString().TrimEnd(), $"{format}: skip diagnostic");
+        }
+    }
+
+    [TestMethod]
+    public void AllWriters_WithoutContinueOnError_ThrowEnumerationException()
+    {
+        // EnumerationException is what makes msconvert suggest re-running with --continueOnError.
+        foreach (var format in s_streamedFormats)
+        {
+            var ex = Assert.ThrowsException<EnumerationException>(
+                () => WriteThroughMSDataFile(BuildDocWithUnreadableSpectrum(), format, continueOnError: false),
+                $"{format}: an unreadable spectrum must stop the write");
+            Assert.IsInstanceOfType<InvalidOperationException>(ex.InnerException, $"{format}: inner exception");
+        }
     }
 }
