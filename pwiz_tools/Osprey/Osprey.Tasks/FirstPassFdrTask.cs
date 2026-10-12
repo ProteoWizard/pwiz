@@ -1958,17 +1958,18 @@ namespace pwiz.Osprey.Tasks
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             FdrProjectionSet prebuiltProjections)
         {
-            // Preferred path (issue #4397): PerFileScoring streamed these rows straight
-            // out of the per-file .scores.parquet, so the fat FdrEntry stub buffer was
-            // never allocated at all (it cost ~53 GB at 191M rows). Fall back to building
-            // from stubs on the paths that still publish them - rehydrate / reconciled-input, or when
-            // a resident pool is required. BuildFromEntries releases each file's stubs
-            // incrementally (releaseStubs: true) so the projection never coexists with the
-            // full stub buffer. Clearing the hand-off ScoredEntries lists is safe: nothing
-            // downstream of this task reads ScoredEntries on a compute path -- the survivor
-            // buffer is published as CompactedEntries.
-            var projections = prebuiltProjections ??
-                FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
+            // The only path (issue #4397): PerFileScoring counted these rows from each
+            // per-file .scores.parquet footer, so the fat FdrEntry stub buffer was never
+            // allocated (it cost ~53 GB at 191M rows), and the first pass streams every row's
+            // identity and features from the parquet. Every PerFileScoring load publishes this
+            // counts-only set; the resident projection built from stubs, every run's rows at
+            // once, had no producer left and survives only as a test oracle in Osprey.FDR.
+            var projections = prebuiltProjections;
+            if (projections == null || !projections.IsCountsOnly)
+            {
+                throw new InvalidOperationException(
+                    @"The first pass was reached without the counts-only projection PerFileScoring publishes.");
+            }
             long maxRows = 0;
             for (int f = 0; f < projections.PerFile.Count; f++)
                 maxRows = Math.Max(maxRows, projections.RowCount(f));
@@ -1977,13 +1978,9 @@ namespace pwiz.Osprey.Tasks
             // 446 files. afterCount below is deliberately left int - it is the post-compaction
             // survivor count, ~289 M, a different magnitude with room to spare.
             long beforeCount = projections.TotalRows;
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, projections.IsCountsOnly
-                ? string.Format(
-                    @"projection counts-only: {0} rows across {1} files (no resident rows); FdrEntry stubs released",
-                    beforeCount, projections.PerFile.Count)
-                : string.Format(
-                    @"projection built: {0} rows, {1} distinct peptides; FdrEntry stubs released",
-                    beforeCount, projections.PeptideById.Length));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, string.Format(
+                @"projection counts-only: {0} rows across {1} files (no resident rows); FdrEntry stubs released",
+                beforeCount, projections.PerFile.Count));
 
             // Stage 5: first-pass Percolator over the projection. Same SVM, same
             // dispatch, same q-values -- only the resident buffer differs. The lean
@@ -2114,7 +2111,7 @@ namespace pwiz.Osprey.Tasks
             // one sidecar adopted there is already an on-disk score that model produced, so
             // reusing it is the consistent choice rather than a surprising one.
             var reloadedModel = LoadCurrentModelSidecar(perFileParquetPaths, sidecarValidityKey);
-            PercolatorResults adoptedModel = projections.IsCountsOnly && resumableFiles.Count > 0
+            PercolatorResults adoptedModel = resumableFiles.Count > 0
                 ? reloadedModel?.Model
                 : null;
 
@@ -2277,93 +2274,81 @@ namespace pwiz.Osprey.Tasks
             var featureInfos = OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES);
             var swFdr = Stopwatch.StartNew();
             bool aborted;
-            if (projections.IsCountsOnly)
-            {
-                // Stage B (issue #4355 struct-shrink S3): the lean 1st pass holds NO resident
-                // FdrProjection[] -- stream every row's identity + features from the per-file
-                // .scores.parquet. The row source reads the scalar columns (entry_id / charge /
-                // is_decoy / coelution_sum / modseq) in parquet row order (== the resident sort
-                // order on the 1st pass, since the parquet is written (entry_id,charge,scan)-sorted),
-                // and loadFileFeatures loads that file's feature vectors by the running row ordinal.
-                // perFileParquetPaths has every projection file, so the indexer cannot miss - but
-                // NOT for the reason this used to give ("the counts-only producer read the same
-                // parquet to count its rows"): the resume producer reads the footer now, not the
-                // rows. What holds is that PerFileScoringTask sets perFileParquetPaths[fileName]
-                // unconditionally, outside the fat/lean branch and outside any existence test,
-                // and Run seeds every path up front. Moving that assignment inside the lean
-                // branch - where it looks redundant, since that arm adds an empty entry list -
-                // would break this indexer deep inside the Stage-5 streaming pass.
-                var stubIdentity = StubIdentity(ctx);
-                Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
-                    (fileName, columns, onRow) =>
-                        ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow, columns, stubIdentity);
-                // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
-                // load that file's feature vectors or re-run the dot product. Consulted by BOTH
-                // passes, and the set grows during pass 1 - so on a cold run this is what stops
-                // pass 2 recomputing all 446 files' scores 82 minutes after pass 1 computed
-                // them. Returns false for a file whose sidecar is not on disk, which scores
-                // normally.
-                CompletedScoreStreamer tryStreamCompletedScores =
-                    (fileName, onRecord) =>
+            // Stage B (issue #4355 struct-shrink S3): the lean 1st pass holds NO resident
+            // FdrProjection[] -- stream every row's identity + features from the per-file
+            // .scores.parquet. The row source reads the scalar columns (entry_id / charge /
+            // is_decoy / coelution_sum / modseq) in parquet row order (== the resident sort
+            // order on the 1st pass, since the parquet is written (entry_id,charge,scan)-sorted),
+            // and loadFileFeatures loads that file's feature vectors by the running row ordinal.
+            // perFileParquetPaths has every projection file, so the indexer cannot miss - but
+            // NOT for the reason this used to give ("the counts-only producer read the same
+            // parquet to count its rows"): the resume producer reads the footer now, not the
+            // rows. What holds is that PerFileScoringTask sets perFileParquetPaths[fileName]
+            // unconditionally, outside the fat/lean branch and outside any existence test,
+            // and Run seeds every path up front. Moving that assignment inside the lean
+            // branch - where it looks redundant, since that arm adds an empty entry list -
+            // would break this indexer deep inside the Stage-5 streaming pass.
+            var stubIdentity = StubIdentity(ctx);
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
+                (fileName, columns, onRow) =>
+                    ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow, columns, stubIdentity);
+            // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
+            // load that file's feature vectors or re-run the dot product. Consulted by BOTH
+            // passes, and the set grows during pass 1 - so on a cold run this is what stops
+            // pass 2 recomputing all 446 files' scores 82 minutes after pass 1 computed
+            // them. Returns false for a file whose sidecar is not on disk, which scores
+            // normally.
+            CompletedScoreStreamer tryStreamCompletedScores =
+                (fileName, onRecord) =>
+                {
+                    lock (scoresOnDisk)
                     {
-                        lock (scoresOnDisk)
-                        {
-                            if (!scoresOnDisk.Contains(fileName))
-                                return false;
-                        }
-                        string doneBase = ScoringTaskShared.ResolveSidecarBasePath(
-                            fileName, perFileParquetPaths, config);
-                        if (string.IsNullOrEmpty(doneBase))
+                        if (!scoresOnDisk.Contains(fileName))
                             return false;
-                        // Both run q-values travel with the score. The record carries them
-                        // already - it is the record pass 1 wrote - so handing them on costs
-                        // nothing here and saves the reader a sort per file.
-                        return FdrScoresSidecar.ReadRecords(
-                            FdrScoresSidecar.Pass1Path(doneBase), FdrScoresSidecar.Pass.FirstPass,
-                            rec => onRecord(rec.EntryId, rec.Score,
-                                rec.RunPrecursorQvalue, rec.RunPeptideQvalue));
-                    };
-                // The adopted model is reused rather than skipped: the scorer still publishes it
-                // through captureModel, so a second pass that needs the frozen first-pass model
-                // gets the SAME model the scores on disk were produced by. Synthesising a stub to
-                // satisfy the arithmetic would publish a meaningless model and corrupt pass 2
-                // silently. See adoptedModel above for when a model is adopted.
-                PercolatorResults pretrainedModel = adoptedModel;
-                if (pretrainedModel != null)
-                {
-                    ctx.LogInfo(CountText.Format(resumableFiles.Count,
-                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again__1_of__1__files_,
-                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again___0__of__1__files_,
-                        projections.PerFile.Count));
-                }
-                else if (reloadedModel?.Model != null)
-                {
-                    ctx.LogInfo(
-                        OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__a_saved_first_pass_model_exists_but_no_file_has_saved_scores__so_the_model_is_);
-                }
-                aborted = PercolatorEngine.RunFirstPassStreaming(
-                    projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
-                    config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                    pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes);
-                // Says whether the pass-1 write actually engaged. Without it a run in which
-                // flushFileRunScope never fired would look identical from the outside - the
-                // sink would have written the same sidecars from pass 2, and the output would
-                // be byte-identical - so the log is the only place the distinction is visible.
-                ctx.LogVerbose(CountText.Format(projections.PerFile.Count,
-                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of_the_file_were_saved_while_training_and_read_back__so_its_,
-                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of__1__of__0__files_were_saved_while_training_and_read_back__so_,
-                    scoresOnDisk.Count));
-            }
-            else
+                    }
+                    string doneBase = ScoringTaskShared.ResolveSidecarBasePath(
+                        fileName, perFileParquetPaths, config);
+                    if (string.IsNullOrEmpty(doneBase))
+                        return false;
+                    // Both run q-values travel with the score. The record carries them
+                    // already - it is the record pass 1 wrote - so handing them on costs
+                    // nothing here and saves the reader a sort per file.
+                    return FdrScoresSidecar.ReadRecords(
+                        FdrScoresSidecar.Pass1Path(doneBase), FdrScoresSidecar.Pass.FirstPass,
+                        rec => onRecord(rec.EntryId, rec.Score,
+                            rec.RunPrecursorQvalue, rec.RunPeptideQvalue));
+                };
+            // The adopted model is reused rather than skipped: the scorer still publishes it
+            // through captureModel, so a second pass that needs the frozen first-pass model
+            // gets the SAME model the scores on disk were produced by. Synthesising a stub to
+            // satisfy the arithmetic would publish a meaningless model and corrupt pass 2
+            // silently. See adoptedModel above for when a model is adopted.
+            PercolatorResults pretrainedModel = adoptedModel;
+            if (pretrainedModel != null)
             {
-                aborted = PercolatorEngine.RunPercolatorFdr(
-                    projections, config, featureInfos,
-                    ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                    @"First-pass", loadFileFeatures,
-                    fileName => ParquetScoreCache.ReadApexRtsByParquetIndex(perFileParquetPaths[fileName]),
-                    captureContributions, captureModel);
+                ctx.LogInfo(CountText.Format(resumableFiles.Count,
+                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again__1_of__1__files_,
+                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__reusing_the_saved_first_pass_model_instead_of_training_again___0__of__1__files_,
+                    projections.PerFile.Count));
             }
+            else if (reloadedModel?.Model != null)
+            {
+                ctx.LogInfo(
+                    OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_Resuming__a_saved_first_pass_model_exists_but_no_file_has_saved_scores__so_the_model_is_);
+            }
+            aborted = PercolatorEngine.RunFirstPassStreaming(
+                projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
+                config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
+                @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
+                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes);
+            // Says whether the pass-1 write actually engaged. Without it a run in which
+            // flushFileRunScope never fired would look identical from the outside - the
+            // sink would have written the same sidecars from pass 2, and the output would
+            // be byte-identical - so the log is the only place the distinction is visible.
+            ctx.LogVerbose(CountText.Format(projections.PerFile.Count,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of_the_file_were_saved_while_training_and_read_back__so_its_,
+                OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of__1__of__0__files_were_saved_while_training_and_read_back__so_,
+                scoresOnDisk.Count));
             swFdr.Stop();
             if (aborted)
             {
