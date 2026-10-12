@@ -24,8 +24,13 @@ internal interface IMsLevelProvider
 /// </summary>
 internal sealed class DemuxSpectrumCache : SpectrumListWrapper, IMsLevelProvider
 {
-    private readonly int[] _msLevels;
-    private readonly int _capacity;
+    /// <summary>A spectrum's metadata as the demultiplexer uses it.</summary>
+    internal readonly record struct SpectrumSummary(int MsLevel, int PrecursorCount,
+        double PrecursorLowMz, double PrecursorHighMz);
+
+    private readonly SpectrumSummary[] _summaries;
+    private SpectrumIdentity[]? _identities; // only until the index mapper has read them
+    private int _capacity;
     private readonly object _lock = new();
 
     // Two synchronized structures form an LRU: linked list for ordering, dict for O(1) lookup.
@@ -40,16 +45,44 @@ internal sealed class DemuxSpectrumCache : SpectrumListWrapper, IMsLevelProvider
         // Pre-compute MS levels in one sweep. Each metadata-only GetSpectrum is cheap individually
         // (~10s of µs) but the cumulative cost dominated FindNearbySpectra in the demux pipeline,
         // which makes ~500 such calls per source spectrum.
-        _msLevels = new int[inner.Count];
+        _summaries = new SpectrumSummary[inner.Count];
+        _identities = new SpectrumIdentity[inner.Count];
         for (int i = 0; i < inner.Count; i++)
         {
             var s = inner.GetSpectrum(i, getBinaryData: false);
-            _msLevels[i] = s.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
+            bool hasPrecursor = s.Precursors.Count > 0;
+            _summaries[i] = new SpectrumSummary(
+                s.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0),
+                s.Precursors.Count,
+                hasPrecursor ? DemuxHelpers.PrecursorMzLow(s.Precursors[0]) : 0,
+                hasPrecursor ? DemuxHelpers.PrecursorMzHigh(s.Precursors[0]) : 0);
+            _identities[i] = new SpectrumIdentity
+            {
+                Index = s.Index, Id = s.Id, SpotId = s.SpotId, SourceFilePosition = s.SourceFilePosition,
+            };
         }
     }
 
     /// <inheritdoc/>
-    public int GetMsLevel(int index) => _msLevels[index];
+    public int GetMsLevel(int index) => _summaries[index].MsLevel;
+
+    /// <summary>Spectrum <paramref name="index"/>'s metadata from the constructor's sweep.</summary>
+    public SpectrumSummary GetSummary(int index) => _summaries[index];
+
+    /// <summary>Spectrum <paramref name="index"/>'s identity from the constructor's sweep, until
+    /// <see cref="ReleaseIdentities"/>.</summary>
+    public SpectrumIdentity GetIdentity(int index) =>
+        (_identities ?? throw new InvalidOperationException("identities released"))[index];
+
+    /// <summary>Drops the identities once the index mapper has built its own.</summary>
+    public void ReleaseIdentities() => _identities = null;
+
+    /// <summary>Raises the capacity to at least <paramref name="capacity"/> spectra.</summary>
+    public void EnsureCapacity(int capacity)
+    {
+        lock (_lock)
+            _capacity = System.Math.Max(_capacity, capacity);
+    }
 
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
