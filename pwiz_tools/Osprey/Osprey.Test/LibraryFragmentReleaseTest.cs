@@ -173,20 +173,14 @@ namespace pwiz.Osprey.Test
                 FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
             });
 
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
             bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
             try
             {
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertRunsOnLeg(false, @"OSPREY_FDR_PROJECTION=0", new OspreyConfig());
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-
                 OspreyEnvironment.ReleaseLibraryFragments = false;
                 AssertRunsOnLeg(false, @"OSPREY_RELEASE_LIBRARY_FRAGMENTS=0", new OspreyConfig());
             }
             finally
             {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
                 OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
             }
         }
@@ -194,7 +188,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The suffix records whether the release RAN, not whether the flag was set. Keying it
         /// on the flag alone left the guarantee resting one gate upstream: a leg that never
-        /// released (Stage 5 forced onto the resident path, say) stamped the same EMPTY suffix
+        /// released stamped the same EMPTY suffix
         /// as a leg that did, so a later run WITH the release could adopt those outputs, skip
         /// the work, and report the release arm's memory profile without ever executing it.
         ///
@@ -204,7 +198,6 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void ValidateValidityKeySuffixTracksWhetherTheReleaseRan()
         {
-            bool savedProjection = OspreyEnvironment.UseFdrProjection;
             bool savedRelease = OspreyEnvironment.ReleaseLibraryFragments;
             try
             {
@@ -214,14 +207,6 @@ namespace pwiz.Osprey.Test
                 AssertSuffix(true, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME + @" cannot release",
                     TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME));
 
-                OspreyEnvironment.UseFdrProjection = false;
-                AssertSuffix(false, @"could have released, Stage 5 went resident instead",
-                    new OspreyConfig());
-                // SecondPassFDR's release is its own and does not ride the Stage 5 path.
-                AssertSuffix(true, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + @" ignores OSPREY_FDR_PROJECTION",
-                    TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME));
-                OspreyEnvironment.UseFdrProjection = savedProjection;
-
                 OspreyEnvironment.ReleaseLibraryFragments = false;
                 AssertSuffix(false, @"opted out where a release was possible", new OspreyConfig());
                 AssertSuffix(true, @"opted out where it was not possible anyway",
@@ -229,7 +214,6 @@ namespace pwiz.Osprey.Test
             }
             finally
             {
-                OspreyEnvironment.UseFdrProjection = savedProjection;
                 OspreyEnvironment.ReleaseLibraryFragments = savedRelease;
             }
         }
