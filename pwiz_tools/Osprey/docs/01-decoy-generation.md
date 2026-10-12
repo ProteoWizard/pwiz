@@ -203,9 +203,11 @@ else that needs a peptide's b/y m/z shares one set of residue masses with `Decoy
   spanning it does. Until this was fixed the map kept only the last of the two, putting those
   decoy ions 42 Da off. (Both travel with the residue, so the N-terminal modification lands
   on an internal decoy residue - the same in Rust, and a separate question from this sum.)
-  No validity-key term marks the fix: task sidecars compare the key and nothing else, so a
-  directory scored before it and resumed after it keeps its old decoys. Only a library with
-  two modifications on one residue is affected; delete the outputs to re-score one.
+  No validity-key term marks the fix, and none is needed: every artifact's embedded stamp
+  records the build that wrote it, and a different build is never current, so a directory
+  scored before the fix is re-scored when resumed by a build that has it - unless
+  OSPREY_VERSION_OVERRIDE pins the old version, which keeps the old decoys. Only a library
+  with two modifications on one residue is affected.
 - Neutral loss is subtracted when present.
 - Final m/z: `(mass + (charge-1)*proton) / charge`.
 

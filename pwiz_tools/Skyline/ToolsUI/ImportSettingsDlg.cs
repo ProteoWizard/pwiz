@@ -35,14 +35,23 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public partial class ImportSettingsDlg : FormEx
     {
+        /// <summary>
+        /// Whether to uninstall whichever installation is chosen, if it can be. Kept apart from
+        /// the checkbox, which is cleared while an installation that cannot be uninstalled is
+        /// selected.
+        /// </summary>
+        private bool _uninstallWanted;
+
         /// <param name="installations">The installations to offer.</param>
         /// <param name="userInitiated">True when the user chose Import Settings; false when
         /// Skyline offers the import unasked at its first start, and the dialog asks whether to
-        /// import at all.</param>
+        /// import at all. Only a first start uninstalls by default: a new version is replacing
+        /// the one it imports from.</param>
         public ImportSettingsDlg(IEnumerable<SkylineInstallation> installations, bool userInitiated)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
+            _uninstallWanted = !userInitiated;
             if (!userInitiated)
             {
                 labelInstallations.Text = ToolsUIResources.ImportSettingsDlg_ImportSettingsDlg__Do_you_want_to_import_settings_from_one_of_these_previous_versions_;
@@ -94,14 +103,19 @@ namespace pwiz.Skyline.ToolsUI
             var installation = SelectedInstallation;
             bool canUninstall = installation != null && installation.CanUninstall;
             cbUninstall.Enabled = canUninstall;
-            if (!canUninstall)
-                cbUninstall.Checked = false;
+            cbUninstall.Checked = canUninstall && _uninstallWanted;
             btnOk.Enabled = installation != null;
         }
 
         private void listInstallations_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateControls();
+        }
+
+        private void cbUninstall_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbUninstall.Enabled)
+                _uninstallWanted = cbUninstall.Checked;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
