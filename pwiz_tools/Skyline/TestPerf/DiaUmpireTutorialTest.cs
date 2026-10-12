@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2021 University of Washington - Seattle, WA
  * 
@@ -19,12 +20,19 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -329,6 +337,15 @@ namespace TestPerf
         /// </summary>
         protected override bool IsRecordMode => false;
 
+        /// <summary>
+        /// Environment variable naming a directory where the test saves the search pipeline's
+        /// intermediates (DIA-Umpire spectrum digests, Comet and Percolator outputs, the spectral
+        /// library) and a description of the machine, for comparing machines that disagree.
+        /// </summary>
+        private const string DIAGNOSTIC_DIR_VARIABLE = @"SKYLINE_DIAUMPIRE_DIAG_DIR";
+
+        private static string DiagnosticDir => Environment.GetEnvironmentVariable(DIAGNOSTIC_DIR_VARIABLE);
+
         protected override void DoTest()
         {
             try
@@ -337,6 +354,9 @@ namespace TestPerf
             }
             finally
             {
+                if (!string.IsNullOrEmpty(DiagnosticDir))
+                    SaveDiagnosticFiles(DiagnosticDir);
+
                 // Cleanup output files in persistent dir, even when the test fails: the DIA-SWATH tutorial
                 // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
                 // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
@@ -579,6 +599,8 @@ namespace TestPerf
                 // Report only the top PSM per pseudo-spectrum: keeps the Percolator pin small (much
                 // faster FDR) and is sufficient for building the library from best matches.
                 importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(@"num_output_lines", @"1");
+                if (!string.IsNullOrEmpty(DiagnosticDir))
+                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(@"keep-intermediate-files", @"True");
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
@@ -931,6 +953,87 @@ namespace TestPerf
             foreach (var pattern in new[] { "*-diaumpire*", "comet.*", "make-pin.pin", "percolator.*", "crux.*" })
                 foreach (var file in Directory.GetFiles(diaDir, pattern))
                     FileEx.SafeDelete(file);
+        }
+
+        private void SaveDiagnosticFiles(string diagnosticDir)
+        {
+            try
+            {
+                Directory.CreateDirectory(diagnosticDir);
+                File.WriteAllLines(Path.Combine(diagnosticDir, @"machine.txt"), GetMachineDescription());
+
+                // The pseudo-spectra are too large to keep, so record a digest per spectrum instead
+                string diaDir = GetTestPath("DIA\\");
+                foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.mzML"))
+                    WriteSpectrumDigests(file, Path.Combine(diagnosticDir, Path.GetFileName(file) + @".digest.txt"));
+
+                var filesToCopy = new HashSet<string>();
+                foreach (var pattern in new[] { "*-diaumpire*", "comet.*", "make-pin.pin", "percolator.*", "crux.*" })
+                    filesToCopy.UnionWith(Directory.GetFiles(diaDir, pattern).Where(f => !f.EndsWith(@".mzML")));
+                filesToCopy.UnionWith(Directory.GetFiles(TestFilesDirs[0].FullPath, "*.blib", SearchOption.AllDirectories));
+                filesToCopy.UnionWith(Directory.GetFiles(TestFilesDirs[0].FullPath, "*.irtdb", SearchOption.AllDirectories));
+                foreach (var file in filesToCopy)
+                    File.Copy(file, Path.Combine(diagnosticDir, Path.GetFileName(file)), true);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(@"Failed to save diagnostic files to {0}: {1}", diagnosticDir, e);
+            }
+        }
+
+        private static IEnumerable<string> GetMachineDescription()
+        {
+            using var cpuKey = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0");
+            string ucrtPath = Path.Combine(Environment.SystemDirectory, @"ucrtbase.dll");
+            return new[]
+            {
+                @"Machine: " + Environment.MachineName,
+                @"CPU: " + cpuKey?.GetValue(@"ProcessorNameString"),
+                @"ProcessorCount: " + Environment.ProcessorCount,
+                @"OS: " + RuntimeInformation.OSDescription,
+                @".NET: " + RuntimeInformation.FrameworkDescription,
+                @"ucrtbase.dll: " + (File.Exists(ucrtPath) ? FileVersionInfo.GetVersionInfo(ucrtPath).FileVersion : @"missing"),
+                @"Fma: " + Fma.IsSupported,
+                @"Avx2: " + Avx2.IsSupported,
+                @"Avx512F: " + Avx512F.IsSupported,
+                @"Vector512.IsHardwareAccelerated: " + Vector512.IsHardwareAccelerated,
+                @"DOTNET_EnableAVX512: " + Environment.GetEnvironmentVariable(@"DOTNET_EnableAVX512")
+            };
+        }
+
+        /// <summary>
+        /// Writes one hash per spectrum in the file's spectrumList, ignoring line endings and
+        /// everything outside the list (file paths, timestamps and index offsets), followed by
+        /// a hash of the whole list.
+        /// </summary>
+        private static void WriteSpectrumDigests(string mzmlPath, string digestPath)
+        {
+            using var reader = new StreamReader(mzmlPath);
+            using var writer = new StreamWriter(digestPath);
+            using var listHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            using var spectrumHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            bool inList = false;
+            int spectrumCount = 0;
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (!inList)
+                {
+                    inList = line.Contains(@"<spectrumList");
+                    continue;
+                }
+                if (line.Contains(@"</spectrumList>"))
+                    break;
+                var bytes = Encoding.UTF8.GetBytes(line + '\n');
+                listHash.AppendData(bytes);
+                spectrumHash.AppendData(bytes);
+                if (line.Contains(@"</spectrum>"))
+                {
+                    writer.WriteLine(Convert.ToHexString(spectrumHash.GetHashAndReset()).Substring(0, 16));
+                    spectrumCount++;
+                }
+            }
+            writer.WriteLine(@"spectra={0} sha256={1}", spectrumCount, Convert.ToHexString(listHash.GetHashAndReset()));
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)

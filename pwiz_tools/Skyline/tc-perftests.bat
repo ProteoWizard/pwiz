@@ -166,6 +166,11 @@ if %SEQUENTIAL%==1 (
 set TC_DECORATION=
 if defined TEAMCITY_VERSION set TC_DECORATION=teamcitytestdecoration=on
 
+REM # DIAGNOSTIC (draft PR, not for merge): run only TestDiaTtofDiaUmpireTutorial, once as the
+REM # agent runs it and once with .NET AVX-512 disabled, and publish the pipeline intermediates
+REM # each run saves to SKYLINE_DIAUMPIRE_DIAG_DIR.
+goto diag_run
+
 REM # Escape hatch: run a single custom TestRunner (still perftests=on) instead of
 REM # the two standard suites. e.g. SKYLINE_TEST_ARGS=test=TestSciexPrmCeOptimization.
 if defined SKYLINE_TEST_ARGS goto custom_run
@@ -195,6 +200,25 @@ echo ##teamcity[progressMessage 'TestRunner ^(custom SKYLINE_TEST_ARGS^)']
 call :run_tests %RUNNER_MODE% %RUNNER_ARGS%
 popd
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
+
+:diag_run
+set DIAG_ROOT=%TC_TEST_RESULTS%\DiaUmpireDiag
+set DIAG_FAILED=0
+echo ##teamcity[progressMessage 'TestDiaTtofDiaUmpireTutorial ^(AVX-512 as the agent has it^)']
+set SKYLINE_DIAUMPIRE_DIAG_DIR=%DIAG_ROOT%\avx512-default
+call :run_tests parallelmode=off loop=1 language=en offscreen=on perftests=on test=TestDiaTtofDiaUmpireTutorial log=DiagDefault.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
+if %EXIT% NEQ 0 set DIAG_FAILED=1
+echo ##teamcity[progressMessage 'TestDiaTtofDiaUmpireTutorial ^(DOTNET_EnableAVX512=0^)']
+set SKYLINE_DIAUMPIRE_DIAG_DIR=%DIAG_ROOT%\avx512-disabled
+set DOTNET_EnableAVX512=0
+call :run_tests parallelmode=off loop=1 language=en offscreen=on perftests=on test=TestDiaTtofDiaUmpireTutorial log=DiagNoAvx512.log results="%TC_TEST_RESULTS%" %TC_DECORATION%
+if %EXIT% NEQ 0 set DIAG_FAILED=1
+set DOTNET_EnableAVX512=
+set SKYLINE_DIAUMPIRE_DIAG_DIR=
+echo ##teamcity[publishArtifacts '%DIAG_ROOT% => DiaUmpireDiag.zip']
+popd
+if %DIAG_FAILED% NEQ 0 (set EXIT=1 & set "ERROR_TEXT=TestDiaTtofDiaUmpireTutorial diagnostic run failed" & goto error)
+goto tests_done
 
 :tests_done
 popd
