@@ -918,6 +918,8 @@ public static class SpectrumListFactory
             RemoveNonOverlappingEdges = bool.Parse(TakeKeyValue(ref args, "removeNonOverlappingEdges=", "false")),
             Optimization = ParseOptimization(TakeKeyValue(ref args, "optimization=", "none")),
             SolveThreads = int.Parse(TakeKeyValue(ref args, "solveThreads=", "1"), CultureInfo.InvariantCulture),
+            // Not in cpp: Poisson-weighted NNLS refit.
+            PoissonWeights = bool.Parse(TakeKeyValue(ref args, "poissonWeights=", "false")),
         };
 
         args = args.Trim();

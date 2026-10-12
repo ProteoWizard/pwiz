@@ -75,6 +75,10 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         /// solved blocks and the spectra they read. A host converting several files at once
         /// should leave it at 1.</summary>
         public int SolveThreads { get; init; } = 1;
+
+        /// <summary>Refit each NNLS column with Poisson row weights from its unweighted solution
+        /// (default false, matching cpp). See <see cref="NnlsSolver"/>.</summary>
+        public bool PoissonWeights { get; init; }
     }
 
     private readonly DemuxImpl _impl;
@@ -259,7 +263,7 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             // matrix + interpolation cycles) collapse to 1 unique fetch per spectrum amortized.
             _inner = new DemuxSpectrumCache(inner);
             _params = p;
-            _solver = new NnlsSolver(p.NnlsMaxIter, p.NnlsEps);
+            _solver = new NnlsSolver(p.NnlsMaxIter, p.NnlsEps, poissonWeights: p.PoissonWeights);
 
             var pmcParams = new PrecursorMaskCodec.Params
             {
@@ -550,7 +554,8 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             Parallel.For(0, results.Length,
                 new ParallelOptions { MaxDegreeOfParallelism = _params.SolveThreads, CancellationToken = cancel },
                 () => (Demux: CreateDemultiplexer(),
-                    Solver: new NnlsSolver(_params.NnlsMaxIter, _params.NnlsEps, parallelColumns: false)),
+                    Solver: new NnlsSolver(_params.NnlsMaxIter, _params.NnlsEps, parallelColumns: false,
+                        poissonWeights: _params.PoissonWeights)),
                 (i, _, worker) =>
                 {
                     try

@@ -123,6 +123,80 @@ public static class DemuxTests
             AssertVectorEqual(new[] { 0.0, 2.0 }, X.Column(0).ToArray(), 1e-12);
         }
 
+        [TestMethod]
+        public void NnlsSolver_PoissonWeights_MatchesBruteForceWeightedOptimum()
+        {
+            // Random sparse non-negative systems at Orbitrap-like intensities. Each column's refit
+            // must equal the brute-force weighted NNLS optimum, with weights 1 / max(A x0, floor)
+            // from the brute-force unweighted optimum x0. The last column is below the floor
+            // everywhere: uniform weights, so the unweighted solution stands.
+            const double floor = NnlsSolver.PoissonWeightFloor;
+            var random = new Random(7);
+            int refitColumns = 0;
+            for (int trial = 0; trial < 40; trial++)
+            {
+                int n = 2 + random.Next(4);
+                int m = n + 1 + random.Next(4);
+                var A = DenseMatrix.Create(m, n, (_, _) => random.NextDouble() < 0.3 ? 0 : random.NextDouble());
+                int cols = 4;
+                var B = DenseMatrix.Create(m, cols, 0);
+                for (int c = 0; c < cols; c++)
+                {
+                    double scale = c == cols - 1 ? floor / (2 * n) : System.Math.Pow(10, 3 + 2 * random.NextDouble());
+                    var trueX = DenseVector.Create(n, _ => random.NextDouble() < 0.3 ? 0 : scale * random.NextDouble());
+                    var b = A * trueX;
+                    for (int r = 0; r < m; r++)
+                        B[r, c] = System.Math.Max(0, b[r] + scale * 0.3 * (random.NextDouble() - 0.5));
+                }
+
+                var X = new NnlsSolver(poissonWeights: true).Solve(A, B);
+                for (int c = 0; c < cols; c++)
+                {
+                    var b = B.Column(c);
+                    var x0 = BruteForceNnls(A, b, null);
+                    var mu = A * DenseVector.OfArray(x0);
+                    var weights = mu.Select(v => 1 / System.Math.Max(v, floor)).ToArray();
+                    if (mu.Any(v => v > floor))
+                        refitColumns++;
+                    var expected = BruteForceNnls(A, b, weights);
+                    double tolerance = 1e-7 * System.Math.Max(1, expected.Max());
+                    AssertVectorEqual(expected, X.Column(c).ToArray(), tolerance);
+                }
+            }
+            Assert.IsTrue(refitColumns > 80, $"expected most columns to be refit, got {refitColumns}");
+        }
+
+        /// <summary>Minimizes sum_r w_r (A x - b)_r^2 over x &gt;= 0 (w = 1 when null) by
+        /// enumerating every support: the optimum is the least-squares solution on its support,
+        /// with every entry there positive.</summary>
+        private static double[] BruteForceNnls(Matrix<double> A, Vector<double> b, double[]? weights)
+        {
+            int m = A.RowCount, n = A.ColumnCount;
+            var sqrtW = DenseVector.Create(m, r => weights == null ? 1 : System.Math.Sqrt(weights[r]));
+            var Aw = DenseMatrix.Create(m, n, (r, i) => sqrtW[r] * A[r, i]);
+            var bw = DenseVector.Create(m, r => sqrtW[r] * b[r]);
+            var best = new double[n];
+            double bestObjective = bw.DotProduct(bw);
+            for (int support = 1; support < 1 << n; support++)
+            {
+                var columns = Enumerable.Range(0, n).Where(i => (support & (1 << i)) != 0).ToArray();
+                var As = DenseMatrix.Create(m, columns.Length, (r, k) => Aw[r, columns[k]]);
+                var xs = As.TransposeThisAndMultiply(As).Solve(As.TransposeThisAndMultiply(bw));
+                if (xs.Any(v => !(v > 0)))
+                    continue;
+                var residual = As * xs - bw;
+                double objective = residual.DotProduct(residual);
+                if (objective < bestObjective)
+                {
+                    bestObjective = objective;
+                    best = new double[n];
+                    for (int k = 0; k < columns.Length; k++)
+                        best[columns[k]] = xs[k];
+                }
+            }
+            return best;
+        }
+
         private static void AssertVectorEqual(double[] expected, double[]? actual, double tolerance)
         {
             Assert.IsNotNull(actual);
