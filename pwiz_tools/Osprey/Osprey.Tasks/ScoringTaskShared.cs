@@ -824,6 +824,29 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Why a Stage 7 join over <paramref name="config"/>'s inputs cannot be folded run by run
+        /// (<see cref="CanStreamStage7Join"/> is false), in the words Stage 7 would have used:
+        /// the retained base_id summary, or the reconciled parquets. For a run that HAS a join -
+        /// both callers are past <see cref="RunsStage7Join"/> - every other term is one of these
+        /// two, so finding neither means this message and the predicate have drifted apart.
+        /// </summary>
+        internal static string UnstreamableJoinError(OspreyConfig config)
+        {
+            if (ReadRetainedBaseIds(config, out string retainedError) == null)
+                return retainedError;
+            var fileNames = new List<string>();
+            var scoresPaths = new Dictionary<string, string>();
+            foreach (string input in config.InputFiles ?? new List<string>())
+            {
+                string fileName = Path.GetFileNameWithoutExtension(input) ?? string.Empty;
+                fileNames.Add(fileName);
+                scoresPaths[fileName] = ParquetScoreCache.GetScoresPath(input);
+            }
+            return SecondPassFdrTask.UnusableReconciledParquetsError(fileNames, scoresPaths) ??
+                   throw new InvalidOperationException(@"Second-pass FDR cannot fold run by run for no reason it can name");
+        }
+
+        /// <summary>
         /// Every <c>CanStreamStage7Join</c> term EXCEPT the reconciled parquets, i.e. the half a
         /// run can answer BEFORE Stage 6 has written them.
         ///

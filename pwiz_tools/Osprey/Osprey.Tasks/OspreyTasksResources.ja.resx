@@ -725,10 +725,6 @@
     <value>第2パスの結果をモデル診断レポートに追加できませんでした：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>第2パスの結果をモデル診断レポートに追加できませんでした：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_" xml:space="preserve">
     <value>モデル診断レポートを書き込めませんでした：{0}</value>
     <comment>Needs Review:New resource</comment>
@@ -903,22 +899,6 @@
   </data>
   <data name="Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____1_" xml:space="preserve">
     <value>{0}からピークフィーチャーの再読み込みに失敗しました：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第2パス中間ファイルを確認中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第2パス中間ファイルを確認中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for_1_file" xml:space="preserve">
-    <value>1個のファイルの第2パスFDRスコア（{1}）を再読み込みしました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2__of__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルのうち{2:N0}個の第2パスFDRスコア（{1}）を再読み込みしました</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_" xml:space="preserve">
@@ -1111,14 +1091,6 @@
   </data>
   <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_the_file_into_memory_" xml:space="preserve">
     <value>第2パスFDRは、このファイルの保持されたプリカーサー候補をメモリに読み込んでいます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>1個のファイルから保持されたプリカーサー候補を再構築中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから保持されたプリカーサー候補を再構築中</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_OverlayReconciledIntoBuffer_Failed_to_reload_the_re_scored_results_file__0____1_" xml:space="preserve">
@@ -1679,10 +1651,6 @@
   </data>
   <data name="SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__" xml:space="preserve">
     <value>{0}：{1}の書き込みをスキップします（レポートのみ）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_candidates_of_all__0__runs_in_memory_at_once__" xml:space="preserve">
-    <value>第2パスFDRは、{0:N0}個すべてのランのプリカーサー候補を一度にメモリに保持します（約{1:N0} GB）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">

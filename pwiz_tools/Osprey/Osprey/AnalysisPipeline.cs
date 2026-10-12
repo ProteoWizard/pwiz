@@ -131,6 +131,15 @@ namespace pwiz.Osprey
                 LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));
                 return 0;
             }
+            catch (RehydrateFailedException ex)
+            {
+                // The task that could not rehydrate has already logged why, naming the file, and
+                // set the exit code this carries. Restating it as "could not reload its results"
+                // made a designed refusal read as two errors, the second naming nothing. A task
+                // that set the code without logging is still caught: Program reconciles a failing
+                // exit code that has no "Error:" line.
+                return ex.ExitCode;
+            }
             catch (Exception ex)
             {
                 // Skyline's line (CommonExceptionUtil.IsProgrammingDefect): a file or data

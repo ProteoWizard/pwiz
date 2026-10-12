@@ -156,10 +156,6 @@ namespace pwiz.Osprey.Tasks
             public HashSet<(string ModifiedSequence, byte Charge)> PassingPrecursors;
             public HashSet<uint> GlobalBaseIds;
             public int TotalMulticharge;
-            /// <summary>Every file's entries, materialized ONLY when a Stage-6 diagnostic dump
-            /// that needs them is requested. Null on the production path, which is what keeps
-            /// the buffer this class exists to avoid from coming back through the dump.</summary>
-            public List<KeyValuePair<string, IReadOnlyList<FdrEntry>>> EntriesForDump;
         }
 
         /// <summary>
@@ -173,8 +169,6 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
-            bool dumpNeedsEntries = (_ctx.Diagnostics?.DumpMulticharge ?? false) ||
-                                    (_ctx.Diagnostics?.DumpReconciliation ?? false);
             var scan = new ScanResult
             {
                 PerFileConsensusTargets =
@@ -190,9 +184,6 @@ namespace pwiz.Osprey.Tasks
                 PassingBaseIds = new HashSet<(uint, byte)>(),
                 PassingPrecursors = new HashSet<(string ModifiedSequence, byte Charge)>(),
                 GlobalBaseIds = new HashSet<uint>(),
-                EntriesForDump = dumpNeedsEntries
-                    ? new List<KeyValuePair<string, IReadOnlyList<FdrEntry>>>(fileNames.Count)
-                    : null,
             };
 
             // Fail-fast: a footer-only metadata check confirms every file's stubs are in
@@ -242,8 +233,6 @@ namespace pwiz.Osprey.Tasks
                     foreach (var entry in entries)
                         scan.GlobalBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
                     cwtInvalid.AddRange(file.Invalid);
-                    scan.EntriesForDump?.Add(
-                        new KeyValuePair<string, IReadOnlyList<FdrEntry>>(fileName, entries));
                     scanProgress.Report(++done);
                 });
             }
@@ -253,14 +242,6 @@ namespace pwiz.Osprey.Tasks
                 OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_will_be_re_scored_at_the_peak_boundaries_of_the_,
                 OspreyTasksResources.Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_across__0__files_will_be_re_scored_at_the_peak_,
                 scan.TotalMulticharge));
-
-            if (_ctx.Diagnostics?.DumpMulticharge ?? false)
-            {
-                _ctx.Diagnostics?.WriteStage6MultichargeDump(
-                    scan.EntriesForDump, scan.PerFileConsensusTargets);
-                if (_ctx.Diagnostics?.MultichargeOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
-            }
             return scan;
         }
 
@@ -360,12 +341,6 @@ namespace pwiz.Osprey.Tasks
             bool refitOnlyExit =
                 ((_ctx.Diagnostics?.DumpLoessFit ?? false) && (_ctx.Diagnostics?.LoessFitOnly ?? false)) ||
                 ((_ctx.Diagnostics?.DumpRefit ?? false) && (_ctx.Diagnostics?.RefitOnly ?? false));
-            // The reconciliation dump DOES plan - its whole subject is the planned actions -
-            // but it exits immediately afterwards, so writing and stamping a full set of
-            // envelopes on the way out would leave a diagnostic run looking like a completed
-            // planning pass to the next resume.
-            bool suppressEnvelopes = (_ctx.Diagnostics?.DumpReconciliation ?? false) &&
-                                     (_ctx.Diagnostics?.ReconciliationOnly ?? false);
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             // Empty consensus (single-file / no cross-file evidence) is a legitimate
             // skip, not an error -- only a corrupt input aborts (in pass A).
@@ -442,7 +417,7 @@ namespace pwiz.Osprey.Tasks
                     // caller writes a per-file envelope from this, and an envelope recording
                     // "no actions" because planning was skipped would be indistinguishable
                     // from one that was planned and found none.
-                    if (!refitOnlyExit && !suppressEnvelopes)
+                    if (!refitOnlyExit)
                         onFilePlanned?.Invoke(filePlan);
                     planProgress.Report(++done);
                 }
@@ -487,20 +462,6 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 _ctx.LogInfo(OspreyTasksResources.Stage6Planner_PlanFiles_Cross_run_reconciliation__skipped__because_no_peptide_was_detected_in_enough_files_to_);
-            }
-
-            // Stage 6 cross-impl bisection dump for the planner output. Fires
-            // unconditionally when OSPREY_DUMP_RECONCILIATION=1 is set so the
-            // skipped / empty paths still produce a header-only TSV and still
-            // honor OSPREY_RECONCILIATION_ONLY for early exit. Mirrors the Rust
-            // side after the reconciliation block closes.
-            if (_ctx.Diagnostics?.DumpReconciliation ?? false)
-            {
-                var dumpActions = (IReadOnlyDictionary<(string File, int Index), ReconcileAction>)actions
-                    ?? new Dictionary<(string File, int Index), ReconcileAction>();
-                _ctx.Diagnostics?.WriteStage6ReconciliationDump(dumpActions, scan.EntriesForDump);
-                if (_ctx.Diagnostics?.ReconciliationOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
             }
 
             return new Stage6Plan
