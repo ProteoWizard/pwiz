@@ -15,6 +15,13 @@
       usual one - Windows Desktop projects (UseWindowsForms/UseWPF) get it from the framework,
       so only plain net10.0 projects with preserialized resources need the package. -->
  <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
+ <!-- Keep the build warning-free: a new compiler or analyzer warning fails the build. Demote
+      with NoWarn above, with a comment saying why. MSBuild task warnings are promoted by code,
+      not wholesale: SkylineVersion.targets and SkylineTester.csproj rely on ContinueOnError and
+      <Warning> staying soft when git is unavailable. MSB3568: duplicate .resx resource name.
+      MSB3277: conflicting versions of a referenced assembly. MSB3245: unresolved reference. -->
+ <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+ <MSBuildWarningsAsErrors>$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
  <!-- .NET 9+ defaults this to "all" (transitive), which fails restore. Restore the
       net8 default; transitive advisories are tracked separately. -->
  <NuGetAuditMode>direct</NuGetAuditMode>
