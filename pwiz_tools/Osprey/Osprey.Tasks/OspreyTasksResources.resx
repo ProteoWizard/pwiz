@@ -571,9 +571,6 @@
   <data name="ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>The second-pass results could not be added to the model diagnostics report: {0}</value>
   </data>
-  <data name="ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>The second-pass results could not be added to the model diagnostics report: {0}</value>
-  </data>
   <data name="ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_" xml:space="preserve">
     <value>The model diagnostics report could not be written: {0}</value>
   </data>
@@ -705,18 +702,6 @@
   </data>
   <data name="Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____1_" xml:space="preserve">
     <value>Failed to reload peak features from {0}: {1}</value>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1_file" xml:space="preserve">
-    <value>Checking second-pass intermediate files for 1 file</value>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for__0__files" xml:space="preserve">
-    <value>Checking second-pass intermediate files for {0:N0} files</value>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for_1_file" xml:space="preserve">
-    <value>Reloaded second-pass FDR scores ({1}) for 1 file</value>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2__of__0__files" xml:space="preserve">
-    <value>Reloaded second-pass FDR scores ({1}) for {2:N0} of {0:N0} files</value>
   </data>
   <data name="Pass2FdrSidecar_RequireTransferExperimentSidecar_Second_pass_FDR_needs_the_whole_experiment_first_pass_intermediate_file__0___which_is_missing__Run__1__first_" xml:space="preserve">
     <value>Second-pass FDR needs the whole-experiment first-pass intermediate file {0}, which is missing. Run {1} first.</value>
@@ -882,12 +867,6 @@
   </data>
   <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_the_file_into_memory_" xml:space="preserve">
     <value>Second-pass FDR is loading the kept precursor candidates of the file into memory.</value>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>Rebuilding the kept precursor candidates from 1 file</value>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>Rebuilding the kept precursor candidates from {0:N0} files</value>
   </data>
   <data name="PerFileRescoreTask_OverlayReconciledIntoBuffer_Failed_to_reload_the_re_scored_results_file__0____1_" xml:space="preserve">
     <value>Failed to reload the re-scored results file {0}: {1}</value>
@@ -1320,9 +1299,6 @@
   </data>
   <data name="SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__" xml:space="preserve">
     <value>{0}: skipping the {1} write (report only).</value>
-  </data>
-  <data name="SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_candidates_of_all__0__runs_in_memory_at_once__" xml:space="preserve">
-    <value>Second-pass FDR will hold the precursor candidates of all {0:N0} runs in memory at once (about {1:N0} GB).</value>
   </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">
     <value>No precursors pass the FDR threshold. Writing an empty {0}.</value>
