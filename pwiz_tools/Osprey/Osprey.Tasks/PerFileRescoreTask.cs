@@ -92,8 +92,7 @@ namespace pwiz.Osprey.Tasks
     /// materializes the producing task), dispatches into
     /// <see cref="ExecuteRescore"/>, then runs the per-process
     /// diagnostic-writer close + cross-impl bisection dump. Reaches the
-    /// scoring engine (RunCoelutionScoring via <see cref="ScoringPipeline"/>,
-    /// ExtractIsolationWindows via <see cref="ScoringTaskShared"/>) directly
+    /// scoring engine (RunCoelutionScoring via <see cref="ScoringPipeline"/>) directly
     /// rather than through a base class.
     /// </summary>
     internal sealed class PerFileRescoreTask : OspreyTask
@@ -1486,12 +1485,12 @@ namespace pwiz.Osprey.Tasks
             // Stream this file's MS2 by isolation window from the .spectra.bin cache the
             // original Stage 1-4 run wrote, instead of materializing the whole ~6 GB
             // resident List<Spectrum>: build the seekable SpectraWindowIndex (MS1 + the
-            // first-cycle isolation windows come from it too) and load each window on
+            // isolation windows come from it too) and load each window on
             // demand during the re-score. Stage 6 REQUIRES that cache; there is no mzML
             // fallback -- a rescore without the cache is a deployment error, not a reason
             // to re-read the 6 GB mzML (LoadSpectraForRescore throws).
             SpectraWindowIndex spectraIndex = ScoringTaskShared.LoadSpectraForRescore(inputFile, fileName,
-                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring, true);
+                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring, true, ctx);
             ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
                 spectraIndex.Ms2Count, spectraIndex.Ms1Spectra.Count, fileName));
@@ -1551,9 +1550,8 @@ namespace pwiz.Osprey.Tasks
             context.BoundaryOverrides = boundaryOverrides;
             context.OriginalRtMad = rtMadFromCalJson;
 
-            // Isolation windows come straight from the streaming index -- reconstructed
-            // with the same first-cycle dedup + Center sort ScoringTaskShared.ExtractIsolationWindows
-            // applied to the resident list, so the window fan-out is unchanged.
+            // Isolation windows come straight from the streaming index, the same list
+            // Stages 1-4 scored, so the window fan-out is unchanged.
             var isolationWindows = spectraIndex.IsolationWindows.ToList();
 
             // Stream each isolation window's calibrated MS2 from the index on demand. The
