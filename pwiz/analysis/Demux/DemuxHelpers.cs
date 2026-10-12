@@ -69,9 +69,10 @@ internal static class DemuxHelpers
     /// <paramref name="sl"/>, suitable for assembling a demux block. Walks backward and forward
     /// from the center; if not enough MS2 spectra exist on one side, pulls extra from the other.
     /// Returns <c>false</c> when fewer than <paramref name="numSpectraToFind"/> MS2 spectra are
-    /// available in the file. Port of cpp's <c>FindNearbySpectra</c>.</summary>
+    /// available in the file. Port of cpp's <c>FindNearbySpectra</c>. <paramref name="backwardCount"/>
+    /// sets how many to take before the center (default: half the rest, rounded as cpp).</summary>
     public static bool FindNearbySpectra(List<int> spectraIndices, ISpectrumList sl, int centerIndex,
-        int numSpectraToFind, int stride = 1)
+        int numSpectraToFind, int stride = 1, int backwardCount = -1)
     {
         ArgumentNullException.ThrowIfNull(sl);
         ArgumentNullException.ThrowIfNull(spectraIndices);
@@ -91,7 +92,9 @@ internal static class DemuxHelpers
 
         spectraIndices.Clear();
         spectraIndices.Add(centerIndex);
-        int backwardsNeeded = (int)System.Math.Round((numSpectraToFind - 1) / 2.0);
+        int backwardsNeeded = backwardCount >= 0
+            ? System.Math.Min(backwardCount, numSpectraToFind - 1)
+            : (int)System.Math.Round((numSpectraToFind - 1) / 2.0);
         int afterNeeded = numSpectraToFind - 1 - backwardsNeeded;
         int indexLoc = centerIndex;
         int stepCount = 0;

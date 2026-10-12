@@ -525,6 +525,27 @@ public static class DemuxTests
             Console.WriteLine($"Max error relative to largest sample: {maxInsideError:E2} inside, {maxOutsideError:E2} outside");
         }
 
+        [TestMethod]
+        public void Makima_ExactOnLinesAndFlatBesideSteps()
+        {
+            // Uneven times, as acquisitions of one window are.
+            var times = new[] { 0.0, 0.11, 0.25, 0.36, 0.49, 0.61 };
+            var line = times.Select(x => 3e5 - 2e5 * x).ToArray();
+            var step = new[] { 0.0, 0.0, 0.0, 1e6, 1e6, 1e6 };
+            for (double t = 0; t <= 0.61; t += 0.01)
+            {
+                double onLine = RetentionTimeInterpolator.Interpolate(DemuxInterpolation.Makima, times, line, t);
+                Assert.AreEqual(3e5 - 2e5 * t, onLine, 1e-6, $"line at t={t:R}");
+                // Makima's weights vanish on flat runs, so it does not overshoot or ring beside a step.
+                double onStep = RetentionTimeInterpolator.Interpolate(DemuxInterpolation.Makima, times, step, t);
+                Assert.IsTrue(onStep >= -1e-6 && onStep <= 1e6 + 1e-6, $"step at t={t:R}: {onStep:R}");
+                if (t <= 0.25)
+                    Assert.AreEqual(0, onStep, 1e-6, $"flat before the step at t={t:R}");
+                if (t >= 0.36)
+                    Assert.AreEqual(1e6, onStep, 1e-6, $"flat after the step at t={t:R}");
+            }
+        }
+
         private static double RandomSpacing(Random random)
         {
             // 0.005 to 0.5 min: 0.3 s to 30 s.

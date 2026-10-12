@@ -1,4 +1,5 @@
 using Pwiz.Analysis;
+using Pwiz.Analysis.Demux;
 using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
@@ -410,6 +411,68 @@ public class SpectrumListDemuxTests
                 changed++;
         }
         Assert.IsTrue(changed > 0, "Poisson weights should change some demultiplexed intensities");
+    }
+
+    [TestMethod]
+    public void Interpolation_OverlapTest_NaturalThreePointMatchesSpline()
+    {
+        var basic = new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly };
+        var spline = AssertSolveThreadsDeterministic("OverlapTest.mzML", basic);
+        var closedForm = AssertSolveThreadsDeterministic("OverlapTest.mzML",
+            basic with { Interpolation = DemuxInterpolation.NaturalThreePoint });
+        Assert.AreEqual(spline.Length, closedForm.Length, "spectrum count");
+        for (int i = 0; i < spline.Length; i++)
+        {
+            Assert.AreEqual(spline[i].Id, closedForm[i].Id, $"spectrum {i} id");
+            // The same curve: peaks agree to rounding. Rounding can leave a near-zero peak on one side only.
+            var expected = PeaksAbove(spline[i], 1e-3);
+            var actual = PeaksAbove(closedForm[i], 1e-3);
+            CollectionAssert.AreEqual(expected.Keys.ToArray(), actual.Keys.ToArray(), $"spectrum {i} peaks");
+            foreach (var (mz, intensity) in expected)
+                Assert.AreEqual(intensity, actual[mz], 1e-9 * System.Math.Max(1, intensity), $"spectrum {i} m/z {mz}");
+        }
+    }
+
+    [TestMethod]
+    public void Interpolation_OverlapTest_MakimaFallsBackOnShortRuns()
+    {
+        // The fixture has 3-4 acquisitions per window, fewer than makima's 6, so every row falls
+        // back to the 3-point natural spline instead of failing.
+        var basic = new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly };
+        var closedForm = AssertSolveThreadsDeterministic("OverlapTest.mzML",
+            basic with { Interpolation = DemuxInterpolation.NaturalThreePoint });
+        var makima = AssertSolveThreadsDeterministic("OverlapTest.mzML", basic with { Interpolation = DemuxInterpolation.Makima });
+        Assert.AreEqual(closedForm.Length, makima.Length, "spectrum count");
+        for (int i = 0; i < makima.Length; i++)
+            AssertSpectraEqual(closedForm[i], makima[i], "makima on a short run");
+    }
+
+    [TestMethod]
+    public void FindNearbySpectra_BackwardCount_SplitsAroundTheCenter()
+    {
+        // Two windows per cycle, MS1 first: window 0 of cycle c is index 3c + 1; stride 2 keeps to window 0.
+        // The indices come back sorted.
+        var sl = BuildOrdinaryDiaList(numCycles: 10, windows: 2, margin: 0);
+        var found = new List<int>();
+        Assert.IsTrue(DemuxHelpers.FindNearbySpectra(found, sl, 16, 6, stride: 2));
+        CollectionAssert.AreEqual(new[] { 10, 13, 16, 19, 22, 25 }, found, "default: 2 before, 3 after (cpp rounding)");
+        Assert.IsTrue(DemuxHelpers.FindNearbySpectra(found, sl, 16, 6, stride: 2, backwardCount: 3));
+        CollectionAssert.AreEqual(new[] { 7, 10, 13, 16, 19, 22 }, found, "3 before, 2 after");
+        Assert.IsTrue(DemuxHelpers.FindNearbySpectra(found, sl, 4, 6, stride: 2, backwardCount: 3));
+        CollectionAssert.AreEqual(new[] { 1, 4, 7, 10, 13, 16 }, found, "too few before: the rest come from after");
+    }
+
+    private static Dictionary<double, double> PeaksAbove(Spectrum spectrum, double minIntensity)
+    {
+        var mzs = spectrum.GetMZArray()?.Data ?? [];
+        var intensities = spectrum.GetIntensityArray()?.Data ?? [];
+        var peaks = new Dictionary<double, double>();
+        for (int i = 0; i < mzs.Count; i++)
+        {
+            if (intensities[i] >= minIntensity)
+                peaks[mzs[i]] = intensities[i];
+        }
+        return peaks;
     }
 
     /// <summary>Reads every spectrum of the fixture demultiplexed at SolveThreads=1, then checks
