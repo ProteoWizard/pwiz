@@ -216,8 +216,11 @@ namespace pwiz.Osprey.Test
                 // The worker's answer is the pair carrying the stamp of the reconciled parquet
                 // beside it. A pair from a run under another key is not this run's answer.
                 var workerStamp = ArtifactStamp.ForCurrentBuild(PerFileRescoreTask.TASK_NAME, @"key");
-                // One row: an empty entry list writes no parquet at all.
-                ParquetScoreCache.WriteScoresParquet(ParquetScoreCache.GetReconciledScoresPath(runA),
+                // One row: an empty entry list writes no parquet at all. Written as Stage 6
+                // writes it - its producer over a Stage 4 parquet - because a reconciled parquet
+                // without the survivor shape reads as unstamped, whatever its footer says.
+                string stage4 = Path.Combine(dir, @"a_stage4" + ParquetScoreCache.EXT_SCORES);
+                ParquetScoreCache.WriteScoresParquet(stage4,
                     new List<CoelutionScoredEntry>
                     {
                         new CoelutionScoredEntry
@@ -226,7 +229,11 @@ namespace pwiz.Osprey.Test
                             FileName = @"a.mzML", PeakBounds = new XICPeakBounds(), Features = new CoelutionFeatureSet(),
                         },
                     },
-                    ParquetScoreCache.WithStamp(null, workerStamp));
+                    null);
+                ParquetScoreCache.StreamReconciledScoresParquet(stage4, ParquetScoreCache.GetReconciledScoresPath(runA),
+                    null, null, ParquetScoreCache.WithStamp(
+                        ReconciledParquetWriter.BuildReconciliationMetadata(new OspreyConfig(), null), workerStamp),
+                    null, @"a.mzML", null, PerFileRescoreTask.TASK_NAME, null, null);
                 current = RunKey(runA);
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(),
@@ -667,8 +674,7 @@ namespace pwiz.Osprey.Test
                 {
                     OspreyEnvironment.PickValidityKeySuffix(),
                     OspreyEnvironment.Pass2QValueValidityKeySuffix(),
-                    OspreyEnvironment.ExperimentAggValidityKeySuffix(),
-                    OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
+                    OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 })
                 {
                     Assert.AreNotEqual(libfrag, other,

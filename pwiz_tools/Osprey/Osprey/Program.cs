@@ -584,21 +584,22 @@ namespace pwiz.Osprey
                     LogInfo(string.Format(@"First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
                         OspreyEnvironment.SvmCSelectionTolerance.ToString(CultureInfo.InvariantCulture)));
                 }
-                // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
-                // only arm there is. Setting it to 0 used to select the RESIDENT join, so a sweep
-                // script still passing it would measure the streamed arm and file the numbers
-                // under the resident one - the misattribution case these variables have to be
-                // strict about, and the reason this is an error rather than a warning. Checked at
-                // startup so a stale script dies in seconds instead of after Stage 1-5.
-                // It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the
-                // streamed default; that A/B was banked (the resident arm matched the committed
-                // golden at 1e-9 with a byte-identical diagnostics report). The configurations
-                // that still take the resident arm do so by their own declaration (ResidentPaths).
-                if (OspreyEnvironment.Stage7StreamRetiredSet)
+                // An OSPREY_* variable this build does not read is refused, as an unrecognized
+                // argument is (OspreyEnvironment.KnownVariables). Silence was the bad outcome
+                // for every kind of name this catches: a retired switch (OSPREY_STAGE7_STREAM,
+                // OSPREY_FDR_PROJECTION and the rest) would have the default arm's numbers filed
+                // under the arm it used to select; a Rust-only dump left in a bisection shell
+                // would produce a run with no dump; and a misspelling would change nothing while
+                // its caller believed it had. Checked at startup, so it costs seconds rather
+                // than Stages 1-5.
+                var unrecognizedVariables = OspreyEnvironment.UnrecognizedVariables();
+                if (unrecognizedVariables.Count > 0)
                 {
-                    LogError(
-                        @"OSPREY_STAGE7_STREAM was removed and has no effect. Unset it. Second-pass " +
-                        @"FDR now always processes one run at a time where the analysis allows it.");
+                    LogError(string.Format(
+                        @"Osprey does not recognize the environment variable(s) {0}. Unset them. A variable that " +
+                        @"was removed no longer has any effect, and one that only Rust osprey reads is never " +
+                        @"honored here.",
+                        string.Join(@", ", unrecognizedVariables)));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
@@ -613,21 +614,24 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.AllowUnfixedResidentUnrecognized)
                 {
                     // Name the UNRECOGNIZED tokens, not the whole value: the flag is a comma
-                    // separated list and NamesResidentPath tests each token independently, so
-                    // 'projection-off,hpc-merge' still grants projection-off. Condemning the
+                    // separated list and NamesResidentPath tests each token independently, so a
+                    // recognized token beside a retired one is still granted. Condemning the
                     // whole value would push the operator to rewrite or unset a variable whose
                     // valid half the run still needs, and the run then aborts on a guard the
                     // warning said was not engaged.
                     // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
                     // reconciled-input load and the pass-1 FDRBench emitter both stream and need
                     // no allowance. 'non-percolator-fdr' was retired with the simple FDR method
-                    // it named.
+                    // it named, 'compacted-entries-buffer' with OSPREY_STAGE6_STREAM_SURVIVORS,
+                    // and 'projection-off' with OSPREY_FDR_PROJECTION, which left the list empty.
                     LogWarning(string.Format(
                         @"OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
                         @"have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
                         @"is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
-                        string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
+                        ResidentPaths.KNOWN_UNFIXED.Count == 0
+                            ? @"none"
+                            : string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
                 }
                 LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
@@ -970,15 +974,9 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
             if (export.ClaimantQ.HasValue && !(export.ClaimantQ.Value > 0 && export.ClaimantQ.Value <= 1))
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
-            // The transfer arm computes every run's second-pass q in SecondPassFDR, after
-            // PerFileRescoring has written the export, so the export would have no second-pass
-            // values for any run to select on.
-            if (export.Enabled && OspreyEnvironment.Pass2TransferQ)
-            {
-                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
-                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                    SecondPassFdrTask.TASK_NAME);
-            }
+            // No pass-2 mode is refused here any more. OSPREY_PASS2_QVALUE=transfer was, while it
+            // computed every run's second-pass q in SecondPassFDR after the export was written;
+            // its per-run half runs in PerFileRescoring now (#4665), before the export.
             return null;
         }
 
