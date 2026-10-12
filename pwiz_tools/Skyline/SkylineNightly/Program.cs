@@ -308,7 +308,10 @@ namespace SkylineNightly
             }
             catch (Exception ex)
             {
-                MessageBox.Show(@"Exception Caught: " + ex.Message, @"SkylineNightly.exe");
+                // The full exception, not just Message: a developer tool, and the inner exceptions and
+                // stack traces are the diagnosis (a TypeInitializationException's Message names only
+                // the type whose static setup failed).
+                MessageBox.Show(@"Exception Caught: " + ex, @"SkylineNightly.exe");
             }
         }
     }
