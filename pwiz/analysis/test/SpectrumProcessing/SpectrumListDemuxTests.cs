@@ -1,4 +1,5 @@
 using Pwiz.Analysis;
+using Pwiz.Analysis.Demux;
 using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
@@ -93,6 +94,33 @@ public class SpectrumListDemuxTests
         var inner = BuildSingleOverlapList(numCycles: 5, scansPerHalf: 25, mzStart: 400, mzEnd: 600);
         var wrapped = SpectrumListFactory.Wrap(inner, "demultiplex massError=10ppm nnlsMaxIter=50");
         Assert.IsInstanceOfType<SpectrumListDemux>(wrapped);
+        Assert.IsInstanceOfType<SpectrumListDemux>(SpectrumListFactory.Wrap(inner, "demultiplex poissonWeights=true"));
+    }
+
+    [TestMethod]
+    public void Factory_PoissonWeightsAndInterpolationKeysReachTheDemultiplexer()
+    {
+        var expectedParams = new SpectrumListDemux.Params
+        {
+            Optimization = SpectrumListDemux.Optimization.OverlapOnly,
+            PoissonWeights = true,
+            Interpolation = DemuxInterpolation.NaturalThreePoint,
+        };
+        var (centroided, expected) = LoadAndWrap("OverlapTest.mzML", expectedParams);
+        var (_, defaults) = LoadAndWrap("OverlapTest.mzML", expectedParams with { PoissonWeights = false });
+        var parsed = SpectrumListFactory.Wrap(centroided,
+            "demultiplex optimization=overlap_only poissonWeights=true interpolation=natural3");
+        Assert.AreEqual(expected.Count, parsed.Count, "spectrum count");
+        int differsFromDefault = 0;
+        for (int i = 0; i < expected.Count; i++)
+        {
+            var spectrum = expected.GetSpectrum(i, getBinaryData: true);
+            AssertSpectraEqual(spectrum, parsed.GetSpectrum(i, getBinaryData: true), "parsed keys");
+            var before = defaults.GetSpectrum(i, getBinaryData: true).GetIntensityArray()?.Data.ToArray() ?? [];
+            if (!before.SequenceEqual(spectrum.GetIntensityArray()?.Data.ToArray() ?? []))
+                differsFromDefault++;
+        }
+        Assert.IsTrue(differsFromDefault > 0, "poissonWeights=true should change the output");
     }
 
     [TestMethod]
@@ -391,13 +419,99 @@ public class SpectrumListDemuxTests
         AssertSolveThreadsDeterministic("MsxTest.mzML", SpectrumListDemux.Optimization.None);
     }
 
+    [TestMethod]
+    public void PoissonWeights_OverlapTest_ChangesIntensitiesDeterministically()
+    {
+        // The gold tests above cover PoissonWeights=false (the default) leaving output unchanged.
+        var basic = new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly };
+        var unweighted = AssertSolveThreadsDeterministic("OverlapTest.mzML", basic);
+        var weighted = AssertSolveThreadsDeterministic("OverlapTest.mzML", basic with { PoissonWeights = true });
+        Assert.AreEqual(unweighted.Length, weighted.Length, "spectrum count");
+        int changed = 0;
+        for (int i = 0; i < weighted.Length; i++)
+        {
+            Assert.AreEqual(unweighted[i].Id, weighted[i].Id, $"spectrum {i} id");
+            var before = unweighted[i].GetIntensityArray()?.Data.ToArray() ?? [];
+            var after = weighted[i].GetIntensityArray()?.Data.ToArray() ?? [];
+            if (!before.SequenceEqual(after))
+                changed++;
+        }
+        Assert.IsTrue(changed > 0, "Poisson weights should change some demultiplexed intensities");
+    }
+
+    [TestMethod]
+    public void Interpolation_OverlapTest_NaturalThreePointMatchesSpline()
+    {
+        var basic = new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly };
+        var spline = AssertSolveThreadsDeterministic("OverlapTest.mzML", basic);
+        var closedForm = AssertSolveThreadsDeterministic("OverlapTest.mzML",
+            basic with { Interpolation = DemuxInterpolation.NaturalThreePoint });
+        Assert.AreEqual(spline.Length, closedForm.Length, "spectrum count");
+        for (int i = 0; i < spline.Length; i++)
+        {
+            Assert.AreEqual(spline[i].Id, closedForm[i].Id, $"spectrum {i} id");
+            // The same curve: peaks agree to rounding. Rounding can leave a near-zero peak on one side only.
+            var expected = PeaksAbove(spline[i], 1e-3);
+            var actual = PeaksAbove(closedForm[i], 1e-3);
+            CollectionAssert.AreEqual(expected.Keys.ToArray(), actual.Keys.ToArray(), $"spectrum {i} peaks");
+            foreach (var (mz, intensity) in expected)
+                Assert.AreEqual(intensity, actual[mz], 1e-9 * System.Math.Max(1, intensity), $"spectrum {i} m/z {mz}");
+        }
+    }
+
+    [TestMethod]
+    public void Interpolation_OverlapTest_MakimaFallsBackOnShortRuns()
+    {
+        // The fixture has 3-4 acquisitions per window, fewer than makima's 6, so every row falls
+        // back to the 3-point natural spline instead of failing.
+        var basic = new SpectrumListDemux.Params { Optimization = SpectrumListDemux.Optimization.OverlapOnly };
+        var closedForm = AssertSolveThreadsDeterministic("OverlapTest.mzML",
+            basic with { Interpolation = DemuxInterpolation.NaturalThreePoint });
+        var makima = AssertSolveThreadsDeterministic("OverlapTest.mzML", basic with { Interpolation = DemuxInterpolation.Makima });
+        Assert.AreEqual(closedForm.Length, makima.Length, "spectrum count");
+        for (int i = 0; i < makima.Length; i++)
+            AssertSpectraEqual(closedForm[i], makima[i], "makima on a short run");
+    }
+
+    [TestMethod]
+    public void FindNearbySpectra_BackwardCount_SplitsAroundTheCenter()
+    {
+        // Two windows per cycle, MS1 first: window 0 of cycle c is index 3c + 1; stride 2 keeps to window 0.
+        // The indices come back sorted.
+        var sl = BuildOrdinaryDiaList(numCycles: 10, windows: 2, margin: 0);
+        var found = new List<int>();
+        Assert.IsTrue(DemuxHelpers.FindNearbySpectra(found, sl, 16, 6, stride: 2));
+        CollectionAssert.AreEqual(new[] { 10, 13, 16, 19, 22, 25 }, found, "default: 2 before, 3 after (cpp rounding)");
+        Assert.IsTrue(DemuxHelpers.FindNearbySpectra(found, sl, 16, 6, stride: 2, backwardCount: 3));
+        CollectionAssert.AreEqual(new[] { 7, 10, 13, 16, 19, 22 }, found, "3 before, 2 after");
+        Assert.IsTrue(DemuxHelpers.FindNearbySpectra(found, sl, 4, 6, stride: 2, backwardCount: 3));
+        CollectionAssert.AreEqual(new[] { 1, 4, 7, 10, 13, 16 }, found, "too few before: the rest come from after");
+    }
+
+    private static Dictionary<double, double> PeaksAbove(Spectrum spectrum, double minIntensity)
+    {
+        var mzs = spectrum.GetMZArray()?.Data ?? [];
+        var intensities = spectrum.GetIntensityArray()?.Data ?? [];
+        var peaks = new Dictionary<double, double>();
+        for (int i = 0; i < mzs.Count; i++)
+        {
+            if (intensities[i] >= minIntensity)
+                peaks[mzs[i]] = intensities[i];
+        }
+        return peaks;
+    }
+
     /// <summary>Reads every spectrum of the fixture demultiplexed at SolveThreads=1, then checks
     /// that SolveThreads 2 and 4 give exactly the same spectra, read in order and read in a
     /// jumping order (backwards, then scattered) that exercises solving a batch from a jump.</summary>
-    private static void AssertSolveThreadsDeterministic(string fixtureName, SpectrumListDemux.Optimization optimization)
+    private static Spectrum[] AssertSolveThreadsDeterministic(string fixtureName, SpectrumListDemux.Optimization optimization)
     {
-        var (_, serial) = LoadAndWrap(fixtureName,
-            new SpectrumListDemux.Params { Optimization = optimization, SolveThreads = 1 });
+        return AssertSolveThreadsDeterministic(fixtureName, new SpectrumListDemux.Params { Optimization = optimization });
+    }
+
+    private static Spectrum[] AssertSolveThreadsDeterministic(string fixtureName, SpectrumListDemux.Params baseParams)
+    {
+        var (_, serial) = LoadAndWrap(fixtureName, baseParams with { SolveThreads = 1 });
         var expected = new Spectrum[serial.Count];
         for (int i = 0; i < serial.Count; i++)
             expected[i] = serial.GetSpectrum(i, getBinaryData: true);
@@ -406,7 +520,7 @@ public class SpectrumListDemuxTests
 
         foreach (int threads in new[] { 2, 4 })
         {
-            var p = new SpectrumListDemux.Params { Optimization = optimization, SolveThreads = threads };
+            var p = baseParams with { SolveThreads = threads };
 
             var (_, inOrder) = LoadAndWrap(fixtureName, p);
             Assert.AreEqual(expected.Length, inOrder.Count, $"SolveThreads={threads}: spectrum count");
@@ -425,6 +539,7 @@ public class SpectrumListDemuxTests
             foreach (int i in order)
                 AssertSpectraEqual(expected[i], jumping.GetSpectrum(i, getBinaryData: true), $"SolveThreads={threads} jumping");
         }
+        return expected;
     }
 
     [TestMethod]
