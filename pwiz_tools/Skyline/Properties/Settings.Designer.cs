@@ -3692,7 +3692,25 @@ namespace pwiz.Skyline.Properties {
                 return ((string)(this["MsFraggerDownloadUrl"]));
             }
         }
-        
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://skyline.ms/_webdav/home/software/Skyline/daily/@files/")]
+        public string InstallUrl {
+            get {
+                return ((string)(this["InstallUrl"]));
+            }
+        }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Skyline-daily")]
+        public string ProductName {
+            get {
+                return ((string)(this["ProductName"]));
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -3762,6 +3780,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["EnableMcpAutoConnect"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CheckedForSettingsToImport {
+            get {
+                return ((bool)(this["CheckedForSettingsToImport"]));
+            }
+            set {
+                this["CheckedForSettingsToImport"] = value;
             }
         }
     }

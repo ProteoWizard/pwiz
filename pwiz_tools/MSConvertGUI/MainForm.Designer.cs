@@ -215,6 +215,8 @@ namespace MSConvertGUI
             this.OptionsGB = new System.Windows.Forms.GroupBox();
             this.OptionsTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.DemuxRemoveNonOverlappingEdgesCheckbox = new System.Windows.Forms.CheckBox();
+            this.DemuxSolveThreadsLabel = new System.Windows.Forms.Label();
+            this.DemuxSolveThreadsValue = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.SubsetPanel.SuspendLayout();
@@ -1253,6 +1255,8 @@ namespace MSConvertGUI
             // 
             // DemultiplexPanel
             // 
+            this.DemultiplexPanel.Controls.Add(this.DemuxSolveThreadsValue);
+            this.DemultiplexPanel.Controls.Add(this.DemuxSolveThreadsLabel);
             this.DemultiplexPanel.Controls.Add(this.DemuxRemoveNonOverlappingEdgesCheckbox);
             this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorTypeBox);
             this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorValue);
@@ -2049,6 +2053,23 @@ namespace MSConvertGUI
             this.DemuxRemoveNonOverlappingEdgesCheckbox.Text = "Remove non-overlapping isolation windows at edges";
             this.DemuxRemoveNonOverlappingEdgesCheckbox.UseVisualStyleBackColor = true;
             // 
+            // DemuxSolveThreadsLabel
+            // 
+            this.DemuxSolveThreadsLabel.AutoSize = true;
+            this.DemuxSolveThreadsLabel.Location = new System.Drawing.Point(17, 109);
+            this.DemuxSolveThreadsLabel.Name = "DemuxSolveThreadsLabel";
+            this.DemuxSolveThreadsLabel.Size = new System.Drawing.Size(76, 13);
+            this.DemuxSolveThreadsLabel.TabIndex = 20;
+            this.DemuxSolveThreadsLabel.Text = "Solve threads:";
+            // 
+            // DemuxSolveThreadsValue
+            // 
+            this.DemuxSolveThreadsValue.Location = new System.Drawing.Point(99, 106);
+            this.DemuxSolveThreadsValue.Name = "DemuxSolveThreadsValue";
+            this.DemuxSolveThreadsValue.Size = new System.Drawing.Size(36, 20);
+            this.DemuxSolveThreadsValue.TabIndex = 21;
+            this.DemuxSolveThreadsValue.Text = "1";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2281,6 +2302,8 @@ namespace MSConvertGUI
         private System.Windows.Forms.TableLayoutPanel OptionsTableLayoutPanel;
         private System.Windows.Forms.GroupBox OptionsGB;
         private System.Windows.Forms.CheckBox DemuxRemoveNonOverlappingEdgesCheckbox;
+        private System.Windows.Forms.Label DemuxSolveThreadsLabel;
+        private System.Windows.Forms.TextBox DemuxSolveThreadsValue;
     }
 }
 

@@ -167,6 +167,7 @@ public class MainLogicTest
                         "MGF byte streams differ between CLI and GUI");
     }
 
+#if !NO_VENDOR_SUPPORT
     /// <summary>A multi-sample WIFF converts to one file per sample, each named for its run.</summary>
     [TestMethod]
     public void Wiff_ConvertsEverySample()
@@ -189,4 +190,5 @@ public class MainLogicTest
         var expected = Enumerable.Range(1, 10).Select(i => $"Enolase_repeats_AQv1.4.2-20070918_En_{i:00}.mzML");
         CollectionAssert.AreEquivalent(expected.ToArray(), Directory.GetFiles(outDir).Select(Path.GetFileName).ToArray());
     }
+#endif
 }

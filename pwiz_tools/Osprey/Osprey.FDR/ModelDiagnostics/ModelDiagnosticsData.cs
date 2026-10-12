@@ -776,9 +776,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             bool structural = pass2Contributions != null;
             int cards = PASS2_BASE_CARDS + (structural ? PASS2_STRUCTURAL_CARDS : 0);
             // NOT `using`d, matching LibraryDeduplicator: Dispose forces a final 100% from the
-            // finally block, and WritePass2AndFinalize catches and logs our exception as one
-            // line - so a card that threw would read "all cards done" immediately followed by
-            // "pass-2 enrichment failed". The last Report on the success path prints 100% anyway.
+            // finally block, and a report writer catches and logs our exception as one line - so
+            // a card that threw would read "all cards done" immediately followed by "pass-2
+            // enrichment failed". The last Report on the success path prints 100% anyway.
             // The heading counts CARDS because that is what the total is; labelling it with the
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;

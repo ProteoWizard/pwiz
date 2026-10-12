@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -36,13 +38,27 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
+    /// A setting value that can be merged part by part, rather than taken whole, when two copies
+    /// of the settings have each changed it since they were the same.
+    /// </summary>
+    public interface IMergeable
+    {
+        /// <summary>
+        /// A new value holding this one's changes since <paramref name="baseValue"/> along with
+        /// those of <paramref name="sourceValue"/>. A part changed both here and in the source
+        /// keeps the change made here. Both arguments are values of the same setting as this one.
+        /// </summary>
+        object ThreeWayMerge(object baseValue, object sourceValue);
+    }
+
+    /// <summary>
     /// XML serializable MappedList for use with lists that must be
     /// stored in the program settings.
     /// </summary>
     /// <typeparam name="TKey">Type of the key used in the map</typeparam>
     /// <typeparam name="TValue">Type stored in the collection</typeparam>
     public class XmlMappedList<TKey, TValue>
-        : MappedList<TKey, TValue>, IXmlSerializable
+        : MappedList<TKey, TValue>, IXmlSerializable, IMergeable
         where TValue : IKeyContainer<TKey>, IXmlSerializable
     {
         /// <summary>
@@ -50,6 +66,59 @@ namespace pwiz.Skyline.Util
         /// to upgrade the elements in a settings list.
         /// </summary>
         public int RevisionIndex { get; set; }
+
+        #region IMergeable Members
+
+        /// <summary>
+        /// Items match by key. One added, changed or removed here stays that way; one left alone
+        /// here follows the source, including being removed from it; and one the source added is
+        /// added, after the items already here.
+        /// </summary>
+        public virtual object ThreeWayMerge(object baseValue, object sourceValue)
+        {
+            var baseByKey = ((IEnumerable) baseValue).Cast<TValue>().ToDictionary(item => item.GetKey());
+            var sourceList = ((IEnumerable) sourceValue).Cast<TValue>().ToList();
+            var sourceByKey = sourceList.ToDictionary(item => item.GetKey());
+            var merged = (XmlMappedList<TKey, TValue>) Activator.CreateInstance(GetType());
+            merged.RevisionIndex = RevisionIndex;
+            foreach (var item in this)
+            {
+                var key = item.GetKey();
+                if (!baseByKey.TryGetValue(key, out var baseItem) || !IsSameItem(item, baseItem))
+                    merged.Add(item);
+                else if (sourceByKey.TryGetValue(key, out var sourceItem))
+                    merged.Add(sourceItem);
+            }
+            foreach (var sourceItem in sourceList)
+            {
+                var key = sourceItem.GetKey();
+                if (!baseByKey.ContainsKey(key) && !merged.ContainsKey(key))
+                    merged.Add(sourceItem);
+            }
+            return merged;
+        }
+
+        /// <summary>
+        /// Compares what the items would save, since not every item type overrides Equals.
+        /// </summary>
+        private static bool IsSameItem(TValue item1, TValue item2)
+        {
+            return Equals(SerializeItem(item1), SerializeItem(item2));
+        }
+
+        private static string SerializeItem(TValue item)
+        {
+            var stringBuilder = new StringBuilder();
+            using (var writer = XmlWriter.Create(stringBuilder))
+            {
+                writer.WriteStartElement(@"item");
+                item.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+            return stringBuilder.ToString();
+        }
+
+        #endregion
 
         #region IXmlSerializable Members
 

@@ -649,7 +649,8 @@ namespace SkylineNightly
         /// </summary>
         private static string FindLocalSkylineTesterZip()
         {
-            var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            // AppContext.BaseDirectory, not Assembly.Location, which is empty in a single-file build.
+            var dir = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
             for (; !string.IsNullOrEmpty(dir); dir = Path.GetDirectoryName(dir))
             {
                 var skylineDir = Path.Combine(dir, "pwiz_tools", "Skyline");
