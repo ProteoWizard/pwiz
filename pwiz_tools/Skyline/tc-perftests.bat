@@ -215,7 +215,8 @@ call :run_tests parallelmode=off loop=1 language=en offscreen=on perftests=on te
 if %EXIT% NEQ 0 set DIAG_FAILED=1
 set DOTNET_EnableAVX512=
 set SKYLINE_DIAUMPIRE_DIAG_DIR=
-echo ##teamcity[publishArtifacts '%DIAG_ROOT% => DiaUmpireDiag.zip']
+dir /s "%DIAG_ROOT%"
+echo ##teamcity[publishArtifacts '%DIAG_ROOT% =^> DiaUmpireDiag.zip']
 popd
 if %DIAG_FAILED% NEQ 0 (set EXIT=1 & set "ERROR_TEXT=TestDiaTtofDiaUmpireTutorial diagnostic run failed" & goto error)
 goto tests_done
