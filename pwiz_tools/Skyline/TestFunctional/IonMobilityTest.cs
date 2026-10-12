@@ -27,7 +27,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
