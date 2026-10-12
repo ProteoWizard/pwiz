@@ -34,9 +34,8 @@ namespace pwiz.Osprey.Test
     /// <summary>
     /// Unit tests for what is left of the resident first-pass pool ratchet after
     /// <c>OSPREY_FDR_PROJECTION</c> was removed (2026-10-10): the token list
-    /// (<see cref="ResidentPaths.KNOWN_UNFIXED"/>) pinned EMPTY, the lean-load predicate
-    /// (<see cref="PerFileScoringTask.CanUseLeanProjection"/>) as a truth table, and the
-    /// guards past the compaction line. The first-pass guard itself went with the last path it
+    /// (<see cref="ResidentPaths.KNOWN_UNFIXED"/>) pinned EMPTY, and the guards past the
+    /// compaction line. The first-pass guard itself went with the last path it
     /// could admit: with no resident first-pass path left, there is nothing for it to refuse
     /// or name.
     /// </summary>
@@ -76,8 +75,6 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(OspreyEnvironment.NamesResidentPath("alpha,beta", "gamma"));
             Assert.IsFalse(OspreyEnvironment.NamesResidentPath(null, "alpha"));
 
-            AssertLeanProjectionTruthTable();
-
             // The ALL-RUNS reconciliation bundle, refused outright. Reaches PAST the compaction
             // line, but takes NO token: the bounded alternative
             // (the per-run survivor loader off the analysis-wide retained base_id summary)
@@ -97,44 +94,6 @@ namespace pwiz.Osprey.Test
             // is now the disk question that flag stood in for, so the rules it must not lose
             // are pinned here rather than left to the end-to-end gate.
             AssertStage7StreamAdmission();
-        }
-
-        /// <summary>
-        /// The lean counts-only load adds an EMPTY entry list per file, so the two consumers that
-        /// need real stubs must never take it: a reconciled bundle (the overlay reads them) and
-        /// the reconciled-input merge, whose Stage 7 would otherwise write a near-empty
-        /// <c>.blib</c> with no error. The case that matters for the merge is inputs MISSING a
-        /// <c>.reconciliation.json</c> (one partially copied file is enough to make
-        /// <c>AllHaveReconSidecars</c> false). Every other config - the default run, the tree
-        /// classifier, FDRBench pass 1 and <c>both</c>, <c>--model-diagnostics</c> - goes lean:
-        /// none of them reads a resident first-pass pool any more.
-        /// </summary>
-        private static void AssertLeanProjectionTruthTable()
-        {
-            var hpc = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
-            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(hpc, hasReconSidecars: false),
-                "the reconciled-input merge must never take the lean counts-only load");
-            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(hpc, hasReconSidecars: true));
-
-            var lean = new OspreyConfig();
-            Assert.IsFalse(PerFileScoringTask.CanUseLeanProjection(lean, hasReconSidecars: true));
-            Assert.IsTrue(PerFileScoringTask.CanUseLeanProjection(lean, hasReconSidecars: false));
-
-            var fdrbench1 = new OspreyConfig { OutputFdrBench = "bench.tsv", FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 };
-            var fdrbenchBoth = new OspreyConfig
-            {
-                OutputFdrBench = "bench.tsv",
-                FdrBenchPass = OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2
-            };
-            foreach (var config in new[]
-                     {
-                         fdrbench1, fdrbenchBoth,
-                         new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt },
-                         new OspreyConfig { ModelDiagnostics = true }
-                     })
-            {
-                Assert.IsTrue(PerFileScoringTask.CanUseLeanProjection(config, hasReconSidecars: false));
-            }
         }
 
         /// <summary>
@@ -235,11 +194,11 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The predicate the pre-compaction-pool decision now defers to (#4486).
-        /// <c>PreCompactionPoolReason</c> used to ask <c>!NoJoin</c> as a stand-in for "will
-        /// first-pass Percolator train in this process", which agreed with the real rule for
-        /// every task except <c>--task SecondPassFDR</c> - and that one disagreement forced an
-        /// O(files) resident pool for a consumer that does not exist.
+        /// Whether first-pass Percolator trains in this process: the predicate the
+        /// <c>--input-scores</c> load asks before it adopts a reconciliation bundle (#4486). It
+        /// used to be asked as <c>!NoJoin</c>, which agreed with the real rule for every task
+        /// except <c>--task SecondPassFDR</c> - and that one disagreement forced an O(files)
+        /// resident pool for a consumer that does not exist.
         ///
         /// <para>Pinned as a TRUTH TABLE over every selection, built the way the CLI builds
         /// them, not as a single case, because the defect was a predicate that was right four
@@ -265,12 +224,6 @@ namespace pwiz.Osprey.Test
             var secondPass = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             Assert.IsFalse(ScoringTaskShared.Includes<FirstPassFdrTask>(secondPass),
                 OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + " must not be treated as running first-pass Percolator");
-
-            // This row is what lets the merge take the file-count-bounded STREAMING hydrate. It
-            // does NOT license the LEAN counts-only projection for this config -
-            // CanUseLeanProjection is asserted FALSE for it in TestResidentPathRatchet, because
-            // that path hands Stage 7 empty per-file lists and would write a near-empty .blib
-            // with no error. Streaming hydrate and lean projection are different routes.
         }
     }
 }

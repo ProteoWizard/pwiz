@@ -818,17 +818,11 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Null means this analysis has no retained base_id summary to build the per-run
-            // loader from. What happens next depends on which load ran, and the disclosure is
-            // made where that is decided (LoadOwnReconciliationBundle) rather than here:
-            //
-            //   * the default LEAN load left every list empty, so the bundle has to be streamed
-            //     from disk - and that stream needs the same summary, so it fails one call
-            //     later with its own error naming the producer. Warning here first that the
-            //     run is "taking the bundle route" would promise a route it cannot take and
-            //     put a second, contradictory remedy above the real one;
-            //   * a STUB-LOADING load (the --input-scores stubs-only arm) kept every stub in
-            //     memory, and the overlay builds the bundle from those without the summary.
-            //     That arm completes, at O(files x entries), and it is the one to disclose.
+            // loader from. Every load that reaches here left the lists empty or already
+            // compacted, so the bundle is streamed from disk - and that stream needs the same
+            // summary, so it fails one call later with its own error naming the producer.
+            // Warning here first that the run is "taking the bundle route" would promise a
+            // route it cannot take and put a second, contradictory remedy above the real one.
             //
             // The summary is a declared output of this task, so a missing one makes the task
             // not current and the next run rebuilds it.
@@ -860,10 +854,7 @@ namespace pwiz.Osprey.Tasks
             // passing-target counts below are then read from those tallies rather than
             // recomputed off perFileEntries, which by that point holds only survivors - the
             // same reason the lean projection path reads them off its score-pass sink. The
-            // --model-diagnostics report is streamed off the same load for the same reason,
-            // and its accumulator is null only where the bundle came from the batch
-            // reconciliation overlay, where perFileEntries still IS the pre-compaction pool the
-            // batch report reads.
+            // --model-diagnostics report is streamed off the same load for the same reason.
             LogFirstPassResultsAndReport(perFileEntries, config, ctx,
                 bundle.PreCompactionTallies, bundle.ModelDiagnosticsAccumulator);
             // The accumulator holds the whole run's --model-diagnostics reduction (~1-2 GB
@@ -1042,31 +1033,17 @@ namespace pwiz.Osprey.Tasks
         /// here against this task's own outputs. Returns <c>null</c> (with
         /// <see cref="PipelineContext.ExitCode"/> set) on a load failure; because
         /// CanRehydrate gated the sidecars as valid, that is a genuine fault, not
-        /// a "recompute instead" case. Clears PIN features on the overlaid stubs,
-        /// exactly as the worker hydration does, so PerFileRescore's "Features !=
-        /// null means rescored" parquet criterion and SecondPassFDR's feature reload
-        /// stay correct.
+        /// a "recompute instead" case. The stubs it loads carry no PIN features, which
+        /// is what keeps PerFileRescore's "Features != null means rescored" parquet
+        /// criterion and SecondPassFDR's feature reload correct.
         ///
-        /// <para>Which hydrate runs is decided by what upstream actually loaded,
-        /// not by a flag. Stage 5 takes the LEAN load unless it must load stubs (a
-        /// reconciled bundle or the reconciled-input merge, see
-        /// <c>PerFileScoringTask.CanUseLeanProjection</c>), and the lean
-        /// load publishes one EMPTY stub list per scored file. Those empty lists
-        /// cannot carry the sidecar overlay: <c>FdrScoresSidecar.TryRead</c> binds
-        /// each record to a stub by <c>entry_id</c> and fails the file when one is
-        /// missing, so any sidecar that carries at least one record is refused
-        /// against zero stubs. (A zero-record sidecar would "succeed" vacuously -
-        /// the refusal comes from the records, not from the emptiness.) So the batch
-        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> is only
-        /// correct when the resident pool is present. The lean case loads each
-        /// file's stubs from its own <c>.scores.parquet</c> through
-        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> instead, which
-        /// compacts each file before touching the next and so never holds more than
-        /// ONE file's pre-compaction pool (~1.19 GB per file, vs O(files) for the
-        /// batch twin). That is what lets <c>--model-diagnostics</c> report off this
-        /// path without the resident pool (issue #4505): the accumulator is fed from
-        /// the pass that already reads every sidecar, so the report comes off the
-        /// same PRE-compaction rows the batch write would have read.</para>
+        /// <para>Stage 5's load publishes one EMPTY stub list per scored file, so the bundle
+        /// loads each file's stubs from its own <c>.scores.parquet</c> through
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/>, which compacts each file
+        /// before touching the next and so never holds more than ONE file's pre-compaction
+        /// pool (~1.19 GB per file). That is also what lets <c>--model-diagnostics</c> report
+        /// off this path (issue #4505): the accumulator is fed from the pass that already
+        /// reads every sidecar, so the report comes off the PRE-compaction rows.</para>
         /// </summary>
         private bool RehydrateForPerRunRescore(
             PipelineContext ctx, List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
@@ -1218,44 +1195,24 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Zero stubs across every file IS the lean load's signature: it appends a keyed
-            // entry per scored file with an empty list, while every resident arm appends real
-            // ones. Tested on the DATA rather than read off a published flag because it is the
-            // overlay's actual precondition - "are there stubs to overlay onto" - and the
-            // batch hydrate fails on exactly this shape.
-            //
-            // The alternative signal is FdrProjections, non-null exactly on the lean arm.
-            // Equivalent today. If the two ever disagree, that is a bug in Stage 5's own
-            // lean/fat bookkeeping, and this test still picks the hydrate the data can serve.
-            // (An earlier version of this comment claimed an all-zero-row run could not reach
-            // here because it stops at PerFileScoring's "no scored entries" boundary. That is
-            // NOT true on the lazy-Demand path, which swallows the stop when ExitCode == 0.
-            // The conclusion survives for a different reason: such a run writes no 1st-pass
-            // sidecar, so FirstPassFDR Runs rather than Rehydrates and never reaches this line.)
-            bool leanStubs = residentStubs == 0;
+            // entry per scored file with an empty list. The streaming hydrate below requires
+            // exactly that, and the only load that ever handed this method real stubs - the
+            // --input-scores stubs-only loop, every run's pre-compaction pool at once - is
+            // gone, so stubs here are a routing defect rather than a second shape to serve.
+            if (residentStubs > 0)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"The first-pass resume was reached with {0:N0} first-pass stubs already " +
+                    @"resident across {1} runs; only the lean load reaches it.",
+                    residentStubs, perFileEntries.Count));
+            }
 
-            RescoreInputs bundle;
             try
             {
-                if (leanStubs)
-                {
-                    bundle = StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths);
-                }
-                else
-                {
-                    // The one arm of this resume that builds the all-runs bundle AND completes:
-                    // a resident load already holds every run's stubs, and the overlay needs no
-                    // retained summary to compact them. Disclosed here, on the arm that takes
-                    // the cost, because the lean arm above cannot - it streams from disk, needs
-                    // the summary, and fails with its own named remedy when that is missing.
-                    // The ALL-RUNS reconciliation bundle: O(files x entries), 0.10 GB/file
-                    // measured on a 446-run cohort. The bounded per-run survivor loader cannot
-                    // serve a consumer that reads the resident pool.
-                    ctx.LogWarning(
-                        OspreyTasksResources.FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_first_pass_precursor_candidates_of_every_run_in_);
-                    bundle = RescoreHydration.HydrateReconciliationOverlay(perFileEntries,
-                        parquetPaths, LoadFirstPassExperimentRecords(ctx.Config, ctx),
-                        ctx.Get<SequencePool>().Value, ctx);
-                }
+                // No PIN features to clear afterwards: these stubs come from
+                // LoadFdrStubsFromParquet, which never assigns Features, so PerFileRescore's
+                // "Features != null means this entry was rescored" criterion holds as loaded.
+                return StreamOwnReconciliationBundle(ctx, perFileEntries, parquetPaths);
             }
             catch (InvalidDataException ex)
             {
@@ -1265,25 +1222,6 @@ namespace pwiz.Osprey.Tasks
                 ctx.ExitCode = 1;
                 return null;
             }
-
-            // Clear PIN features on the overlaid stubs so PerFileRescore's
-            // "Features != null means this entry was rescored" parquet criterion
-            // stays correct and SecondPassFDR reloads features from the reconciled
-            // parquet -- mirrors PerFileScoringTask.HydrateRescoreBundleIfPresent.
-            //
-            // Skipped on the streaming arm, where it is provably a no-op: those stubs come
-            // from LoadFdrStubsFromParquet, which never assigns Features. Running it anyway
-            // would store null over null across every file's survivors - ~88.9 M reference
-            // writes at 163 files, each tripping the GC write barrier and dirtying the card
-            // table over the whole survivor buffer, immediately before Stage 6 adopts it.
-            if (!leanStubs)
-            {
-                foreach (var kvp in perFileEntries)
-                    foreach (var entry in kvp.Value)
-                        entry.Features = null;
-            }
-
-            return bundle;
         }
 
         /// <summary>
@@ -1425,8 +1363,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para><see cref="LoadOwnReconciliationBundle"/> catches exactly that type and
         /// promises an operator-facing "failed to hydrate reconciliation bundle from own
-        /// sidecars" line plus <c>ExitCode = 1</c>. That was free for the batch arm, which
-        /// never opened a parquet; this arm does, so a truncated or locked
+        /// sidecars" line plus <c>ExitCode = 1</c>. This load opens a parquet, so a truncated or locked
         /// <c>.scores.parquet</c> would otherwise throw <c>IOException</c> straight out of
         /// <c>Rehydrate</c> with no exit code and none of that text. Mirrors both upstream
         /// resume loaders, which wrap for the same reason.</para>
@@ -1462,9 +1399,10 @@ namespace pwiz.Osprey.Tasks
         /// It is what lets that path report at all: <paramref name="perFileEntries"/> has
         /// already lost the ~52x non-survivors - mostly the decoys and entrapment the FDP
         /// and calibration views are built from - so building the report off it would
-        /// silently produce a plausible WRONG page. Null everywhere else, where
-        /// <paramref name="perFileEntries"/> IS the pre-compaction pool and the batch
-        /// <see cref="ModelDiagnosticsReport.Write"/> reduces it directly.
+        /// silently produce a plausible WRONG page. Every bundle this method is handed came
+        /// from that streaming hydrate, so the accumulator is present whenever the report is
+        /// requested. The batch report that built off a resident pool went with the last
+        /// load that produced one.
         ///
         /// <para>The OSPREY_DUMP_PERCOLATOR / OSPREY_PERCOLATOR_ONLY dump that used to be
         /// written here was removed on 2026-10-10.</para>
@@ -1489,37 +1427,33 @@ namespace pwiz.Osprey.Tasks
                 // order and perFileEntries keeps every file's key even once compacted.
                 var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
                 var libraryById = ctx.Get<LibraryById>().Value;
-                if (mdiagAccumulator != null)
+                if (mdiagAccumulator == null)
                 {
-                    // The peak co-assignment panel (issue #4522) is built from the per-file FDR
-                    // sidecars, NOT from perFileEntries - the same source the projection path
-                    // uses, so there is one implementation of this panel rather than two.
-                    //
-                    // A non-null mdiagAccumulator means this is the bounded rehydrate path, and
-                    // the remarks on this method say what that implies: perFileEntries "has
-                    // already lost the ~52x non-survivors - mostly the decoys and entrapment",
-                    // so building the report off it "would silently produce a plausible WRONG
-                    // page". That is precisely what the earlier resident build did here. It
-                    // agreed with the sidecar build on the acceptance boundary (0.0120) and on
-                    // the accepted count (28,926) and still reported 72 detected decoys against
-                    // 468, because compaction had already dropped the rest - target denominators
-                    // intact, decoy class quietly gutted. The regression then overwrote the
-                    // straight-through report with this one, so every measurement taken after a
-                    // full run was the wrong page.
-                    var coAssignment = PeakCoAssignmentSource.Build(
-                        perFileEntries.ConvertAll(kv => kv.Key),
-                        ctx.Get<PerFileParquetPaths>().Value, config,
-                        mdiagAccumulator.ClassByBaseId, libraryById,
-                        LoadFirstPassExperimentRecords(config, ctx), ctx);
-                    ModelDiagnosticsReport.WriteFromAccumulator(
-                        mdiagAccumulator, null, cal, config, ctx, coAssignment,
-                        ValidityKey(ctx));
+                    throw new InvalidOperationException(
+                        @"The first-pass report was requested from a bundle loaded without its diagnostics accumulator.");
                 }
-                else
-                {
-                    ModelDiagnosticsReport.Write(perFileEntries, null, libraryById, cal,
-                        config, ctx, ValidityKey(ctx));
-                }
+                // The peak co-assignment panel (issue #4522) is built from the per-file FDR
+                // sidecars, NOT from perFileEntries - the same source the projection path
+                // uses, so there is one implementation of this panel rather than two.
+                //
+                // The remarks on this method say why perFileEntries cannot be the source: it
+                // "has already lost the ~52x non-survivors - mostly the decoys and entrapment",
+                // so building the report off it "would silently produce a plausible WRONG
+                // page". That is precisely what an earlier resident build did here. It agreed
+                // with the sidecar build on the acceptance boundary (0.0120) and on the accepted
+                // count (28,926) and still reported 72 detected decoys against 468, because
+                // compaction had already dropped the rest - target denominators intact, decoy
+                // class quietly gutted. The regression then overwrote the straight-through
+                // report with this one, so every measurement taken after a full run was the
+                // wrong page.
+                var coAssignment = PeakCoAssignmentSource.Build(
+                    perFileEntries.ConvertAll(kv => kv.Key),
+                    ctx.Get<PerFileParquetPaths>().Value, config,
+                    mdiagAccumulator.ClassByBaseId, libraryById,
+                    LoadFirstPassExperimentRecords(config, ctx), ctx);
+                ModelDiagnosticsReport.WriteFromAccumulator(
+                    mdiagAccumulator, null, cal, config, ctx, coAssignment,
+                    ValidityKey(ctx));
             }
         }
 
@@ -1593,16 +1527,15 @@ namespace pwiz.Osprey.Tasks
         /// Build the streaming <see cref="ModelDiagnosticsData.Accumulator"/> that a
         /// pre-compaction row source folds each row into, so the pass-1
         /// <c>--model-diagnostics</c> report emits without the resident FdrEntry pool. Derives the
-        /// entrapment classification from the searched library -- the same source and one-time
-        /// logging as the resident <see cref="ModelDiagnosticsReport.Write"/> path -- and seeds the
+        /// entrapment classification from the searched library, logged once, and seeds the
         /// accumulator with the input-file order plus the run FDR level.
         ///
         /// Two row sources share it: the projection path's score-pass sink (fed as first-pass
         /// Percolator scores each row) and the streaming reconciled-bundle rehydrate
         /// (<see cref="RescoreHydration.HydrateCompactedStreaming"/>, fed per file after the
         /// 1st-pass sidecar overlay and before compaction discards the non-survivors). Both feed
-        /// rows in the same nested (file, row) order the batch <see cref="ModelDiagnosticsData.Build"/>
-        /// walks, which is what keeps the streamed report identical to the resident one.
+        /// rows in the same nested (file, row) order the batch <c>ModelDiagnosticsData.Build</c>
+        /// test oracle walks, which is what keeps the streamed report identical to it.
         /// <paramref name="libraryById"/> is passed rather than pulled from the context because
         /// the rehydrate caller runs before <c>LibraryById</c> is published.
         ///

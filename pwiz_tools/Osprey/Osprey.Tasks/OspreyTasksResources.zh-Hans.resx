@@ -397,10 +397,6 @@
     <value>无法恢复运行：无法读取第一轮中间文件。{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_first_pass_precursor_candidates_of_every_run_in_" xml:space="preserve">
-    <value>此配置在恢复运行时会同时将每次运行的第一轮母离子候选载入内存，内存用量随运行次数增长（每次运行约 0.1 GB），在大型队列上可能耗尽内存。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_" xml:space="preserve">
     <value>无法从 {1} 加载 {0} 的得分：{2}</value>
     <comment>Needs Review:New resource</comment>
@@ -723,14 +719,6 @@
   </data>
   <data name="ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>无法将第二轮结果添加到模型诊断报告：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_" xml:space="preserve">
-    <value>无法写入模型诊断报告：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>已写入模型诊断报告：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ModelDiagnosticsTask_DescribeOutput__0___report_only__no_other_file_is_written_" xml:space="preserve">
@@ -1289,10 +1277,6 @@
     <value>第二轮 FDR</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>已加载 {0:N0} 个第一轮母离子候选峰（此处不需要特征）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_" xml:space="preserve">
     <value>{0} 缺少特征列，因此不是有效的 Osprey 得分文件。请将其删除并重新运行，以便重新写入。</value>
     <comment>Needs Review:New resource</comment>
@@ -1323,14 +1307,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>已从 {1:N0} 个文件加载 {0:N0} 个第一轮母离子候选峰。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">
-    <value>在没有跨运行协调文件的情况下恢复运行</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Training_the_first_pass_Percolator_model" xml:space="preserve">
-    <value>训练第一轮 Percolator 模型</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_" xml:space="preserve">
@@ -1409,14 +1385,6 @@
     <value>恢复运行：加载 {0} 失败：{1}；正在重新评分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">
-    <value>此配置</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool__0__needs_the_first_pass_precursor_candidates_of_every_file_in_memory_at_once__memory_" xml:space="preserve">
-    <value>{0}需要同时将每个文件的第一轮母离子候选载入内存；内存用量随文件数增长，在大型队列上可能耗尽内存。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1__from__0____2_" xml:space="preserve">
     <value>无法从 {0} 写入重新评分的中间文件 {1}：{2}</value>
     <comment>Needs Review:New resource</comment>
@@ -1462,14 +1430,6 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="RescoreHydration_HydrateCompactedStreaming_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
-    <value>正在将全部 {0:N0} 次运行的跨运行协调文件一次性载入内存；内存用量随文件数增长。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_files" xml:space="preserve">
-    <value>正在加载跨运行协调文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
     <value>正在将全部 {0:N0} 次运行的跨运行协调文件一次性载入内存；内存用量随文件数增长。</value>
     <comment>Needs Review:New resource</comment>
   </data>

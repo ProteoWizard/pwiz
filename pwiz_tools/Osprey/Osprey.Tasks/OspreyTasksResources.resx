@@ -322,9 +322,6 @@
   <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__the_first_pass_intermediate_files_could_not_be_read___0_" xml:space="preserve">
     <value>Cannot resume: the first-pass intermediate files could not be read. {0}</value>
   </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_first_pass_precursor_candidates_of_every_run_in_" xml:space="preserve">
-    <value>This configuration resumes with the first-pass precursor candidates of every run in memory at once, which grows with the number of runs (about 0.1 GB per run) and may exhaust memory on large cohorts.</value>
-  </data>
   <data name="FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_" xml:space="preserve">
     <value>Failed to load the scores for {0} from {1}: {2}</value>
   </data>
@@ -570,12 +567,6 @@
   </data>
   <data name="ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>The second-pass results could not be added to the model diagnostics report: {0}</value>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_" xml:space="preserve">
-    <value>The model diagnostics report could not be written: {0}</value>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>Wrote the model diagnostics report: {0}</value>
   </data>
   <data name="ModelDiagnosticsTask_DescribeOutput__0___report_only__no_other_file_is_written_" xml:space="preserve">
     <value>{0} (report only; no other file is written)</value>
@@ -1027,9 +1018,6 @@
   <data name="PerFileScoringTask_LoadJoinOnlyScores_Second_pass_FDR" xml:space="preserve">
     <value>Second-pass FDR</value>
   </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>Loaded {0:N0} first-pass precursor candidate peaks (features not needed here)</value>
-  </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_" xml:space="preserve">
     <value>{0} is missing the feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again.</value>
   </data>
@@ -1053,12 +1041,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>Loaded {0:N0} first-pass precursor candidate peaks from {1:N0} files.</value>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">
-    <value>Resuming without cross-run reconciliation files</value>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Training_the_first_pass_Percolator_model" xml:space="preserve">
-    <value>Training the first-pass Percolator model</value>
   </data>
   <data name="PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_" xml:space="preserve">
     <value>Loaded {0:N0} MS1 and {1:N0} MS/MS spectra with {2:N0} unique isolation windows{3}</value>
@@ -1117,12 +1099,6 @@
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_" xml:space="preserve">
     <value>Resuming: failed to load {0}: {1}; scoring it again.</value>
   </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">
-    <value>This configuration</value>
-  </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool__0__needs_the_first_pass_precursor_candidates_of_every_file_in_memory_at_once__memory_" xml:space="preserve">
-    <value>{0} needs the first-pass precursor candidates of every file in memory at once; memory grows with the number of files and may exhaust RAM on large cohorts.</value>
-  </data>
   <data name="ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1__from__0____2_" xml:space="preserve">
     <value>Could not write the re-scored intermediate file {1} from {0}: {2}</value>
   </data>
@@ -1157,12 +1133,6 @@
     <value>Loading cross-run reconciliation files</value>
   </data>
   <data name="RescoreHydration_HydrateCompactedStreaming_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
-    <value>Loading the cross-run reconciliation files for all {0:N0} runs into memory at once; memory grows with the number of files.</value>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_files" xml:space="preserve">
-    <value>Loading cross-run reconciliation files</value>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
     <value>Loading the cross-run reconciliation files for all {0:N0} runs into memory at once; memory grows with the number of files.</value>
   </data>
   <data name="RescoreHydration_LoadEnvelope_Failed_to_read__0____1_" xml:space="preserve">

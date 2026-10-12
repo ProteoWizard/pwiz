@@ -798,16 +798,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This configuration resumes with the first-pass precursor candidates of every run in memory at once, which grows with the number of runs (about 0.1 GB per run) and may exhaust memory on large cohorts..
-        /// </summary>
-        public static string FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_first_pass_precursor_candidates_of_every_run_in_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_" +
-                        "first_pass_precursor_candidates_of_every_run_in_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to load the scores for {0} from {1}: {2}.
         /// </summary>
         public static string FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_ {
@@ -1577,25 +1567,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("ModelDiagnosticsReport_TryRenderFromProducts_The_saved_first_pass_diagnostics_res" +
                         "ults_belong_to_a_different_analysis__rebuilding_them_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The model diagnostics report could not be written: {0}.
-        /// </summary>
-        public static string ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_ {
-            get {
-                return ResourceManager.GetString("ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___" +
-                        "0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Wrote the model diagnostics report: {0}.
-        /// </summary>
-        public static string ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_ {
-            get {
-                return ResourceManager.GetString("ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_", resourceCulture);
             }
         }
         
@@ -2962,16 +2933,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loaded {0:N0} first-pass precursor candidate peaks (features not needed here).
-        /// </summary>
-        public static string PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate" +
-                        "_peaks__features_not_needed_here_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Loading FDR values from intermediate files for {0:N0} files.
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for__0__files {
@@ -3133,26 +3094,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_pe" +
                         "aks_from_1_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Resuming without cross-run reconciliation files.
-        /// </summary>
-        public static string PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliat" +
-                        "ion_files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Training the first-pass Percolator model.
-        /// </summary>
-        public static string PerFileScoringTask_PreCompactionPoolReason_Training_the_first_pass_Percolator_model {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_PreCompactionPoolReason_Training_the_first_pass_Percolator_mod" +
-                        "el", resourceCulture);
             }
         }
         
@@ -3339,25 +3280,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} needs the first-pass precursor candidates of every file in memory at once; memory grows with the number of files and may exhaust RAM on large cohorts..
-        /// </summary>
-        public static string PerFileScoringTask_WarnPreCompactionPool__0__needs_the_first_pass_precursor_candidates_of_every_file_in_memory_at_once__memory_ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_WarnPreCompactionPool__0__needs_the_first_pass_precursor_candi" +
-                        "dates_of_every_file_in_memory_at_once__memory_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to This configuration.
-        /// </summary>
-        public static string PerFileScoringTask_WarnPreCompactionPool_This_configuration {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_WarnPreCompactionPool_This_configuration", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks.
         /// </summary>
         public static string ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__ {
@@ -3492,26 +3414,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("RescoreHydration_HydrateCompactedStreaming_Loading_the_cross_run_reconciliation_f" +
                         "iles_for_all__0__runs_into_memory_at_once__memory_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading cross-run reconciliation files.
-        /// </summary>
-        public static string RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_files {
-            get {
-                return ResourceManager.GetString("RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_fi" +
-                        "les", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading the cross-run reconciliation files for all {0:N0} runs into memory at once; memory grows with the number of files..
-        /// </summary>
-        public static string RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_ {
-            get {
-                return ResourceManager.GetString("RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliatio" +
-                        "n_files_for_all__0__runs_into_memory_at_once__memory_", resourceCulture);
             }
         }
         

@@ -4851,8 +4851,8 @@ namespace pwiz.Osprey.Test
         /// End-to-end round-trip: write a synthetic Stage 5 → Stage 6
         /// boundary file pair (.scores.parquet + .1st-pass.fdr_scores.bin
         /// + .reconciliation.json) for a single file, hydrate it via
-        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/>, and
-        /// assert every piece of the in-memory state matches what was written.
+        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> with every base_id
+        /// retained, and assert every piece of the in-memory state matches what was written.
         /// </summary>
         [TestMethod]
         public void TestRescoreHydrationRoundTrip()
@@ -4979,14 +4979,8 @@ namespace pwiz.Osprey.Test
                 };
                 ReconciliationFile.Save(reconPath, reconFile, TestStamps.Any);
 
-                // 4. Hydrate.
-                var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
-                {
-                    new KeyValuePair<string, List<FdrEntry>>(
-                        stem, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)),
-                };
-                var inputs = RescoreHydration.HydrateReconciliationOverlay(
-                    perFile, new[] { parquetPath }, new Dictionary<uint, FdrExperimentRecord>());
+                // 4. Hydrate, retaining every base_id so nothing is compacted away.
+                var inputs = HydrateStreamed(new[] { parquetPath }, new HashSet<uint> { 100u, 101u, 102u });
 
                 // 5. Assert per-file entries: same fileName, same count,
                 //    Score / ExperimentProteinQvalue overlaid bit-exactly.
@@ -5103,13 +5097,8 @@ namespace pwiz.Osprey.Test
 
                 try
                 {
-                    var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
-                    {
-                        new KeyValuePair<string, List<FdrEntry>>(
-                            stem, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)),
-                    };
-                    RescoreHydration.HydrateReconciliationOverlay(
-                        perFile, new[] { parquetPath }, new Dictionary<uint, FdrExperimentRecord>());
+                    // The planner retains the base_id of every action it emits, 999 included.
+                    HydrateStreamed(new[] { parquetPath }, new HashSet<uint> { 100u, 999u });
                     Assert.Fail("expected InvalidDataException for entry_id drift");
                 }
                 catch (InvalidDataException ex)
@@ -5127,27 +5116,26 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// The file-count-bounded <see cref="RescoreHydration.HydrateCompactedStreaming"/>
-        /// must land on EXACTLY the state the resident
-        /// <see cref="RescoreHydration.HydrateReconciliationOverlay"/> +
-        /// <see cref="RescoreCompaction.Apply"/> pair lands on. That equivalence is what
-        /// lets an HPC rescue/resume worker compact each file as it loads instead of holding
-        /// every file's pre-compaction pool (~1.19 GB per file, O(files)).
+        /// compacts each file as it loads it, against the retained base_id set the planner
+        /// wrote, and lands on the state <see cref="RescoreCompaction.Apply"/> would: a second
+        /// <c>Apply</c> over its output removes nothing. The batch overlay it was once compared
+        /// against held every file's pre-compaction pool (~1.19 GB per file, O(files)) and was
+        /// removed with the last load that produced one.
         ///
         /// Two files, five entries each, written in ascending entry_id order (the parquet
-        /// writer's own sort), so both hydrates see rows
+        /// writer's own sort), so the hydrate sees rows
         /// [100, 101, 102, 0x80000064, 0x80000065]:
         ///   base 100 - in the envelope's join-wide first_pass_base_ids, target + decoy stay
         ///   base 101 - in neither term, target + decoy are compacted away in BOTH files
         ///   base 102 - NOT in the global set, but file s2's envelope carries a use_cwt_peak
-        ///              action on it, so the action-target union rescues it in BOTH files
-        ///              (the cross-file property the streaming pre-pass has to reproduce
-        ///              before any file is filtered)
+        ///              action on it, so the action-target union the planner writes to the
+        ///              retained summary rescues it in BOTH files
         /// Survivors per file are therefore [100, 102, 0x80000064], and the two actions must
         /// land on POST-compaction vec_idx: (s1, 0) for the forced integration on 100,
         /// (s2, 1) for the use_cwt_peak on 102.
         /// </summary>
         [TestMethod]
-        public void TestRescoreHydrationStreamingMatchesResidentCompaction()
+        public void TestRescoreHydrationStreamingCompaction()
         {
             string dir = Path.Combine(Path.GetTempPath(),
                 "rescore_stream_" + Guid.NewGuid().ToString("N"));
@@ -5159,22 +5147,9 @@ namespace pwiz.Osprey.Test
                 foreach (string stem in stems)
                     parquetPaths.Add(WriteStreamingBoundaryTrio(dir, stem, stems));
 
-                // Resident: load every file's full stub list first, overlay, then compact.
-                var residentEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
-                foreach (string parquetPath in parquetPaths)
-                {
-                    residentEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                        Path.GetFileNameWithoutExtension(
-                            RescoreHydration.SyntheticInputFromParquet(parquetPath)),
-                        ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
-                }
-                var resident = RescoreHydration.HydrateReconciliationOverlay(
-                    residentEntries, parquetPaths, new Dictionary<uint, FdrExperimentRecord>());
-                var residentStats = RescoreCompaction.Apply(resident);
-
-                // Streaming: one file's pre-compaction pool resident at a time. Apply still
-                // runs afterwards - on an already-compacted buffer it removes nothing and
-                // rebuilds the identical action map, which is what keeps it the authority.
+                // One file's pre-compaction pool resident at a time. Apply still runs
+                // afterwards - on an already-compacted buffer it removes nothing and rebuilds
+                // the identical action map, which is what keeps it the authority.
                 var streamedEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
                 var seenPreCompactionCounts = new List<int>();
                 var seenFileIndexes = new List<int>();
@@ -5189,13 +5164,9 @@ namespace pwiz.Osprey.Test
                         tally.PassingTargets = stubs.Count;
                     },
                     new Dictionary<uint, FdrExperimentRecord>(),
-                    // The retained set the planner would have written to the analysis-wide
-                    // summary. Taking it from the resident arm's Apply is the point of the
-                    // comparison rather than a shortcut: Apply derives the union with every
-                    // file's actions in hand, so handing the streaming arm the same set asserts
-                    // that a run compacted against the summary keeps exactly what the join
-                    // keeps.
-                    resident.RetainedBaseIds);
+                    // The retained set the planner writes to the analysis-wide summary: the
+                    // join-wide first-pass base_ids plus every action target, across files.
+                    new HashSet<uint> { 100u, 102u });
                 var streamedStats = RescoreCompaction.Apply(streamed);
 
                 // The streaming hook saw the FULL pre-compaction pool for each file, and the
@@ -5204,54 +5175,34 @@ namespace pwiz.Osprey.Test
                 // The hook's file index is the parquetPaths index, in order: the streaming
                 // --model-diagnostics feed keys its per-file report rows on it.
                 CollectionAssert.AreEqual(new[] { 0, 1 }, seenFileIndexes);
-                Assert.AreEqual(residentStats.EntriesBefore, streamed.TotalPreCompactionStubs);
+                Assert.AreEqual(10, streamed.TotalPreCompactionStubs);
 
-                // Post-state parity: same files in the same order, same survivors in the
-                // same order, same compaction statistics.
-                Assert.AreEqual(residentStats.EntriesAfter, streamedStats.EntriesAfter);
-                Assert.AreEqual(residentStats.FirstPassBaseIds, streamedStats.FirstPassBaseIds);
-                Assert.AreEqual(residentStats.DroppedActions, streamedStats.DroppedActions);
-                Assert.AreEqual(resident.PerFileEntries.Count, streamed.PerFileEntries.Count);
-                for (int i = 0; i < resident.PerFileEntries.Count; i++)
+                // Already compacted: Apply finds nothing left to remove and drops no action.
+                Assert.AreEqual(6, streamedStats.EntriesBefore);
+                Assert.AreEqual(6, streamedStats.EntriesAfter);
+                Assert.AreEqual(0, streamedStats.DroppedActions);
+
+                // Base 101 is compacted away in both files and base 102 is rescued in both by
+                // s2's action, though it has no first-pass pass of its own - so this is not a
+                // vacuous pass over an uncompacted buffer. Each survivor keeps its own row's
+                // first-pass score, overlaid from that file's sidecar.
+                Assert.AreEqual(2, streamed.PerFileEntries.Count);
+                for (int i = 0; i < stems.Length; i++)
                 {
-                    Assert.AreEqual(resident.PerFileEntries[i].Key, streamed.PerFileEntries[i].Key);
-                    var expected = resident.PerFileEntries[i].Value;
-                    var actual = streamed.PerFileEntries[i].Value;
-                    Assert.AreEqual(expected.Count, actual.Count);
-                    for (int j = 0; j < expected.Count; j++)
-                    {
-                        Assert.AreEqual(expected[j].EntryId, actual[j].EntryId);
-                        Assert.AreEqual(expected[j].ParquetIndex, actual[j].ParquetIndex);
-                        Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[j].Score),
-                                        BitConverter.DoubleToInt64Bits(actual[j].Score));
-                        Assert.AreEqual(
-                            BitConverter.DoubleToInt64Bits(expected[j].RunPeptideQvalue),
-                            BitConverter.DoubleToInt64Bits(actual[j].RunPeptideQvalue));
-                    }
+                    Assert.AreEqual(stems[i], streamed.PerFileEntries[i].Key);
+                    var survivors = streamed.PerFileEntries[i].Value;
+                    CollectionAssert.AreEqual(new[] { 100u, 102u, 0x80000064u },
+                        survivors.ConvertAll(e => e.EntryId));
+                    CollectionAssert.AreEqual(new[] { -3.5, -3.3, -3.2 },
+                        survivors.ConvertAll(e => Math.Round(e.Score, 9)));
                 }
 
-                // The cross-file rescue actually happened (base 102 has no first-pass pass of
-                // its own), so this is not a vacuous comparison of two uncompacted buffers.
-                CollectionAssert.AreEqual(
-                    new[] { 100u, 102u, 0x80000064u },
-                    streamed.PerFileEntries[0].Value.ConvertAll(e => e.EntryId));
-
-                // Action map parity, including the post-compaction vec_idx remap.
-                Assert.AreEqual(resident.ReconciliationActions.Count,
-                                streamed.ReconciliationActions.Count);
-                foreach (var kvp in resident.ReconciliationActions)
-                {
-                    Assert.IsTrue(streamed.ReconciliationActions.TryGetValue(kvp.Key, out var got),
-                        string.Format("streaming lost the action at ({0}, {1})",
-                            kvp.Key.FileName, kvp.Key.Index));
-                    Assert.AreEqual(kvp.Value.GetType(), got.GetType());
-                }
+                // The actions land on POST-compaction vec_idx.
+                Assert.AreEqual(2, streamed.ReconciliationActions.Count);
                 Assert.IsInstanceOfType(streamed.ReconciliationActions[("s1", 0)],
                     typeof(ReconcileAction.ForcedIntegration));
                 Assert.IsInstanceOfType(streamed.ReconciliationActions[("s2", 1)],
                     typeof(ReconcileAction.UseCwtPeak));
-
-                AssertBatchOverlayRejectsLeanStubs(parquetPaths, stems);
             }
             finally
             {
@@ -5260,43 +5211,22 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The batch <see cref="RescoreHydration.HydrateReconciliationOverlay"/> must REFUSE
-        /// the per-file lists a LEAN Stage 5 load publishes - one keyed entry per scored file,
-        /// every list EMPTY - rather than quietly hydrate a bundle with no entries in it.
-        ///
-        /// This is not a hypothetical: it is the shape <c>FirstPassFdrTask.Rehydrate</c> is handed on
-        /// every resume that did not need the resident pool, and the reason that path has to
-        /// take <see cref="RescoreHydration.HydrateCompactedStreaming"/> (which loads each
-        /// file's stubs itself) instead. The refusal comes from the sidecar reader's superset
-        /// contract - <c>FdrScoresSidecar.TryRead</c> cannot bind a record to a list of zero
-        /// entries - so it is the CALLER's job to pick the hydrate that matches what upstream
-        /// loaded. Pinned here because the failure is a mid-pipeline
-        /// <see cref="InvalidDataException"/> that reads like sidecar corruption rather than
-        /// like the wrong hydrate being called.
+        /// Hydrate <paramref name="parquetPaths"/> through the streaming reconciled-bundle
+        /// hydrate, each file's stubs loaded from its own parquet, compacted against
+        /// <paramref name="retainedBaseIds"/>.
         /// </summary>
-        private static void AssertBatchOverlayRejectsLeanStubs(
-            List<string> parquetPaths, string[] stems)
+        private static RescoreInputs HydrateStreamed(IList<string> parquetPaths, HashSet<uint> retainedBaseIds)
         {
-            var leanEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
-            foreach (string stem in stems)
-                leanEntries.Add(new KeyValuePair<string, List<FdrEntry>>(stem, new List<FdrEntry>()));
-            try
-            {
-                RescoreHydration.HydrateReconciliationOverlay(
-                    leanEntries, parquetPaths, new Dictionary<uint, FdrExperimentRecord>());
-                Assert.Fail("expected InvalidDataException overlaying a sidecar onto empty stubs");
-            }
-            catch (InvalidDataException ex)
-            {
-                StringAssert.Contains(ex.Message, "1st-pass.fdr_scores.bin");
-                StringAssert.Contains(ex.Message, stems[0]);
-            }
+            return RescoreHydration.HydrateCompactedStreaming(
+                new List<KeyValuePair<string, List<FdrEntry>>>(), parquetPaths,
+                (fileIdx, fileName, parquetPath) => ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath),
+                null, new Dictionary<uint, FdrExperimentRecord>(), retainedBaseIds);
         }
 
         /// <summary>
         /// Write one file's Stage 5 -> Stage 6 boundary trio (.scores.parquet +
         /// .1st-pass.fdr_scores.bin + .reconciliation.json) for
-        /// <see cref="TestRescoreHydrationStreamingMatchesResidentCompaction"/> and return
+        /// <see cref="TestRescoreHydrationStreamingCompaction"/> and return
         /// the parquet path. Every envelope carries the same join-wide
         /// <c>first_pass_base_ids</c> and <c>file_stems</c> (the sibling-consistency
         /// contract); only the action arrays differ per file.

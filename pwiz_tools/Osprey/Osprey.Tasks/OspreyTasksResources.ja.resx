@@ -397,10 +397,6 @@
     <value>再開できません：第1パス中間ファイルを読み取れませんでした。{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_first_pass_precursor_candidates_of_every_run_in_" xml:space="preserve">
-    <value>この構成では、すべてのランの第1パスプリカーサー候補を一度にメモリに保持して再開します。これはラン数に比例して増加し（ランあたり約0.1 GB）、大規模なコホートではメモリが不足する可能性があります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_" xml:space="preserve">
     <value>{1}から{0}のスコアの読み込みに失敗しました：{2}</value>
     <comment>Needs Review:New resource</comment>
@@ -723,14 +719,6 @@
   </data>
   <data name="ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>第2パスの結果をモデル診断レポートに追加できませんでした：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_" xml:space="preserve">
-    <value>モデル診断レポートを書き込めませんでした：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>モデル診断レポートを書き込みました：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ModelDiagnosticsTask_DescribeOutput__0___report_only__no_other_file_is_written_" xml:space="preserve">
@@ -1289,10 +1277,6 @@
     <value>第2パスFDR</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>{0:N0}個の第1パスプリカーサー候補ピークを読み込みました（ここではフィーチャーは不要）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_" xml:space="preserve">
     <value>{0}にはフィーチャー列がないため、有効なOspreyスコアファイルではありません。削除して再実行し、書き直してください。</value>
     <comment>Needs Review:New resource</comment>
@@ -1323,14 +1307,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>{1:N0}個のファイルから{0:N0}個の第1パスプリカーサー候補ピークを読み込みました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">
-    <value>ラン間整合ファイルなしでの再開</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Training_the_first_pass_Percolator_model" xml:space="preserve">
-    <value>第1パスPercolatorモデルのトレーニング</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_" xml:space="preserve">
@@ -1409,14 +1385,6 @@
     <value>再開：{0}の読み込みに失敗しました：{1}。再度スコアリングします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">
-    <value>この構成</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool__0__needs_the_first_pass_precursor_candidates_of_every_file_in_memory_at_once__memory_" xml:space="preserve">
-    <value>{0}では、すべてのファイルの第1パスプリカーサー候補を一度にメモリに保持する必要があります。メモリ使用量はファイル数に比例して増加し、大規模なコホートではRAMが不足する可能性があります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1__from__0____2_" xml:space="preserve">
     <value>{0}から、再スコアリングされた中間ファイル{1}を書き込めませんでした：{2}</value>
     <comment>Needs Review:New resource</comment>
@@ -1462,14 +1430,6 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="RescoreHydration_HydrateCompactedStreaming_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
-    <value>{0:N0}個すべてのランのラン間整合ファイルを一度にメモリに読み込んでいます。メモリ使用量はファイル数に比例して増加します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_files" xml:space="preserve">
-    <value>ラン間整合ファイルを読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
     <value>{0:N0}個すべてのランのラン間整合ファイルを一度にメモリに読み込んでいます。メモリ使用量はファイル数に比例して増加します。</value>
     <comment>Needs Review:New resource</comment>
   </data>

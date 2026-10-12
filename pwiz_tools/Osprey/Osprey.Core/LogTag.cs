@@ -261,8 +261,6 @@ namespace pwiz.Osprey.Core
         /// file's stubs held at once) or <c>lean</c> (calibration and footer counts only).
         /// </summary>
         public const string ROUTE_SCORED_ENTRIES = @"scored-entries";
-        /// <summary>The resident pre-compaction first-pass pool was held (O(files)).</summary>
-        public const string ROUTE_PRE_COMPACTION_POOL = @"pre-compaction-pool";
         /// <summary>
         /// The exit code and the "Error:" lines disagreed and Program reconciled them
         /// (<c>error-with-success</c> or <c>failure-without-error</c>). Always a defect.
