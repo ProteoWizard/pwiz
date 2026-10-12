@@ -151,8 +151,10 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
                     if (RetentionTimeInterpolator.Samples(_params.Interpolation) <= 3 ||
                         !FindInterpolationSpectra(interpolationIndices, scansInDeconv[row], deconvStartTime,
                             RetentionTimeInterpolator.Samples(interpolation), specPerCycle))
+                    {
                         throw new InvalidOperationException(
                             "BuildDeconvBlock() Not enough spectra to interpolate for the overlap.");
+                    }
                 }
 
                 var binMatrix = DenseMatrix.Create(interpolationIndices.Count, numTransitions, 0);
@@ -225,7 +227,8 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
         int backward = -1;
         if (samples % 2 == 0)
         {
-            double centerTime = TryGetStartTime(_spectrumList!.GetSpectrum(centerIndex, getBinaryData: false)) ?? targetTime;
+            // With binary data: the cache holds decoded spectra, and this one is read for interpolation anyway.
+            double centerTime = TryGetStartTime(_spectrumList!.GetSpectrum(centerIndex, getBinaryData: true)) ?? targetTime;
             backward = centerTime > targetTime ? samples / 2 : samples / 2 - 1;
         }
         return DemuxHelpers.FindNearbySpectra(indices, _spectrumList!, centerIndex, samples, specPerCycle, backward);
@@ -248,8 +251,8 @@ public sealed class OverlapDemultiplexer : IDemultiplexer
             return;
         }
 
-        // scanTimes is in FindNearbySpectra's order (center, earlier, later); sort it once for
-        // every transition. Acquisition times are distinct, so the unstable sort is safe.
+        // The interpolants need increasing times; FindNearbySpectra returns file order, so this sort
+        // is a guard, done once for every transition. Acquisition times are distinct, so it is stable enough.
         int n = scanTimes.Length;
         var order = new int[n];
         for (int i = 0; i < n; i++) order[i] = i;

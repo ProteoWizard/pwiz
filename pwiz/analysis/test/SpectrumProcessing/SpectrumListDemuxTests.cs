@@ -98,6 +98,32 @@ public class SpectrumListDemuxTests
     }
 
     [TestMethod]
+    public void Factory_PoissonWeightsAndInterpolationKeysReachTheDemultiplexer()
+    {
+        var expectedParams = new SpectrumListDemux.Params
+        {
+            Optimization = SpectrumListDemux.Optimization.OverlapOnly,
+            PoissonWeights = true,
+            Interpolation = DemuxInterpolation.NaturalThreePoint,
+        };
+        var (centroided, expected) = LoadAndWrap("OverlapTest.mzML", expectedParams);
+        var (_, defaults) = LoadAndWrap("OverlapTest.mzML", expectedParams with { PoissonWeights = false });
+        var parsed = SpectrumListFactory.Wrap(centroided,
+            "demultiplex optimization=overlap_only poissonWeights=true interpolation=natural3");
+        Assert.AreEqual(expected.Count, parsed.Count, "spectrum count");
+        int differsFromDefault = 0;
+        for (int i = 0; i < expected.Count; i++)
+        {
+            var spectrum = expected.GetSpectrum(i, getBinaryData: true);
+            AssertSpectraEqual(spectrum, parsed.GetSpectrum(i, getBinaryData: true), "parsed keys");
+            var before = defaults.GetSpectrum(i, getBinaryData: true).GetIntensityArray()?.Data.ToArray() ?? [];
+            if (!before.SequenceEqual(spectrum.GetIntensityArray()?.Data.ToArray() ?? []))
+                differsFromDefault++;
+        }
+        Assert.IsTrue(differsFromDefault > 0, "poissonWeights=true should change the output");
+    }
+
+    [TestMethod]
     public void Factory_RejectsBadOptimization()
     {
         var inner = BuildSingleOverlapList(numCycles: 5, scansPerHalf: 25, mzStart: 400, mzEnd: 600);
