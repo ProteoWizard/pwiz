@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
             McpConnector.PerformAction(
                 new UiElementPath(treeContextMenu, pickChildrenText, null, null), @"click", null);
             var popup = WaitForOpenForm<PopupPickList>();
-            string popupId = GetOpenFormId<PopupPickList>();
+            string popupId = WaitForMcpConnectorForm<PopupPickList>();
 
             // Toggle the checked state of the first transition by its visible label.
             string label = null;

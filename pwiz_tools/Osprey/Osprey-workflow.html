@@ -471,11 +471,11 @@
 
 <g transform="translate(0, 2116)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring<tspan class="task-hdr-count">   &#183; out: 3 files/run<title>Per run: .scores-reconciled.parquet, plus .2nd-pass.fdr_scores.bin and .2nd-pass.fdr_decoys.bin where the protein-compact worker answers (1 file/run in other pass-2 modes). 246 files at 82 runs. --training-export adds 1 per run.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task PerFileRescoring<tspan class="task-hdr-count">   &#183; out: 3 files/run<title>Per run: .scores-reconciled.parquet and .2nd-pass.fdr_scores.bin, plus .2nd-pass.fdr_decoys.bin under protein-compact (2 files/run under transfer). 246 files at 82 runs. --training-export adds 1 per run.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">per-run fan-out &#183; reads its own runs + the experiment baseline only</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (derived from --input) + <tspan class="sc-run">.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-run">.1st-pass.model.json</tspan>, <tspan class="sc-cache">.spectra.bin</tspan></text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan>   &#183;   resident baseline</text>
-  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan>, <tspan class="sc-run">.2nd-pass.fdr_decoys.bin</tspan>, <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (pass-2 worker)   &#183;   validity stamped in each file</text>
+  <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan>, <tspan class="sc-run">.2nd-pass.fdr_decoys.bin</tspan>, <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (pass-2 worker, every run)   &#183;   validity stamped in each file</text>
   <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.training.parquet</tspan>  (--training-export)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: the run's own set + every experiment-wide file</text>
 </g>
@@ -516,7 +516,7 @@
 
 <g transform="translate(0, 2508)">
   <rect class="task-hdr-bg" x="120" y="0" width="960" height="112" rx="8"/>
-  <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR<tspan class="task-hdr-count">   &#183; out: <tspan class="sc-exp">4 files</tspan><title>Experiment-wide: the .blib, .protein_groups.tsv, .stats.tsv and .2nd-pass.fdr_experiment.bin. Under the other pass-2 modes (no per-file worker) it also writes .2nd-pass.fdr_scores.bin for every run. --model-diagnostics adds 2 (product and page), --fdrbench adds 2.</title></tspan></text>
+  <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR<tspan class="task-hdr-count">   &#183; out: <tspan class="sc-exp">4 files</tspan><title>Experiment-wide: the .blib, .protein_groups.tsv, .stats.tsv and .2nd-pass.fdr_experiment.bin. No per-run file in any pass-2 mode. --model-diagnostics adds 2 (product and page), --fdrbench adds 2.</title></tspan></text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; final aggregation</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (every run - one parquet per run, no <tspan class="sc-run">.scores.parquet</tspan> fallback), <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (worker)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.model.json</tspan>, <tspan class="sc-run">.1st-pass.stratum.json</tspan>, <tspan class="sc-run">.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan></text>

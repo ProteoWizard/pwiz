@@ -261,7 +261,7 @@ the user's culture, as Skyline's does:
   only through `-d` or an `OSPREY_*` setting.
 - `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
   instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
-  choice from `OSPREY_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
+  choice from `OSPREYDEV_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
   tr-TR are test cultures for number formatting, not translation targets.
 
 ## Distributed execution (HPC)

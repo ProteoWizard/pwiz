@@ -397,9 +397,6 @@
   <data name="Program_TrainingExportError__0____1__and__2__apply_only_with__3__" xml:space="preserve">
     <value>{0}, {1} and {2} apply only with {3}.</value>
   </data>
-  <data name="Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_" xml:space="preserve">
-    <value>{0} cannot run with {1}: that mode computes the run q-values in {2}, after the per-run export is written. Leave out {0}, or run without {1}.</value>
-  </data>
   <data name="Program_TrainingExportError__0__must_be_in__0__1__" xml:space="preserve">
     <value>{0} must be in (0, 1].</value>
   </data>
