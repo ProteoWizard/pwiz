@@ -84,7 +84,9 @@ namespace pwiz.SkylineTestFunctional
         // ClickFormButton clicks a CheckBox -- the AutoCheck=false "Enable audit logging" one.
         private AuditLogForm ClickCheckBox()
         {
-            var auditLogForm = ShowMcpConnectorForm<AuditLogForm>(() => SkylineWindow.ShowAuditLog(), out var auditFormId);
+            RunUI(() => SkylineWindow.ShowAuditLog());
+            var auditLogForm = WaitForOpenForm<AuditLogForm>();
+            string auditFormId = GetOpenFormId<AuditLogForm>();
 
             bool before = SkylineWindow.Document.Settings.DataSettings.AuditLogging;
             // The checkbox is created in code from a string-table entry, so match it by that same string.
@@ -99,7 +101,9 @@ namespace pwiz.SkylineTestFunctional
         // nav-bar toolstrip; it walks the "Reports" dropdown (items built on demand) to switch the report.
         private void ClickToolStripDropDownItem()
         {
-            var documentGrid = ShowMcpConnectorForm<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true), out var gridId);
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            var documentGrid = WaitForOpenForm<DocumentGridForm>();
+            string gridId = GetOpenFormId<DocumentGridForm>();
 
             // The dropdown button's caption comes from the NavBar's resources; the built-in report names
             // are the localized row-source names SkylineViewContext.GetDocumentGridRowSources assigns,

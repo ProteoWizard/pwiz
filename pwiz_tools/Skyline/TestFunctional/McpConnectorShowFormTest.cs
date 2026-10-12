@@ -29,15 +29,15 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Verifies <see cref="McpConnectorTest.ShowMcpConnectorForm{TForm}"/> against the race behind intermittent
-    /// McpConnector test failures ("Expected a form of type DefineAnnotationDlg to be open, but it was not").
-    /// ShowDialog returns as soon as a form is Created, which is before Windows shows it, while the connector lists
-    /// only visible windows. A form that takes a while in OnLoad holds that gap open, so the race happens every
-    /// time instead of a few times in a thousand.
+    /// McpConnector test failures ("Expected a form of type DefineAnnotationDlg to be open, but it was not"), using
+    /// a dialog whose OnLoad can be held open so the race happens every time instead of a few times in a thousand.
     /// </summary>
     [TestClass]
     public class McpConnectorShowFormTest : McpConnectorTest
     {
-        // Long enough to outlast the 100 ms poll by which ShowDialog notices the form, with margin for a busy machine.
+        // Only a safety limit: the test releases the held OnLoad as soon as it has checked the window.
+        private const int HELD_LOAD_TIMEOUT_MILLIS = 30 * 1000;
+        // Long enough that ShowDialog nearly always returns first, so the helper has the race to wait out.
         private const int SLOW_LOAD_MILLIS = 300;
 
         [TestMethod]
@@ -54,36 +54,54 @@ namespace pwiz.SkylineTestFunctional
             VerifyShowMcpConnectorFormWaitsForConnector();
         }
 
-        // The precondition the helper exists for: ShowDialog hands back a form Windows has not shown yet. Without
+        // The precondition the helper exists for: ShowDialog hands back a dialog Windows has not shown yet. Without
         // this, the check below could pass only because the race had stopped happening.
         private void VerifyShowDialogReturnsBeforeVisible()
         {
-            var slowForm = ShowDialog<SlowLoadingForm>(ShowSlowLoadingForm);
-            Assert.IsTrue(slowForm.Created);
-            Assert.IsFalse(User32.IsWindowVisible(slowForm.LoadHandle),
-                @"Expected ShowDialog to return while the form was still loading and not yet visible.");
+            using var loadGate = new ManualResetEventSlim();
+            var slowForm = ShowDialog<SlowLoadingForm>(() => ShowSlowLoadingForm(loadGate, HELD_LOAD_TIMEOUT_MILLIS));
+            try
+            {
+                AssertEx.IsFalse(slowForm.LoadHandle == IntPtr.Zero);
+                AssertEx.IsFalse(User32.IsWindowVisible(slowForm.LoadHandle),
+                    @"Expected ShowDialog to return while the dialog was still loading and not yet visible.");
+            }
+            finally
+            {
+                loadGate.Set();
+            }
             OkDialog(slowForm, slowForm.Close);
         }
 
-        // Looking the form up with GetOpenFormId right after ShowDialog failed here every time.
+        // Looking the dialog up with GetOpenFormId right after ShowDialog failed here every time.
         private void VerifyShowMcpConnectorFormWaitsForConnector()
         {
-            var slowForm = ShowMcpConnectorForm<SlowLoadingForm>(ShowSlowLoadingForm, out var formId);
-            Assert.IsTrue(User32.IsWindowVisible(slowForm.LoadHandle));
+            using var neverSet = new ManualResetEventSlim();
+            var slowForm = ShowMcpConnectorForm<SlowLoadingForm>(() => ShowSlowLoadingForm(neverSet, SLOW_LOAD_MILLIS),
+                out var formId);
             Assert.IsNotNull(McpConnector.GetControls(formId));
             OkDialog(slowForm, slowForm.Close);
         }
 
-        private void ShowSlowLoadingForm()
+        private void ShowSlowLoadingForm(ManualResetEventSlim loadGate, int loadTimeoutMillis)
         {
-            using var form = new SlowLoadingForm();
+            using var form = new SlowLoadingForm(loadGate, loadTimeoutMillis);
             form.ShowDialog(SkylineWindow);
         }
 
-        /// <summary>A dialog that spends <see cref="SLOW_LOAD_MILLIS"/> in OnLoad, after it is Created and before
-        /// Windows shows it.</summary>
+        /// <summary>A dialog whose OnLoad waits on a gate (or a timeout), after it is Created and before Windows
+        /// shows it.</summary>
         private class SlowLoadingForm : FormEx
         {
+            private readonly ManualResetEventSlim _loadGate;
+            private readonly int _loadTimeoutMillis;
+
+            public SlowLoadingForm(ManualResetEventSlim loadGate, int loadTimeoutMillis)
+            {
+                _loadGate = loadGate;
+                _loadTimeoutMillis = loadTimeoutMillis;
+            }
+
             public IntPtr LoadHandle { get; private set; }
 
             // Captured as soon as the window exists, before Created can become true.
@@ -96,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
             protected override void OnLoad(EventArgs e)
             {
                 base.OnLoad(e);
-                Thread.Sleep(SLOW_LOAD_MILLIS);
+                _loadGate.Wait(_loadTimeoutMillis);
             }
         }
     }
