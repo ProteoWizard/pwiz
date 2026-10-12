@@ -255,7 +255,9 @@ does not:
   writes one: a diagnostics-only render writes nothing but its report.
 
   Like `ModelDiagnostics`, it is admitted to the per-run survivor loader (`HydratesPerRun`), so
-  walking a finished cohort does not fall to the all-runs bundle. Under any other `--task` the
+  walking a finished cohort reads one run at a time. (A task that declined it once fell to the
+  all-runs bundle; that route was removed on 2026-10-12, and such a task is now refused.) Under
+  any other `--task` the
   flag is accepted, because an HPC wrapper hands every node the same options, and it is inert
   except on the `PerFileRescoring` leg; the startup line says where the export is written.
 

@@ -256,9 +256,9 @@ namespace pwiz.Osprey.Tasks
         /// <para><paramref name="loadStubs"/> must return the run's FULL pre-compaction stub
         /// list; <paramref name="onStubsHydrated"/> is the caller's one look at it (per-run
         /// tallies, the <c>--model-diagnostics</c> fold) before compaction drops the
-        /// non-survivors. Cross-run envelope agreement is deliberately NOT checked here: a node
-        /// holding one run has no sibling to compare against, so that check belongs to a caller
-        /// that legitimately has several.</para>
+        /// non-survivors. Cross-run envelope agreement is not checked: a node holding one run
+        /// has no sibling to compare against, and the all-runs hydrate that did hold several,
+        /// and checked them, was removed with the last route that reached it.</para>
         /// </summary>
         public static RunRescoreInputs HydrateOneRun(
             string parquetPath,
