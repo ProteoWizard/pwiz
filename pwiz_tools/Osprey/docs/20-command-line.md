@@ -253,14 +253,14 @@ the user's culture, as Skyline's does:
   which scans every `.resx` under `pwiz_tools`.
 - Text written for a PERSON uses the current culture: in fr-FR a count reads `1 234 567` and a
   fraction `12,5 %`. Text written for a PROGRAM uses the invariant culture: every output file
-  (blib, TSV report, FDRBench input, parquet, JSON, `.osprey.task`) and every tagged log line.
+  (blib, TSV report, FDRBench input, parquet, JSON, the embedded validity stamps) and every tagged log line.
   A run under any culture writes byte-identical files.
 - `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
   argument and environment variable names, internal-invariant exceptions, and diagnostics reached
   only through `-d` or an `OSPREY_*` setting.
 - `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
   instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
-  choice from `OSPREY_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
+  choice from `OSPREYDEV_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
   tr-TR are test cultures for number formatting, not translation targets.
 
 ## Distributed execution (HPC)
