@@ -299,10 +299,10 @@ namespace pwiz.Osprey.Test
                     records.Add(new FdrScoreRecord(id, firstPassScore, 0.001 * id, 0.002 * id, 10.0 + id));
                     survivors.Add(new FdrEntry { EntryId = id, Features = features });
                 }
-                FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass);
+                FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
 
                 var tally = new Pass2FdrSidecar.TransferTally();
-                Pass2FdrSidecar.TransferOneFile(@"run1", inputFile, survivors, scorer,
+                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer,
                     new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
 
                 Assert.AreEqual(1, tally.FilesDone);

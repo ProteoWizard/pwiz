@@ -2,6 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *                Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -21,94 +22,67 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Unit tests for <see cref="PerFileResumeDriver"/>, the per-file resume
-    /// sidecar mechanics shared by PerFileScoringTask and PerFileRescoreTask.
+    /// Unit tests for <see cref="PerFileResumeDriver"/>, the per-file resume test every task
+    /// that reuses outputs file by file asks.
     /// </summary>
     [TestClass]
     public class PerFileResumeDriverTest
     {
         private const string TASK = "PerFileResumeDriverTest";
-        private const string VERSION = "26.1.1.0";
 
         /// <summary>
-        /// IsCurrent must require BOTH the output file on disk AND a matching
-        /// validity sidecar; Stamp writes that sidecar and ClearStale removes it.
+        /// IsCurrent reads the stamp the output carries inside itself: the matching task and key
+        /// by this build are current, anything else is not, an output without a stamp never is,
+        /// and rewriting the output replaces its stamp in the same commit - so there is nothing
+        /// to clear before a recompute and nothing to stamp after it.
         /// </summary>
         [TestMethod]
-        public void TestIsCurrentStampAndClearStale()
+        public void TestIsCurrentReadsTheEmbeddedStamp()
         {
-            string outputPath = Path.GetTempFileName();
-            string sidecarPath = TaskValiditySidecar.PathFor(outputPath, TASK);
-            var warnings = new List<string>();
+            string dir = Path.Combine(Path.GetTempPath(), "resume_driver_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
             try
             {
-                // Output exists but no sidecar yet -> not current.
-                Assert.IsFalse(PerFileResumeDriver.IsCurrent(outputPath, TASK, "key1"));
+                string output = Path.Combine(dir, "run" + FdrScoresSidecar.EXT_FIRST_PASS);
+                var records = new List<FdrScoreRecord> { new FdrScoreRecord(1, 0.5, 0.01, 0.01, 10.0) };
 
-                // After a successful stamp the matching key is current; a
-                // different key is not (a foreign invocation's output).
-                PerFileResumeDriver.Stamp(outputPath, TASK, VERSION, "key1",
-                    new[] { "input.mzML" }, warnings.Add);
-                Assert.AreEqual(0, warnings.Count);
-                Assert.IsTrue(PerFileResumeDriver.IsCurrent(outputPath, TASK, "key1"));
-                Assert.IsFalse(PerFileResumeDriver.IsCurrent(outputPath, TASK, "key2"));
+                // Present but unstamped (a foreign or legacy file) -> not current.
+                File.WriteAllText(output, "not a sidecar");
+                Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK, "key1"));
+                File.Delete(output);
 
-                // The file-existence gate: a valid sidecar without its output is
-                // NOT current (the sidecar can outlive a deleted output).
-                File.Delete(outputPath);
-                Assert.IsFalse(PerFileResumeDriver.IsCurrent(outputPath, TASK, "key1"));
+                FdrScoresSidecar.BeginRun();
+                FdrScoresSidecar.Write(output, records, FdrScoresSidecar.Pass.FirstPass,
+                    ArtifactStamp.ForCurrentBuild(TASK, "key1"));
+                Assert.IsTrue(PerFileResumeDriver.IsCurrent(output, TASK, "key1"));
+                Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK, "key2"));
+                Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK + "Other", "key1"));
 
-                // ClearStale removes the sidecar so the next probe re-runs.
-                File.WriteAllText(outputPath, "rebuilt");
-                Assert.IsTrue(PerFileResumeDriver.IsCurrent(outputPath, TASK, "key1"));
-                PerFileResumeDriver.ClearStale(outputPath, TASK);
-                Assert.IsFalse(PerFileResumeDriver.IsCurrent(outputPath, TASK, "key1"));
+                // A later run's write replaces the stamp with its own.
+                FdrScoresSidecar.BeginRun();
+                FdrScoresSidecar.Write(output, records, FdrScoresSidecar.Pass.FirstPass,
+                    ArtifactStamp.ForCurrentBuild(TASK, "key2"));
+                Assert.IsTrue(PerFileResumeDriver.IsCurrent(output, TASK, "key2"));
+                Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK, "key1"));
+
+                // Deleted -> not current, and asking does not throw.
+                File.Delete(output);
+                Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK, "key2"));
             }
             finally
             {
-                if (File.Exists(outputPath))
-                    File.Delete(outputPath);
-                if (File.Exists(sidecarPath))
-                    File.Delete(sidecarPath);
-            }
-        }
-
-        /// <summary>
-        /// A sidecar-write failure is non-fatal: Stamp must route it to the
-        /// warning callback and not throw (the output is already on disk; only
-        /// the resume-skip hint is lost). FileSaver creates the destination
-        /// directory, so the failure is forced with a parent path that is an
-        /// existing FILE -- allocating the sibling temp under it throws.
-        /// </summary>
-        [TestMethod]
-        public void TestStampSwallowsWriteFailure()
-        {
-            string blocker = Path.Combine(Path.GetTempPath(), "osprey-resume-blocker-file");
-            if (File.Exists(blocker))
-                File.Delete(blocker);
-            File.WriteAllText(blocker, "x");
-            try
-            {
-                string badPath = Path.Combine(blocker, "out.parquet"); // parent is a file
-                var warnings = new List<string>();
-
-                PerFileResumeDriver.Stamp(badPath, TASK, VERSION, "key1",
-                    new[] { "input.mzML" }, warnings.Add);
-
-                Assert.AreEqual(1, warnings.Count);
-            }
-            finally
-            {
-                if (File.Exists(blocker))
-                    File.Delete(blocker);
+                try { Directory.Delete(dir, true); } catch (IOException) { }
             }
         }
     }

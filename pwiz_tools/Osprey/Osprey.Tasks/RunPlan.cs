@@ -40,24 +40,31 @@ namespace pwiz.Osprey.Tasks
     public sealed class RunPlan
     {
         /// <summary>
-        /// How many files will actually run concurrently in the current
-        /// invocation. Computed once by <c>PerFileScoringTask</c> before the
-        /// per-file <c>ProcessFile()</c> calls and read to divide the inner
-        /// main-search thread budget so total thread demand stays near core
-        /// count. Defaults to 1 (no scaling). Does NOT feed any
-        /// <c>SearchIdentity</c> hash.
+        /// How many files the scoring stage runs concurrently in the current
+        /// invocation (<see cref="FileStage.Scoring"/>). Computed once by
+        /// <c>PerFileScoringTask</c> before the per-file <c>ProcessFile()</c> calls
+        /// and read to divide the inner main-search thread budget so total thread
+        /// demand stays near core count. Defaults to 1 (no scaling). Does NOT feed
+        /// any <c>SearchIdentity</c> hash.
         /// </summary>
-        public int EffectiveFileParallelism { get; set; } = 1;
+        public int ScoringFileParallelism { get; set; } = 1;
+
+        /// <summary>
+        /// How many files the re-scoring stage runs concurrently (<see cref="FileStage.Rescoring"/>),
+        /// resolved by <c>PerFileRescoreTask</c> on its own rather than inherited from scoring:
+        /// its per-file working set is a small fraction of the scoring stage's, so the two do
+        /// not want the same count. Defaults to 1. Does NOT feed any <c>SearchIdentity</c> hash.
+        /// </summary>
+        public int RescoringFileParallelism { get; set; } = 1;
 
         /// <summary>
         /// How many files the rescore and second-pass stages work on at once in their per-file
-        /// phases: the same <see cref="EffectiveFileParallelism"/>, never below one. Those phases
-        /// apply every cross-file effect in file order (<see cref="OrderedFileLanes"/>), so the
-        /// count changes the wall clock and nothing else - and their per-file working set is a
-        /// small fraction of the scoring stage's, so the count that fit scoring fits them.
+        /// phases: <see cref="RescoringFileParallelism"/>, never below one. Those phases apply
+        /// every cross-file effect in file order (<see cref="OrderedFileLanes"/>), so the count
+        /// changes the wall clock and nothing else.
         /// First-pass FDR has its own count, <see cref="FirstPassFdrLanes"/>.
         /// </summary>
-        public int FileLanes => Math.Max(1, EffectiveFileParallelism);
+        public int FileLanes => Math.Max(1, RescoringFileParallelism);
 
         /// <summary>
         /// How many files first-pass FDR and its Stage 6 planning work on at once, chosen by

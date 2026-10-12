@@ -113,6 +113,16 @@ public static class DemuxTests
                 $"expected a small iteration count, got {solver.IterationCount}");
         }
 
+        [TestMethod]
+        public void NnlsSolver_IterationLimitHit_KeepsPartialSolution()
+        {
+            // maxIter = 1 stops after the first LS solve with x = (0, 2); like cpp, keep it, not zeros.
+            var A = DenseMatrix.OfArray(new[,] { { 1.0, 0 }, { 0, 1 } });
+            var B = DenseMatrix.OfArray(new[,] { { 1.0 }, { 2.0 } });
+            var X = new NnlsSolver(maxIter: 1).Solve(A, B);
+            AssertVectorEqual(new[] { 0.0, 2.0 }, X.Column(0).ToArray(), 1e-12);
+        }
+
         private static void AssertVectorEqual(double[] expected, double[]? actual, double tolerance)
         {
             Assert.IsNotNull(actual);
@@ -287,6 +297,19 @@ public static class DemuxTests
             ext.Extract(spec, matrix, rowNum: 0, weight: 3.0);
             Assert.AreEqual(15.0, matrix[0, 0], 1e-9);
             Assert.AreEqual(30.0, matrix[0, 1], 1e-9);
+        }
+
+        [TestMethod]
+        public void OverlappingRanges_SnapToCentersOfTheOriginalRanges()
+        {
+            // Cpp snaps to the original edges: 500.002, then 500.006 (not 500.00675 from the moved
+            // middle bin), so 500.0064 belongs to the upper bin.
+            double[] peakMzs = { 500.000, 500.004, 500.008 };
+            var ext = new SpectrumPeakExtractor(peakMzs, new MZTolerance(0.005, MZToleranceUnits.Mz));
+            var matrix = DenseMatrix.Create(1, ext.NumPeaks, 0);
+            ext.Extract(MakeSpectrumPlain(new[] { 500.0064 }, new[] { 1.0 }), matrix, rowNum: 0);
+            Assert.AreEqual(0.0, matrix[0, 1], 1e-12, "middle bin");
+            Assert.AreEqual(1.0, matrix[0, 2], 1e-12, "upper bin");
         }
 
         [TestMethod]

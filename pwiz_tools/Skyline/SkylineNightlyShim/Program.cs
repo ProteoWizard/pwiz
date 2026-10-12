@@ -28,6 +28,7 @@
 // ReSharper disable LocalizableElement
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Ionic.Zip;
@@ -74,7 +75,8 @@ namespace SkylineNightlyShim
 
             try
             {
-                File.Move(fileName, tmpName);
+                if (File.Exists(fileName)) // A file new to this zip has nothing to move aside
+                    File.Move(fileName, tmpName);
             }
             catch (Exception e)
             {
@@ -144,11 +146,17 @@ namespace SkylineNightlyShim
                 TeamCityNightlyAuth.DownloadArtifact(zipFileLink, fileName, teamCityToken);
                 using (var zipFile = new ZipFile(fileName))
                 {
-                    AttemptUpdate("SkylineNightly.exe", zipFile);
-                    AttemptUpdate("SkylineNightly.pdb", zipFile);
-                    AttemptUpdate("ProDotNetZip.dll", zipFile);
-                    AttemptUpdate("SkylineNightlyShim.exe", zipFile);
-                    AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
+                    // Every top-level file in the zip, not a fixed list of names: a fixed list is
+                    // what broke the update when the zip's contents changed from .NET Framework
+                    // to .NET (see CreateZipInstallerWindow in SkylineTester).
+                    var names = new List<string>();
+                    foreach (var entry in zipFile.Entries)
+                    {
+                        if (!entry.IsDirectory && !entry.FileName.Contains('/'))
+                            names.Add(entry.FileName);
+                    }
+                    foreach (var name in names)
+                        AttemptUpdate(name, zipFile);
                 }
             }
             catch (Exception e)

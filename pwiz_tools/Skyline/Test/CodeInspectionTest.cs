@@ -419,7 +419,8 @@ namespace pwiz.SkylineTest
                 "DetectionsGraphController", // An intermediate type, actually exercised in DetectionsPlotTest
                 "MassErrorGraphController", // An intermediate type, actually exercised in MassErrorGraphsTest 
                 "PeptideSettingsUI.TabWithPage", // An intermediate type
-                "BackgroundEventThreadsTestForm" // Used in tests itself, not a UI thing    
+                "BackgroundEventThreadsTestForm", // Used in tests itself, not a UI thing
+                "SlowLoadingForm" // Used in TestMcpConnectorShowForm itself, not a UI thing
             };
 
             foreach (var formName in foundForms)

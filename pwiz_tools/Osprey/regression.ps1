@@ -361,14 +361,14 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 # statement of health, and reading it as sufficient is the trap: a token is only
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
-# published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
-# asked for a token. #4486 was the standing example while it was open: the survivor
-# buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
+# published no survivor loader, so the Stage 6 handoff guard (since retired with
+# OSPREY_STAGE6_STREAM_SURVIVORS) no-oped and nothing asked for a token. #4486 was the
+# standing example while it was open: the survivor buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
 # path, and no guard covered it because it was not a resume or a mode - it was what Stage
-# 7 took as input. That is now closed (#4486): every default leg folds run by run, and the
-# one route that still takes the pool is the transfer pass-2 mode, tracked as #4665 in the
-# row below. Zero tokens therefore does NOT mean zero gaps, and this table keeps that
-# legible.
+# 7 took as input. That is now closed (#4486): every leg folds run by run. The last route
+# that still took the pool - the transfer pass-2 mode, whose per-file half ran in Stage 7 -
+# was this table's last row until #4665 moved that half into Pass2PerFileWorker. Zero tokens
+# still does NOT mean zero gaps in general, and this table is where the next one goes.
 #
 # Printed in the run summary (not just parked in a comment) so every CI log states the
 # outstanding gaps, and so a fixed entry left here shows up as a stale line in output
@@ -384,79 +384,38 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 #     handoff like every other leg and resume-survivor-handoff - the last entry here - came out
 #     with it. Zero is the invariant, not a milestone: a new entry below is a regression
 #     to justify in review, not a line to add and move on.
-$knownResidentGaps = @(
-    # Untokened by nature, which is exactly why it belongs here: no guard demands a token
-    # for it, so a token audit cannot see it and a green gate printed "none" while every
-    # leg walked it. Measured 2026-08-09 on 82 files rather than estimated - the preamble
-    # above names it, and a table that omits the one gap the preamble names is worse than
-    # no table. Token NONE, so it does not inflate the required-token count below.
-    @{
-        Issue = '#4665'
-        Token = 'NONE'
-        Path  = 'Transfer pass-2 (OSPREY_PASS2_QVALUE=transfer) computes its per-file half in Stage 7 over the whole pool (TransferOneFile runs from TransferPerRunQ, not from Pass2PerFileWorker); resident for the whole of Stage 7. #4486, the original tracker, is closed.'
-        # One model, stated explicitly: a fixed library term plus a per-file slope, both from
-        # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
-        # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
-        # not 0.197), which is unreadable in a summary that prints on every CI run.
-        # NOT every leg any more, and saying so mattered: this gate's own mode-3 SecondPassFDR
-        # phase takes the streamed join, which is the fix for this gap being exercised rather
-        # than merely described. The note below about hpc-merge already said that; this line
-        # still said "every leg", so the summary printed the stale half on every CI run.
-        #
-        # The model is now CONFIRMED rather than projected: 4.4 + 0.197*446 = 92.3 GB predicts
-        # the 91.1 GB private measured on the 446-run CHS cohort (2026-09-08), which is the
-        # first endpoint past 82 files. Quoted as a check on the model, not as a second model -
-        # see the note above about three numbers no single model reproduced.
-        # The set has SHRUNK from "every leg except mode 3's join phase" to one pass-2 mode.
-        # CanStreamStage7Join's first term was config.ExpectReconciledInput, which only
-        # --task SecondPassFDR sets, so the ordinary run could not stream BY CONSTRUCTION;
-        # derived from the reconciled parquets on disk it is route-independent, and the cold
-        # run and both resume arms now fold run by run (asserted per leg, not projected).
-        # What is left is the pass-2 mode with no per-file worker: transfer still computes
-        # its per-file half in Stage 7, over the whole pool. Moving TransferOneFile into
-        # Pass2PerFileWorker is what empties this row - and then the guard's
-        # streamingAvailable exemption has no subject either, so the two go together.
-        Legs  = 'ONLY a pass-2 mode with no per-file worker (OSPREY_PASS2_QVALUE=transfer, exercised per commit by SubsetPipelineTest''s transfer arm since #4728; no leg of this gate runs it). Every default leg - cold straight-through, the resume, and mode 3''s SecondPassFDR phase - folds run by run. ~4.4 GB library + 0.197 GB/file live post-GC where it is still taken: ~20 GB at 82 files, and 92.3 GB predicted vs 91.1 GB measured at 446.'
-    }
-)
+# EMPTY since #4665. Its last row was the transfer pass-2 mode (OSPREY_PASS2_QVALUE=transfer),
+# untokened by nature because no guard demanded a token for it: its per-file half ran in
+# Stage 7 over the whole pool, ~4.4 GB library + 0.197 GB/file live post-GC - 92.3 GB
+# predicted against 91.1 GB measured at 446 runs. Transfer now streams like every other mode,
+# exercised per commit by SubsetPipelineTest's transfer arm (no leg of this gate runs it).
+$knownResidentGaps = @()
 # Reachable only outside this gate, tokened, each with an open issue: NONE. The last one,
 # fdrbench-pass1 (#4507), is GONE: the pass-1 emitter streams off the per-file sidecars and
 # mode 12 covers it - the ratchet shrinking a fifth time. hpc-merge went with #4486 (the
 # --task SecondPassFDR reconciled-input load takes the bounded streaming hydrate, so
 # mode 3's join node needs no token).
-# By design rather than unfinished, so no issue: projection-off and
-# compacted-entries-buffer (the A/B byte-identity oracles). non-percolator-fdr went with
-# #4543, which deleted the simple FDR method it named - the ratchet shrinking a sixth time.
+# non-percolator-fdr went with #4543, which deleted the simple FDR method it named - the
+# ratchet shrinking a sixth time - compacted-entries-buffer with
+# OSPREY_STAGE6_STREAM_SURVIVORS (2026-10-10), the seventh, and projection-off (the A/B
+# byte-identity oracle, kept by design) with OSPREY_FDR_PROJECTION (2026-10-10), the eighth,
+# which left the token list empty.
 
 # Preserved and RESTORED at the end of the run (see the finally block): this mutates the
 # process environment, so a developer running the gate in their interactive shell would
 # otherwise silently lose an exported token for the rest of the session.
 $script:priorAllowResident = $env:OSPREY_ALLOW_UNFIXED_RESIDENT
-# An operator running a deliberate A/B needs their token: OSPREY_STAGE6_STREAM_SURVIVORS=0
-# and OSPREY_FDR_PROJECTION=0 force resident paths ON PURPOSE, and clearing the token that
-# admits them would abort the gate on its first leg with a guard error - making the very
-# comparison this harness exists to support impossible to run. Ambient tokens are stripped
-# ONLY when no such switch is set, which is the case the clearing is aimed at.
-#
-# OSPREY_STAGE7_STREAM=0 was in this set and is GONE (2026-09-10): the switch itself was
-# retired once its A/B was banked, so there is no Stage-7 arm left for an operator to
-# force and no token to keep. ResidentPaths.KNOWN_UNFIXED shrank from 5 to 4 with it.
-#
-$abSwitchSet = ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-               ($env:OSPREY_FDR_PROJECTION -eq '0')
+# Every A/B switch that forced a resident path ON PURPOSE, and so needed its token kept, is
+# gone: OSPREY_STAGE7_STREAM (2026-09-10), OSPREY_STAGE6_STREAM_SURVIVORS (2026-10-10) and
+# OSPREY_FDR_PROJECTION (2026-10-10) were each retired with their arm, and Osprey refuses all
+# three names at startup. So an inherited allowance is always cleared.
 if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
-    if ($abSwitchSet) {
-        # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
-        # formatted and '{0}' survives verbatim into the output.
-        Write-Host (("Keeping inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - an A/B switch " +
-            "(OSPREY_STAGE6_STREAM_SURVIVORS/OSPREY_FDR_PROJECTION=0) is set and needs it.") `
-            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
-    } else {
-        Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
-            "gate may run under an ambient resident-pool allowance.") `
-            -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
-        Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
-    }
+    # Extra parens: -f binds TIGHTER than +, so without them only the LAST fragment is
+    # formatted and '{0}' survives verbatim into the output.
+    Write-Host (("Clearing inherited OSPREY_ALLOW_UNFIXED_RESIDENT='{0}' - no leg of this " +
+        "gate may run under an ambient resident-pool allowance.") `
+        -f $env:OSPREY_ALLOW_UNFIXED_RESIDENT) -ForegroundColor Yellow
+    Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
 }
 
 # The goldens are captured under the shipped first-pass SVM C selection, so an inherited
@@ -1225,8 +1184,8 @@ function Compare-DirFingerprint {
 # The canonical four-task pipeline, in execution order. These are the
 # OspreyTask.Name values (OspreyTasks.Create().Pipeline, the explicit ordered list the
 # task set declares): the same tokens
-# Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
-# [TASK] log lines and the .<Name>.osprey.task validity sidecars.
+# the driver writes into its [TASK] log lines and every artifact embeds in its
+# validity stamp.
 $pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
 
 # The driver's own per-task markers: the cache-hit skip at the top of the task
@@ -1778,7 +1737,7 @@ function Invoke-OspreyTaskRun {
         throw ("Osprey --task modified {0} file(s) it was given, which no task may do: [{1}]. " +
                "A phase produces new artifacts; rewriting one it received means a later stage " +
                "is reaching back into an earlier stage's output, so that file no longer matches " +
-               "the validity sidecar attesting it. See issue #4486. Log: {2}") -f
+               "the producer that stamped it. See issue #4486. Log: {2}") -f
               $touched.Count, ($touched -join ', '), $logPath
     }
 }
@@ -2065,14 +2024,11 @@ function Invoke-HpcChain {
         # below, so without this the files the comparison needs would be gone.
         Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3Out "$s.1st-pass.fdr_scores.bin")
 
-        # WITHHELD ONLY WHEN THE WORKER ANSWERED. The modes with a per-file half
-        # (protein-compact) leaves a 2nd-pass sidecar here, and phase 4 folds it
-        # without opening anything from the first pass - that is the contract issue #4486
-        # establishes, and withholding is how it is proven. OSPREY_PASS2_QVALUE=transfer and the
-        # retrain modes have NO per-file half, so Stage 7 legitimately recomputes and legitimately
-        # needs these files; withholding them there would fail a mode for a contract it never
-        # claimed. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
-        # future mode gets the right answer without editing this line.
+        # WITHHELD ONLY WHEN THE WORKER ANSWERED. Every pass-2 mode's worker leaves a 2nd-pass
+        # sidecar here (#4665), and phase 4 folds it without opening anything from the first
+        # pass - that is the contract issue #4486 establishes, and withholding is how it is
+        # proven. Decided from what phase 3 actually WROTE rather than from the mode flag, so a
+        # run whose worker did not answer still has what it would need to be diagnosed.
         if (-not (Test-Path (Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"))) {
             Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
         }
@@ -2112,14 +2068,6 @@ function Invoke-HpcChain {
             }
             Copy-Item $pass2Side (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin")
             Copy-Item $pass2Decoys (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin")
-            $decoysStamp = "$pass2Decoys.PerFileRescoring.osprey.task"
-            if (Test-Path $decoysStamp) {
-                Copy-Item $decoysStamp (Join-Path $ph4 "$s.2nd-pass.fdr_decoys.bin.PerFileRescoring.osprey.task")
-            }
-            $pass2Stamp = "$pass2Side.PerFileRescoring.osprey.task"
-            if (Test-Path $pass2Stamp) {
-                Copy-Item $pass2Stamp (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task")
-            }
         }
         # Same relay for the analysis-wide experiment sidecar: SecondPassFDR seeds pass-1
         # scalars from it, and $ph2 is gone by now, so phase 3 is its only route here.
@@ -2211,37 +2159,11 @@ foreach ($name in $selected) {
     $dataFp = Get-DirFingerprint -Dir $inputs.Dir
 
     $straightDir = Join-Path $runRoot "$name\straight"
-    # Whether this run was ASKED for a configuration that cannot stream the Stage-7 join, so
-    # the legs below can tell "took the resident join" from "was told to". These are
-    # CanStreamStage7Join's OWN terms, not a mode list: the switch that forces the resident
-    # join, the one that makes NeedsResidentPool true, and any pass-2 mode other than
-    # protein-compact (transfer still computes its per-file half in Stage 7). Enumerated
-    # rather than inferred from the log, because a resident run says nothing about WHY it was
-    # resident - and a silent SKIP for the wrong reason is what these legs exist to prevent.
-    #
-    # ExpectReconciledInput is not among them, and used to be the whole answer: it was
-    # CanStreamStage7Join's first term, and only --task SecondPassFDR sets it, so the ordinary
-    # run could not stream by construction. Deriving the admission from the reconciled parquets
-    # on disk is what puts every leg under one question.
-    #
-    # OSPREY_STAGE6_STREAM_SURVIVORS=0 belongs here too, and its absence made this list
-    # wrong rather than merely incomplete. Under that switch BuildRunPerRunSource returns
-    # null (no loader, and the per-run lists are never cleared), so no marker reaches
-    # straight.log and the mode1 leg FAILS a run behaving exactly as instructed - while
-    # mode2 PASS, because BuildResumePerRunSource reads the loader through
-    # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
-    # red that reads like a genuine regression is the worst shape a gate can have.
-    #
-    # Reading env vars only is now COMPLETE for the resident-pool half: NeedsResidentPool's
-    # one remaining trigger is OSPREY_FDR_PROJECTION=0, tested below. Its CLI/config triggers are
-    # gone - --fdrbench-pass 1 streamed with #4507, and the non-Percolator --fdr-method went
-    # with #4543, which removed the argument and the simple FDR method. OSPREY_FDR_MODEL=gbdt
-    # does not belong here: trees run the same Percolator framework and stream.
-    $cannotStreamJoin =
-        ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
-        ($env:OSPREY_FDR_PROJECTION -eq '0') -or
-        (-not [string]::IsNullOrWhiteSpace($env:OSPREY_PASS2_QVALUE) -and
-         $env:OSPREY_PASS2_QVALUE -ne 'protein-compact')
+    # No configuration this gate can be asked for declines the streamed Stage-7 join any more,
+    # so every leg's streamed-join assertion is unconditional. The terms that once excused one
+    # were the switches that forced a resident join or a resident first-pass pool
+    # (OSPREY_STAGE7_STREAM, OSPREY_STAGE6_STREAM_SURVIVORS, OSPREY_FDR_PROJECTION=0), each
+    # retired with its arm, and the pass-2 mode, which stopped being a term with #4665.
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     # GoldenFolder, not Folder: StellarLibDecoy shares the stellar mzML folder,
     # so keying the golden on Folder alone would collide with Stellar's.
@@ -2467,7 +2389,9 @@ foreach ($name in $selected) {
             # Compare-Object boxes every byte into a PSObject and hashes it. On Astral (85.8 MB,
             # 2,498,773 records) that took the harness process to a 53 GB working set and stalled
             # this leg for many minutes; the span compare is under a second.
-            $expDiff = [OspreyFdrSidecarComparer]::CompareBytes(
+            # CompareExperimentBytes: header and records only. The trailing validity stamp is
+            # provenance whose key names the route, so it legitimately differs between legs.
+            $expDiff = [OspreyFdrSidecarComparer]::CompareExperimentBytes(
                 $expStraight[0].FullName, $expChain[0].FullName, 1000)
             if (-not $expDiff.Readable) {
                 $m3sIssues.Add("$expName : $($expDiff.Problem)")
@@ -2485,9 +2409,9 @@ foreach ($name in $selected) {
                     $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
                     $expDiff.FirstDiffOffset, $expDiff.DiffCount))
             } else {
-                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length -
+                $m3sCompared += [int](($expDiff.LengthExpected -
                     [OspreyFdrSidecarComparer]::ExperimentHeaderLen) /
-                    [OspreyFdrSidecarComparer]::ExperimentRecordLen
+                    [OspreyFdrSidecarComparer]::ExperimentRecordLen)
             }
         }
 
@@ -2533,27 +2457,27 @@ foreach ($name in $selected) {
             -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
         $chainFold = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
-        # And the chain must have folded a worker answer for EVERY file. "Verification off" is
-        # not the same as "the shipped path ran": a node given no 2nd-pass artifacts also has the
-        # verifier off, and silently recomputes every file from 1st-pass sidecars. That is exactly
-        # what a SEA-AD measurement did for hours while reporting the shipped path (2026-08-31).
-        # Only the modes with a per-file half make this claim. OSPREY_PASS2_QVALUE=transfer and
-        # the retrain modes compute the second pass in Stage 7 by definition, so there is no
-        # worker answer to fold and demanding one would fail them for a contract they never
-        # made. Detected from the worker's own validity stamp reaching phase 4, not from the
-        # mode flag.
-        $chainHasWorkerOutput = @(Get-ChildItem -File -Path $chainDir `
-            -Filter '*.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task' `
-            -ErrorAction SilentlyContinue).Count -gt 0
-        $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
-            -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ answered=(\d+)/\1\b') -Quiet
-        if (-not $chainHasWorkerOutput) {
-            $summaryLines.Add("$name mode3 (shipped fold): SKIP (mode has no per-file half)")
-        } elseif (-not $chainAllAnswered) {
+        # And the chain must have folded the worker answers. "Verification off" is not the same
+        # as "the shipped path ran": a node given no 2nd-pass artifacts also has the verifier off.
+        # It used to silently recompute every file from 1st-pass sidecars - exactly what a SEA-AD
+        # measurement did for hours while reporting the shipped path (2026-08-31). Since #4665 it
+        # refuses instead, because SecondPassFDR computes no per-run answer in any mode, so this
+        # asserts the two things that make the fold real: every 2nd-pass sidecar phase 4 read
+        # names PerFileRescoring as its producer, and phase 4 reported the fold.
+        $chainSidecars = @(Get-ChildItem -File -Path $chainDir -Filter '*.2nd-pass.fdr_scores.bin' -ErrorAction SilentlyContinue)
+        $chainWorkerSidecars = @($chainSidecars | Where-Object { Test-ProducedBy $_.FullName 'PerFileRescoring' })
+        # The fold line is the competition's (it carries the verifier state); the transfer fold
+        # emits none, so it is demanded only where the straight leg emitted one too.
+        $chainFolded = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
+            -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ runs=\d+\b') -Quiet
+        $foldLineExpected = Select-String -Path (Join-Path $straightDir 'straight.log') `
+            -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
+        if ($chainSidecars.Count -eq 0 -or $chainWorkerSidecars.Count -ne $chainSidecars.Count -or
+            ($foldLineExpected -and -not $chainFolded)) {
             $overallFail = $true
-            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - phase 4 did not report a worker " +
-                "answer for ALL files, so it recomputed some from 1st-pass sidecars rather than " +
-                "folding what the workers wrote.")
+            Write-Problem-Tc ("$name mode3 (shipped fold): FAIL - $($chainWorkerSidecars.Count) of " +
+                "$($chainSidecars.Count) 2nd-pass sidecars were written by PerFileRescoring, and phase 4 " +
+                "reported the fold: $([bool]$chainFolded).")
             $summaryLines.Add("$name mode3 (shipped fold): FAIL")
         } else {
             $summaryLines.Add("$name mode3 (shipped fold): PASS (worker answer folded for every file)")
@@ -2573,20 +2497,13 @@ foreach ($name in $selected) {
         # the suite green. That term is gone from the predicate (the pass-2 report is folded run
         # by run through ModelDiagnosticsData.Accumulator), so the scoping goes with it.
         #
-        # Nothing else in the predicate varies across these datasets: --fdrbench is never passed
-        # here, so NeedsResidentPool is false, and protein-compact is the default pass-2 mode, so
-        # every mode-3 chain meets the remaining conditions structurally. A dataset that ever
-        # needs a narrower rule should name the condition rather than restore a blanket skip.
-        # ...unless the run was asked for a configuration that cannot stream, in which case it
-        # is doing exactly what it was told and demanding the marker would fail it for
-        # complying. $cannotStreamJoin, computed once per dataset above, is that question; it
-        # governs every leg's copy of this assertion rather than each one enumerating the
-        # terms again.
+        # Nothing else in the predicate varies across these datasets: protein-compact is the
+        # default pass-2 mode, so every mode-3 chain meets the remaining conditions
+        # structurally. A dataset that ever needs a narrower rule should name the condition
+        # rather than restore a blanket skip.
         $chainStreamed = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
             -Pattern $stage7StreamMarker -SimpleMatch -Quiet
-        if ($cannotStreamJoin) {
-            $summaryLines.Add("$name mode3 (streamed join): SKIP (this configuration cannot stream the join)")
-        } elseif (-not $chainStreamed) {
+        if (-not $chainStreamed) {
             $overallFail = $true
             Write-Problem-Tc ("$name mode3 (streamed join): FAIL - phase 4 did not report the " +
                 "per-run fold, so SecondPassFDR built the whole-run survivor pool. Output is " +
@@ -2596,10 +2513,10 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode3 (streamed join): PASS (per-run fold, no all-runs pool)")
         }
 
-        # Scoped for the same reason as the shipped-fold check above: the verifier only exists on
-        # the frozen-competition path, so OSPREY_PASS2_QVALUE=transfer and the retrain modes emit
-        # NEITHER fold line and there is no split to assert. Detected from the straight leg having
-        # emitted a fold line at all, rather than from the mode flag.
+        # Scoped to the competition: the verifier only exists on the protein-compact fold, so
+        # OSPREY_PASS2_QVALUE=transfer emits NEITHER fold line and there is no split to assert.
+        # Detected from the straight leg having emitted a fold line at all, rather than from the
+        # mode flag.
         $straightUsedFrozenPath = Select-String -Path (Join-Path $straightDir 'straight.log') `
             -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
         if (-not $straightUsedFrozenPath) {
@@ -2907,10 +2824,7 @@ foreach ($name in $selected) {
         @{ Log = 'resume.log';    Mode = 'mode2'; What = 'the resume'; ModeNumber = 2 })) {
         if (Test-ModeCut $cfg $streamLeg.ModeNumber) { continue }
         $legPath = Join-Path $straightDir $streamLeg.Log
-        if ($cannotStreamJoin) {
-            $summaryLines.Add(("$name $($streamLeg.Mode) (streamed join): SKIP " +
-                '(this configuration cannot stream the join)'))
-        } elseif (-not (Test-Path -LiteralPath $legPath)) {
+        if (-not (Test-Path -LiteralPath $legPath)) {
             $summaryLines.Add("$name $($streamLeg.Mode) (streamed join): SKIP (leg not run)")
         } else {
             $legStream = Test-LogMarker -LogPath $legPath -Marker $stage7StreamMarker `

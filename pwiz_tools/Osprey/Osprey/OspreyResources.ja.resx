@@ -136,10 +136,6 @@
     <value>パイプラインが失敗しました：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>タスク{0}による{1}の完了を記録できませんでした：{2}。再開時にはこのステップがやり直されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="OspreyArgUsageProvider_AppliesToHeader_Applies_To" xml:space="preserve">
     <value>適用先</value>
     <comment>Needs Review:New resource</comment>

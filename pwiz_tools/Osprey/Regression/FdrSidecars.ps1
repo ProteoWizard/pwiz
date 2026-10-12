@@ -78,7 +78,7 @@ file pair equal on the strength of records it never read.
 $ospreyComparerType = ([System.Management.Automation.PSTypeName]'OspreyFdrSidecarComparer').Type
 if ($ospreyComparerType) {
     foreach ($required in @('CheckPass2ProteinQ', 'LoadExperimentMap', 'CompareFused',
-                            'CompareBytes')) {
+                            'CompareBytes', 'CompareExperimentBytes')) {
         if (-not $ospreyComparerType.GetMethod($required)) {
             throw ("An older OspreyFdrSidecarComparer is already loaded in this PowerShell " +
                    "session and has no $required method. A loaded .NET type cannot be " +
@@ -181,14 +181,14 @@ public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
     private const int RecordLen = 36;
-    private const byte ExpectedVersion = 7;
+    private const byte ExpectedVersion = 8;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
     // own version, one record per DISTINCT entry_id.
     public const int ExperimentHeaderLen = 32;
     public const int ExperimentRecordLen = 44;
-    private const byte ExpectedExperimentVersion = 2;
+    private const byte ExpectedExperimentVersion = 3;
     private static readonly byte[] ExperimentMagic =
         { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x45, 0x58, 0x50 }; // OSPRYEXP
 
@@ -435,6 +435,45 @@ public static class OspreyFdrSidecarComparer
             return result;
         }
         result.Readable = true;
+        return CompareByteArrays(result, a, b, maxCount);
+    }
+
+    /// CompareBytes for two experiment sidecars, over their header and records only. The
+    /// writer's validity stamp follows the records and is PROVENANCE, not content: its key
+    /// names the route (a straight-through and an HPC-chain leg legitimately differ, e.g. by
+    /// ';libfrag=0'), so it is excluded the way BlibComparer excludes the blib's stamp - the
+    /// trailer is dropped and its length field at [24..28] is blanked.
+    public static FdrByteDiff CompareExperimentBytes(string pathExpected, string pathActual, long maxCount)
+    {
+        var result = new FdrByteDiff();
+        byte[] a, b;
+        try
+        {
+            a = ExperimentBody(File.ReadAllBytes(pathExpected));
+            b = ExperimentBody(File.ReadAllBytes(pathActual));
+        }
+        catch (Exception ex)
+        {
+            result.Problem = string.Format("could not be read: {0}", ex.Message);
+            return result;
+        }
+        result.Readable = true;
+        return CompareByteArrays(result, a, b, maxCount);
+    }
+
+    private static byte[] ExperimentBody(byte[] data)
+    {
+        if (data.Length < ExperimentHeaderLen)
+            return data;
+        long bodyLen = ExperimentHeaderLen + (long)BitConverter.ToUInt64(data, 16) * ExperimentRecordLen;
+        var body = new byte[Math.Min(bodyLen, data.LongLength)];
+        Array.Copy(data, body, body.LongLength);
+        Array.Clear(body, 24, 4);
+        return body;
+    }
+
+    private static FdrByteDiff CompareByteArrays(FdrByteDiff result, byte[] a, byte[] b, long maxCount)
+    {
         result.LengthExpected = a.LongLength;
         result.LengthActual = b.LongLength;
         if (a.LongLength == b.LongLength &&
@@ -680,7 +719,9 @@ public static class OspreyFdrSidecarComparer
             return null;
         }
         ulong headerCount = BitConverter.ToUInt64(data, 16);
-        long expectedLen = (long)ExperimentHeaderLen + (long)headerCount * ExperimentRecordLen;
+        // The writer's validity stamp follows the records; its length is the u32 at [24..28].
+        long expectedLen = (long)ExperimentHeaderLen + (long)headerCount * ExperimentRecordLen +
+                           BitConverter.ToUInt32(data, 24);
         if (data.LongLength != expectedLen)
         {
             problem = "experiment sidecar length " + data.LongLength + " != header count " +
@@ -824,7 +865,8 @@ public static class OspreyFdrSidecarComparer
         long expectedLen;
         try
         {
-            expectedLen = checked(HeaderLen + (long)n * RecordLen);
+            // The writer's validity stamp follows the records; its length is the u32 at [24..28].
+            expectedLen = checked(HeaderLen + (long)n * RecordLen + BitConverter.ToUInt32(data, 24));
         }
         catch (OverflowException)
         {

@@ -86,19 +86,36 @@ done
 echo "##teamcity[progressMessage 'build.sh $*']"
 bash "$SCRIPT_DIR/build.sh" "$@" || fail "build.sh failed"
 
-# Post-build hygiene checks. Run from the repo root so git sees the full
-# working tree, not just pwiz-sharp/.
-cd "$SCRIPT_DIR/.."
+# Every Linux package, on every branch: build.sh only warns when packaging fails, but a vendor
+# build here is the one Core Linux x86_64 publishes to the download page, where a partial set
+# would replace a working download list. See the matching installer check in tcbuild.bat.
+for arg in "$@"; do
+    if [ "$arg" = "--i-agree-to-the-vendor-licenses" ]; then
+        PKG_DIR="$SCRIPT_DIR/scripts/installer/build"
+        [ -f "$PKG_DIR/installer-version.txt" ] \
+            || fail "No Linux packages were built: scripts/installer/build/installer-version.txt is missing"
+        PKG_VERSION="$(cat "$PKG_DIR/installer-version.txt")"
+        for name in "ProteoWizard-linux-x64-$PKG_VERSION.tar.gz" "ProteoWizard-NoNetRuntime-linux-x64-$PKG_VERSION.tar.gz"; do
+            [ -f "$PKG_DIR/$name" ] || fail "Linux package $name was not built"
+        done
+        break
+    fi
+done
+
+# Post-build hygiene checks, from the repo root (this script's directory) so git sees the
+# whole working tree. A git error fails the build: outside a repository git prints nothing
+# to stdout, which would read as a clean tree and pass both checks.
+cd "$SCRIPT_DIR"
 
 echo "##teamcity[progressMessage 'git ls-files --deleted (build should not delete tracked files)']"
-DELETED="$(git ls-files --deleted)"
+DELETED="$(git ls-files --deleted)" || fail "git ls-files failed"
 if [ -n "$DELETED" ]; then
     echo "$DELETED"
     fail "Build deleted tracked files"
 fi
 
 echo "##teamcity[progressMessage 'git status --porcelain (build should not leave untracked files)']"
-DIRTY="$(git status --porcelain)"
+DIRTY="$(git status --porcelain)" || fail "git status failed"
 if [ -n "$DIRTY" ]; then
     echo "$DIRTY"
     fail "Build produced files not in .gitignore"

@@ -408,15 +408,6 @@ namespace pwiz.SkylineTestFunctional
             var locatorResult = JObject.Parse(locatorResponse);
             Assert.IsNotNull(locatorResult[nameof(JSON_RPC.result)]);
 
-            // QueryAvailableMethods - special dispatch path (not on the interface)
-            string methodsResponse = server.HandleRequest(
-                Encoding.UTF8.GetBytes(buildRequest(@"QueryAvailableMethods")));
-            var methodsResult = JObject.Parse(methodsResponse);
-            string methods = (string)methodsResult[nameof(JSON_RPC.result)];
-            AssertEx.Contains(methods, nameof(IJsonToolService.GetVersion));
-            AssertEx.Contains(methods, nameof(IJsonToolService.GetSelection));
-            AssertEx.Contains(methods, nameof(IJsonToolService.ExportReport));
-
             // Error: unknown method (caught by Dispatch, returned as error JSON)
             string unknownResponse = server.HandleRequest(
                 Encoding.UTF8.GetBytes(buildRequest(@"NotARealMethod")));
