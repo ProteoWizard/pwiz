@@ -528,9 +528,9 @@ namespace pwiz.Osprey.Tasks
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
             // done upstream. State comes from either FirstPassFdrTask's
-            // planning block (in-process pipeline, DidPlan=true) or
-            // PerFileScoringTask's probe-the-disk bundle (collapsed worker
-            // path, DidPlan=false but bundle != null). A 2nd-pass FDR
+            // planning block (in-process pipeline, DidPlan=true) or each
+            // run's own reconciliation.json through the per-run hydrate
+            // (worker and resume paths, DidPlan=false). A 2nd-pass FDR
             // sidecar already on disk for any file is the signal that a
             // previous run COMPLETED Stage 7 here, so the rescore engine
             // has already produced the reconciled output; re-running it
@@ -918,8 +918,7 @@ namespace pwiz.Osprey.Tasks
         // PerFileRescoreTask. Upstream state previously assembled in
         // RunWorker (library load, hydration, compaction, consensus,
         // calibration) is produced by PerFileScoringTask's joinOnly
-        // probe-the-disk path and consumed through the lazy-rehydrate
-        // accessors. Run() above is the only entry point.
+        // load and the per-run hydrate. Run() above is the only entry point.
 
         /// <summary>
         /// Execute the per-file Stage 6 rescore loop. Mirrors
@@ -955,9 +954,16 @@ namespace pwiz.Osprey.Tasks
             out HashSet<string> rescoredFiles,
             IReadOnlyList<string> joinFileStems = null)
         {
-            // The planner's run-wide action count, for the summary line. Each run's own actions
-            // come from its own reconciliation.json through the per-run hydrate.
-            GroupReconciliationActionsByFile(reconciliationActions, out int totalReconciliation);
+            // The planner's run-wide count of non-Keep actions, for the summary line - counted,
+            // not grouped: grouping built a target list per action (30.8 M at 446 runs) only to
+            // keep the count. Each run's own actions come from its own reconciliation.json
+            // through the per-run hydrate.
+            int totalReconciliation = 0;
+            foreach (var action in reconciliationActions.Values)
+            {
+                if (action is ReconcileAction.UseCwtPeak || action is ReconcileAction.ForcedIntegration)
+                    totalReconciliation++;
+            }
 
             // file_name -> input_files index, used to pick the right mzML
             // path for spectra cache load + sibling .calibration.json.

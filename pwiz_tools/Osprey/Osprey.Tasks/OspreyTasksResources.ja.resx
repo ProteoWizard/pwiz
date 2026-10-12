@@ -453,14 +453,6 @@
     <value>再スコアリングではファイルを個別に読み込むため、統合されたラン間整合データは構築されません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from_1_cross_run_reconciliation_file_" xml:space="preserve">
-    <value>1個のラン間整合ファイルから、欠損ピークの対象と精密化された校正を{1:F1}秒で読み取りました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_" xml:space="preserve">
-    <value>{0:N0}個のラン間整合ファイルから、欠損ピークの対象と精密化された校正を{1:F1}秒で読み取りました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
     <value>「{0}」の第1パス中間ファイルを書き込めません：入力パスから場所を導出できませんでした。</value>
     <comment>Needs Review:New resource</comment>

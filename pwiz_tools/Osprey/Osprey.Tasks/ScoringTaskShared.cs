@@ -497,27 +497,12 @@ namespace pwiz.Osprey.Tasks
         /// consumes the whole-run pool. Everything else rescores per run - including the
         /// straight-through pipeline.</para>
         ///
-        /// <para><b>The <c>--input-scores</c> term is a KNOWN WART, and it is here for a measured
-        /// reason rather than a good one.</b> Keying a memory shape on how the run was invoked is
-        /// wrong in principle - the per-run artifacts exist either way, and straight-through
-        /// consequently still holds the planner's whole-experiment products (the reconciliation
-        /// action map, 30.8 M entries at 446 runs; gap-fill targets, 8.85 M; per-run consensus
-        /// targets and refined calibrations - order 13 GB) across the entire rescore.</para>
-        ///
-        /// <para>Removing the term was TRIED and reverted. Straight-through output stayed
-        /// byte-identical (mode 1 green), but the Stage-5 rehydrate leg lost 77 of 27,321
-        /// precursors a run apiece - <c>RefSpectra.copies</c> and <c>NRunsDetected</c> both
-        /// 3 -> 2, 94 <c>RetentionTimes</c> keys missing. Cause: mode 5 SKIPS PerFileRescoring,
-        /// so <c>PerFileRescoreTask.Rehydrate</c> runs and rebuilds the whole-run pool for
-        /// Stage 7 via <c>OverlayReconciledIntoFiles(..., ctx.Get&lt;PerFileGapFillForRescore&gt;())</c>.
-        /// That path needs gap-fill across ALL runs by design, and a per-run FirstPassFDR
-        /// rehydrate has none to give it.</para>
-        ///
-        /// <para>So extending this to straight-through is NOT independent of Stage 7's own
-        /// O(runs) pool - it is blocked behind the same lean-row work (#4486). The right signal
-        /// remains the SUMMARY'S EXISTENCE rather than an argument, since it is written when
-        /// planning ends and so answers "has the producing phase finished?" the way an artifact
-        /// should; the flag term is what has to go when Stage 7 stops needing the pool.</para>
+        /// <para>The signal is the SUMMARY'S EXISTENCE rather than how the run was invoked: it is
+        /// written when planning ends, so it answers "has the producing phase finished?" the way
+        /// an artifact should, and the straight-through pipeline rescores per run like every other
+        /// route. An <c>--input-scores</c> term once kept straight-through off this route, because
+        /// Stage 7 rebuilt the whole-run pool with cross-run gap-fill; that rebuild is gone, and
+        /// the term went with it.</para>
         ///
         /// <para>The summary is probed by header rather than read, so this stays cheap enough to
         /// call from either site. Its ABSENCE returns false rather than failing here: the run is

@@ -364,12 +364,6 @@
   <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Re_scoring_loads_the_file_on_its_own__so_no_combined_cross_run_reconciliation_data_is_" xml:space="preserve">
     <value>Re-scoring loads the file on its own, so no combined cross-run reconciliation data is built.</value>
   </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from_1_cross_run_reconciliation_file_" xml:space="preserve">
-    <value>Read missing-peak targets and refined calibrations from 1 cross-run reconciliation file in {1:F1}s</value>
-  </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_" xml:space="preserve">
-    <value>Read missing-peak targets and refined calibrations from {0:N0} cross-run reconciliation files in {1:F1}s</value>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
     <value>Cannot write the first-pass intermediate file for '{0}': no location could be derived from its input path.</value>
   </data>

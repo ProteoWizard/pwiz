@@ -1293,8 +1293,7 @@ namespace pwiz.Osprey.Tasks
             //
             // This is the fan-out contract stated as code: entering PerFileRescoring must cost
             // the same whether the process was handed 1 run or 446, because an HPC node holding
-            // one run cannot pay for the other 445 and must still produce identical output. The
-            // all-runs path below stays for the tasks that genuinely join.
+            // one run cannot pay for the other 445 and must still produce identical output.
             // The SAME early return for the reconciled-input merge, whose consumer is Stage 7's
             // fold rather than the rescore loop (issue #4486). Both legs want exactly this: the
             // run names, their parquet paths and their calibrations, and no rows. What differs

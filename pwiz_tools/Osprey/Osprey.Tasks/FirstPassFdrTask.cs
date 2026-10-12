@@ -763,14 +763,6 @@ namespace pwiz.Osprey.Tasks
             var config = ctx.Config;
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
 
-            // When the rescore hydrates per run there is nothing for this task to adopt. Building
-            // the experiment-wide bundle here would rebuild exactly what the per-run loop is
-            // about to read one run at a time - and it would do it by the OTHER route: not the
-            // upstream load (already skipped), but this task's own
-            // LoadOwnReconciliationBundle -> StreamOwnReconciliationBundle, which walks every
-            // run's envelope and parquet. Removing an O(runs) pre-load from one producer only
-            // moves it if the second producer is left standing.
-            //
             // What downstream still needs from this task is the per-run SURVIVOR LOADER, and it
             // needs the retained base_id set to build it. That set comes from the analysis-wide
             // summary rather than from a bundle assembled by reading every run - which is the
@@ -787,33 +779,26 @@ namespace pwiz.Osprey.Tasks
             //
             // The summary is a declared output of this task, so a missing one makes the task not
             // current and a full re-run rebuilds it.
-            if (ScoringTaskShared.PerRunSurvivorLoaderAvailable(config))
+            if (ScoringTaskShared.ReadRetainedBaseIds(config, out string retainedError) == null)
             {
-                throw new InvalidOperationException(string.Format(
-                    @"First-pass state was demanded by a selection that does not rehydrate per run, although the retained base_id summary is on disk: {0}",
-                    RetainedBaseIdSidecar.PathFor(config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config))));
+                ctx.LogError(retainedError);
+                ctx.ExitCode = 1;
+                return false;
             }
-            ScoringTaskShared.ReadRetainedBaseIds(config, out string retainedError);
-            ctx.LogError(retainedError);
-            ctx.ExitCode = 1;
-            return false;
+            throw new InvalidOperationException(string.Format(
+                @"First-pass state was demanded by a selection that does not rehydrate per run, although the retained base_id summary is readable: {0}",
+                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config))));
         }
 
         /// <summary>
-        /// Build the post-Stage-5 rescore bundle from THIS task's own
-        /// <c>.1st-pass.fdr_scores.bin</c> + <c>.reconciliation.json</c> sidecars
-        /// for a straight-through resume, where the driver skipped
-        /// <see cref="Run"/> because those outputs were already valid on disk
-        /// (<see cref="PipelineContext.CanRehydrate"/>) and a downstream task is
-        /// the first to touch this task's state. Overlays the first-pass q-values
-        /// onto the per-file stubs and parses the reconciliation envelopes -- the
-        /// same bundle PerFileScoring's worker-mode hydration produces, but owned
-        /// here against this task's own outputs. Returns <c>null</c> (with
-        /// <see cref="PipelineContext.ExitCode"/> set) on a load failure; because
-        /// CanRehydrate gated the sidecars as valid, that is a genuine fault, not
-        /// a "recompute instead" case. The stubs it loads carry no PIN features, which
-        /// is what keeps PerFileRescore's "Features != null means rescored" parquet
-        /// criterion and SecondPassFDR's feature reload correct.
+        /// Rebuild this task's state for a resume, where the driver skipped <see cref="Run"/>
+        /// because its outputs were already valid on disk
+        /// (<see cref="PipelineContext.CanRehydrate"/>) and a downstream task is the first to
+        /// touch its state: publish the per-run survivor loader, built from the analysis-wide
+        /// retained base_id summary, and every planning slot EMPTY - each run's actions,
+        /// gap-fill and refined calibration are read from its own reconciliation.json when it
+        /// is re-scored. Returns false (with <see cref="PipelineContext.ExitCode"/> set) when the
+        /// summary cannot be read.
         /// </summary>
         private bool RehydrateForPerRunRescore(
             PipelineContext ctx, List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
@@ -821,10 +806,9 @@ namespace pwiz.Osprey.Tasks
             // The lists this arm republishes as CompactedEntries must be EMPTY: every load that
             // reaches it (the lean --input-files load and the per-run --input-scores names load)
             // leaves them so, and each run is compacted against the retained set as it is
-            // hydrated. Checked rather than assumed. The stubs-only resident load and this arm
-            // each ask CanHydratePerRun, whose last term reads disk, so a disagreement between
-            // the two would publish uncompacted stubs and fold the second pass over every
-            // pre-compaction row - a wrong report with no error. O(files) to count.
+            // hydrated. Checked rather than assumed, because uncompacted stubs here would fold
+            // the second pass over every pre-compaction row - a wrong report with no error.
+            // O(files) to count.
             long residentStubs = 0;
             foreach (var kvp in perFileEntries)
                 residentStubs += kvp.Value.Count;
@@ -853,45 +837,10 @@ namespace pwiz.Osprey.Tasks
                 perFileParquetPaths, ctx.Config, retainedBaseIds, ctx.Get<SequencePool>().Value);
             _firstPassBaseIds = retainedBaseIds;
 
-            // Gap-fill and the refined calibrations ARE read across runs here, and that is the
-            // honest scope of the remaining coupling rather than an oversight. Stage 7's pool
-            // rebuild (PerFileRescoreTask.Rehydrate -> OverlayReconciledIntoFiles) overlays every
-            // run's reconciled parquet and needs the gap-fill targets to restore the detections
-            // gap-fill transferred into runs that did not find them independently. Published
-            // empty, it costs exactly those: 94 missing RetentionTimes rows on Stellar, with
-            // NRunsDetected falling 3 -> 2.
-            //
-            // This is envelope JSON only - no parquet pass, no stub materialisation - so it is a
-            // small fraction of the all-runs pre-load this path removed. It should become LAZY
-            // (built on first read, like the RescoredEntries milestone) so a --task
-            // PerFileRescoring worker, which never rebuilds the pool, does not pay it at all.
-            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
-            var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            var sequencePool = ctx.Get<SequencePool>().Value;
-            // ONE read fills BOTH maps, so both byproducts share a single build guarded here
-            // rather than each carrying its own factory - two factories over the same two
-            // dictionaries would read every envelope twice for whoever asked second.
-            bool envelopesRead = false;
-            Action readEnvelopes = () =>
-            {
-                if (envelopesRead)
-                    return;
-                envelopesRead = true;
-                var sw = Stopwatch.StartNew();
-                RescoreHydration.ReadGapFillAndCalibrations(
-                    perFileParquetPaths.Values, perFileGapFill, refinedCalibrations, sequencePool);
-                ctx.LogVerbose(CountText.Format(perFileGapFill.Count,
-                    OspreyTasksResources.FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from_1_cross_run_reconciliation_file_,
-                    OspreyTasksResources.FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_,
-                    sw.Elapsed.TotalSeconds));
-            };
-            // NOT assigned to _perFileGapFillForRescore. That field's only reader is the release
-            // below, and doing so would force the read right here - deferring it and then
-            // immediately demanding it. The release does not need it: see the note at its call
-            // site, which already says the analysis-wide retained set alone is the right
-            // predicate on THIS path because every run's gap-fill target is already inside the
-            // set the planner wrote. Leaving it null makes that stated reasoning the actual
-            // behaviour instead of a claim next to a redundant union.
+            // No cross-run gap-fill or refined-calibration map is built here: the per-run hydrate
+            // reads each run's own out of its reconciliation.json inside its own iteration, and
+            // the Stage 7 overlay that needed the all-runs form was removed. The release below
+            // needs none either - see the note at its call site.
             _perFileGapFillForRescore = null;
 
             // Release on this path too, for the reason Rehydrate's own release block gives: this
@@ -922,10 +871,8 @@ namespace pwiz.Osprey.Tasks
             // contents do not. No compaction runs here: the lists are empty, and each run is
             // compacted against the retained set as it is hydrated.
             ctx.Publish(new ReconciliationActions(new Dictionary<(string, int), ReconcileAction>()));
-            ctx.Publish(new RefinedCalibrations(
-                () => { readEnvelopes(); return refinedCalibrations; }));
-            ctx.Publish(new PerFileGapFillForRescore(
-                () => { readEnvelopes(); return perFileGapFill; }));
+            ctx.Publish(new RefinedCalibrations(new Dictionary<string, RTCalibration>()));
+            ctx.Publish(new PerFileGapFillForRescore(new Dictionary<string, List<GapFillTarget>>()));
             ctx.Publish(new PerFileConsensusTargets(
                 new Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>()));
             ctx.Publish(new CompactedEntries(perFileEntries));

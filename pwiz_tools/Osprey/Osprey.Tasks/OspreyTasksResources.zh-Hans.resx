@@ -453,14 +453,6 @@
     <value>重新评分时单独加载该文件，因此不构建合并的跨运行协调数据。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from_1_cross_run_reconciliation_file_" xml:space="preserve">
-    <value>已在 {1:F1}s 内从 1 个跨运行协调文件读取缺失峰目标和优化后的校准</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_" xml:space="preserve">
-    <value>已在 {1:F1}s 内从 {0:N0} 个跨运行协调文件读取缺失峰目标和优化后的校准</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
     <value>无法写入“{0}”的第一轮中间文件：无法根据其输入路径确定位置。</value>
     <comment>Needs Review:New resource</comment>

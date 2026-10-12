@@ -934,26 +934,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Read missing-peak targets and refined calibrations from {0:N0} cross-run reconciliation files in {1:F1}s.
-        /// </summary>
-        public static string FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_" +
-                        "calibrations_from__0__cross_run_reconciliation_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Read missing-peak targets and refined calibrations from 1 cross-run reconciliation file in {1:F1}s.
-        /// </summary>
-        public static string FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from_1_cross_run_reconciliation_file_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_" +
-                        "calibrations_from_1_cross_run_reconciliation_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Model diagnostics: the first pass is already complete, so its report is built from the first-pass intermediate files. Nothing is re-run..
         /// </summary>
         public static string FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_ {
