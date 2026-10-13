@@ -82,7 +82,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly ISet<string> KnownVariables = new HashSet<string>(VariableNameComparer)
         {
-            @"OSPREY_ALLOW_UNFIXED_RESIDENT", @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
+            @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
             @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
             @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
             @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
@@ -822,8 +822,7 @@ namespace pwiz.Osprey.Core
         ///     Restores calibration while keeping the re-scoring ID gain.
         ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
-        ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
-        ///     <c>ResidentPaths</c>.
+        ///     pool. Re-adding a resident pool for it is the #4446 regression.
         /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
         /// <see cref="Pass2QValueUnrecognized"/>). Re-read on each access, so a command-line
         /// test can set it (<see cref="OverrideVariables"/>).
@@ -909,86 +908,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool Pass2VerifyWorker =>
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
-
-        /// <summary>
-        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take. Legal values are exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>, which has
-        /// been EMPTY since projection-off left it (2026-10-10), so no value admits anything;
-        /// any resident path is refused no matter what this is set to.
-        ///
-        /// This REPLACES the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c>, which granted
-        /// amnesty to every trigger at once. That is not a hypothetical failure: it let
-        /// <c>OSPREY_PASS2_QVALUE=transfer</c> silently regress back onto the resident pool for
-        /// ten days (#4438 removed the forcing, a #4446 merge artifact restored it), because
-        /// developers simply set the boolean and a re-broken memory bound looked like normal
-        /// operating procedure. A named token cannot do that: an unlisted path errors even with
-        /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
-        /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
-        ///
-        /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
-        /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. A LIST keeps the property that matters - every
-        /// admitted path is still named individually, so nothing rides along unnamed the way
-        /// the blanket boolean allowed - while a single value only ever prevented honest
-        /// work.</para>
-        ///
-        /// Re-read on each access, like <see cref="Pass2QValue"/>. Intended for local testing. The standing
-        /// <c>regression.ps1</c> gate names NO token on any leg - #4536 removed the last one -
-        /// and an INHERITED value is cleared at startup unless a deliberate A/B switch needs it.
-        /// A resident path appearing anywhere in the gate fails CI rather than riding along on
-        /// an ambient allowance, and any token the gate is ever made to require has to carry an
-        /// open issue to remove it again.
-        /// </summary>
-        public static string AllowUnfixedResident =>
-            (GetVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
-
-        /// <summary>
-        /// True when <see cref="AllowUnfixedResident"/> names anything that is not a legal token,
-        /// so the guard can say "that value is not a known path" instead of printing the
-        /// same message it prints when the variable is unset. Without this, a typo
-        /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
-        /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
-        /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
-        /// </summary>
-        public static bool AllowUnfixedResidentUnrecognized => UnrecognizedResidentTokens.Length > 0;
-
-        /// <summary>
-        /// Just the unrecognized tokens of <see cref="AllowUnfixedResident"/>, comma separated.
-        /// The warning names THESE rather than the whole value: the flag is a list and
-        /// <c>NamesResidentPath</c> tests each token independently, so a value pairing a retired
-        /// token with a live one still grants the live one. Empty when every token is known.
-        /// </summary>
-        public static string UnrecognizedResidentTokens =>
-            string.Join(@", ", SplitResidentTokens(AllowUnfixedResident).Where(
-                v => !ResidentPaths.KNOWN_UNFIXED.Any(
-                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase))));
-
-        /// <summary>
-        /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
-        /// <paramref name="token"/>. Case-insensitive, matching how the rest of the CLI parses
-        /// tokens: the guard's message names the exact token to set, so rejecting the operator's
-        /// own value for capitalization would read as the guard ignoring what they just did.
-        /// </summary>
-        public static bool NamesResidentPath(string allowValue, string token)
-        {
-            return SplitResidentTokens(allowValue).Any(
-                v => string.Equals(v, token, StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <summary>
-        /// The individual tokens in an OSPREY_ALLOW_UNFIXED_RESIDENT setting. Comma and semicolon
-        /// both separate, and empty entries are dropped, so a trailing separator is not a typo
-        /// the operator has to hunt for.
-        /// </summary>
-        private static IEnumerable<string> SplitResidentTokens(string allowValue)
-        {
-            if (string.IsNullOrEmpty(allowValue))
-                return Array.Empty<string>();
-            return allowValue
-                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(v => v.Trim())
-                .Where(v => v.Length > 0);
-        }
 
         /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
         /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default

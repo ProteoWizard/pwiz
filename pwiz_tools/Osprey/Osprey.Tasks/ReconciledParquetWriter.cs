@@ -187,7 +187,7 @@ namespace pwiz.Osprey.Tasks
         /// without that, a worker rescoring a single parquet stamps a single-file
         /// hash that the downstream --task SecondPassFDR node rejects on
         /// mismatch. The join file stems come from the planner's
-        /// reconciliation.json (v2+) via <see cref="RescoreInputs.JoinFileStems"/>;
+        /// reconciliation.json (v2+), when the caller passes them;
         /// fall back to the config-derived hash when the caller passed none
         /// (in-process pipeline where config.InputFiles already has all files, or
         /// v1 backward compat).
