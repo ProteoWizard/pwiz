@@ -58,6 +58,7 @@ namespace pwiz.Skyline.SettingsUI
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.ceLabel = new System.Windows.Forms.Label();
             this.tabAlphaSource = new System.Windows.Forms.TabPage();
+            this.cbUseGpu = new System.Windows.Forms.CheckBox();
             this.btnCarafeModelBrowse = new System.Windows.Forms.Button();
             this.textCarafeModel = new System.Windows.Forms.TextBox();
             this.labelCarafeModel = new System.Windows.Forms.Label();
@@ -288,11 +289,19 @@ namespace pwiz.Skyline.SettingsUI
             // tabAlphaSource
             // 
             this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
+            this.tabAlphaSource.Controls.Add(this.cbUseGpu);
             this.tabAlphaSource.Controls.Add(this.btnCarafeModelBrowse);
             this.tabAlphaSource.Controls.Add(this.textCarafeModel);
             this.tabAlphaSource.Controls.Add(this.labelCarafeModel);
             resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
             this.tabAlphaSource.Name = "tabAlphaSource";
+            //
+            // cbUseGpu
+            //
+            resources.ApplyResources(this.cbUseGpu, "cbUseGpu");
+            this.cbUseGpu.Name = "cbUseGpu";
+            this.cbUseGpu.UseVisualStyleBackColor = true;
+            this.cbUseGpu.CheckedChanged += new System.EventHandler(this.cbUseGpu_CheckedChanged);
             //
             // btnCarafeModelBrowse
             //
@@ -422,6 +431,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckBox cbKeepRedundant;
         private System.Windows.Forms.CheckBox cbFilter;
         private System.Windows.Forms.TabPage tabAlphaSource;
+        private System.Windows.Forms.CheckBox cbUseGpu;
         private System.Windows.Forms.Button btnCarafeModelBrowse;
         private System.Windows.Forms.TextBox textCarafeModel;
         private System.Windows.Forms.Label labelCarafeModel;

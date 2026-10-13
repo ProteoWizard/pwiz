@@ -2340,7 +2340,75 @@ namespace pwiz.Skyline.Model {
                         "lled_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to No NVIDIA GPU was found. Predicting on the GPU needs an NVIDIA GPU and its driver..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the" +
+                        "_GPU_needs_an_NVIDIA_GPU_and_its_driver_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NVIDIA GPU.
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_NVIDIA_GPU {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_NVIDIA_GPU", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} has compute capability {1}, but predicting on the GPU needs compute capability {2} or later..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_The__0__has_compute_capability__1___but_predicting_on_the_GPU_needs_compute_capability__2__or_later_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_The__0__has_compute_capability__1___but_pr" +
+                        "edicting_on_the_GPU_needs_compute_capability__2__or_later_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The NVIDIA driver supports CUDA {0}, but predicting on the GPU needs a driver for CUDA {1} or later. Update the NVIDIA driver to predict on the GPU..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_The_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later__Update_the_NVIDIA_driver_to_predict_on_the_GPU_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_The_NVIDIA_driver_supports_CUDA__0___but_p" +
+                        "redicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later__Update_the_NVIDIA_dri" +
+                        "ver_to_predict_on_the_GPU_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This build of Skyline does not list the NVIDIA CUDA runtime packages..
+        /// </summary>
+        public static string TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NVIDIA_CUDA_runtime_packages_ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NV" +
+                        "IDIA_CUDA_runtime_packages_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading the NVIDIA CUDA runtime (package {0} of {1}).
+        /// </summary>
+        public static string TorchRuntimes_InstallCuda_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1__ {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_InstallCuda_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Installing the NVIDIA CUDA runtime.
+        /// </summary>
+        public static string TorchRuntimes_InstallCuda_Installing_the_NVIDIA_CUDA_runtime {
+            get {
+                return ResourceManager.GetString("TorchRuntimes_InstallCuda_Installing_the_NVIDIA_CUDA_runtime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to precursor.
         /// </summary>

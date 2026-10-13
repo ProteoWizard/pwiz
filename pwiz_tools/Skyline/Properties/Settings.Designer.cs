@@ -1710,7 +1710,19 @@ namespace pwiz.Skyline.Properties {
                 this["LibraryKeepRedundant"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AlphaPeptDeepUseGpu {
+            get {
+                return ((bool)(this["AlphaPeptDeepUseGpu"]));
+            }
+            set {
+                this["AlphaPeptDeepUseGpu"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]

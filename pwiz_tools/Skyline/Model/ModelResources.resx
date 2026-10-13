@@ -978,4 +978,26 @@ Would you like to continue building this predicted library?</value>
     <value>{0} or {1}</value>
     <comment>Joins the two acceptable file-identity column names (FileName, ReplicateName) in a missing-header error; localize the word "or".</comment>
   </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver_" xml:space="preserve">
+    <value>No NVIDIA GPU was found. Predicting on the GPU needs an NVIDIA GPU and its driver.</value>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_NVIDIA_GPU" xml:space="preserve">
+    <value>NVIDIA GPU</value>
+    <comment>Stands in for the GPU's name, as {0} in "The {0} has compute capability...", when the driver does not give it.</comment>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_The__0__has_compute_capability__1___but_predicting_on_the_GPU_needs_compute_capability__2__or_later_" xml:space="preserve">
+    <value>The {0} has compute capability {1}, but predicting on the GPU needs compute capability {2} or later.</value>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_The_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later__Update_the_NVIDIA_driver_to_predict_on_the_GPU_" xml:space="preserve">
+    <value>The NVIDIA driver supports CUDA {0}, but predicting on the GPU needs a driver for CUDA {1} or later. Update the NVIDIA driver to predict on the GPU.</value>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NVIDIA_CUDA_runtime_packages_" xml:space="preserve">
+    <value>This build of Skyline does not list the NVIDIA CUDA runtime packages.</value>
+  </data>
+  <data name="TorchRuntimes_InstallCuda_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1__" xml:space="preserve">
+    <value>Downloading the NVIDIA CUDA runtime (package {0} of {1})</value>
+  </data>
+  <data name="TorchRuntimes_InstallCuda_Installing_the_NVIDIA_CUDA_runtime" xml:space="preserve">
+    <value>Installing the NVIDIA CUDA runtime</value>
+  </data>
 </root>

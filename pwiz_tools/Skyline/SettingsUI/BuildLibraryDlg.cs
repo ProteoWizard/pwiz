@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
+using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -103,6 +104,9 @@ namespace pwiz.Skyline.SettingsUI
         // Values used to keep from overwriting user changes to synchronized fields
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
+
+        private TorchRuntimes _torchRuntimes;
+        private bool _updatingUseGpu;
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -292,10 +296,123 @@ namespace pwiz.Skyline.SettingsUI
 
             Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
             {
-                CarafeModelPath = carafeModelPath.Length > 0 ? carafeModelPath : null
+                CarafeModelPath = carafeModelPath.Length > 0 ? carafeModelPath : null,
+                TorchRuntimes = TorchRuntimes,
+                UseGpu = UseGpu
             };
+            // Not when this session already loaded a runtime, which decides the box
+            if (TorchRuntimes.CanChooseRuntime)
+                Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
 
             return true;
+        }
+
+        /// <summary>
+        /// The libtorch runtimes AlphaPeptDeep predicts with, which decide whether Use GPU can be checked.
+        /// </summary>
+        public TorchRuntimes TorchRuntimes
+        {
+            get { return _torchRuntimes ??= new TorchRuntimes(); }
+            set
+            {
+                _torchRuntimes = value;
+                UpdateUseGpu();
+            }
+        }
+
+        /// <summary>
+        /// Whether AlphaPeptDeep predicts on the GPU. Checking it says why when the GPU cannot be used,
+        /// and otherwise downloads the NVIDIA CUDA runtime first, if it is not installed.
+        /// </summary>
+        public bool UseGpu
+        {
+            get { return cbUseGpu.Checked; }
+            set { cbUseGpu.Checked = value; }
+        }
+
+        /// <summary>
+        /// Shows the runtime this session already predicted with, which it cannot change, or else checks
+        /// Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is installed.
+        /// </summary>
+        private void UpdateUseGpu()
+        {
+            var runtimes = TorchRuntimes;
+            SetUseGpu(runtimes.CanChooseRuntime
+                ? runtimes.CanUseCuda && runtimes.IsCudaInstalled && Settings.Default.AlphaPeptDeepUseGpu
+                : LibTorchRuntime.Loaded.IsCuda);
+        }
+
+        private void cbUseGpu_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_updatingUseGpu)
+                return;
+
+            string reason = null;
+            if (!TorchRuntimes.CanChooseRuntime)
+                reason = SettingsUIResources.BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_;
+            else if (cbUseGpu.Checked)
+                reason = TorchRuntimes.GetCudaUnavailableReason();
+
+            if (reason != null)
+            {
+                MessageDlg.Show(this, reason);
+                SetUseGpu(!cbUseGpu.Checked);
+            }
+            else if (cbUseGpu.Checked && !TorchRuntimes.IsCudaInstalled && !InstallCudaRuntime())
+            {
+                SetUseGpu(false);
+            }
+        }
+
+        /// <summary>
+        /// Checks or unchecks Use GPU without asking anything of the user.
+        /// </summary>
+        private void SetUseGpu(bool useGpu)
+        {
+            _updatingUseGpu = true;
+            try
+            {
+                cbUseGpu.Checked = useGpu;
+            }
+            finally
+            {
+                _updatingUseGpu = false;
+            }
+        }
+
+        /// <summary>
+        /// Downloads and installs the CUDA runtime, once the user agrees to its size. Returns false if the
+        /// user declines, or the download fails or is canceled.
+        /// </summary>
+        private bool InstallCudaRuntime()
+        {
+            long downloadSize = TorchRuntimes.CudaInstaller.PackageSet.TotalSize;
+            string message = string.Format(SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime,
+                (downloadSize / 1e9).ToString(@"0.0", LocalizationHelper.CurrentCulture));
+            using (var confirmDlg = new MultiButtonMsgDlg(message, SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Download))
+            {
+                if (confirmDlg.ShowDialog(this) != DialogResult.OK)
+                    return false;
+            }
+
+            try
+            {
+                using var longWaitDlg = new LongWaitDlg();
+                var status = longWaitDlg.PerformWork(this, 0, progressMonitor =>
+                {
+                    IProgressStatus progressStatus = new ProgressStatus();
+                    TorchRuntimes.InstallCuda(progressMonitor, ref progressStatus);
+                });
+                return !status.IsCanceled;
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                MessageDlg.ShowWithException(this,
+                    SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_, x);
+                return false;
+            }
         }
 
         /// <summary>
@@ -930,6 +1047,8 @@ namespace pwiz.Skyline.SettingsUI
                 if (radioAlphaSource.Checked)
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
+                    // Only now, so the NVIDIA driver is not loaded for the other library sources
+                    UpdateUseGpu();
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 }
                 else // must be Koina

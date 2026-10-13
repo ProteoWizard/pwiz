@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     /// <summary>
     /// Builds a library of AlphaPeptDeep MS2 and RT predictions for the document's precursors. The
     /// models run in process through CarafeSharp's TorchSharp port of peptdeep, on an NVIDIA GPU when
-    /// one is usable and otherwise on the CPU. The predictions are written as the predict.speclib.tsv
+    /// the CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on the CPU. The predictions are written as the predict.speclib.tsv
     /// that peptdeep 1.5.0's "cmd-flow --task_workflow library" wrote when Skyline ran it in Python,
     /// using that workflow's defaults, and are then imported through BlibBuild as before. CCS is not
     /// predicted: CarafeSharp has no port of the CCS model.
@@ -148,6 +148,17 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// the collision energy and instrument it was trained on.
         /// </summary>
         public string CarafeModelPath { get; set; }
+
+        /// <summary>
+        /// The libtorch runtimes to predict with.
+        /// </summary>
+        public TorchRuntimes TorchRuntimes { get; set; } = new TorchRuntimes();
+
+        /// <summary>
+        /// Whether to predict on the GPU, which needs the CUDA runtime installed. Otherwise, and when this
+        /// process already predicted on the CPU, prediction runs on the CPU.
+        /// </summary>
+        public bool UseGpu { get; set; }
 
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
@@ -246,7 +257,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var precursors = ReadPrecursorInputFile();
             try
             {
-                var device = TorchDevice.Resolve(@"gpu", out _);
+                // Before anything touches TorchSharp, which would otherwise look for libtorch beside the executable
+                var runtime = TorchRuntimes.Load(UseGpu);
+                var device = TorchDevice.Resolve(runtime.IsCuda ? TorchDevice.GPU : TorchDevice.CPU, out _);
                 Messages.WriteAsyncUserMessage(device.type == DeviceType.CUDA
                     ? ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU
                     : ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU);
