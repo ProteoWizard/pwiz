@@ -27,6 +27,9 @@
   <ItemGroup>
     <!-- The test data package list TestData.cs reads, which the data scripts share. -->
     <None Include="..\testdata.json" Link="testdata.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Committed subsets of the test data packages, which the tests run on every commit with no
+         download (built by ai/scripts/CarafeSharp/SubsetData). -->
+    <None Include="TestData\*.zip" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

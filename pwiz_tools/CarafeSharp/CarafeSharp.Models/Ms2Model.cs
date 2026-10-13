@@ -85,34 +85,48 @@ namespace pwiz.CarafeSharp.Models
         private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device, AcquisitionVocabulary stored)
         {
             var source = new Dictionary<string, Tensor>(weights, StringComparer.Ordinal);
-            AcquisitionVocabulary vocabulary;
-            if (source.TryGetValue(MetaEmbedding.ACQUISITION_WEIGHT, out var acquisition))
+            ModelMs2Bert network = null;
+            try
             {
-                // A layer without its list was written by a CarafeSharp network saved directly, in the default order.
-                var held = stored ?? AcquisitionVocabulary.DEFAULT;
-                if (acquisition.shape[1] != held.Width)
+                AcquisitionVocabulary vocabulary;
+                if (source.TryGetValue(MetaEmbedding.ACQUISITION_WEIGHT, out var acquisition))
                 {
-                    throw new InvalidDataException(string.Format(@"The MS2 model's acquisition layer has {0} columns, but its list ({1}) has {2}.",
-                        acquisition.shape[1], held, held.Width));
+                    // A layer without its list was written by a CarafeSharp network saved directly, in the default order.
+                    var held = stored ?? AcquisitionVocabulary.DEFAULT;
+                    if (acquisition.shape[1] != held.Width)
+                    {
+                        throw new InvalidDataException(string.Format(@"The MS2 model's acquisition layer has {0} columns, but its list ({1}) has {2}.",
+                            acquisition.shape[1], held, held.Width));
+                    }
+                    vocabulary = held.WithKnownValues();
+                    if (vocabulary.Width > held.Width)
+                        source[MetaEmbedding.ACQUISITION_WEIGHT] = PlaceColumns(acquisition, held, vocabulary);
                 }
-                vocabulary = held.WithKnownValues();
-                if (vocabulary.Width > held.Width)
-                    source[MetaEmbedding.ACQUISITION_WEIGHT] = PlaceColumns(acquisition, held, vocabulary);
+                else
+                {
+                    vocabulary = AcquisitionVocabulary.DEFAULT;
+                    source[MetaEmbedding.ACQUISITION_WEIGHT] = zeros(ModelMs2Bert.META_DIM - 1, vocabulary.Width);
+                }
+                network = new ModelMs2Bert(acquisitionWidth: vocabulary.Width);
+                StateDict.Load(network, source);
+                network.to(device);
+                network.eval();
+                return new Ms2Model(network, device, vocabulary);
             }
-            else
+            catch
             {
-                vocabulary = AcquisitionVocabulary.DEFAULT;
-                source[MetaEmbedding.ACQUISITION_WEIGHT] = zeros(ModelMs2Bert.META_DIM - 1, vocabulary.Width);
+                network?.Dispose();
+                throw;
             }
-            var network = new ModelMs2Bert(acquisitionWidth: vocabulary.Width);
-            StateDict.Load(network, source);
-            foreach (var tensor in source.Values.Except(weights.Values))
-                tensor.Dispose();
-            foreach (var tensor in weights.Values)
-                tensor.Dispose();
-            network.to(device);
-            network.eval();
-            return new Ms2Model(network, device, vocabulary);
+            finally
+            {
+                // The tensors made here and the loaded weights; by reference, as Tensor.Equals compares contents.
+                var loaded = new HashSet<Tensor>(weights.Values, ReferenceEqualityComparer.Instance);
+                foreach (var tensor in source.Values.Where(t => !loaded.Contains(t)))
+                    tensor.Dispose();
+                foreach (var tensor in weights.Values)
+                    tensor.Dispose();
+            }
         }
 
         /// <summary>

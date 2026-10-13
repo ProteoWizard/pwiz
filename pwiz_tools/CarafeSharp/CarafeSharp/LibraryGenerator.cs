@@ -198,6 +198,12 @@ namespace pwiz.CarafeSharp
                         Log(string.Format(CultureInfo.InvariantCulture,
                             @"Pairs: dropped {0} precursors whose target or decoy partner had fewer than {1} fragments, so every pair " +
                             @"is written whole (Carafe keeps them unpaired)", _pairGate.Dropped.Count, _settings.MinFragments));
+                        if (_pairGate.ReleasedUnpaired > 0)
+                        {
+                            Log(string.Format(CultureInfo.InvariantCulture,
+                                @"Pairs: wrote {0} precursors without a partner, whose partner side has no precursor of their charge and " +
+                                @"modifications to predict", _pairGate.ReleasedUnpaired));
+                        }
                     }
                     var finishClock = Stopwatch.StartNew();
                     writer.Finish();
@@ -406,6 +412,15 @@ namespace pwiz.CarafeSharp
                     @"From {0}: precursor m/z {1}-{2}, fragment m/z {3}-{4}, NCE {5}, rt_max {6}",
                     CarafeModelDirectory.META_FILE, _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz,
                     _settings.MaxFragmentMz, _settings.Nce, _settings.RtMax));
+                var rtMaxes = modelDirectory.Runs.Select(r => r.RtMax).Distinct().ToList();
+                if (rtMaxes.Count > 1)
+                {
+                    Log(string.Format(CultureInfo.InvariantCulture,
+                        @"The training runs in {0} have different rt_max ({1}): as Carafe does, the library takes the last, {2}, " +
+                        @"but training normalized RT by the largest, {3}, so library RTs scale by {2}/{3}.",
+                        CarafeModelDirectory.META_FILE, string.Join(@", ", rtMaxes.Select(v => v.ToString(CultureInfo.InvariantCulture))),
+                        _settings.RtMax, rtMaxes.Max()));
+                }
             }
             else if (_settings.ApplyTrainingRunMeta)
             {

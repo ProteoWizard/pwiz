@@ -513,6 +513,21 @@ namespace pwiz.CarafeSharp.Proteome
                     settings.TrainingType = trainingType;
                 if (string.Equals(settings.TrainingType, @"test", StringComparison.OrdinalIgnoreCase))
                     throw new NotSupportedException(@"-tf test is not supported by CarafeSharp");
+                if (!new[] { @"all", @"ms2", @"rt" }.Contains(settings.TrainingType, StringComparer.Ordinal))
+                {
+                    // -model is CarafeSharp's, so it takes only the values training does; -model_dir keeps
+                    // Carafe's reading, where any other value predicts with neither fine-tuned model.
+                    if (hasModelFile)
+                    {
+                        if (!new[] { @"all", @"ms2", @"rt" }.Contains(settings.TrainingType, StringComparer.OrdinalIgnoreCase))
+                            throw new NotSupportedException(@"-tf " + settings.TrainingType + @" is not supported by CarafeSharp; all, ms2 or rt");
+                        settings.TrainingType = settings.TrainingType.ToLowerInvariant();
+                    }
+                    else
+                    {
+                        Warnings.Add(@"-tf " + settings.TrainingType + @" is not all, ms2 or rt: as in Carafe, the library predicts with neither fine-tuned model.");
+                    }
+                }
                 CheckIonMobilityTrainingType(settings);
             }
             if (TryGet(@"device", out string device))

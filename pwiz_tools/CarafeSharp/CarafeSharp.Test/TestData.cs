@@ -51,9 +51,21 @@ namespace pwiz.CarafeSharp.Test
     /// needs that is not there, with its path, an item with neither a package nor a variable, and a
     /// variable that names no path or a missing one.
     /// </para>
+    /// <para>
+    /// A test can also run on a committed subset of a package (<see cref="UseSubset"/>): a zip in
+    /// <c>CarafeSharp.Test/TestData</c> holding package folders laid out as the full packages are,
+    /// each with its <c>MANIFEST.sha256</c>, but with a fraction of their content. While it is in
+    /// use it is the root, the variables are ignored, and an item's paths the subset leaves out
+    /// are skipped, so the same checks run on every commit with no download.
+    /// </para>
     /// </summary>
     public static class TestData
     {
+        /// <summary>The folder beside this assembly that holds the committed subsets.</summary>
+        public const string SUBSET_FOLDER = @"TestData";
+
+        // The extracted subset in use (UseSubset), or null. Tests do not run in parallel.
+        private static string _subsetRoot;
         /// <summary>The folder the packages are extracted in, in place of <c>&lt;Downloads&gt;/Perftests</c>.</summary>
         public const string ROOT_VARIABLE = @"CARAFESHARP_TESTDATA";
 
@@ -196,6 +208,8 @@ namespace pwiz.CarafeSharp.Test
         {
             get
             {
+                if (_subsetRoot != null)
+                    return _subsetRoot;
                 string root = Environment.GetEnvironmentVariable(ROOT_VARIABLE);
                 if (string.IsNullOrEmpty(root))
                     return Path.Combine(GetDownloadsPath(), PERFTESTS_FOLDER);
@@ -237,6 +251,28 @@ namespace pwiz.CarafeSharp.Test
             Assert.Inconclusive(@"No test data: extract {0} into {1}{2}.",
                 string.Join(@" and ", packages.Select(p => p.Zip)), Root,
                 variables.Length > 0 ? @", or set " + string.Join(@" or ", variables) : string.Empty);
+        }
+
+        /// <summary>True while a committed subset is the root (<see cref="UseSubset"/>).</summary>
+        public static bool IsSubset
+        {
+            get { return _subsetRoot != null; }
+        }
+
+        /// <summary>
+        /// Extracts the committed subset <paramref name="zipName"/> (from <see cref="SUBSET_FOLDER"/>
+        /// beside this assembly) into the test run folder and makes it the root until the result is
+        /// disposed. The test fails if the zip is missing.
+        /// </summary>
+        public static IDisposable UseSubset(TestContext context, string zipName)
+        {
+            string zip = RequireFile(Path.Combine(AppContext.BaseDirectory, SUBSET_FOLDER, zipName));
+            // A short unique suffix: SQLite cannot open a .blib whose path exceeds MAX_PATH.
+            string folder = Path.Combine(context.TestRunDirectory ?? Path.GetTempPath(),
+                Path.GetFileNameWithoutExtension(zipName) + @"_" + Guid.NewGuid().ToString(@"N").Substring(0, 8));
+            System.IO.Compression.ZipFile.ExtractToDirectory(zip, folder);
+            _subsetRoot = folder;
+            return new SubsetScope();
         }
 
         /// <summary>Fails the test, naming the path, unless the file exists; returns the path.</summary>
@@ -489,6 +525,14 @@ namespace pwiz.CarafeSharp.Test
                         Variable != null ? @", or set " + Variable : string.Empty);
                 }
                 var copies = _relativePaths.Select(Package.GetPath).ToArray();
+                if (IsSubset)
+                {
+                    // A subset keeps only some of an item's paths, but at least one.
+                    copies = copies.Where(p => File.Exists(p) || Directory.Exists(p)).ToArray();
+                    if (copies.Length == 0)
+                        Assert.Fail(@"The subset {0} has none of {1}", Package.RootPath, string.Join(@", ", _relativePaths));
+                    return copies;
+                }
                 foreach (string path in copies)
                 {
                     if (!File.Exists(path) && !Directory.Exists(path))
@@ -499,7 +543,15 @@ namespace pwiz.CarafeSharp.Test
 
             private string VariableValue
             {
-                get { return Variable == null ? null : Environment.GetEnvironmentVariable(Variable); }
+                get { return Variable == null || IsSubset ? null : Environment.GetEnvironmentVariable(Variable); }
+            }
+        }
+
+        private sealed class SubsetScope : IDisposable
+        {
+            public void Dispose()
+            {
+                _subsetRoot = null;
             }
         }
     }

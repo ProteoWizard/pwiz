@@ -101,9 +101,26 @@ above and extract it there yourself.
 
 This works from Visual Studio or ReSharper too, where no script sets variables.
 
+**Committed subsets.** Each parity test also runs on a committed subset of its packages, in the default pass
+and so on every commit, with no download. The zips are in `CarafeSharp.Test/TestData`, each under 5 MB,
+holding package folders laid out as the full packages are, each with its `MANIFEST.sha256`. A test opens one
+with `TestData.UseSubset`, which makes it the data root and ignores the variables below. The scripts that cut
+them, byte-identically, are in `ai/scripts/CarafeSharp/SubsetData` (its README has the rules).
+
+| Zip | Size | Holds | Tests |
+|---|---|---|---|
+| `LibraryParitySubset.zip` | 3.4 MB | about 1,000 precursors of each of 5 reference runs (Stellar initial and new, nocut, trypsin, varmod), whole FASTA record groups with their rows, re-indexed fragments and trimmed .blibs | `TestLibraryParitySubset`, `TestPretrainedPredictionsMatchCarafeSubset` |
+| `TrainingParitySubset.zip` | 4.0 MB | Carafe's training tables with intensities kept for the held-out spectra only, and 1/20 of the sequences of `carafesharp-export-v1` | `TestFineTuneMatchesCarafeSubset`, `TestMaskingAgreesWithCarafeSubset` |
+| `Stage1Inputs.zip` | 1.9 MB | the stage-1 input FASTAs and the expected SHA-256 of each output: 3 signatures and 10 of the 12 builds | `TestSubsetFastaBuildsMatchCarafe` |
+| `RegressionSubset.zip` | 4.2 MB | 1/15 of the peptide forms of the Stellar export (`carafesharp-export-v2`) and 1/500 of its pair groups | `TestRegressionSubset` (see "Regression") |
+
+What stays download-only: prediction with Carafe's fine-tuned models (16 MB of weights, which do not
+compress), the two builds that need the 14 MB mouse FASTA, the full fine-tune of
+`CARAFESHARP_FINETUNE_FULL`, and the full-scale versions of every check.
+
 **What the tests do with the data:**
-- **Nothing present:** with no package and no variable set, the parity tests are Inconclusive. That is what
-  CI sees.
+- **Nothing present:** with no package and no variable set, the full-scale parity tests are Inconclusive,
+  and their subset versions run.
 - **Anything present:** once any data is there, a missing file fails, naming its path. So does a package
   folder without `MANIFEST.sha256`, the checksum list that is the zip's last entry; an extraction that
   stopped part way has none. An item a test reads with no data of its own fails too, as does a variable
@@ -134,17 +151,33 @@ new version.
 
 ## Test passes
 
-| Pass | Command | Tests | Time |
+| Pass | Command | Tests | Time (i9-14900) |
 |---|---|---|---|
-| CPU, no data | `build.ps1` | 92, of which the 8 parity tests are Inconclusive | about 1.5 min |
-| CPU, with data | `build.ps1 -RequireData` | all 92 | about 10 min |
+| CPU, no data | `build.ps1` | 105, of which the 8 full-scale parity tests are Inconclusive; the subset tests and `TestRegressionSubset` run | about 2 min |
+| CPU, with data | `build.ps1 -RequireData` | all 105 | about 4 min |
 | Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
-| CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU | not yet timed |
-| Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 12 min, Astral 38 min on the CPU (i9-13900H) |
+| CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU, and the subset fine-tuned twice on the GPU | about 2 min |
+| Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 12 min, Astral about 36 min on the CPU |
 
 - **CUDA:** the pass sets `CARAFESHARP_REQUIRE_CUDA=1`, so a GPU test that finds no usable GPU fails
   instead of passing untested. The GPU and CPU predictions agree within 3e-5 in intensity and 5e-5 in
-  normalized RT, a few times what was measured.
+  normalized RT, a few times what was measured. `TestRegressionSubsetRepeatsOnGpu` requires two GPU
+  fine-tunes of the subset to be the same bytes (see "Reproducibility").
+
+## Continuous integration
+
+CarafeSharp has no TeamCity configuration of its own: Osprey's build it, since it trains the libraries Osprey
+searches, and their scripts are in the repository (`pwiz_tools/Osprey`).
+- **Every commit** (`tcbuild.bat`, Osprey Windows .NET; `tcbuild.sh`, Osprey Linux .NET): `build.ps1 -TeamCity`
+  after Osprey's, with dotCover on Windows. No test data: the committed subsets and `TestRegressionSubset` run, the
+  full-scale parity tests are Inconclusive. It adds about 1.5-2 min on TCA1 or Linux, and about 5 min on a slower
+  Windows cloud agent. `scripts/misc/vcs_trigger_and_paths_config.py` routes `pwiz_tools/CarafeSharp` (and
+  `Shared/Lib/Parquet`) changes to both configs.
+- **Nightly** (`tctest.bat`, Osprey Windows .NET Perf/Regression, after Osprey's lanes): `tcregression.ps1` runs
+  `build.ps1 -TestData Fetch -RequireData`, `regression.ps1 -Dataset Stellar`, `regression.ps1 -Leg Chained`, and
+  `regression.ps1 -Dataset StellarSubset` twice, whose models and training tables must be the same bytes (a rerun on
+  the agent repeats), about 19 minutes on an i9-14900. Its test data goes in `<Downloads>/Perftests/carafesharp`, not the default
+  folder, so a per-commit build on the same agent does not find it and run the full-scale tests every commit.
 - **Parity coverage:** the Stellar parity checks compare every precursor. The Astral run is ten times
   larger, so its two whole-set checks compare one hash partition of the precursor keys, a sixteenth, the
   same on both sides. `CARAFESHARP_FULL_PARITY=1` compares them all, at about 13 GB of memory.
@@ -158,6 +191,11 @@ new version.
 - **Chained** (`-Leg Chained`): Osprey searches its committed Stellar subset with `--training-export`, and
   CarafeSharp trains on those exports and predicts a library (see "The chained leg" below). It checks that
   the two tools work together, needs no test data, and has no golden.
+
+`-Dataset StellarSubset` is the isolated leg on the committed `RegressionSubset.zip`, with no test data: 1,831
+of the Stellar export's 27,424 precursors (1,672 peptide forms, enough for the KDE alignment) and 438 pair
+groups, 1,896 library precursors. It takes about a minute, and `TestRegressionSubset` runs it in-process on
+every commit, with the arguments its golden records, against `regression.data/stellar-subset`.
 
 ```
 pwsh -File regression.ps1                                   # CPU run, compared with the golden
@@ -187,26 +225,33 @@ the workflow predicts with 1960. A CPU run takes 20 to 35 minutes; each gets its
 **The comparator** is `RegressionTest` (category `Regression`, left out of the default pass). It reads
 the run folder from `CARAFESHARP_REGRESSION_RUN`, which `regression.ps1` sets, and is Inconclusive
 without it. The calibrated tolerances decide pass or fail, on every machine and device. They are each at
-least three times the largest spread seen across GPU repeats, CPU against GPU and Windows against Linux:
+least three times the largest spread seen across GPU repeats, CPU against GPU and Windows against Linux
+(Stellar and Astral 2026-09-27; the subset 2026-10-13, over 4, 8 and 16 torch threads, two GPU runs and
+Linux, its held-out sets being a tenth of Stellar's):
 
-| Check | Pass when |
-|---|---|
-| Input SHA-256 (export, FASTA, pairing, subset) | identical; otherwise the golden is of other inputs |
-| `use_finetuned_for_prediction` | identical |
-| Pretrained held-out metrics | within 1e-5 |
-| Fine-tuned held-out metrics | COS and PCC within 1.5e-3, SA 6e-3, SPC 5e-3, RT R2 1e-4, RT MAE 5e-4 |
-| Library precursor count, DecoyPairs row count | within 1e-4 of the golden's (at least 2) |
-| Library peak count | within 1% |
-| DecoyPairs pairs | each is a target and the decoy of its pair group (or the entrapment target and entrapment decoy), of one charge |
-| DecoyPairs targets | every target paired, its decoy written (the library keeps its pairs whole) |
-| Sampled precursors | one-sided only with at most 3 fragments; the same precursor m/z |
-| Sampled spectral cosine | median 0.99925, p5 0.991, p1 0.975 or more |
-| Sampled RT difference (minutes) | median 0.03, p95 0.10, p99 0.16 or less |
+| Check | Pass when (Stellar, Astral) | Pass when (subset) |
+|---|---|---|
+| Input SHA-256 (export, FASTA, pairing, subset) | identical; otherwise the golden is of other inputs | the same |
+| `use_finetuned_for_prediction` | identical | the same |
+| Pretrained held-out metrics | MS2 within 1e-5, RT 4e-5 | MS2 1e-5, RT 6e-5 |
+| Fine-tuned held-out metrics | COS and PCC within 1.5e-3, SA 6e-3, SPC 5e-3, RT R2 1e-4, RT MAE 5e-4 | COS 2e-3, PCC 4e-3, SA 7e-3, SPC 1.5e-2, RT R2 5e-4, RT MAE 1.5e-3 |
+| Library precursor count, DecoyPairs row count | within 1e-4 of the golden's (at least 2) | the same |
+| Library peak count | within 1% | within 2% |
+| DecoyPairs pairs | each is a target and the decoy of its pair group (or the entrapment target and entrapment decoy), of one charge | the same |
+| DecoyPairs targets | every target paired, its decoy written (the library keeps its pairs whole) | the same |
+| Sampled precursors | one-sided only with at most 3 fragments; the same precursor m/z | the same |
+| Sampled spectral cosine | median 0.99925, p5 0.991, p1 0.975 or more | median 0.998, p5 0.985, p1 0.955 |
+| Sampled RT difference (minutes) | median 0.03, p95 0.10, p99 0.16 or less | median 0.09, p95 0.3, p99 0.5 |
 
-- **Exact comparisons, reported and never gated:** the SHA-256 of the four training tables and of
-  `ms2.safetensors` and `rt.safetensors`, the held-out metrics as numbers, and the library's content
-  hash and counts. The report marks each SAME or DIFFERS. A CPU fine-tune is byte-reproducible on one
-  machine, so there they are all SAME; on another device or machine they need not be.
+- **Exact comparisons** (SHA-256 of the four training tables and of `ms2.safetensors` and `rt.safetensors`,
+  the held-out metrics as numbers, and the library's content hash and counts) gate what must repeat:
+  - **the training tables** are the same bytes on every system and device ("Reproducibility"), so they must
+    match the golden's on every run but one on another export (`-Export`);
+  - **the models, metrics and library** repeat only with the same training arithmetic, so they must match on
+    the golden's environment (system, device, processor and torch thread count), in a process of its own as
+    `regression.ps1` runs CarafeSharp, and are reported as SAME or DIFFERS elsewhere. A rerun on the golden's
+    machine that does not reproduce it fails. `TestRegressionSubset` fine-tunes in the test process, after
+    other tests, where the MS2 model can sum in another order, so it gates the training tables only.
 - **The library content hash** is over one line per precursor, sorted: modified sequence, charge,
   precursor m/z, RT, and the fragments in m/z order, with fragment m/z, intensity and RT rounded to 1e-6.
   It is read from the .blib with SQLite, never the file's bytes, which change with `createTime` on every
@@ -230,18 +275,24 @@ already there it compares the run with it, lists the `golden.json` values that c
 only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
 inputs' SHA-256.
 
-**The Stellar golden** is a CPU run (Intel i9-13900H, Windows, 14 libtorch threads, 15 minutes) on
-`carafesharp-export-v2`, made on 2026-10-03 (37477a43d4): 19,344 precursors, 335,906 peaks and 19,340 DecoyPairs
-rows, with a 1,923-precursor sample. Its training aligns the run's minutes onto Chronologer's hydrophobic index (the
-KDE ridge on 24,972 peptide forms, 2.29-23.97 min) and fine-tunes Chronologer on the aligned minutes (07-chronologer.md).
-Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9665 to 0.9834 on 17,521 spectra; RT R2 0.9977 to 0.9990,
-median error 0.0063 to 0.0040 of the gradient.
+**The Stellar golden** is a CPU run (Intel i9-14900, Windows, 24 libtorch threads, 11 minutes) on
+`carafesharp-export-v2`, made on 2026-10-13 (8e5458db95) when the alignment's reference became float64: 19,344
+precursors, 335,838 peaks and 19,340 DecoyPairs rows, with a 1,923-precursor sample. Its training aligns the run's
+minutes onto Chronologer's hydrophobic index (the KDE ridge on 24,972 peptide forms, 2.29-23.97 min) and fine-tunes
+Chronologer on the aligned minutes (07-chronologer.md). Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9665 to
+0.9833 on 17,521 spectra; RT R2 0.9977 to 0.9990, median error 0.0063 to 0.0040 of the gradient. Its models are
+byte-identical to a run of the commit before (the float64 reference moved the training targets in their last bits
+only); the earlier golden (2026-10-03, 37477a43d4) was an i9-13900H's.
 
-**The Astral golden** is a CPU run on the same machine (43 minutes, most of it the fine-tune on 43,216 MS2 spectra
-and 86,699 RT peptide forms) on `carafesharp-export-astral-v2`, made on 2026-10-03 (d781a0ae3d): 123,391 precursors,
-1,708,379 peaks and 123,382 DecoyPairs rows, with a 1,738-precursor sample at modulus 70. The run's map is the KDE
-ridge on 86,699 forms, 2.16-23.80 min. Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9792 to 0.9879; RT R2
-0.9974 to 0.9989, median error 0.0064 to 0.0037.
+**The StellarSubset golden** is a CPU run on the same machine (1.3 minutes), made on 2026-10-13 (ea3997b2e4): 1,896
+precursors, 31,690 peaks and 1,896 DecoyPairs rows, with a 200-precursor sample. Held-out metrics, pretrained to
+fine-tuned: MS2 COS 0.9701 to 0.9820 on 90 spectra; RT R2 0.9971 to 0.9984 on 152 forms.
+
+**The Astral golden** is a CPU run on the same machine (31 minutes, most of it the fine-tune on 43,216 MS2 spectra
+and 86,699 RT peptide forms) on `carafesharp-export-astral-v2`, made on 2026-10-13 (4c2ad69c26): 123,391 precursors,
+1,710,187 peaks and 123,382 DecoyPairs rows, with a 1,738-precursor sample at modulus 70. The run's map is the KDE
+ridge on 86,699 forms, 2.16-23.80 min. Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9792 to 0.9876; RT R2
+0.9974 to 0.9989, median error 0.0064 to 0.0037. The earlier golden (2026-10-03, d781a0ae3d) was an i9-13900H's.
 
 **What the v2 exports changed.** The goldens before them fine-tuned on the v1 exports, whose search of Carafe's
 library stopped at 19.8 min, so their libraries extrapolated the end of the gradient. Scored against DIA-NN's
@@ -299,8 +350,8 @@ the Thermo reader searched the Stellar `_21` .raw in 332 s, with the command tha
 export; its export differs from the packaged one only as described above. CarafeSharp's regression then
 ran on Linux's CPU twice, once on that export (`-Export`) and once on the packaged one, and both passed
 against the Windows golden (fine-tuned COS +1.4e-4, sampled spectral cosine median 0.99995):
-- the four training tables of both runs have the same content as the golden run's; they differ only
-  in line endings, which the training-table hashes ignore;
+- the four training tables of both runs have the same content as the golden run's; they differed only
+  in line endings, which the training-table hashes ignore (since 2026-10-13 every system writes `\n`);
 - the two Linux runs' models and held-out metrics are byte-identical to each other, so the export's
   last-digit differences do not reach the fine-tune;
 - the models differ from the Windows golden's as a CPU fine-tune on Linux and on Windows does.
@@ -323,17 +374,21 @@ DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 t
 ## Coverage
 
 Statement coverage from `build.ps1 -Coverage`, with no test data (what CI sees; the pretrained archive
-is bundled, so its tests run) and with the data (`-RequireData`). The regression runs CarafeSharp as a
-separate process, so it is in neither.
+is bundled, so its tests run) and with the data (`-RequireData`); and, merged with them, `regression.ps1`'s
+isolated and chained legs, measured by `ai/scripts/CarafeSharp/Measure-CumulativeCoverage.ps1` (2026-10-12,
+before the committed subsets).
 
-| Assembly | No data | With data |
-|---|---|---|
-| CarafeSharp | 97.7% | 98.3% |
-| CarafeSharp.Core | 94.2% | 94.2% |
-| CarafeSharp.IO | 98.8% | 98.8% |
-| CarafeSharp.Models | 96.8% | 97.5% |
-| CarafeSharp.Proteome | 98.8% | 99.0% |
-| CarafeSharp.Training | 99.6% | 99.6% |
+| Assembly | No data | With data | With the regression |
+|---|---|---|---|
+| CarafeSharp | 94.3% | 94.9% | 95.8% |
+| CarafeSharp.Core | 96.0% | 96.0% | 96.3% |
+| CarafeSharp.IO | 98.9% | 98.9% | 98.9% |
+| CarafeSharp.Models | 97.4% | 97.7% | 97.7% |
+| CarafeSharp.Proteome | 98.5% | 98.6% | 98.8% |
+| CarafeSharp.Training | 97.8% | 97.8% | 97.8% |
+| All (7,973 statements) | 97.7% | 97.8% | 98.0% |
+
+The regression adds little coverage; its value is the real data.
 
 Most of what is left is argument checks, `ToString` and the CUDA path, which a CPU run does not reach.
 
@@ -350,10 +405,25 @@ dotCover 2023.3.3 is pinned in `.config/dotnet-tools.json`, the version Osprey u
 
 ## Reproducibility
 
-- **CPU fine-tuning:** two identical CPU fine-tunes of one training export give byte-identical models,
-  metrics and training tables, at one thread count.
-- **GPU fine-tuning:** not deterministic. Repeat fine-tunes differ by about 5e-4 in held-out COS, and the
-  libraries built from them by a median spectral cosine of 0.9997.
+Measured on the subset (2026-10-13; the regression gates it, see "Regression"):
+
+| What | Windows CPU | Linux CPU | GPU (RTX 4070) |
+|---|---|---|---|
+| Training tables | the same bytes on all three |  |  |
+| Models, metrics, library, run to run | identical | identical | identical |
+| Models against Windows CPU | — | differ | differ |
+
+- **Training tables, everywhere.** The run alignment maps each run onto the pretrained Chronologer's
+  hydrophobic index. Predicted in float32, that index differed in its last bits between the Windows and Linux
+  libtorch builds, and by up to 5e-3 on a GPU, whose cuDNN convolutions use TF32 by default; enough on the GPU to
+  move the KDE ridge and the RT targets by up to 0.4 s. The alignment's reference therefore predicts on the CPU in
+  float64, rounded to float32 (`ChronologerModel.AlignmentReference`), which gives the same values everywhere.
+  The tables are written with `\n` line ends on every system. The KDE's .NET `Math.Cos` still differs between
+  Windows and Linux in its last bits (2 ulps at most); it has not moved a ridge.
+- **CPU fine-tuning** repeats byte for byte on one system at one thread count. Another thread count, or Linux,
+  sums in another order: the models differ slightly, within the tolerances.
+- **GPU fine-tuning** repeats byte for byte since its dropout is seeded: TorchSharp's `manual_seed` leaves the
+  CUDA generator unseeded, so `FineTuneRun` seeds it too (`cuda.manual_seed_all`). Its models differ from the
+  CPU's, as its kernels do. `TestRegressionSubsetRepeatsOnGpu` checks it.
 - **Before the fine-tune:** digests, precursor sets and fragment m/z are identical across CPU and GPU,
-  and between Windows and Linux on the CPU. Osprey's export and the training tables are identical whenever
-  the initial library's content is. Predicted intensities differ between devices by at most about 1e-5.
+  and between Windows and Linux on the CPU. Predicted intensities differ between devices by at most about 1e-5.

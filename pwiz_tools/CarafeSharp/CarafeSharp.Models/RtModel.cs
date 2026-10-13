@@ -59,13 +59,25 @@ namespace pwiz.CarafeSharp.Models
 
         private static RtModel Create(IReadOnlyDictionary<string, Tensor> weights, Device device)
         {
-            var network = new ModelRtLstmCnn();
-            StateDict.Load(network, weights);
-            foreach (var tensor in weights.Values)
-                tensor.Dispose();
-            network.to(device);
-            network.eval();
-            return new RtModel(network, device);
+            ModelRtLstmCnn network = null;
+            try
+            {
+                network = new ModelRtLstmCnn();
+                StateDict.Load(network, weights);
+                network.to(device);
+                network.eval();
+                return new RtModel(network, device);
+            }
+            catch
+            {
+                network?.Dispose();
+                throw;
+            }
+            finally
+            {
+                foreach (var tensor in weights.Values)
+                    tensor.Dispose();
+            }
         }
 
         private RtModel(ModelRtLstmCnn network, Device device)

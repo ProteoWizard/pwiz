@@ -62,6 +62,9 @@ namespace pwiz.CarafeSharp.Test
     {
         public const string FULL_PARITY_VARIABLE = @"CARAFESHARP_FULL_PARITY";
 
+        /// <summary>The committed subset of the Stellar runs and the library references, for the checks on every commit.</summary>
+        public const string SUBSET_ZIP = @"LibraryParitySubset.zip";
+
         /// <summary>A partitioned set check keeps one precursor in this many: those whose key hash has its top bits zero.</summary>
         private const int PARTITION_MODULUS = 16;
 
@@ -123,6 +126,31 @@ namespace pwiz.CarafeSharp.Test
                 foreach (var run in runs)
                     CheckPredictedLibrary(run, scratch);
             });
+        }
+
+        /// <summary>
+        /// All four requirements on the committed subset (<see cref="SUBSET_ZIP"/>), with no
+        /// download. Its fine-tuned run keeps no models, so it is left out of the prediction.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryParitySubset()
+        {
+            using (TestData.UseSubset(TestContext, SUBSET_ZIP))
+            {
+                foreach (var run in ReferenceRuns())
+                {
+                    CheckPeptideForms(run, false);
+                    CheckFragmentMz(run, false);
+                }
+                foreach (var run in LibraryRuns(TestData.PretrainedLibraries, TestData.FineTunedLibraries, TestData.LibraryReferences))
+                    CheckLibraryAssembly(run);
+                var runs = LibraryRuns(TestData.PretrainedLibraries, TestData.LibraryReferences);
+                InScratchFolder(scratch =>
+                {
+                    foreach (var run in runs)
+                        CheckPredictedLibrary(run, scratch);
+                });
+            }
         }
 
         /// <summary>All four requirements on the Astral run, whose package is optional.</summary>
@@ -278,7 +306,8 @@ namespace pwiz.CarafeSharp.Test
             string output = Path.Combine(scratch, TestData.FileName(Path.GetDirectoryName(run.Folder)) + @"_" + run.Name);
             Directory.CreateDirectory(output);
             bool subset = run.LibraryBlib == null;
-            string fasta = subset ? WriteSubsetFasta(run.FastaPath, Path.Combine(output, @"subset.fasta")) : run.FastaPath;
+            // A committed subset's FASTA is already a fraction of the records.
+            string fasta = subset && !TestData.IsSubset ? WriteSubsetFasta(run.FastaPath, Path.Combine(output, @"subset.fasta")) : run.FastaPath;
             var settings = run.CreateSettings(fasta, output);
             settings.LibraryFormat = @"Skyline,DIA-NN";
             var clock = Stopwatch.StartNew();

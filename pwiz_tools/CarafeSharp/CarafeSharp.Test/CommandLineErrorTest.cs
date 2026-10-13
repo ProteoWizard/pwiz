@@ -91,6 +91,13 @@ namespace pwiz.CarafeSharp.Test
             // mzSpecLib only with -fast: without it Carafe writes any -lf_type as a TSV.
             AssertUsageError(@"-db", @"x.fasta", @"-lf_type", @"mzSpecLib", @"-fast");
             AssertUsageError(@"-db", @"x.fasta", @"-model_dir", _folder, @"-tf", @"test");
+            // -model is CarafeSharp's: only training's -tf values, in any case.
+            AssertUsageError(@"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-tf", @"foo");
+            Assert.AreEqual(@"ms2", CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-tf", @"MS2" })
+                .LibrarySettings.TrainingType);
+            // -model_dir keeps Carafe's reading, where another value predicts with neither fine-tuned model, and says so.
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model_dir", _folder, @"-tf", @"MS2" }).Warnings
+                .Any(w => w.StartsWith(@"-tf MS2 is not all, ms2 or rt", StringComparison.Ordinal)));
             AssertUsageError(@"-db", @"x.fasta", @"-fixMod", @"abc");
             AssertUsageError(@"-db", @"x.fasta", @"-max_pep_charge", @"1");
             AssertUsageError(@"-db", @"x.fasta", @"-nce", @"30x");

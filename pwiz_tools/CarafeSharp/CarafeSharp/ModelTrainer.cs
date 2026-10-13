@@ -333,7 +333,7 @@ namespace pwiz.CarafeSharp
                     options.AlignmentReference = @"chronologer " + ChronologerFiles.VERSION + @" (pretrained)";
                     options.PredictHi = forms =>
                     {
-                        reference ??= ChronologerModel.FromFiles(ChronologerFiles.Open(), fineTune.Device);
+                        reference ??= ChronologerModel.AlignmentReference(ChronologerFiles.Open());
                         return reference.Predict(forms);
                     };
                 }

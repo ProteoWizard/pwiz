@@ -100,6 +100,8 @@ namespace pwiz.CarafeSharp.Training
             using (var intensities = new StreamWriter(Path.Combine(directory, INTENSITY_FILE)))
             using (var valid = new StreamWriter(Path.Combine(directory, VALID_FILE)))
             {
+                // "\n" on every system, so the tables are the same bytes on Windows and Linux.
+                psms.NewLine = intensities.NewLine = valid.NewLine = "\n";
                 psms.WriteLine(string.Join(TAB, @"psm_id", @"peptide", @"charge", @"mods", @"mod_sites", @"frag_start_idx",
                     @"frag_stop_idx", @"n_valid_fragment_ions", @"n_total_matched_ions"));
                 string header = string.Join(TAB, FRAGMENT_COLUMNS);
@@ -129,6 +131,7 @@ namespace pwiz.CarafeSharp.Training
             }
             using (var rtFile = new StreamWriter(Path.Combine(directory, RT_FILE)))
             {
+                rtFile.NewLine = "\n";
                 rtFile.WriteLine(string.Join(TAB, @"peptide", @"sequence", @"mods", @"mod_sites", @"rt_norm"));
                 foreach (var example in rt)
                 {

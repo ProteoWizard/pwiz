@@ -31,6 +31,7 @@ using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 
@@ -50,8 +51,13 @@ namespace pwiz.CarafeSharp.Test
     /// The tolerances calibrated across GPU repeats, CPU against GPU and Windows against Linux
     /// decide pass or fail, on every machine: the held-out metrics, the library's precursor, peak
     /// and DecoyPairs counts, the DecoyPairs table's pairing, and a sample of the library's spectra.
-    /// The exact hashes (training tables, model weights, library content) are compared too, and
-    /// reported, but never fail the test.
+    /// </para>
+    /// <para>
+    /// Exact comparisons gate what must repeat: the training tables are the same bytes on every
+    /// system and device, so they must match the golden's everywhere (except a run on another
+    /// export); the models, held-out metrics and library content repeat only where the training
+    /// arithmetic is the same, so they must match on the golden's environment (system, device,
+    /// processor and torch threads) and are reported elsewhere.
     /// </para>
     /// <para>
     /// With <c>CARAFESHARP_REGRESSION_CREATE</c> set to a folder, it writes a golden of the run
@@ -100,24 +106,66 @@ namespace pwiz.CarafeSharp.Test
         private const ulong FNV_OFFSET_BASIS = 14695981039346656037UL;
         private const ulong FNV_PRIME = 1099511628211UL;
 
-        // Calibrated tolerances (2026-09-27 calibration, each at least 3x the largest spread seen
-        // across GPU repeats, CPU vs GPU and Windows vs Linux; Stellar and Astral).
-        private const double PRETRAINED_METRIC_TOLERANCE = 1e-5;
-        private static readonly IReadOnlyDictionary<string, double> FINETUNED_METRIC_TOLERANCES = new Dictionary<string, double>
+        /// <summary>The dataset whose inputs are the committed RegressionSubset.zip.</summary>
+        public const string SUBSET_DATASET = @"StellarSubset";
+        /// <summary>The committed inputs of <see cref="SUBSET_DATASET"/>, beside the test assembly.</summary>
+        public const string SUBSET_ZIP = @"RegressionSubset.zip";
+
+        /// <summary>Each dataset's folder of regression.data, as regression.ps1 names it.</summary>
+        private static readonly IReadOnlyDictionary<string, string> DATASET_FOLDERS = new Dictionary<string, string>
         {
-            { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
+            { @"Stellar", @"stellar" }, { @"Astral", @"astral" }, { SUBSET_DATASET, @"stellar-subset" },
         };
-        private const double PEAK_COUNT_TOLERANCE = 0.01;
-        // The written precursor set, and with it the DecoyPairs rows, may lose a few precursors
-        // near the -lf_min_n_frag cutoff on another device (Astral GPU vs GPU: 1.7e-5).
-        private const double PRECURSOR_COUNT_TOLERANCE = 1e-4;
-        private const int PRECURSOR_COUNT_MIN_ALLOWED = 2;
-        private const double COSINE_MEDIAN_MIN = 0.99925;
-        private const double COSINE_P5_MIN = 0.991;
-        private const double COSINE_P1_MIN = 0.975;
-        private const double RT_MEDIAN_MAX = 0.03;
-        private const double RT_P95_MAX = 0.10;
-        private const double RT_P99_MAX = 0.16;
+
+        // Calibrated tolerances (2026-09-27 calibration, each at least 3x the largest spread seen
+        // across GPU repeats, CPU vs GPU and Windows vs Linux; Stellar and Astral). The pretrained
+        // RT model's metrics move on the GPU since the run alignment (Stellar GPU 1.27e-5, 2026-10-12):
+        // its targets map each run onto the pretrained Chronologer's predictions, made on the device.
+        private static readonly Tolerances FULL_TOLERANCES = new Tolerances
+        {
+            PretrainedMetric = 1e-5,
+            PretrainedRtMetric = 4e-5,
+            FinetunedMetric = new Dictionary<string, double>
+            {
+                { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
+            },
+            PeakCountFraction = 0.01,
+            // The written precursor set, and with it the DecoyPairs rows, may lose a few precursors
+            // near the -lf_min_n_frag cutoff on another device (Astral GPU vs GPU: 1.7e-5).
+            PrecursorCountFraction = 1e-4,
+            PrecursorCountMinAllowed = 2,
+            CosineMedianMin = 0.99925,
+            CosineP5Min = 0.991,
+            CosineP1Min = 0.975,
+            RtMedianMax = 0.03,
+            RtP95Max = 0.10,
+            RtP99Max = 0.16,
+        };
+
+        // The subset's held-out sets are about a tenth of Stellar's (90 MS2 spectra, 152 RT forms)
+        // and its sample 200 precursors, so its fine-tuned metrics and library move more between
+        // machines. Each is at least 3x the largest change from the CPU golden seen over a CPU
+        // repeat, 4, 8 and 16 torch threads, two GPU runs and Linux (2026-10-13): MS2 cos 6.3e-4,
+        // pcc 1.2e-3, sa 2.1e-3, spc 4.8e-3; RT mae 4.3e-4, r2 1.5e-4; pretrained RT 1.85e-5 (GPU);
+        // peaks 0.5%; cosine median 0.99932, p5 0.9953, p1 0.9852; RT 0.030, 0.103, 0.172 min.
+        private static readonly Tolerances SUBSET_TOLERANCES = new Tolerances
+        {
+            PretrainedMetric = 1e-5,
+            PretrainedRtMetric = 6e-5,
+            FinetunedMetric = new Dictionary<string, double>
+            {
+                { @"cos", 2e-3 }, { @"pcc", 4e-3 }, { @"sa", 7e-3 }, { @"spc", 1.5e-2 }, { @"r2", 5e-4 }, { @"mae_normalized", 1.5e-3 },
+            },
+            PeakCountFraction = 0.02,
+            PrecursorCountFraction = 1e-4,
+            PrecursorCountMinAllowed = 2,
+            CosineMedianMin = 0.998,
+            CosineP5Min = 0.985,
+            CosineP1Min = 0.955,
+            RtMedianMax = 0.09,
+            RtP95Max = 0.3,
+            RtP99Max = 0.5,
+        };
 
         /// <summary>A precursor may be in one library only when it has at most this many fragments (lf_min_n_frag + 1).</summary>
         private const int FEW_FRAGMENTS = 3;
@@ -158,6 +206,8 @@ namespace pwiz.CarafeSharp.Test
         private static readonly string[] MODEL_FILES = { ModelFiles.MS2_SAFETENSORS, ModelFiles.RT_SAFETENSORS };
 
         private readonly List<string> _report = new List<string>();
+        /// <summary>The tolerances of the dataset being compared.</summary>
+        private Tolerances _tolerances = FULL_TOLERANCES;
         private readonly List<string> _failures = new List<string>();
 
         public TestContext TestContext { get; set; }
@@ -183,6 +233,7 @@ namespace pwiz.CarafeSharp.Test
             }
 
             var run = RunMeasurement.Measure(runFolder, TorchSharp.torch.get_num_threads());
+            _tolerances = Tolerances.For(run.Dataset);
             if (!string.IsNullOrEmpty(createFolder))
             {
                 CreateGolden(run, createFolder);
@@ -195,6 +246,151 @@ namespace pwiz.CarafeSharp.Test
             WriteReport(runFolder);
             Assert.AreEqual(0, _failures.Count, @"The run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
                 Environment.NewLine, string.Join(Environment.NewLine, _failures));
+        }
+
+        /// <summary>
+        /// The regression on every commit: <see cref="SUBSET_DATASET"/>'s fine-tune and library,
+        /// from the committed <see cref="SUBSET_ZIP"/> and with the arguments its golden records,
+        /// run in-process and compared with that golden as regression.ps1 compares a run.
+        /// </summary>
+        [TestMethod]
+        public void TestRegressionSubset()
+        {
+            string goldenFolder = GetGoldenFolder(SUBSET_DATASET);
+            var golden = Golden.Read(goldenFolder);
+            var run = RunSubset(golden, TorchDevice.CPU);
+            Compare(golden, run);
+            WriteReport(run.Folder);
+            Assert.AreEqual(0, _failures.Count, @"The subset run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
+                Environment.NewLine, string.Join(Environment.NewLine, _failures));
+        }
+
+        /// <summary>
+        /// The subset fine-tuned twice on the GPU: the two runs must be the same bytes (training tables,
+        /// models and library), and within the golden's tolerances, which were calibrated with GPU runs.
+        /// </summary>
+        [TestMethod, TestCategory(TestData.CUDA_CATEGORY)]
+        public void TestRegressionSubsetRepeatsOnGpu()
+        {
+            TorchDevice.Resolve(TorchDevice.GPU, out string fallback);
+            if (fallback != null)
+            {
+                if (Environment.GetEnvironmentVariable(TestData.REQUIRE_CUDA_VARIABLE) == @"1")
+                    Assert.Fail(fallback);
+                Assert.Inconclusive(fallback);
+            }
+            string goldenFolder = GetGoldenFolder(SUBSET_DATASET);
+            var golden = Golden.Read(goldenFolder);
+            var first = RunSubset(golden, TorchDevice.GPU);
+            var second = RunSubset(golden, TorchDevice.GPU);
+            Compare(golden, second);
+            WriteReport(second.Folder);
+            CollectionAssert.AreEqual(first.TrainingTables, second.TrainingTables, @"The GPU runs' training tables differ");
+            CollectionAssert.AreEqual(first.Models, second.Models, @"The GPU runs' models differ");
+            Assert.AreEqual(first.Library.ContentSha256, second.Library.ContentSha256, @"The GPU runs' libraries differ");
+            Assert.AreEqual(0, _failures.Count, @"The GPU subset run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
+                Environment.NewLine, string.Join(Environment.NewLine, _failures));
+        }
+
+        /// <summary>
+        /// Runs <see cref="SUBSET_DATASET"/> in-process on <paramref name="device"/> (<c>-device</c>), from the
+        /// committed <see cref="SUBSET_ZIP"/> with the golden's arguments, and measures the run.
+        /// </summary>
+        private RunMeasurement RunSubset(Golden golden, string device)
+        {
+            string runFolder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"RegressionSubset_" + Guid.NewGuid().ToString(@"N").Substring(0, 8));
+            string inputs = Path.Combine(runFolder, @"inputs");
+            ZipFile.ExtractToDirectory(TestData.RequireFile(Path.Combine(AppContext.BaseDirectory, @"TestData", SUBSET_ZIP)), inputs);
+
+            string fasta = Path.Combine(inputs, @"library_subset_peptides.fasta");
+            string pairing = Path.Combine(inputs, @"library_subset_pairing.tsv");
+            string exportFolder = Path.Combine(inputs, @"stellar");
+            string export = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).Single();
+            string runFile = Path.GetFileName(export).Substring(0, Path.GetFileName(export).Length - OspreyTrainingExport.FILE_SUFFIX.Length) + @".raw";
+            var args = new List<string>
+            {
+                @"-db", fasta, @"-i", exportFolder, @"-ms", Path.Combine(exportFolder, runFile), @"-o", Path.Combine(runFolder, OUTPUT_FOLDER),
+                @"-pairing_manifest", pairing,
+            };
+            // The golden's arguments, on the device asked for.
+            var arguments = golden.Arguments.ToList();
+            int deviceIndex = arguments.IndexOf(@"-device");
+            Assert.IsTrue(deviceIndex >= 0 && deviceIndex + 1 < arguments.Count, @"The golden's arguments name no -device");
+            arguments[deviceIndex + 1] = device;
+            args.AddRange(arguments);
+            args.AddRange(new[] { @"-tf", @"all" });
+
+            int exitCode;
+            using (var log = new StreamWriter(Path.Combine(runFolder, @"carafesharp.log")))
+                exitCode = Program.Run(args.ToArray(), log, log);
+            WriteSubsetRunInfo(runFolder, arguments, device == TorchDevice.GPU ? @"cuda" : @"cpu", exitCode, export, fasta, pairing);
+            Assert.AreEqual(0, exitCode, @"CarafeSharp failed; see {0}", Path.Combine(runFolder, @"carafesharp.log"));
+
+            var run = RunMeasurement.Measure(runFolder, TorchSharp.torch.get_num_threads());
+            _tolerances = Tolerances.For(run.Dataset);
+            return run;
+        }
+
+        /// <summary>The regression-run.json regression.ps1 would write for this in-process run of the subset.</summary>
+        private static void WriteSubsetRunInfo(string runFolder, IReadOnlyList<string> arguments, string deviceUsed, int exitCode, string export,
+            string fasta, string pairing)
+        {
+            using (var stream = File.Create(Path.Combine(runFolder, RUN_INFO_FILE)))
+            using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+            {
+                json.WriteStartObject();
+                json.WriteString(@"format", @"carafesharp-regression-run-1");
+                json.WriteString(@"dataset", SUBSET_DATASET);
+                json.WriteString(@"leg", @"isolated");
+                json.WriteString(@"device_used", deviceUsed);
+                json.WriteString(@"commit", @"in-process (TestRegressionSubset)");
+                json.WriteBoolean(@"dirty", false);
+                json.WriteBoolean(@"in_process", true);
+                json.WriteString(@"os_platform", OperatingSystem.IsWindows() ? @"Windows" : OperatingSystem.IsLinux() ? @"Linux" : @"other");
+                json.WriteString(@"processor", GetProcessorName());
+                json.WriteStartArray(@"arguments");
+                foreach (string argument in arguments)
+                    json.WriteStringValue(argument);
+                json.WriteEndArray();
+                json.WriteNumber(@"exit_code", exitCode);
+                json.WriteStartObject(@"inputs");
+                WriteInput(json, INPUT_EXPORT, runFolder, export);
+                WriteInput(json, @"library_fasta", runFolder, fasta);
+                WriteInput(json, @"library_pairing", runFolder, pairing);
+                // The zip holds the subset itself, which regression.ps1 keeps whole (modulus 1).
+                WriteInput(json, @"subset_fasta", runFolder, fasta);
+                WriteInput(json, @"subset_pairing", runFolder, pairing);
+                json.WriteEndObject();
+                json.WriteEndObject();
+            }
+        }
+
+        /// <summary>The processor's name as regression.ps1 records it: Win32_Processor's Name, or /proc/cpuinfo's model name.</summary>
+        private static string GetProcessorName()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0"))
+                {
+                    if (key?.GetValue(@"ProcessorNameString") is string name)
+                        return name.Trim();
+                }
+            }
+            else if (File.Exists(@"/proc/cpuinfo"))
+            {
+                string line = File.ReadLines(@"/proc/cpuinfo").FirstOrDefault(l => l.StartsWith(@"model name", StringComparison.Ordinal));
+                if (line != null)
+                    return line.Substring(line.IndexOf(':') + 1).Trim();
+            }
+            return System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString();
+        }
+
+        private static void WriteInput(Utf8JsonWriter json, string name, string runFolder, string path)
+        {
+            json.WriteStartObject(name);
+            json.WriteString(@"path", Path.GetRelativePath(runFolder, path).Replace('\\', '/'));
+            json.WriteString(@"sha256", Sha256(path));
+            json.WriteEndObject();
         }
 
         private void CreateGolden(RunMeasurement run, string folder)
@@ -222,7 +418,7 @@ namespace pwiz.CarafeSharp.Test
             LibrarySample.Write(samplePath, sample);
             long sampleBytes = new FileInfo(samplePath).Length;
             Assert.IsTrue(sampleBytes <= MAX_SAMPLE_BYTES, @"The library sample is {0} bytes, more than {1}.", sampleBytes, MAX_SAMPLE_BYTES);
-            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run, modulus, sample.Count);
+            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run, modulus, sample.Count, _tolerances);
             TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} DecoyPairs rows, {4} sampled at modulus {5} ({6} bytes).",
                 folder, run.Library.Precursors, run.Library.Peaks, pairs.Rows, sample.Count, modulus, sampleBytes);
         }
@@ -256,7 +452,7 @@ namespace pwiz.CarafeSharp.Test
             CheckLibrary(golden, run);
             CheckDecoyPairs(golden, run);
             CheckSample(golden, run);
-            ReportExactComparisons(golden, run);
+            CheckExactComparisons(golden, run);
         }
 
         /// <summary>
@@ -427,7 +623,7 @@ namespace pwiz.CarafeSharp.Test
                     Check(false, @"metric {0}: missing from the run", pair.Key);
                     continue;
                 }
-                double tolerance = GetMetricTolerance(pair.Key);
+                double tolerance = _tolerances.GetMetricTolerance(pair.Key);
                 double difference = value - pair.Value;
                 Check(Math.Abs(difference) <= tolerance, @"metric {0}: golden {1}, run {2}, difference {3} (tolerance {4})", pair.Key,
                     Format(pair.Value), Format(value), difference.ToString(@"E2", CultureInfo.InvariantCulture),
@@ -439,8 +635,8 @@ namespace pwiz.CarafeSharp.Test
         {
             CheckCount(@"library precursors", golden.Library.Precursors, run.Library.Precursors);
             double peakChange = golden.Library.Peaks > 0 ? (double)(run.Library.Peaks - golden.Library.Peaks) / golden.Library.Peaks : 0;
-            Check(Math.Abs(peakChange) <= PEAK_COUNT_TOLERANCE, @"library peaks: golden {0}, run {1}, change {2:P2} (tolerance {3:P0})",
-                golden.Library.Peaks, run.Library.Peaks, peakChange, PEAK_COUNT_TOLERANCE);
+            Check(Math.Abs(peakChange) <= _tolerances.PeakCountFraction, @"library peaks: golden {0}, run {1}, change {2:P2} (tolerance {3:P0})",
+                golden.Library.Peaks, run.Library.Peaks, peakChange, _tolerances.PeakCountFraction);
         }
 
         /// <summary>
@@ -484,48 +680,48 @@ namespace pwiz.CarafeSharp.Test
             double cosineMedian = comparison.CosinePercentile(0.5);
             double cosineP5 = comparison.CosinePercentile(0.05);
             double cosineP1 = comparison.CosinePercentile(0.01);
-            Check(cosineMedian >= COSINE_MEDIAN_MIN && cosineP5 >= COSINE_P5_MIN && cosineP1 >= COSINE_P1_MIN,
+            var t = _tolerances;
+            Check(cosineMedian >= t.CosineMedianMin && cosineP5 >= t.CosineP5Min && cosineP1 >= t.CosineP1Min,
                 @"sampled spectral cosine over {0} precursors: median {1:F6} (min {2}), p5 {3:F6} (min {4}), p1 {5:F6} (min {6}), lowest {7:F6}",
-                comparison.Shared, cosineMedian, COSINE_MEDIAN_MIN, cosineP5, COSINE_P5_MIN, cosineP1, COSINE_P1_MIN,
+                comparison.Shared, cosineMedian, t.CosineMedianMin, cosineP5, t.CosineP5Min, cosineP1, t.CosineP1Min,
                 comparison.CosinePercentile(0));
             double rtMedian = comparison.RetentionTimePercentile(0.5);
             double rtP95 = comparison.RetentionTimePercentile(0.95);
             double rtP99 = comparison.RetentionTimePercentile(0.99);
-            Check(rtMedian <= RT_MEDIAN_MAX && rtP95 <= RT_P95_MAX && rtP99 <= RT_P99_MAX,
+            Check(rtMedian <= t.RtMedianMax && rtP95 <= t.RtP95Max && rtP99 <= t.RtP99Max,
                 @"sampled |RT difference| (min): median {0:F4} (max {1}), p95 {2:F4} (max {3}), p99 {4:F4} (max {5}), largest {6:F4}",
-                rtMedian, RT_MEDIAN_MAX, rtP95, RT_P95_MAX, rtP99, RT_P99_MAX, comparison.RetentionTimePercentile(1));
+                rtMedian, t.RtMedianMax, rtP95, t.RtP95Max, rtP99, t.RtP99Max, comparison.RetentionTimePercentile(1));
             Report(@"INFO sampled precursors with the golden's fragment m/z set: {0} of {1} ({2:P1})", comparison.SameFragmentSet,
                 comparison.Shared, (double)comparison.SameFragmentSet / comparison.Shared);
         }
 
         /// <summary>
-        /// The exact comparisons, reported and never gated: a CPU fine-tune repeats byte for byte on
-        /// one machine, so on the golden's machine these are all SAME, and anywhere else they need not be.
+        /// The exact comparisons. The training tables repeat on every system and device, so they are
+        /// gated everywhere but on another export. The models, held-out metrics and library repeat
+        /// byte for byte only with the same training arithmetic, so they are gated on the golden's
+        /// environment, in a process of their own as regression.ps1 runs CarafeSharp, and reported
+        /// elsewhere. A fine-tune in the test process, after other tests, can sum in another order
+        /// (the MS2 model differed while the training tables matched, 2026-10-13).
         /// </summary>
-        private void ReportExactComparisons(Golden golden, RunMeasurement run)
+        private void CheckExactComparisons(Golden golden, RunMeasurement run)
         {
-            Report(@"Information: exact comparisons, not gated (SAME is expected only on the golden's machine and device).");
-            ReportSameMaps(@"training table", golden.TrainingTables, run.TrainingTables);
-            ReportSameMaps(@"model", golden.Models, run.Models);
+            bool sameEnvironment = !run.InProcess && golden.OsPlatform == run.OsPlatform && golden.Device == run.Device &&
+                                   golden.Processor == run.Processor && golden.TorchThreads == run.TorchThreads;
+            Report(@"Exact: training tables gated{0}; models, metrics and library gated on the golden's environment " +
+                   @"({1}, {2}, {3}, {4} torch threads, a process of its own), which this run {5}.",
+                run.OtherExport ? @" except on another export (this run)" : string.Empty, golden.OsPlatform, golden.Device, golden.Processor,
+                golden.TorchThreads, sameEnvironment ? @"is on" : @"is not on, so they are reported only");
+            CompareMaps(!run.OtherExport, @"training table", golden.TrainingTables, run.TrainingTables);
+            CompareMaps(sameEnvironment, @"model", golden.Models, run.Models);
             var differing = golden.Metrics.Where(p => !run.Metrics.TryGetValue(p.Key, out double v) || !v.Equals(p.Value)).Select(p => p.Key).ToList();
-            Inform(differing.Count == 0, @"held-out metrics: {0} of {1} identical{2}", golden.Metrics.Count - differing.Count, golden.Metrics.Count,
-                differing.Count == 0 ? string.Empty : @" (" + string.Join(@", ", differing) + @" differ)");
-            Inform(golden.Library.ContentSha256 == run.Library.ContentSha256, @"library content SHA-256: golden {0}, run {1}",
+            Exact(sameEnvironment, differing.Count == 0, @"held-out metrics: {0} of {1} identical{2}", golden.Metrics.Count - differing.Count,
+                golden.Metrics.Count, differing.Count == 0 ? string.Empty : @" (" + string.Join(@", ", differing) + @" differ)");
+            Exact(sameEnvironment, golden.Library.ContentSha256 == run.Library.ContentSha256, @"library content SHA-256: golden {0}, run {1}",
                 golden.Library.ContentSha256, run.Library.ContentSha256);
-            Inform(golden.Library.Precursors == run.Library.Precursors && golden.Library.Peaks == run.Library.Peaks &&
-                   golden.DecoyPairRows == run.Pairs.Rows,
+            Exact(sameEnvironment, golden.Library.Precursors == run.Library.Precursors && golden.Library.Peaks == run.Library.Peaks &&
+                                   golden.DecoyPairRows == run.Pairs.Rows,
                 @"library precursors, peaks, DecoyPairs rows: golden {0}, {1}, {2}; run {3}, {4}, {5}", golden.Library.Precursors,
                 golden.Library.Peaks, golden.DecoyPairRows, run.Library.Precursors, run.Library.Peaks, run.Pairs.Rows);
-        }
-
-        /// <summary>The tolerance of a metric key such as "ms2.finetuned.cos": tight for the pretrained model, calibrated for the fine-tuned one.</summary>
-        private static double GetMetricTolerance(string key)
-        {
-            if (key.Contains(@"." + ModelFiles.METRICS_PRETRAINED + @"."))
-                return PRETRAINED_METRIC_TOLERANCE;
-            if (!FINETUNED_METRIC_TOLERANCES.TryGetValue(key.Substring(key.LastIndexOf('.') + 1), out double tolerance))
-                Assert.Fail(@"No tolerance is calibrated for the metric {0}", key);
-            return tolerance;
         }
 
         private static string GetGoldenFolder(string dataset)
@@ -538,7 +734,8 @@ namespace pwiz.CarafeSharp.Test
                     string candidate = Path.Combine(dir, DATA_FOLDER);
                     if (Directory.Exists(candidate))
                     {
-                        folder = Path.Combine(candidate, dataset.ToLowerInvariant());
+                        Assert.IsTrue(DATASET_FOLDERS.TryGetValue(dataset, out string datasetFolder), @"No regression.data folder is named for the dataset {0}", dataset);
+                        folder = Path.Combine(candidate, datasetFolder);
                         break;
                     }
                 }
@@ -551,17 +748,26 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>A count within the precursor-count tolerance of the golden's.</summary>
         private void CheckCount(string what, long golden, long run)
         {
-            long allowed = Math.Max(PRECURSOR_COUNT_MIN_ALLOWED, (long)(PRECURSOR_COUNT_TOLERANCE * golden));
+            long allowed = Math.Max(_tolerances.PrecursorCountMinAllowed, (long)(_tolerances.PrecursorCountFraction * golden));
             Check(Math.Abs(run - golden) <= allowed, @"{0}: golden {1}, run {2} (at most {3} may differ)", what, golden, run, allowed);
         }
 
-        private void ReportSameMaps(string what, IReadOnlyDictionary<string, string> golden, IReadOnlyDictionary<string, string> run)
+        private void CompareMaps(bool gated, string what, IReadOnlyDictionary<string, string> golden, IReadOnlyDictionary<string, string> run)
         {
             foreach (var pair in golden)
             {
                 run.TryGetValue(pair.Key, out string value);
-                Inform(value == pair.Value, @"{0} {1}: golden {2}, run {3}", what, pair.Key, pair.Value, value ?? @"missing");
+                Exact(gated, value == pair.Value, @"{0} {1}: golden {2}, run {3}", what, pair.Key, pair.Value, value ?? @"missing");
             }
+        }
+
+        /// <summary>An exact comparison: a gated check, or reported only.</summary>
+        private void Exact(bool gated, bool same, string format, params object[] args)
+        {
+            if (gated)
+                Check(same, format, args);
+            else
+                Inform(same, format, args);
         }
 
         /// <summary>Reports one gated check; a failed one fails the test.</summary>
@@ -741,6 +947,7 @@ namespace pwiz.CarafeSharp.Test
                     run.Processor = root.GetProperty(@"processor").GetString();
                     run.Arguments = root.GetProperty(@"arguments").EnumerateArray().Select(a => a.GetString()).ToList();
                     run.OtherExport = root.TryGetProperty(@"other_export", out var otherExport) && otherExport.GetBoolean();
+                    run.InProcess = root.TryGetProperty(@"in_process", out var inProcess) && inProcess.GetBoolean();
                     Assert.AreEqual(0, root.GetProperty(@"exit_code").GetInt32(), @"CarafeSharp failed in {0}", folder);
                     var inputs = root.GetProperty(@"inputs");
                     foreach (var input in inputs.EnumerateObject())
@@ -769,6 +976,8 @@ namespace pwiz.CarafeSharp.Test
             public bool Dirty { get; private set; }
             /// <summary>The run trained on an export given with regression.ps1 -Export.</summary>
             public bool OtherExport { get; private set; }
+            /// <summary>CarafeSharp ran in the test process (TestRegressionSubset), not a process of its own.</summary>
+            public bool InProcess { get; private set; }
             public string OsPlatform { get; private set; }
             public string Processor { get; private set; }
             public int TorchThreads { get; private set; }
@@ -1266,6 +1475,7 @@ namespace pwiz.CarafeSharp.Test
                     golden.Device = provenance.GetProperty(@"device_used").GetString();
                     golden.OsPlatform = provenance.GetProperty(@"os_platform").GetString();
                     golden.Processor = provenance.GetProperty(@"processor").GetString();
+                    golden.TorchThreads = provenance.GetProperty(@"torch_cpu_threads").GetInt32();
                     golden.Arguments = (provenance.GetProperty(@"arguments").GetString() ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var input in root.GetProperty(@"inputs").EnumerateObject())
                         golden.Inputs[input.Name] = input.Value.GetProperty(@"sha256").GetString();
@@ -1289,7 +1499,7 @@ namespace pwiz.CarafeSharp.Test
             }
 
             /// <summary>Writes golden.json for <paramref name="run"/>, whose sample at <paramref name="modulus"/> is written beside it.</summary>
-            public static void Write(string path, RunMeasurement run, int modulus, int sampled)
+            public static void Write(string path, RunMeasurement run, int modulus, int sampled, Tolerances tolerances)
             {
                 using (var stream = File.Create(path))
                 using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
@@ -1336,24 +1546,25 @@ namespace pwiz.CarafeSharp.Test
                     json.WriteString(@"rule", @"the precursors whose 64-bit FNV-1a hash of modseq/charge, shifted right 32 bits, is 0 modulo the modulus");
                     json.WriteEndObject();
                     json.WriteStartObject(@"tolerances");
-                    json.WriteNumber(@"pretrained_metric", PRETRAINED_METRIC_TOLERANCE);
+                    json.WriteNumber(@"pretrained_metric", tolerances.PretrainedMetric);
+                    json.WriteNumber(@"pretrained_rt_metric", tolerances.PretrainedRtMetric);
                     json.WriteStartObject(@"finetuned_metric");
-                    foreach (var pair in FINETUNED_METRIC_TOLERANCES)
+                    foreach (var pair in tolerances.FinetunedMetric)
                         json.WriteNumber(pair.Key, pair.Value);
                     json.WriteEndObject();
-                    json.WriteNumber(@"precursor_and_decoy_pair_count_fraction", PRECURSOR_COUNT_TOLERANCE);
-                    json.WriteNumber(@"peak_count_fraction", PEAK_COUNT_TOLERANCE);
-                    json.WriteNumber(@"cosine_median_min", COSINE_MEDIAN_MIN);
-                    json.WriteNumber(@"cosine_p5_min", COSINE_P5_MIN);
-                    json.WriteNumber(@"cosine_p1_min", COSINE_P1_MIN);
-                    json.WriteNumber(@"rt_minutes_median_max", RT_MEDIAN_MAX);
-                    json.WriteNumber(@"rt_minutes_p95_max", RT_P95_MAX);
-                    json.WriteNumber(@"rt_minutes_p99_max", RT_P99_MAX);
+                    json.WriteNumber(@"precursor_and_decoy_pair_count_fraction", tolerances.PrecursorCountFraction);
+                    json.WriteNumber(@"peak_count_fraction", tolerances.PeakCountFraction);
+                    json.WriteNumber(@"cosine_median_min", tolerances.CosineMedianMin);
+                    json.WriteNumber(@"cosine_p5_min", tolerances.CosineP5Min);
+                    json.WriteNumber(@"cosine_p1_min", tolerances.CosineP1Min);
+                    json.WriteNumber(@"rt_minutes_median_max", tolerances.RtMedianMax);
+                    json.WriteNumber(@"rt_minutes_p95_max", tolerances.RtP95Max);
+                    json.WriteNumber(@"rt_minutes_p99_max", tolerances.RtP99Max);
                     json.WriteEndObject();
 
                     // Reported, never gated.
                     json.WriteStartObject(@"exact");
-                    json.WriteString(@"use", @"information only: reported as SAME or DIFFERS, never failing a run");
+                    json.WriteString(@"use", @"training tables gated on every run but one on another export; models and library gated on the golden's environment");
                     WriteMap(json, @"training_tables", run.TrainingTables);
                     WriteMap(json, @"models", run.Models);
                     json.WriteString(@"library_content_sha256", run.Library.ContentSha256);
@@ -1369,6 +1580,7 @@ namespace pwiz.CarafeSharp.Test
             public string Device { get; private set; }
             public string OsPlatform { get; private set; }
             public string Processor { get; private set; }
+            public int TorchThreads { get; private set; }
             public IReadOnlyList<string> Arguments { get; private set; }
             public SortedDictionary<string, string> Inputs { get; } = new SortedDictionary<string, string>(StringComparer.Ordinal);
             public SortedDictionary<string, string> TrainingTables { get; } = new SortedDictionary<string, string>(StringComparer.Ordinal);
@@ -1393,6 +1605,41 @@ namespace pwiz.CarafeSharp.Test
                 foreach (var pair in map)
                     json.WriteString(pair.Key, pair.Value);
                 json.WriteEndObject();
+            }
+        }
+
+        /// <summary>The gates of one dataset's comparison with its golden.</summary>
+        private sealed class Tolerances
+        {
+            public static Tolerances For(string dataset)
+            {
+                return dataset == SUBSET_DATASET ? SUBSET_TOLERANCES : FULL_TOLERANCES;
+            }
+
+            /// <summary>The pretrained MS2 model's metrics.</summary>
+            public double PretrainedMetric { get; set; }
+            /// <summary>The pretrained RT model's metrics, which the run alignment makes depend on the device.</summary>
+            public double PretrainedRtMetric { get; set; }
+            /// <summary>By metric name (cos, pcc, sa, spc, r2, mae_normalized), for either model.</summary>
+            public IReadOnlyDictionary<string, double> FinetunedMetric { get; set; }
+            public double PeakCountFraction { get; set; }
+            public double PrecursorCountFraction { get; set; }
+            public int PrecursorCountMinAllowed { get; set; }
+            public double CosineMedianMin { get; set; }
+            public double CosineP5Min { get; set; }
+            public double CosineP1Min { get; set; }
+            public double RtMedianMax { get; set; }
+            public double RtP95Max { get; set; }
+            public double RtP99Max { get; set; }
+
+            /// <summary>The tolerance of a metric key such as "ms2.finetuned.cos": tight for the pretrained model, calibrated for the fine-tuned one.</summary>
+            public double GetMetricTolerance(string key)
+            {
+                if (key.Contains(@"." + ModelFiles.METRICS_PRETRAINED + @"."))
+                    return key.StartsWith(ModelFiles.METRICS_RT + @".", StringComparison.Ordinal) ? PretrainedRtMetric : PretrainedMetric;
+                if (!FinetunedMetric.TryGetValue(key.Substring(key.LastIndexOf('.') + 1), out double tolerance))
+                    Assert.Fail(@"No tolerance is calibrated for the metric {0}", key);
+                return tolerance;
             }
         }
 

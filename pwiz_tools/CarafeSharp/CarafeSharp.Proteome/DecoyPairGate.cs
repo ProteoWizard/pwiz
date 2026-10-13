@@ -31,7 +31,9 @@ namespace pwiz.CarafeSharp.Proteome
     /// When one has fewer fragments than <c>-lf_min_n_frag</c>, its partner is dropped too, so
     /// no target wins target-decoy competition unopposed (Osprey counts a target without a
     /// decoy as a winner) and no decoy is written without its target. Carafe writes each on its
-    /// own.
+    /// own. The exception is a pair one of whose sides has no precursor of that charge and
+    /// modification set to predict (for example a pyro-Glu target, whose decoy seldom starts with
+    /// Q or E): its other side is written unpaired, and counted (<see cref="ReleasedUnpaired"/>).
     /// <para>
     /// Partners are matched as <see cref="DecoyPairPlanner"/> pairs them: by I/L-normalized
     /// sequence, charge and modification set. A sequence with more than one place in the
@@ -53,6 +55,7 @@ namespace pwiz.CarafeSharp.Proteome
         private readonly Dictionary<(int PairIndex, bool Entrapment, int Charge, string ModKey), PairState> _pairs =
             new Dictionary<(int, bool, int, string), PairState>();
         private readonly List<LibrarySpectrum> _dropped = new List<LibrarySpectrum>();
+        private int _releasedUnpaired;
         private long _offered;
 
         public DecoyPairGate(IEnumerable<DecoyPairPlanner.ManifestEntry> manifest)
@@ -87,6 +90,12 @@ namespace pwiz.CarafeSharp.Proteome
         public IReadOnlyList<LibrarySpectrum> Dropped
         {
             get { return _dropped; }
+        }
+
+        /// <summary>Precursors written without a partner, because the partner side had none to predict.</summary>
+        public int ReleasedUnpaired
+        {
+            get { return _releasedUnpaired; }
         }
 
         /// <summary>Whether <paramref name="strippedSequence"/> is one side of a gated pair.</summary>
@@ -149,9 +158,12 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         private void Decide(PairState state, List<LibrarySpectrum> released)
         {
-            int keep = state.Expected[0] == 0 || state.Expected[1] == 0
+            bool unpaired = state.Expected[0] == 0 || state.Expected[1] == 0;
+            int keep = unpaired
                 ? int.MaxValue
                 : Math.Min(state.Kept.Count(k => k.Side == 0), state.Kept.Count(k => k.Side == 1));
+            if (unpaired)
+                _releasedUnpaired += state.Kept.Count;
             var taken = new int[2];
             foreach (var (side, spectrum) in state.Kept)
             {
