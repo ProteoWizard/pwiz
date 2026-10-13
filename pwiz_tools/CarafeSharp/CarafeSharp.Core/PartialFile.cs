@@ -56,6 +56,16 @@ namespace pwiz.CarafeSharp.Core
             _committed = true;
         }
 
+        /// <summary>
+        /// Moves the finished partial file to <paramref name="path"/>, which nothing may hold, instead of
+        /// <see cref="FinalPath"/>: for a finished file that could not replace the one at its final name.
+        /// </summary>
+        public void CommitAs(string path)
+        {
+            File.Move(PartialPath, path, false);
+            _committed = true;
+        }
+
         /// <summary>Deletes the partial file unless it was committed.</summary>
         public void Discard()
         {

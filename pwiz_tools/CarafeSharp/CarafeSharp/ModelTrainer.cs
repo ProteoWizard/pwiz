@@ -68,11 +68,13 @@ namespace pwiz.CarafeSharp
 
         public void Run()
         {
-            // What the run needs before hours of work: the library FASTA, any -ms2_model or
+            // What the run needs before hours of work: the library FASTA and a replaceable library, any -ms2_model or
             // saved model (-model, its entries checked), the device, the pretrained models, and
             // Chronologer's pinned files when it is the RT model.
             if (_settings.Library != null && !File.Exists(_settings.Library.Database))
                 throw new FileNotFoundException(@"Library FASTA (-db) not found: " + _settings.Library.Database, _settings.Library.Database);
+            if (_settings.Library != null)
+                LibraryGenerator.CheckOutputsReplaceable(_settings.Library, _settings.OutputDirectory);
             if (_settings.Ms2Model != null && !File.Exists(_settings.Ms2Model))
                 throw new FileNotFoundException(@"MS2 model (-ms2_model) not found: " + _settings.Ms2Model, _settings.Ms2Model);
             var baseModel = _settings.BaseModel != null ? CarafeModelFile.Open(_settings.BaseModel) : null;

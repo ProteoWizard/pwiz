@@ -177,8 +177,10 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(File.Exists(reconciled));
 
             // Library prediction from a folder of random models, as a .blib and a TSV. When the
-            // .blib cannot take its final name, the run fails and leaves neither library nor
-            // either partial file, only what was there before.
+            // finished .blib cannot take its final name (a folder there here; a library open in
+            // another program since the run began is the same), the run fails and the library is
+            // saved beside it as "name (2)", the .blib and the TSV with one number, which the error
+            // names; no partial file is left, and what was there before is unchanged.
             string models = Path.Combine(_folder, @"models");
             Directory.CreateDirectory(models);
             manual_seed(3);
@@ -194,13 +196,28 @@ namespace pwiz.CarafeSharp.Test
                 @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
             (code, _, error) = Run(predict);
             Assert.AreEqual(1, code, error);
-            CollectionAssert.AreEqual(new[] { blocker }, Directory.GetFileSystemEntries(libraryFolder));
+            string savedBlib = Path.Combine(libraryFolder, @"carafe_spectral_library (2).blib");
+            string savedTsv = Path.Combine(libraryFolder, @"carafe_spectral_library (2).tsv");
+            CollectionAssert.AreEquivalent(new[] { blocker, savedBlib, savedTsv }, Directory.GetFileSystemEntries(libraryFolder));
+            StringAssert.Contains(error, savedBlib);
+            StringAssert.Contains(error, savedTsv);
+            File.Delete(savedBlib);
+            File.Delete(savedTsv);
             // Without the obstacle the same command writes both, and nothing else.
             Directory.Delete(blocker);
             (code, _, error) = Run(predict);
             Assert.AreEqual(0, code, error);
-            CollectionAssert.AreEquivalent(new[] { blocker, Path.Combine(libraryFolder, CarafeLibraryTsvWriter.FILE_NAME) },
-                Directory.GetFileSystemEntries(libraryFolder));
+            var written = new[] { blocker, Path.Combine(libraryFolder, CarafeLibraryTsvWriter.FILE_NAME) };
+            CollectionAssert.AreEquivalent(written, Directory.GetFileSystemEntries(libraryFolder));
+            if (OperatingSystem.IsWindows())
+            {
+                // A library open in another program fails the run before any work, leaving the folder as it was.
+                using (new FileStream(blocker, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    (code, _, error) = Run(predict);
+                Assert.AreEqual(1, code, error);
+                StringAssert.Contains(error, blocker + @" cannot be replaced");
+                CollectionAssert.AreEquivalent(written, Directory.GetFileSystemEntries(libraryFolder));
+            }
 
             // The library of stage 1's peptide FASTA with its pairing manifest carries Carafe's
             // DecoyPairs table (and, without -rt_max, iRT retention times): every pair one target

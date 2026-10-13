@@ -229,6 +229,15 @@ namespace pwiz.CarafeSharp.IO
         }
 
         /// <summary>
+        /// Moves the completed library to <paramref name="path"/>, which nothing may hold, when
+        /// <see cref="Complete"/> could not move it over the final name.
+        /// </summary>
+        public void CommitAs(string path)
+        {
+            _file.CommitAs(path);
+        }
+
+        /// <summary>
         /// The BiblioSpec peak blobs of a spectrum: m/z as float64 of the float32 library m/z,
         /// intensity as float32, each compressed when that is smaller.
         /// </summary>

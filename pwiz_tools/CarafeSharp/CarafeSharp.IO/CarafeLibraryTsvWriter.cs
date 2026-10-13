@@ -129,6 +129,17 @@ namespace pwiz.CarafeSharp.IO
             _file.Commit();
         }
 
+        /// <summary>
+        /// Closes the TSV and moves it to <paramref name="path"/>, which nothing may hold, instead of the
+        /// final name: after <see cref="Complete"/> could not replace the file there, or to keep the name
+        /// the library beside it took.
+        /// </summary>
+        public void CompleteAs(string path)
+        {
+            _writer.Dispose();
+            _file.CommitAs(path);
+        }
+
         /// <summary>Closes the TSV; without <see cref="Complete"/>, deletes it and leaves the final name as it was.</summary>
         public void Dispose()
         {
