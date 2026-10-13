@@ -97,7 +97,6 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal sealed class Stage6Plan
         {
-            public IReadOnlyList<PeptideConsensusRT> Consensus;
             /// <summary>Non-Keep actions planned across every file, or null when reconciliation
             /// was skipped (single-file / empty consensus).</summary>
             public int? ActionCount;
@@ -338,25 +337,33 @@ namespace pwiz.Osprey.Tasks
             bool refitOnlyExit =
                 ((_ctx.Diagnostics?.DumpLoessFit ?? false) && (_ctx.Diagnostics?.LoessFitOnly ?? false)) ||
                 ((_ctx.Diagnostics?.DumpRefit ?? false) && (_ctx.Diagnostics?.RefitOnly ?? false));
+            // Every file's refit is kept ONLY for the two opt-in dumps that write them all out.
+            // Otherwise each refit goes into its own file's reconciliation.json through
+            // onFilePlanned and is counted, not kept - the same whole-experiment pattern as the
+            // action map (issue #4664).
+            bool keepRefits = (_ctx.Diagnostics?.DumpLoessFit ?? false) || (_ctx.Diagnostics?.DumpRefit ?? false);
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
+            int refitCount = 0;
             // Empty consensus (single-file / no cross-file evidence) is a legitimate
             // skip, not an error -- only a corrupt input aborts (in pass A).
             bool planning = consensus.Count > 0 && !refitOnlyExit;
             // Counted, not kept: each file's actions go into its own reconciliation.json through
             // onFilePlanned, and nothing reads the whole-experiment map (30.8 M entries at 446
-            // runs) that used to be built here. DISTINCT (file, index) keys, as that map had.
+            // runs) that used to be built here. PlanFile adds at most one action per entry index,
+            // so a file's action count is its DISTINCT (file, index) count, as that map's was.
             int actionCount = 0;
-            // The planner and the gap-fill identifier are handed refinedCalibrations, but the file
-            // walk below passes each file's own refit to them explicitly: files are planned on
-            // file lanes while the map is filled in file order, and a lookup would race those
-            // writes. Each reads only the file it is planning, so nothing else is needed.
+            // The planner and the gap-fill identifier take a refit map, but the file walk below
+            // passes each file's own refit to them explicitly: files are planned on file lanes,
+            // and each reads only the file it is planning. So they are handed an empty map, which
+            // no lookup on this path reads.
+            IReadOnlyDictionary<string, RTCalibration> noRefitLookup = new Dictionary<string, RTCalibration>();
             var planner = planning
                 ? new ReconciliationPlanner.FilePlanner(
-                    consensus, scan.PassingBaseIds, refinedCalibrations, perFileCalibrations)
+                    consensus, scan.PassingBaseIds, noRefitLookup, perFileCalibrations)
                 : null;
             var gapFiller = planning
                 ? new GapFillTargetIdentifier.FileIdentifier(
-                    consensus, scan.PassingPrecursors, refinedCalibrations, perFileCalibrations,
+                    consensus, scan.PassingPrecursors, noRefitLookup, perFileCalibrations,
                     libLookup, libPrecursorMz, perFileIsolationMz)
                 : null;
 
@@ -405,15 +412,14 @@ namespace pwiz.Osprey.Tasks
                 void RecordFilePlan(int i, Stage6FilePlan filePlan)
                 {
                     if (filePlan.RefinedCalibration != null)
-                        refinedCalibrations[filePlan.FileName] = filePlan.RefinedCalibration;
+                    {
+                        refitCount++;
+                        if (keepRefits)
+                            refinedCalibrations[filePlan.FileName] = filePlan.RefinedCalibration;
+                    }
                     // Exists exactly when planning, which is also when the file plan has actions.
                     if (planning && filePlan.Actions != null)
-                    {
-                        var indices = new HashSet<int>();
-                        foreach (var action in filePlan.Actions)
-                            indices.Add(action.Key);
-                        actionCount += indices.Count;
-                    }
+                        actionCount += filePlan.Actions.Count;
 
                     // Nothing is handed on when a diagnostic dump is about to end the run: the
                     // caller writes a per-file envelope from this, and an envelope recording
@@ -431,7 +437,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx.LogInfo(string.Format(
                     OspreyTasksResources.Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__files_using_the_cross_run_consensus_,
-                    refinedCalibrations.Count, fileNames.Count));
+                    refitCount, fileNames.Count));
             }
 
             if (_ctx.Diagnostics?.DumpLoessFit ?? false)
@@ -468,7 +474,6 @@ namespace pwiz.Osprey.Tasks
 
             return new Stage6Plan
             {
-                Consensus = consensus,
                 ActionCount = planning ? actionCount : null,
             };
         }

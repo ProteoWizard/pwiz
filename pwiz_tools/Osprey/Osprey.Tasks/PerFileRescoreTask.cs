@@ -88,8 +88,9 @@ namespace pwiz.Osprey.Tasks
     /// path so the canonical pipeline's membership rule (OspreyConfig.Includes) + the
     /// upstream tasks' lazy-rehydrate handle it. Run reads upstream state
     /// as typed byproducts through <c>ctx.Get&lt;CompactedEntries&gt;()</c>,
-    /// <c>ctx.Get&lt;ReconciliationActions&gt;()</c>, etc. (a cache miss
-    /// materializes the producing task), dispatches into
+    /// <c>ctx.Get&lt;PlannedActionCount&gt;()</c>, etc. (a cache miss
+    /// materializes the producing task) - each run's actions, gap-fill and refined
+    /// calibration come from that run's own <c>reconciliation.json</c> - dispatches into
     /// <see cref="ExecuteRescore"/>, then runs the per-process
     /// diagnostic-writer close + cross-impl bisection dump. Reaches the
     /// scoring engine (RunCoelutionScoring via <see cref="ScoringPipeline"/>) directly

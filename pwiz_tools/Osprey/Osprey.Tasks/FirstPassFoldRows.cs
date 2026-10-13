@@ -35,13 +35,15 @@ namespace pwiz.Osprey.Tasks
     /// <para>It replaces a full <see cref="FdrEntry"/> stub list per run (issue #4664). That list
     /// decoded eleven parquet columns into one object per row - ~3.8 M rows per run on the 446-run
     /// cohort - to hand the fold four of them, and was rebuilt for every run. This reads four
-    /// columns into parallel buffers that are REUSED across runs, so after the largest run nothing
-    /// is allocated per run at all, and nothing lands on the large object heap once per run.</para>
+    /// columns into parallel buffers that are REUSED across runs and grow geometrically, so a
+    /// buffer is reallocated a logarithmic number of times over the whole fold rather than once
+    /// per run.</para>
     ///
-    /// <para><see cref="TryJoinFirstPassSidecar"/> applies the sidecar with the same rules as
-    /// <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass, Func{uint, bool}, IReadOnlyDictionary{uint, FdrExperimentRecord})"/>,
-    /// because the report is compared against a committed golden and these rows must fold to
-    /// the same numbers the stubs did.</para>
+    /// <para><see cref="TryJoinFirstPassSidecar"/> joins the sidecar through
+    /// <see cref="FdrScoresSidecar.TryJoinRows"/>, the same walk
+    /// <see cref="FdrScoresSidecar.TryRead(string, IList{FdrEntry}, FdrScoresSidecar.Pass, Func{uint, bool}, IReadOnlyDictionary{uint, FdrExperimentRecord})"/>
+    /// uses, because the report is compared against a committed regression test and these rows
+    /// must fold to the same numbers the stubs did.</para>
     /// </summary>
     public sealed class FirstPassFoldRows
     {
@@ -78,7 +80,7 @@ namespace pwiz.Osprey.Tasks
                     _entryIds.Add(entryId);
                     _charges.Add(charge);
                     _isDecoys.Add(isDecoy);
-                    _modifiedSequences.Add(Canonicalize(modifiedSequence, sequencePool));
+                    _modifiedSequences.Add(LibraryStringInterner.Canonicalize(sequencePool, modifiedSequence));
                 },
                 StubColumns.SkipCoelutionSum);
         }
@@ -89,10 +91,9 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="expectedAbsent"/> does not account for - in which case the values
         /// must not be used.
         ///
-        /// <para>Same rules as <c>FdrScoresSidecar.TryRead</c>, in full: a record lands on the
-        /// LAST row with its entry_id; a row with no record keeps Score 0 and q = 1; and the
-        /// experiment q-values reach only rows a record landed on, never every row sharing an
-        /// entry_id (see that method for what widening it cost).</para>
+        /// <para>The join rules are <see cref="FdrScoresSidecar.TryJoinRows"/>'s, mapping each
+        /// entry_id to its LAST row as <c>TryRead</c> does. A row with no record keeps Score 0
+        /// and q = 1, the defaults a stub carried.</para>
         /// </summary>
         public bool TryJoinFirstPassSidecar(string sidecarPath,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
@@ -106,34 +107,25 @@ namespace pwiz.Osprey.Tasks
             Fill(_experimentPrecursorQvalues, count, 1.0);
             Fill(_experimentPeptideQvalues, count, 1.0);
 
+            // Reused like the buffers: Clear keeps the largest run's capacity, so the map is
+            // allocated (and grown) a few times over the fold rather than once per run.
             _rowByEntryId.Clear();
             for (int i = 0; i < count; i++)
                 _rowByEntryId[_entryIds[i]] = i;
 
-            bool unaccounted = false;
-            bool read = FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, record =>
-            {
-                if (unaccounted)
-                    return;
-                if (!_rowByEntryId.TryGetValue(record.EntryId, out int row))
+            return FdrScoresSidecar.TryJoinRows(sidecarPath, FdrScoresSidecar.Pass.FirstPass,
+                _rowByEntryId, expectedAbsent, experimentRecords,
+                (row, record, experiment) =>
                 {
-                    if (expectedAbsent == null || !expectedAbsent(record.EntryId))
-                        unaccounted = true;
-                    return;
-                }
-                _scores[row] = record.Score;
-                _runPrecursorQvalues[row] = record.RunPrecursorQvalue;
-                _runPeptideQvalues[row] = record.RunPeptideQvalue;
-                if (experimentRecords != null &&
-                    experimentRecords.TryGetValue(record.EntryId, out var experiment))
-                {
-                    _experimentPrecursorQvalues[row] = experiment.ExperimentPrecursorQvalue;
-                    _experimentPeptideQvalues[row] = experiment.ExperimentPeptideQvalue;
-                }
-            });
-            // The map is per run and as large as the run; nothing reads it after the join.
-            _rowByEntryId.Clear();
-            return read && !unaccounted;
+                    _scores[row] = record.Score;
+                    _runPrecursorQvalues[row] = record.RunPrecursorQvalue;
+                    _runPeptideQvalues[row] = record.RunPeptideQvalue;
+                    if (experiment.HasValue)
+                    {
+                        _experimentPrecursorQvalues[row] = experiment.Value.ExperimentPrecursorQvalue;
+                        _experimentPeptideQvalues[row] = experiment.Value.ExperimentPeptideQvalue;
+                    }
+                });
         }
 
         /// <summary>The modified sequence of row <paramref name="row"/>.</summary>
@@ -167,28 +159,20 @@ namespace pwiz.Osprey.Tasks
         {
             if (_scores.Length >= count)
                 return;
-            _scores = new double[count];
-            _runPrecursorQvalues = new double[count];
-            _runPeptideQvalues = new double[count];
-            _experimentPrecursorQvalues = new double[count];
-            _experimentPeptideQvalues = new double[count];
+            // Geometric, as List<T> grows the parquet buffers: runs arriving in increasing size
+            // would otherwise reallocate all five arrays for every run.
+            int capacity = Math.Max(count, 2 * _scores.Length);
+            _scores = new double[capacity];
+            _runPrecursorQvalues = new double[capacity];
+            _runPeptideQvalues = new double[capacity];
+            _experimentPrecursorQvalues = new double[capacity];
+            _experimentPeptideQvalues = new double[capacity];
         }
 
         private static void Fill(double[] values, int count, double value)
         {
             for (int i = 0; i < count; i++)
                 values[i] = value;
-        }
-
-        /// <summary>
-        /// The pool's shared instance for <paramref name="value"/>, or the value unchanged when
-        /// no pool was supplied - as the stub loader canonicalizes, empty included.
-        /// </summary>
-        private static string Canonicalize(string value, LibraryStringInterner pool)
-        {
-            if (pool == null || string.IsNullOrEmpty(value))
-                return value;
-            return pool.Intern(value);
         }
     }
 }

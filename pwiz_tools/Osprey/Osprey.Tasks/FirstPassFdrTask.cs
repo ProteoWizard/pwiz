@@ -1655,14 +1655,15 @@ namespace pwiz.Osprey.Tasks
         /// safety argument.
         ///
         /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
-        /// already pair-symmetric so a target's decoy rides along) PLUS the gap-fill candidates.
-        /// The gap-fill term is a belt rather than a necessity, and the reason this doc used to
-        /// give for it was wrong - see
+        /// already pair-symmetric so a target's decoy rides along), and nothing else: no
+        /// gap-fill term is passed, on either path. None is needed - see
         /// <see cref="LibraryFragmentRelease.BuildRetainedBaseIds(HashSet{uint}, IReadOnlyDictionary{string, List{GapFillTarget}})"/>,
-        /// which carries the corrected argument (issue #4650). In short: a gap-fill target is a
-        /// precursor that PASSED in a sibling replicate and is absent from THIS file's rows, so
-        /// its base_id is already in the join-wide first-pass set. "Did not survive compaction"
-        /// is true of the file's ROW, never of the base_id.</para>
+        /// which carries the argument (issue #4650). In short: a gap-fill target is a precursor
+        /// that PASSED in a sibling replicate and is absent from THIS file's rows, so its base_id
+        /// is already in the join-wide first-pass set. "Did not survive compaction" is true of
+        /// the file's ROW, never of the base_id. The in-process path passed a null term before
+        /// the all-runs gap-fill map was removed too: that map was released one line ahead of
+        /// this call (issue #4664).</para>
         ///
         /// <para>Called from BOTH <see cref="Run"/> (projection path) and
         /// <see cref="Rehydrate"/> (resume / bundle-adopt), which set
