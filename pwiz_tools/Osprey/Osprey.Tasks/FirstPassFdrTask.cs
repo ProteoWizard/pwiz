@@ -356,10 +356,9 @@ namespace pwiz.Osprey.Tasks
             {
                 RescoreHydration.FoldPreCompactionPerRun(
                     parquetPaths,
-                    (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
-                        ctx.Get<SequencePool>().Value),
-                    (fileIdx, fileName, stubs) =>
-                        ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, stubs),
+                    ctx.Get<SequencePool>().Value,
+                    (fileIdx, fileName, rows) =>
+                        ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, rows),
                     experimentRecords,
                     retainedBaseIds,
                     ctx);
@@ -853,28 +852,6 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
             ctx.Publish(new PlanningPerformed(false));
             return true;
-        }
-
-        /// <summary>
-        /// One file's stub load for <see cref="FoldDiagnosticsOnly"/>, with any parquet fault
-        /// wrapped as <see cref="InvalidDataException"/>, so a truncated or locked
-        /// <c>.scores.parquet</c> reaches the caller as an operator-facing error naming the file
-        /// rather than as an <c>IOException</c> with no exit code. Mirrors both upstream resume
-        /// loaders, which wrap for the same reason.
-        /// </summary>
-        private static List<FdrEntry> LoadResumeStubs(string fileName, string parquetPath,
-            LibraryStringInterner sequencePool)
-        {
-            try
-            {
-                return ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_,
-                    fileName, parquetPath, ex.Message), ex);
-            }
         }
 
         /// <summary>

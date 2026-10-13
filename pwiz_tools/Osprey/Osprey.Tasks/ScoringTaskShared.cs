@@ -1012,6 +1012,24 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// <see cref="FeedModelDiagnostics(ModelDiagnosticsData.Accumulator, int, List{FdrEntry})"/>
+        /// for one run's joined <see cref="FirstPassFoldRows"/>, in row order. PEP is 1.0 on every
+        /// row, as it was on the stubs these rows replace: the first-pass sidecar carries no PEP
+        /// column (see <see cref="FdrScoreRecord"/>), so a stub kept its default.
+        /// </summary>
+        internal static void FeedModelDiagnostics(
+            ModelDiagnosticsData.Accumulator accumulator, int fileIdx, FirstPassFoldRows rows)
+        {
+            for (int i = 0; i < rows.Count; i++)
+            {
+                accumulator.Add(fileIdx, rows.ModifiedSequence(i), rows.Charge(i), rows.EntryId(i),
+                    rows.IsDecoy(i), rows.Score(i),
+                    new FdrQValues(rows.RunPrecursorQvalue(i), rows.RunPeptideQvalue(i),
+                        rows.ExperimentPrecursorQvalue(i), rows.ExperimentPeptideQvalue(i), 1.0));
+            }
+        }
+
+        /// <summary>
         /// Report the first-pass compaction: what was kept, for the person watching, and the
         /// admission detail behind <c>--verbose</c>. The base_id count mixes three admission
         /// rules (run-level peptide q, protein q, and proteins with 2 or more detections), so it
