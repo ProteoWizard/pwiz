@@ -1,4 +1,5 @@
 using System.Globalization;
+using Pwiz.Analysis.Demux;
 using Pwiz.Analysis.Filters;
 using Pwiz.Analysis.PeakFilters;
 using Pwiz.Analysis.PeakPicking;
@@ -918,6 +919,9 @@ public static class SpectrumListFactory
             RemoveNonOverlappingEdges = bool.Parse(TakeKeyValue(ref args, "removeNonOverlappingEdges=", "false")),
             Optimization = ParseOptimization(TakeKeyValue(ref args, "optimization=", "none")),
             SolveThreads = int.Parse(TakeKeyValue(ref args, "solveThreads=", "1"), CultureInfo.InvariantCulture),
+            Interpolation = ParseInterpolation(TakeKeyValue(ref args, "interpolation=", "spline")),
+            // Not in cpp: Poisson-weighted NNLS refit.
+            PoissonWeights = bool.Parse(TakeKeyValue(ref args, "poissonWeights=", "false")),
         };
 
         args = args.Trim();
@@ -929,6 +933,15 @@ public static class SpectrumListFactory
 
         return new SpectrumListDemux(inner, p);
     }
+
+    private static DemuxInterpolation ParseInterpolation(string s) =>
+        s.ToLowerInvariant() switch
+        {
+            "spline" => DemuxInterpolation.NaturalSpline,
+            "natural3" => DemuxInterpolation.NaturalThreePoint,
+            "makima" => DemuxInterpolation.Makima,
+            _ => throw new ArgumentException($"demultiplex: unknown interpolation '{s}' (spline, natural3 or makima)"),
+        };
 
     private static SpectrumListDemux.Optimization ParseOptimization(string s) =>
         s.ToLowerInvariant() switch

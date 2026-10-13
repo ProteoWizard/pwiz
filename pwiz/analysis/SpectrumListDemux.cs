@@ -27,8 +27,8 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         OverlapOnly,
     }
 
-    /// <summary>Tunable parameters.</summary>
-    public sealed class Params
+    /// <summary>Tunable parameters. A record, so callers copy it with <c>with { ... }</c>.</summary>
+    public sealed record Params
     {
         /// <summary>Mass tolerance for MS/MS peak extraction (default 10 ppm).</summary>
         public MZTolerance MassError { get; init; } = new(10, MZToleranceUnits.Ppm);
@@ -58,6 +58,10 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         /// <summary>Interpolate signal rows to the demuxed spectrum's RT (overlap mode only).</summary>
         public bool InterpolateRetentionTime { get; init; } = true;
 
+        /// <summary>How rows are interpolated to the demuxed spectrum's RT (overlap mode only).
+        /// Default <see cref="DemuxInterpolation.NaturalSpline"/>, as cpp.</summary>
+        public DemuxInterpolation Interpolation { get; init; } = DemuxInterpolation.NaturalSpline;
+
         /// <summary>Choice of demultiplexer algorithm.</summary>
         public Optimization Optimization { get; init; } = Optimization.None;
 
@@ -75,6 +79,10 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
         /// solved blocks and the spectra they read. A host converting several files at once
         /// should leave it at 1.</summary>
         public int SolveThreads { get; init; } = 1;
+
+        /// <summary>Refit each NNLS column with Poisson row weights from its unweighted solution
+        /// (default false, matching cpp). See <see cref="NnlsSolver"/>.</summary>
+        public bool PoissonWeights { get; init; }
     }
 
     private readonly DemuxImpl _impl;
@@ -84,6 +92,114 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
     {
         ArgumentNullException.ThrowIfNull(inner);
         _impl = new DemuxImpl(inner, p ?? new Params(), Inner.DataProcessing);
+    }
+
+    /// <summary>The multiplexing scheme of a spectrum list, as this demultiplexer represents it.</summary>
+    /// <param name="SpectraPerCycle">MS2 spectra per acquisition cycle.</param>
+    /// <param name="PrecursorsPerSpectrum">Isolation windows per MS2 spectrum: above 1 is MSX.</param>
+    /// <param name="OverlapsPerSpectrum">Demux windows each isolation window covers: above 1 is
+    /// overlapping (staggered) windows.</param>
+    /// <param name="DemuxWindows">Narrow windows the spectra are demultiplexed into.</param>
+    public sealed record Scheme(int SpectraPerCycle, int PrecursorsPerSpectrum, int OverlapsPerSpectrum, int DemuxWindows)
+    {
+        /// <summary>The demux algorithm for this scheme: overlap demultiplexing for overlapping
+        /// windows, MSX demultiplexing for several precursors per spectrum.</summary>
+        public Optimization Optimization => PrecursorsPerSpectrum > 1 ? Optimization.None : Optimization.OverlapOnly;
+    }
+
+    /// <summary>
+    /// The multiplexing scheme of <paramref name="spectra"/>, or null when it is not multiplexed
+    /// in a way this demultiplexer can represent: ordinary DIA, DDA, or a file with no MS2.
+    /// Reads metadata only: at most the first <see cref="DetectHeadSpectra"/> spectra, plus two
+    /// cycles in the middle and at the end of the run.
+    /// </summary>
+    /// <remarks>
+    /// Multiplexed means several precursors per MS2 spectrum (MSX) or overlapping windows, AND
+    /// every MS2 spectrum of two cycles at the start, middle and end of the run maps onto the same
+    /// number of demux windows. That rejects ordinary DIA whose adjacent windows overlap by a margin
+    /// (body windows cover three demux windows, edge windows two) and a method whose windows change
+    /// partway, which the demultiplexer would otherwise fail on mid-run.
+    /// </remarks>
+    public static Scheme? DetectScheme(ISpectrumList spectra, Params? p = null)
+    {
+        ArgumentNullException.ThrowIfNull(spectra);
+        p ??= new Params();
+        // A reader error should surface as itself, not as "not multiplexed": read up to the first
+        // MS2 spectrum outside the codec's catch below.
+        var head = new HeadSpectrumList(spectra, DetectHeadSpectra);
+        for (int i = 0; i < head.Count; i++)
+        {
+            if (head.GetSpectrum(i, getBinaryData: false).Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) == 2)
+                break;
+        }
+        PrecursorMaskCodec codec;
+        try
+        {
+            // The head only, so a run with no repeating cycle (DDA) fails fast.
+            codec = new PrecursorMaskCodec(head, new PrecursorMaskCodec.Params
+            {
+                VariableFill = p.VariableFill,
+                MinimumWindowSize = p.MinimumWindowSize,
+                RemoveNonOverlappingEdges = p.RemoveNonOverlappingEdges,
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            // No MS2, no repeating cycle, or a varying number of precursors per spectrum.
+            return null;
+        }
+        if (codec.PrecursorsPerSpectrum <= 1 && codec.OverlapsPerCycle <= 1)
+            return null;
+
+        int span = 3 * (codec.SpectraPerCycle + 1);
+        foreach (int start in new[] { 0, spectra.Count / 2, System.Math.Max(0, spectra.Count - span) })
+        {
+            if (!MapsConsistently(spectra, codec, start, 2 * codec.SpectraPerCycle))
+                return null;
+        }
+        return new Scheme(codec.SpectraPerCycle, codec.PrecursorsPerSpectrum, codec.OverlapsPerCycle,
+            codec.NumDemuxWindows);
+    }
+
+    /// <summary>Spectra <see cref="DetectScheme"/> reads at most to infer the cycle.</summary>
+    public const int DetectHeadSpectra = 5000;
+
+    /// <summary>True when the first <paramref name="ms2Count"/> MS2 spectra from
+    /// <paramref name="start"/> each map onto the codec's number of demux windows.</summary>
+    private static bool MapsConsistently(ISpectrumList spectra, PrecursorMaskCodec codec, int start, int ms2Count)
+    {
+        var indices = new List<int>();
+        int checkedMs2 = 0;
+        for (int i = start; i < spectra.Count && checkedMs2 < ms2Count; i++)
+        {
+            var spectrum = spectra.GetSpectrum(i, getBinaryData: false);
+            if (spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) != 2)
+                continue;
+            try
+            {
+                // Throws when this spectrum maps onto a different number of demux windows.
+                codec.SpectrumToIndices(spectrum, indices);
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+            checkedMs2++;
+        }
+        return true;
+    }
+
+    /// <summary>The first spectra of a list, for inferring its cycle without sweeping it.</summary>
+    private sealed class HeadSpectrumList : SpectrumListWrapper
+    {
+        private readonly int _count;
+
+        public HeadSpectrumList(ISpectrumList inner, int count) : base(inner)
+        {
+            _count = System.Math.Min(inner.Count, count);
+        }
+
+        public override int Count => _count;
     }
 
     /// <inheritdoc/>
@@ -151,7 +267,7 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             // matrix + interpolation cycles) collapse to 1 unique fetch per spectrum amortized.
             _inner = new DemuxSpectrumCache(inner);
             _params = p;
-            _solver = new NnlsSolver(p.NnlsMaxIter, p.NnlsEps);
+            _solver = new NnlsSolver(p.NnlsMaxIter, p.NnlsEps, poissonWeights: p.PoissonWeights);
 
             var pmcParams = new PrecursorMaskCodec.Params
             {
@@ -179,7 +295,10 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             // spectra, PrecursorsPerSpectrum cycles or more. More with DemuxBlockExtra. A smaller
             // cache decodes each spectrum several times. One extra per cycle for the MS1.
             int spectraPerCycle = _pmc.SpectraPerCycle + 1;
-            int cycles = System.Math.Max(CACHE_CYCLES, _pmc.DemuxBlockSize / _pmc.SpectraPerCycle + 1) +
+            // Interpolation reads Samples(...) acquisitions around a mux spectrum up to a cycle away.
+            int interpolationCycles = RetentionTimeInterpolator.Samples(p.Interpolation) + 1;
+            int cycles = System.Math.Max(System.Math.Max(CACHE_CYCLES, interpolationCycles),
+                             _pmc.DemuxBlockSize / _pmc.SpectraPerCycle + 1) +
                 (int)System.Math.Ceiling(System.Math.Max(0, p.DemuxBlockExtra));
             _prefetchMargin = (cycles + 1) / 2 * spectraPerCycle;
             _solveAhead = p.SolveThreads > 1 ? p.SolveThreads * SOLVE_AHEAD_PER_THREAD : 1;
@@ -332,6 +451,7 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
                 Optimization.OverlapOnly => new OverlapDemultiplexer(new OverlapDemultiplexer.Params
                 {
                     InterpolateRetentionTime = _params.InterpolateRetentionTime,
+                    Interpolation = _params.Interpolation,
                     ApplyWeighting = _params.ApplyWeighting,
                     MassError = _params.MassError,
                 }),
@@ -442,7 +562,8 @@ public sealed class SpectrumListDemux : SpectrumListWrapper
             Parallel.For(0, results.Length,
                 new ParallelOptions { MaxDegreeOfParallelism = _params.SolveThreads, CancellationToken = cancel },
                 () => (Demux: CreateDemultiplexer(),
-                    Solver: new NnlsSolver(_params.NnlsMaxIter, _params.NnlsEps, parallelColumns: false)),
+                    Solver: new NnlsSolver(_params.NnlsMaxIter, _params.NnlsEps, parallelColumns: false,
+                        poissonWeights: _params.PoissonWeights)),
                 (i, _, worker) =>
                 {
                     try

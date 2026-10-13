@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Test
         // The startup-checked variables the cases below set.
         private static readonly string[] STARTUP_VARIABLES =
         {
-            @"OSPREY_PASS2_QVALUE", @"OSPREY_ALLOW_UNFIXED_RESIDENT"
+            @"OSPREY_PASS2_QVALUE"
         };
 
         // OSPREY_* names this build does not read: switches retired by name, a Rust-only dump and
@@ -56,6 +56,7 @@ namespace pwiz.Osprey.Test
         private static readonly string[] UNRECOGNIZED_VARIABLES =
         {
             @"OSPREY_STAGE7_STREAM", @"OSPREY_STAGE6_STREAM_SURVIVORS", @"OSPREY_FDR_PROJECTION",
+            @"OSPREY_ALLOW_UNFIXED_RESIDENT",
             @"OSPREY_DUMP_PERCOLATOR", @"OSPREY_PERCOLATOR_ONLY", @"OSPREY_DUMP_RESCORED",
             @"OSPREY_PASS2_QVALUES"
         };
@@ -159,12 +160,6 @@ namespace pwiz.Osprey.Test
             // Empty is unset, for an unknown name as for a known one: the run goes on, here to the
             // ModelDiagnostics error above, which stays the only error line.
             output = RunCommandAndValidateError(Variable(UNRECOGNIZED_VARIABLES[0], string.Empty), modelDiagnostics);
-            AssertErrorMessage(output, noFirstPass);
-            // A retired allowance token is a warning, not an error: the run goes on, here to
-            // the ModelDiagnostics error above, which stays the only error line.
-            output = RunCommandAndValidateError(Variable(@"OSPREY_ALLOW_UNFIXED_RESIDENT", @"hpc-merge"),
-                modelDiagnostics);
-            StringAssert.Contains(output, @"hpc-merge");
             AssertErrorMessage(output, noFirstPass);
 
             // --culture: a name .NET does not know stops the run with .NET's own message (which

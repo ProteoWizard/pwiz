@@ -79,7 +79,7 @@ public static class TraDataIO
         w.WriteEndElement();
     }
 
-    private static void WriteCvList(XmlWriter w, IList<CV> cvs)
+    private static void WriteCvList(XmlWriter w, List<CV> cvs)
     {
         w.WriteStartElement("cvList", Ns);
         w.WriteAttributeString("count", cvs.Count.ToString(CultureInfo.InvariantCulture));
@@ -95,7 +95,7 @@ public static class TraDataIO
         w.WriteEndElement();
     }
 
-    private static void WriteContactList(XmlWriter w, IList<Contact> contacts)
+    private static void WriteContactList(XmlWriter w, List<Contact> contacts)
     {
         w.WriteStartElement("ContactList", Ns);
         w.WriteAttributeString("count", contacts.Count.ToString(CultureInfo.InvariantCulture));

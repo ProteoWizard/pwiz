@@ -106,24 +106,13 @@ artifact**, so the multi-GB spectra caches there are harmless):
 assertion) are described in `regression.ps1`'s own comment header, alongside why
 comparing output alone cannot detect a cache-invalidation regression.
 
-**No** leg names a resident-pool token. The rehydrate leg (formerly mode 5) was the last one that did
-(`OSPREY_ALLOW_UNFIXED_RESIDENT=resume-survivor-handoff`, because a resume could not stream
-the Stage 6 survivor handoff); issue #4536 gave the rehydrate its own per-file survivor
-loader, so that arm streams instead of needing one. An *inherited* value is cleared at
-startup unless a deliberate A/B switch needs it. Any token this gate is ever made to require
-must have an open issue to remove it, and the run summary prints the outstanding-gap table
-so a required token would be visible on every green run - today that table is empty and the
-summary prints `none`.
-
-Zero tokens is not zero O(files) paths, and the summary says only the former. The survivor
-buffer is rebuilt by `SecondPassFDR`'s own pull for it to read (#4597 moved the build off the
-end of Stage 6, which does not shrink it), so it is resident for the whole of Stage 7 on every
-path; no guard covers that because it is Stage 7's
-input rather than a mode or a resume. That is #4486.
-
-An ambient allowance on a standing gate can only mask the regression the gate exists to
-catch - which is how the former blanket `OSPREY_ALLOW_UNBOUNDED_MEMORY=1` let an
-`OSPREY_PASS2_QVALUE=transfer` regression ride along for ten days.
+There is no resident-pool allowance any more. The named-token ratchet
+(`OSPREY_ALLOW_UNFIXED_RESIDENT`, which replaced the blanket `OSPREY_ALLOW_UNBOUNDED_MEMORY=1`
+after that let an `OSPREY_PASS2_QVALUE=transfer` regression ride along for ten days) shrank to
+no tokens and was removed on 2026-10-12 with the last resident route; Osprey refuses the
+variable at startup like any other unknown `OSPREY_*` name, so an inherited value fails the
+gate loudly rather than being cleared. Stage 7 folds run by run on every leg (#4486), which the
+`(streamed join)` lines assert.
 
 Every leg of a dataset — straight-through, resume, and each HPC phase — is given
 the **same** dataset CLI flags (`Get-DatasetCliArgs`). A self-consistency oracle
