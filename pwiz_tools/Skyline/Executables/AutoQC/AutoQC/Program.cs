@@ -1,6 +1,7 @@
 /*
  * Original author: Vagisha Sharma <vsharma .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  * Copyright 2015 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,8 +120,13 @@ namespace AutoQC
                         ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
                     configFile = config.FilePath;
                     ProgramLog.Info(string.Format("user.config path: {0}", configFile));
-                    if (!InitSkylineSettings()) return;
+                    // Upgrade before InitSkylineSettings(), because Upgrade() copies the previous version's Skyline
+                    // installation settings over the ones InitSkylineSettings() finds. MigrateConfigsIfRequired() comes
+                    // after, because converting configurations saved by an older AutoQC needs the installations found.
                     UpgradeSettingsIfRequired();
+                    if (!InitSkylineSettings())
+                        return;
+                    MigrateConfigsIfRequired();
                 }
                 catch (Exception e)
                 {
@@ -221,6 +227,10 @@ namespace AutoQC
                 Settings.Default.Save();
                 Settings.Default.Reload();
             }
+        }
+
+        private static void MigrateConfigsIfRequired()
+        {
             GetCurrentAndLastInstalledVersions();
             Settings.Default.UpdateIfNecessary(_install.BareVersion, ConfigMigrationRequired());
         }
@@ -278,12 +288,13 @@ namespace AutoQC
             {
                 if (SkylineInstallations.HasSkyline)
                 {
-                    ProgramLog.Info(string.Format("Found SkylineRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineRunnerPath));
+                    ProgramLog.Info(string.Format("The Skyline option uses: {0}.", new SkylineSettings(SkylineType.Skyline, null).CmdPath));
                 }
                 if (SkylineInstallations.HasSkylineDaily)
                 {
-                    ProgramLog.Info(string.Format("Found SkylineDailyRunner at: {0}.", SharedBatch.Properties.Settings.Default.SkylineDailyRunnerPath));
+                    ProgramLog.Info(string.Format("The Skyline-daily option uses: {0}.", new SkylineSettings(SkylineType.SkylineDaily, null).CmdPath));
                 }
+                LogCustomSkylineCmd();
                 // Save the Skyline settings otherwise, in a new installation of AutoQC Loader, "Skyline" and "Skyline Daily" options
                 // are disabled in the "Skyline" tab.
                 SharedBatch.Properties.Settings.Default.Save();
@@ -307,8 +318,21 @@ namespace AutoQC
                     string.Format(Resources.Program_InitSkylineSettings_Please_install_Skyline_to_run__0__, AppName), AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-            
+
+            LogCustomSkylineCmd();
+            // Save the folder the user selected, so the dialog is not shown again at the next start.
+            SharedBatch.Properties.Settings.Default.Save();
             return true;
+        }
+
+        private static void LogCustomSkylineCmd()
+        {
+            // Each configuration that uses the option stores its own folder. This is the default the configuration form shows.
+            var customCmdPath = SharedBatch.Properties.Settings.Default.SkylineCustomCmdPath;
+            if (!string.IsNullOrEmpty(customCmdPath))
+            {
+                ProgramLog.Info(string.Format("The saved default for the Skyline installation directory option is: {0}.", customCmdPath));
+            }
         }
 
         private static string GetFirstArg(string[] args)

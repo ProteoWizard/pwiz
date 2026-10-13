@@ -68,6 +68,8 @@ namespace SkylineBatchTest
             return string.Join(Environment.NewLine,
                 @"  Skyline installations:",
                 $@"    local cmd path:  {SharedBatch.Properties.Settings.Default.SkylineLocalCommandPath ?? @"(none)"}",
+                $@"    inno cmd path:   {SharedBatch.Properties.Settings.Default.SkylineInnoCmdPath ?? @"(none)"}",
+                $@"    runner path:     {SharedBatch.Properties.Settings.Default.SkylineRunnerPath ?? @"(none)"}",
                 $@"    admin cmd path:  {SharedBatch.Properties.Settings.Default.SkylineAdminCmdPath ?? @"(none)"}",
                 $@"    test fallback:   {SkylineInstallations.TestAdminSkylineCmdPath ?? @"(none)"}",
                 $@"    HasLocalSkylineCmd={SkylineInstallations.HasLocalSkylineCmd} HasSkyline={SkylineInstallations.HasSkyline} HasSkylineDaily={SkylineInstallations.HasSkylineDaily} HasCustom={SkylineInstallations.HasCustomSkylineCmd}");
