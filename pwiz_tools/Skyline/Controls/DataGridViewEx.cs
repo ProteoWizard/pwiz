@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
@@ -54,22 +53,8 @@ namespace pwiz.Skyline.Controls
                 var autoSize = column.InheritedAutoSizeMode;
                 if (autoSize != DataGridViewAutoSizeColumnMode.None && autoSize != DataGridViewAutoSizeColumnMode.NotSet)
                     continue;   // width follows the content or the grid, not the designer
-                int designWidth = column.Width == defaultWidth ? 100 : column.Width;    // 96-DPI pixels
                 if (column.Width != defaultWidth)
                     column.Width = DpiUtil.Scale(this, column.Width);
-                // A header that fit on one line at 96 DPI can wrap at the scaled width, because
-                // text does not scale linearly with the font; keep it on one line. A header that
-                // already wrapped in the designer is left to wrap, so it takes no space from
-                // the other columns. (GetPreferredWidth measures against the wrapped header
-                // height, so measure the text directly.)
-                var headerFont = ColumnHeadersDefaultCellStyle.Font ?? Font;
-                int reserve = column.SortMode == DataGridViewColumnSortMode.NotSortable ? 16 : 36;    // sort glyph and padding
-                int headerTextWidth = TextRenderer.MeasureText(column.HeaderText ?? string.Empty, headerFont,
-                    System.Drawing.Size.Empty, TextFormatFlags.SingleLine).Width;
-                bool fitAt96 = headerTextWidth / factor + reserve <= designWidth;
-                int headerWidth = headerTextWidth + DpiUtil.Scale(this, reserve);
-                if (fitAt96 && column.Width < headerWidth)
-                    column.Width = headerWidth;
             }
         }
 

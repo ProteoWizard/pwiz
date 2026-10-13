@@ -47,14 +47,12 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Ratio of the process's rendering DPI to the classic 96 DPI baseline
-        /// (1.0 at 100% display scaling, 1.25 at 125%, etc.). Control.DeviceDpi is NOT
-        /// used: on .NET Framework 4.7.2 it stays 96 in a system-DPI-aware process (it is
-        /// only maintained under per-monitor-V2 awareness), before AND after handle
-        /// creation. The screen DC is the reliable source, and because the system DPI is
-        /// fixed for the process lifetime in system-aware mode, the value is read once and
-        /// cached - this property is called from per-node paint paths. The control
-        /// parameter is kept for the day per-monitor V2 makes DPI genuinely per-control
-        /// (.NET 8 port, issue #4599).
+        /// (1.0 at 100% display scaling, 1.25 at 125%, etc.). In system-DPI-aware mode the
+        /// system DPI is fixed for the process lifetime and Control.DeviceDpi carries the
+        /// same value, so the screen DC is read once and cached: this is called from
+        /// per-node paint paths and from code with no control at hand (callers pass null).
+        /// The control parameter is kept for the day per-monitor V2 makes DPI genuinely
+        /// per-control (issue #4599).
         /// </summary>
         public static float GetFactor(Control control)
         {
