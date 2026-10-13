@@ -303,29 +303,37 @@ namespace pwiz.SkylineTest
             var chromInfo = new TransitionChromInfo(fileId, 0, peak.WithObservedIonMobility(0.95123f).WithObservedCcs(301.2),
                 ionMobilityFilter, Annotations.EMPTY, UserSet.TRUE);
 
-            // Recomputed from the cache: IM quantized to 1/10000, and no CCS
-            Assert.IsTrue(chromInfo.EquivalentTolerant(fileId, 0, peak.WithObservedIonMobility(0.9512f)));
+            // Recomputed from the cache: IM quantized to 1/10000, and CCS quantized to 1/100
+            Assert.IsTrue(chromInfo.EquivalentTolerant(fileId, 0, peak.WithObservedIonMobility(0.9512f).WithObservedCcs(301.2)));
             // Stored results from before observed IM was tracked
             var chromInfoWithoutObserved = chromInfo.ChangeObservedIonMobility(null, null);
             Assert.IsTrue(chromInfoWithoutObserved.EquivalentTolerant(fileId, 0, peak.WithObservedIonMobility(0.9512f)));
             // A genuinely different observed IM is a different peak
             Assert.IsFalse(chromInfo.EquivalentTolerant(fileId, 0, peak.WithObservedIonMobility(0.97f)));
 
-            // Observed CCS needs the raw file to compute, so a re-integrated peak has none. Keep the
-            // stored CCS while observed IM is unchanged, and drop it once observed IM moves.
-            var reintegrated = chromInfo.ChangePeak(peak.WithObservedIonMobility(0.9512f), UserSet.TRUE);
-            Assert.AreEqual(301.2f, reintegrated.ObservedCcs.Value, 1e-3);
-            Assert.IsNull(chromInfo.ChangePeak(peak.WithObservedIonMobility(0.97f), UserSet.TRUE).ObservedCcs);
+            // A re-integrated peak brings its own observed IM and CCS, read at its apex from the
+            // per-point values stored in the cache, so they replace the old ones
+            var reintegrated = chromInfo.ChangePeak(peak.WithObservedIonMobility(0.97f).WithObservedCcs(305.4), UserSet.TRUE);
+            Assert.AreEqual(0.97f, reintegrated.ObservedIonMobility.Value, 1e-6);
+            Assert.AreEqual(305.4f, reintegrated.ObservedCcs.Value, 1e-3);
             Assert.IsNull(chromInfo.ChangePeak(peak, UserSet.TRUE).ObservedCcs);
+
+            // Observed IM and CCS ride along with the ion mobility filter, which is unchanged
+            Assert.AreSame(ionMobilityFilter, chromInfo.IonMobility);
+            Assert.AreSame(ionMobilityFilter, reintegrated.IonMobility);
+            Assert.AreSame(ionMobilityFilter, chromInfoWithoutObserved.IonMobility);
+            Assert.IsNull(chromInfoWithoutObserved.ObservedIonMobility);
+            Assert.IsNull(chromInfoWithoutObserved.ObservedCcs);
+            Assert.AreSame(IonMobilityFilter.EMPTY,
+                new TransitionChromInfo(fileId, 0, peak, null, Annotations.EMPTY, UserSet.FALSE).IonMobility);
         }
 
         [TestMethod]
         public void TestChromPeakObservedCcsRoundTrip()
         {
-            // ObservedCcs is set via WithObservedCcs (called by ApplyObservedCcs in
-            // the cache builder while the source file is open). Empty peak with no
-            // CCS should report null; round-trip through WithObservedCcs sets the
-            // flag and the value, and clearing with null clears both.
+            // Empty peak with no CCS should report null; round-trip through
+            // WithObservedCcs sets the flag and the value, and clearing with null
+            // clears both.
             ChromPeak peak = ChromPeak.EMPTY;
             Assert.IsNull(peak.ObservedCcs);
 
@@ -336,38 +344,15 @@ namespace pwiz.SkylineTest
             peak = peak.WithObservedCcs(null);
             Assert.IsNull(peak.ObservedCcs);
 
-            // The vendor IM->CCS conversion behind ApplyObservedCcs: a value passes through, while
-            // no value (0 or NaN) or a failure leaves the peak without CCS - a failure must not
-            // fail the import of the whole file.
+            // The vendor IM->CCS conversion of each point at import: a value passes through, while
+            // no value (0 or NaN) leaves the point without CCS. A failure is left to the caller,
+            // which stops converting that chromatogram group rather than fail the whole import.
             var im = IonMobilityValue.GetIonMobilityValue(1.05, eIonMobilityUnits.inverse_K0_Vsec_per_cm2);
-            Assert.AreEqual(345.67, ChromCacheBuilder.GetObservedCcs(new FakeCcsConverter(() => 345.67), im, 500, 2, null));
-            Assert.IsNull(ChromCacheBuilder.GetObservedCcs(new FakeCcsConverter(() => 0), im, 500, 2, null));
-            Assert.IsNull(ChromCacheBuilder.GetObservedCcs(new FakeCcsConverter(() => double.NaN), im, 500, 2, null));
-            Assert.IsNull(ChromCacheBuilder.GetObservedCcs(
+            Assert.AreEqual(345.67, ChromDataSet.GetObservedCcs(new FakeCcsConverter(() => 345.67), im, 500, 2, null));
+            Assert.IsNull(ChromDataSet.GetObservedCcs(new FakeCcsConverter(() => 0), im, 500, 2, null));
+            Assert.IsNull(ChromDataSet.GetObservedCcs(new FakeCcsConverter(() => double.NaN), im, 500, 2, null));
+            AssertEx.ThrowsException<InvalidOperationException>(() => ChromDataSet.GetObservedCcs(
                 new FakeCcsConverter(() => throw new InvalidOperationException(@"vendor library error")), im, 500, 2, null));
-
-            // Rescore converts peaks it cannot match to a previous one with the raw file, opened once
-            // on first need. A raw file that cannot be found or opened leaves those peaks without CCS.
-            const eIonMobilityUnits units = eIonMobilityUnits.inverse_K0_Vsec_per_cm2;
-            int openCount = 0;
-            using (var missingRawFile = new RawFileCcsConverter(units, () =>
-                   {
-                       openCount++;
-                       return null;
-                   }))
-            {
-                Assert.AreEqual(0, openCount);
-                Assert.IsTrue(double.IsNaN(missingRawFile.CCSFromIonMobility(
-                    IonMobilityValue.GetIonMobilityValue(0.9700f, units), 500.25, 2, null)));
-                Assert.IsTrue(double.IsNaN(missingRawFile.CCSFromIonMobility(
-                    IonMobilityValue.GetIonMobilityValue(0.9682f, units), 600.25, 2, null)));
-                Assert.AreEqual(1, openCount);
-            }
-            using (var unopenable = new RawFileCcsConverter(units, () => throw new IOException(@"raw file locked")))
-            {
-                Assert.IsTrue(double.IsNaN(unopenable.CCSFromIonMobility(
-                    IonMobilityValue.GetIonMobilityValue(0.9700f, units), 500.25, 2, null)));
-            }
         }
 
         [TestMethod]
@@ -406,6 +391,13 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1.30f, coarser.ObservedIonMobilities[1], .0001);
             var allGaps = new TimeIntensities(times, intensities, null, null, new[] { 0f, 0f, 0f });
             Assert.AreEqual(0f, allGaps.Interpolate(new[] { 1f, 3f }, false).ObservedIonMobilities[1]);
+
+            // Observed CCS is interpolated the same way, skipping points the conversion gave no value
+            var withCcs = new TimeIntensities(times, intensities, null, null, observedIms, new[] { 300f, 0f, 320f });
+            var coarserCcs = withCcs.Interpolate(new[] { 1f, 3f }, false).ObservedCcs;
+            Assert.AreEqual(2, coarserCcs.Count);
+            Assert.AreEqual(320f, coarserCcs[1], .0001);
+            Assert.IsNull(withGap.Interpolate(new[] { 1f, 3f }, false).ObservedCcs);
         }
 
         [TestMethod]
@@ -422,6 +414,9 @@ namespace pwiz.SkylineTest
             // Slice should be {1.2, 1.3, 1.4}
             Assert.AreEqual(1.2f, truncated.ObservedIonMobilities[0], .0001);
             Assert.AreEqual(1.4f, truncated.ObservedIonMobilities[truncated.NumPoints - 1], .0001);
+
+            var truncatedCcs = ti.ChangeObservedCcs(new[] { 310f, 320f, 330f, 340f, 350f }).Truncate(2.0, 4.0).ObservedCcs;
+            AssertFloatsEqual(new[] { 320f, 330f, 340f }, truncatedCcs);
         }
 
         [TestMethod]
@@ -451,6 +446,11 @@ namespace pwiz.SkylineTest
             // the new point toward 0.
             var withGap = new TimeIntensities(times, intensities, null, null, new[] { 0f, 2.0f });
             Assert.AreEqual(2.0f, withGap.InterpolateTime(1.5f).ObservedIonMobilities[1], .0001);
+
+            // Observed CCS gets the same treatment
+            var withCcs = new TimeIntensities(times, intensities, null, null, observedIms, new[] { 0f, 330f });
+            var withCcsMidpoint = withCcs.InterpolateTime(1.5f).ObservedCcs;
+            AssertFloatsEqual(new[] { 0f, 330f, 330f }, withCcsMidpoint);
         }
 
         [TestMethod]
@@ -559,10 +559,12 @@ namespace pwiz.SkylineTest
             var encoded = raw.ToChromatogramGroupData();
             Assert.AreEqual(0, encoded.ObservedIonMobilityScale);
             Assert.AreEqual(0, encoded.Chromatograms[0].ObservedIonMobilitiesScaled.Count);
+            Assert.AreEqual(0, encoded.Chromatograms[0].ObservedCcs100X.Count);
 
             var decoded = RawTimeIntensities.FromChromatogramGroupData(encoded);
             Assert.AreEqual(0, decoded.ObservedIonMobilityScale);
             Assert.IsNull(decoded.TransitionTimeIntensities[0].ObservedIonMobilities);
+            Assert.IsNull(decoded.TransitionTimeIntensities[0].ObservedCcs);
         }
 
         [TestMethod]
@@ -629,18 +631,31 @@ namespace pwiz.SkylineTest
             var timeIntensities = new TimeIntensities(times, intensities, null, null, imGapAtMax);
             var peak = ChromPeak.IntegrateWithoutBackground(timeIntensities, 1f, 5f, 0, null);
             Assert.AreEqual(4.4f, peak.ObservedIonMobility);
+            Assert.IsNull(peak.ObservedCcs);
             Assert.IsNull(ChromPeak.IntegrateWithoutBackground(new TimeIntensities(times, intensities), 1f, 5f, 0, null)
                 .ObservedIonMobility);
+
+            // The observed CCS is the one converted from the apex point's IM, so a peak picked
+            // again from stored points (rescore, manual integration) gets CCS for its new apex
+            var withCcs = timeIntensities.ChangeObservedCcs(new[] { 301f, 302f, 0f, 304f, 305f });
+            var peakWithCcs = ChromPeak.IntegrateWithoutBackground(withCcs, 1f, 5f, 0, null);
+            Assert.AreEqual(4.4f, peakWithCcs.ObservedIonMobility);
+            Assert.AreEqual(304f, peakWithCcs.ObservedCcs);
+            Assert.AreEqual(302f, ChromPeak.IntegrateWithoutBackground(withCcs, 1f, 2f, 0, null).ObservedCcs);
+            // An apex point the conversion gave no value has no CCS, rather than a neighbor's
+            var gapAtApex = timeIntensities.ChangeObservedCcs(new[] { 301f, 302f, 0f, 0f, 305f });
+            Assert.IsNull(ChromPeak.IntegrateWithoutBackground(gapAtApex, 1f, 5f, 0, null).ObservedCcs);
         }
 
         [TestMethod]
         public void TestInterpolatedTimeIntensitiesMixedGroupStreamRoundTrip()
         {
-            // A chromatogram group can carry the has_mass_errors / has_observed_ion_mobilities flag
-            // at the group level while some transitions lack the array (e.g. after merging a cache
-            // that has the data with one that doesn't). WriteToStream skips those transitions, so
-            // ReadFromStream must honor the per-transition MissingMassErrors / MissingObservedIonMobility
-            // flags - otherwise it over-reads and corrupts every transition after the gap.
+            // A chromatogram group can carry the has_mass_errors flag at the group level while some
+            // transitions lack the array (e.g. after merging a cache that has the data with one that
+            // doesn't). WriteToStream skips those transitions, so ReadFromStream must honor the
+            // per-transition MissingMassErrors flag - otherwise it over-reads and corrupts every
+            // transition after the gap. Observed IM is never written in this layout, which exists
+            // only for compatibility with older Skyline versions.
             var times = new[] { 0f, 1f, 2f, 3f };
             int numPoints = times.Length;
             // Transitions 0 and 2 carry mass errors and observed IM; transition 1 carries neither.
@@ -657,12 +672,11 @@ namespace pwiz.SkylineTest
             stream.Position = 0;
 
             var header = new ChromGroupHeaderInfo(new SignedMz(500.0), 3, 0, 0, null, 0, 0, numPoints,
-                ChromGroupHeaderInfo.FlagValues.has_mass_errors | ChromGroupHeaderInfo.FlagValues.has_observed_ion_mobilities,
+                ChromGroupHeaderInfo.FlagValues.has_mass_errors,
                 null, null, null, eIonMobilityUnits.none);
             var t1Missing = new ChromTransition(0, 0, 0, 0, ChromSource.fragment, 0)
             {
-                MissingMassErrors = true,
-                MissingObservedIonMobility = true
+                MissingMassErrors = true
             };
             var chromTransitions = new[]
             {
@@ -673,15 +687,15 @@ namespace pwiz.SkylineTest
 
             var result = InterpolatedTimeIntensities.ReadFromStream(stream, header, chromTransitions)
                 .TransitionTimeIntensities;
+            Assert.AreEqual(stream.Length, stream.Position);
             Assert.AreEqual(3, result.Count);
-            // Transition 1's missing arrays come back null...
+            // Transition 1's missing mass errors come back null...
             Assert.IsNull(result[1].MassErrors);
-            Assert.IsNull(result[1].ObservedIonMobilities);
             // ...and transitions 0 and 2 round-trip intact (2 would be corrupt if 1 had consumed bytes).
             AssertFloatsEqual(ti0.MassErrors, result[0].MassErrors);
-            AssertFloatsEqual(ti0.ObservedIonMobilities, result[0].ObservedIonMobilities);
             AssertFloatsEqual(ti2.MassErrors, result[2].MassErrors);
-            AssertFloatsEqual(ti2.ObservedIonMobilities, result[2].ObservedIonMobilities);
+            foreach (var timeIntensities in result)
+                Assert.IsNull(timeIntensities.ObservedIonMobilities);
 
             // Skyline 3.6 (cache v11) wrote the same flags with a different layout: a zero-filled
             // mass-error slot for every transition, including those flagged MissingMassErrors.
@@ -718,15 +732,14 @@ namespace pwiz.SkylineTest
             legacyGroup.WriteToStream(rewritten);
             AssertEx.AreEqualDeep(legacyBytes, rewritten.ToArray());
 
-            // Cache formats before v20 have no has_observed_ion_mobilities flag, so an interpolated
-            // group written for them must not carry the observed IM section, or readers take it for
-            // the scan IDs that follow.
+            // Older Skyline versions read this layout, so a group with observed IM must be written
+            // without it, or they take it for the scan IDs that follow.
             var fragmentScanIds = scanIds[(int)ChromSource.fragment];
             var groupWithScanIds = new InterpolatedTimeIntensities(
                 new[] { ti0.ChangeScanIds(fragmentScanIds), ti2.ChangeScanIds(fragmentScanIds) },
                 new[] { ChromSource.fragment, ChromSource.fragment });
             var olderFormatStream = new MemoryStream();
-            groupWithScanIds.RemoveObservedIonMobilities().WriteToStream(olderFormatStream);
+            groupWithScanIds.WriteToStream(olderFormatStream);
             olderFormatStream.Position = 0;
             var olderFormatHeader = new ChromGroupHeaderInfo(new SignedMz(500.0), 2, 0, 0, null, 0, 0, numPoints,
                 ChromGroupHeaderInfo.FlagValues.has_mass_errors | ChromGroupHeaderInfo.FlagValues.has_frag_scan_ids,
@@ -751,25 +764,31 @@ namespace pwiz.SkylineTest
             return massErrors.Select(massError => ChromPeak.To10x(massError)).ToArray();
         }
 
-        private static void AssertFloatsEqual(IReadOnlyList<float> expected, IReadOnlyList<float> actual)
+        private static void AssertFloatsEqual(IReadOnlyList<float> expected, IReadOnlyList<float> actual, float delta = 1e-4f)
         {
             Assert.IsNotNull(actual);
             Assert.AreEqual(expected.Count, actual.Count);
             for (int i = 0; i < expected.Count; i++)
-                Assert.AreEqual(expected[i], actual[i], 1e-4f);
+                Assert.AreEqual(expected[i], actual[i], delta);
         }
 
         private static void AssertObservedIonMobilityRoundTrip(eIonMobilityUnits units, float[] observedIms)
         {
             var times = Enumerable.Range(0, observedIms.Length).Select(i => (float)i).ToArray();
             var intensities = observedIms.Select(_ => 100f).ToArray();
-            var ti = new TimeIntensities(times, intensities, null, null, observedIms);
+            // Observed CCS rides along, except where the conversion gave no value
+            var observedCcs = observedIms.Select((_, i) => i == 1 ? 0f : 300.123f + 45.678f * i).ToArray();
+            var ti = new TimeIntensities(times, intensities, null, null, observedIms, observedCcs);
             var scale = RawTimeIntensities.GetObservedIonMobilityScale(units);
-            var raw = new RawTimeIntensities(new[] { ti }, null, scale);
+            var raw = new RawTimeIntensities(new[] { ti, ti.ChangeObservedCcs(null) }, null, scale);
 
             var encoded = raw.ToChromatogramGroupData();
             Assert.AreEqual(scale, encoded.ObservedIonMobilityScale);
             Assert.AreEqual(observedIms.Length, encoded.Chromatograms[0].ObservedIonMobilitiesScaled.Count);
+            Assert.AreEqual(0, encoded.Chromatograms[1].ObservedCcs100X.Count);
+            AssertFloatsEqual(observedCcs, RawTimeIntensities.FromChromatogramGroupData(encoded)
+                .TransitionTimeIntensities[0].ObservedCcs, 0.005f);
+            Assert.IsNull(RawTimeIntensities.FromChromatogramGroupData(encoded).TransitionTimeIntensities[1].ObservedCcs);
 
             var decoded = RawTimeIntensities.FromChromatogramGroupData(encoded);
             Assert.AreEqual(scale, decoded.ObservedIonMobilityScale);

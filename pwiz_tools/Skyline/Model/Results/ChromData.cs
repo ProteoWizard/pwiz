@@ -93,6 +93,18 @@ namespace pwiz.Skyline.Model.Results
             return result;
         }
 
+        /// <summary>
+        /// Adds per-point observed CCS to the loaded points, before they are interpolated.
+        /// </summary>
+        public void SetObservedCcs(IEnumerable<float> observedCcs)
+        {
+            if (!ReferenceEquals(TimeIntensities, RawTimeIntensities))
+            {
+                throw new InvalidOperationException(@"Cannot add observed CCS after interpolation");
+            }
+            TimeIntensities = RawTimeIntensities = RawTimeIntensities.ChangeObservedCcs(observedCcs);
+        }
+
         public ChromData Truncate(double minTime, double maxTime)
         {
             if (!ReferenceEquals(Times, RawTimes))

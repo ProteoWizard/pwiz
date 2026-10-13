@@ -170,8 +170,7 @@ namespace pwiz.Skyline.Model.Results
             raw_chromatograms = 0x20,
             dda_acquisition_method = 0x40,
             extracted_qc_trace = 0x80,
-            has_max_peak_score = 0x100,
-            has_observed_ion_mobilities = 0x200
+            has_max_peak_score = 0x100
         }
 
         /// <summary>
@@ -340,7 +339,6 @@ namespace pwiz.Skyline.Model.Results
         public FlagValues Flags { get { return _flagBits; } }
 
         public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
-        public bool HasObservedIonMobilities { get { return (Flags & FlagValues.has_observed_ion_mobilities) != 0; } }
         public bool HasMs1ScanIds { get { return (Flags & FlagValues.has_ms1_scan_ids) != 0; } }
         public bool HasFragmentScanIds { get { return (Flags & FlagValues.has_frag_scan_ids) != 0; } }
         public bool HasSimScanIds { get { return (Flags & FlagValues.has_sim_scan_ids) != 0; } }
@@ -797,7 +795,6 @@ namespace pwiz.Skyline.Model.Results
             sim = 0x03,
 
             missing_mass_errors = 0x04,
-            missing_observed_ion_mobility = 0x08,
         }
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
@@ -866,12 +863,6 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return (Flags & FlagValues.missing_mass_errors) != 0; }
             set { Flags = (Flags & ~FlagValues.missing_mass_errors) | (value ? FlagValues.missing_mass_errors : 0); }
-        }
-
-        public bool MissingObservedIonMobility
-        {
-            get { return (Flags & FlagValues.missing_observed_ion_mobility) != 0; }
-            set { Flags = (Flags & ~FlagValues.missing_observed_ion_mobility) | (value ? FlagValues.missing_observed_ion_mobility : 0); }
         }
 
         public static FlagValues GetSourceFlags(ChromSource source)
@@ -1177,19 +1168,20 @@ namespace pwiz.Skyline.Model.Results
                     _massError = To10x(massError);
                 }
             }
-            var observedIonMobilities = timeIntensities.ObservedIonMobilities;
-            if (observedIonMobilities != null)
+            // Observed IM and CCS, unlike mass error, are read at the peak apex (see
+            // ApexObservedIonMobility) - IM is only meaningfully observable where the peak
+            // has signal, and IM units (e.g. 1/K0) are not linearly averageable.
+            GetApexObservedValues(timeIntensities, intensities, peak.StartIndex, peak.EndIndex,
+                out var apexIonMobility, out var apexCcs);
+            if (apexIonMobility.HasValue)
             {
-                // Observed IM, unlike mass error, is read at the peak apex (see
-                // ApexObservedIonMobility) - IM is only meaningfully observable where the peak
-                // has signal, and IM units (e.g. 1/K0) are not linearly averageable.
-                var apexIonMobility = ApexObservedIonMobility(intensities, observedIonMobilities,
-                    peak.StartIndex, peak.EndIndex);
-                if (apexIonMobility.HasValue)
-                {
-                    _flagValues |= FlagValues.observed_ion_mobility_known;
-                    _observedIonMobility = apexIonMobility.Value;
-                }
+                _flagValues |= FlagValues.observed_ion_mobility_known;
+                _observedIonMobility = apexIonMobility.Value;
+            }
+            if (apexCcs.HasValue)
+            {
+                _flagValues |= FlagValues.observed_ccs_known;
+                _observedCcs = apexCcs.Value;
             }
             if (rawTimes != null)
             {
@@ -1244,6 +1236,34 @@ namespace pwiz.Skyline.Model.Results
         internal static float? ApexObservedIonMobility(IReadOnlyList<float> intensities,
             IReadOnlyList<float> observedIonMobilities, int startIndex, int endIndex)
         {
+            int apexIndex = ApexObservedIonMobilityIndex(intensities, observedIonMobilities, startIndex, endIndex);
+            return apexIndex >= 0 ? observedIonMobilities[apexIndex] : null;
+        }
+
+        /// <summary>
+        /// The observed IM and observed CCS at the peak apex chosen by
+        /// <see cref="ApexObservedIonMobility"/>. The CCS is the one converted from the IM of the
+        /// same point, or null when that point has none.
+        /// </summary>
+        private static void GetApexObservedValues(TimeIntensities timeIntensities, IReadOnlyList<float> intensities,
+            int startIndex, int endIndex, out float? observedIonMobility, out float? observedCcs)
+        {
+            observedIonMobility = observedCcs = null;
+            var observedIonMobilities = timeIntensities.ObservedIonMobilities;
+            if (observedIonMobilities == null)
+                return;
+            int apexIndex = ApexObservedIonMobilityIndex(intensities, observedIonMobilities, startIndex, endIndex);
+            if (apexIndex < 0)
+                return;
+            observedIonMobility = observedIonMobilities[apexIndex];
+            var observedCcsList = timeIntensities.ObservedCcs;
+            if (observedCcsList != null && apexIndex < observedCcsList.Count && observedCcsList[apexIndex] > 0)
+                observedCcs = observedCcsList[apexIndex];
+        }
+
+        private static int ApexObservedIonMobilityIndex(IReadOnlyList<float> intensities,
+            IReadOnlyList<float> observedIonMobilities, int startIndex, int endIndex)
+        {
             int apexIndex = -1;
             float apexIntensity = 0; // Strictly greater below, so zero-intensity scans never qualify
             int count = Math.Min(intensities.Count, observedIonMobilities.Count);
@@ -1256,7 +1276,7 @@ namespace pwiz.Skyline.Model.Results
                     apexIndex = i;
                 }
             }
-            return apexIndex >= 0 ? observedIonMobilities[apexIndex] : null;
+            return apexIndex;
         }
 
         public float RetentionTime { get { return _retentionTime; } }
@@ -1347,7 +1367,8 @@ namespace pwiz.Skyline.Model.Results
         // Observed collision cross section in sq Angstroms. Set only when the source
         // data file is a vendor format that exposes an IM-CCS conversion (a vendor-supplied
         // black box); open formats like mzML and mz5 do not, so this stays null for them.
-        // Applied via WithObservedCcs after the peak is constructed, while the file is open.
+        // Read at the same apex point as ObservedIonMobility, from the per-point CCS the
+        // conversion produced at import (see TimeIntensities.ObservedCcs).
         public float? ObservedCcs
         {
             get
@@ -1627,15 +1648,11 @@ namespace pwiz.Skyline.Model.Results
                     (float)peakShapeStatistics.Kurtosis, correlation);
             }
 
-            float? observedIonMobility = null;
-            if (timeIntensities.ObservedIonMobilities != null)
-            {
-                observedIonMobility = ApexObservedIonMobility(timeIntensities.Intensities,
-                    timeIntensities.ObservedIonMobilities, startIndex, endIndex);
-            }
+            GetApexObservedValues(timeIntensities, timeIntensities.Intensities, startIndex, endIndex,
+                out var observedIonMobility, out var observedCcs);
 
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
-                pointsAcrossPeak, peakShapeValues).WithObservedIonMobility(observedIonMobility);
+                pointsAcrossPeak, peakShapeValues).WithObservedIonMobility(observedIonMobility).WithObservedCcs(observedCcs);
         }
 
         #region Fast file I/O

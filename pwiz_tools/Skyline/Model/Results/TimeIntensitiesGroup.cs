@@ -52,11 +52,6 @@ namespace pwiz.Skyline.Model.Results
             get { return TransitionTimeIntensities.Any(timeIntensities => null != timeIntensities.MassErrors); }
         }
 
-        public bool HasObservedIonMobilities
-        {
-            get { return TransitionTimeIntensities.Any(timeIntensities => null != timeIntensities.ObservedIonMobilities); }
-        }
-
         public bool HasAnyPoints
         {
             get { return TransitionTimeIntensities.Any(timeIntensities => 0 < timeIntensities.NumPoints); }
@@ -192,19 +187,6 @@ namespace pwiz.Skyline.Model.Results
                 }
                 WriteScaledShortErrors(stream, timeIntensities.MassErrors);
             }
-            // Per-time-point observed IM values (absolute, raw IM units), written as floats
-            // after the mass-error section. Presence is gated by
-            // ChromGroupHeaderInfo.HasObservedIonMobilities (and, per transition, by the
-            // MissingObservedIonMobility flag - see ReadFromStream); a reader unaware of this
-            // section cannot simply skip it, it must honor those flags.
-            foreach (var timeIntensities in TransitionTimeIntensities)
-            {
-                if (timeIntensities.ObservedIonMobilities == null)
-                {
-                    continue;
-                }
-                PrimitiveArrays.Write(stream, timeIntensities.ObservedIonMobilities.ToArray());
-            }
             var scanIdsByChromSource = ScanIdsByChromSource();
             foreach (var chromSource in PERSISTED_CHROM_SOURCES)
             {
@@ -257,16 +239,6 @@ namespace pwiz.Skyline.Model.Results
                     transitionMassErrors[i] = ReadScaledShortErrors(stream, numPoints);
                 }
             }
-            IList<float>[] transitionObservedIonMobilities = new IList<float>[numTrans];
-            if (chromGroupHeaderInfo.HasObservedIonMobilities)
-            {
-                for (int i = 0; i < numTrans; i++)
-                {
-                    if (chromTransitions[i].MissingObservedIonMobility)
-                        continue;
-                    transitionObservedIonMobilities[i] = PrimitiveArrays.Read<float>(stream, numPoints);
-                }
-            }
             if (chromGroupHeaderInfo.HasFragmentScanIds)
             {
                 scanIds.Add(ChromSource.fragment, PrimitiveArrays.Read<int>(stream, numPoints));
@@ -286,7 +258,7 @@ namespace pwiz.Skyline.Model.Results
                 int[] transitionScanIds;
                 scanIds.TryGetValue(chromSource, out transitionScanIds);
 
-                var timeIntensities = new TimeIntensities(sharedTimes, transitionIntensities[i], transitionMassErrors[i], transitionScanIds, transitionObservedIonMobilities[i]);
+                var timeIntensities = new TimeIntensities(sharedTimes, transitionIntensities[i], transitionMassErrors[i], transitionScanIds);
                 listOfTimeIntensities.Add(timeIntensities);
             }
             return new InterpolatedTimeIntensities(listOfTimeIntensities, chromTransitions.Select(chromTransition=>chromTransition.Source));
@@ -309,11 +281,6 @@ namespace pwiz.Skyline.Model.Results
             int numTrans = chromTransitions.Length;
             long slotPerTransitionLength = (long)sizeof(float) * numPoints * (numTrans + 1)
                                            + (long)sizeof(short) * numPoints * numTrans;
-            if (chromGroupHeaderInfo.HasObservedIonMobilities)
-            {
-                int numObservedIonMobilities = chromTransitions.Count(chromTransition => !chromTransition.MissingObservedIonMobility);
-                slotPerTransitionLength += (long)sizeof(float) * numPoints * numObservedIonMobilities;
-            }
             int numScanIdLists = new[]
             {
                 chromGroupHeaderInfo.HasFragmentScanIds,
@@ -322,20 +289,6 @@ namespace pwiz.Skyline.Model.Results
             }.Count(hasScanIds => hasScanIds);
             slotPerTransitionLength += (long)sizeof(int) * numPoints * numScanIdLists;
             return stream.Length - stream.Position == slotPerTransitionLength;
-        }
-
-        /// <summary>
-        /// Returns this group without per-time-point observed ion mobilities, for writing to a cache
-        /// format older than <see cref="CacheFormatVersion.Twenty"/>, whose readers cannot detect
-        /// the observed ion mobility section.
-        /// </summary>
-        public InterpolatedTimeIntensities RemoveObservedIonMobilities()
-        {
-            if (!HasObservedIonMobilities)
-                return this;
-            return new InterpolatedTimeIntensities(TransitionTimeIntensities
-                    .Select(timeIntensities => timeIntensities.ChangeObservedIonMobilities(null)),
-                TransitionChromSources);
         }
 
         public override TimeIntensitiesGroup Truncate(float newStartTime, float newEndTime)
@@ -480,6 +433,10 @@ namespace pwiz.Skyline.Model.Results
                     chromatogram.ObservedIonMobilitiesScaled.AddRange(
                         timeIntensities.ObservedIonMobilities.Select(im => (int)Math.Round(im * ObservedIonMobilityScale)));
                 }
+                if (null != timeIntensities.ObservedCcs)
+                {
+                    chromatogram.ObservedCcs100X.AddRange(timeIntensities.ObservedCcs.Select(ccs => (int)Math.Round(ccs * 100)));
+                }
                 chromatogram.ScanIdListIndex = scanIdLists.Add(timeIntensities.ScanIds);
                 chromatogramGroupData.Chromatograms.Add(chromatogram);
             }
@@ -541,11 +498,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     observedIonMobilities = chromatogram.ObservedIonMobilitiesScaled.Select(v => v / (float)observedIonMobilityScale);
                 }
+                IEnumerable<float> observedCcs = null;
+                if (chromatogram.ObservedCcs100X.Count > 0)
+                {
+                    observedCcs = chromatogram.ObservedCcs100X.Select(ccs => ccs / 100f);
+                }
                 var timeIntensities = new TimeIntensities(timeLists[chromatogram.TimeListIndex - 1],
                     chromatogram.Intensities,
                     massErrors,
                     chromatogram.ScanIdListIndex == 0 ? null : scanIdLists[chromatogram.ScanIdListIndex - 1],
-                    observedIonMobilities);
+                    observedIonMobilities, observedCcs);
                 timeIntensitiesList.Add(timeIntensities);
             }
             InterpolationParams interpolationParams;

@@ -20,6 +20,7 @@ message ChromatogramGroupData {
 		repeated sint32 massErrors100X = 5;
 		int32 scanIdListIndex = 4; // One-based index into "scanIdLists" or zero if no scanIds
 		repeated sint32 observedIonMobilitiesScaled = 6; // Per-time-point intensity-weighted observed IM, encoded as round(raw * ChromatogramGroupData.observedIonMobilityScale).
+		repeated int32 observedCcs100X = 7; // Per-time-point observed CCS (sq Angstroms) converted from the observed IM by the vendor, encoded as round(ccs * 100). Zero where a point has none.
 	}
 	message TimeIntervals {
 		repeated float startTimes = 1;
