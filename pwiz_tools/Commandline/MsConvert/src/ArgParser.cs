@@ -21,44 +21,131 @@ internal static class ArgParser
     internal static MsConvertConfig Parse(IReadOnlyList<string> args)
     {
         ArgumentNullException.ThrowIfNull(args);
-        var config = new MsConvertConfig();
         var help = new HelpRequest();
+        var tokens = Tokenize(args, help, out var error);
+        // Help wins over any other problem with the command line, and comes before any file is read.
+        if (help.Requested)
+            throw new ArgParseHelpRequested(help);
+        if (error is not null)
+            throw error;
 
+        // Config files are applied first, so an option on the command line overrides the same
+        // option in a config file, as in the C++ msconvert (repeatable options such as --filter
+        // add to it).
+        var config = new MsConvertConfig();
+        foreach (var token in tokens.Where(t => ReferenceEquals(t.Option, s_configOption)))
+        {
+            foreach (var configToken in ReadConfigFile(token.Value!))
+                configToken.Option!.Apply!(config, configToken.Value);
+        }
+        foreach (var token in tokens)
+        {
+            if (token.Option is null)
+                config.InputFiles.Add(token.Value!);
+            else if (!ReferenceEquals(token.Option, s_configOption))
+                token.Option.Apply!(config, token.Value);
+        }
+
+        if (config.InputFiles.Count == 0)
+            throw new ArgumentException("No input files specified. Use --help for usage.");
+        return config;
+    }
+
+    /// <summary>One option and its value, or, with no option, an input file.</summary>
+    private readonly record struct Token(Option? Option, string? Value);
+
+    /// <summary>
+    /// Splits <paramref name="args"/> into options and input files, collecting help options into
+    /// <paramref name="help"/>. The first error is returned rather than thrown, so a help option
+    /// anywhere on the command line still gets help.
+    /// </summary>
+    private static List<Token> Tokenize(IReadOnlyList<string> args, HelpRequest help, out ArgumentException? error)
+    {
+        var tokens = new List<Token>();
+        error = null;
         for (int i = 0; i < args.Count; i++)
         {
             string a = args[i];
+            string? inlineValue = null;
             if (!s_optionsByName.TryGetValue(a, out var option))
             {
-                if (a.StartsWith('-'))
-                    throw new ArgumentException($"Unknown option: {a}");
-                config.InputFiles.Add(a);
-                continue;
+                // --name=value, as boost::program_options accepted it
+                int eq = a.StartsWith("--", StringComparison.Ordinal) ? a.IndexOf('=') : -1;
+                if (eq > 0 && s_optionsByName.TryGetValue(a[..eq], out option))
+                {
+                    inlineValue = a[(eq + 1)..];
+                }
+                else if (a.StartsWith('-'))
+                {
+                    error ??= new ArgumentException($"Unknown option: {a}");
+                    continue;
+                }
+                else
+                {
+                    tokens.Add(new Token(null, a));
+                    continue;
+                }
             }
 
-            string? value = option.Value switch
+            try
             {
-                OptionValue.Required => RequireNext(args, ref i, a),
-                // The value is optional, so only a number that follows is taken as one.
-                OptionValue.OptionalNumber => PeekNumeric(args, i + 1, out _) ? args[++i] : null,
-                _ => null,
-            };
-            if (option.Help != HelpFlag.None)
-                help.Add(option.Help, value);
-            else
-                option.Apply!(config, value);
+                if (!TryTakeValue(option, a, inlineValue, args, ref i, out string? value))
+                    continue; // turned off, e.g. mzXML=false
+                if (option.Help != HelpFlag.None)
+                    help.Add(option.Help, value);
+                else
+                    tokens.Add(new Token(option, value));
+            }
+            catch (ArgumentException e)
+            {
+                error ??= e;
+            }
         }
+        return tokens;
+    }
 
-        if (help.Requested)
-            throw new ArgParseHelpRequested(help);
-        if (config.InputFiles.Count == 0)
-            throw new ArgumentException("No input files specified. Use --help for usage.");
-
-        return config;
+    /// <summary>
+    /// The value <paramref name="option"/> takes, from <paramref name="inlineValue"/> (the text after
+    /// '=') or the argument after it. Returns false when the value turns the option off.
+    /// </summary>
+    private static bool TryTakeValue(Option option, string name, string? inlineValue,
+                                     IReadOnlyList<string> args, ref int i, out string? value)
+    {
+        value = null;
+        switch (option.Value)
+        {
+            case OptionValue.Required:
+                value = inlineValue ?? RequireNext(args, ref i, name);
+                return true;
+            case OptionValue.OptionalNumber:
+                if (inlineValue is null)
+                {
+                    // The value is optional, so only a number that follows is taken as one.
+                    if (PeekNumeric(args, i + 1, out _))
+                        value = args[++i];
+                    return true;
+                }
+                // A C++ msconvert config file could also give true or false (singleThreaded=true).
+                if (IsBooleanWord(inlineValue, out bool on))
+                    return on;
+                value = inlineValue;
+                return true;
+            case OptionValue.OptionalBool:
+                // Never taken from the next argument, as boost::program_options did for an implicit value.
+                value = inlineValue is null || ParseBool(inlineValue, name) ? bool.TrueString : bool.FalseString;
+                return true;
+            default:
+                return inlineValue is null || ParseBool(inlineValue, name);
+        }
     }
 
     // ---------- option table ----------
 
-    private enum OptionValue { None, Required, OptionalNumber }
+    /// <summary>
+    /// What follows an option: nothing; a value, required; a number, optional; or a boolean,
+    /// optional and given only with '=' (--zlib=off).
+    /// </summary>
+    private enum OptionValue { None, Required, OptionalNumber, OptionalBool }
 
     internal enum HelpFlag { None, Help, HelpFilter, ShowExamples, Doc }
 
@@ -77,6 +164,9 @@ internal static class ArgParser
 
         public HelpFlag Help { get; init; }
 
+        /// <summary>True for an option that is accepted, but not shown in help.</summary>
+        public bool Hidden { get; init; }
+
         /// <summary>The option's first help column, in boost::program_options style as the C++ msconvert printed it.</summary>
         public string Synopsis
         {
@@ -87,6 +177,7 @@ internal static class ArgParser
                 {
                     OptionValue.Required => names + " arg" + (Default is null ? "" : $" (={Default})"),
                     OptionValue.OptionalNumber => names + $" [arg(={Implicit})]",
+                    OptionValue.OptionalBool => names + $" [=arg(={Implicit})]",
                     _ => names,
                 };
             }
@@ -120,6 +211,20 @@ internal static class ArgParser
         return new Option(s, l, OptionValue.OptionalNumber, description, apply) { Implicit = implicitValue };
     }
 
+    private static Option OptionalBool(string names, string description, Action<MsConvertConfig, bool> apply)
+    {
+        var (s, l) = SplitNames(names);
+        return new Option(s, l, OptionValue.OptionalBool, description, (c, v) => apply(c, bool.Parse(v!))) { Implicit = "1" };
+    }
+
+    /// <summary>An output format the C++ msconvert wrote and this one cannot: accepted only to say so.</summary>
+    private static Option Unsupported(string names, string format)
+    {
+        var (s, l) = SplitNames(names);
+        return new Option(s, l, OptionValue.None, string.Empty,
+            (_, _) => throw new ArgumentException($"{l}: writing {format} is not supported by this msconvert.")) { Hidden = true };
+    }
+
     private static Option HelpOption(string names, HelpFlag flag, string description, bool takesValue = false)
     {
         var (s, l) = SplitNames(names);
@@ -134,6 +239,9 @@ internal static class ArgParser
     /// <summary>Where the help's default values come from, so they follow the code's defaults.</summary>
     private static readonly MsConvertConfig s_defaults = new();
 
+    /// <summary>The config file option, which <see cref="Parse"/> handles itself.</summary>
+    private static readonly Option s_configOption = Arg("config,c", "configuration file (optionName=value)", (_, _) => { });
+
     /// <summary>Every option, in the order the help lists them (the C++ msconvert's order).</summary>
     private static readonly Option[] s_options =
     {
@@ -141,11 +249,10 @@ internal static class ArgParser
             (c, v) => LoadFilelist(v, c.InputFiles)),
         Arg("outdir,o", "set output directory ('.' for current directory)",
             (c, v) => c.OutputPath = v, defaultValue: s_defaults.OutputPath) with { Aliases = new[] { "--output-path" } },
-        Arg("config,c", "configuration file (optionName=value)",
-            (c, v) => LoadConfigFile(v, c)),
+        s_configOption,
         Arg("outfile", "Override the name of output file.",
             (c, v) => c.OutFile = v),
-        Arg("ext,e", "set extension for output files [mzML|mzXML|mgf|txt|mz5|mzMLb]",
+        Arg("ext,e", "set extension for output files [mzML|mzXML|mgf|mzMLb]",
             (c, v) => c.OutputExtension = v),
 
         // -------- output format --------
@@ -153,8 +260,7 @@ internal static class ArgParser
             c => c.WriteConfig.Format = WriteFormat.Mzml) with { Aliases = new[] { "--mzml" } },
         Flag("mzXML", "write mzXML format",
             c => c.WriteConfig.Format = WriteFormat.MzXml),
-        Flag("mz5", "write mz5 format",
-            c => c.WriteConfig.Format = WriteFormat.Mz5),
+        Unsupported("mz5", "mz5"),
         Flag("mzMLb", "write mzMLb format",
             c => c.WriteConfig.Format = WriteFormat.MzMLb),
         Arg("mzMLbChunkSize", "mzMLb dataset chunk size in bytes",
@@ -165,8 +271,7 @@ internal static class ArgParser
             defaultValue: Invariant(s_defaults.WriteConfig.MzMLbCompressionLevel)),
         Flag("mgf", "write Mascot generic format",
             c => c.WriteConfig.Format = WriteFormat.Mgf) with { Aliases = new[] { "--MGF" } },
-        Flag("text", "write ProteoWizard internal text format",
-            c => c.WriteConfig.Format = WriteFormat.Text),
+        Unsupported("text", "the ProteoWizard internal text format"),
         Flag("ms1", "write MS1 format",
             c => c.WriteConfig.Format = WriteFormat.Ms1),
         Flag("bms1", "write BMS1 format",
@@ -248,8 +353,8 @@ internal static class ArgParser
             c => c.WriteConfig.Indexed = false),
         Arg("contactInfo,i", "filename for contact info",
             (c, v) => c.ContactInfo = v),
-        Flag("zlib,z", "use zlib compression for binary data",
-            c => c.WriteConfig.EncoderConfig.Compression = BinaryCompression.Zlib),
+        OptionalBool("zlib,z", "use zlib compression for binary data [default] (add =off to disable compression)",
+            (c, on) => c.WriteConfig.EncoderConfig.Compression = on ? BinaryCompression.Zlib : BinaryCompression.None),
         // pwiz C++ numpress flags set per-array overrides; --numpressAll combines Linear+Slof.
         OptionalNumber("numpressLinear", Invariant(s_defaults.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance),
             "use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)", (c, v) =>
@@ -258,11 +363,15 @@ internal static class ArgParser
             if (v is not null)
                 c.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance = ParseDouble(v, "--numpressLinear");
         }),
-        // Absolute tolerance is an alternative way to specify linear numpress precision.
-        // We stash it as the linear tolerance; the encoder fallback still compares relatively.
-        // This mirrors pwiz's msconvert flag which is really an input to optimalLinearFixedPointMass.
-        Arg("numpressLinearAbsTol", "desired absolute tolerance for linear numpress prediction (e.g. use 1e-4 for a mass accuracy of 0.2 ppm at 500 m/z, default uses -1.0 for maximal accuracy). Note: setting this value may substantially reduce file size, this overrides relative accuracy tolerance.",
-            (c, v) => c.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance = ParseDouble(v, "--numpressLinearAbsTol")),
+        Arg("numpressLinearAbsTol", "desired absolute tolerance for linear numpress prediction (e.g. use 1e-4 for a mass accuracy of 0.2 ppm at 500 m/z, default uses -1.0 for maximal accuracy). Note: setting this value may substantially reduce file size, this overrides relative accuracy tolerance.", (c, v) =>
+        {
+            double tolerance = ParseDouble(v, "--numpressLinearAbsTol");
+            if (tolerance < 0)
+                return; // maximal accuracy, the default
+            SetNumpress(c, BinaryNumpress.Linear, CVID.MS_m_z_array, CVID.MS_time_array);
+            c.WriteConfig.EncoderConfig.NumpressLinearAbsMassAcc = tolerance;
+            c.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance = 0;
+        }),
         Flag("numpressPic", "use numpress positive integer compression for binary intensities (absolute accuracy loss will not exceed 0.5)",
             c => SetNumpress(c, BinaryNumpress.Pic, CVID.MS_intensity_array)),
         OptionalNumber("numpressSlof", Invariant(s_defaults.WriteConfig.EncoderConfig.NumpressSlofErrorTolerance),
@@ -358,7 +467,7 @@ internal static class ArgParser
 
     private static void LoadFilelist(string path, List<string> destination)
     {
-        foreach (string raw in File.ReadAllLines(path))
+        foreach (string raw in ReadLines(path, "file list"))
         {
             string trimmed = raw.Trim();
             if (trimmed.Length > 0 && !trimmed.StartsWith('#'))
@@ -367,84 +476,58 @@ internal static class ArgParser
     }
 
     /// <summary>
-    /// Reads a <c>key=value</c> config file and replays each entry through <see cref="Parse"/>.
-    /// Lines starting with <c>#</c> are comments; bare switches (without <c>=</c>) are allowed.
+    /// The options in a config file, one <c>optionName=value</c> per line, as the C++ msconvert
+    /// read them. Lines starting with <c>#</c> are comments, and a name without <c>=</c> is a
+    /// switch turned on.
     /// </summary>
-    private static void LoadConfigFile(string path, MsConvertConfig target)
+    private static List<Token> ReadConfigFile(string path)
     {
-        var replay = new List<string>();
-        foreach (string raw in File.ReadAllLines(path))
+        var args = new List<string>();
+        foreach (string raw in ReadLines(path, "configuration file"))
         {
             string line = raw.Trim();
-            if (line.Length == 0 || line.StartsWith('#')) continue;
-            int eq = line.IndexOf('=');
-            if (eq < 0) { replay.Add("--" + line); continue; }
-            string key = "--" + line[..eq].Trim();
-            string val = line[(eq + 1)..].Trim();
-            // A switch takes no value on the command line, so "mzXML=true" turns it on and
-            // "mzXML=false" leaves it off, as in a C++ msconvert config file.
-            if (s_optionsByName.TryGetValue(key, out var option) && option.Value == OptionValue.None)
-            {
-                if (!IsFalse(val)) replay.Add(key);
+            if (line.Length == 0 || line.StartsWith('#'))
                 continue;
-            }
-            replay.Add(key);
-            if (val.Length > 0) replay.Add(val);
+            int eq = line.IndexOf('=');
+            args.Add(eq < 0 ? "--" + line : "--" + line[..eq].Trim() + "=" + line[(eq + 1)..].Trim());
         }
-        // Add a sentinel input so nested Parse doesn't error on "no inputs"; discard after.
-        replay.Add("__configfile_placeholder__");
-        var parsed = Parse(replay);
-        foreach (var f in parsed.InputFiles)
-            if (f != "__configfile_placeholder__") target.InputFiles.Add(f);
-        target.Filters.AddRange(parsed.Filters);
-        target.ChromatogramFilters.AddRange(parsed.ChromatogramFilters);
-        // Scalar option merge: copy fields set by the nested parse onto target.
-        MergeScalar(parsed, target);
+
+        var tokens = Tokenize(args, new HelpRequest(), out var error);
+        if (error is not null)
+            throw new ArgumentException($"{path}: {error.Message}");
+        if (tokens.Any(t => ReferenceEquals(t.Option, s_configOption)))
+            throw new ArgumentException($"{path}: a configuration file cannot name another one.");
+        return tokens;
     }
 
-    private static bool IsFalse(string value) =>
-        value.Equals("false", StringComparison.OrdinalIgnoreCase) || value == "0"
-        || value.Equals("off", StringComparison.OrdinalIgnoreCase);
-
-    private static void MergeScalar(MsConvertConfig src, MsConvertConfig dest)
+    private static string[] ReadLines(string path, string description)
     {
-        // Paths and format.
-        if (src.OutputPath != ".") dest.OutputPath = src.OutputPath;
-        if (src.OutFile is not null) dest.OutFile = src.OutFile;
-        if (src.OutputExtension is not null) dest.OutputExtension = src.OutputExtension;
-        if (src.WriteConfig.Format != WriteFormat.Mzml) dest.WriteConfig.Format = src.WriteConfig.Format;
+        try
+        {
+            return File.ReadAllLines(path);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            throw new ArgumentException($"Unable to read {description} {path}: {e.Message}", e);
+        }
+    }
 
-        // Binary encoding — the nested Parse recreated a fresh BinaryEncoderConfig, so we only
-        // copy non-default values over.
-        var s = src.WriteConfig.EncoderConfig; var d = dest.WriteConfig.EncoderConfig;
-        if (s.Precision != BinaryPrecision.Bits64) d.Precision = s.Precision;
-        if (s.Compression != BinaryCompression.None) d.Compression = s.Compression;
-        if (s.Numpress != BinaryNumpress.None) d.Numpress = s.Numpress;
-        foreach (var kv in s.PrecisionOverrides) d.PrecisionOverrides[kv.Key] = kv.Value;
-        foreach (var kv in s.CompressionOverrides) d.CompressionOverrides[kv.Key] = kv.Value;
-        foreach (var kv in s.NumpressOverrides) d.NumpressOverrides[kv.Key] = kv.Value;
+    /// <summary>The words boost::program_options read as a boolean.</summary>
+    private static bool IsBooleanWord(string value, out bool on)
+    {
+        on = value.Equals("true", StringComparison.OrdinalIgnoreCase) || value.Equals("yes", StringComparison.OrdinalIgnoreCase)
+             || value.Equals("on", StringComparison.OrdinalIgnoreCase);
+        return on || value.Equals("false", StringComparison.OrdinalIgnoreCase) || value.Equals("no", StringComparison.OrdinalIgnoreCase)
+               || value.Equals("off", StringComparison.OrdinalIgnoreCase);
+    }
 
-        // Boolean toggles copy through directly. Indexed defaults to true, so "indexed got
-        // explicitly turned off in the config file" means src.WriteConfig.Indexed == false.
-        dest.WriteConfig.Gzip |= src.WriteConfig.Gzip;
-        if (!src.WriteConfig.Indexed) dest.WriteConfig.Indexed = false;
-        dest.Merge |= src.Merge;
-        dest.SimAsSpectra |= src.SimAsSpectra;
-        dest.SrmAsSpectra |= src.SrmAsSpectra;
-        dest.CombineIonMobilitySpectra |= src.CombineIonMobilitySpectra;
-        dest.DdaProcessing |= src.DdaProcessing;
-        dest.IgnoreCalibrationScans |= src.IgnoreCalibrationScans;
-        dest.AcceptZeroLengthSpectra |= src.AcceptZeroLengthSpectra;
-        dest.IgnoreMissingZeroSamples |= src.IgnoreMissingZeroSamples;
-        dest.IgnoreUnknownInstrumentError |= src.IgnoreUnknownInstrumentError;
-        dest.StripLocationFromSourceFiles |= src.StripLocationFromSourceFiles;
-        dest.StripVersionFromSoftware |= src.StripVersionFromSoftware;
-        dest.ContinueOnError |= src.ContinueOnError;
-        dest.Verbose |= src.Verbose;
-        if (src.SingleThreaded > 0) dest.SingleThreaded = src.SingleThreaded;
-        if (src.VerboseProgressPeriod != 100) dest.VerboseProgressPeriod = src.VerboseProgressPeriod;
-        if (src.RunIndexSet is not null) dest.RunIndexSet = src.RunIndexSet;
-        if (src.ContactInfo is not null) dest.ContactInfo = src.ContactInfo;
+    private static bool ParseBool(string value, string option)
+    {
+        if (IsBooleanWord(value, out bool on))
+            return on;
+        if (value is "1" or "0")
+            return value == "1";
+        throw new ArgumentException($"{option}: expected true or false, got '{value}'.");
     }
 
     private static bool PeekNumeric(IReadOnlyList<string> args, int idx, out double value)
@@ -571,10 +654,11 @@ internal static class ArgParser
     private static void AppendOptions(System.Text.StringBuilder sb, int maxLineLength)
     {
         sb.Append("Options:\n");
-        int column = s_options.Max(o => o.Synopsis.Length) + 3; // two-space indent, synopsis, one space
+        var shown = s_options.Where(o => !o.Hidden).ToList();
+        int column = shown.Max(o => o.Synopsis.Length) + 3; // two-space indent, synopsis, one space
         if (maxLineLength > 0)
             column = Math.Min(column, maxLineLength / 2);
-        foreach (var option in s_options)
+        foreach (var option in shown)
         {
             string synopsis = "  " + option.Synopsis;
             sb.Append(synopsis);
