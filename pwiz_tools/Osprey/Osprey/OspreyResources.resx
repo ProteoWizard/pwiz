@@ -412,4 +412,7 @@
   <data name="Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_" xml:space="preserve">
     <value>The {0} path is the library the search reads: {1}. Choose another path for the search results.</value>
   </data>
+  <data name="Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_" xml:space="preserve">
+    <value>Input file not found, and its demultiplexed spectra cache cannot stand in for it: {0} ({1}). It can be rebuilt only from the source file; restore it.</value>
+  </data>
 </root>

@@ -662,6 +662,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Input file not found, and its demultiplexed spectra cache cannot stand in for it: {0} ({1}). It can be rebuilt only from the source file; restore it..
+        /// </summary>
+        public static string Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one..
         /// </summary>
         public static string Program_Run__0__of__1__input_files_are_not_present__using_the_intermediate_scores_file_written_for_ {
