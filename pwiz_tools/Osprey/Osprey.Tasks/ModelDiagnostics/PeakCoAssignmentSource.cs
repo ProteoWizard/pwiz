@@ -290,7 +290,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                         return null;
                     }
                     totalDetected += detected;
-                    builder.FlushFile();
+                    builder.FlushFile(f);
                 }
             }
             ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-end");

@@ -339,6 +339,11 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
+            // The analysis-wide experiment records, read ONCE for both the fold and the panel. Both
+            // only read them, and each read is the whole sidecar - ~400 MB at 446 runs - which
+            // this used to do twice back to back (issue #4664).
+            var experimentRecords = LoadFirstPassExperimentRecords(config, ctx);
+
             // The co-assignment panel is built from the per-file FDR sidecars and the
             // experiment-scope sidecar, NOT from the fold - so the fold can be skipped without
             // taking the panel with it. That separation is what
@@ -362,7 +367,7 @@ namespace pwiz.Osprey.Tasks
                         ctx.Get<SequencePool>().Value),
                     (fileIdx, fileName, stubs) =>
                         ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, stubs),
-                    LoadFirstPassExperimentRecords(config, ctx),
+                    experimentRecords,
                     retainedBaseIds,
                     ctx);
             }
@@ -372,7 +377,7 @@ namespace pwiz.Osprey.Tasks
             // harness path too.
             var coAssignment = PeakCoAssignmentSource.Build(
                 fileNames, perFileParquetPaths, config, accumulator.ClassByBaseId, libraryById,
-                LoadFirstPassExperimentRecords(config, ctx), ctx);
+                experimentRecords, ctx);
             // No validity key on the harness path. The stamp is what lets a later render trust a
             // product, and this one describes a single panel over an accumulator that was never
             // fed; stamping it would let a ten-minute measurement stand in for the hour-long
