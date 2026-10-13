@@ -459,11 +459,11 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
         }
     }
 
-    private static (double[] mz, double[] inten) FilterByMz(IList<double> mzArr, IList<double> intArr, double lo, double hi)
+    private static (double[] mz, double[] inten) FilterByMz(double[] mzArr, double[] intArr, double lo, double hi)
     {
-        var mzOut = new List<double>(mzArr.Count);
-        var intOut = new List<double>(intArr.Count);
-        for (int i = 0; i < mzArr.Count; i++)
+        var mzOut = new List<double>(mzArr.Length);
+        var intOut = new List<double>(intArr.Length);
+        for (int i = 0; i < mzArr.Length; i++)
         {
             if (mzArr[i] < lo || mzArr[i] > hi) continue;
             mzOut.Add(mzArr[i]);
@@ -472,7 +472,7 @@ public sealed class SpectrumList_ChargeFromIsotope : SpectrumListWrapper
         return (mzOut.ToArray(), intOut.ToArray());
     }
 
-    private static (double[] mz, double[] inten) FilterByMinIntensity(IList<double> mzArr, IList<double> intArr)
+    private static (double[] mz, double[] inten) FilterByMinIntensity(List<double> mzArr, List<double> intArr)
     {
         // cpp removes peaks whose intensity is < 5% of max or equals the running min.
         if (intArr.Count == 0) return (System.Array.Empty<double>(), System.Array.Empty<double>());

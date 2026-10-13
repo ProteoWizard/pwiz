@@ -1206,10 +1206,8 @@ namespace pwiz.Osprey.Tasks
             // 1. The one genuinely global set: every survivor entry_id. The best-of-runs floor is
             //    a per-entry_id minimum across files, so that set has to span the run - but it is
             //    O(distinct entry_ids), not O(files x entry_ids). Folded over the files one at a
-            //    time and each dropped, so this walk does not build the pool (#4486); while
-            //    anything else still does, Files() yields from the resident buffer and it costs
-            //    nothing. Fusing this fold with the other converted consumers' walks is a
-            //    separate, run-wide question - it is free until nothing builds the buffer.
+            //    time and each dropped, so this walk does not build the pool (#4486). Fusing
+            //    this fold with the other consumers' walks is a separate, run-wide question.
             //
             //    What used to sit here was a separate whole-run pass that loaded EVERY file's
             //    reconciled PIN features and stashed all of their frozen-model scores in one

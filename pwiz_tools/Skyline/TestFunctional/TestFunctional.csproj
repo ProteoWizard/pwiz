@@ -23,10 +23,9 @@
     <ReferenceParquetNet>true</ReferenceParquetNet>
   </PropertyGroup>
 
-  <!-- Fixtures + app config land next to the assembly for AbstractUnitTest.GetTestPath. -->
+  <!-- Fixtures land next to the assembly for AbstractUnitTest.GetTestPath. -->
   <ItemGroup>
     <None Include="*.zip" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="App.config" />
     <EmbeddedResource Include="ExportMethodDialogThermoTest.json" />
   </ItemGroup>
 

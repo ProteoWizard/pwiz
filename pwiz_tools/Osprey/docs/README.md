@@ -23,7 +23,7 @@ writes, or keeps.** It has no Rust counterpart and no "Divergences" section: it 
 architecture the C# pipeline is built to, rather than porting a Rust source doc. **21** is
 exempt the same way: it is a C#-only review checklist for the log's vocabulary, with no
 Rust counterpart and no "Divergences" section. So is **22**, the schema of the training
-export, a C#-only file.
+export, a C#-only file, and **23**, demultiplexing, an Osprey-only option.
 
 Three documents divide the file-and-orchestration subject, and none repeats another: **00**
 owns scope, contract, principles and relay (which file, whose, when, who may read it);
@@ -55,6 +55,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 20 | [command-line](20-command-line.md) | Full CLI option reference (every flag, default, and value list) with copy-paste unit (Stellar) and HRAM (Astral) examples and the four-task HPC split. |
 | 21 | [user-facing-text](21-user-facing-text.md) | Vocabulary for the log, warnings and errors - the only UI Osprey has: which developer terms never appear in user text and what replaces them. |
 | 22 | [training-export](22-training-export.md) | The `--training-export` product of `PerFileRescoring` and the schema of `<stem>.training.parquet` - the contract CarafeSharp reads: every identified target's full b/y ladder with per-ion interference evidence from Osprey's own boundaries, median polish and shared-peak logic. |
+| 23 | [demultiplexing](23-demultiplexing.md) | `--demux auto`: overlapping-window (staggered) DIA read through ProteoWizard's demultiplexer straight from the vendor file into `<stem>.demux.spectra.bin` - detection, settings descriptor, rescoring and staging rules, performance, and what was ported from #4710. |
 
 ## Supplementary
 

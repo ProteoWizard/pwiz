@@ -68,8 +68,13 @@ namespace pwiz.Osprey.FDR
         /// removed with OSPREY_FDR_PROJECTION (2026-10-10). Returns <c>true</c> when a
         /// diagnostic-only (<c>*Only</c>) dump fired and the run should stop early - the
         /// Tasks-layer caller owns the process exit.
+        ///
+        /// <para>A TEST ORACLE, internal so nothing outside this assembly and its tests can reach
+        /// it. It holds every run's projection rows at once, which no production route does any
+        /// more: the first pass streams each row from its parquet, and the tests hold that
+        /// streaming pass to this resident one.</para>
         /// </summary>
-        public static bool RunPercolatorFdr(
+        internal static bool RunPercolatorFdr(
             FdrProjectionSet projections,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,

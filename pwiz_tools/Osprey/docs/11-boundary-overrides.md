@@ -271,19 +271,17 @@ selects the task and runs `AnalysisPipeline.Run` like every other invocation, an
 upstream boundary state is rehydrated lazily rather than hand-assembled. (The
 `RescoreWorker.Run` alias that survived the collapse with no callers was removed.)
 
-- `RescoreHydration.HydrateForRescore` (`Osprey.Tasks/RescoreHydration.cs:166`)
-  loads pre-compaction `FdrEntry` stubs from each `.scores.parquet`, overlays the
-  `.1st-pass.fdr_scores.bin` v3 sidecar (SVM scores + 4 q-values + PEP +
-  `RunProteinQvalue`), and parses each `reconciliation.json` envelope into the
-  action map + refined calibration + gap-fill targets + join-wide
-  `first_pass_base_ids` (v3).
-- `RescoreCompaction.Apply` (`Osprey.Tasks/RescoreCompaction.cs:113`) reproduces
-  the in-process first-pass compaction: it keeps exactly the join-wide
-  `GlobalFirstPassBaseIds` set (hard-fails if absent), **unioned** with the
-  base_ids of every reconciliation-action target so cross-file-rescued entries
-  survive. Compaction is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and
-  its paired decoy stay together, and the action map is re-keyed to
-  post-compaction indices.
+- `RescoreHydration.HydrateOneRun` (`Osprey.Tasks/RescoreHydration.cs`) hydrates ONE
+  run: it loads the run's pre-compaction `FdrEntry` stubs from its `.scores.parquet`,
+  overlays its `.1st-pass.fdr_scores.bin` sidecar (SVM scores + q-values + PEP), parses
+  its `reconciliation.json` envelope into the action map + refined calibration +
+  gap-fill targets, and compacts the stubs against the analysis-wide retained base_id
+  summary (`RetainedBaseIdSidecar`): the join-wide first-pass base_ids **unioned** with
+  the base_ids of every reconciliation-action target, so cross-file-rescued entries
+  survive. Compaction is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and its
+  paired decoy stay together, and the actions are mapped to post-compaction indices.
+  The all-runs equivalent (`HydrateCompactedStreaming` + `RescoreCompaction.Apply`) was
+  removed on 2026-10-12: no route that could finish still reached it.
 
 ## Flags and switches
 
