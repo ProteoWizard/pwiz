@@ -454,7 +454,10 @@ function Get-GitState {
         return [PSCustomObject]@{ Commit = 'unknown'; Branch = 'unknown'; Dirty = $true; Changes = @('not a git checkout') }
     }
     $branch = (& git -C $scriptRoot rev-parse --abbrev-ref HEAD 2>$null)
-    $changes = @(& git -C $scriptRoot status --porcelain 2>$null)
+    # Tracked changes anywhere, and untracked files only under CarafeSharp (where a new source
+    # file would be built): a pwiz checkout usually has untracked files of its own (b.bat, bs.bat).
+    $changes = @(@(& git -C $scriptRoot status --porcelain --untracked-files=no 2>$null) +
+        @(& git -C $scriptRoot status --porcelain --untracked-files=all -- . 2>$null | Where-Object { $_.StartsWith('??') }))
     return [PSCustomObject]@{ Commit = "$commit".Trim(); Branch = "$branch".Trim(); Dirty = $changes.Count -gt 0; Changes = $changes }
 }
 
@@ -483,7 +486,7 @@ function Invoke-Comparator([string]$RunFolder, [string]$CreateFolder, [string]$L
         $env:CARAFESHARP_REGRESSION_DATA = Join-Path $goldenRoot $config.Folder
 
         $log = Join-Path $RunFolder $LogName
-        & pwsh -NoProfile -File $buildScript -NoBuild -Torch $Torch -TestName 'RegressionTest' -RequireData *>&1 |
+        & pwsh -NoProfile -File $buildScript -NoBuild -Torch $Torch -TestName 'RegressionTest.TestRegressionGolden' -RequireData *>&1 |
             Tee-Object -FilePath $log | Out-Host
         return $LASTEXITCODE
     } finally {
