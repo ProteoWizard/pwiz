@@ -58,10 +58,24 @@ namespace pwiz.CarafeSharp.Models
         private const string SCALE_HYDROPHOBIC_INDEX = @"hydrophobic_index";
         private const string SCALE_NORMALIZED_RT = @"normalized_rt";
 
+        // Predicts in float64, rounded to float32 (AlignmentReference).
+        private readonly bool _float64;
+
         /// <summary>The pretrained Chronologer.</summary>
         public static ChronologerModel FromFiles(ChronologerFiles files, Device device)
         {
-            return Create(StateDict.ReadPthFile(files.WeightsPath), files, false, device);
+            return Create(StateDict.ReadPthFile(files.WeightsPath), files, false, device, false);
+        }
+
+        /// <summary>
+        /// The pretrained Chronologer the run alignment maps every run onto, on the CPU in float64 with each
+        /// prediction rounded to float32. Float32 inference differs in its last bits between libtorch builds
+        /// (Windows, Linux) and the GPU's TF32 convolutions differ by up to 5e-3, enough to move the KDE
+        /// ridge; float64 rounded to float32 gives the same values everywhere, so a run's training targets do too.
+        /// </summary>
+        public static ChronologerModel AlignmentReference(ChronologerFiles files)
+        {
+            return Create(StateDict.ReadPthFile(files.WeightsPath), files, false, CPU, true);
         }
 
         /// <summary>
@@ -79,7 +93,7 @@ namespace pwiz.CarafeSharp.Models
                     path, version, ChronologerFiles.VERSION));
             }
             bool normalized = metadata.TryGetValue(RT_SCALE_KEY, out string scale) && scale == SCALE_NORMALIZED_RT;
-            return Create(StateDict.ReadSafetensors(path), files, normalized, device);
+            return Create(StateDict.ReadSafetensors(path), files, normalized, device, false);
         }
 
         /// <summary>Whether a safetensors RT model file is a saved Chronologer rather than an AlphaPeptDeep model.</summary>
@@ -100,7 +114,7 @@ namespace pwiz.CarafeSharp.Models
         }
 
         private static ChronologerModel Create(IReadOnlyDictionary<string, Tensor> weights, ChronologerFiles files, bool normalized,
-            Device device)
+            Device device, bool float64)
         {
             ModelChronologer network = null;
             try
@@ -109,8 +123,10 @@ namespace pwiz.CarafeSharp.Models
                 network = new ModelChronologer();
                 StateDict.Load(network, weights);
                 network.to(device);
+                if (float64)
+                    network.to(ScalarType.Float64);
                 network.eval();
-                return new ChronologerModel(network, encoding, normalized, device);
+                return new ChronologerModel(network, encoding, normalized, device, float64);
             }
             catch
             {
@@ -124,13 +140,15 @@ namespace pwiz.CarafeSharp.Models
             }
         }
 
-        private ChronologerModel(ModelChronologer network, ChronologerEncoding encoding, bool normalized, Device device)
+        private ChronologerModel(ModelChronologer network, ChronologerEncoding encoding, bool normalized, Device device, bool float64)
         {
             Network = network;
             Encoding = encoding;
             PredictsNormalizedRt = normalized;
             Device = device;
+            _float64 = float64;
         }
+
 
         internal ModelChronologer Network { get; }
 
@@ -212,7 +230,9 @@ namespace pwiz.CarafeSharp.Models
                     {
                         int count = Math.Min(batchSize, accepted.Length - start);
                         var batch = Enumerable.Range(start, count).Select(i => tokens[accepted[i]]).ToArray();
-                        float[] values = Forward(batch).cpu().data<float>().ToArray();
+                        float[] values = _float64
+                            ? Forward(batch).cpu().data<double>().Select(v => (float)v).ToArray()
+                            : Forward(batch).cpu().data<float>().ToArray();
                         for (int i = 0; i < count; i++)
                             results[accepted[start + i]] = Math.Max(values[i], floor);
                     }

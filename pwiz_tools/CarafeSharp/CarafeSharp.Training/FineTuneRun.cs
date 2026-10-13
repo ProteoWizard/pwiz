@@ -131,6 +131,9 @@ namespace pwiz.CarafeSharp.Training
             // An earlier run's base model would otherwise predict in place of this run's choice.
             File.Delete(Path.Combine(outputDirectory, ModelFiles.MS2_BASE_SAFETENSORS));
             manual_seed(options.Seed);
+            // TorchSharp's manual_seed leaves the CUDA generator unseeded, so dropout differed on every GPU run.
+            if (options.Device.type == TorchSharp.DeviceType.CUDA)
+                cuda.manual_seed_all(options.Seed);
             var shuffle = new NumpyRandomState(options.Seed);
             var result = new FineTuneResult();
 
