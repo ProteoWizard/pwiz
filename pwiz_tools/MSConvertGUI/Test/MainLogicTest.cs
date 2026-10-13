@@ -154,6 +154,16 @@ public class MainLogicTest
         }
     }
 
+    /// <summary>mz5 can be read but not written. A <c>--mz5</c> left in an old command line must
+    /// fail with an explanation, not be queued as an input file named "--mz5".</summary>
+    [TestMethod]
+    public void ParseCommandLine_Mz5OutputIsRejected()
+    {
+        var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), calculateSHA1Mutex: new object());
+        var e = Assert.ThrowsException<Exception>(() => logic.ParseCommandLine(_tempDir, "--mz5|input.mzML"));
+        StringAssert.Contains(e.Message, "no longer supported");
+    }
+
     /// <summary>mzML→MGF: GUI and CLI should emit the same byte stream (MGF is line-oriented
     /// text; no XML re-shuffling between the two paths).</summary>
     [TestMethod]

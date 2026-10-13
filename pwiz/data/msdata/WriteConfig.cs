@@ -3,10 +3,10 @@ using Pwiz.Data.MsData.Encoding;
 namespace Pwiz.Data.MsData;
 
 /// <summary>The output format selection for a <see cref="WriteConfig"/>.
-/// Mirrors cpp <c>MSDataFile::Format</c>. Formats whose writer isn't yet
-/// implemented are still in the enum so CLIs can accept the switch — the
-/// chosen writer throws <see cref="System.NotImplementedException"/> at
-/// write time.</summary>
+/// Mirrors cpp <c>MSDataFile::Format</c>, except that mz5 is omitted: pwiz-sharp
+/// reads mz5 but does not write it. Formats whose writer isn't yet implemented
+/// are still in the enum so CLIs can accept the switch — the chosen writer
+/// throws <see cref="System.NotImplementedException"/> at write time.</summary>
 public enum WriteFormat
 {
     /// <summary>mzML 1.1 — primary output format.</summary>
@@ -15,7 +15,7 @@ public enum WriteFormat
     MzXml,
     /// <summary>Mascot Generic Format — MS/MS peak lists only.</summary>
     Mgf,
-    /// <summary>mzMLb HDF5 format (unimplemented).</summary>
+    /// <summary>mzMLb — mzML embedded in an HDF5 container.</summary>
     MzMLb,
     /// <summary>pwiz internal text format (unimplemented).</summary>
     Text,

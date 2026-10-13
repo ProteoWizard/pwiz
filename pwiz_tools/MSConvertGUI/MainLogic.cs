@@ -180,6 +180,8 @@ namespace MSConvertGUI
                     case "--mzXML":
                         formatMzXml = true;
                         break;
+                    case "--mz5":
+                        throw new Exception("[msconvert] mz5 output is no longer supported (mz5 files can still be read). Use mzML or mzMLb instead.");
                     case "--mgf":
                         formatMgf = true;
                         break;

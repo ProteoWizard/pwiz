@@ -42,6 +42,8 @@ namespace MSConvertGUI
     public partial class MainForm : BaseForm
     {
         IList<string> cmdline_args;
+        private string _loadedPreset; // the preset whose settings the controls currently hold
+        private bool _revertingPresetSelection;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
         string AboutButtonHelpText = "Version: " + Application.ProductVersion + "\r\n\r\n" +
             "Each control has a \"tooltip\": let your cursor rest atop a control for a moment to see a help message for that control.\r\n\r\n" +
@@ -856,22 +858,23 @@ namespace MSConvertGUI
             LoadPresets();
         }
 
-        private void SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
+        private bool SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
         {
             if (!File.Exists(cfgFileName))
             {
                 MessageBox.Show("Can't find config file \"" + cfgFileName + "\"");
-                return;
+                return false;
             }
             string cmdline = File.ReadAllText(cfgFileName);
             if (cmdline.Split('|').Contains("--mz5"))
             {
                 MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) +
                                 "\" uses mz5 output, which is no longer supported (mz5 files can still be read). " +
-                                "The preset was not loaded. Choose another output format and save the preset again.");
-                return;
+                                "The preset was not loaded. To replace it, set the options you want and use Save As with the same name.");
+                return false;
             }
             SetControlsFromCommandline(cmdline);
+            return true;
         }
 
         private void StartButton_Click(object sender, EventArgs e)
@@ -1200,7 +1203,26 @@ namespace MSConvertGUI
 
         private void presetComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SetGUIfromCfg(Path.Combine(PresetFolder, (presetComboBox.SelectedItem as string) + ".cmdline"));
+            var presetName = presetComboBox.SelectedItem as string;
+            if (_revertingPresetSelection || presetName == null)
+                return;
+            if (SetGUIfromCfg(Path.Combine(PresetFolder, presetName + ".cmdline")))
+            {
+                _loadedPreset = presetName;
+                return;
+            }
+
+            // The preset was rejected, so show the preset the controls still hold. Otherwise
+            // Save would write those settings into the rejected preset.
+            _revertingPresetSelection = true;
+            try
+            {
+                presetComboBox.SelectedIndex = _loadedPreset == null ? -1 : presetComboBox.Items.IndexOf(_loadedPreset);
+            }
+            finally
+            {
+                _revertingPresetSelection = false;
+            }
         }
 
         private void presetSetDefaultButton_Click(object sender, EventArgs e)
