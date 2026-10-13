@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
@@ -37,7 +38,9 @@ namespace pwiz.CarafeSharp.Test
     /// keeps, and the per-ion masking decisions on the spectra both have. Carafe reads its own
     /// XICs and CarafeSharp reads Osprey's evidence, so this is agreement, not identity.
     /// <see cref="TestData"/> finds the export (<c>CARAFESHARP_OSPREY_TRAINING_EXPORT</c>) and the
-    /// Carafe folder, the first fine-tuning folder (<c>CARAFESHARP_CARAFE_FINETUNED</c>).
+    /// Carafe folder, the first fine-tuning folder (<c>CARAFESHARP_CARAFE_FINETUNED</c>). The subset
+    /// test runs the same checks on the committed <c>TrainingParitySubset.zip</c>, whose export keeps
+    /// the rows of a hash sample of sequences, and compares Carafe's spectra of the same sequences.
     /// </summary>
     [TestClass]
     public class OspreyMaskingParityTest
@@ -48,10 +51,29 @@ namespace pwiz.CarafeSharp.Test
         private const double MIN_SLOT_AGREEMENT = 0.83;
         private const double MIN_SHARED_KEPT_FRACTION = 0.80;
 
+        // The footer key of a subset export's sample: the rows whose sequence IsSampled with this modulus.
+        private const string SUBSET_MODULUS_KEY = @"carafesharp.subset.sequence_modulus";
+
+        // 64-bit FNV-1a, as the subset builder samples sequences.
+        private const ulong FNV_OFFSET_BASIS = 14695981039346656037UL;
+        private const ulong FNV_PRIME = 1099511628211UL;
+
         public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void TestMaskingAgreesWithCarafe()
+        {
+            CompareMasking();
+        }
+
+        [TestMethod]
+        public void TestMaskingAgreesWithCarafeSubset()
+        {
+            using (TestData.UseSubset(TestContext, CarafeFineTuneParityTest.SUBSET_ZIP))
+                CompareMasking();
+        }
+
+        private void CompareMasking()
         {
             // Both packages in one call: with either one present, a missing other one fails.
             TestData.InconclusiveUnlessAvailable(TestData.TrainingExports, TestData.FineTunedLibraries);
@@ -81,8 +103,17 @@ namespace pwiz.CarafeSharp.Test
                 .Select(p => p.Key + @" " + p.Value)));
 
             // Spectra by modified form and charge; a repeated key keeps its first row.
-            var carafe = FirstByKey(CarafeTrainingDirectory.ReadMs2(carafeFolder, carafeSettings.Nce, carafeSettings.Instrument),
-                e => Key(e.Precursor.Peptide, e.Precursor.Charge), out int carafeRepeats);
+            var carafeRows = CarafeTrainingDirectory.ReadMs2(carafeFolder, carafeSettings.Nce, carafeSettings.Instrument);
+            if (TestData.IsSubset)
+            {
+                // The subset export has the rows of a sample of sequences; compare Carafe's of the same.
+                if (!export.Metadata.TryGetValue(SUBSET_MODULUS_KEY, out string modulusText))
+                    Assert.Fail(@"No {0} in {1}", SUBSET_MODULUS_KEY, exportPath);
+                int modulus = int.Parse(modulusText, CultureInfo.InvariantCulture);
+                carafeRows = carafeRows.Where(e => IsSampled(e.Sequence, modulus)).ToArray();
+                TestContext.WriteLine(@"Subset: Carafe's spectra of the sequences sampled modulo {0}", modulus);
+            }
+            var carafe = FirstByKey(carafeRows, e => Key(e.Precursor.Peptide, e.Precursor.Charge), out int carafeRepeats);
             var records = FirstByKey(export.Records.Where(r => r.RunPrecursorQ <= options.MaxRunQ), RecordKey, out int exportRepeats);
             TestContext.WriteLine(@"Repeated keys: Carafe {0}, export {1}", carafeRepeats, exportRepeats);
             var policy = new OspreyMaskingPolicy(options.Masking);
@@ -128,6 +159,15 @@ namespace pwiz.CarafeSharp.Test
                 record.ModUnimodIds, out var peptide, out _)
                 ? Key(peptide, record.Charge)
                 : null;
+        }
+
+        /// <summary>True when the 64-bit FNV-1a hash of <paramref name="sequence"/>, shifted right 32 bits, is 0 modulo <paramref name="modulus"/>.</summary>
+        private static bool IsSampled(string sequence, int modulus)
+        {
+            ulong hash = FNV_OFFSET_BASIS;
+            foreach (byte b in Encoding.UTF8.GetBytes(sequence))
+                hash = (hash ^ b) * FNV_PRIME;
+            return (hash >> 32) % (ulong)modulus == 0;
         }
 
         private static Dictionary<string, T> FirstByKey<T>(IEnumerable<T> items, Func<T, string> getKey, out int repeats)

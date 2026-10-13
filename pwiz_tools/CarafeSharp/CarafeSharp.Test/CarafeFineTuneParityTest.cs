@@ -46,7 +46,9 @@ namespace pwiz.CarafeSharp.Test
     /// </list>
     /// The training rows are featurized with the NCE and instrument each run was trained with,
     /// from its meta.json and parameter.txt. <see cref="TestData"/> finds the folders
-    /// (<c>CARAFESHARP_CARAFE_FINETUNED</c>).
+    /// (<c>CARAFESHARP_CARAFE_FINETUNED</c>). The subset test runs the first two checks on the
+    /// committed <c>TrainingParitySubset.zip</c>, whose training tables keep every row but
+    /// intensities only of the held-out spectra, so it never fine-tunes.
     /// </summary>
     [TestClass]
     public class CarafeFineTuneParityTest
@@ -56,6 +58,9 @@ namespace pwiz.CarafeSharp.Test
         private const string METRICS_FILE = @"model_evaluation_metrics.json";
         private const string RT_TEST_FILE = @"rt_test.tsv";
         private const string MS2_TEST_FILE = @"test_true_intensity.tsv";
+
+        /// <summary>The committed subset of the first fine-tuning folder and the training export.</summary>
+        public const string SUBSET_ZIP = @"TrainingParitySubset.zip";
 
         private const double PRETRAINED_METRIC_TOLERANCE = 2e-4;
         private const double FINETUNED_MS2_TOLERANCE = 0.01;
@@ -67,6 +72,13 @@ namespace pwiz.CarafeSharp.Test
         public void TestFineTuneMatchesCarafe()
         {
             CompareFineTunes(TestData.FineTunedLibraries);
+        }
+
+        [TestMethod]
+        public void TestFineTuneMatchesCarafeSubset()
+        {
+            using (TestData.UseSubset(TestContext, SUBSET_ZIP))
+                CompareFineTunes(TestData.FineTunedLibraries);
         }
 
         [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
@@ -103,7 +115,8 @@ namespace pwiz.CarafeSharp.Test
                 var ms2Test = CheckMs2Split(folder, ms2Rows);
                 CheckPretrainedScores(pretrained, carafeMetrics.RootElement, rtTest, ms2Test);
 
-                if (Environment.GetEnvironmentVariable(FULL_RUN_VARIABLE) == @"1")
+                // A subset has intensities only for the held-out spectra, nothing to train on.
+                if (!TestData.IsSubset && Environment.GetEnvironmentVariable(FULL_RUN_VARIABLE) == @"1")
                     CheckFullFineTune(pretrained, carafeMetrics.RootElement, rtRows, ms2Rows);
             }
         }
