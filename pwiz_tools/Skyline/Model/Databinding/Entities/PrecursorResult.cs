@@ -117,8 +117,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         // Observed IM, observed CCS, and the target IM filter, computed together in one pass
-        // over the transitions and cached per row (invalidated on document change).
-        private ObservedIonMobilityCalculator.Result ObservedImValues { get { return _cachedValues.GetValue3(this); } }
+        // over the transitions.
+        private ObservedIonMobilityCalculator.Result ObservedImValues { get { return CalculateObservedIonMobility(); } }
 
         private static double? PercentError(double? observed, double? target)
         {
@@ -136,13 +136,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var settings = SrmDocument.Settings;
             bool ms1Extracted = settings.TransitionSettings.FullScan.IsEnabledMs;
             var nodeGroup = Precursor.DocNode;
-            double precursorHighEnergyOffset = nodeGroup.Transitions.Any(t => !(t.IsMs1 && ms1Extracted))
-                ? ObservedIonMobilityCalculator.GetPrecursorHighEnergyOffset(settings, Precursor.Peptide.DocNode,
-                    nodeGroup, resultFile.ChromFileInfo.FilePath)
-                : 0;
             return ObservedIonMobilityCalculator.Calculate(
                 nodeGroup.Transitions.Select(t => (t, resultFile.FindChromInfo(t.Results))),
-                ms1Extracted, precursorHighEnergyOffset);
+                ms1Extracted, () => ObservedIonMobilityCalculator.GetPrecursorHighEnergyOffset(settings,
+                    Precursor.Peptide.DocNode, nodeGroup, resultFile.ChromFileInfo.FilePath));
         }
 
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
@@ -405,17 +402,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo);
         }
 
-        private class CachedValues
-            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>, ObservedIonMobilityCalculator.Result>
+        private class CachedValues 
+            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>>
         {
             protected override SrmDocument GetDocument(PrecursorResult owner)
             {
                 return owner.SrmDocument;
-            }
-
-            protected override ObservedIonMobilityCalculator.Result CalculateValue3(PrecursorResult owner)
-            {
-                return owner.CalculateObservedIonMobility();
             }
 
             protected override TransitionGroupChromInfo CalculateValue(PrecursorResult owner)

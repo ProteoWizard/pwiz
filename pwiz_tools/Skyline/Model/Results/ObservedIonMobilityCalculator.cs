@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -79,23 +80,25 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="transitions">The precursor's transitions with their chrom infos</param>
         /// <param name="ms1Extracted">True when MS1 full-scan filtering is on. Otherwise precursor
         /// transitions are extracted from MS2 spectra, in the high-energy frame, like fragments.</param>
-        /// <param name="precursorHighEnergyOffset">The precursor's high-energy IM offset, used for
-        /// transitions without an explicit one. Extraction folds the offset into each fragment's
-        /// stored IM filter, so it cannot be recovered from the results.</param>
+        /// <param name="getPrecursorHighEnergyOffset">Gets the precursor's high-energy IM offset, used
+        /// for transitions without an explicit one. Extraction folds the offset into each fragment's
+        /// stored IM filter, so it cannot be recovered from the results. Called at most once, and
+        /// only when the high-energy channels contribute to the result, since the lookup can be
+        /// costly (see <see cref="GetPrecursorHighEnergyOffset"/>).</param>
         public static Result Calculate(IEnumerable<(TransitionDocNode Transition, TransitionChromInfo ChromInfo)> transitions,
-            bool ms1Extracted, double precursorHighEnergyOffset)
+            bool ms1Extracted, Func<double> getPrecursorHighEnergyOffset)
         {
             var channels = new List<Channel>();
-            IonMobilityFilter ms1Target = null, highEnergyTarget = null;
+            var highEnergyTransitions = new List<(TransitionDocNode Transition, TransitionChromInfo ChromInfo)>();
+            IonMobilityFilter target = null;
             foreach (var (nodeTran, chromInfo) in transitions)
             {
                 if (chromInfo == null || chromInfo.IsEmpty)
                     continue;
-                bool hasFilter = chromInfo.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility);
                 if (nodeTran.IsMs1 && ms1Extracted)
                 {
-                    if (ms1Target == null && hasFilter)
-                        ms1Target = chromInfo.IonMobility;
+                    if (target == null && HasFilter(chromInfo))
+                        target = chromInfo.IonMobility;
                     // MS1 isotope channels weight by predicted abundance; an MS1 precursor with
                     // no isotope distribution (m/z-only small molecule, low-res precursor
                     // filtering, or a neutral-loss transition) weights by observed area instead
@@ -105,16 +108,32 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    double offset = nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? precursorHighEnergyOffset;
-                    if (highEnergyTarget == null && hasFilter)
-                        highEnergyTarget = RemoveHighEnergyOffset(chromInfo.IonMobility, offset);
+                    highEnergyTransitions.Add((nodeTran, chromInfo));
+                }
+            }
+            // The high-energy channels matter only when there are no MS1 channels (Aggregate falls
+            // back to them, and CCS is MS1-only) or no MS1 channel supplied the target.
+            if (highEnergyTransitions.Count > 0 && (channels.Count == 0 || target == null))
+            {
+                double? precursorHighEnergyOffset = null;
+                foreach (var (nodeTran, chromInfo) in highEnergyTransitions)
+                {
+                    double offset = nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ??
+                                    (precursorHighEnergyOffset ??= getPrecursorHighEnergyOffset());
+                    if (target == null && HasFilter(chromInfo))
+                        target = RemoveHighEnergyOffset(chromInfo.IonMobility, offset);
                     channels.Add(new Channel(false, chromInfo.ObservedIonMobility, chromInfo.ObservedCcs, chromInfo.Area, offset));
                 }
             }
             return new Result(
                 Aggregate(channels),
                 WeightedMean(channels.Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))),
-                ms1Target ?? highEnergyTarget);
+                target);
+        }
+
+        private static bool HasFilter(TransitionChromInfo chromInfo)
+        {
+            return chromInfo.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility);
         }
 
         /// <summary>

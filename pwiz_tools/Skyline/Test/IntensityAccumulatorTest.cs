@@ -69,7 +69,7 @@ namespace pwiz.SkylineTest
                 (nodeFragment, MakeChromInfo(fileId, precursorIm + groupOffset, window, 3.37f, 100)),
                 (nodeFragmentExplicit, MakeChromInfo(fileId, precursorIm + explicitOffset, window, 3.30f, 100))
             };
-            var result = ObservedIonMobilityCalculator.Calculate(ms2Only, true, groupOffset);
+            var result = ObservedIonMobilityCalculator.Calculate(ms2Only, true, () => groupOffset);
             Assert.AreEqual((3.37 - groupOffset + 3.30 - explicitOffset) / 2, result.IonMobility.Value, 1e-5);
             Assert.AreEqual(precursorIm, result.Target.IonMobility.Mobility.Value, 1e-9);
 
@@ -79,16 +79,19 @@ namespace pwiz.SkylineTest
                 (nodeFragment, MakeChromInfo(fileId, precursorIm + groupOffset, window, 3.37f, 100)),
                 (nodePrecursor, MakeChromInfo(fileId, precursorIm, window, 3.383f, 100))
             };
-            result = ObservedIonMobilityCalculator.Calculate(withMs1, true, groupOffset);
+            // and the precursor offset, which can need a spectral library lookup, is never fetched
+            int offsetLookups = 0;
+            result = ObservedIonMobilityCalculator.Calculate(withMs1, true, () => { offsetLookups++; return groupOffset; });
             Assert.AreEqual(3.383, result.IonMobility.Value, 1e-5);
             Assert.AreEqual(precursorIm, result.Target.IonMobility.Mobility.Value, 1e-9);
+            Assert.AreEqual(0, offsetLookups);
 
             // Without MS1 filtering the precursor ion is extracted from MS2 spectra, in the high-energy frame
             var noMs1Filtering = new[]
             {
                 (nodePrecursor, MakeChromInfo(fileId, precursorIm + groupOffset, window, 3.33f, 100))
             };
-            result = ObservedIonMobilityCalculator.Calculate(noMs1Filtering, false, groupOffset);
+            result = ObservedIonMobilityCalculator.Calculate(noMs1Filtering, false, () => groupOffset);
             Assert.AreEqual(3.33 - groupOffset, result.IonMobility.Value, 1e-5);
             Assert.AreEqual(precursorIm, result.Target.IonMobility.Mobility.Value, 1e-9);
         }
