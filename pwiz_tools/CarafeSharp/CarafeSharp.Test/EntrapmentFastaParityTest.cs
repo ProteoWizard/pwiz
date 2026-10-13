@@ -43,6 +43,8 @@ namespace pwiz.CarafeSharp.Test
     /// the Carafe command line, one argument per line, <c>-db</c> included). A path in it starting
     /// <c>{DATA}/</c> is in the test data package holding the build.</item>
     /// </list>
+    /// A committed subset (<c>Stage1Inputs.zip</c>) holds only the inputs: where a reference output
+    /// is missing, the folder's <c>expected.sha256</c> gives its SHA-256 instead.
     /// </summary>
     [TestClass]
     public class EntrapmentFastaParityTest
@@ -51,6 +53,7 @@ namespace pwiz.CarafeSharp.Test
         private const string COMMAND_FILE = @"command.txt";
         private const string FASTA_FILE = @"peptides.fasta";
         private const string MANIFEST_FILE = @"pairing.tsv";
+        private const string EXPECTED_SHA256_FILE = @"expected.sha256";
 
         public TestContext TestContext { get; set; }
 
@@ -58,6 +61,17 @@ namespace pwiz.CarafeSharp.Test
         public void TestFullFastaBuildsMatchCarafe()
         {
             CompareBuilds(TestData.Stage1References, TestData.Stage1Builds);
+        }
+
+        /// <summary>
+        /// The same builds on the committed inputs, against the hashes of the outputs: all three GUI
+        /// signatures and the 10 builds that read only hela-filtered.fasta and mouse-subset1500.fasta.
+        /// </summary>
+        [TestMethod]
+        public void TestSubsetFastaBuildsMatchCarafe()
+        {
+            using (TestData.UseSubset(TestContext, @"Stage1Inputs.zip"))
+                CompareBuilds(TestData.Stage1References, TestData.Stage1Builds);
         }
 
         [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
@@ -145,20 +159,53 @@ namespace pwiz.CarafeSharp.Test
         private void RunAndCompare(string name, List<string> args, string expectedFasta, string expectedManifest,
             string actualFasta, string actualManifest, List<string> mismatches)
         {
-            TestData.RequireFile(expectedFasta);
-            TestData.RequireFile(expectedManifest);
+            string expectedFastaSha = ExpectedSha256(expectedFasta);
+            string expectedManifestSha = ExpectedSha256(expectedManifest);
             var settings = CarafeCommandLine.Parse(args).BuildSettings;
             var stopwatch = Stopwatch.StartNew();
             var result = new EntrapmentFastaBuilder(settings).Run();
             stopwatch.Stop();
-            bool fastaMatches = FilesMatch(expectedFasta, actualFasta, out string fastaSha);
-            bool manifestMatches = FilesMatch(expectedManifest, actualManifest, out string manifestSha);
+            string fastaSha = Sha256File(actualFasta);
+            string manifestSha = Sha256File(actualManifest);
+            bool fastaMatches = fastaSha == expectedFastaSha;
+            bool manifestMatches = manifestSha == expectedManifestSha;
             TestContext.WriteLine(@"{0}: {1} quartets in {2:F1} s; FASTA {3} {4}; manifest {5} {6}", name, result.KeptQuartets,
                 stopwatch.Elapsed.TotalSeconds, fastaSha, fastaMatches ? @"match" : @"DIFFERS", manifestSha, manifestMatches ? @"match" : @"DIFFERS");
             if (!fastaMatches)
-                mismatches.Add(name + @" FASTA: " + FirstDifference(expectedFasta, actualFasta));
+                mismatches.Add(name + @" FASTA: " + Difference(expectedFasta, expectedFastaSha, actualFasta, fastaSha));
             if (!manifestMatches)
-                mismatches.Add(name + @" manifest: " + FirstDifference(expectedManifest, actualManifest));
+                mismatches.Add(name + @" manifest: " + Difference(expectedManifest, expectedManifestSha, actualManifest, manifestSha));
+        }
+
+        /// <summary>
+        /// The SHA-256 of a reference output: of the file when it is there, else the one its folder's
+        /// <c>expected.sha256</c> records. The test fails when there is neither.
+        /// </summary>
+        private static string ExpectedSha256(string expected)
+        {
+            if (File.Exists(expected))
+                return Sha256File(expected);
+            string hashes = Path.Combine(Path.GetDirectoryName(expected) ?? string.Empty, EXPECTED_SHA256_FILE);
+            if (File.Exists(hashes))
+            {
+                string name = Path.GetFileName(expected);
+                foreach (string line in File.ReadAllLines(hashes))
+                {
+                    // sha256sum's format: the hash, two spaces, the file name.
+                    var parts = line.Split(@"  ", 2);
+                    if (parts.Length == 2 && parts[1] == name)
+                        return parts[0];
+                }
+            }
+            return Sha256File(TestData.RequireFile(expected));
+        }
+
+        private static string Difference(string expected, string expectedSha, string actual, string actualSha)
+        {
+            if (File.Exists(expected))
+                return FirstDifference(expected, actual);
+            return string.Format(@"SHA-256 {0}, expected {1}; the full test data package has the output, for the first differing line",
+                actualSha, expectedSha);
         }
 
         /// <summary>Sets the value after <paramref name="option"/> when given, and returns the old one.</summary>
@@ -170,12 +217,6 @@ namespace pwiz.CarafeSharp.Test
             if (value != null)
                 args[index + 1] = value;
             return old;
-        }
-
-        private static bool FilesMatch(string expected, string actual, out string actualSha)
-        {
-            actualSha = Sha256File(actual);
-            return actualSha == Sha256File(expected);
         }
 
         /// <summary>The first differing line, for diagnosis without a diff tool.</summary>
