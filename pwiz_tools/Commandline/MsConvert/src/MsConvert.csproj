@@ -119,6 +119,27 @@
   </Target>
 
 
+  <!-- The ProteoWizard website shows msconvert's help from the source-controlled
+       pwiz_tools/Commandline/msconvert-help.txt, so write msconvert's doc option output there whenever
+       msconvert or a library it takes help text from (the filter factories in Pwiz.Analysis)
+       is rebuilt, as the C++ build's "make msconvert-help.txt" rule did. Commit the change with
+       the option or filter change that caused it. Vendor builds only, since a no-vendor build
+       compiles out lockmassRefiner and would drop it from the page; and only when the built
+       msconvert can run here, which a cross-RID build's cannot. -->
+  <PropertyGroup>
+    <MsConvertHelpFile>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\..\msconvert-help.txt'))</MsConvertHelpFile>
+  </PropertyGroup>
+  <Target Name="WriteMsConvertHelp" AfterTargets="Build"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true' AND ('$(RuntimeIdentifier)' == '' OR '$(RuntimeIdentifier)' == '$(NETCoreSdkRuntimeIdentifier)')"
+          Inputs="$(TargetPath);@(ReferenceCopyLocalPaths)" Outputs="$(MsConvertHelpFile)">
+    <PropertyGroup>
+      <!-- Written beside the build first, so a failed run cannot leave a truncated page. -->
+      <_MsConvertHelpTemp>$(IntermediateOutputPath)msconvert-help.txt</_MsConvertHelpTemp>
+    </PropertyGroup>
+    <Exec Command="&quot;$(TargetDir)$(TargetName)$(_NativeExecutableExtension)&quot; --doc &gt; &quot;$(_MsConvertHelpTemp)&quot;" />
+    <Copy SourceFiles="$(_MsConvertHelpTemp)" DestinationFiles="$(MsConvertHelpFile)" />
+  </Target>
+
   <!-- VC++ redistributable beside the vendor DLLs; see the targets file. -->
   <Import Project="$(PwizToolsRoot)\Shared\Lib\VendorNativeCrt.targets" />
 
