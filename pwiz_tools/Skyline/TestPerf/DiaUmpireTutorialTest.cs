@@ -341,7 +341,7 @@ namespace TestPerf
                 // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
                 // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
                 if (!IsRecordMode)
-                    CleanUpPersistentDir(GetTestPath("DIA\\"));
+                    CleanUpPersistentDir(GetTestPath("DIA\\"), GetTestPath("DDA_search\\"));
             }
         }
 
@@ -928,7 +928,7 @@ namespace TestPerf
             }
         }
 
-        private static void CleanUpPersistentDir(string diaDir)
+        private static void CleanUpPersistentDir(string diaDir, string ddaSearchDir)
         {
             // Remove every search-generated file so the persistent dir returns to its downloaded
             // state (the framework fails the test if the persistent dir is left modified).
@@ -939,6 +939,10 @@ namespace TestPerf
                 foreach (var file in Directory.GetFiles(diaDir, pattern))
                     FileEx.SafeDelete(file);
             DirectoryEx.SafeDelete(Path.Combine(diaDir, "crux-output"));
+            // MSFragger writes a decoy database and its .pepindex files next to the search FASTA,
+            // which has no decoys of its own
+            foreach (var file in Directory.GetFiles(ddaSearchDir, "decoy_*"))
+                FileEx.SafeDelete(file);
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
