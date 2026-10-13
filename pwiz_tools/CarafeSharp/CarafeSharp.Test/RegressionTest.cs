@@ -31,6 +31,7 @@ using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 
@@ -50,8 +51,13 @@ namespace pwiz.CarafeSharp.Test
     /// The tolerances calibrated across GPU repeats, CPU against GPU and Windows against Linux
     /// decide pass or fail, on every machine: the held-out metrics, the library's precursor, peak
     /// and DecoyPairs counts, the DecoyPairs table's pairing, and a sample of the library's spectra.
-    /// The exact hashes (training tables, model weights, library content) are compared too, and
-    /// reported, but never fail the test.
+    /// </para>
+    /// <para>
+    /// Exact comparisons gate what must repeat: the training tables are the same bytes on every
+    /// system and device, so they must match the golden's everywhere (except a run on another
+    /// export); the models, held-out metrics and library content repeat only where the training
+    /// arithmetic is the same, so they must match on the golden's environment (system, device,
+    /// processor and torch threads) and are reported elsewhere.
     /// </para>
     /// <para>
     /// With <c>CARAFESHARP_REGRESSION_CREATE</c> set to a folder, it writes a golden of the run
@@ -250,11 +256,51 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestRegressionSubset()
         {
-            string runFolder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"RegressionSubset_" + Guid.NewGuid().ToString(@"N"));
-            string inputs = Path.Combine(runFolder, @"inputs");
-            ZipFile.ExtractToDirectory(TestData.RequireFile(Path.Combine(AppContext.BaseDirectory, @"TestData", SUBSET_ZIP)), inputs);
             string goldenFolder = GetGoldenFolder(SUBSET_DATASET);
             var golden = Golden.Read(goldenFolder);
+            var run = RunSubset(golden, TorchDevice.CPU);
+            Compare(golden, run);
+            WriteReport(run.Folder);
+            Assert.AreEqual(0, _failures.Count, @"The subset run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
+                Environment.NewLine, string.Join(Environment.NewLine, _failures));
+        }
+
+        /// <summary>
+        /// The subset fine-tuned twice on the GPU: the two runs must be the same bytes (training tables,
+        /// models and library), and within the golden's tolerances, which were calibrated with GPU runs.
+        /// </summary>
+        [TestMethod, TestCategory(TestData.CUDA_CATEGORY)]
+        public void TestRegressionSubsetRepeatsOnGpu()
+        {
+            TorchDevice.Resolve(TorchDevice.GPU, out string fallback);
+            if (fallback != null)
+            {
+                if (Environment.GetEnvironmentVariable(TestData.REQUIRE_CUDA_VARIABLE) == @"1")
+                    Assert.Fail(fallback);
+                Assert.Inconclusive(fallback);
+            }
+            string goldenFolder = GetGoldenFolder(SUBSET_DATASET);
+            var golden = Golden.Read(goldenFolder);
+            var first = RunSubset(golden, TorchDevice.GPU);
+            var second = RunSubset(golden, TorchDevice.GPU);
+            Compare(golden, second);
+            WriteReport(second.Folder);
+            CollectionAssert.AreEqual(first.TrainingTables, second.TrainingTables, @"The GPU runs' training tables differ");
+            CollectionAssert.AreEqual(first.Models, second.Models, @"The GPU runs' models differ");
+            Assert.AreEqual(first.Library.ContentSha256, second.Library.ContentSha256, @"The GPU runs' libraries differ");
+            Assert.AreEqual(0, _failures.Count, @"The GPU subset run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
+                Environment.NewLine, string.Join(Environment.NewLine, _failures));
+        }
+
+        /// <summary>
+        /// Runs <see cref="SUBSET_DATASET"/> in-process on <paramref name="device"/> (<c>-device</c>), from the
+        /// committed <see cref="SUBSET_ZIP"/> with the golden's arguments, and measures the run.
+        /// </summary>
+        private RunMeasurement RunSubset(Golden golden, string device)
+        {
+            string runFolder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"RegressionSubset_" + Guid.NewGuid().ToString(@"N").Substring(0, 8));
+            string inputs = Path.Combine(runFolder, @"inputs");
+            ZipFile.ExtractToDirectory(TestData.RequireFile(Path.Combine(AppContext.BaseDirectory, @"TestData", SUBSET_ZIP)), inputs);
 
             string fasta = Path.Combine(inputs, @"library_subset_peptides.fasta");
             string pairing = Path.Combine(inputs, @"library_subset_pairing.tsv");
@@ -266,25 +312,28 @@ namespace pwiz.CarafeSharp.Test
                 @"-db", fasta, @"-i", exportFolder, @"-ms", Path.Combine(exportFolder, runFile), @"-o", Path.Combine(runFolder, OUTPUT_FOLDER),
                 @"-pairing_manifest", pairing,
             };
-            args.AddRange(golden.Arguments);
+            // The golden's arguments, on the device asked for.
+            var arguments = golden.Arguments.ToList();
+            int deviceIndex = arguments.IndexOf(@"-device");
+            Assert.IsTrue(deviceIndex >= 0 && deviceIndex + 1 < arguments.Count, @"The golden's arguments name no -device");
+            arguments[deviceIndex + 1] = device;
+            args.AddRange(arguments);
             args.AddRange(new[] { @"-tf", @"all" });
 
             int exitCode;
             using (var log = new StreamWriter(Path.Combine(runFolder, @"carafesharp.log")))
                 exitCode = Program.Run(args.ToArray(), log, log);
-            WriteSubsetRunInfo(runFolder, golden.Arguments, exitCode, export, fasta, pairing);
+            WriteSubsetRunInfo(runFolder, arguments, device == TorchDevice.GPU ? @"cuda" : @"cpu", exitCode, export, fasta, pairing);
             Assert.AreEqual(0, exitCode, @"CarafeSharp failed; see {0}", Path.Combine(runFolder, @"carafesharp.log"));
 
             var run = RunMeasurement.Measure(runFolder, TorchSharp.torch.get_num_threads());
             _tolerances = Tolerances.For(run.Dataset);
-            Compare(golden, run);
-            WriteReport(runFolder);
-            Assert.AreEqual(0, _failures.Count, @"The subset run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
-                Environment.NewLine, string.Join(Environment.NewLine, _failures));
+            return run;
         }
 
         /// <summary>The regression-run.json regression.ps1 would write for this in-process run of the subset.</summary>
-        private static void WriteSubsetRunInfo(string runFolder, IReadOnlyList<string> arguments, int exitCode, string export, string fasta, string pairing)
+        private static void WriteSubsetRunInfo(string runFolder, IReadOnlyList<string> arguments, string deviceUsed, int exitCode, string export,
+            string fasta, string pairing)
         {
             using (var stream = File.Create(Path.Combine(runFolder, RUN_INFO_FILE)))
             using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
@@ -293,11 +342,11 @@ namespace pwiz.CarafeSharp.Test
                 json.WriteString(@"format", @"carafesharp-regression-run-1");
                 json.WriteString(@"dataset", SUBSET_DATASET);
                 json.WriteString(@"leg", @"isolated");
-                json.WriteString(@"device_used", @"cpu");
+                json.WriteString(@"device_used", deviceUsed);
                 json.WriteString(@"commit", @"in-process (TestRegressionSubset)");
                 json.WriteBoolean(@"dirty", false);
                 json.WriteString(@"os_platform", OperatingSystem.IsWindows() ? @"Windows" : OperatingSystem.IsLinux() ? @"Linux" : @"other");
-                json.WriteString(@"processor", Environment.GetEnvironmentVariable(@"PROCESSOR_IDENTIFIER") ?? System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
+                json.WriteString(@"processor", GetProcessorName());
                 json.WriteStartArray(@"arguments");
                 foreach (string argument in arguments)
                     json.WriteStringValue(argument);
@@ -313,6 +362,26 @@ namespace pwiz.CarafeSharp.Test
                 json.WriteEndObject();
                 json.WriteEndObject();
             }
+        }
+
+        /// <summary>The processor's name as regression.ps1 records it: Win32_Processor's Name, or /proc/cpuinfo's model name.</summary>
+        private static string GetProcessorName()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0"))
+                {
+                    if (key?.GetValue(@"ProcessorNameString") is string name)
+                        return name.Trim();
+                }
+            }
+            else if (File.Exists(@"/proc/cpuinfo"))
+            {
+                string line = File.ReadLines(@"/proc/cpuinfo").FirstOrDefault(l => l.StartsWith(@"model name", StringComparison.Ordinal));
+                if (line != null)
+                    return line.Substring(line.IndexOf(':') + 1).Trim();
+            }
+            return System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString();
         }
 
         private static void WriteInput(Utf8JsonWriter json, string name, string runFolder, string path)
@@ -382,7 +451,7 @@ namespace pwiz.CarafeSharp.Test
             CheckLibrary(golden, run);
             CheckDecoyPairs(golden, run);
             CheckSample(golden, run);
-            ReportExactComparisons(golden, run);
+            CheckExactComparisons(golden, run);
         }
 
         /// <summary>
@@ -626,21 +695,28 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
-        /// The exact comparisons, reported and never gated: a CPU fine-tune repeats byte for byte on
-        /// one machine, so on the golden's machine these are all SAME, and anywhere else they need not be.
+        /// The exact comparisons. The training tables repeat on every system and device, so they are
+        /// gated everywhere but on another export. The models, held-out metrics and library repeat
+        /// byte for byte only with the same training arithmetic, so they are gated on the golden's
+        /// environment and reported elsewhere.
         /// </summary>
-        private void ReportExactComparisons(Golden golden, RunMeasurement run)
+        private void CheckExactComparisons(Golden golden, RunMeasurement run)
         {
-            Report(@"Information: exact comparisons, not gated (SAME is expected only on the golden's machine and device).");
-            ReportSameMaps(@"training table", golden.TrainingTables, run.TrainingTables);
-            ReportSameMaps(@"model", golden.Models, run.Models);
+            bool sameEnvironment = golden.OsPlatform == run.OsPlatform && golden.Device == run.Device &&
+                                   golden.Processor == run.Processor && golden.TorchThreads == run.TorchThreads;
+            Report(@"Exact: training tables gated{0}; models, metrics and library gated on the golden's environment " +
+                   @"({1}, {2}, {3}, {4} torch threads), which this run {5}.",
+                run.OtherExport ? @" except on another export (this run)" : string.Empty, golden.OsPlatform, golden.Device, golden.Processor,
+                golden.TorchThreads, sameEnvironment ? @"is on" : @"is not on, so they are reported only");
+            CompareMaps(!run.OtherExport, @"training table", golden.TrainingTables, run.TrainingTables);
+            CompareMaps(sameEnvironment, @"model", golden.Models, run.Models);
             var differing = golden.Metrics.Where(p => !run.Metrics.TryGetValue(p.Key, out double v) || !v.Equals(p.Value)).Select(p => p.Key).ToList();
-            Inform(differing.Count == 0, @"held-out metrics: {0} of {1} identical{2}", golden.Metrics.Count - differing.Count, golden.Metrics.Count,
-                differing.Count == 0 ? string.Empty : @" (" + string.Join(@", ", differing) + @" differ)");
-            Inform(golden.Library.ContentSha256 == run.Library.ContentSha256, @"library content SHA-256: golden {0}, run {1}",
+            Exact(sameEnvironment, differing.Count == 0, @"held-out metrics: {0} of {1} identical{2}", golden.Metrics.Count - differing.Count,
+                golden.Metrics.Count, differing.Count == 0 ? string.Empty : @" (" + string.Join(@", ", differing) + @" differ)");
+            Exact(sameEnvironment, golden.Library.ContentSha256 == run.Library.ContentSha256, @"library content SHA-256: golden {0}, run {1}",
                 golden.Library.ContentSha256, run.Library.ContentSha256);
-            Inform(golden.Library.Precursors == run.Library.Precursors && golden.Library.Peaks == run.Library.Peaks &&
-                   golden.DecoyPairRows == run.Pairs.Rows,
+            Exact(sameEnvironment, golden.Library.Precursors == run.Library.Precursors && golden.Library.Peaks == run.Library.Peaks &&
+                                   golden.DecoyPairRows == run.Pairs.Rows,
                 @"library precursors, peaks, DecoyPairs rows: golden {0}, {1}, {2}; run {3}, {4}, {5}", golden.Library.Precursors,
                 golden.Library.Peaks, golden.DecoyPairRows, run.Library.Precursors, run.Library.Peaks, run.Pairs.Rows);
         }
@@ -673,13 +749,22 @@ namespace pwiz.CarafeSharp.Test
             Check(Math.Abs(run - golden) <= allowed, @"{0}: golden {1}, run {2} (at most {3} may differ)", what, golden, run, allowed);
         }
 
-        private void ReportSameMaps(string what, IReadOnlyDictionary<string, string> golden, IReadOnlyDictionary<string, string> run)
+        private void CompareMaps(bool gated, string what, IReadOnlyDictionary<string, string> golden, IReadOnlyDictionary<string, string> run)
         {
             foreach (var pair in golden)
             {
                 run.TryGetValue(pair.Key, out string value);
-                Inform(value == pair.Value, @"{0} {1}: golden {2}, run {3}", what, pair.Key, pair.Value, value ?? @"missing");
+                Exact(gated, value == pair.Value, @"{0} {1}: golden {2}, run {3}", what, pair.Key, pair.Value, value ?? @"missing");
             }
+        }
+
+        /// <summary>An exact comparison: a gated check, or reported only.</summary>
+        private void Exact(bool gated, bool same, string format, params object[] args)
+        {
+            if (gated)
+                Check(same, format, args);
+            else
+                Inform(same, format, args);
         }
 
         /// <summary>Reports one gated check; a failed one fails the test.</summary>
@@ -1384,6 +1469,7 @@ namespace pwiz.CarafeSharp.Test
                     golden.Device = provenance.GetProperty(@"device_used").GetString();
                     golden.OsPlatform = provenance.GetProperty(@"os_platform").GetString();
                     golden.Processor = provenance.GetProperty(@"processor").GetString();
+                    golden.TorchThreads = provenance.GetProperty(@"torch_cpu_threads").GetInt32();
                     golden.Arguments = (provenance.GetProperty(@"arguments").GetString() ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var input in root.GetProperty(@"inputs").EnumerateObject())
                         golden.Inputs[input.Name] = input.Value.GetProperty(@"sha256").GetString();
@@ -1472,7 +1558,7 @@ namespace pwiz.CarafeSharp.Test
 
                     // Reported, never gated.
                     json.WriteStartObject(@"exact");
-                    json.WriteString(@"use", @"information only: reported as SAME or DIFFERS, never failing a run");
+                    json.WriteString(@"use", @"training tables gated on every run but one on another export; models and library gated on the golden's environment");
                     WriteMap(json, @"training_tables", run.TrainingTables);
                     WriteMap(json, @"models", run.Models);
                     json.WriteString(@"library_content_sha256", run.Library.ContentSha256);
@@ -1488,6 +1574,7 @@ namespace pwiz.CarafeSharp.Test
             public string Device { get; private set; }
             public string OsPlatform { get; private set; }
             public string Processor { get; private set; }
+            public int TorchThreads { get; private set; }
             public IReadOnlyList<string> Arguments { get; private set; }
             public SortedDictionary<string, string> Inputs { get; } = new SortedDictionary<string, string>(StringComparer.Ordinal);
             public SortedDictionary<string, string> TrainingTables { get; } = new SortedDictionary<string, string>(StringComparer.Ordinal);
