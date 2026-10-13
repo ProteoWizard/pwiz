@@ -86,15 +86,19 @@ namespace pwiz.Osprey.Test
             AssertNeutralLossEqual(NeutralLossCode.H3PO4, NeutralLoss.Parse("H3PO4"));
             AssertNeutralLossEqual(NeutralLossCode.H3PO4, NeutralLoss.Parse("PHOSPHO"));
 
-            // None returns
-            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse("").Code);
-            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse("NOLOSS").Code);
-            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse(null).Code);
+            // Explicitly no loss
+            AssertNeutralLossEqual(NeutralLossCode.None, NeutralLoss.Parse("NOLOSS"));
+
+            // Empty or unrecognized is not a loss the reader may assume
+            Assert.IsNull(NeutralLoss.Parse(""));
+            Assert.IsNull(NeutralLoss.Parse(null));
+            Assert.IsNull(NeutralLoss.Parse("garbage"));
 
             // Custom numeric
             var custom = NeutralLoss.Parse("18.5");
-            Assert.AreEqual(NeutralLossCode.Custom, custom.Code);
-            Assert.AreEqual(18.5, custom.CustomMass, TOLERANCE);
+            Assert.IsNotNull(custom);
+            Assert.AreEqual(NeutralLossCode.Custom, custom.Value.Code);
+            Assert.AreEqual(18.5, custom.Value.CustomMass, TOLERANCE);
         }
 
         #endregion
@@ -398,7 +402,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(DecoyMethod.Reverse, config.DecoyMethod);
             Assert.IsTrue(config.PrefilterEnabled);
             Assert.AreEqual(0.01, config.ExperimentFdr, TOLERANCE);
-            Assert.AreEqual(FdrMethod.Percolator, config.FdrMethod);
+            Assert.AreEqual(FdrClassifier.LinearSvm, config.FdrClassifier);
             Assert.AreEqual(FdrLevel.Precursor, config.FdrLevel);
             Assert.AreEqual(SharedPeptideMode.All, config.SharedPeptides);
         }
@@ -621,9 +625,10 @@ namespace pwiz.Osprey.Test
         }
 
         private static void AssertNeutralLossEqual(NeutralLossCode expected,
-            (NeutralLossCode Code, double CustomMass) actual)
+            (NeutralLossCode Code, double CustomMass)? actual)
         {
-            Assert.AreEqual(expected, actual.Code);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(expected, actual.Value.Code);
         }
 
         #endregion
@@ -672,6 +677,82 @@ namespace pwiz.Osprey.Test
             {
                 Environment.SetEnvironmentVariable(name, saved);
             }
+        }
+
+        /// <summary>
+        /// <c>OSPREY_FDR_MODEL</c> selects the first-pass classifier. It is read once into a
+        /// static, so the PARSE is what is pinned here, as for the other OSPREY_* selectors
+        /// (<see cref="TestEnvFlagZeroCountsAsOff"/> says why the wiring cannot be).
+        ///
+        /// <para>The unrecognized case carries the weight. The classifier used to be a
+        /// command-line value that warned and fell back to the linear SVM, and a run that asked
+        /// for trees and trained the SVM is the #4491 defect: it completes, and its output reads
+        /// like a tree result. So an unrecognized value must be a startup error, never a
+        /// default.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrModelSelection()
+        {
+            // Unset, empty and whitespace-only are the default, as for every OSPREY_* selector.
+            foreach (string unset in new[] { null, string.Empty, @"   " })
+            {
+                Assert.AreEqual(FdrClassifier.LinearSvm, OspreyEnvironment.ParseFdrModel(unset));
+                Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(unset));
+            }
+
+            // Both arms by name, case-insensitive and trimmed like OSPREY_PASS2_QVALUE. The
+            // default has an explicit spelling so a sweep can name both arms.
+            foreach (string svm in new[] { OspreyEnvironment.FDR_MODEL_SVM, @"SVM", @" svm " })
+            {
+                Assert.AreEqual(FdrClassifier.LinearSvm, OspreyEnvironment.ParseFdrModel(svm), svm);
+                Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(svm), svm);
+            }
+            foreach (string gbdt in new[] { OspreyEnvironment.FDR_MODEL_GBDT, @"GBDT", "\tGbdt " })
+            {
+                Assert.AreEqual(FdrClassifier.Gbdt, OspreyEnvironment.ParseFdrModel(gbdt), gbdt);
+                Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(gbdt), gbdt);
+            }
+
+            // Anything else fails, including the removed --fdr-method's own values and alias:
+            // they named the framework or the deleted simple method, not a classifier. The
+            // shell-quoted value is what cmd.exe stores for set X="gbdt".
+            foreach (string bad in new[] { @"percolator", @"simple", @"fasttree", @"mokapot", @"gbt", @"svm2", @"'gbdt'" })
+            {
+                Assert.IsNull(OspreyEnvironment.ParseFdrModel(bad), bad);
+                string err = OspreyEnvironment.DescribeUnrecognizedFdrModel(bad);
+                Assert.IsNotNull(err, bad);
+                // Names the value as given, so it cannot be mistaken for an unset variable, and
+                // both legal spellings, so the operator is told what to type.
+                StringAssert.Contains(err, bad);
+                StringAssert.Contains(err, OspreyEnvironment.FDR_MODEL_SVM);
+                StringAssert.Contains(err, OspreyEnvironment.FDR_MODEL_GBDT);
+            }
+
+            // The run log names the classifier only when it is not the default, so the linear
+            // SVM's log is unchanged.
+            Assert.IsNull(OspreyEnvironment.DescribeFdrModel(FdrClassifier.LinearSvm));
+            StringAssert.Contains(OspreyEnvironment.DescribeFdrModel(FdrClassifier.Gbdt), OspreyEnvironment.FDR_MODEL_GBDT);
+
+            // Not a search parameter: SearchParameterHash must match Rust, which has no trees, so
+            // the classifier keys only the tasks the model determines (TaskValidityKeyTest).
+            Assert.AreEqual(new OspreyConfig().Identity.SearchParameterHash(),
+                new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }.Identity.SearchParameterHash());
+        }
+
+        /// <summary>
+        /// <see cref="CountText.Format"/> picks the whole singular sentence for exactly one and
+        /// the plural format otherwise - zero included - with the count as {0} and any further
+        /// arguments after it. The sentences here are test inputs, not product text.
+        /// </summary>
+        [TestMethod]
+        public void TestCountTextChoosesWholeSentence()
+        {
+            const string one = @"one: {1}";
+            const string many = @"many {0}: {1}";
+            Assert.AreEqual(@"one: x", CountText.Format(1, one, many, @"x"));
+            Assert.AreEqual(@"many 0: x", CountText.Format(0, one, many, @"x"));
+            Assert.AreEqual(@"many 2: x", CountText.Format(2, one, many, @"x"));
+            Assert.AreEqual(string.Format(@"{0:N0}", 1234567L), CountText.Format(1234567, @"one", @"{0:N0}"));
         }
 
         #endregion

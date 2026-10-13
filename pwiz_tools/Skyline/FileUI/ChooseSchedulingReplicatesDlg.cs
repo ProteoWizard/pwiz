@@ -129,7 +129,7 @@ namespace pwiz.Skyline.FileUI
         }
         private void SkylineWindowOnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs documentChangedEventArgs)
         {
-            BeginInvoke(new Action(UpdateUi));
+            BeginInvoke(UpdateUi);
         }
 
         public void UpdateUi()
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.FileUI
 
         private void checkedListBoxResults_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            BeginInvoke(new Action(UpdateSelectAll));
+            BeginInvoke(UpdateSelectAll);
         }
 
         #region Testing methods

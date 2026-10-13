@@ -191,7 +191,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 double precursorRes;
-                return double.TryParse(textPrecursorRes.Text, out precursorRes) ? (double?)precursorRes : null;
+                return double.TryParse(textPrecursorRes.Text, out precursorRes) ? precursorRes : null;
             }
             set { textPrecursorRes.Text = FormatRes(value, PrecursorMassAnalyzer); }
         }
@@ -201,7 +201,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 double precursorResMz;
-                return double.TryParse(textPrecursorAt.Text, out precursorResMz) ? (double?)precursorResMz : null;
+                return double.TryParse(textPrecursorAt.Text, out precursorResMz) ? precursorResMz : null;
             }
             set { textPrecursorAt.Text = value.ToString(); }
         }
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 double productRes;
-                return double.TryParse(textProductRes.Text, out productRes) ? (double?)productRes : null;
+                return double.TryParse(textProductRes.Text, out productRes) ? productRes : null;
             }
             set { textProductRes.Text = FormatRes(value, ProductMassAnalyzer); }
         }
@@ -221,7 +221,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 double productResMz;
-                return double.TryParse(textProductAt.Text, out productResMz) ? (double?)productResMz : null;
+                return double.TryParse(textProductAt.Text, out productResMz) ? productResMz : null;
             }
             set { textProductAt.Text = value.ToString(); }
         }

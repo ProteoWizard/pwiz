@@ -47,12 +47,20 @@ using Newtonsoft.Json;
 
 namespace ZedGraph
 {
+    /// <summary>
+    /// Computes label placements for a graph pane. The constructor must be called on the UI
+    /// thread: it captures an immutable snapshot of the point-marker geometry from the live
+    /// curve list. All subsequent layout work, including <see cref="ComputePlacementsSimulatedAnnealing"/>
+    /// running on a background thread, reads only that snapshot, so it is never affected by
+    /// the UI thread modifying the graph's curves while the layout is being computed.
+    /// </summary>
     public class LabelLayout
     {
         private GraphPane _graph;
         private int _cellSize;
         private Random _randGenerator = new Random(123);
         private PointF _chartOffset;
+        private readonly MarkerInfo[] _markers;
         private Dictionary<TextObj, LabeledPoint> _labeledPoints = new Dictionary<TextObj, LabeledPoint>();
         private const float CROSSOVER_PENALTY = 5000f;
         private const float LABEL_OVERLAP_PENALTY = 5000f;
@@ -80,6 +88,7 @@ namespace ZedGraph
             _cellSize = cellSize;
             var chartRect = _graph.Chart.Rect;
             _chartOffset = new PointF(chartRect.Location.X, chartRect.Location.Y);
+            _markers = SnapshotMarkers();
             FillDensityGrid();
         }
 
@@ -115,118 +124,63 @@ namespace ZedGraph
                 }
             }
 
-            foreach (var line in GetMarkerLinesSnapshot())
+            foreach (var markerRect in EnumerateMarkerRectangles())
             {
-                int pointCount;
-                try
+                foreach (var cell in GetRectangleCells(markerRect))
                 {
-                    pointCount = line.Points.Count;
-                }
-                catch (InvalidOperationException)
-                {
-                    continue;
-                }
-
-                for (var i = 0; i < pointCount; i++)
-                {
-                    try
+                    var intersect = RectangleF.Intersect(markerRect, cell.Bounds);
+                    if (intersect != RectangleF.Empty)
                     {
-                        if (!line.GetCoords(this._graph, i, out var coords))
-                        {
-                            continue;
-                        }
-
-                        var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                        var markerRect = new Rectangle(sides[0], sides[1], sides[2] - sides[0],
-                            sides[3] - sides[1]);
-
-                        foreach (var cell in GetRectangleCells(markerRect))
-                        {
-                            var intersect = RectangleF.Intersect(markerRect, cell.Bounds);
-                            if (intersect != Rectangle.Empty)
-                            {
-                                cell.Density += intersect.Height * intersect.Width;
-                                cell.PointCount++;
-                            }
-                        }
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        break;
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        break;
+                        cell.Density += intersect.Height * intersect.Width;
+                        cell.PointCount++;
                     }
                 }
             }
         }
 
-        private LineItem[] GetMarkerLinesSnapshot()
+        /// <summary>
+        /// Captures the screen-pixel rectangle and center of every visible point marker on the
+        /// graph. Called once from the constructor, on the UI thread, because it iterates the
+        /// live curve list; everything else reads the returned immutable snapshot.
+        /// </summary>
+        private MarkerInfo[] SnapshotMarkers()
         {
-            try
+            var markers = new List<MarkerInfo>();
+            foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
             {
-                return _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None).ToArray();
+                for (var i = 0; i < line.Points.Count; i++)
+                {
+                    if (!line.GetCoords(_graph, i, out var coords))
+                        continue;
+
+                    var sides = Array.ConvertAll(coords.Split(','), int.Parse);
+                    var rect = new RectangleF(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
+                    var point = line.Points[i];
+                    var center = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
+                    markers.Add(new MarkerInfo(center, rect));
+                }
             }
-            catch (InvalidOperationException)
-            {
-                return Array.Empty<LineItem>();
-            }
+            return markers.ToArray();
+        }
+
+        /// <summary>
+        /// Enumerates the marker rectangles captured at construction.
+        /// Shared by the density grid and the overlap pruner.
+        /// </summary>
+        private IEnumerable<RectangleF> EnumerateMarkerRectangles()
+        {
+            return _markers.Select(m => m.Rect);
         }
 
         private void GetPointMarkerRectangle(PointF pt, out RectangleF rect)
         {
             rect = RectangleF.Empty;
-            foreach (var line in GetMarkerLinesSnapshot())
+            foreach (var marker in _markers)
             {
-                int pointCount;
-                try
+                if (Math.Abs(marker.Center.X - pt.X) < 1 && Math.Abs(marker.Center.Y - pt.Y) < 1)
                 {
-                    pointCount = line.Points.Count;
-                }
-                catch (InvalidOperationException)
-                {
-                    continue;
-                }
-
-                for (var i = 0; i < pointCount; i++)
-                {
-                    PointF screenPt;
-                    try
-                    {
-                        var point = line.Points[i];
-                        screenPt = _graph.TransformCoord(point.X, point.Y, CoordType.AxisXYScale);
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        break;
-                    }
-                    catch (ArgumentOutOfRangeException)
-                    {
-                        break;
-                    }
-
-                    if (Math.Abs(screenPt.X - pt.X) < 1 && Math.Abs(screenPt.Y - pt.Y) < 1 )
-                    {
-                        try
-                        {
-                            if (!line.GetCoords(this._graph, i, out var coords))
-                            {
-                                continue;
-                            }
-                            var sides = Array.ConvertAll(coords.Split(','), int.Parse);
-                            rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
-                            return;
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            break;
-                        }
-                        catch (ArgumentOutOfRangeException)
-                        {
-                            break;
-                        }
-                    }
+                    rect = marker.Rect;
+                    return;
                 }
             }
         }
@@ -705,6 +659,232 @@ namespace ZedGraph
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Removes labels whose final (post-annealing) rectangles either overlap another kept
+        /// label or sit squarely on top of a foreign data point (cover its marker center). The
+        /// pre-annealing sampler targets a label density the annealer can usually satisfy, but on
+        /// very dense plots some labels still land on top of each other or on markers. This second
+        /// pass enforces those invariants on the actual placed rectangles. Selected labels are
+        /// always kept. The processing order is deterministic (selected first, then by a stable
+        /// hash of the label text) so repeated layouts of the same data prune the same labels.
+        /// Pruned labels are hidden, their connectors removed, and they are dropped from the
+        /// layout so they are not persisted.
+        /// </summary>
+        public void PruneOverlappingLabels(Graphics g)
+        {
+            if (_labeledPoints.Count == 0)
+                return;
+
+            var entries = new List<LabelRect>();
+            foreach (var labeledPoint in _labeledPoints.Values)
+            {
+                var rect = _graph.GetRectScreen(labeledPoint.Label, g);
+                if (rect.Width <= 0 || rect.Height <= 0)
+                    continue;
+                entries.Add(new LabelRect(labeledPoint, rect));
+            }
+            if (entries.Count == 0)
+                return;
+
+            // Selected labels first (never pruned), then a stable hash of the label text so the
+            // survivors do not depend on alphabetical ordering and two runs over the same data agree.
+            // The final tiebreaker on a position-independent identity keeps the order deterministic
+            // even when two points share the same label text (List.Sort is not a stable sort).
+            entries.Sort((a, b) =>
+            {
+                if (a.Point.IsSelected != b.Point.IsSelected)
+                    return a.Point.IsSelected ? -1 : 1;
+                var hashCompare = a.Hash.CompareTo(b.Hash);
+                if (hashCompare != 0)
+                    return hashCompare;
+                var textCompare = string.CompareOrdinal(a.Text, b.Text);
+                if (textCompare != 0)
+                    return textCompare;
+                return string.CompareOrdinal(a.TieBreak, b.TieBreak);
+            });
+
+            var bucketSize = 1;
+            foreach (var entry in entries)
+                bucketSize = Math.Max(bucketSize, (int)Math.Ceiling(Math.Max(entry.Rect.Width, entry.Rect.Height)));
+
+            // Spatial hash of point-marker centers so a label that sits squarely on top of a data
+            // point (covers its center) can be pruned. A label is allowed to overlap the marker of
+            // its own point - the connector already ties them together - so that one is excluded per
+            // candidate below.
+            var markerCentersByBucket = new Dictionary<long, List<PointF>>();
+            foreach (var markerRect in EnumerateMarkerRectangles())
+            {
+                if (markerRect.Width <= 0 || markerRect.Height <= 0)
+                    continue;
+                var center = new PointF(markerRect.X + markerRect.Width / 2f, markerRect.Y + markerRect.Height / 2f);
+                var key = BucketKey(center, bucketSize);
+                if (!markerCentersByBucket.TryGetValue(key, out var centers))
+                {
+                    centers = new List<PointF>();
+                    markerCentersByBucket[key] = centers;
+                }
+                centers.Add(center);
+            }
+
+            var keptByBucket = new Dictionary<long, List<RectangleF>>();
+            var pruned = new List<LabeledPoint>();
+            foreach (var entry in entries)
+            {
+                if (!entry.Point.IsSelected &&
+                    (OverlapsKept(entry.Rect, bucketSize, keptByBucket) ||
+                     CoversForeignMarker(entry, bucketSize, markerCentersByBucket)))
+                {
+                    pruned.Add(entry.Point);
+                    continue;
+                }
+                AddToBuckets(entry.Rect, bucketSize, keptByBucket);
+            }
+
+            foreach (var point in pruned)
+            {
+                point.Label.IsVisible = false;
+                if (point.Connector != null)
+                    _graph.GraphObjList.Remove(point.Connector);
+                _labeledPoints.Remove(point.Label);
+            }
+        }
+
+        // Distance (squared, in pixels) within which a marker center is treated as a label's own
+        // point rather than a foreign one it is sitting on top of.
+        private const float OWN_MARKER_TOLERANCE_SQ = 4f;
+
+        /// <summary>
+        /// Returns true if the label rectangle covers the center of any point marker other than the
+        /// marker of the label's own point.
+        /// </summary>
+        private bool CoversForeignMarker(LabelRect entry, int bucketSize, Dictionary<long, List<PointF>> markerCentersByBucket)
+        {
+            // Own-marker exclusion assumes a non-ordinal (Linear) X axis: ownCenter is transformed
+            // from the data value while the marker centers come from LineItem.GetCoords, which uses
+            // the ordinal index on Text/ordinal axes. Both plots that use this layout (volcano and
+            // relative abundance) have Linear X axes, so the two agree to sub-pixel precision.
+            var ownCenter = _graph.TransformCoord(entry.Point.Point.X, entry.Point.Point.Y, CoordType.AxisXYScale);
+            foreach (var bucket in BucketKeys(entry.Rect, bucketSize))
+            {
+                if (!markerCentersByBucket.TryGetValue(bucket, out var centers))
+                    continue;
+                foreach (var center in centers)
+                {
+                    if (!entry.Rect.Contains(center))
+                        continue;
+                    var dx = center.X - ownCenter.X;
+                    var dy = center.Y - ownCenter.Y;
+                    if (dx * dx + dy * dy <= OWN_MARKER_TOLERANCE_SQ)
+                        continue;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static long BucketKey(PointF pt, int bucketSize)
+        {
+            var bx = (int)Math.Floor(pt.X / bucketSize);
+            var by = (int)Math.Floor(pt.Y / bucketSize);
+            return ((long)bx << 32) ^ (uint)by;
+        }
+
+        private static bool OverlapsKept(RectangleF rect, int bucketSize, Dictionary<long, List<RectangleF>> keptByBucket)
+        {
+            foreach (var bucket in BucketKeys(rect, bucketSize))
+            {
+                if (!keptByBucket.TryGetValue(bucket, out var rects))
+                    continue;
+                foreach (var kept in rects)
+                {
+                    if (kept.IntersectsWith(rect))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static void AddToBuckets(RectangleF rect, int bucketSize, Dictionary<long, List<RectangleF>> keptByBucket)
+        {
+            foreach (var bucket in BucketKeys(rect, bucketSize))
+            {
+                if (!keptByBucket.TryGetValue(bucket, out var rects))
+                {
+                    rects = new List<RectangleF>();
+                    keptByBucket[bucket] = rects;
+                }
+                rects.Add(rect);
+            }
+        }
+
+        private static IEnumerable<long> BucketKeys(RectangleF rect, int bucketSize)
+        {
+            var minX = (int)Math.Floor(rect.Left / bucketSize);
+            var maxX = (int)Math.Floor(rect.Right / bucketSize);
+            var minY = (int)Math.Floor(rect.Top / bucketSize);
+            var maxY = (int)Math.Floor(rect.Bottom / bucketSize);
+            for (var bx = minX; bx <= maxX; bx++)
+            {
+                for (var by = minY; by <= maxY; by++)
+                    yield return ((long)bx << 32) ^ (uint)by;
+            }
+        }
+
+        private static uint StableTextHash(string text)
+        {
+            unchecked
+            {
+                const uint fnvOffset = 2166136261;
+                const uint fnvPrime = 16777619;
+                var hash = fnvOffset;
+                if (!string.IsNullOrEmpty(text))
+                {
+                    foreach (var ch in text)
+                    {
+                        hash ^= ch;
+                        hash *= fnvPrime;
+                    }
+                }
+                return hash;
+            }
+        }
+
+        /// <summary>
+        /// Immutable snapshot of a single point marker: its screen rectangle (as reported by
+        /// <see cref="LineItem.GetCoords"/>) and the transformed center of the data point.
+        /// </summary>
+        private readonly struct MarkerInfo
+        {
+            public MarkerInfo(PointF center, RectangleF rect)
+            {
+                Center = center;
+                Rect = rect;
+            }
+
+            public PointF Center { get; }
+            public RectangleF Rect { get; }
+        }
+
+        private readonly struct LabelRect
+        {
+            public LabelRect(LabeledPoint point, RectangleF rect)
+            {
+                Point = point;
+                Rect = rect;
+                Text = point.Label?.Text ?? string.Empty;
+                Hash = StableTextHash(Text);
+                // Stable, position-independent identity used as the final sort tiebreaker so
+                // that points sharing the same label text still prune in a deterministic order.
+                TieBreak = point.UniqueID?.ToString() ?? string.Empty;
+            }
+
+            public LabeledPoint Point { get; }
+            public RectangleF Rect { get; }
+            public string Text { get; }
+            public uint Hash { get; }
+            public string TieBreak { get; }
         }
 
         /// <summary>

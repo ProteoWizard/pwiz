@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="05f5f891-6998-4aeb-867d-4e2521ff634c" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>ProteoWizard</name>
+  <description>http://proteowizard.sourceforge.net/</description>
+  <parameters>
+    <param name="GitHubAuthToken" value="credentialsJSON:f8fb99a5-f2ce-42ef-9ef4-8809c17e6b32" spec="password label='GitHubAuthToken' display='normal'" />
+    <param name="SkylineCurrentRelease" value="skyline_26_1_1" />
+    <param name="TeamCityAuthToken" value="credentialsJSON:c2bbab87-b6a4-45a2-839b-b20bb9fc79a6" spec="password display='normal'" />
+    <param name="WINDOWS_CHECKOUT_DIR" value="C:\pwiz" />
+    <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+    <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+    <param name="env.PARALLEL_WORKER_COUNT" value="8" />
+    <param name="env.PWIZ_VERSION" value="42" />
+    <param name="env.PYTHON_HdOME" value="C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python39_64" />
+    <param name="env.TCA_PASSWORD" value="credentialsJSON:34e91ce9-8ade-49c7-8e2b-50913c6b7afa" spec="password display='normal'" />
+    <param name="prositconfig_production_xml" value="credentialsJSON:51c86fd5-8d26-42c8-bfe9-8cf0025f9b7a" spec="password readOnly='true' display='hidden'" />
+    <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+    <param name="teamcity.activeVcsBranch.age.days" value="3" />
+  </parameters>
+  <project-extensions>
+    <extension id="PROJECT_EXT_102" type="project-graphs">
+      <parameters>
+        <param name="defaultFilters" value="" />
+        <param name="format" value="duration" />
+        <param name="hideFilters" value="" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Duration (excluding Checkout Time)",
+    "sourceBuildTypeId": "ProteoWizard_Bumbershoot_Windows_X86",
+    "key": "BuildDurationNetTime"
+  }
+]]]></param>
+        <param name="seriesTitle" value="Build duration" />
+        <param name="title" value="ProteoWizard / Bumbershoot Windows x86" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_103" type="project-graphs">
+      <parameters>
+        <param name="defaultFilters" value="" />
+        <param name="format" value="duration" />
+        <param name="hideFilters" value="" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Duration (excluding Checkout Time)",
+    "sourceBuildTypeId": "bt83",
+    "key": "BuildDurationNetTime"
+  }
+]]]></param>
+        <param name="title" value="ProteoWizard / Core Windows x86_64" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_104" type="project-graphs">
+      <parameters>
+        <param name="format" value="duration" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Duration (excluding Checkout Time)",
+    "sourceBuildTypeId": "bt209",
+    "key": "BuildDurationNetTime"
+  }
+]]]></param>
+        <param name="title" value="ProteoWizard / Skyline master and PRs (Windows x86_64)" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_105" type="project-graphs">
+      <parameters>
+        <param name="defaultFilters" value="" />
+        <param name="format" value="duration" />
+        <param name="hideFilters" value="" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Checkout Time",
+    "sourceBuildTypeId": "bt36",
+    "key": "BuildCheckoutTime"
+  }
+]]]></param>
+        <param name="seriesTitle" value="Serie" />
+        <param name="title" value="Checkout time" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_1127" type="buildtype-graphs">
+      <parameters>
+        <param name="format" value="text" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Checkout Time",
+    "key": "BuildCheckoutTime"
+  }
+]]]></param>
+        <param name="seriesTitle" value="Time" />
+        <param name="title" value="Checkout Time" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_114" type="IssueTracker">
+      <parameters>
+        <param name="authType" value="anonymous" />
+        <param name="name" value="ProteoWizard/pwiz" />
+        <param name="pattern" value="#(\d+)" />
+        <param name="repository" value="https://github.com/ProteoWizard/pwiz" />
+        <param name="secure:accessToken" value="" />
+        <param name="secure:password" value="" />
+        <param name="type" value="GithubIssues" />
+        <param name="username" value="" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_1160" type="storage_settings">
+      <parameters>
+        <param name="aws.access.key.id" value="AKIA6RINVLEH5YQMMNPP" />
+        <param name="aws.credentials.type" value="aws.access.keys" />
+        <param name="aws.external.id" value="TeamCity-server-b507c09e-4f91-472d-ab11-3fe534e2ca8f" />
+        <param name="aws.region.name" value="us-west-2" />
+        <param name="secure:aws.secret.access.key" value="credentialsJSON:695d4ca4-e2cd-43b7-b748-b9788778eabe" />
+        <param name="storage.name" value="ProteoWizard Artifacts at MacCoss" />
+        <param name="storage.s3.bucket.name" value="mc-tca-01" />
+        <param name="storage.s3.upload.presignedUrl.enabled" value="true" />
+        <param name="storage.s3.verifyIntegrityAfterUpload" value="true" />
+        <param name="storage.type" value="S3_storage" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_1161" type="active_storage">
+      <parameters>
+        <param name="active.storage.feature.id" value="PROJECT_EXT_1160" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_118" type="project-graphs">
+      <parameters>
+        <param name="format" value="duration" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Duration (excluding Checkout Time)",
+    "sourceBuildTypeId": "bt17",
+    "key": "BuildDurationNetTime"
+  }
+]]]></param>
+        <param name="seriesTitle" value="Serie" />
+        <param name="title" value="ProteoWizard / Core Linux x86_64" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_119" type="project-graphs.order">
+      <parameters>
+        <param name="order" value="_Root:SuccessRate,_Root:TestCount,PROJECT_EXT_103,PROJECT_EXT_118,PROJECT_EXT_102,PROJECT_EXT_104,PROJECT_EXT_174,PROJECT_EXT_18,PROJECT_EXT_105,_Root:BuildDurationNetTime,_Root:TimeSpentInQueue,_Root:CodeCoverage,_Root:MaxTimeToFixTestGraph" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_1356" type="CloudImage">
+      <parameters>
+        <param name="agent_pool_id" value="-2" />
+        <param name="amazon-id" value="ami-0070d3b6582cdf6a8" />
+        <param name="image-instances-limit" value="3" />
+        <param name="image-name-prefix" value="pwiz-linux" />
+        <param name="instance-type" value="m8i.2xlarge" />
+        <param name="key-pair-name" value="teamcity-chambm-maccoss" />
+        <param name="profileId" value="amazon-9" />
+        <param name="security-group-ids" value="sg-0175b412cb58a33d6" />
+        <param name="source-id" value="pwiz-linux" />
+        <param name="spot-instance-price" value="0.5" />
+        <param name="subnet-id" value="subnet-0d6974ea88c0b50ec" />
+        <param name="user-tags" value="Project=teamcity,teamcity-agent=pwiz-linux" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_1357" type="CloudImage">
+      <parameters>
+        <param name="agent_pool_id" value="-2" />
+        <param name="amazon-id" value="ami-0b85c36a722bd2b75" />
+        <param name="image-instances-limit" value="6" />
+        <param name="image-name-prefix" value="pwiz-windows" />
+        <param name="image-priority" value="1" />
+        <param name="instance-type" value="m6i.2xlarge,m8i.2xlarge,m7i.2xlarge" />
+        <param name="key-pair-name" value="teamcity-chambm-maccoss" />
+        <param name="profileId" value="amazon-9" />
+        <param name="security-group-ids" value="sg-0175b412cb58a33d6" />
+        <param name="source-id" value="pwiz-windows" />
+        <param name="spot-instance-price" value="0.75" />
+        <param name="subnet-id" value="subnet-0d6974ea88c0b50ec" />
+        <param name="user-tags" value="Project=teamcity,teamcity-agent=pwiz-windows" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_1453" type="CloudImage">
+      <parameters>
+        <param name="agent_pool_id" value="-2" />
+        <param name="amazon-id" value="ami-0a0614f3cd3fd8838" />
+        <param name="ebs-optimized" value="false" />
+        <param name="image-instances-limit" value="7" />
+        <param name="image-name-prefix" value="pwiz-vs-2022" />
+        <param name="instance-type" value="r6i.2xlarge" />
+        <param name="key-pair-name" value="myhosts" />
+        <param name="profileId" value="amazon-6" />
+        <param name="security-group-ids" value="sg-056cf2aa275fca9b4," />
+        <param name="source-id" value="pwiz-vs-2022" />
+        <param name="subnet-id" value="subnet-09aa4de9c60d949ef" />
+        <param name="use-spot-instances" value="false" />
+        <param name="user-tags" value="teamcity-agent=pwiz-vs-2022" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_174" type="project-graphs">
+      <parameters>
+        <param name="format" value="duration" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Duration (excluding Checkout Time)",
+    "sourceBuildTypeId": "bt19",
+    "key": "BuildDurationNetTime"
+  }
+]]]></param>
+        <param name="title" value="ProteoWizard / Skyline master and PRs (Windows x86)" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_175" type="OAuthProvider">
+      <parameters>
+        <param name="displayName" value="Docker Registry" />
+        <param name="providerType" value="Docker" />
+        <param name="repositoryUrl" value="https://docker.io" />
+        <param name="secure:userPass" value="credentialsJSON:fffad487-0b2d-413f-a165-ea3a75cc0139" />
+        <param name="userName" value="chambm" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_18" type="project-graphs">
+      <parameters>
+        <param name="format" value="duration" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Build Duration (excluding Checkout Time)",
+    "sourceBuildTypeId": "ProteoWizardAndSkylineDockerContainerWineX8664",
+    "key": "BuildDurationNetTime"
+  }
+]]]></param>
+        <param name="seriesTitle" value="Serie" />
+        <param name="title" value="Docker container build/test/push" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_2171" type="buildtype-graphs">
+      <parameters>
+        <param name="format" value="integer" />
+        <param name="series"><![CDATA[[
+  {
+    "type": "valueType",
+    "title": "Number of Classes Covered",
+    "key": "CodeCoverageAbsCCovered"
+  },
+  {
+    "type": "valueType",
+    "title": "Total Number of Classes",
+    "key": "CodeCoverageAbsCTotal"
+  },
+  {
+    "type": "valueType",
+    "title": "Number of Methods Covered",
+    "key": "CodeCoverageAbsMCovered"
+  },
+  {
+    "type": "valueType",
+    "title": "Total Number of Methods",
+    "key": "CodeCoverageAbsMTotal"
+  },
+  {
+    "type": "valueType",
+    "title": "Number of Statements Covered",
+    "key": "CodeCoverageAbsSCovered"
+  },
+  {
+    "type": "valueType",
+    "title": "Total Number of Statements",
+    "key": "CodeCoverageAbsSTotal"
+  }
+]]]></param>
+        <param name="seriesTitle" value="Serie" />
+        <param name="title" value="Absolute coverage" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_2292" type="buildtype-graphs.order">
+      <parameters>
+        <param name="order" value="_Root:SuccessRate,_Root:TestCount,_Root:MaxTimeToFixTestGraph,_Root:VisibleArtifactsSize,_Root:InspectionStats,_Root:CodeCoverage,PROJECT_EXT_2171,_Root:BuildDurationNetTime,_Root:TimeSpentInQueue,_Root:PROJECT_EXT_72,PROJECT_EXT_1127" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_24" type="CloudImage">
+      <parameters>
+        <param name="agent_pool_id" value="-2" />
+        <param name="amazon-id" value="ami-033286c36ef58bdb1" />
+        <param name="ebs-optimized" value="false" />
+        <param name="image-name-prefix" value="pwiz-linux" />
+        <param name="instance-type" value="m6a.2xlarge" />
+        <param name="key-pair-name" value="myhosts" />
+        <param name="profileId" value="amazon-6" />
+        <param name="security-group-ids" value="sg-056cf2aa275fca9b4," />
+        <param name="source-id" value="pwiz-linux" />
+        <param name="spot-instance-price" value="0.5" />
+        <param name="subnet-id" value="subnet-09aa4de9c60d949ef" />
+        <param name="use-spot-instances" value="true" />
+        <param name="user-tags" value="teamcity-agent=pwiz-linux" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_25" type="OAuthProvider">
+      <parameters>
+        <param name="clientId" value="7d25710ff6e8b0c66c1f" />
+        <param name="defaultTokenScope" value="public_repo,repo,repo:status,write:repo_hook" />
+        <param name="displayName" value="GitHub.com" />
+        <param name="gitHubUrl" value="https://github.com/" />
+        <param name="providerType" value="GitHub" />
+        <param name="secure:clientSecret" value="credentialsJSON:008edfe0-35ee-4c4b-804a-67c20f1a0070" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_30" type="CloudImage">
+      <parameters>
+        <param name="agent_pool_id" value="-2" />
+        <param name="amazon-id" value="ami-05d33404e50962cc8" />
+        <param name="ebs-optimized" value="false" />
+        <param name="image-instances-limit" value="1" />
+        <param name="image-name-prefix" value="pwiz-vs-2022-2" />
+        <param name="instance-type" value="r6i.2xlarge" />
+        <param name="key-pair-name" value="proteowizard-chambers" />
+        <param name="profileId" value="amazon-6" />
+        <param name="security-group-ids" value="sg-056cf2aa275fca9b4," />
+        <param name="source-id" value="pwiz-vs-2022-2" />
+        <param name="spot-instance-price" value="0.75" />
+        <param name="subnet-id" value="subnet-09aa4de9c60d949ef" />
+        <param name="use-spot-instances" value="true" />
+        <param name="user-tags" value="teamcity-agent=pwiz-vs-2022-2" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_355" type="CloudImage">
+      <parameters>
+        <param name="agent_pool_id" value="-2" />
+        <param name="amazon-id" value="fleet" />
+        <param name="image-instances-limit" value="0" />
+        <param name="image-name-prefix" value="Windows spot fleet" />
+        <param name="profileId" value="amazon-9" />
+        <param name="source-id" value="Windows spot fleet" />
+        <param name="spot-fleet-config"><![CDATA[{"IamFleetRole":"arn:aws:iam::999145429263:role/aws-ec2-spot-fleet-tagging-role","AllocationStrategy":"capacityOptimized","TargetCapacity":7,"SpotPrice":"1.12",
+"LaunchSpecifications":[
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m7a.2xlarge","SpotPrice":"0.8426"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m5.2xlarge","SpotPrice":"0.752"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m5d.2xlarge","SpotPrice":"0.82"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m5dn.2xlarge","SpotPrice":"0.912"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m5n.2xlarge","SpotPrice":"0.844"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m6a.2xlarge","SpotPrice":"0.7136"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m6i.2xlarge","SpotPrice":"0.752"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"m6in.2xlarge","SpotPrice":"0.9249"},
+{"ImageId":"ami-0380c3cfd9cad8a58","KeyName":"teamcity-chambm-maccoss","BlockDeviceMappings":[{"DeviceName":"/dev/sda1","Ebs":{"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0033ac3efb423c25f","VolumeSize":100,"VolumeType":"gp3","Encrypted":false,"Throughput":125}}],"TagSpecifications":[{"ResourceType":"instance","Tags":[{"Key":"Project","Value":"teamcity"},{"Key":"teamcity-agent","Value":"pwiz-windows"}]}],"IamInstanceProfile":{"Arn":"arn:aws:iam::999145429263:instance-profile/ec2-maccoss-profile-teamcity-agent"},"EbsOptimized":true,"SubnetId":"subnet-0d6974ea88c0b50ec","SecurityGroups":[{"GroupId":"sg-0175b412cb58a33d6"}],"InstanceType":"h1.2xlarge","SpotPrice":"0.836"}
+],"TagSpecifications":[{"ResourceType":"spot-fleet-request","Tags":[{"Key":"Project","Value":"teamcity"}]}]}]]></param>
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_6285" type="OAuthProvider">
+      <parameters>
+        <param name="connectionSubtype" value="gitHubApp" />
+        <param name="displayName" value="ProteoWizardTeamCity" />
+        <param name="gitHubApp.appId" value="4901534" />
+        <param name="gitHubApp.clientId" value="Iv23lihMd0qYPUHnFwPf" />
+        <param name="gitHubApp.ownerUrl" value="https://github.com/ProteoWizard" />
+        <param name="providerType" value="GitHubApp" />
+        <param name="secure:gitHubApp.clientSecret" value="credentialsJSON:eca1a4eb-1299-43f7-94a0-c9d6d928b158" />
+        <param name="secure:gitHubApp.privateKey" value="credentialsJSON:ff076791-21ba-48c6-acc2-c9f6965e84ae" />
+        <param name="secure:gitHubApp.webhookSecret" value="credentialsJSON:2db1a1d6-dd90-42f4-b594-89778ab0ab82" />
+        <param name="useUniqueRedirect" value="true" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_6446" type="versionedSettings">
+      <parameters>
+        <param name="buildSettings" value="PREFER_VCS" />
+        <param name="credentialsStorageType" value="credentialsJSON" />
+        <param name="enabled" value="true" />
+        <param name="ignoreChangesInDependenciesAndVcsSettings" value="false" />
+        <param name="rootId" value="ProteoWizard_PwizGithubMasterWithPRs" />
+        <param name="showChanges" value="false" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_86" type="storage_settings">
+      <parameters>
+        <param name="aws.access.key.id" value="AKIAJOWCKOVGOCFFUTEA" />
+        <param name="aws.credentials.type" value="aws.access.keys" />
+        <param name="aws.external.id" value="TeamCity-server-b507c09e-4f91-472d-ab11-3fe534e2ca8f" />
+        <param name="aws.region.name" value="us-west-2" />
+        <param name="secure:aws.secret.access.key" value="credentialsJSON:081fe437-ff09-4af0-8981-67b7bcc91b16" />
+        <param name="storage.name" value="Proteowizard Artifacts" />
+        <param name="storage.s3.bucket.name" value="proteowizard-teamcity-artifacts" />
+        <param name="storage.s3.upload.presignedUrl.enabled" value="true" />
+        <param name="storage.type" value="S3_storage" />
+      </parameters>
+    </extension>
+    <extension id="ProteoWizard_AmazonWebServicesAws" type="OAuthProvider">
+      <parameters>
+        <param name="awsAccessKeyId" value="AKIA6RINVLEH34WR2UPK" />
+        <param name="awsAllowedInBuilds" value="true" />
+        <param name="awsAllowedInSubProjects" value="true" />
+        <param name="awsCredentialsType" value="awsAccessKeys" />
+        <param name="awsIamRoleSessionName" value="TeamCity-session" />
+        <param name="awsRegionName" value="us-west-2" />
+        <param name="awsSessionCredentials" value="true" />
+        <param name="awsStsEndpoint" value="https://sts.us-west-2.amazonaws.com" />
+        <param name="displayName" value="Amazon Web Services (AWS)" />
+        <param name="providerType" value="AWS" />
+        <param name="secure:awsSecretAccessKey" value="credentialsJSON:86f700fc-9919-470c-99ba-75921983fee3" />
+      </parameters>
+    </extension>
+    <extension id="amazon-6" type="CloudProfile">
+      <parameters>
+        <param name="cloud-code" value="amazon" />
+        <param name="description" value="" />
+        <param name="enabled" value="false" />
+        <param name="max-running-instances" value="8" />
+        <param name="name" value="Pwiz Agents" />
+        <param name="next-hour" value="" />
+        <param name="not-checked" value="" />
+        <param name="profileId" value="amazon-6" />
+        <param name="profileServerUrl" value="https://172.30.36.165" />
+        <param name="region" value="us-west-2" />
+        <param name="secure:access-id" value="credentialsJSON:9dc1dedd-665d-41c3-aa07-e6a156447091" />
+        <param name="secure:secret-key" value="credentialsJSON:ce56fc07-be77-49ac-9dde-edde32e12de7" />
+        <param name="system.cloud.profile_id" value="amazon-6" />
+        <param name="terminate-idle-time" value="20" />
+        <param name="total-work-time" value="" />
+      </parameters>
+    </extension>
+    <extension id="amazon-9" type="CloudProfile">
+      <parameters>
+        <param name="cloud-code" value="amazon" />
+        <param name="description" value="" />
+        <param name="enabled" value="true" />
+        <param name="max-running-instances" value="7" />
+        <param name="name" value="Pwiz Agents on MacCoss" />
+        <param name="profileId" value="amazon-9" />
+        <param name="profileServerUrl" value="https://teamcity.int.labkey.org" />
+        <param name="region" value="us-west-2" />
+        <param name="secure:access-id" value="credentialsJSON:1a4ecfb0-43bd-48ff-9169-9138e837b7bb" />
+        <param name="secure:secret-key" value="credentialsJSON:695d4ca4-e2cd-43b7-b748-b9788778eabe" />
+        <param name="system.cloud.profile_id" value="amazon-9" />
+        <param name="terminate-idle-time" value="20" />
+        <param name="use-instance-iam-role" value="false" />
+      </parameters>
+    </extension>
+  </project-extensions>
+</project>
+

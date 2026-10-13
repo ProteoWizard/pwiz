@@ -1,0 +1,44 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace pwiz.Osprey.Core
+{
+    /// <summary>
+    /// Chooses between a whole singular sentence and a whole plural sentence for a count, the
+    /// way Skyline writes <c>count == 1 ? Resources.X : string.Format(Resources.Y, count)</c>.
+    /// Never "file(s)" and never "1 files": an HPC worker always runs on one file, and each
+    /// sentence becomes its own resource that translates as a whole.
+    /// </summary>
+    public static class CountText
+    {
+        /// <summary>
+        /// <paramref name="singular"/> when <paramref name="count"/> is 1, else
+        /// <paramref name="pluralFormat"/> formatted with the count as {0}. Further
+        /// <paramref name="args"/> follow as {1}, {2} ... in both.
+        /// </summary>
+        public static string Format(long count, string singular, string pluralFormat, params object[] args)
+        {
+            var all = new object[args.Length + 1];
+            all[0] = count;
+            args.CopyTo(all, 1);
+            return string.Format(count == 1 ? singular : pluralFormat, all);
+        }
+    }
+}

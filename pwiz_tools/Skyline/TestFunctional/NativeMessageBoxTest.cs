@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
             StartToolService();
 
             // No TestFilesZip is set for this test, so there is no TestFilesDir; use the (writable) test results
-            // folder for the document, the same way PrmMcpConnectorTest does.
+            // folder for the document.
             var savePath = TestContext.GetTestResultsPath(@"MyDocument.sky");
             // Start from a clean slate so the FIRST save has no file to replace (a leftover from an earlier run
             // would otherwise raise the replace-confirm box on the first save, before the test expects it).

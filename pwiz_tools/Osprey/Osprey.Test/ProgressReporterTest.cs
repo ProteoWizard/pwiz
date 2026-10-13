@@ -55,8 +55,9 @@ namespace pwiz.Osprey.Test
                     p.Report(1);            // still 0% -> heartbeat line
                 });
             // Only the heartbeat line carries the "(... elapsed)" parenthetical; the plain
-            // "N%" advance lines and the heading do not (punctuation, not localizable text).
-            StringAssert.Contains(string.Join("\n", frozen), "(");
+            // "N%" advance lines and the heading do not. The parenthesis is read from the
+            // resource, because Japanese and Chinese write it full-width.
+            StringAssert.Contains(string.Join("\n", frozen), HeartbeatMarker);
 
             // A phase that advances on every report but never idles past a (wide) heartbeat
             // threshold emits only advance lines -- no heartbeat clutter on healthy phases.
@@ -67,40 +68,39 @@ namespace pwiz.Osprey.Test
                     p.Report(50);
                     p.Report(75);
                 });
-            Assert.IsFalse(string.Join("\n", fast).Contains("("),
+            Assert.IsFalse(string.Join("\n", fast).Contains(HeartbeatMarker),
                 "a fast, always-advancing phase should emit no heartbeat line");
         }
 
         /// <summary>
-        /// The LogWaitTime / MinPercentTime levers, modelled on Skyline's LongWaitDlg delay: a
-        /// scope that finishes inside the wait leaves NO trace at all. The constructor bounds
-        /// both by the report interval, which is what makes the two display rules structural
-        /// rather than checked: the heading always precedes the first percent, and a scope that
-        /// showed a sub-100% percent always closes with 100%.
+        /// The display rules for a CLI log (Brendan, 2026-09-25): the heading ALWAYS prints, so
+        /// the log says what ran, in order; a step that finished inside MinPercentTime and showed
+        /// no percent reads as its heading alone ("Reading... / Removing duplicates..."), not a
+        /// heading plus a 100% that only says it was fast; and a step that showed a percent always
+        /// closes with 100%, which the constructor's clamp to the report interval guarantees.
         /// </summary>
         [TestMethod]
-        public void TestProgressReporterSuppressesFastScopes()
+        public void TestProgressReporterHeadingAlwaysPrints()
         {
-            // Inside the wait: nothing at all, heading included. Reported at 50% so this proves
-            // the THRESHOLD suppressed the output, not an absent Report call.
+            // Inside MinPercentTime, no percent shown: the heading and nothing else. Reported at
+            // 50% so this proves the thresholds held back the percent, not an absent Report call.
             var fast = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
-                act: p => p.Report(50), logWaitSeconds: 60.0, minPercentSeconds: 60.0);
-            Assert.AreEqual(0, fast.Count,
-                @"a scope finishing inside LogWaitTime must print nothing at all, heading included");
+                act: p => p.Report(50), minPercentSeconds: 60.0);
+            Assert.AreEqual(1, fast.Count, @"a fast step prints only its heading");
+            StringAssert.Contains(fast[0], Heading(@"phase"));
 
-            // Past MinPercentTime but still inside LogWaitTime, so no percent line was ever
-            // printed: the deferred heading must still come out WITH the completion line,
-            // never a bare 100% under no heading.
+            // Past MinPercentTime but no percent shown (the interval has not elapsed): the
+            // heading, then the closing 100%.
             var announced = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
-                act: p => p.Report(50), logWaitSeconds: 60.0, minPercentSeconds: 0.0);
+                act: p => p.Report(50), minPercentSeconds: 0.0);
             Assert.AreEqual(2, announced.Count, @"expected the heading and its completion line");
-            StringAssert.Contains(announced[0], @"phase...");
+            StringAssert.Contains(announced[0], Heading(@"phase"));
             StringAssert.Contains(announced[1], @"100%");
 
-            // Both thresholds are clamped to the interval, so asking for a wait longer than the
-            // reporting cadence cannot produce a scope that shows 50% and then never closes.
+            // MinPercentTime is clamped to the interval, so a step that showed 50% always closes.
             var partial = CaptureLines(total: 100, intervalSeconds: 0.0, heartbeatSeconds: 60.0,
-                act: p => p.Report(50), logWaitSeconds: 60.0, minPercentSeconds: 60.0);
+                act: p => p.Report(50), minPercentSeconds: 60.0);
+            StringAssert.Contains(partial[0], Heading(@"phase"));
             StringAssert.Contains(string.Join("\n", partial), @"50%");
             StringAssert.Contains(partial[partial.Count - 1], @"100%");
         }
@@ -112,21 +112,47 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static List<string> CaptureLines(long total, double intervalSeconds,
             double heartbeatSeconds, Action<ProgressReporter> act,
-            double logWaitSeconds = 0.0, double minPercentSeconds = 0.0)
+            double minPercentSeconds = 0.0)
         {
             var writer = new StringWriter();
             using (OspreyOutput.PushScopedOut(writer))
-            // logWait / minPercent default to 0 here so the display tests keep exercising the
-            // format at millisecond durations, the same reason they already inject a 0.05 s
-            // heartbeat. The suppression behaviour those two govern has its own tests below.
+            // minPercent defaults to 0 here so the display tests keep exercising the format at
+            // millisecond durations, the same reason they already inject a 0.05 s heartbeat. The
+            // suppression behaviour it governs has its own test above.
             using (var reporter = new ProgressReporter(@"phase", total, string.Empty,
-                intervalSeconds, heartbeatSeconds, logWaitSeconds, minPercentSeconds))
+                intervalSeconds, heartbeatSeconds, minPercentSeconds))
             {
                 act(reporter);
             }
             return writer.ToString()
-                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .ReadLines()
+                .Where(line => line.Length > 0)
                 .ToList();
+        }
+
+        /// <summary>
+        /// The text between the percent and the counts in the heartbeat line - "% (" in English,
+        /// "%" and a full-width parenthesis in Japanese - which no plain advance line or heading
+        /// contains.
+        /// </summary>
+        private static string HeartbeatMarker
+        {
+            get
+            {
+                string format = OspreyCoreResources.ProgressReporter_Report__0____1_____2___3____4__elapsed_;
+                int start = format.IndexOf("{1", StringComparison.Ordinal);
+                start = format.IndexOf('}', start) + 1;
+                return format.Substring(start, format.IndexOf("{2", start, StringComparison.Ordinal) - start).Trim();
+            }
+        }
+
+        /// <summary>
+        /// A progress heading as the reporter prints it in the current UI language: the ellipsis
+        /// is part of the resource because Chinese writes it as one full-width character.
+        /// </summary>
+        private static string Heading(string activity)
+        {
+            return string.Format(OspreyCoreResources.ProgressReporter_ProgressReporter__0____, activity);
         }
     }
 }

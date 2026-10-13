@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vcs-root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="0f188998-0462-4dae-890b-e57065a0b5d9" type="jetbrains.git" modification-check-interval="60" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>pwiz Github Skyline_Release_Only with PRs (1)</name>
+  <param name="agentCleanFilesPolicy" value="NON_IGNORED_ONLY" />
+  <param name="agentCleanPolicy" value="ALWAYS" />
+  <param name="authMethod" value="ANONYMOUS" />
+  <param name="branch" value="refs/heads/Skyline/%SkylineCurrentRelease%" />
+  <param name="ignoreKnownHosts" value="true" />
+  <param name="submoduleCheckout" value="CHECKOUT" />
+  <param name="teamcity:branchSpec"><![CDATA[+:refs/heads/Skyline/(%SkylineCurrentRelease%)
++:refs/(pull/*)/head]]></param>
+  <param name="url" value="https://github.com/ProteoWizard/pwiz.git" />
+  <param name="useAlternates" value="SHALLOW_CLONE" />
+  <param name="usernameStyle" value="EMAIL" />
+</vcs-root>
+

@@ -594,7 +594,8 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public void ClickAddDirectory()
         {
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = SettingsUIResources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory;
                 dlg.ShowNewFolderButton = false;

@@ -19,7 +19,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -491,13 +490,22 @@ namespace pwiz.Skyline.SettingsUI
             base.OnHandleDestroyed(e);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             Settings.Default.ViewLibraryLocation = Location;
             Settings.Default.ViewLibrarySize = Size;
             Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
 
+            base.OnFormClosing(e);
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            // Unsubscribe here rather than in OnFormClosing. WinForms raises FormClosing on owned
+            // forms before the owner's own OnFormClosing, so a shutdown the owner goes on to cancel
+            // would leave this dialog open with the ion type and loss selectors disconnected.
+            // UpdateIonTypeMenu only subscribes when it builds the menu, so they never come back.
             var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
             if (ionTypeSelector != null)
             {
@@ -505,7 +513,7 @@ namespace pwiz.Skyline.SettingsUI
                 ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
             }
 
-            base.OnClosing(e);
+            base.OnFormClosed(e);
         }
 
         #endregion

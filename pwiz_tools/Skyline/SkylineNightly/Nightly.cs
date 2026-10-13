@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2014 University of Washington - Seattle, WA
  * 
@@ -26,6 +27,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.ServiceModel;
 using System.Text;
@@ -86,8 +89,9 @@ namespace SkylineNightly
         private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
 
         private const string GIT_MASTER_URL = "https://github.com/ProteoWizard/pwiz";
-        private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
+        // Delimiter SkylineTester.csproj puts before the branch name in InformationalVersion.
         private const string BRANCH_MARKER = ".branch.";
+        private const string GIT_BRANCHES_URL = GIT_MASTER_URL + "/tree/";
         private const string SKYLINETESTER_FILES_DIR = "SkylineTester Files";
 
         private DateTime _startTime;
@@ -110,8 +114,22 @@ namespace SkylineNightly
         }
         private string _skylineTesterDir;
 
-        public Nightly(RunSpec runSpec, string decorateSrcDirName = null, string logDir = null)
-            : this(runSpec, runSpec.ShortName, decorateSrcDirName, logDir)
+        /// <summary>Caller asked to keep an existing source tree instead of re-cloning it.</summary>
+        private readonly bool _reuseCheckout;
+
+        /// <summary>Caller asked to install a locally built SkylineTester.zip rather than download one.</summary>
+        private readonly bool _localSkylineTester;
+
+        /// <summary>
+        /// Whether a checkout actually was preserved. Distinct from <see cref="_reuseCheckout"/>:
+        /// the first run with the option has nothing to reuse yet, and must still let SkylineTester
+        /// clone. Set by <see cref="CreateSkylineTesterDirectory"/>, read when writing the .skytr.
+        /// </summary>
+        private bool _reusedCheckout;
+
+        public Nightly(RunSpec runSpec, string decorateSrcDirName = null, string logDir = null,
+            bool reuseCheckout = false, bool localSkylineTester = false)
+            : this(runSpec, runSpec.ShortName, decorateSrcDirName, logDir, reuseCheckout, localSkylineTester)
         {
         }
 
@@ -121,13 +139,16 @@ namespace SkylineNightly
         /// </summary>
         public static Nightly ForCommand(string command, string logDir = null)
         {
-            return new Nightly(null, command, null, logDir);
+            return new Nightly(null, command, null, logDir, false, false);
         }
 
-        private Nightly(RunSpec runSpec, string logName, string decorateSrcDirName, string logDir)
+        private Nightly(RunSpec runSpec, string logName, string decorateSrcDirName, string logDir,
+            bool reuseCheckout, bool localSkylineTester)
         {
             _runSpec = runSpec;
             _logName = logName;
+            _reuseCheckout = reuseCheckout;
+            _localSkylineTester = localSkylineTester;
             _nightly = new Xml("nightly");
             _failures = _nightly.Append("failures");
             _leaks = _nightly.Append("leaks");
@@ -252,7 +273,7 @@ namespace SkylineNightly
 
             Log("buildRoot is " + PwizDir);
 
-            var branchUrl = DownloadSkylineTester(skylineTesterZipName);
+            var branchUrl = AcquireSkylineTester(skylineTesterZipName);
             var durationHours = CreateSkylineNightlySkytrFile(nightlyDir, branchUrl, skylineNightlySkytr);
 
             // Start SkylineTester to do the build.
@@ -342,8 +363,53 @@ namespace SkylineNightly
             Log(_startTime.ToShortDateString());
         }
 
+        /// <summary>
+        /// True when <paramref name="pwizDir"/> holds a source tree worth reusing: a git repo that
+        /// also has a checked-out working tree.
+        ///
+        /// Directory existence alone is not enough. A clone interrupted part way (a killed run, a
+        /// dropped connection) leaves a large .git with an EMPTY working tree and no index; reusing
+        /// that makes "git pull" backfill the whole object store rather than doing the quick
+        /// incremental update that is the point of the option. Re-cloning is the cheaper repair.
+        /// </summary>
+        private static bool IsUsableCheckout(string pwizDir)
+        {
+            if (!Directory.Exists(Path.Combine(pwizDir, ".git")))
+                return false;
+            // An index means a checkout actually completed; a tracked file confirms the working
+            // tree really was written out.
+            return File.Exists(Path.Combine(pwizDir, ".git", "index")) &&
+                   File.Exists(Path.Combine(pwizDir, "Jamroot.jam"));
+        }
+
         private void CreateSkylineTesterDirectory()
         {
+            if (_reuseCheckout && IsUsableCheckout(PwizDir))
+            {
+                // The source tree deliberately lives INSIDE this folder (see PwizDir), so the
+                // wholesale delete below would take the checkout with it. Clear out only the
+                // SkylineTester binaries around it; the zip is extracted over the top afterwards
+                // with OverwriteSilently, so it does not need an empty directory.
+                //
+                // Staying in this exact folder also matters: the retry path below moves to a
+                // sibling ("_1", "_2", ...) when a delete fails, which would silently abandon the
+                // checkout we are trying to reuse.
+                Log("Reusing existing checkout at " + PwizDir);
+                foreach (var dir in Directory.GetDirectories(_skylineTesterDir))
+                {
+                    if (string.Equals(Path.GetFileName(dir), "pwiz", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    Delete(dir);
+                }
+                foreach (var file in Directory.GetFiles(_skylineTesterDir))
+                    Delete(file);
+                _reusedCheckout = true;
+                return;
+            }
+
+            if (_reuseCheckout)
+                Log("No usable checkout at " + PwizDir + " to reuse; it will be cloned this run");
+
             string nextDir = _skylineTesterDir;
             int retry = 1;
             for (;;)
@@ -400,6 +466,11 @@ namespace SkylineNightly
                     // A SkylineTester from before the run type existed reads these instead
                     skylineTester.GetChild("nightlyRunPerfTests").Set(_runSpec.IsPerf ? "true" : "false");
                     skylineTester.GetChild("nightlyDuration").Set(((int)TargetDuration.TotalHours).ToString());
+                    // Only sync-in-place when there is actually a tree to sync. TabBuild does nothing
+                    // at all when updateBuild is set but the directory is missing, which would leave
+                    // the build with no source.
+                    skylineTester.GetChild("nukeBuild").Set(_reusedCheckout ? "false" : "true");
+                    skylineTester.GetChild("updateBuild").Set(_reusedCheckout ? "true" : "false");
                     if (!string.IsNullOrEmpty(branchUrl) && branchUrl.Contains("tree"))
                     {
                         skylineTester.GetChild("nightlyBuildTrunk").Set("false");
@@ -540,6 +611,101 @@ namespace SkylineNightly
         /// <param name="skylineTesterZipPath">Full local destination path for the downloaded zip. The remote artifact name is fixed by SKYLINETESTER_ZIP_NAME.</param>
         /// <returns>Branch URL</returns>
         /// <exception cref="IOException">Failure after 2 hours throws an exception with the reason</exception>
+        /// <summary>
+        /// Puts a SkylineTester into <see cref="_skylineTesterDir"/> and returns the branch URL it
+        /// was built from, either from TeamCity or from a locally built zip.
+        /// </summary>
+        private string AcquireSkylineTester(string skylineTesterZipPath)
+        {
+            return _localSkylineTester
+                ? InstallLocalSkylineTester()
+                : DownloadSkylineTester(skylineTesterZipPath);
+        }
+
+        /// <summary>
+        /// Installs the SkylineTester.zip built from this SkylineNightly's own checkout, skipping
+        /// TeamCity entirely. Produce it with "build.bat Release SkylineTester.zip".
+        ///
+        /// The branch still comes from the installed assembly's stamped version, exactly as for a
+        /// downloaded zip, so the tested branch is whichever branch the zip was BUILT from - not
+        /// necessarily the branch currently checked out.
+        /// </summary>
+        private string InstallLocalSkylineTester()
+        {
+            var localZip = FindLocalSkylineTesterZip();
+            Log("Installing locally built SkylineTester from " + localZip);
+            if (!InstallSkylineTester(localZip, _skylineTesterDir))
+                throw new IOException("SkylineTester installation failed for " + localZip);
+            // Deliberately NOT deleted, unlike the downloaded copy: this is the user's build output.
+            var branchUrl = ResolveBranchUrlFromInstalledTester();
+            Log("Locally built SkylineTester reports branch " + (branchUrl ?? "master"));
+            return branchUrl;
+        }
+
+        /// <summary>
+        /// Locates the SkylineTester.zip produced by build.bat in the checkout this SkylineNightly
+        /// was built from. Walks up from the running assembly looking for the Skyline tree rather
+        /// than counting parent directories, so it survives a change of output layout.
+        /// </summary>
+        private static string FindLocalSkylineTesterZip()
+        {
+            // AppContext.BaseDirectory, not Assembly.Location, which is empty in a single-file build.
+            var dir = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
+            for (; !string.IsNullOrEmpty(dir); dir = Path.GetDirectoryName(dir))
+            {
+                var skylineDir = Path.Combine(dir, "pwiz_tools", "Skyline");
+                if (!File.Exists(Path.Combine(skylineDir, "build.bat")))
+                    continue;
+
+                var binDir = Path.Combine(skylineDir, "bin");
+                if (!Directory.Exists(binDir))
+                    break;
+
+                // Prefer the canonical staging dir, then any workflow-specific one, newest first -
+                // the same preference order SkylineTester itself uses to pick a build directory.
+                var candidates = Directory.GetDirectories(binDir, "staging*")
+                    // Skip pre-rename leftovers: the staging dir used to be named after the target
+                    // framework ("staging-net8"). bin/ is gitignored and nothing prunes it, so a dev
+                    // who upgraded still has one - and its binaries target a runtime that is no longer
+                    // staged. Any "staging-net<tfm>" is stale by construction; "staging",
+                    // "staging-record" and "staging-validate" are current.
+                    .Where(d => !Path.GetFileName(d).StartsWith(@"staging-net", StringComparison.OrdinalIgnoreCase))
+                    .Select(d => Path.Combine(d, "Release", SKYLINETESTER_ZIP_NAME))
+                    .Where(File.Exists)
+                    .OrderByDescending(z => Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(z))) == "staging")
+                    .ThenByDescending(File.GetLastWriteTimeUtc)
+                    .ToList();
+                if (candidates.Count > 0)
+                    return candidates[0];
+                break;
+            }
+
+            throw new IOException(string.Format(
+                "No locally built {0} found. Build one with \"build.bat Release {0}\" in pwiz_tools\\Skyline, " +
+                "or drop the --local option to download it from TeamCity.", SKYLINETESTER_ZIP_NAME));
+        }
+
+        /// <summary>
+        /// Reads the branch the installed SkylineTester was built from. SkylineTester.csproj stamps
+        /// InformationalVersion as "&lt;version&gt;+&lt;sha&gt;.branch.&lt;branch&gt;". Read through
+        /// FileVersionInfo rather than loading the assembly: this runs against a build that may
+        /// target a different framework than SkylineNightly itself.
+        /// </summary>
+        private string ResolveBranchUrlFromInstalledTester()
+        {
+            var testerDll = Path.Combine(_skylineTesterDir, "SkylineTester Files", "SkylineTester.dll");
+            var productVersion = FileVersionInfo.GetVersionInfo(testerDll).ProductVersion;
+            // A branch name contains '/', so it cannot be the last dot-separated token of a
+            // version string; ".branch." delimits it instead of a plain split.
+            var branchIndex = productVersion?.IndexOf(BRANCH_MARKER, StringComparison.Ordinal) ?? -1;
+            if (branchIndex < 0)
+                return null;
+            var branch = productVersion.Substring(branchIndex + BRANCH_MARKER.Length);
+            return branch.Equals("master")
+                ? GIT_MASTER_URL
+                : GIT_BRANCHES_URL + branch; // Looks like https://github.com/ProteoWizard/pwiz/tree/Skyline/skyline_9_7
+        }
+
         private string DownloadSkylineTester(string skylineTesterZipPath)
         {
             // Fetch the token once up front: fails fast on a misconfigured machine (rather
@@ -610,9 +776,6 @@ namespace SkylineNightly
 
         private void DownloadSkylineTester(string skylineTesterZip, Branch branch, bool desperate, string token)
         {
-            using var client = new WebClient();
-            TeamCityNightlyAuth.ConfigureClient(client, token);
-
             var isRelease = branch == Branch.release;
             var isIntegration = branch == Branch.integration;
             // Always the branch's own build, whatever SKYLINE_NIGHTLY_BRANCH says: that variable chooses the
@@ -629,7 +792,7 @@ namespace SkylineNightly
             {
                 Log("Download SkylineTester zip file as " + zipFileLink);
             }
-            client.DownloadFile(zipFileLink, skylineTesterZip); // N.B. depending on caller to do try/catch
+            TeamCityNightlyAuth.DownloadArtifact(zipFileLink, skylineTesterZip, token); // N.B. depending on caller to do try/catch
         }
 
         private bool InstallSkylineTester(string skylineTesterZip, string skylineTesterDir)
@@ -1076,21 +1239,27 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// Post the latest results to the server.
+        /// Post the latest results to the server, or the given run's XML, with that run's log.
         /// </summary>
         public string Post(RunSpec runSpec, string xmlFile = null)
         {
+            string logFile;
             if (xmlFile == null)
             {
-                xmlFile = GetLatestLog();    // Change extension to .xml below
-                if (xmlFile == null)
+                logFile = GetLatestLog();
+                if (logFile == null)
                     return string.Empty;
-                xmlFile = Path.ChangeExtension(xmlFile, ".xml"); // In case it's actually the log file name
+                xmlFile = Path.ChangeExtension(logFile, ".xml");
             }
-            
+            else
+            {
+                // The log of the run being posted, not the newest log: posting an earlier run's XML must not carry
+                // the latest run's log, from which the server reads the last test and would report a hang in it.
+                logFile = Path.ChangeExtension(xmlFile, ".log");
+            }
+
             var xml = File.ReadAllText(xmlFile);
-            var logFile = GetLatestLog();
-            if (logFile != null)
+            if (File.Exists(logFile))
             {
                 var log = File.ReadAllText(logFile);
                 XDocument doc = XDocument.Parse(xml);
@@ -1106,6 +1275,10 @@ namespace SkylineNightly
                         Xml.ShowXmlExceptionDetailsAndDie(e, log);
                     }
                 }
+            }
+            else
+            {
+                Log(string.Format("No log {0} to post with the results", logFile));
             }
 
             if (string.IsNullOrEmpty(xml) || !xml.Contains("<test id"))
@@ -1169,58 +1342,38 @@ namespace SkylineNightly
             Log("Posting results to " + link);
             for (var retry = 5; retry > 0; retry--)
             {
-                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
-                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
-
-                var wr = (HttpWebRequest)WebRequest.Create(link);
-                wr.ProtocolVersion = HttpVersion.Version10;
-                wr.ContentType = "multipart/form-data; boundary=" + boundary;
-                wr.Method = "POST";
-                wr.KeepAlive = true;
-                wr.Credentials = CredentialCache.DefaultCredentials;
-
-                if (SetCSRFToken(wr, LogFileName))
+                try
                 {
-                    var rs = wr.GetRequestStream();
-
-                    rs.Write(boundarybytes, 0, boundarybytes.Length);
-                    const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                    string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
-                    byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-                    rs.Write(headerbytes, 0, headerbytes.Length);
-                    var bytes = Encoding.UTF8.GetBytes(postData);
-                    rs.Write(bytes, 0, bytes.Length);
-
-                    byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-                    rs.Write(trailer, 0, trailer.Length);
-                    rs.Close();
-
-                    WebResponse wresp = null;
-                    try
+                    using (var client = CreateLabKeyClient(LogFileName, TimeSpan.FromSeconds(100)))
+                    using (var content = new MultipartFormDataContent())
                     {
-                        wresp = wr.GetResponse();
-                        var stream2 = wresp.GetResponseStream();
-                        if (stream2 != null)
+                        var xmlPart = new ByteArrayContent(Encoding.UTF8.GetBytes(postData));
+                        xmlPart.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
+                        // Built by hand to keep the wire format the server has always received.
+                        // ContentDispositionHeaderValue leaves values unquoted unless they are quoted here, and
+                        // the Add(content, name, fileName) overload also adds a filename* parameter.
+                        xmlPart.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
                         {
-                            var reader2 = new StreamReader(stream2);
-                            var result = reader2.ReadToEnd();
-                            return result;
+                            Name = "\"xml_file\"",
+                            FileName = "\"" + (filePath != null ? Path.GetFileName(filePath) : "xml_file") + "\""
+                        };
+                        content.Add(xmlPart);
+                        var request = new HttpRequestMessage(HttpMethod.Post, link) { Version = HttpVersion.Version10, Content = content };
+                        using (var response = client.SendAsync(request).GetAwaiter().GetResult())
+                        {
+                            response.EnsureSuccessStatusCode();
+                            return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                         }
                     }
-                    catch (Exception e)
-                    {
-                        Log(errmessage = e.ToString());
-                        if (wresp != null)
-                        {
-                            wresp.Close();
-                        }
-                    }
+                }
+                catch (Exception e)
+                {
+                    Log(errmessage = e.ToString());
                 }
                 if (retry > 1)
                 {
                     Thread.Sleep(30000);
                     Log("Retrying post");
-                    errmessage = String.Empty;
                 }
             }
             Log(errmessage = "Failed to post results: " + errmessage); 
@@ -1239,39 +1392,22 @@ namespace SkylineNightly
             var postData = Encoding.ASCII.GetBytes(string.Join("&", postParams));
             for (var retry = 5; retry > 0; retry--)
             {
-                var request = (HttpWebRequest) WebRequest.Create(LABKEY_EMAIL_NOTIFICATION_URL);
-                request.ProtocolVersion = HttpVersion.Version11;
-                request.ContentType = "application/x-www-form-urlencoded";
-                request.Method = "POST";
-                request.KeepAlive = false;
-                request.Credentials = CredentialCache.DefaultCredentials;
-                request.Timeout = 30000; // 30 second timeout
-
-                if (SetCSRFToken(request, null))
+                try
                 {
-                    try
+                    using (var client = CreateLabKeyClient(null, TimeSpan.FromSeconds(30)))
+                    using (var content = new ByteArrayContent(postData))
                     {
-                        using (var stream = request.GetRequestStream())
+                        content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+                        using (var response = client.PostAsync(LABKEY_EMAIL_NOTIFICATION_URL, content).GetAwaiter().GetResult())
                         {
-                            stream.Write(postData, 0, postData.Length);
-                        }
-
-                        using (var response = (HttpWebResponse)request.GetResponse())
-                        using (var responseStream = response.GetResponseStream())
-                        {
-                            if (responseStream != null)
-                            {
-                                using (var responseReader = new StreamReader(responseStream))
-                                {
-                                    return responseReader.ReadToEnd();
-                                }
-                            }
+                            response.EnsureSuccessStatusCode();
+                            return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                         }
                     }
-                    catch (Exception)
-                    {
-                        // We will retry
-                    }
+                }
+                catch (Exception)
+                {
+                    // We will retry
                 }
                 if (retry > 1)
                     Thread.Sleep(30000);
@@ -1425,36 +1561,33 @@ namespace SkylineNightly
             }
         }
 
-        private static bool SetCSRFToken(HttpWebRequest postReq, string logFileName)
+        /// <summary>
+        /// Creates an <see cref="HttpClient"/> holding a skyline.ms session, with the CSRF header LabKey requires on a POST.
+        /// </summary>
+        private static HttpClient CreateLabKeyClient(string logFileName, TimeSpan timeout)
         {
-            var url = LABKEY_HOME_URL;
-
-            var sessionCookies = new CookieContainer();
+            var handler = new HttpClientHandler { CookieContainer = new CookieContainer(), UseDefaultCredentials = true };
+            var client = new HttpClient(handler) { Timeout = timeout };
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = @"GET";
-                request.CookieContainer = sessionCookies;
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var response = client.GetAsync(LABKEY_HOME_URL).GetAwaiter().GetResult())
+                    response.EnsureSuccessStatusCode();
+                var csrf = handler.CookieContainer.GetCookies(new Uri(LABKEY_HOME_URL))[LABKEY_CSRF];
+                if (csrf != null)
                 {
-                    postReq.CookieContainer = sessionCookies;
-                    var csrf = response.Cookies[LABKEY_CSRF];
-                    if (csrf != null)
-                    {
-                        // The server set a cookie called X-LABKEY-CSRF, get its value and add a header to the POST request
-                        postReq.Headers.Add(LABKEY_CSRF, csrf.Value);
-                    }
-                    else
-                    {
-                        Log(logFileName, @"CSRF token not found.");
-                    }
+                    // The server set a cookie called X-LABKEY-CSRF. Send its value back as a header on the POST.
+                    client.DefaultRequestHeaders.Add(LABKEY_CSRF, csrf.Value);
                 }
-                return true;
+                else
+                {
+                    Log(logFileName, @"CSRF token not found.");
+                }
+                return client;
             }
             catch (Exception e)
             {
-                Log(logFileName, $@"Error establishing a session and getting a CSRF token: {e}");
-                return false;
+                client.Dispose();
+                throw new IOException(@"Error establishing a session and getting a CSRF token", e);
             }
         }
 

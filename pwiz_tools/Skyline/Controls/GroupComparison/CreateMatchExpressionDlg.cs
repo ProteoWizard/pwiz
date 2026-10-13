@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             try
             {
-                _formattingDlg.BeginInvoke(new Action(() =>
+                _formattingDlg.BeginInvoke(() =>
                 {
                     if (!canellationToken.IsCancellationRequested)
                     {
@@ -345,7 +345,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         Cursor = Cursors.Default;
                         UpdateGrid(expr);
                     }
-                }));
+                });
             }
             catch (Exception)
             {

@@ -47,13 +47,12 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // The Ion Types submenu is only shown for proteomic documents; enable it the way showing a
-            // proteomic spectrum does (a loaded peptide document has already done this in normal use).
-            // The verbs are driven through the running JSON tool server (torn down with the window).
+            // The Ion Types submenu is shown for any document that is not small-molecule only, so the empty
+            // starting document already has it. The verbs are driven through the running JSON tool server
+            // (torn down with the window).
             RunUI(() =>
             {
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
-                SkylineWindow.ViewMenu.EnableProteomicIons(true);
                 Program.StartToolService();
             });
 

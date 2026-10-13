@@ -288,11 +288,11 @@ namespace pwiz.Skyline.Controls.GroupComparison
             if (!_updatePending)
             {
                 _updatePending = true;
-                BeginInvoke(new Action(() =>
+                BeginInvoke(() =>
                 {
                     _updatePending = false;
                     UpdateGraph(Settings.Default.FilterVolcanoPlotPoints);
-                }));
+                });
             }
         }
 

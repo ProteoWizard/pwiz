@@ -101,7 +101,7 @@ namespace pwiz.Common.Spectra
         {
             get
             {
-                return GetFlag(Flags.HasCompensationVoltage) ? _compensationVoltage : (double?) null;
+                return GetFlag(Flags.HasCompensationVoltage) ? _compensationVoltage : null;
             }
             private set
             {
@@ -119,14 +119,14 @@ namespace pwiz.Common.Spectra
         private double _scanWindowUpperLimit;
         public double? ScanWindowLowerLimit
         {
-            get { return GetFlag(Flags.HasScanWindow) ? _scanWindowLowerLimit : (double?)null; }
+            get { return GetFlag(Flags.HasScanWindow) ? _scanWindowLowerLimit : null; }
         }
 
         public double? ScanWindowUpperLimit
         {
             get
             {
-                return GetFlag(Flags.HasScanWindow) ? _scanWindowUpperLimit : (double?)null;
+                return GetFlag(Flags.HasScanWindow) ? _scanWindowUpperLimit : null;
             }
         }
 
@@ -153,7 +153,7 @@ namespace pwiz.Common.Spectra
         {
             get
             {
-                return GetFlag(Flags.HasTotalIonCurrent) ? _totalIonCurrent : (double?)null;
+                return GetFlag(Flags.HasTotalIonCurrent) ? _totalIonCurrent : null;
             }
             private set
             {
@@ -168,7 +168,7 @@ namespace pwiz.Common.Spectra
         {
             get
             {
-                return GetFlag(Flags.HasConstantNeutralLoss) ? _constantNeutralLoss : (double?)null;
+                return GetFlag(Flags.HasConstantNeutralLoss) ? _constantNeutralLoss : null;
             }
             private set
             {
@@ -194,7 +194,7 @@ namespace pwiz.Common.Spectra
         {
             get
             {
-                return GetFlag(Flags.HasInjectionTime) ? _injectionTime : (double?)null;
+                return GetFlag(Flags.HasInjectionTime) ? _injectionTime : null;
             }
             private set
             {

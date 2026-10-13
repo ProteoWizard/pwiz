@@ -53,6 +53,9 @@ namespace pwiz.Osprey.Core
     /// call (matching the historical behavior when these methods lived on
     /// <see cref="OspreyConfig"/>). Obtain one via <see cref="OspreyConfig.Identity"/>.
     /// </summary>
+    // Every string in this class is a term of a stamped hash - never shown to a user, and
+    // changing one invalidates every cached artifact.
+    // ReSharper disable LocalizableElement
     public sealed class SearchIdentity
     {
         private readonly OspreyConfig _config;
@@ -75,7 +78,7 @@ namespace pwiz.Osprey.Core
             using (var sha256 = SHA256.Create())
             {
                 var ic = System.Globalization.CultureInfo.InvariantCulture;
-                Func<bool, string> b = v => v ? "true" : "false";
+                Func<bool, string> b = v => v.ToLowerText();
                 var sb = new StringBuilder();
                 sb.AppendFormat(ic, "resolution_mode:{0}\n", _config.ResolutionMode);
                 sb.AppendFormat(ic, "fragment_tolerance:{0},{1}\n", _config.FragmentTolerance.Tolerance, _config.FragmentTolerance.Unit);
@@ -96,10 +99,10 @@ namespace pwiz.Osprey.Core
                         prefixes.Add(p == null ? string.Empty : p.ToLowerInvariant());
                 }
                 prefixes.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to render a stable display string of distinct decoy prefixes; equal strings are byte-identical so tie order is irrelevant
-                var prefixList = new StringBuilder("[");
+                var prefixList = new StringBuilder(@"[");
                 for (int i = 0; i < prefixes.Count; i++)
                 {
-                    if (i > 0) prefixList.Append(", ");
+                    if (i > 0) prefixList.Append(@", ");
                     prefixList.Append('"').Append(prefixes[i]).Append('"');
                 }
                 prefixList.Append(']');
@@ -117,12 +120,16 @@ namespace pwiz.Osprey.Core
                 sb.AppendFormat(ic, "rt_cal.calibration_sample_size:{0}\n", _config.RtCalibration.CalibrationSampleSize);
                 sb.AppendFormat(ic, "rt_cal.calibration_retry_factor:{0}\n", _config.RtCalibration.CalibrationRetryFactor);
                 sb.AppendFormat(ic, "reconciliation.top_n_peaks:{0}\n", _config.Reconciliation.TopNPeaks);
+                // Osprey-only, and appended only when enabled: with demux off the recipe, and so
+                // every existing hash, is unchanged, including the cross-impl match with Rust.
+                if (_config.DemuxMode != DemuxMode.off)
+                    sb.AppendFormat(ic, "demux:{0}\n", _config.DemuxMode);
 
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);
                 for (int i = 0; i < hashBytes.Length; i++)
                 {
-                    result.Append(hashBytes[i].ToString("x2"));
+                    result.Append(hashBytes[i].ToString(@"x2"));
                 }
                 return result.ToString();
             }
@@ -180,6 +187,17 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// The identity of an arbitrary file - an upstream artifact a validity key has to
+        /// follow - by the same name + size + mtime recipe as the library
+        /// (<see cref="FileIdentityHash"/>), so moving the file is free and rewriting it is
+        /// not.
+        /// </summary>
+        public static string FileIdentityTerm(string path)
+        {
+            return FileIdentityHash(path);
+        }
+
+        /// <summary>
         /// A fast identity hash for one file: file name + size + mtime, filesystem metadata
         /// only, no content hashing. The DIRECTORY portion is deliberately excluded so the
         /// same file identifies identically across Rust / .NET / OS variations (drive letter
@@ -212,7 +230,7 @@ namespace pwiz.Osprey.Core
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);
                 for (int i = 0; i < hashBytes.Length; i++)
-                    result.Append(hashBytes[i].ToString("x2"));
+                    result.Append(hashBytes[i].ToString(@"x2"));
                 return result.ToString();
             }
         }
@@ -263,7 +281,7 @@ namespace pwiz.Osprey.Core
                 var sb = new StringBuilder();
                 sb.Append(SearchParameterHash());
                 sb.AppendFormat(ic, "reconciliation.enabled:{0}\n",
-                    _config.Reconciliation.Enabled ? "true" : "false");
+                    _config.Reconciliation.Enabled.ToLowerText());
                 sb.AppendFormat(ic, "reconciliation.consensus_fdr:{0}\n",
                     _config.Reconciliation.ConsensusFdr);
                 sb.AppendFormat(ic, "run_fdr:{0}\n", _config.RunFdr);
@@ -295,10 +313,10 @@ namespace pwiz.Osprey.Core
                 if (write < stems.Count)
                     stems.RemoveRange(write, stems.Count - write);
 
-                var stemsList = new StringBuilder("[");
+                var stemsList = new StringBuilder(@"[");
                 for (int i = 0; i < stems.Count; i++)
                 {
-                    if (i > 0) stemsList.Append(", ");
+                    if (i > 0) stemsList.Append(@", ");
                     stemsList.Append('"').Append(stems[i]).Append('"');
                 }
                 stemsList.Append(']');
@@ -307,9 +325,10 @@ namespace pwiz.Osprey.Core
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);
                 for (int i = 0; i < hashBytes.Length; i++)
-                    result.Append(hashBytes[i].ToString("x2"));
+                    result.Append(hashBytes[i].ToString(@"x2"));
                 return result.ToString();
             }
         }
     }
+    // ReSharper restore LocalizableElement
 }

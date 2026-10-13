@@ -1,0 +1,3188 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Parquet</name>
+    </assembly>
+    <members>
+        <member name="T:Parquet.CompressionMethod">
+            <summary>
+            Parquet compression method. See https://github.com/apache/parquet-format/blob/master/Compression.md
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.None">
+            <summary>
+            No compression
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Snappy">
+            <summary>
+            Snappy compression 
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Gzip">
+            <summary>
+            Gzip compression
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Lzo">
+            <summary>
+            LZO
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Brotli">
+            <summary>
+            Brotli
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.LZ4">
+            <summary>
+            LZ4
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Zstd">
+            <summary>
+            ZSTD
+            </summary>
+        </member>
+        <member name="F:Parquet.CompressionMethod.Lz4Raw">
+            <summary>
+            LZ4 raw
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.BigDecimal">
+            <summary>
+            A class that encapsulates decimal that goes out of range of .NET's <see cref="T:System.Decimal"/>.
+            It does not implement any math and should only be treated as a container for a very large decimal value. Big decimal math is out of scope of this project.
+            See https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#decimal.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.BigDecimal.UnscaledValue">
+            <summary>
+            Raw value read as is
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.BigDecimal.Precision">
+            <summary>
+            The precision of the decimal value (the total number of significant digits in the number, both before and after the decimal point)
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.BigDecimal.Scale">
+            <summary>
+            The scale of the decimal value (the number of digits to the right of the decimal point i.e. the fractional part)
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.BigDecimal.#ctor(System.Numerics.BigInteger,System.Int32,System.Int32)">
+            <summary>
+            Construct big decimal
+            </summary>
+            <param name="unscaledValue"></param>
+            <param name="precision"></param>
+            <param name="scale"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Parquet.Data.BigDecimal.FromDecimal(System.Decimal,System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            Creates a new instance of <see cref="T:Parquet.Data.BigDecimal"/> from a <see cref="T:System.Decimal"/>.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.BigDecimal.GetBufferSize(System.Int32)">
+            <summary>
+            Gets buffer size enough to be able to hold the decimal number of a specific precision
+            </summary>
+            <param name="precision">Precision value</param>
+            <returns>Length in bytes</returns>
+        </member>
+        <member name="M:Parquet.Data.BigDecimal.ToString">
+            <summary>
+            String representation
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.DataColumnStatistics">
+            <summary>
+            Basic statistics for data column
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DataColumnStatistics.#ctor">
+            <summary>
+            Creates an uninitalised instance of column statistics
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.DataColumnStatistics.#ctor(System.Nullable{System.Int64},System.Nullable{System.Int64},System.Object,System.Object)">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataColumnStatistics.NullCount">
+            <summary>
+            Number of null values
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataColumnStatistics.DistinctCount">
+            <summary>
+            Number of distinct values if set.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataColumnStatistics.MinValue">
+            <summary>
+            Minimum value, casted to CLR type
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.DataColumnStatistics.MaxValue">
+            <summary>
+            Maximum value, casted to CLR type
+            </summary>
+        </member>
+        <member name="T:Parquet.Data.RawColumnData">
+            <summary>
+            Base interface for raw column data, to hold something other than a raw object.
+            You have to dispose of this object after use!
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.RawColumnData.#ctor(System.Buffers.IMemoryOwner{System.Int32},System.Buffers.IMemoryOwner{System.Int32})">
+            <summary>
+            Initializes a new instance of the RawColumnData class with the specified definition and repetition levels.
+            </summary>
+            <param name="definitionLevels">
+            An optional memory owner containing the definition levels for the column data. May be null if definition levels
+            are not required.
+            </param>
+            <param name="repetitionLevels">
+            An optional memory owner containing the repetition levels for the column data. May be null if repetition levels
+            are not required.
+            </param>
+        </member>
+        <member name="P:Parquet.Data.RawColumnData.DefinitionLevels">
+            <summary>
+            Definition levels, if they exist. Otherwise, <see cref="T:System.InvalidOperationException"/> is thrown.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.RawColumnData.RepetitionLevels">
+            <summary>
+            Repetition levels, if they exist. Otherwise, <see cref="T:System.InvalidOperationException"/> is thrown.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.RawColumnData.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="T:Parquet.Data.RawColumnData`1">
+            <summary>
+            Used as a container for column data read if you don't want to allocate the memory yourself.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:Parquet.Data.RawColumnData`1.#ctor(System.Buffers.IMemoryOwner{`0},System.Buffers.IMemoryOwner{System.Int32},System.Buffers.IMemoryOwner{System.Int32})">
+            <summary>
+            Initializes a new instance of the RawColumnData class with the specified values, definition levels, and
+            repetition levels.
+            </summary>
+            <param name="values">An memory owner containing the values for the column data.</param>
+            <param name="definitionLevels">
+            An optional memory owner containing the definition levels for the column data. May be null if definition levels
+            are not required.
+            </param>
+            <param name="repetitionLevels">
+            An optional memory owner containing the repetition levels for the column data. May be null if repetition levels
+            are not required.
+            </param>
+        </member>
+        <member name="P:Parquet.Data.RawColumnData`1.Values">
+            <summary>
+            Returns raw column values. If This column is nullable, you can also use <see cref="P:Parquet.Data.RawColumnData`1.NullableValues"/> to account
+            for that. If you want to produce nullable values yourself, use this span and
+            <see cref="P:Parquet.Data.RawColumnData.DefinitionLevels"/> property.
+            </summary>
+        </member>
+        <member name="P:Parquet.Data.RawColumnData`1.NullableValues">
+            <summary>
+            Gets nullable values for this column. Only valid if this column allows for nullable values, othersiwe an
+            exception will be thrown.
+            </summary>
+        </member>
+        <member name="M:Parquet.Data.RawColumnData`1.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="T:Parquet.File.Values.Primitives.Interval">
+            <summary>
+            A parquet interval type compatible with a Spark INTERVAL type
+            12 byte little Endian structure fits in an INT96 original type with an INTERVAL converted type
+            </summary>
+        </member>
+        <member name="F:Parquet.File.Values.Primitives.Interval.BinarySize">
+            <summary>
+            Binary serialised size
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Values.Primitives.Interval.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Used to create an interval type
+            </summary>
+            <param name="months">The month interval</param>
+            <param name="days">The days interval</param>
+            <param name="millis">The milliseconds interval</param>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.Interval.Millis">
+            <summary>
+            Returns the number of milliseconds in the type
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.Interval.Days">
+            <summary>
+            Returns the number of days in the type
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Values.Primitives.Interval.Months">
+            <summary>
+            Returns the number of months in type
+            </summary>
+        </member>
+        <member name="M:Parquet.File.Values.Primitives.Interval.GetBytes">
+            <summary>
+            Converts to bytes representation
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.File.Values.Primitives.Interval.ToString">
+            <summary>
+            String repr
+            </summary>
+        </member>
+        <member name="T:Parquet.File.ICompressor">
+            <summary>
+            Data compression interface. Unfortunately it's practically impossible to perform streaming in parquet pages. When
+            this interface is stable for some time, it will allow public exposure and "Bring Your Own Compressor" plugins, but
+            not right now.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.ICompressor.CompressAsync(Parquet.CompressionMethod,System.IO.Compression.CompressionLevel,System.IO.MemoryStream)">
+            <summary>
+            Compresses data from the source stream using the specified compression method and level. Returns an
+            <see cref="T:System.Buffers.IMemoryOwner`1"/> containing the compressed data.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.ICompressor.Decompress(Parquet.CompressionMethod,System.IO.Stream,System.Int32)">
+            <summary>
+            Decompresses data from the source stream and returns the decompressed data in an <see cref="T:System.Buffers.IMemoryOwner`1"/>.
+            The returned memory owner contains the decompressed bytes. The source stream is read but not owned or disposed
+            by this method.
+            </summary>
+        </member>
+        <member name="T:Parquet.File.Compressor">
+            <summary>
+            Compressor entry point.
+            </summary>
+        </member>
+        <member name="P:Parquet.File.Compressor.Instance">
+            <summary>
+            Gets the default instance of the compressor to use for compression and decompression operations.
+            </summary>
+            <remarks>
+            This property provides a shared, thread-safe compressor instance that can be used throughout the application.
+            Use this instance when a custom compressor is not required.
+            </remarks>
+        </member>
+        <member name="T:Parquet.File.DataColumnReader">
+            <summary>
+            Reader for Parquet data column
+            </summary>
+        </member>
+        <member name="M:Parquet.File.DataColumnReader.GetColumnStatistics">
+            <summary>
+            Return data column statistics
+            </summary>
+            <returns>Data column statistics or null</returns>
+        </member>
+        <member name="M:Parquet.File.DataColumnWriter.PrepareAsync``1(Parquet.WritingColumn{``0},System.Threading.CancellationToken)">
+            <summary>
+            Encodes and compresses the column's pages into memory. This is the expensive part of writing a
+            column and it touches nothing shared with other columns, so several columns can be prepared
+            concurrently. <see cref="M:Parquet.File.DataColumnWriter.EmitAsync(Parquet.File.DataColumnWriter.PreparedColumnChunk,Parquet.Schema.FieldPath,System.Threading.CancellationToken)"/> appends a prepared chunk to the file, which has to happen
+            in schema order because the chunk records its position in the file.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.DataColumnWriter.EmitAsync(Parquet.File.DataColumnWriter.PreparedColumnChunk,Parquet.Schema.FieldPath,System.Threading.CancellationToken)">
+            <summary>
+            Appends a prepared column chunk to the file and returns its metadata. The bytes written are
+            exactly those <see cref="M:Parquet.File.DataColumnWriter.WriteAsync``1(Parquet.Schema.FieldPath,Parquet.WritingColumn{``0},System.Threading.CancellationToken)"/> writes for the same column.
+            </summary>
+        </member>
+        <member name="T:Parquet.File.DataColumnWriter.PreparedColumnChunk">
+            <summary>
+            A column chunk's pages, encoded and compressed into memory, with what the chunk's metadata needs.
+            </summary>
+        </member>
+        <member name="T:Parquet.EncodingHint">
+            <summary>
+            Encoding hint per column. This should be used from <see cref="T:Parquet.ParquetOptions"/>
+            </summary>
+        </member>
+        <member name="F:Parquet.EncodingHint.Default">
+            <summary>
+            Default encoding, chosen based on data type and other factors.
+            </summary>
+        </member>
+        <member name="F:Parquet.EncodingHint.Dictionary">
+            <summary>
+            Dictionary encoding, applies to <see cref="T:System.String"/> and <see cref="T:System.Byte"/>[] fields.
+            </summary>
+        </member>
+        <member name="F:Parquet.EncodingHint.DeltaBinaryPacked">
+            <summary>
+            Delta binary packed encoding can be applied to <see cref="T:System.Int32"/> and <see cref="T:System.Int64"/> fields.
+            </summary>
+        </member>
+        <member name="F:Parquet.EncodingHint.ByteSplitStream">
+            <summary>
+            Byte split stream encoding. Not all of the types can be encoded. Currently supported types are:
+            <see cref="T:System.Single"/>, <see cref="T:System.Double"/>, <see cref="T:System.Int32"/>, <see cref="T:System.Int64"/>, <see cref="T:System.Int16"/>,
+            <see cref="T:System.UInt16"/>,
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Encode8ValuesLE(System.Span{System.Int32},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Encodes exactly 8 values from input span. Unlike pack, checks for boundaries.
+            </summary>
+            <returns>Number of bytes written</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Pack8ValuesLE(System.Span{System.Int32},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Packs exactly 8 int values using little-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Decode8ValuesLE(System.Span{System.Byte},System.Span{System.Int32},System.Int32)">
+            <summary>
+            Decodes exactly 8 values from input span. Unlike unpack, checks for boundaries.
+            </summary>
+            <returns>Number of values unpacked</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Unpack8ValuesLE(System.Span{System.Byte},System.Span{System.Int32},System.Int32)">
+            <summary>
+            Unpacks exactly 8 int values using little-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Encode8ValuesBE(System.Span{System.Int32},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Encodes exactly 8 values from input span. Unlike pack, checks for boundaries.
+            </summary>
+            <returns>Number of bytes written</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Pack8ValuesBE(System.Span{System.Int32},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Packs exactly 8 int values using big-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Decode8ValuesBE(System.Span{System.Byte},System.Span{System.Int32},System.Int32)">
+            <summary>
+            Decodes exactly 8 values from input span. Unlike unpack, checks for boundaries.
+            </summary>
+            <returns>Number of values unpacked</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Unpack8ValuesBE(System.Span{System.Byte},System.Span{System.Int32},System.Int32)">
+            <summary>
+            Unpacks exactly 8 int values using big-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Encode8ValuesLE(System.Span{System.Int64},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Encodes exactly 8 values from input span. Unlike pack, checks for boundaries.
+            </summary>
+            <returns>Number of bytes written</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Pack8ValuesLE(System.Span{System.Int64},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Packs exactly 8 long values using little-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Decode8ValuesLE(System.Span{System.Byte},System.Span{System.Int64},System.Int32)">
+            <summary>
+            Decodes exactly 8 values from input span. Unlike unpack, checks for boundaries.
+            </summary>
+            <returns>Number of values unpacked</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Unpack8ValuesLE(System.Span{System.Byte},System.Span{System.Int64},System.Int32)">
+            <summary>
+            Unpacks exactly 8 long values using little-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Encode8ValuesBE(System.Span{System.Int64},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Encodes exactly 8 values from input span. Unlike pack, checks for boundaries.
+            </summary>
+            <returns>Number of bytes written</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Pack8ValuesBE(System.Span{System.Int64},System.Span{System.Byte},System.Int32)">
+            <summary>
+            Packs exactly 8 long values using big-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Decode8ValuesBE(System.Span{System.Byte},System.Span{System.Int64},System.Int32)">
+            <summary>
+            Decodes exactly 8 values from input span. Unlike unpack, checks for boundaries.
+            </summary>
+            <returns>Number of values unpacked</returns>
+        </member>
+        <member name="M:Parquet.Encodings.BitPackedEncoder.Unpack8ValuesBE(System.Span{System.Byte},System.Span{System.Int64},System.Int32)">
+            <summary>
+            Unpacks exactly 8 long values using big-endian encoding from src into dest without checking for boundaries.
+            </summary>
+        </member>
+        <member name="T:Parquet.Encodings.ByteStreamSplitEncoder">
+            <summary>
+            https://github.com/apache/parquet-format/blob/master/Encodings.md#BYTESTREAMSPLIT. Supported Types: FLOAT, DOUBLE,
+            INT32, INT64, FIXED_LEN_BYTE_ARRAY. Also, see https://youtu.be/29k7cou8Hdk
+            </summary>
+        </member>
+        <member name="P:Parquet.Encodings.ByteStreamSplitEncoder.SupportedTypes">
+            <summary>
+            Types that are supported by this encoding.
+            </summary>
+        </member>
+        <member name="T:Parquet.Encodings.DeltaBinaryPackedEncoder">
+            <summary>
+            DELTA_BINARY_PACKED
+            (https://github.com/apache/parquet-format/blob/master/Encodings.md#delta-encoding-delta_binary_packed--5).
+            Good video explainer: https://youtu.be/vNQqe6PGCH4.
+            
+            Fastparquet sample:
+            https://github.com/dask/fastparquet/blob/c59e105537a8e7673fa30676dfb16d9fa5fb1cac/fastparquet/cencoding.pyx#L232
+            
+            Golang sample:
+            https://github.com/xitongsys/parquet-go/blob/62cf52a8dad4f8b729e6c38809f091cd134c3749/encoding/encodingread.go#L270
+            
+            Supported Types: short, ushort, int, uint, long, ulong
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.DeltaBinaryPackedEncoder.Encode``1(System.ReadOnlySpan{``0},System.IO.Stream,Parquet.Data.DataColumnStatistics)">
+            <summary>
+            Encodes the provided data using a delta encoding scheme and writes it to the given destination stream.
+            Optionally, collects statistics about the encoded data if the 'stats' parameter is provided.
+            </summary>
+            <typeparam name="T">The type of elements to encode. Supported types: short, ushort, int, uint, long, ulong.</typeparam>
+            <param name="data">The input span to be encoded.</param>
+            <param name="destination">The stream where the encoded data will be written.</param>
+            <param name="stats">Optional parameter to collect statistics about the encoded data (can be null).</param>
+            <exception cref="T:System.NotSupportedException">Thrown when T is not a supported type or ulong values exceed long.MaxValue.</exception>
+        </member>
+        <member name="T:Parquet.Encodings.DeltaByteArrayEncoder">
+            <summary>
+            DELTA_BYTE_ARRAY = 7, aka "Delta Strings" Supported Types: BYTE_ARRAY, FIXED_LEN_BYTE_ARRAY see
+            https://github.com/apache/parquet-format/blob/master/Encodings.md#delta-strings-delta_byte_array--7
+            </summary>
+            <remarks>
+            This encoding depends on DELTA_BINARY_PACKED and DELTA_LENGTH_BYTE_ARRAY
+            </remarks>
+        </member>
+        <member name="T:Parquet.Encodings.DeltaLengthByteArrayEncoder">
+            <summary>
+            DELTA_LENGTH_BYTE_ARRAY = 6
+            Supported Types: BYTE_ARRAY
+            see https://github.com/apache/parquet-format/blob/master/Encodings.md#delta-length-byte-array-delta_length_byte_array--6
+            </summary>
+        </member>
+        <member name="T:Parquet.Encodings.ParquetPlainEncoder">
+            <summary>
+            Fast data encoder. See https://github.com/aloneguid/parquet-dotnet/issues/643#issuecomment-3489932123 for future
+            performance ideas. Experimental.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.ParquetPlainEncoder.Encode``1(System.ReadOnlySpan{``0},System.IO.Stream,Parquet.Meta.SchemaElement,Parquet.Data.DataColumnStatistics)">
+            <summary>
+            Memory-friendly method to encode data. This might be ugly, but it's a step forward in migration from legacy
+            .NET.
+            </summary>
+            <param name="sourceSpan">
+            Reference to <see cref="T:System.ReadOnlyMemory`1"/> passed as an object, due to unclarity of what the T will be.
+            </param>
+            <param name="destination">Where do we write this to?</param>
+            <param name="tse"></param>
+            <param name="stats"></param>
+        </member>
+        <member name="M:Parquet.Encodings.ParquetPlainEncoder.Decode``1(System.Span{``0},System.Int32,Parquet.Meta.SchemaElement,System.Span{System.Byte},System.Int32@)">
+            <summary>
+            Generic overload for decoding directly into a <see cref="T:System.Span`1"/> with element count control.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.RleBitpackedHybridEncoder.EncodeWithLength(System.IO.Stream,System.Int32,System.ReadOnlySpan{System.Int32})">
+            <summary>
+            Writes to target stream without jumping around, therefore can be used in forward-only stream.
+            Before writing actual data, writes out int32 value indicating total data binary length.
+            </summary>
+        </member>
+        <member name="M:Parquet.Encodings.RleBitpackedHybridEncoder.RLEEncode(System.ReadOnlySpan{System.Int32},System.Int32,System.Byte[]@)">
+            <summary>
+            Encoding with RLE: https://youtu.be/p-K3TzFQvJo
+            </summary>
+            <param name="data"></param>
+            <param name="bitWidth"></param>
+            <param name="rentedBuffer"></param>
+            <returns></returns>
+            <exception cref="T:System.IO.IOException"></exception>
+        </member>
+        <member name="M:Parquet.Encodings.SchemaEncoder.Decode(System.Collections.Generic.List{Parquet.Meta.SchemaElement},Parquet.ParquetOptions,System.Int32@,System.Int32@)">
+            <summary>
+            Builds <see cref="T:Parquet.Schema.Field"/> from schema
+            </summary>
+            <param name="schema"></param>
+            <param name="options"></param>
+            <param name="index"></param>
+            <param name="ownedChildCount"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Encodings.SchemaEncoder.GetSystemType(Parquet.Meta.SchemaElement,Parquet.ParquetOptions)">
+            <summary>
+            See https://github.com/apache/parquet-format/blob/master/LogicalTypes.md
+            </summary>
+        </member>
+        <member name="M:Parquet.Extensions.EncodingExtensions.ULEB128Encode(System.UInt64,System.Span{System.Byte},System.Int32@)">
+            <summary>
+            Encodes in ULEB128 and returns number of emitted bytes. See https://youtu.be/hKQCpfdG7to and
+            https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128
+            </summary>
+        </member>
+        <member name="M:Parquet.Extensions.EncodingExtensions.ULEB128Decode(System.Span{System.Byte},System.Int32@)">
+            <summary>
+            Decodes to unsigned long from span of bytes using ULEB128 encoding.
+            </summary>
+            <param name="data">Span to read from</param>
+            <param name="offset">Reference to start offset in the span. It is updated as the value is read.</param>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Extensions.ExpressionExtensions">
+            <summary>
+            Expression trees extensions
+            </summary>
+        </member>
+        <member name="M:Parquet.Extensions.ExpressionExtensions.ClearArray(System.Linq.Expressions.ParameterExpression,System.Linq.Expressions.Expression)">
+            <summary>
+            Calls <see cref="M:System.Array.Clear(System.Array,System.Int32,System.Int32)"/>
+            </summary>
+        </member>
+        <member name="M:Parquet.Extensions.ExpressionExtensions.GetPseudoCode(System.Linq.Expressions.Expression)">
+            <summary>
+            Gets internal property "DebugView" which is normally only available in Visual Studio debugging session
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Extensions.ParquetClrSchemaExtensions.CreateGenericList(System.Type)">
+            <summary>
+            Creates a generic typed list of elements of this type.
+            </summary>
+        </member>
+        <member name="M:Parquet.Extensions.ParquetClrSchemaExtensions.TryExtractIEnumerableType(System.Type,System.Type@)">
+            <summary>
+            Checks if this type implements generic IEnumerable or an array.
+            </summary>
+            <param name="t"></param>
+            <param name="baseType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Extensions.ParquetClrSchemaExtensions.IsGenericList(System.Type,System.Type@)">
+            <summary>
+            Checks if this type is a generic <see cref="T:System.Collections.Generic.List`1"/> (not just any <see cref="T:System.Collections.Generic.IEnumerable`1"/> or <see cref="T:System.Collections.Generic.IList`1"/>, but specifically <see cref="T:System.Collections.Generic.List`1"/>).
+            </summary>
+            <param name="t"></param>
+            <param name="elementType">Generic list's element type, if this is a generic list.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Extensions.ParquetClrSchemaExtensions.AsSpan``2(System.Span{``0})">
+            <summary>
+            Reinterprets this span as a span of a different struct element type without copying.
+            </summary>
+        </member>
+        <member name="M:Parquet.Extensions.StreamExtensions.CopyToAsync(System.IO.Stream,System.Memory{System.Byte},System.Threading.CancellationToken)">
+            <summary>
+            Copies data from stream to memory destination until either the destination is full or the stream ends.
+            </summary>
+            <param name="s"></param>
+            <param name="destination"></param>
+            <param name="token"></param>
+            <returns>Number of bytes copied</returns>
+        </member>
+        <member name="T:Parquet.Extensions.Streaming.ReadSpanSubStream">
+             <summary>
+             A read-only <see cref="T:System.IO.Stream"/> backed by a memory slice. This implementation is zero-copy when
+             constructed with a <see cref="T:System.ReadOnlyMemory`1"/>. It intentionally does not copy the underlying data.
+            
+             A span is a ref struct and cannot be stored on the heap,
+             therefore a stream (a reference type) cannot safely hold a span field. Callers that only have a span
+             should convert it to <see cref="T:System.ReadOnlyMemory`1"/> or pass the original array and offset to avoid copying.
+             </summary>
+        </member>
+        <member name="M:Parquet.Extensions.Streaming.ReadSpanSubStream.#ctor(System.ReadOnlyMemory{System.Byte})">
+            <summary>
+            Creates a new read-only stream over the provided memory without copying.
+            This is the preferred zero-copy constructor.
+            </summary>
+            <param name="source">Source memory to expose as a stream.</param>
+        </member>
+        <member name="T:Parquet.Extensions.ThriftExtensions">
+            <summary>
+            Internal data structure helpers
+            </summary>
+        </member>
+        <member name="M:Parquet.OtherExtensions.ToByteArray(System.IO.Stream)">
+            <summary>
+            Reads all stream in memory and returns as byte array
+            </summary>
+        </member>
+        <member name="T:Parquet.Globals">
+            <summary>
+            Global values.
+            CI should run envsubst to put actual values inside it. Prefer global constants to reflection as reflection is not
+            available everywhere.
+            </summary>
+        </member>
+        <member name="F:Parquet.Globals.Version">
+            <summary>
+            Library version
+            </summary>
+        </member>
+        <member name="F:Parquet.Globals.GithubSha">
+            <summary>
+            Github Actions stamped commit SHA. For more supported variables see
+            https://docs.github.com/en/actions/learn-github-actions/variables
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.Type">
+            <summary>
+            Types supported by Parquet.  These types are intended to be used in combination with the encodings to control the on disk storage format. For example INT16 is not included as a type since a good encoding of INT32 would handle this.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.ConvertedType">
+            <summary>
+            DEPRECATED: Common types used by frameworks(e.g. hive, pig) using parquet. ConvertedType is superseded by LogicalType.  This enum should not be extended.  See LogicalTypes.md for conversion between ConvertedType and LogicalType.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.UTF8">
+            <summary>
+            A BYTE_ARRAY actually contains UTF8 encoded chars.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.MAP">
+            <summary>
+            A map is converted as an optional field containing a repeated key/value pair.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.MAP_KEY_VALUE">
+            <summary>
+            A key/value pair is converted into a group of two fields.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.LIST">
+            <summary>
+            A list is converted into an optional field containing a repeated field for its values.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.ENUM">
+            <summary>
+            An enum is converted into a BYTE_ARRAY field.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.DECIMAL">
+            <summary>
+            A decimal value.  This may be used to annotate BYTE_ARRAY or FIXED_LEN_BYTE_ARRAY primitive types. The underlying byte array stores the unscaled value encoded as two&#39;s complement using big-endian byte order (the most significant byte is the zeroth element). The value of the decimal is the value * 10^{-scale}.  This must be accompanied by a (maximum) precision and a scale in the SchemaElement. The precision specifies the number of digits in the decimal and the scale stores the location of the decimal point. For example 1.23 would have precision 3 (3 total digits) and scale 2 (the decimal point is 2 digits over).
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.DATE">
+            <summary>
+            A Date  Stored as days since Unix epoch, encoded as the INT32 physical type.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.TIME_MILLIS">
+            <summary>
+            A time  The total number of milliseconds since midnight.  The value is stored as an INT32 physical type.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.TIME_MICROS">
+            <summary>
+            A time.  The total number of microseconds since midnight.  The value is stored as an INT64 physical type.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.TIMESTAMP_MILLIS">
+            <summary>
+            A date/time combination  Date and time recorded as milliseconds since the Unix epoch.  Recorded as a physical type of INT64.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.TIMESTAMP_MICROS">
+            <summary>
+            A date/time combination  Date and time recorded as microseconds since the Unix epoch.  The value is stored as an INT64 physical type.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.UINT_8">
+            <summary>
+            An unsigned integer value.  The number describes the maximum number of meaningful data bits in the stored value. 8, 16 and 32 bit values are stored using the INT32 physical type.  64 bit values are stored using the INT64 physical type.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.INT_8">
+            <summary>
+            A signed integer value.  The number describes the maximum number of meaningful data bits in the stored value. 8, 16 and 32 bit values are stored using the INT32 physical type.  64 bit values are stored using the INT64 physical type.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.JSON">
+            <summary>
+            An embedded JSON document  A JSON document embedded within a single UTF8 column.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.BSON">
+            <summary>
+            An embedded BSON document  A BSON document embedded within a single BYTE_ARRAY column.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.ConvertedType.INTERVAL">
+            <summary>
+            An interval of time  This type annotates data stored as a FIXED_LEN_BYTE_ARRAY of length 12 This data is composed of three separate little endian unsigned integers.  Each stores a component of a duration of time.  The first integer identifies the number of months associated with the duration, the second identifies the number of days associated with the duration and the third identifies the number of milliseconds associated with the provided duration.  This duration of time is independent of any particular timezone or date.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.FieldRepetitionType">
+            <summary>
+            Representation of Schemas.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.FieldRepetitionType.REQUIRED">
+            <summary>
+            This field is required (can not be null) and each row has exactly 1 value.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.FieldRepetitionType.OPTIONAL">
+            <summary>
+            The field is optional (can be null) and each row has 0 or 1 values.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.FieldRepetitionType.REPEATED">
+            <summary>
+            The field is repeated and can contain 0 or more values.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.EdgeInterpolationAlgorithm">
+            <summary>
+            Edge interpolation algorithm for Geography logical type.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.Encoding">
+            <summary>
+            Encodings supported by Parquet.  Not all encodings are valid for all types.  These enums are also used to specify the encoding of definition and repetition levels. See the accompanying doc for the details of the more complicated encodings.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.PLAIN">
+            <summary>
+            Default encoding. BOOLEAN - 1 bit per value. 0 is false; 1 is true. INT32 - 4 bytes per value.  Stored as little-endian. INT64 - 8 bytes per value.  Stored as little-endian. FLOAT - 4 bytes per value.  IEEE. Stored as little-endian. DOUBLE - 8 bytes per value.  IEEE. Stored as little-endian. BYTE_ARRAY - 4 byte length stored as little endian, followed by bytes. FIXED_LEN_BYTE_ARRAY - Just the bytes.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.PLAIN_DICTIONARY">
+            <summary>
+            Deprecated: Dictionary encoding. The values in the dictionary are encoded in the plain type. in a data page use RLE_DICTIONARY instead. in a Dictionary page use PLAIN instead.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.RLE">
+            <summary>
+            Group packed run length encoding. Usable for definition/repetition levels encoding and Booleans (on one bit: 0 is false; 1 is true.).
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.BIT_PACKED">
+            <summary>
+            Bit packed encoding.  This can only be used if the data has a known max width.  Usable for definition/repetition levels encoding.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.DELTA_BINARY_PACKED">
+            <summary>
+            Delta encoding for integers. This can be used for int columns and works best on sorted data.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.DELTA_LENGTH_BYTE_ARRAY">
+            <summary>
+            Encoding for byte arrays to separate the length values and the data. The lengths are encoded using DELTA_BINARY_PACKED.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.DELTA_BYTE_ARRAY">
+            <summary>
+            Incremental-encoded byte array. Prefix lengths are encoded using DELTA_BINARY_PACKED. Suffixes are stored as delta length byte arrays.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.RLE_DICTIONARY">
+            <summary>
+            Dictionary encoding: the ids are encoded using the RLE encoding.
+            </summary>
+        </member>
+        <member name="F:Parquet.Meta.Encoding.BYTE_STREAM_SPLIT">
+            <summary>
+            Encoding for fixed-width data (FLOAT, DOUBLE, INT32, INT64, FIXED_LEN_BYTE_ARRAY). K byte-streams are created where K is the size in bytes of the data type. The individual bytes of a value are scattered to the corresponding stream and the streams are concatenated. This itself does not reduce the size of the data but can lead to better compression afterwards.  Added in 2.8 for FLOAT and DOUBLE. Support for INT32, INT64 and FIXED_LEN_BYTE_ARRAY added in 2.11.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.CompressionCodec">
+            <summary>
+            Supported compression algorithms.  Codecs added in format version X.Y can be read by readers based on X.Y and later. Codec support may vary between readers based on the format version and libraries available at runtime.  See Compression.md for a detailed specification of these algorithms.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.BoundaryOrder">
+            <summary>
+            Enum to annotate whether lists of min/max elements inside ColumnIndex are ordered and if so, in which direction.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.SizeStatistics">
+            <summary>
+            A structure for capturing metadata for estimating the unencoded, uncompressed size of data written. This is useful for readers to estimate how much memory is needed to reconstruct data in their memory model and for fine grained filter pushdown on nested structures (the histograms contained in this structure can help determine the number of nulls at a particular nesting level and maximum length of lists).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SizeStatistics.UnencodedByteArrayDataBytes">
+            <summary>
+            The number of physical bytes stored for BYTE_ARRAY data values assuming no encoding. This is exclusive of the bytes needed to store the length of each byte array. In other words, this field is equivalent to the `(size of PLAIN-ENCODING the byte array values) - (4 bytes * number of values written)`. To determine unencoded sizes of other types readers can use schema information multiplied by the number of non-null and null values. The number of null/non-null values can be inferred from the histograms below.  For example, if a column chunk is dictionary-encoded with dictionary [&quot;a&quot;, &quot;bc&quot;, &quot;cde&quot;], and a data page contains the indices [0, 0, 1, 2], then this value for that data page should be 7 (1 + 1 + 2 + 3).  This field should only be set for types that use BYTE_ARRAY as their physical type.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SizeStatistics.RepetitionLevelHistogram">
+            <summary>
+            When present, there is expected to be one element corresponding to each repetition (i.e. size=max repetition_level+1) where each element represents the number of times the repetition level was observed in the data.  This field may be omitted if max_repetition_level is 0 without loss of information.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SizeStatistics.DefinitionLevelHistogram">
+            <summary>
+            Same as repetition_level_histogram except for definition levels.  This field may be omitted if max_definition_level is 0 or 1 without loss of information.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.BoundingBox">
+            <summary>
+            Bounding box for GEOMETRY or GEOGRAPHY type in the representation of min/max value pair of coordinates from each axis.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.GeospatialStatistics">
+            <summary>
+            Statistics specific to Geometry and Geography logical types.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.GeospatialStatistics.Bbox">
+            <summary>
+            A bounding box of geospatial instances.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.GeospatialStatistics.GeospatialTypes">
+            <summary>
+            Geospatial type codes of all instances, or an empty list if not known.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.Statistics">
+            <summary>
+            Statistics per row group and per page All fields are optional.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.Statistics.Max">
+            <summary>
+            DEPRECATED: min and max value of the column. Use min_value and max_value.  Values are encoded using PLAIN encoding, except that variable-length byte arrays do not include a length prefix.  These fields encode min and max values determined by signed comparison only. New files should use the correct order for a column&#39;s logical type and store the values in the min_value and max_value fields.  To support older readers, these may be set when the column order is signed.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.Statistics.NullCount">
+            <summary>
+            Count of null values in the column.  Writers SHOULD always write this field even if it is zero (i.e. no null value) or the column is not nullable. Readers MUST distinguish between null_count not being present and null_count == 0. If null_count is not present, readers MUST NOT assume null_count == 0.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.Statistics.DistinctCount">
+            <summary>
+            Count of distinct values occurring.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.Statistics.MaxValue">
+            <summary>
+            Lower and upper bound values for the column, determined by its ColumnOrder.  These may be the actual minimum and maximum values found on a page or column chunk, but can also be (more compact) values that do not exist on a page or column chunk. For example, instead of storing &quot;Blart Versenwald III&quot;, a writer may set min_value=&quot;B&quot;, max_value=&quot;C&quot;. Such more compact values must still be valid values within the column&#39;s logical type.  Values are encoded using PLAIN encoding, except that variable-length byte arrays do not include a length prefix.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.Statistics.IsMaxValueExact">
+            <summary>
+            If true, max_value is the actual maximum value for a column.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.Statistics.IsMinValueExact">
+            <summary>
+            If true, min_value is the actual minimum value for a column.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.StringType">
+            <summary>
+            Empty structs to use as logical type annotations.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.NullType">
+            <summary>
+            Logical type to annotate a column that is always null.  Sometimes when discovering the schema of existing data, values are always null and the physical type can&#39;t be determined. This annotation signals the case where the physical type was guessed from all null values.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.DecimalType">
+            <summary>
+            Decimal logical type annotation  Scale must be zero or a positive integer less than or equal to the precision. Precision must be a non-zero positive integer.  To maintain forward-compatibility in v1, implementations using this logical type must also set scale and precision on the annotated SchemaElement.  Allowed for physical types: INT32, INT64, FIXED_LEN_BYTE_ARRAY, and BYTE_ARRAY.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.MilliSeconds">
+            <summary>
+            Time units for logical types.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.TimestampType">
+            <summary>
+            Timestamp logical type annotation  Allowed for physical types: INT64.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.TimeType">
+            <summary>
+            Time logical type annotation  Allowed for physical types: INT32 (millis), INT64 (micros, nanos).
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.IntType">
+            <summary>
+            Integer logical type annotation  bitWidth must be 8, 16, 32, or 64.  Allowed for physical types: INT32, INT64.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.JsonType">
+            <summary>
+            Embedded JSON logical type annotation  Allowed for physical types: BYTE_ARRAY.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.BsonType">
+            <summary>
+            Embedded BSON logical type annotation  Allowed for physical types: BYTE_ARRAY.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.VariantType">
+            <summary>
+            Embedded Variant logical type annotation.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.GeometryType">
+            <summary>
+            Embedded Geometry logical type annotation  Geospatial features in the Well-Known Binary (WKB) format and edges interpolation is always linear/planar.  A custom CRS can be set by the crs field. If unset, it defaults to &quot;OGC:CRS84&quot;, which means that the geometries must be stored in longitude, latitude based on the WGS84 datum.  Allowed for physical type: BYTE_ARRAY.  See Geospatial.md for details.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.GeographyType">
+            <summary>
+            Embedded Geography logical type annotation  Geospatial features in the WKB format with an explicit (non-linear/non-planar) edges interpolation algorithm.  A custom geographic CRS can be set by the crs field, where longitudes are bound by [-180, 180] and latitudes are bound by [-90, 90]. If unset, the CRS defaults to &quot;OGC:CRS84&quot;.  An optional algorithm can be set to correctly interpret edges interpolation of the geometries. If unset, the algorithm defaults to SPHERICAL.  Allowed for physical type: BYTE_ARRAY.  See Geospatial.md for details.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.LogicalType">
+            <summary>
+            LogicalType annotations to replace ConvertedType.  To maintain compatibility, implementations using LogicalType for a SchemaElement must also set the corresponding ConvertedType (if any) from the following table.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.SchemaElement">
+            <summary>
+            Represents a element inside a schema definition.  - if it is a group (inner node) then type is undefined and num_children is defined  - if it is a primitive type (leaf) then type is defined and num_children is undefined the nodes are listed in depth first traversal order.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.Type">
+            <summary>
+            Data type for this field. Not set if the current element is a non-leaf node.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.TypeLength">
+            <summary>
+            If type is FIXED_LEN_BYTE_ARRAY, this is the byte length of the values. Otherwise, if specified, this is the maximum bit length to store any of the values. (e.g. a low cardinality INT col could have this set to 3).  Note that this is in the schema, and therefore fixed for the entire file.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.RepetitionType">
+            <summary>
+            Repetition of the field. The root of the schema does not have a repetition_type. All other nodes must have one.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.Name">
+            <summary>
+            Name of the field in the schema.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.NumChildren">
+            <summary>
+            Nested fields.  Since thrift does not support nested fields, the nesting is flattened to a single list by a depth-first traversal. The children count is used to construct the nested relationship. This field is not set when the element is a primitive type.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.ConvertedType">
+            <summary>
+            DEPRECATED: When the schema is the result of a conversion from another model. Used to record the original type to help with cross conversion.  This is superseded by logicalType.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.Scale">
+            <summary>
+            DEPRECATED: Used when this column contains decimal data. See the DECIMAL converted type for more details.  This is superseded by using the DecimalType annotation in logicalType.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.FieldId">
+            <summary>
+            When the original schema supports field ids, this will save the original field id in the parquet schema.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SchemaElement.LogicalType">
+            <summary>
+            The logical type of this SchemaElement  LogicalType replaces ConvertedType, but ConvertedType is still required for some logical types to ensure forward-compatibility in format v1.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.DataPageHeader">
+            <summary>
+            Data page header.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeader.NumValues">
+            <summary>
+            Number of values, including NULLs, in this data page.  If a OffsetIndex is present, a page must begin at a row boundary (repetition_level = 0). Otherwise, pages may begin within a row (repetition_level &gt; 0).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeader.Encoding">
+            <summary>
+            Encoding used for this data page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeader.DefinitionLevelEncoding">
+            <summary>
+            Encoding used for definition levels.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeader.RepetitionLevelEncoding">
+            <summary>
+            Encoding used for repetition levels.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeader.Statistics">
+            <summary>
+            Optional statistics for the data in this page.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.DictionaryPageHeader">
+            <summary>
+            The dictionary page must be placed at the first position of the column chunk if it is partly or completely dictionary encoded. At most one dictionary page can be placed in a column chunk.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DictionaryPageHeader.NumValues">
+            <summary>
+            Number of values in the dictionary.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DictionaryPageHeader.Encoding">
+            <summary>
+            Encoding using this dictionary page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DictionaryPageHeader.IsSorted">
+            <summary>
+            If true, the entries in the dictionary are sorted in ascending order.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.DataPageHeaderV2">
+            <summary>
+            Alternate page format allowing reading levels without decompressing the data Repetition and definition levels are uncompressed The remaining section containing the data is compressed if is_compressed is true  Implementation note - this header is not necessarily a strict improvement over `DataPageHeader` (in particular the original header might provide better compression in some scenarios). Page indexes require pages to start and end at row boundaries, regardless of which page header is used.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.NumValues">
+            <summary>
+            Number of values, including NULLs, in this data page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.NumNulls">
+            <summary>
+            Number of NULL values, in this data page. Number of non-null = num_values - num_nulls which is also the number of values in the data section.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.NumRows">
+            <summary>
+            Number of rows in this data page. Every page must begin at a row boundary (repetition_level = 0): rows must **not** be split across page boundaries when using V2 data pages.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.Encoding">
+            <summary>
+            Encoding used for data in this page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.DefinitionLevelsByteLength">
+            <summary>
+            Length of the definition levels.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.RepetitionLevelsByteLength">
+            <summary>
+            Length of the repetition levels.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.IsCompressed">
+            <summary>
+            Whether the values are compressed. Which means the section of the page between definition_levels_byte_length + repetition_levels_byte_length + 1 and compressed_page_size (included) is compressed with the compression_codec. If missing it is considered compressed.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.DataPageHeaderV2.Statistics">
+            <summary>
+            Optional statistics for the data in this page.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.SplitBlockAlgorithm">
+            <summary>
+            Block-based algorithm type annotation.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.BloomFilterAlgorithm">
+            <summary>
+            The algorithm used in Bloom filter.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.BloomFilterAlgorithm.BLOCK">
+            <summary>
+            Block-based Bloom filter.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.XxHash">
+            <summary>
+            Hash strategy type annotation. xxHash is an extremely fast non-cryptographic hash algorithm. It uses 64 bits version of xxHash.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.BloomFilterHash">
+            <summary>
+            The hash function used in Bloom filter. This function takes the hash of a column value using plain encoding.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.BloomFilterHash.XXHASH">
+            <summary>
+            XxHash Strategy.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.Uncompressed">
+            <summary>
+            The compression used in the Bloom filter.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.BloomFilterHeader">
+            <summary>
+            Bloom filter header is stored at beginning of Bloom filter data of each column and followed by its bitset.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.BloomFilterHeader.NumBytes">
+            <summary>
+            The size of bitset in bytes.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.BloomFilterHeader.Algorithm">
+            <summary>
+            The algorithm for setting bits.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.BloomFilterHeader.Hash">
+            <summary>
+            The hash function used for Bloom filter.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.BloomFilterHeader.Compression">
+            <summary>
+            The compression used in the Bloom filter.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageHeader.Type">
+            <summary>
+            The type of the page: indicates which of the *_header fields is set.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageHeader.UncompressedPageSize">
+            <summary>
+            Uncompressed page size in bytes (not including this header).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageHeader.CompressedPageSize">
+            <summary>
+            Compressed (and potentially encrypted) page size in bytes, not including this header.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageHeader.Crc">
+            <summary>
+            The 32-bit CRC checksum for the page, to be be calculated as follows:  - The standard CRC32 algorithm is used (with polynomial 0x04C11DB7,   the same as in e.g. GZip). - All page types can have a CRC (v1 and v2 data pages, dictionary pages,   etc.). - The CRC is computed on the serialization binary representation of the page   (as written to disk), excluding the page header. For example, for v1   data pages, the CRC is computed on the concatenation of repetition levels,   definition levels and column values (optionally compressed, optionally   encrypted). - The CRC computation therefore takes place after any compression   and encryption steps, if any.  If enabled, this allows for disabling checksumming in HDFS if only a few pages need to be read.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.KeyValue">
+            <summary>
+            Wrapper struct to store key values.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.SortingColumn">
+            <summary>
+            Sort order within a RowGroup of a leaf column.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SortingColumn.ColumnIdx">
+            <summary>
+            The ordinal position of the column (in this row group).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SortingColumn.Descending">
+            <summary>
+            If true, indicates this column is sorted in descending order.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.SortingColumn.NullsFirst">
+            <summary>
+            If true, nulls will come before non-null values, otherwise, nulls go at the end.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.PageEncodingStats">
+            <summary>
+            Statistics of a given page type and encoding.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageEncodingStats.PageType">
+            <summary>
+            The page type (data/dic/...).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageEncodingStats.Encoding">
+            <summary>
+            Encoding of the page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageEncodingStats.Count">
+            <summary>
+            Number of pages of this type with this encoding.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.ColumnMetaData">
+            <summary>
+            Description for column metadata.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.Type">
+            <summary>
+            Type of this column.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.Encodings">
+            <summary>
+            Set of all encodings used for this column. The purpose is to validate whether we can decode those pages.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.PathInSchema">
+            <summary>
+            Path in schema.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.Codec">
+            <summary>
+            Compression codec.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.NumValues">
+            <summary>
+            Number of values in this column.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.TotalUncompressedSize">
+            <summary>
+            Total byte size of all uncompressed pages in this column chunk (including the headers).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.TotalCompressedSize">
+            <summary>
+            Total byte size of all compressed, and potentially encrypted, pages in this column chunk (including the headers).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.KeyValueMetadata">
+            <summary>
+            Optional key/value metadata.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.DataPageOffset">
+            <summary>
+            Byte offset from beginning of file to first data page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.IndexPageOffset">
+            <summary>
+            Byte offset from beginning of file to root index page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.DictionaryPageOffset">
+            <summary>
+            Byte offset from the beginning of file to first (only) dictionary page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.Statistics">
+            <summary>
+            Optional statistics for this column chunk.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.EncodingStats">
+            <summary>
+            Set of all encodings used for pages in this column chunk. This information can be used to determine if all data pages are dictionary encoded for example.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.BloomFilterOffset">
+            <summary>
+            Byte offset from beginning of file to Bloom filter data.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.BloomFilterLength">
+            <summary>
+            Size of Bloom filter data including the serialized header, in bytes. Added in 2.10 so readers may not read this field from old files and it can be obtained after the BloomFilterHeader has been deserialized. Writers should write this field so readers can read the bloom filter in a single I/O.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.SizeStatistics">
+            <summary>
+            Optional statistics to help estimate total memory when converted to in-memory representations. The histograms contained in these statistics can also be useful in some cases for more fine-grained nullability/list length filter pushdown.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnMetaData.GeospatialStatistics">
+            <summary>
+            Optional statistics specific for Geometry and Geography logical types.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.EncryptionWithColumnKey.PathInSchema">
+            <summary>
+            Column path in schema.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.EncryptionWithColumnKey.KeyMetadata">
+            <summary>
+            Retrieval metadata of column encryption key.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.FilePath">
+            <summary>
+            File where column data is stored.  If not set, assumed to be same file as metadata.  This path is relative to the current file.  As of December 2025, the only known use-case for this field is writing summary parquet files (i.e. &quot;_metadata&quot; files).  These files consolidate footers from multiple parquet files to allow for efficient reading of footers to avoid file listing costs and prune out files that do not need to be read based on statistics.  These files do not appear to have ever been formally specified in the specification. and are potentially problematic from a correctness perspective [1].  [1] https://lists.apache.org/thread/ootf2kmyg3p01b1bvplpvp4ftd1bt72d  There is no other known usage of this field. Specifically, there are no known reference implementations that will read externally stored column data if this field is populated within a standard parquet file. Making use of the field for this purpose is not considered part of the Parquet specification.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.FileOffset">
+            <summary>
+            Deprecated: Byte offset in file_path to the ColumnMetaData  Past use of this field has been inconsistent, with some implementations using it to point to the ColumnMetaData and some using it to point to the first page in the column chunk. In many cases, the ColumnMetaData at this location is wrong. This field is now deprecated and should not be used. Writers should set this field to 0 if no ColumnMetaData has been written outside the footer.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.MetaData">
+            <summary>
+            Column metadata for this chunk. Some writers may also replicate this at the location pointed to by file_path/file_offset. Note: while marked as optional, this field is in fact required by most major Parquet implementations. As such, writers MUST populate this field.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.OffsetIndexOffset">
+            <summary>
+            File offset of ColumnChunk&#39;s OffsetIndex.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.OffsetIndexLength">
+            <summary>
+            Size of ColumnChunk&#39;s OffsetIndex, in bytes.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.ColumnIndexOffset">
+            <summary>
+            File offset of ColumnChunk&#39;s ColumnIndex.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.ColumnIndexLength">
+            <summary>
+            Size of ColumnChunk&#39;s ColumnIndex, in bytes.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.CryptoMetadata">
+            <summary>
+            Crypto metadata of encrypted columns.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnChunk.EncryptedColumnMetadata">
+            <summary>
+            Encrypted column metadata for this chunk.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.RowGroup.Columns">
+            <summary>
+            Metadata for each column chunk in this row group. This list must have the same order as the SchemaElement list in FileMetaData.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.RowGroup.TotalByteSize">
+            <summary>
+            Total byte size of all the uncompressed column data in this row group.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.RowGroup.NumRows">
+            <summary>
+            Number of rows in this row group.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.RowGroup.SortingColumns">
+            <summary>
+            If set, specifies a sort ordering of the rows in this RowGroup. The sorting columns can be a subset of all the columns.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.RowGroup.FileOffset">
+            <summary>
+            Byte offset from beginning of file to first page (data or dictionary) in this row group.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.RowGroup.TotalCompressedSize">
+            <summary>
+            Total byte size of all compressed (and potentially encrypted) column data in this row group.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.RowGroup.Ordinal">
+            <summary>
+            Row group ordinal in the file.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.TypeDefinedOrder">
+            <summary>
+            Empty struct to signal the order defined by the physical or logical type.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.ColumnOrder">
+            <summary>
+            Union to specify the order used for the min_value and max_value fields for a column. This union takes the role of an enhanced enum that allows rich elements (which will be needed for a collation-based ordering in the future).  Possible values are: * TypeDefinedOrder - the column uses the order defined by its logical or                      physical type (if there is no logical type).  If the reader does not support the value of this union, min and max stats for this column should be ignored.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnOrder.TYPEORDER">
+            <summary>
+            The sort orders for logical types are:   UTF8 - unsigned byte-wise comparison   INT8 - signed comparison   INT16 - signed comparison   INT32 - signed comparison   INT64 - signed comparison   UINT8 - unsigned comparison   UINT16 - unsigned comparison   UINT32 - unsigned comparison   UINT64 - unsigned comparison   DECIMAL - signed comparison of the represented value   DATE - signed comparison   FLOAT16 - signed comparison of the represented value (*)   TIME_MILLIS - signed comparison   TIME_MICROS - signed comparison   TIMESTAMP_MILLIS - signed comparison   TIMESTAMP_MICROS - signed comparison   INTERVAL - undefined   JSON - unsigned byte-wise comparison   BSON - unsigned byte-wise comparison   ENUM - unsigned byte-wise comparison   LIST - undefined   MAP - undefined   VARIANT - undefined   GEOMETRY - undefined   GEOGRAPHY - undefined  In the absence of logical types, the sort order is determined by the physical type:   BOOLEAN - false, true   INT32 - signed comparison   INT64 - signed comparison   INT96 (only used for legacy timestamps) - undefined(+)   FLOAT - signed comparison of the represented value (*)   DOUBLE - signed comparison of the represented value (*)   BYTE_ARRAY - unsigned byte-wise comparison   FIXED_LEN_BYTE_ARRAY - unsigned byte-wise comparison  (+) While the INT96 type has been deprecated, at the time of writing it is    still used in many legacy systems. If a Parquet implementation chooses    to write statistics for INT96 columns, it is recommended to order them    according to the legacy rules:    - compare the last 4 bytes (days) as a little-endian 32-bit signed integer    - if equal last 4 bytes, compare the first 8 bytes as a little-endian      64-bit signed integer (nanos)    See https://github.com/apache/parquet-format/issues/502 for more details  (*) Because the sorting order is not specified properly for floating     point values (relations vs. total ordering) the following     compatibility rules should be applied when reading statistics:     - If the min is a NaN, it should be ignored.     - If the max is a NaN, it should be ignored.     - If the min is +0, the row group may contain -0 values as well.     - If the max is -0, the row group may contain +0 values as well.     - When looking for NaN values, min and max should be ignored.      When writing statistics the following rules should be followed:     - NaNs should not be written to min or max statistics fields.     - If the computed max value is zero (whether negative or positive),       `+0.0` should be written into the max statistics field.     - If the computed min value is zero (whether negative or positive),       `-0.0` should be written into the min statistics field.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageLocation.Offset">
+            <summary>
+            Offset of the page in the file.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageLocation.CompressedPageSize">
+            <summary>
+            Size of the page, including header. Sum of compressed_page_size and header length.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.PageLocation.FirstRowIndex">
+            <summary>
+            Index within the RowGroup of the first row of the page. When an OffsetIndex is present, pages must begin on row boundaries (repetition_level = 0).
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.OffsetIndex">
+            <summary>
+            Optional offsets for each data page in a ColumnChunk.  Forms part of the page index, along with ColumnIndex.  OffsetIndex may be present even if ColumnIndex is not.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.OffsetIndex.PageLocations">
+            <summary>
+            PageLocations, ordered by increasing PageLocation.offset. It is required that page_locations[i].first_row_index &lt; page_locations[i+1].first_row_index.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.OffsetIndex.UnencodedByteArrayDataBytes">
+            <summary>
+            Unencoded/uncompressed size for BYTE_ARRAY types.  See documention for unencoded_byte_array_data_bytes in SizeStatistics for more details on this field.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.ColumnIndex">
+            <summary>
+            Optional statistics for each data page in a ColumnChunk.  Forms part the page index, along with OffsetIndex.  If this structure is present, OffsetIndex must also be present.  For each field in this structure, &lt;field&gt;[i] refers to the page at OffsetIndex.page_locations[i].
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnIndex.NullPages">
+            <summary>
+            A list of Boolean values to determine the validity of the corresponding min and max values. If true, a page contains only null values, and writers have to set the corresponding entries in min_values and max_values to byte[0], so that all lists have the same length. If false, the corresponding entries in min_values and max_values must be valid.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnIndex.MinValues">
+            <summary>
+            Two lists containing lower and upper bounds for the values of each page determined by the ColumnOrder of the column. These may be the actual minimum and maximum values found on a page, but can also be (more compact) values that do not exist on a page. For example, instead of storing &quot;&quot;Blart Versenwald III&quot;, a writer may set min_values[i]=&quot;B&quot;, max_values[i]=&quot;C&quot;. Such more compact values must still be valid values within the column&#39;s logical type. Readers must make sure that list entries are populated before using them by inspecting null_pages.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnIndex.BoundaryOrder">
+            <summary>
+            Stores whether both min_values and max_values are ordered and if so, in which direction. This allows readers to perform binary searches in both lists. Readers cannot assume that max_values[i] &lt;= min_values[i+1], even if the lists are ordered.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnIndex.NullCounts">
+            <summary>
+            A list containing the number of null values for each page  Writers SHOULD always write this field even if no null values are present or the column is not nullable. Readers MUST distinguish between null_counts not being present and null_count being 0. If null_counts are not present, readers MUST NOT assume all null counts are 0.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnIndex.RepetitionLevelHistograms">
+            <summary>
+            Contains repetition level histograms for each page concatenated together.  The repetition_level_histogram field on SizeStatistics contains more details.  When present the length should always be (number of pages * (max_repetition_level + 1)) elements.  Element 0 is the first element of the histogram for the first page. Element (max_repetition_level + 1) is the first element of the histogram for the second page.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.ColumnIndex.DefinitionLevelHistograms">
+            <summary>
+            Same as repetition_level_histograms except for definitions levels.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.AesGcmV1.AadPrefix">
+            <summary>
+            AAD prefix.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.AesGcmV1.AadFileUnique">
+            <summary>
+            Unique file identifier part of AAD suffix.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.AesGcmV1.SupplyAadPrefix">
+            <summary>
+            In files encrypted with AAD prefix without storing it, readers must supply the prefix.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.AesGcmCtrV1.AadPrefix">
+            <summary>
+            AAD prefix.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.AesGcmCtrV1.AadFileUnique">
+            <summary>
+            Unique file identifier part of AAD suffix.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.AesGcmCtrV1.SupplyAadPrefix">
+            <summary>
+            In files encrypted with AAD prefix without storing it, readers must supply the prefix.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.FileMetaData">
+            <summary>
+            Description for file metadata.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.Version">
+            <summary>
+            Version of this file  As of December 2025, there is no agreed upon consensus of what constitutes version 2 of the file. For maximum compatibility with readers, writers should always populate &quot;1&quot; for version. For maximum compatibility with writers, readers should accept &quot;1&quot; and &quot;2&quot; interchangeably.  All other versions are reserved for potential future use-cases.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.Schema">
+            <summary>
+            Parquet schema for this file.  This schema contains metadata for all the columns. The schema is represented as a tree with a single root.  The nodes of the tree are flattened to a list by doing a depth-first traversal. The column metadata contains the path in the schema for that column which can be used to map columns to nodes in the schema. The first element is the root.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.NumRows">
+            <summary>
+            Number of rows in this file.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.RowGroups">
+            <summary>
+            Row groups in this file.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.KeyValueMetadata">
+            <summary>
+            Optional key/value metadata.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.CreatedBy">
+            <summary>
+            String for application that wrote this file.  This should be in the format &lt;Application&gt; version &lt;App Version&gt; (build &lt;App Build Hash&gt;). e.g. impala version 1.0 (build 6cf94d29b2b7115df4de2c06e2ab4326d721eb55).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.ColumnOrders">
+            <summary>
+            Sort order used for the min_value and max_value fields in the Statistics objects and the min_values and max_values fields in the ColumnIndex objects of each column in this file. Sort orders are listed in the order matching the columns in the schema. The indexes are not necessary the same though, because only leaf nodes of the schema are represented in the list of sort orders.  Without column_orders, the meaning of the min_value and max_value fields in the Statistics object and the ColumnIndex object is undefined. To ensure well-defined behaviour, if these fields are written to a Parquet file, column_orders must be written as well.  The obsolete min and max fields in the Statistics object are always sorted by signed comparison regardless of column_orders.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.EncryptionAlgorithm">
+            <summary>
+            Encryption algorithm. This field is set only in encrypted files with plaintext footer. Files with encrypted footer store algorithm id in FileCryptoMetaData structure.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileMetaData.FooterSigningKeyMetadata">
+            <summary>
+            Retrieval metadata of key used for signing the footer. Used only in encrypted files with plaintext footer.
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.FileCryptoMetaData">
+            <summary>
+            Crypto metadata for files with encrypted footer.
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileCryptoMetaData.EncryptionAlgorithm">
+            <summary>
+            Encryption algorithm. This field is only used for files with encrypted footer. Files with plaintext footer store algorithm id inside footer (FileMetaData structure).
+            </summary>
+        </member>
+        <member name="P:Parquet.Meta.FileCryptoMetaData.KeyMetadata">
+            <summary>
+            Retrieval metadata of key used for encryption of footer, and (possibly) columns.
+            </summary>
+        </member>
+        <member name="M:Parquet.Meta.Proto.ThriftCompactProtocolWriter.WriteEmptyStruct">
+            <summary>
+            Optimisation to write an empty struct - avoid push/pop
+            </summary>
+        </member>
+        <member name="T:Parquet.Meta.Proto.ThriftProtocolException">
+            <summary>
+            Apache thrift protocol related exception
+            </summary>
+        </member>
+        <member name="M:Parquet.Meta.Proto.ThriftProtocolException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the ThriftProtocolException class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Parquet.Meta.Proto.ThriftProtocolException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the ThriftProtocolException class with a specified error message and a reference
+            to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is
+            specified.</param>
+        </member>
+        <member name="T:Parquet.ParquetActor">
+            <summary>
+            Base class for reader and writer
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetActor.Stream">
+            <summary>
+            Original stream to write or read
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetActor.ValidateFileAsync">
+            <summary>
+            Validates that this file is a valid parquet file by reading head and tail of it
+            </summary>
+            <returns></returns>
+            <exception cref="T:System.IO.IOException"></exception>
+        </member>
+        <member name="T:Parquet.ParquetException">
+            <summary>
+            Parquet format specific
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetException.#ctor">
+            <summary>
+            Creates an instance
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetException.#ctor(System.String)">
+            <summary>
+            Creates an instance
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetException.#ctor(System.String,System.Exception)">
+            <summary>
+            Creates an instance
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetOptions">
+            <summary>
+            Parquet options
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.CompressionMethod">
+            <summary>
+            Compression method to use when writing, defaults to <see cref="F:Parquet.CompressionMethod.Snappy"/>
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.CompressionLevel">
+            <summary>
+            Compression level to use when writing, defaults to <see cref="F:System.IO.Compression.CompressionLevel.SmallestSize"/>. The actual
+            physical compression level varies based on compression algorithm.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.TreatByteArrayAsString">
+            <summary>
+            When true byte arrays will be treated as UTF-8 strings when reading files.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.TreatBigIntegersAsDates">
+            <summary>
+            When true, big integers are always treated as dates when reading files.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.UseDateOnlyTypeForDates">
+            <summary>
+            When set to true, parquet dates will be deserialized as <see cref="T:System.DateOnly"/>, otherwise as
+            <see cref="T:System.DateTime"/> with missing time part.
+            </summary>
+        </member>
+        <member name="F:Parquet.ParquetOptions.ColumnEncodingHints">
+            <summary>
+            Specifies hints to the writers about which encoding to use for specific columns. To get column path use
+            <see cref="P:Parquet.Schema.Field.Path"/> on <see cref="T:Parquet.Schema.DataField"/>.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.DictionaryEncodingThreshold">
+            <summary>
+            Dictionary uniqueness threshold, which is a value from 0 (no unique values) to 1 (all values are unique)
+            indicating when dictionary encoding is applied. Uniqueness factor needs to be less or equal than this threshold.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.DictionaryEncodingSampleSize">
+            <summary>
+            Number of values to sample before attempting full dictionary encoding.
+            When the column has more values than this limit, a quick uniqueness check is performed
+            on the first <c>DictionaryEncodingSampleSize</c> values. If the sample exceeds
+            <see cref="P:Parquet.ParquetOptions.DictionaryEncodingThreshold"/>, dictionary encoding is skipped entirely,
+            avoiding the expensive full-data scan.
+            Set to 0 to disable sampling and always scan the full column.
+            Default is 0 (disabled - full column scan, preserving pre-existing behavior).
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.MaximumSmallPoolFreeBytes">
+            <summary>
+            This option is passed to the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager"/>, which keeps a pool of
+            streams in memory for reuse. By default when this option is unset, the RecyclableStreamManager will keep an
+            unbounded amount of memory, which is "indistinguishable from a memory leak" per their documentation. This does
+            not restrict the size of the pool, but just allows the garbage collector to free unused memory over this limit.
+            You may want to adjust this smaller to reduce max memory usage, or larger to reduce garbage collection
+            frequency. Defaults to 16MB.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.MaximumLargePoolFreeBytes">
+            <summary>
+            This option is passed to the <see cref="T:Microsoft.IO.RecyclableMemoryStreamManager"/>, which keeps a pool of
+            streams in memory for reuse. By default when this option is unset, the RecyclableStreamManager will keep an
+            unbounded amount of memory, which is "indistinguishable from a memory leak" per their documentation. This does
+            not restrict the size of the pool, but just allows the garbage collector to free unused memory over this limit.
+            You may want to adjust this smaller to reduce max memory usage, or larger to reduce garbage collection
+            frequency. Defaults to 64MB.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.UseBigDecimal">
+            <summary>
+            When true, decimals will be read and written as <see cref="T:Parquet.Data.BigDecimal"/> instead of <see cref="T:System.Decimal"/>. This
+            is required if you are working with truly large decimals.
+            </summary>
+        </member>
+        <member name="F:Parquet.ParquetOptions.DefaultPrecision">
+            <summary>
+            The Default Precision value used when not explicitly defined; this is the value used prior to parquet-dotnet
+            v3.9.
+            </summary>
+        </member>
+        <member name="F:Parquet.ParquetOptions.DefaultScale">
+            <summary>
+            The Default Scale value used when not explicitly defined; this is the value used prior to parquet-dotnet v3.9.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.UseHardwareAcceleration">
+            <summary>
+            If true, will attemp to use hardware accelerated math.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.Append">
+            <summary>
+            When set to true, appends to file by creating a new row group. Only applicable when using
+            <see cref="T:Parquet.Serialization.ParquetSerializer"/>. Be careul not to create a lot of tiny row groups as this affects reading
+            performance in all Parquet readers, not just this library.
+            </summary>
+        </member>
+        <member name="F:Parquet.ParquetOptions.DefaultRowGroupSize">
+            <summary>
+            Default size of row groups if not specified
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.RowGroupSize">
+            <summary>
+            Custom row group size, if different from <see cref="F:Parquet.ParquetOptions.DefaultRowGroupSize"/> used by
+            <see cref="T:Parquet.Serialization.ParquetSerializer"/>.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.PropertyNameCaseInsensitive">
+            <summary>
+            Gets or sets a value that indicates whether a property's name uses a case-insensitive comparison during
+            deserialization. The default value is false. Full credits to
+            https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonserializeroptions.propertynamecaseinsensitive?view=net-8.0#system-text-json-jsonserializeroptions-propertynamecaseinsensitive
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.PreferUntypedString">
+            <summary>
+            When using untyped serialisation, prefers using <see cref="T:System.String"/> when reading string values, instead
+            of <see cref="T:System.ReadOnlyMemory`1"/>.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetOptions.PreferUntypedByteArray">
+            <summary>
+            When using untyped serialisation, prefers using <see cref="T:System.Byte"/> array when reading byte array values, instead
+            of <see cref="T:System.ReadOnlyMemory`1"/>.
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetReader">
+            <summary>
+            Implements Apache Parquet format reader, experimental version for next major release.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.CreateAsync(System.String,Parquet.ParquetOptions,System.Threading.CancellationToken)">
+            <summary>
+            Opens reader from a file on disk. When the reader is disposed the file handle is automatically closed.
+            </summary>
+            <param name="filePath"></param>
+            <param name="parquetOptions"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetReader.CreateAsync(System.IO.Stream,Parquet.ParquetOptions,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Creates an instance from input `stream`.
+            </summary>
+            <param name="input">Input stream, must be readable and seekable</param>
+            <param name="parquetOptions">Optional reader options</param>
+            <param name="leaveStreamOpen">
+            When true, leaves the stream passed in <paramref name="input"/> open after disposing the reader.
+            </param>
+            <param name="cancellationToken"></param>
+            <exception cref="T:System.ArgumentNullException">input</exception>
+            <exception cref="T:System.ArgumentException">stream must be readable and seekable - input</exception>
+            <exception cref="T:System.IO.IOException">not a Parquet file (size too small)</exception>
+        </member>
+        <member name="P:Parquet.ParquetReader.CustomMetadata">
+            <summary>
+            Gets custom key-value pairs for metadata
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.ReadSchemaAsync(System.String)">
+            <summary>
+            Opens file at specified path to read schema and return
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.ReadSchemaAsync(System.IO.Stream)">
+            <summary>
+            Reads file stream and returns
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetReader.RowGroupCount">
+            <summary>
+            Gets the number of rows groups in this file
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetReader.Schema">
+            <summary>
+            Reader schema
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetReader.Metadata">
+            <summary>
+            Internal parquet metadata
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.OpenRowGroupReader(System.Int32)">
+            <summary>
+            Opens row group reader. Note that this operation is really cheap as all the metadata is already present. It only
+            gets expensive when you read actual data, not the metadata itself.
+            </summary>
+            <param name="index">
+            Row group index, starting from 0. See <see cref="P:Parquet.ParquetReader.RowGroupCount"/> to get number of row groups in this file.
+            </param>
+            <returns></returns>
+        </member>
+        <member name="P:Parquet.ParquetReader.RowGroups">
+            <summary>
+            Collection of row group readers, fast random access and enumeration
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetReader.DisposeAsync">
+            <summary>
+            <inheritdoc/>
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetRowGroupReader">
+            <summary>
+            Reader for Parquet row groups
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetRowGroupReader.RowGroup">
+            <summary>
+            Exposes raw metadata about this row group
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetRowGroupReader.RowCount">
+            <summary>
+            Gets the number of rows in this row group, which includes null values if any.
+            </summary>
+            <remarks>
+            If this row group contains repeated columns, the number of values in those columns may be greater than the row
+            count, but the row count will always reflect the number of rows, including nulls, in the source data.
+            </remarks>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ColumnExists(Parquet.Schema.DataField)">
+            <summary>
+            Checks if this field exists in source schema
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadRawAsync``1(Parquet.Schema.DataField,System.Memory{``0},System.Nullable{System.Memory{System.Int32}},System.Nullable{System.Memory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Performs "raw" reading of a column, which returns non-nullable values and definition/repetition levels as
+            separate buffers. Intended for advanced use only. todo: explain what to use instead
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadRawColumnDataAsync``1(Parquet.Schema.DataField,System.Threading.CancellationToken)">
+            <summary>
+            Pre-allocates column memory and reads.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadRawColumnDataBaseAsync(Parquet.Schema.DataField,System.Threading.CancellationToken)">
+            <summary>
+            Read strongly typed data column and return as base class of <see cref="T:Parquet.Data.RawColumnData`1"/>. This is useful when
+            the caller doesn't know the type at compile time. Note that this method will be slightly less efficient than
+            calling generic version directly, so if the caller does know the type, it's better to call generic version."/>
+            </summary>
+            <param name="field"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadAsync``1(Parquet.Schema.DataField,System.Memory{``0},System.Nullable{System.Memory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Reads a column from this row group. Unlike writing, columns can be read in any order. If the column is missing,
+            an exception will be thrown.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadAsync``1(Parquet.Schema.DataField,System.Memory{System.Nullable{``0}},System.Nullable{System.Memory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Read nullable column data
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadAsync(Parquet.Schema.DataField,System.Memory{System.String},System.Nullable{System.Memory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Read column as UTF-8 strings.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.ReadAsync(Parquet.Schema.DataField,System.Memory{System.Byte[]},System.Nullable{System.Memory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Read column as <see cref="T:System.Byte"/>[].
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.GetMetadata(Parquet.Schema.DataField)">
+            <summary>
+            Gets raw column chunk metadata for this field
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.GetCustomMetadata(Parquet.Schema.DataField)">
+            <summary>
+            Get custom key-value metadata for a data field
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.GetStatistics(Parquet.Schema.DataField)">
+            <summary>
+            Retrieves statistics stored as metadata inside the Parquet file,for a particular data field. Note that these
+            statistics are not guaranteed to be present, and even when they are present, they may not be reliable. Always
+            check for nulls and use with caution.
+            </summary>
+            <param name="field"></param>
+            <returns></returns>
+            <exception cref="T:Parquet.ParquetException"></exception>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupReader.Dispose">
+            <summary>
+            Dispose isn't required, retained for backward compatibility
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetRowGroupWriter">
+            <summary>
+            Writer for Parquet row groups
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WriteAsync(Parquet.Schema.DataField,System.Collections.Generic.IReadOnlyCollection{System.String},System.Nullable{System.ReadOnlyMemory{System.Int32}})">
+            <summary>
+            Helper method that converts the provided string values to nullable <see cref="T:System.ReadOnlyMemory`1"/> and calls
+            the main WriteAsync method. This is useful for writing string columns without having to manually convert them to
+            the required format.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WriteAsync(Parquet.Schema.DataField,System.Collections.Generic.IReadOnlyCollection{System.Byte[]},System.Nullable{System.ReadOnlyMemory{System.Int32}})">
+            <summary>
+            Helper method that converts the provided byte array values to nullable <see cref="T:System.ReadOnlyMemory`1"/> and
+            calls the main WriteAsync method. This is useful for writing binary columns without having to manually convert
+            them to the required format.
+            </summary>
+            <param name="field"></param>
+            <param name="values"></param>
+            <param name="repetitionLevels"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WriteAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{System.Nullable{``0}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Collections.Generic.Dictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Writes a column of data to this row group. The column must correspond to the next column in the schema, and all
+            columns must be written in the order they appear in the schema. The method will validate that the provided field
+            matches the expected column from the schema and that all columns have the same row count. If any of these
+            validations fail, an exception will be thrown.
+            </summary>
+            <param name="field">The data field representing the column to write.</param>
+            <param name="values">The values to write for the column.</param>
+            <param name="repetitionLevels">Optional repetition levels for the column.</param>
+            <param name="customMetadata">Optional custom metadata for the column.</param>
+            <param name="cancellationToken">Optional cancellation token.</param>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WriteAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Collections.Generic.Dictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Writes a column of data to this row group. The column must correspond to the next column in the schema, and all
+            columns must be written in the order they appear in the schema. The method will validate that the provided field
+            matches the expected column from the schema and that all columns have the same row count. If any of these
+            validations fail, an exception will be thrown.
+            </summary>
+            <param name="field">The data field representing the column to write.</param>
+            <param name="values">The values to write for the column.</param>
+            <param name="repetitionLevels">Optional repetition levels for the column.</param>
+            <param name="customMetadata">Optional custom metadata for the column.</param>
+            <param name="cancellationToken">Optional cancellation token.</param>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WriteAllPartsAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Writes a column of data to this row group. The column must correspond to the next column in the schema, and all
+            columns must be written in the order they appear in the schema. The method will validate that the provided field
+            matches the expected column from the schema and that all columns have the same row count. If any of these
+            validations fail, an exception will be thrown.
+            </summary>
+            <remarks>This method expects that you manually supply definition levels when writing nullable columns, therefore you should only use it for low-level high-performance operations and know what you are doing.</remarks>
+            <param name="field"></param>
+            <param name="values"></param>
+            <param name="definitionValues"></param>
+            <param name="repetitionLevels"></param>
+            <param name="cancellationToken"></param>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.PrepareColumnAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Encodes and compresses a column into memory without writing it. Preparing is the expensive part
+            of writing a column and touches nothing shared between columns, so a caller can prepare the
+            columns of a row group concurrently, on threads of its own choosing, and then write them in
+            schema order with <see cref="M:Parquet.ParquetRowGroupWriter.WritePreparedColumnAsync(Parquet.PreparedColumn,System.Threading.CancellationToken)"/>. The result is byte-for-byte what
+            <see cref="M:Parquet.ParquetRowGroupWriter.WriteAllPartsAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)"/> writes for the same column. Like that method, this one
+            expects definition levels to be supplied for a nullable column.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WritePreparedColumnAsync(Parquet.PreparedColumn,System.Threading.CancellationToken)">
+            <summary>
+            Writes a column prepared by <see cref="M:Parquet.ParquetRowGroupWriter.PrepareColumnAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)"/> as the next column of the row
+            group, and disposes it.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.TakeNextSchemaElement(Parquet.Schema.DataField)">
+            <summary>
+            Checks that the field is the next column in the schema and advances to it.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.ValidateRowCount(Parquet.Schema.DataField,System.Int64)">
+            <summary>
+            The first column decides the row group's row count; every later column has to match it.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.CompleteValidate">
+            <summary>
+            Call to indicate that all columns have been written, to validate completeness.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when not all columns from the schema have been written.
+            </exception>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.Dispose">
+            <summary>
+            Finalizes the row group writing by updating row count and size metadata.
+            </summary>
+        </member>
+        <member name="T:Parquet.ParquetWriter">
+            <summary>
+            Implements Apache Parquet format writer
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetWriter.CreateAsync(Parquet.Schema.ParquetSchema,System.IO.Stream,Parquet.ParquetOptions,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Creates an instance of parquet writer on top of a stream.
+            </summary>
+            <param name="schema"></param>
+            <param name="output">Writeable, seekable stream</param>
+            <param name="options">Additional options</param>
+            <param name="append"></param>
+            <param name="cancellationToken"></param>
+            <exception cref="T:System.ArgumentNullException">Output is null.</exception>
+            <exception cref="T:System.ArgumentException">Output stream is not writeable</exception>
+        </member>
+        <member name="M:Parquet.ParquetWriter.CreateRowGroup">
+            <summary>
+            Creates a new row group and a writer for it.
+            </summary>
+        </member>
+        <member name="P:Parquet.ParquetWriter.CustomMetadata">
+            <summary>
+            Gets custom key-value pairs for metadata
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetWriter.DisposeAsync">
+            <summary>
+            Dispose the writer asynchronously
+            </summary>
+        </member>
+        <member name="T:Parquet.PreparedColumn">
+            <summary>
+            A column of a row group which <see cref="M:Parquet.ParquetRowGroupWriter.PrepareColumnAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)"/> has encoded
+            and compressed into memory, waiting to be written by
+            <see cref="M:Parquet.ParquetRowGroupWriter.WritePreparedColumnAsync(Parquet.PreparedColumn,System.Threading.CancellationToken)"/>. Dispose it if it is never written.
+            </summary>
+        </member>
+        <member name="P:Parquet.PreparedColumn.Field">
+            <summary>
+            The field this column belongs to.
+            </summary>
+        </member>
+        <member name="M:Parquet.PreparedColumn.Dispose">
+            <summary>
+            Releases the memory holding the prepared pages.
+            </summary>
+        </member>
+        <member name="T:Parquet.ReadingColumn`1">
+            <summary>
+            Just like <see cref="T:Parquet.WritingColumn`1"/>, contains intermediate data structures used during column reading.
+            Keps separate as trying to share code between reading and writing is more trouble than it's worth.
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.BigDecimalDataField">
+            <summary>
+            Maps to Parquet decimal type, allowing to specify custom scale and precision.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.BigDecimalDataField.#ctor(System.String,System.Int32,System.Int32,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String)">
+            <summary>
+            Constructs class instance
+            </summary>
+            <param name="name">The name of the column</param>
+            <param name="precision">Custom precision</param>
+            <param name="scale">Custom scale</param>
+            <param name="isNullable"></param>
+            <param name="isArray"></param>
+            <param name="propertyName">When set, uses this property to get the field's data.  When not set, uses the property that matches the name parameter.</param>
+        </member>
+        <member name="T:Parquet.Schema.DataField">
+            <summary>
+            Field containing actual data, unlike fields containing metadata.
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DataField.IsNullable">
+            <summary>
+            When true, this element is allowed to have nulls.
+            Changes <see cref="P:Parquet.Schema.DataField.ClrNullableIfHasNullsType"/> property accordingly.
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DataField.IsArray">
+            <summary>
+            When true, the value is an array rather than a single value.
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DataField.ClrType">
+            <summary>
+            CLR type of this column. This type is always non-nullable, regardless of whether this field is nullable or not.
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DataField.ClrNullableIfHasNullsType">
+            <summary>
+            Unsupported, use at your own risk!
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DataField.FieldId">
+            <summary>
+            Optional metadata integer, used in Lake implementations. See
+            https://arrow.apache.org/docs/cpp/parquet.html#parquet-field-id
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.DataField.#ctor(System.String,System.Type,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String)">
+            <summary>
+            Creates a new instance of <see cref="T:Parquet.Schema.DataField"/> by name and CLR type.
+            </summary>
+            <param name="name">Field name</param>
+            <param name="clrType">
+            CLR type of this field. The type is internally discovered and expanded into appropriate Parquet flags.
+            </param>
+            <param name="isNullable">
+            When set, will override <see cref="P:Parquet.Schema.DataField.IsNullable"/> attribute regardless whether passed type was nullable or not.
+            </param>
+            <param name="isArray">
+            When set, will override <see cref="P:Parquet.Schema.DataField.IsArray"/> attribute regardless whether passed type was an array or not.
+            </param>
+            <param name="propertyName">
+            When set, uses this property to get the field's data. When not set, uses the property that matches the name
+            parameter.
+            </param>
+        </member>
+        <member name="M:Parquet.Schema.DataField.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:Parquet.Schema.DataField.Equals(System.Object)">
+            <summary>
+            Basic equality check
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Schema.DataField.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:Parquet.Schema.DataField.Clone">
+            <summary>
+            Simple memberwise clone
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Schema.DataField`1">
+            <summary>
+            Element of dataset's schema. Provides a helper way to construct a schema element with .NET generics.
+            <typeparamref name="T">Type of element in the column</typeparamref>
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.DataField`1.#ctor(System.String,System.Nullable{System.Boolean})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Schema.Field"/> class.
+            </summary>
+            <param name="name">Column name</param>
+            <param name="nullable">Indicates if column can contain null values</param>
+        </member>
+        <member name="T:Parquet.Schema.DateTimeDataField">
+            <summary>
+            Schema element for <see cref="T:System.DateTime"/> which allows to specify precision
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DateTimeDataField.DateTimeFormat">
+            <summary>
+            Desired data format, Parquet specific
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DateTimeDataField.IsAdjustedToUTC">
+            <summary>
+            IsAdjustedToUTC
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DateTimeDataField.Unit">
+            <summary>
+            TimeUnit
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.DateTimeDataField.#ctor(System.String,Parquet.Schema.DateTimeFormat,System.Boolean,System.Nullable{Parquet.Schema.DateTimeTimeUnit},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Schema.DateTimeDataField"/> class.
+            </summary>
+            <param name="name">The name.</param>
+            <param name="format">The format.</param>
+            <param name="isAdjustedToUTC"></param>
+            <param name="unit"></param>
+            <param name="isNullable"></param>
+            <param name="isArray"></param>
+            <param name="propertyName">When set, uses this property to get the field's data.  When not set, uses the property that matches the name parameter.</param>
+        </member>
+        <member name="T:Parquet.Schema.DateTimeFormat">
+            <summary>
+            Choice of representing dates
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeFormat.Impala">
+            <summary>
+            The impala compatible date, which maps to INT96. This is the default datetime representation.
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeFormat.DateAndTime">
+            <summary>
+            This is the default Parquet datetime representation, but not default option for saving which is <see cref="F:Parquet.Schema.DateTimeFormat.Impala"/>.
+            Stores date and time up to millisecond precision as INT64
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeFormat.DateAndTimeMicros">
+            <summary>
+            Stores date and time up to microsecond precision as INT64.
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeFormat.Date">
+            <summary>
+            Only stores a date. Time portion is truncated. Internally stored as INT32
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeFormat.Timestamp">
+            <summary>
+            Logical Type Timestamp.
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.DateTimeTimeUnit">
+            <summary>
+            Support Time/Timestamp Units
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeTimeUnit.Millis">
+            <summary>
+            Millisecond Precision
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeTimeUnit.Micros">
+            <summary>
+            Microsecond Precision
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.DateTimeTimeUnit.Nanos">
+            <summary>
+            Nanosecond Precision, note dotnet does not support full Nano second precision for DateTime
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.DecimalDataField">
+            <summary>
+            Maps to Parquet decimal type, allowing to specify custom scale and precision
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DecimalDataField.Precision">
+            <summary>
+            Precision
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DecimalDataField.Scale">
+            <summary>
+            Scale
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.DecimalDataField.ForceByteArrayEncoding">
+            <summary>
+            Gets a flag indicating whether byte array encoding is forced.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.DecimalDataField.#ctor(System.String,System.Int32,System.Int32,System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String,System.Type)">
+            <summary>
+            Constructs class instance
+            </summary>
+            <param name="name">The name of the column</param>
+            <param name="precision">Custom precision</param>
+            <param name="scale">Custom scale</param>
+            <param name="forceByteArrayEncoding">Whether to force decimal type encoding as fixed bytes. Hive and Impala only understands decimals when forced to true.</param>
+            <param name="isNullable"></param>
+            <param name="isArray"></param>
+            <param name="propertyName">When set, uses this property to get the field's data.  When not set, uses the property that matches the name parameter.</param>
+            <param name="clrType">Optional CLR type to use for this field. When not specified, defaults to <see cref="T:System.Decimal"/>. Can be set to <see cref="T:Parquet.Data.BigDecimal"/> for decimals that exceed the range of <see cref="T:System.Decimal"/>.</param>
+        </member>
+        <member name="T:Parquet.Schema.Field">
+            <summary>
+            Element of dataset's schema
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.SchemaType">
+            <summary>
+            Type of schema in this field
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.Name">
+            <summary>
+            Column name
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.Path">
+            <summary>
+            Gets Parquet column path. For non-nested columns always equals to column <see cref="P:Parquet.Schema.Field.Name"/> otherwise contains
+            a dot (.) separated path to the column within Parquet file. Note that this is a physical path which depends on field
+            schema and you shouldn't build any reasonable business logic based on it.
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.IsNullable">
+            <summary>
+            Original nullability.
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.MaxRepetitionLevel">
+            <summary>
+            Max repetition level
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.MaxDefinitionLevel">
+            <summary>
+            Max definition level
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.ClrPropName">
+            <summary>
+            Used internally for serialisation
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.SchemaElement">
+            <summary>
+            Low-level schema element corresponding to this high-level schema element.
+            Only set when reading files.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.Field.#ctor(System.String,Parquet.Schema.SchemaType)">
+            <summary>
+            Constructs a field with only requiremd parameters
+            </summary>
+            <param name="name">Field name, required</param>
+            <param name="schemaType">Type of schema of this field</param>
+        </member>
+        <member name="M:Parquet.Schema.Field.PropagateLevels(System.Int32,System.Int32)">
+            <summary>
+            Called by schema when field hierarchy is constructed, so that fields can calculate levels as this is
+            done in reverse order of construction and needs to be done after schema data is ready
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.Field.Children">
+            <summary>
+            Get child fields, which only makes sense for complex types
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.Field.BuildClrPath(Parquet.Schema.ParquetSchema)">
+            <summary>
+            Builds the path to navigate inside the CLR type hierarchy, rather than the native Parquet schema.
+            Used internally by the class serializer to map schema fields to CLR object properties.
+            </summary>
+            <param name="schema">The Parquet schema to use for path resolution.</param>
+            <returns>A collection of <see cref="T:Parquet.Schema.Field"/> objects representing the CLR path.</returns>
+        </member>
+        <member name="M:Parquet.Schema.Field.Rename(System.String)">
+            <summary>
+            Rename this field. Renaming should also fix up the path in complex nested schemas.
+            </summary>
+            <param name="newName"></param>
+        </member>
+        <member name="M:Parquet.Schema.Field.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:Parquet.Schema.Field.Equals(System.Object)">
+            <summary>
+            Basic equality check
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.Field.GetHashCode">
+            <summary>
+            GetHashCode
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.FieldPath">
+            <summary>
+            Represents path in schema. Path is a dot-separated string, however path parts can also contain dots!
+            Never use strings to represent path, prefer this class.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.#ctor(System.String)">
+            <summary>
+            Construct path single part, which becomes the first part in the result path.
+            </summary>
+            <param name="firstPart"></param>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.#ctor(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Constructs path from parts (safe)
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.#ctor(System.String[])">
+            <summary>
+            Constructs path from parts (safe)
+            </summary>
+            <param name="parts"></param>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.Append(System.String)">
+            <summary>
+            Append an element to path
+            </summary>
+            <param name="value">Can be null or empty (ignored).</param>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.ToList">
+            <summary>
+            Convert to list
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:Parquet.Schema.FieldPath.FirstPart">
+            <summary>
+            Returns first part of the path, or null if path is empty
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.FieldPath.Item(System.Int32)">
+            <summary>
+            Gets part by index
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.FieldPath.Length">
+            <summary>
+            Number of elements in path
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.Equals(Parquet.Schema.FieldPath)">
+            <summary>
+            Compares string path
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.ToString">
+            <summary>
+            String repr
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.ToString(System.String,System.IFormatProvider)">
+            <summary>
+            String representation, where format is used as separator for joining parts.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.FieldPath.op_Addition(Parquet.Schema.FieldPath,Parquet.Schema.FieldPath)">
+            <summary>
+            Combines two paths safely
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.ListField">
+            <summary>
+            Represents a list of items. The list can contain either a normal data field or a complex structure.
+            If you need to get a list of primitive data fields it's more efficient to use arrays.
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.ListField.ElementName">
+            <summary>
+            Name of the element item for schema definition.
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.ListField.DefaultContainerName">
+            <summary>
+            Default container name for a list
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.ListField.Item">
+            <summary>
+            Item contained within this list
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.ListField.#ctor(System.String,Parquet.Schema.Field,System.String)">
+            <summary>
+            Creates a new instance of <see cref="T:Parquet.Schema.ListField"/>
+            </summary>
+            <param name="name">Field name</param>
+            <param name="item">Field representing the list element</param>
+            <param name="containerName">Container name</param>
+        </member>
+        <member name="M:Parquet.Schema.ListField.#ctor(System.String,System.Type,System.String,System.String,System.String)">
+            <summary>
+            Creates a new instance of <see cref="T:Parquet.Schema.ListField"/>
+            </summary>
+            <param name="name">Field name</param>
+            <param name="itemDataType">Type of the item in the list</param>
+            <param name="propertyName">When set, uses this property to get the list's data.  When not set, uses the property that matches the name parameter.</param>
+            <param name="containerName">Container name</param>
+            <param name="elementName">Element name</param>
+        </member>
+        <member name="M:Parquet.Schema.ListField.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Parquet.Schema.ListField.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="T:Parquet.Schema.MapField">
+            <summary>
+            Implements a dictionary field
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.MapField.Key">
+            <summary>
+            Data field used as a key
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.MapField.Value">
+            <summary>
+            Data field used as a value
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.MapField.#ctor(System.String,Parquet.Schema.Field,Parquet.Schema.Field)">
+            <summary>
+            Declares a map field
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.MapField.CreateSimpleDictionary">
+            <summary>
+            Creates an empty dictionary to keep values for this map field. Only works when both key and value are <see cref="T:Parquet.Schema.DataField"/>
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Schema.MapField.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Parquet.Schema.MapField.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="T:Parquet.Schema.ParquetSchema">
+            <summary>
+            Represents dataset schema
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.ParquetSchema.PathSeparator">
+            <summary>
+            Symbol used to separate path parts in schema element path
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.ParquetSchema.PathSeparatorChar">
+            <summary>
+            Character used to separate path parts in schema element path
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.#ctor(System.Collections.Generic.IEnumerable{Parquet.Schema.Field})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Schema.ParquetSchema"/> class from schema elements.
+            </summary>
+            <param name="fields">The elements.</param>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.#ctor(Parquet.Schema.Field[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Parquet.Schema.ParquetSchema"/> class.
+            </summary>
+            <param name="fields">The elements.</param>
+        </member>
+        <member name="P:Parquet.Schema.ParquetSchema.Fields">
+            <summary>
+            Gets the schema elements
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.ParquetSchema.Item(System.Int32)">
+            <summary>
+            Get schema element by index
+            </summary>
+            <param name="i">Index of schema element</param>
+            <returns>Schema element</returns>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.GetDataFields">
+            <summary>
+            Gets a flat list of all data fields in this schema. Traverses schema tree in order to do that.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="P:Parquet.Schema.ParquetSchema.DataFields">
+            <summary>
+            Gets data fields in this schema, including from nested types. Equivalent to <see cref="M:Parquet.Schema.ParquetSchema.GetDataFields"/>
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.FindDataField(Parquet.Schema.FieldPath)">
+            <summary>
+            Finds a data field by its path. If not found, throws <see cref="T:System.ArgumentException"/> exception.
+            </summary>
+            <param name="path"></param>
+            <returns></returns>
+            <exception cref="T:System.ArgumentException"></exception>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.FindDataField(System.String)">
+            <summary>
+            Finds a data field by its path. If not found, throws <see cref="T:System.ArgumentException"/> exception.
+            </summary>
+            <param name="path"></param>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.Flatten">
+            <summary>
+            Flattens schema fields i.e. returns all of them in a single dimensional list in no particular order.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.Equals(Parquet.Schema.ParquetSchema)">
+            <summary>
+            Indicates whether the current object is equal to another object of the same type.
+            </summary>
+            <param name="other">An object to compare with this object.</param>
+            <returns>
+            true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.GetNotEqualsMessage(Parquet.Schema.ParquetSchema,System.String,System.String)">
+            <summary>
+            Compares this schema to <paramref name="other"/> and produces a human readable message describing the differences.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.Augment(Parquet.Schema.ParquetSchema)">
+            <summary>
+            Augments this schema with any information that can be taken from an external schema, to make it more complete.
+            It's internal for now due to the fact that it's not clear whether it should be exposed and what are the full side effects.
+            </summary>
+            <param name="schema"></param>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object" />, is equal to this instance.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object" /> to compare with this instance.</param>
+            <returns>
+              <c>true</c> if the specified <see cref="T:System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+            <returns>
+            A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+            </returns>
+        </member>
+        <member name="M:Parquet.Schema.ParquetSchema.ToString">
+            <summary>
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.SchemaType">
+            <summary>
+            Type of schema
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.SchemaType.Data">
+            <summary>
+            Contains actual values i.e. declared by a <see cref="T:Parquet.Schema.DataField"/>
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.SchemaType.Map">
+            <summary>
+            Contains dictionary definition
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.SchemaType.Struct">
+            <summary>
+            Contains structure definition
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.SchemaType.List">
+            <summary>
+            Contains list definition
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.StructField">
+            <summary>
+            Represents a structure i.e. a container for other fields.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.StructField.#ctor(System.String,Parquet.Schema.Field[])">
+            <summary>
+            Creates a new structure field 
+            </summary>
+            <param name="name">Structure name</param>
+            <param name="elements">List of elements</param>
+        </member>
+        <member name="P:Parquet.Schema.StructField.Fields">
+            <summary>
+            Elements of this structure
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.StructField.Equals(Parquet.Schema.StructField)">
+            <summary>
+            
+            </summary>
+            <param name="other"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Schema.TimeDataField">
+            <summary>
+            Represents TIME logical type, which is a time of day since midnight. See
+            https://github.com/apache/parquet-format/blob/master/LogicalTypes.md#time
+            Maps to either <see cref="T:System.Int32"/> or <see cref="T:System.Int64"/> data type.
+            </summary>
+        </member>
+        <member name="M:Parquet.Schema.TimeDataField.#ctor(System.String,Parquet.Schema.TimeUnitPrecision,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String)">
+            <summary>
+            Time data field
+            </summary>
+            <param name="name"></param>
+            <param name="precision"></param>
+            <param name="isNullable"></param>
+            <param name="isArray"></param>
+            <param name="propertyName"></param>
+        </member>
+        <member name="P:Parquet.Schema.TimeDataField.IsAdjustedToUtc">
+            <summary>
+            Indicates if the time is adjusted to UTC.
+            </summary>
+        </member>
+        <member name="P:Parquet.Schema.TimeDataField.Precision">
+            <summary>
+            Time precision.
+            </summary>
+        </member>
+        <member name="T:Parquet.Schema.TimeUnitPrecision">
+            <summary>
+            Time precision. It's called "Unit" to match Parquet convention.
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.TimeUnitPrecision.Millis">
+            <summary>
+            Milliseconds precision
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.TimeUnitPrecision.Micros">
+            <summary>
+            Microseconds precision
+            </summary>
+        </member>
+        <member name="F:Parquet.Schema.TimeUnitPrecision.Nanos">
+            <summary>
+            Nanoseconds precision
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetDecimalAttribute">
+            <summary>
+            Annotates a <see cref="T:System.Decimal"/> property to allow customizing precision and scale
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.Attributes.ParquetDecimalAttribute.#ctor(System.Int32,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="precision"></param>
+            <param name="scale"></param>
+        </member>
+        <member name="P:Parquet.Serialization.Attributes.ParquetDecimalAttribute.Precision">
+            <summary>
+            Precision
+            </summary>
+        </member>
+        <member name="P:Parquet.Serialization.Attributes.ParquetDecimalAttribute.Scale">
+            <summary>
+            Scale
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetIgnoreAttribute">
+            <summary>
+            Attribute to ignore a field in class serialization. Behaves identical to <see cref="T:System.Text.Json.Serialization.JsonIgnoreAttribute"/> and can be used interchangeably.
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetListElementRequiredAttribute">
+            <summary>
+            Changes column optionality to "required" for a list element.
+            Only applicable to list definition, and applies to the list elements themselves, not the list class properties.
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetMicroSecondsTimeAttribute">
+            <summary>
+            Specifies that <see cref="T:System.TimeSpan"/> field should be serialised with microseconds precision (not default milliseconds).
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetRequiredAttribute">
+            <summary>
+            Changes column optionality to "required".
+            This is used to make string properties non-nullable, as in .NET strings are nullable by default.
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetSimpleRepeatableAttribute">
+            <summary>
+            Specifies that a property is a simple repeatable field (as opposed to a list).
+            Used only for legacy compatibility.
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetTimeAttribute">
+            <summary>
+            Customize the time format of a time property. Applicable to <see cref="T:System.TimeSpan"/>, <see cref="T:System.TimeOnly"/>, <see cref="T:System.Int32"/> and <see cref="T:System.Int64"/>.
+            </summary>
+        </member>
+        <member name="P:Parquet.Serialization.Attributes.ParquetTimeAttribute.IsAdjustedToUtc">
+            <summary>
+            Indicates if the time is adjusted to UTC.
+            </summary>
+        </member>
+        <member name="P:Parquet.Serialization.Attributes.ParquetTimeAttribute.Precision">
+            <summary>
+            Time precision.
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetTimestampResolution">
+            <summary>
+            Resolution of Parquet timestamp
+            </summary>
+        </member>
+        <member name="F:Parquet.Serialization.Attributes.ParquetTimestampResolution.Milliseconds">
+            <summary>
+            Milliseconds, maps to <see cref="F:Parquet.Schema.DateTimeFormat.DateAndTime"/>"
+            </summary>
+        </member>
+        <member name="F:Parquet.Serialization.Attributes.ParquetTimestampResolution.Microseconds">
+            <summary>
+            Microseconds, maps to <see cref="F:Parquet.Schema.DateTimeFormat.DateAndTimeMicros"/>"
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Attributes.ParquetTimestampAttribute">
+            <summary>
+            Specifies that a property of type <see cref="T:System.DateTime"/> should be serialized as Parquet timestamp, which is internally
+            an int64 number.
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.Attributes.ParquetTimestampAttribute.#ctor(Parquet.Serialization.Attributes.ParquetTimestampResolution,System.Boolean,System.Boolean)">
+            <summary>
+            Creates an instance of the attribute
+            </summary>
+            <param name="resolution"></param>
+            <param name="useLogicalTimestamp"></param>
+            <param name="isAdjustedToUTC"></param>
+        </member>
+        <member name="P:Parquet.Serialization.Attributes.ParquetTimestampAttribute.Resolution">
+            <summary>
+            Resolution of Parquet timestamp
+            </summary>
+        </member>
+        <member name="P:Parquet.Serialization.Attributes.ParquetTimestampAttribute.UseLogicalTimestamp">
+            <summary>
+            Resolution of Parquet timestamp
+            </summary>
+        </member>
+        <member name="P:Parquet.Serialization.Attributes.ParquetTimestampAttribute.IsAdjustedToUTC">
+            <summary>
+            IsAdjustedToUTC
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.Dremel.FieldAssemblerCompiler`1.TransitionRSM">
+            <summary>
+            Transitions RSM for current RL iteration
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.Dremel.FieldAssemblerCompiler`1.RebuildArray(System.Linq.Expressions.Expression,System.Type,System.Linq.Expressions.Expression)">
+            <summary>
+            Re-creates array with one extra element and copies old elements into it, then adds new element at the end
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.Dremel.FieldStriperCompiler`1.WriteValue(System.Type,System.Linq.Expressions.ParameterExpression,System.Int32,System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="elementType"></param>
+            <param name="valueVar"></param>
+            <param name="dl">Definition level if value is defined. For optional atoms that are null it must be -1.</param>
+            <param name="currentRlVar"></param>
+            <param name="isLeaf"></param>
+            <param name="isAtomic">Value is atomic i.e. having real data value and not just RLs and DLs</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Serialization.Dremel.FieldStriperCompiler`1.Decode(System.Linq.Expressions.Expression,System.Type,System.Boolean,System.Int32,System.Linq.Expressions.ParameterExpression,System.Linq.Expressions.ParameterExpression,Parquet.Schema.Field,System.Int32,System.Collections.Generic.IReadOnlyCollection{Parquet.Schema.Field})">
+            <summary>
+            Corresponds to L6-L20 of Dremel paper Appendix A (Column-Striping Algorithm)
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.Dremel.FieldStriperCompiler`1.GetUntypedValueOrDefault``1(System.Collections.Generic.IDictionary{System.String,System.Object},System.String)">
+            <summary>
+            This method gets injected into untyped serializer to convert data types
+            </summary>
+            <typeparam name="TResult"></typeparam>
+            <param name="source"></param>
+            <param name="keyName"></param>
+            <returns></returns>
+            <exception cref="T:System.NotSupportedException"></exception>
+        </member>
+        <member name="T:Parquet.Serialization.Dremel.ParquetMap`2">
+            <summary>
+            Dictionary that allows for the values and keys to be set independently. Parquet MAP is physically stored as LIST of structs
+            with key and value fields. .NET dictionary does not 100% map to this structure so this class is used as an intermediary.
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.Dremel.Striper`1">
+            <summary>
+            Not a stripper
+            </summary>
+        </member>
+        <member name="T:Parquet.Serialization.ParquetClrSchemaExtensions">
+            <summary>
+            Makes <see cref="T:Parquet.Schema.ParquetSchema"/> from type information.
+            Migrated from SchemaReflector to better fit into C# design strategy.
+            </summary>
+        </member>
+        <member name="P:Parquet.Serialization.ParquetClrSchemaExtensions.ClassMember.ColumnName">
+            <summary>
+            Parquet column name for this member. Will check appropriate attribute to detect name.
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetClrSchemaExtensions.GetParquetSchema(System.Type,System.Boolean)">
+            <summary>
+            Reflects this type to get <see cref="T:Parquet.Schema.ParquetSchema"/>
+            </summary>
+            <param name="t"></param>
+            <param name="forWriting">
+            Set to true to get schema when deserializing into classes (writing to classes), otherwise false.
+            The result will differ if, for instance, some properties are read-only and some write-only.
+            </param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetClrSchemaExtensions.MakeField(System.Type,System.String,System.String,Parquet.Serialization.ParquetClrSchemaExtensions.ClassMember,System.Boolean)">
+            <summary>
+            Makes field from property. 
+            </summary>
+            <param name="t">Type of property</param>
+            <param name="columnName">Parquet file column name</param>
+            <param name="propertyName">Class property name</param>
+            <param name="member">Optional <see cref="T:System.Reflection.PropertyInfo"/> that can be used to get attribute metadata.</param>
+            <param name="forWriting"></param>
+            <returns><see cref="T:Parquet.Schema.DataField"/> or complex field (recursively scans class). Can return null if property is explicitly marked to be ignored.</returns>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetClrSchemaExtensions.Convert(Parquet.Serialization.Attributes.ParquetTimestampResolution)">
+            <summary>
+            Convert Resolution to TimeUnit
+            </summary>
+            <param name="resolution"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetClrSchemaExtensions.Convert(Parquet.Meta.TimeUnit)">
+            <summary>
+            Convert Parquet TimeUnit to TimeUnit
+            </summary>
+            <param name="unit"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Parquet.Serialization.DeserializationResult`1">
+            <summary>
+            All the data read from the file.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="Schema"></param>
+            <param name="Data"></param>
+            <param name="CustomMetadata"></param>
+        </member>
+        <member name="M:Parquet.Serialization.DeserializationResult`1.#ctor(Parquet.Schema.ParquetSchema,System.Collections.Generic.IList{`0},System.Collections.Generic.IReadOnlyDictionary{System.String,System.String})">
+            <summary>
+            All the data read from the file.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="Schema"></param>
+            <param name="Data"></param>
+            <param name="CustomMetadata"></param>
+        </member>
+        <member name="P:Parquet.Serialization.DeserializationResult`1.Schema">
+            <summary></summary>
+        </member>
+        <member name="P:Parquet.Serialization.DeserializationResult`1.Data">
+            <summary></summary>
+        </member>
+        <member name="P:Parquet.Serialization.DeserializationResult`1.CustomMetadata">
+            <summary></summary>
+        </member>
+        <member name="T:Parquet.Serialization.ParquetSerializer">
+            <summary>
+            High-level object serialisation. Supports everything, including nested types.
+            </summary>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetSerializer.SerializeAsync``1(System.Collections.Generic.IEnumerable{``0},System.IO.Stream,Parquet.ParquetOptions,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Serialize object instances into Parquet format and write to provided destination stream.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="objectInstances"></param>
+            <param name="destination"></param>
+            <param name="options"></param>
+            <param name="customMetadata">Specify custom key-value metadata to include in the Parquet file.</param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+            <exception cref="T:System.ApplicationException"></exception>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetSerializer.SerializeUntypedAsync(System.Collections.Generic.IReadOnlyCollection{System.Collections.Generic.IDictionary{System.String,System.Object}},Parquet.Schema.ParquetSchema,System.IO.Stream,Parquet.ParquetOptions,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Serialize untyped data (collection of dictionaries) into Parquet format and write to provided destination
+            stream. Schema must be provided, as it can't be inferred from data.
+            </summary>
+            <param name="data">List of dictionaries representing the data to serialize.</param>
+            <param name="schema">
+            Schema describing the structure of the data. This is required due to untyped nature of the data.
+            </param>
+            <param name="destination">Destination stream to write the Parquet data to.</param>
+            <param name="options">Optional Parquet options for serialization.</param>
+            <param name="customMetadata">Optional custom key-value metadata to include in the Parquet file.</param>
+            <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+            <remarks>
+            This method is the slowest, use only when necessary.
+            </remarks>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetSerializer.SerializeAsync``1(System.Collections.Generic.IEnumerable{``0},System.String,Parquet.ParquetOptions,System.Collections.Generic.IReadOnlyDictionary{System.String,System.String},System.Threading.CancellationToken)">
+            <summary>
+            Serialize object instances into Parquet format and write to a local file. If file already exists, it will be
+            overwritten, unless ParquetSerializerOptions.Append is set to true. In this case, data will be appended to
+            existing file, but only if existing file's schema is compatible with data schema. Otherwise, an exception will
+            be thrown.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="objectInstances"></param>
+            <param name="filePath"></param>
+            <param name="options"></param>
+            <param name="customMetadata"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetSerializer.DeserializeAsync``1(System.IO.Stream,Parquet.ParquetOptions,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Deserialise
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="source"></param>
+            <param name="options"></param>
+            <param name="rowGroupIndex">When specified, only reads specified row group.</param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetSerializer.DeserializeAsync``1(System.String,Parquet.ParquetOptions,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Deserialise from local file.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="filePath">File path</param>
+            <param name="options">Options</param>
+            <param name="rowGroupIndex">When specified, only reads specified row group.</param>
+            <param name="cancellationToken">Optional cancellation token</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Serialization.ParquetSerializer.DeserializeUntypedAsync(System.IO.Stream,Parquet.ParquetOptions,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Deserialise untyped data (collection of dictionaries) from Parquet format read from provided source stream.
+            Schema is returned as well, as it can't be inferred from data.
+            </summary>
+        </member>
+        <member name="P:Parquet.Serialization.ParquetSerializer.LazyDeserialisationResult.MaxRowGroups">
+            <summary>
+            Max number of row groups to read. By default, reads all row groups.
+            </summary>
+        </member>
+        <member name="T:Parquet.Utils.FileMerger">
+            <summary>
+            Concatenates multiple files into a single file. The resulting file will contain all the data and row groups from the
+            original files. Schemas in all the files must match.
+            </summary>
+        </member>
+        <member name="M:Parquet.Utils.FileMerger.#ctor(System.IO.DirectoryInfo)">
+            <summary>
+            Specifies the directory containing the files to concatenate. All the files with ".parquet" extension will be
+            concatenated recursively.
+            </summary>
+            <param name="directory"></param>
+        </member>
+        <member name="M:Parquet.Utils.FileMerger.#ctor(System.Collections.Generic.IEnumerable{System.IO.FileInfo})">
+            <summary>
+            Specifies the files to concatenate. All the files must have the same schema due to parquet file format
+            restrictions.
+            </summary>
+            <param name="files"></param>
+        </member>
+        <member name="P:Parquet.Utils.FileMerger.InputStreams">
+            <summary>
+            All the input streams to concatenate.
+            </summary>
+        </member>
+        <member name="P:Parquet.Utils.FileMerger.InputFiles">
+            <summary>
+            All the input files to concatenate, if this instance was created using <see cref="T:System.IO.DirectoryInfo"/> or
+            <see cref="T:System.IO.FileInfo"/> constructor.
+            </summary>
+        </member>
+        <member name="M:Parquet.Utils.FileMerger.MergeFilesAsync(System.IO.Stream,Parquet.ParquetOptions,System.Threading.CancellationToken,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Merges all the files into a single file by copying row groups from each file into the resulting file. The
+            resulting file will end up having as many row groups as the sum of row groups in all the files. The result looks
+            almost like you have done something like `cat file1.parquet file2.parquet > merged.parquet` in the command line,
+            but with parquet files. This is the most efficient way to merge files, as it does not require reading and
+            writing data, but just copying bytes from source files to the destination file. However, it requires that all
+            the files have exactly the same schema and compatible row group sizes, otherwise the resulting file will be
+            invalid.
+            </summary>
+        </member>
+        <member name="M:Parquet.Utils.FileMerger.MergeRowGroups(System.IO.Stream,Parquet.ParquetOptions,System.Threading.CancellationToken,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32)">
+            <summary>
+            Merges all the row groups in the files into a single row group in the resulting file. If source files have more
+            than one row group, they will be stil merged into one row group in the destination file, therefore you can use
+            this method even on a single file if you want to just merge all the row groups into one.
+            </summary>
+            <param name="destination"></param>
+            <param name="options"></param>
+            <param name="cancellationToken"></param>
+            <param name="metadata"></param>
+            <param name="rowGroupSize">Maximum number of elements allowed per merged field buffer.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Utils.FileMerger.MergeRowGroupsAsync(System.IO.Stream,Parquet.ParquetOptions,System.Threading.CancellationToken,System.Collections.Generic.Dictionary{System.String,System.String},System.Int32)">
+            <summary>
+            Merges all the row groups in the files into a single row group in the resulting file. If source files have more
+            than one row group, they will be stil merged into one row group in the destination file, therefore you can use
+            this method even on a single file if you want to just merge all the row groups into one.
+            </summary>
+            <param name="destination"></param>
+            <param name="options"></param>
+            <param name="cancellationToken"></param>
+            <param name="metadata"></param>
+            <param name="rowGroupSize">Maximum number of elements allowed per merged field buffer.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Parquet.Utils.FileMerger.DisposeAsync">
+            <inheritdoc/>
+        </member>
+        <member name="T:Parquet.WritingColumn`1">
+            <summary>
+            Column that's being written. This class holds required data parts, including allocation of any extra buffers (they
+            will be disposed of when this class is disposed).
+            </summary>
+        </member>
+        <member name="P:Parquet.WritingColumn`1.NumValues">
+            <summary>
+            Total number of values in this column. If column is nullable, this includes nulls. If column is repeated, this
+            includes all values in all repetitions.
+            </summary>
+        </member>
+        <member name="P:Parquet.WritingColumn`1.Field">
+            <summary>
+            The schema field associated with this column.
+            </summary>
+        </member>
+        <member name="M:System.MemoryExtensions.CopyWithLimitTo``1(System.Span{``0},System.Span{``0})">
+            <summary>
+            Copies the source span to the target one. If the source span is larger than the target span, it will fill the
+            target and discard the rest. If the source is smaller, only the bytes available will be copied to the target.
+            </summary>
+        </member>
+    </members>
+</doc>

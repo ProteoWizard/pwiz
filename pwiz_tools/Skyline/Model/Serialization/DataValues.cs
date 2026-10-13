@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Model.Serialization
 
         public static int? FromOptional(SkylineDocumentProto.Types.OptionalInt optionalInt)
         {
-            return optionalInt == null ? (int?) null : optionalInt.Value;
+            return optionalInt == null ? null : optionalInt.Value;
         }
 
         public static LossInclusion FromLossInclusion(SkylineDocumentProto.Types.LossInclusion lossInclusion)

@@ -76,8 +76,9 @@ namespace pwiz.SkylineTestFunctional
             // moving this line inside a RunUI does not turn it into a deadlock.
             var parquetColumnNames = ActionUtil.CallWithoutSynchronizationContext(() =>
             {
-                using var reader = ParquetReader.CreateAsync(parquetFilePath).GetAwaiter().GetResult();
-                return reader.Schema.Fields.Select(f => f.Name).ToArray();
+                using var stream = File.OpenRead(parquetFilePath);
+                return ParquetReader.CreateAsync(stream).GetAwaiter().GetResult()
+                    .Schema.Fields.Select(f => f.Name).ToArray();
             });
             Assert.AreEqual(TextUtil.SpaceSeparate(ParquetReportExporter.MakeValidColumnNames(csvReader.FieldNames)), TextUtil.SpaceSeparate(parquetColumnNames));
         }

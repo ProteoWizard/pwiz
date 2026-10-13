@@ -47,12 +47,12 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public class ScoringPipeline
     {
-        private readonly Action<string> _logInfo;
+        private readonly IOspreyLog _log;
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
 
-        public ScoringPipeline(Action<string> logInfo, IScoringDiagnostics diagnostics)
+        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics)
         {
-            _logInfo = logInfo ?? (_ => { });
+            _log = log ?? OspreyLog.None;
             _diagnostics = diagnostics;
         }
 
@@ -65,6 +65,14 @@ namespace pwiz.Osprey.Scoring
         /// or streaming), already MS2-calibrated; <paramref name="ms2Calibration"/> is
         /// still consulted here for the calibrated fragment tolerance (the provider
         /// owns the per-spectrum m/z calibration).
+        ///
+        /// <para><paramref name="logSearchSettings"/> says whether this call reports the RT and
+        /// fragment tolerances under <c>--verbose</c>. A file re-scored in several passes shares
+        /// one calibration, so only its first pass reports them; otherwise the same three lines
+        /// repeat inside every file's block.</para>
+        ///
+        /// <para><paramref name="passLabel"/> is the whole progress heading of a labeled pass (a
+        /// resource, never an English fragment to be completed here), and indents its block.</para>
         /// </summary>
         public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
@@ -75,8 +83,12 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
-            string passLabel = null)
+            string passLabel = null,
+            bool logSearchSettings = true)
         {
+            // A labeled pass runs inside a per-file block that is indented under its heading.
+            string settingsIndent = passLabel == null ? string.Empty : @"  ";
+            bool logSettings = OspreyOutput.Verbose && logSearchSettings;
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
             var scorer = context.Resolution.CreateScorer();
@@ -137,10 +149,15 @@ namespace pwiz.Osprey.Scoring
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
-                    "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
-                    rtToleranceGlobal, mad,
-                    context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_RT_tolerance___0__min__3_MAD_1_4826__MAD__1___2__,
+                        rtToleranceGlobal, mad,
+                        context.OriginalRtMad.HasValue
+                            ? string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the__0__file, CalibrationIO.EXT)
+                            : OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics));
+                }
             }
             else
             {
@@ -164,19 +181,24 @@ namespace pwiz.Osprey.Scoring
                     Tolerance = calTol,
                     Unit = calUnit
                 };
-                string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
-                    "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
-                    calTol, unitStr));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
+                        calTol, calUnit.GetLocalizedString()));
+                }
 
                 // Use calibrated tolerance for all downstream scoring. (The
                 // provider already applied the per-spectrum m/z calibration, so
                 // only this fragment-tolerance value is set here.)
                 config.FragmentTolerance = searchFragTol;
 
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
-                    "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
-                    ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_,
+                        ms2Calibration.Mean, MzCalibration.GetUnitText(ms2Calibration.Unit), -ms2Calibration.Mean));
+                }
             }
 
             // Per-entry search XIC diagnostic: log the intent once at start.
@@ -185,8 +207,8 @@ namespace pwiz.Osprey.Scoring
             var diagSearchIds = _diagnostics?.DiagSearchEntryIds;
             if (diagSearchIds != null)
             {
-                _logInfo(string.Format(
-                    "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
+                _log.LogInfo(LogTag.BISECT, string.Format(
+                    @"OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     diagSearchIds.Count));
             }
 
@@ -202,9 +224,8 @@ namespace pwiz.Osprey.Scoring
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                _logInfo(string.Format(
-                    "[BENCH] OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
-                    maxWindows, isolationWindows.Count));
+                _log.LogInfo(LogTag.BENCH, @"OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
+                    maxWindows, isolationWindows.Count);
             }
 
             // Process each isolation window (parallelizable). Per-window
@@ -224,8 +245,8 @@ namespace pwiz.Osprey.Scoring
             var coelutionScorer = new CoelutionScorer(_diagnostics);
 
             using (var progress = new ProgressReporter(
-                string.Format("{0} isolation windows", passLabel ?? "Scoring"),
-                windowsToScore.Count, passLabel == null ? string.Empty : "  ", 2.0))
+                passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
+                windowsToScore.Count, passLabel == null ? string.Empty : @"  ", 2.0))
             {
                 Parallel.For(0, windowsToScore.Count, new ParallelOptions
                 {
@@ -306,55 +327,8 @@ namespace pwiz.Osprey.Scoring
             if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
                 return entries;
 
-            // Effective fragment tolerance: 3-sigma from MS2 calibration when
-            // calibrated, falling back to the configured value. Floors at
-            // 0.05 Da / 1 ppm so a tightly fit calibration cannot collapse
-            // the matcher to a sub-isotope window.
-            double fragTolValue;
-            ToleranceUnit fragTolUnit;
-            if (ms2Cal != null && ms2Cal.Calibrated)
-            {
-                double tol3sd = 3.0 * ms2Cal.SD;
-                fragTolUnit = string.Equals(ms2Cal.Unit, "Th", StringComparison.OrdinalIgnoreCase)
-                    ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
-                double minTol = fragTolUnit == ToleranceUnit.Mz ? 0.05 : 1.0;
-                fragTolValue = Math.Max(tol3sd, minTol);
-            }
-            else
-            {
-                fragTolValue = config.FragmentTolerance.Tolerance;
-                fragTolUnit  = config.FragmentTolerance.Unit;
-            }
-
-            // RT neighborhood = 5 x median spectrum spacing.
-            double rtNeighborhood;
-            {
-                var sortedRts = new List<double>(ms2Rts.Count);
-                foreach (var rt in ms2Rts) sortedRts.Add(rt);
-                sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
-                // Dedup adjacent identicals
-                int writeIdx = 0;
-                for (int i = 0; i < sortedRts.Count; i++)
-                {
-                    if (i == 0 || sortedRts[i] != sortedRts[i - 1])
-                    {
-                        sortedRts[writeIdx++] = sortedRts[i];
-                    }
-                }
-                if (writeIdx < sortedRts.Count) sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
-                if (sortedRts.Count < 2)
-                {
-                    rtNeighborhood = 0.25; // 5 * 0.05 fallback
-                }
-                else
-                {
-                    var intervals = new List<double>(sortedRts.Count - 1);
-                    for (int i = 1; i < sortedRts.Count; i++)
-                        intervals.Add(sortedRts[i] - sortedRts[i - 1]);
-                    intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
-                    rtNeighborhood = 5.0 * intervals[intervals.Count / 2];
-                }
-            }
+            DoubleCountingTolerance(ms2Cal, config, out double fragTolValue, out ToleranceUnit fragTolUnit);
+            double rtNeighborhood = DoubleCountingRtNeighborhood(ms2Rts);
 
             // Library lookup by EntryId (Id may not be array-index aligned).
             var libIdMap = new Dictionary<uint, int>(library.Count);
@@ -421,15 +395,8 @@ namespace pwiz.Osprey.Scoring
                 // Stable sort: apex_rt then base_id then entry_id (matches
                 // Rust's deterministic tiebreaker for the dedup pass).
                 Array.Sort(rtSorted, (a, b) => // Array.Sort OK: comparator's terminal key is the unique EntryId, so no ties
-                {
-                    int c = entries[a].ApexRt.CompareTo(entries[b].ApexRt);
-                    if (c != 0) return c;
-                    uint baseA = entries[a].EntryId & 0x7FFFFFFFu;
-                    uint baseB = entries[b].EntryId & 0x7FFFFFFFu;
-                    c = baseA.CompareTo(baseB);
-                    if (c != 0) return c;
-                    return entries[a].EntryId.CompareTo(entries[b].EntryId);
-                });
+                    CompareDoubleCountingOrder(entries[a].ApexRt, entries[a].EntryId,
+                        entries[b].ApexRt, entries[b].EntryId));
 
                 for (int iPos = 0; iPos < rtSorted.Length; iPos++)
                 {
@@ -449,14 +416,9 @@ namespace pwiz.Osprey.Scoring
                         if (!libIdMap.TryGetValue(entries[idxA].EntryId, out libIdxA)) continue;
                         if (!libIdMap.TryGetValue(entries[idxB].EntryId, out libIdxB)) continue;
 
-                        var fragsA = library[libIdxA].Fragments;
-                        var fragsB = library[libIdxB].Fragments;
-                        int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
-                            fragTolValue, fragTolUnit);
-                        int minA = Math.Min(fragsA.Count, 6);
-                        int minB = Math.Min(fragsB.Count, 6);
-                        int threshold = (int)Math.Ceiling(Math.Min(minA, minB) * 0.5);
-                        if (overlap < threshold) continue;
+                        if (!SharesDoubleCountingFragments(library[libIdxA].Fragments,
+                                library[libIdxB].Fragments, fragTolValue, fragTolUnit))
+                            continue;
 
                         if (entries[idxA].CoelutionSum >= entries[idxB].CoelutionSum)
                         {
@@ -482,9 +444,8 @@ namespace pwiz.Osprey.Scoring
             int removedDecoys = removedCount - removedTargets;
             if (removedCount > 0)
             {
-                _logInfo(string.Format(
-                    "Double-counting deduplication: removed {0} entries " +
-                    "({1} targets, {2} decoys; {3} remaining)",
+                _log.LogInfo(string.Format(
+                    OspreyScoringResources.ScoringPipeline_DeduplicateDoubleCounting_Removed__0__precursor_candidate_peaks___1__targets___2__decoys__already_claimed_by_a_,
                     removedCount, removedTargets, removedDecoys,
                     originalCount - removedCount));
             }
@@ -495,6 +456,91 @@ namespace pwiz.Osprey.Scoring
             return kept;
         }
 
+
+        /// <summary>
+        /// The fragment tolerance the double-counting dedup matches library fragments with:
+        /// the search's calibrated tolerance (<see cref="MzCalibration.CalibratedTolerance"/>,
+        /// 3-sigma floored at 0.05 Th / 1 ppm when calibrated) and the configured tolerance
+        /// otherwise, including for a null calibration.
+        ///
+        /// <para>This used to be its own copy of that rule, differing only in matching the
+        /// unit "Th" case-insensitively. Calibration only ever records "ppm" or "Th"
+        /// (<c>MzCalibration</c> writes exactly those, and <c>.calibration.json</c> carries
+        /// what it wrote), and for those two the rules are the same arithmetic, so delegating
+        /// leaves the dedup's tolerance, and its output, unchanged.</para>
+        /// </summary>
+        public static void DoubleCountingTolerance(MzCalibrationResult ms2Cal, OspreyConfig config,
+            out double value, out ToleranceUnit unit)
+        {
+            MzCalibration.CalibratedTolerance(ms2Cal ?? MzCalibrationResult.Uncalibrated(),
+                config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit, out value, out unit);
+        }
+
+        /// <summary>
+        /// The apex-RT neighborhood within which the double-counting dedup compares two
+        /// entries: 5 x the median spacing between distinct MS2 retention times, or 0.25 min
+        /// when there are fewer than two.
+        /// </summary>
+        public static double DoubleCountingRtNeighborhood(IReadOnlyList<double> ms2Rts)
+        {
+            var sortedRts = new List<double>(ms2Rts.Count);
+            foreach (var rt in ms2Rts) sortedRts.Add(rt);
+            sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
+            // Dedup adjacent identicals
+            int writeIdx = 0;
+            for (int i = 0; i < sortedRts.Count; i++)
+            {
+                if (i == 0 || sortedRts[i] != sortedRts[i - 1])
+                {
+                    sortedRts[writeIdx++] = sortedRts[i];
+                }
+            }
+            if (writeIdx < sortedRts.Count)
+                sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
+            if (sortedRts.Count < 2)
+                return 0.25; // 5 * 0.05 fallback
+            var intervals = new List<double>(sortedRts.Count - 1);
+            for (int i = 1; i < sortedRts.Count; i++)
+                intervals.Add(sortedRts[i] - sortedRts[i - 1]);
+            intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
+            return 5.0 * intervals[intervals.Count / 2];
+        }
+
+        /// <summary>
+        /// The double-counting dedup's order: apex RT, then base_id, then entry_id. The dedup
+        /// tests each pair with the entry that comes first in it as the first argument of
+        /// <see cref="SharesDoubleCountingFragments"/>, which is not symmetric, so anything that
+        /// counts the dedup's collisions has to ask in this order too.
+        /// </summary>
+        public static int CompareDoubleCountingOrder(double apexRtA, uint entryIdA, double apexRtB, uint entryIdB)
+        {
+            int c = apexRtA.CompareTo(apexRtB);
+            if (c != 0)
+                return c;
+            uint baseA = entryIdA & 0x7FFFFFFFu;
+            uint baseB = entryIdB & 0x7FFFFFFFu;
+            c = baseA.CompareTo(baseB);
+            if (c != 0)
+                return c;
+            return entryIdA.CompareTo(entryIdB);
+        }
+
+        /// <summary>
+        /// The double-counting collision test on two library spectra: at least half (rounded
+        /// up) of the FIRST list's top 6 fragments match the second's top 6 within the given
+        /// tolerance - a count of the first list's peaks, so the test is not symmetric - where
+        /// half is of the smaller top-6 list, rounded up.
+        /// </summary>
+        public static bool SharesDoubleCountingFragments(IReadOnlyList<LibraryFragment> fragsA,
+            IReadOnlyList<LibraryFragment> fragsB, double tolerance, ToleranceUnit unit)
+        {
+            int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
+                tolerance, unit);
+            int minA = Math.Min(fragsA.Count, 6);
+            int minB = Math.Min(fragsB.Count, 6);
+            int threshold = (int)Math.Ceiling(Math.Min(minA, minB) * 0.5);
+            return overlap >= threshold;
+        }
 
         public List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
         {
@@ -554,7 +600,7 @@ namespace pwiz.Osprey.Scoring
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                _logInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                _log.LogInfo(string.Format(OspreyScoringResources.ScoringPipeline_DeduplicatePairs_Deduplicated_precursor_candidates___0______1____2__removed_,
                     entries.Count, deduped.Count, removed));
             }
 
@@ -587,9 +633,8 @@ namespace pwiz.Osprey.Scoring
             double maxS = sorted[n - 1].Seconds;
             double medS = sorted[n / 2].Seconds;
             var slowest = sorted[n - 1];
-            _logInfo(string.Format(
-                "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
-                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
+            _log.LogInfo(LogTag.TIMING, @"Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
+                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount);
         }
     }
 }

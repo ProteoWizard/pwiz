@@ -179,22 +179,22 @@ namespace pwiz.SkylineTestUtil
             public ShowGridComboBox(DataGridView dataGridView)
             {
                 _dataGridView = dataGridView;
-                _dataGridView.Invoke(new Action(() =>
+                _dataGridView.Invoke(() =>
                 {
                     _dataGridView.BeginEdit(false);
                     var comboBox = (ComboBox)dataGridView.EditingControl;
                     comboBox.DropDownClosed += PreventComboClosing;
                     comboBox.DroppedDown = true;
-                }));
+                });
             }
 
             public void Dispose()
             {
-                _dataGridView.Invoke(new Action(() =>
+                _dataGridView.Invoke(() =>
                 {
                     var comboBox = (ComboBox)_dataGridView.EditingControl;
                     comboBox.DropDownClosed -= PreventComboClosing;
-                }));
+                });
             }
 
             private static void PreventComboClosing(object sender, EventArgs args)

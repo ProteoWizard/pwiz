@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
 {
@@ -47,9 +48,11 @@ namespace pwiz.Osprey.Scoring
     {
         // TSV column order. Kept as a single source of truth so the header and the row
         // formatting below cannot drift apart.
-        private const string HeaderLine =
-            "base_id\tis_decoy\tcand_index\tcoelution\tln_intensity\trt_penalty\t" +
-            "median_polish\tapex_rt\tstart_rt\tend_rt\tis_picked";
+        private static readonly string[] HEADER_COLUMNS =
+        {
+            @"base_id", @"is_decoy", @"cand_index", @"coelution", @"ln_intensity", @"rt_penalty",
+            @"median_polish", @"apex_rt", @"start_rt", @"end_rt", @"is_picked"
+        };
 
         private readonly ConcurrentBag<Row> _rows = new ConcurrentBag<Row>();
 
@@ -110,26 +113,30 @@ namespace pwiz.Osprey.Scoring
             // One small StringBuilder reused per row (cleared each iteration), so the largest
             // live allocation is a single line -- never the whole file.
             var line = new StringBuilder(96);
-            using (var writer = new StreamWriter(path, false))
+            using (var saver = new FileSaver(path))
             {
-                writer.NewLine = "\n";
-                writer.WriteLine(HeaderLine);
-                foreach (var r in rows)
+                using (var writer = new StreamWriter(saver.SafeName, false))
                 {
-                    line.Clear();
-                    line.Append(r.BaseId.ToString(inv)).Append('\t')
-                        .Append(r.IsDecoy ? '1' : '0').Append('\t')
-                        .Append(r.CandIndex.ToString(inv)).Append('\t')
-                        .Append(r.Coelution.ToString("R", inv)).Append('\t')
-                        .Append(r.LnIntensity.ToString("R", inv)).Append('\t')
-                        .Append(r.RtPenalty.ToString("R", inv)).Append('\t')
-                        .Append(r.MedianPolish.ToString("R", inv)).Append('\t')
-                        .Append(r.ApexRt.ToString("R", inv)).Append('\t')
-                        .Append(r.StartRt.ToString("R", inv)).Append('\t')
-                        .Append(r.EndRt.ToString("R", inv)).Append('\t')
-                        .Append(r.IsPicked ? '1' : '0');
-                    writer.WriteLine(line.ToString());
+                    writer.NewLine = TextUtil.LF;
+                    writer.WriteLine(HEADER_COLUMNS.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var r in rows)
+                    {
+                        line.Clear();
+                        line.Append(r.BaseId.ToString(inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.IsDecoy ? '1' : '0').Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.CandIndex.ToString(inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.Coelution.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.LnIntensity.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.RtPenalty.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.MedianPolish.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.ApexRt.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.StartRt.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.EndRt.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.IsPicked ? '1' : '0');
+                        writer.WriteLine(line.ToString());
+                    }
                 }
+                saver.Commit();
             }
 
             // Drain the bag so a subsequent (override rescore) pass on the same context starts

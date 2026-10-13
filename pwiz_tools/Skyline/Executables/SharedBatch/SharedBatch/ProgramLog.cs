@@ -43,13 +43,9 @@ namespace SharedBatch
 
         public static string GetProgramLogFilePath()
         {
-            var repository = ((Hierarchy)LogManager.GetRepository());
-            FileAppender rootAppender = null;
-            if (repository != null)
-            {
-                rootAppender = repository.Root.Appenders.OfType<FileAppender>()
-                    .FirstOrDefault();
-            }
+            var repository = (Hierarchy)LogManager.GetRepository();
+            var rootAppender = repository.Root.Appenders.OfType<FileAppender>()
+                .FirstOrDefault();
             return rootAppender != null ? rootAppender.File : string.Empty;
         }
     }

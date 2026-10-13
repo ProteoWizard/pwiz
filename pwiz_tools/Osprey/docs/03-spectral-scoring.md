@@ -161,7 +161,7 @@ prefilter and CWT and maps the supplied `(apex, start, end)` RTs to scan indices
 `OspreyFeatureCalculators` (`Osprey.Scoring/OspreyFeatureCalculators.cs:41`) holds the
 ordered calculator array; **the array index IS the PIN feature index** and the parquet
 column order. `CoelutionScorer.ScoreCandidate` invokes `Get(0..20).Calculate(...)`
-explicitly (`CoelutionScorer.cs:254-274`). The names match
+explicitly (`CoelutionScorer.cs:248-268`). The names match
 `ParquetScoreCache.PIN_FEATURE_NAMES` (`Osprey.IO/ParquetScoreCache.cs:51`).
 
 | # | PIN name | Family / tier | Direction (`IsReversedScore`) | C# calculator (file) |
@@ -172,7 +172,7 @@ explicitly (`CoelutionScorer.cs:254-274`). The names match
 | 3 | `peak_apex` | Peak shape (detailed) | higher | `PeakApexCalc` (PeakShapeCalculators.cs:116) |
 | 4 | `peak_area` | Peak shape | higher | `PeakAreaCalc` (:136) |
 | 5 | `peak_sharpness` | Peak shape | higher | `PeakSharpnessCalc` (:168) |
-| 6 | `xcorr` | Apex spectrum | higher | `XcorrCalc` (XcorrCalculators.cs:53) |
+| 6 | `xcorr` | Apex spectrum | higher | `XcorrCalc` (XcorrCalculators.cs:52) |
 | 7 | `consecutive_ions` | Apex spectrum | higher | `ConsecutiveIonsCalc` (ApexMatchCalculators.cs:146) |
 | 8 | `explained_intensity` | Apex spectrum | higher | `ExplainedIntensityCalc` (:218) |
 | 9 | `mass_accuracy_deviation_mean` | Apex spectrum | (signed; false by convention) | `MassAccuracyMeanCalc` (:240) |
@@ -183,8 +183,8 @@ explicitly (`CoelutionScorer.cs:254-274`). The names match
 | 14 | `ms1_isotope_cosine` | MS1 (detailed) | higher | `Ms1IsotopeCosineCalc` (:71) |
 | 15 | `median_polish_cosine` | Median polish | higher | `MedianPolishCosineCalc` (MedianPolishCalculators.cs:56) |
 | 16 | `median_polish_residual_ratio` | Median polish | lower | `MedianPolishResidualRatioCalc` (:73) |
-| 17 | `sg_weighted_xcorr` | Apex ±2 spectra | higher | `SgXcorrCalc` (XcorrCalculators.cs:245) |
-| 18 | `sg_weighted_cosine` | Apex ±2 spectra | higher | `SgCosineCalc` (:267) |
+| 17 | `sg_weighted_xcorr` | Apex ±2 spectra | higher | `SgXcorrCalc` (XcorrCalculators.cs:233) |
+| 18 | `sg_weighted_cosine` | Apex ±2 spectra | higher | `SgCosineCalc` (:255) |
 | 19 | `median_polish_min_fragment_r2` | Median polish | higher | `MedianPolishMinFragmentR2Calc` (MedianPolishCalculators.cs:92) |
 | 20 | `median_polish_residual_correlation` | Median polish | lower | `MedianPolishResidualCorrelationCalc` (:109) |
 
@@ -205,11 +205,18 @@ this single cached pass.
 **Peak shape (3–5)** — `PeakShapeReference` (`PeakShapeCalculators.cs:42`) selects the
 reference XIC as highest-total-intensity, **last on tie** (`>=`, seed `-1.0`).
 `peak_apex` is a direct lookup of the CWT/override apex value (NOT a recomputed local
-max, `:124`). `peak_area` is left-to-right trapezoidal integration over `[start, end)`
-(`:144`). `peak_sharpness` is the mean of left/right slopes (`:176`), with strict
+max, `:157-175`). `peak_area` is left-to-right trapezoidal integration over `[start, end)`
+(`:204-208`). `peak_sharpness` is the mean of left/right slopes (`:264-278`), with strict
 `dt > 1e-10` guards.
 
-**xcorr (6)** — `XcorrCalc.Calculate` (`XcorrCalculators.cs:61`) routes through
+All three are **intensity-scale** features and are conditioned as `log10(x + 1)` by
+`PeakShapeReference.ConditionIntensityFeature` (`:144`) before they reach the PIN. The
+SVM is linear: fed raw, these features standardize to z-scores in the hundreds and the
+model becomes an intensity ranker (measured on SEA-AD as an entrapment FDP collapse,
+fixed in #4412/#4418). Per-run normalization and a scale-free sharpness are tracked as
+#4466.
+
+**xcorr (6)** — `XcorrCalc.Calculate` (`XcorrCalculators.cs:60`) routes through
 `context.Resolution.ScoreXcorr` at the **window-global** apex index
 (`ApexGlobalIndex`). Unit reads the f64 dense cache; HRAM reads the sparse cache
 (`SparseXcorrSpectrum.CenteredAt`, bit-identical to the old dense f32 cache — issue
@@ -230,7 +237,7 @@ does ONE closest-peak-by-mz pass over the apex MS2 spectrum:
 
 **MS1 (13–14)** — HRAM-only. The producer (`PeakDataExtractor`) emits the MS1
 precursor XIC / reference XIC and the apex isotope envelope only when the resolution
-strategy reports `HasMs1Features` (`ResolutionStrategy.cs:163` HRAM=true, `:112`
+strategy reports `HasMs1Features` (`ResolutionStrategy.cs:184` HRAM=true, `:133`
 Unit=false). `ms1_precursor_coelution` is the Pearson correlation of the two MS1
 chromatograms (`< 3` samples → 0.0; NaN → 0.0, `Ms1Calculators.cs:52-57`).
 `ms1_isotope_cosine` gates on the M0 peak (`envelope[1] > 0`) then calls
@@ -245,7 +252,7 @@ cropped to the peak range (`peakLen >= 3`) first. The four calculators read the
 `cosine` → 0.0, `residual_ratio` → **1.0** (NOT 0.0), `min_fragment_r2` → 0.0,
 `residual_correlation` → 0.0 (`MedianPolishCalculators.cs:56-123`).
 
-**SG-weighted (17,18)** — `SgWeightedSweep.Compute` (`XcorrCalculators.cs:130`) sweeps
+**SG-weighted (17,18)** — `SgWeightedSweep.Compute` (`XcorrCalculators.cs:129`) sweeps
 offsets `-2..+2` with Savitzky-Golay quadratic weights `[-3,12,17,12,-3]/35`. Out-of-
 range offsets at window edges are **skipped, not zero-filled, and not renormalized**
 (matches Rust). `sg_weighted_xcorr` accumulates per-scan `ScoreXcorr × weight`;
@@ -262,11 +269,11 @@ from feature 6 (documented as an "INDEX TRAP" in the source).
 producer publish an intermediate (coelution stats, peak-shape reference, apex-match
 set, SG sweep, median-polish fit) that its sibling calculators read. The context is
 reused across candidates with `ClearByproducts` between them
-(`CoelutionScorer.cs:208`).
+(`CoelutionScorer.cs:202`).
 
 ### B.6 FdrEntry assembly & post-scoring dedup
 
-`BuildFdrEntry` (`CoelutionScorer.cs:395`) sets both `CoelutionSum` and `Score` to
+`BuildFdrEntry` (`CoelutionScorer.cs:389`) sets both `CoelutionSum` and `Score` to
 `features[0]` (the raw coelution sum is the pre-SVM ranking score), serializes the full
 library fragment list and the reference-XIC slice, and stores the top-N CWT candidates
 for Stage-6 reconciliation. After scoring, `ScoringPipeline` runs two dedup passes:
@@ -284,14 +291,14 @@ Flags affecting THIS stage (defaults from `Osprey.Core/OspreyConfig.cs` /
 
 | Flag / field | Default | Effect on scoring |
 |--------------|---------|-------------------|
-| `--resolution {unit\|hram\|auto}` | `auto` | Selects `UnitStrategy` vs `HramStrategy` (`ResolutionStrategy.cs:97`). Unit = 2000 f64 bins, no MS1 features; HRAM = ~100K sparse bins, MS1 features 13/14 active. **Calibration always uses unit bins regardless.** |
+| `--resolution {unit\|hram\|auto}` | `auto` | Selects `UnitStrategy` vs `HramStrategy` (`ResolutionStrategy.cs:118`). Unit = 2000 f64 bins, no MS1 features; HRAM = ~100K sparse bins, MS1 features 13/14 active. **Calibration always uses unit bins regardless.** |
 | `--fragment-tolerance <v>` | resolution-dependent | Fragment match window for apex-match, cosine, prefilter, LibCosine. |
 | `--fragment-unit {ppm\|mz}` | `ppm` (unit-res forces `mz` 0.5) | Tolerance unit; also the reporting unit for mass-error features 9/10. |
 | `--no-prefilter` (`PrefilterEnabled`) | `true` (prefilter ON) | When set, disables the 2-of-top-6-in-3-of-4-scans signal prefilter (`PeakDataExtractor.cs:117`). Prefilter is always skipped for boundary-override rescoring. |
 | `--threads <count>` | all cores | INNER parallelism: `MaxDegreeOfParallelism` over isolation windows (`ScoringPipeline.cs:271`). Affects speed only, not results. |
 | `--parallel-files [N]` | off (sequential) | OUTER parallelism across files; no effect on per-candidate feature values. |
 | RT calibration `MinRtTolerance` / `MaxRtTolerance` / `FallbackRtTolerance` | config | Clamp the scan-window half-width; the Gaussian rank sigma uses the UNCLAMPED `5×MAD×1.4826` (`ScoringPipeline.cs:170-187`). |
-| `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:328`). |
+| `Reconciliation.TopNPeaks` | config | How many CWT candidates `BuildFdrEntry` captures for Stage-6 (`CoelutionScorer.cs:322`). |
 
 Diagnostic env vars for this stage (shared with Rust for cross-impl bisection):
 
@@ -337,7 +344,7 @@ presence rather than a CLI flag.
   fields still exist on `CoelutionFeatureSet` but are never populated by the scoring
   pass.
   Evidence: `OspreyFeatureCalculators.cs:36-44` ("Scores the Rust engine computes but
-  excludes from the 21 PIN features are intentionally NOT here"); `CoelutionScorer.cs:253-274`
+  excludes from the 21 PIN features are intentionally NOT here"); `CoelutionScorer.cs:247-268`
   builds only a `double[21]`; `Osprey.Core/CoelutionFeatureSet.cs:30-128` still declares
   the unused fields. The Rust doc itself notes "21 PIN features (out of ~47 computed)",
   so this is a deliberate port simplification, not a behavioral output difference.
@@ -348,7 +355,7 @@ presence rather than a CLI flag.
   scans exist. In C# they are strictly HRAM-only: `UnitStrategy.HasMs1Features` is
   `false` so the producer emits no MS1 chromatogram/envelope and features 13/14 are
   exactly 0.0.
-  Evidence: `ResolutionStrategy.cs:112` (Unit false) vs `:163` (HRAM true);
+  Evidence: `ResolutionStrategy.cs:133` (Unit false) vs `:184` (HRAM true);
   `Ms1Calculators.cs:37-38` ("HRAM-only"). This matches the Rust engine's behavior;
   the doc simply doesn't foreground the resolution gate. Severity: info.
 

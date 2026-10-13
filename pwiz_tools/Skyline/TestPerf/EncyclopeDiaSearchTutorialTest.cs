@@ -72,14 +72,24 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 369, 719, 719, 5058 },
+                // net8 uses the C#-ported NNLS DIA demultiplexer (commit 3d87903992), which is
+                // slightly more conservative than native msconvert; a few borderline IDs fall
+                // below the q<=0.01 FDR cutoff. Coherent ~5% proportional drop, structure intact.
+                // Re-baselined for the NNLS fix (#4805) and the full search span (#4814).
+                FinalTargetCounts = new[] { 366, 698, 698, 4907 },
+                // net8's C#-ported NNLS demultiplexer (commit 3d87903992) shifts the per-file
+                // mass-error means for the wide-window panes; the {-0.2} above was recorded on
+                // native msconvert (2025-08) and only the FinalTargetCounts were re-baselined
+                // for net8. These values are deterministic (bit-stable across runs + unchanged
+                // with hardware intrinsics disabled), not machine-dependent.
                 MassErrorStats = new[]
                 {
-                    new[] {-0.2, 2.5 },
-                    new[] {-0.2, 2.5 },
-                    new[] {-0.2, 2.5 },
+                    new[] {-0.3, 2.5 },
+                    new[] {-0.3, 2.5 },
+                    new[] {-0.2, 2.4 },
                 },
-                ChromatogramClickPoint = new PointF(32.175f, 3.184607E+07f)  // MS1 chromatogram peak
+                // Re-recorded with the demultiplexer fixes (#4805, #4814), which moved the old peak.
+                ChromatogramClickPoint = new PointF(32.17265f, 1.157026E+07f)  // MS1 chromatogram peak
             };
 
             RunTest();

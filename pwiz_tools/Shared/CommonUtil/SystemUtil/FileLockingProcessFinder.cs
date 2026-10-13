@@ -237,7 +237,7 @@ namespace pwiz.Common.SystemUtil
                 return x;
 
             var quoted = Regex.Matches(x.Message, "'([^']+)'")
-                .Cast<Match>().Select(m => m.Groups[1].Value).ToArray();
+                .Select(m => m.Groups[1].Value).ToArray();
             if (quoted.Length == 0)
                 return x;
 

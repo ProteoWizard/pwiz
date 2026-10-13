@@ -176,6 +176,7 @@ namespace SkylineTool
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
         public ActionResult DismissWithButton(string formId, string button) { return CallTyped<ActionResult>(nameof(DismissWithButton), formId, button); }
         public ActionResult DismissWithCancelButton(string formId) { return CallTyped<ActionResult>(nameof(DismissWithCancelButton), formId); }
+        public WindowSize ResizeWindow(string formId, int width, int height) { return CallTyped<WindowSize>(nameof(ResizeWindow), formId, width, height); }
         public ActionResult DismissWithAcceptButton(string formId) { return CallTyped<ActionResult>(nameof(DismissWithAcceptButton), formId); }
 
         // 1-arg methods

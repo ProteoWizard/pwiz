@@ -462,7 +462,7 @@ namespace pwiz.Skyline.Controls
 
         private static void PerformWmMouseActivate(ref Message m)
         {
-            m.Result = (IntPtr) 3;
+            m.Result = 3;
         }
 
         protected virtual void OnMouseEnter()
@@ -492,7 +492,7 @@ namespace pwiz.Skyline.Controls
 //          point1.y = p.Y;
 //          point1 = MousePositionToClient(point1);
 
-            m.Result = (IntPtr) (-1);
+            m.Result = (-1);
             return true;
         }
 

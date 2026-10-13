@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
+    <value>ピーク強度blobのサイズが無効です：{0}または{1}バイトが必要ですが、{2}です</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
+    <value>ピークm/z blobのサイズが無効です：{0}バイト（8の倍数ではありません）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
+    <value>無効なBiblioSpecライブラリ：{0}テーブルが見つかりませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_" xml:space="preserve">
+    <value>ライブラリのタンパク質アクセッションに、Carafeが付加するペプチドごとの「{4}」サフィックスが付いています（例：「{2}」-&gt;「{3}」）。これを除去すると、{0:N0}個のアクセッションが{1:N0}個のタンパク質に対応付けられます。除去しないと、すべてのペプチドがそれぞれ別のタンパク質として数えられます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ColumnIndices_RequireColumn_Missing_required_column___0_" xml:space="preserve">
+    <value>必須列がありません：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_" xml:space="preserve">
+    <value>デコイペアリングマニフェストが空です。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
+    <value>デコイペアリングマニフェストに必須列がありません（{1}、{2}、{3}が必要です）。検出された列：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
+    <value>{0}を解析中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DiannTsvLoader_ParseReader_Building_library_precursors" xml:space="preserve">
+    <value>ライブラリプリカーサーを構築中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_" xml:space="preserve">
+    <value>ライブラリファイルが空です：ヘッダー行がありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
+    <value>ライブラリキャッシュを読み込み中（{0:N0}個のプリカーサー）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryCacheStatus_SaveCache_Writing_library_cache" xml:space="preserve">
+    <value>ライブラリキャッシュを書き込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
+    <value>ライブラリキャッシュが破損しています（不明なニュートラルロスタグ{0}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
+    <value>重複するライブラリプリカーサーを統合中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_manifest_disagree___0__library_precursors_are_" xml:space="preserve">
+    <value>ライブラリとそのデコイペアリングマニフェストが一致しません：{0:N0}個のライブラリプリカーサーはタンパク質アクセッションではデコイですが、マニフェスト{1}ではそれらのシークエンスがターゲットとして記載されています。これは、ライブラリがデコイと同一の実ターゲットを1行に統合した場合に発生します。各行がどちらか一方になるようにライブラリを再生成してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precursor_IDs_to_more_than_one_decoy__Each_decoy_" xml:space="preserve">
+    <value>ライブラリデコイのペアリングで、{0:N0}個のライブラリプリカーサーIDが複数のデコイに割り当てられました。各デコイは別々のターゲットとペアにする必要があります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__" xml:space="preserve">
+    <value>ライブラリプリカーサーID{0}：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
+    <value>ライブラリキャッシュの読み込みに失敗しました：{0}。代わりにライブラリファイルを読み取ります。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
+    <value>ライブラリキャッシュの保存に失敗しました：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
+    <value>ライブラリキャッシュ「{0}」は別のバージョンのソースライブラリから構築されています。古いキャッシュを無視し、ソースから再構築します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
+    <value>{0:N0}個のライブラリプリカーサーを読み込みました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
+    <value>キャッシュ「{1}」から{0:N0}個のライブラリプリカーサーを読み込みました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
+    <value>{0}からスペクトルライブラリを読み込み中...</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
+    <value>ライブラリキャッシュ（{0:N0}個のプリカーサー）を「{1}」に保存しました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
+    <value>サポートされていないライブラリ形式：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__" xml:space="preserve">
+    <value>{1:N0}個のライブラリデコイのうち{0:N0}個をターゲットとペアにしました（{2:F1}%、ライブラリキャッシュから）。{3:N0}個のデコイと{4:N0}個のターゲットにはパートナーがありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
+    <value>{1:N0}個のライブラリデコイのうち{0:N0}個をターゲットとペアにしました（{2:F1}%）：ペアリングマニフェストから{3:N0}個、アミノ酸組成により{4:N0}個。{5:N0}個のデコイと{6:N0}個のターゲットにはパートナーがありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_" xml:space="preserve">
+    <value>ライブラリプリカーサー{0}（{1}）にはフラグメントピークがありません。フラグメントのないプリカーサーはBiblioSpecのMS1フィーチャー検出用であり、DIA検索には使用できません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_" xml:space="preserve">
+    <value>デコイペアリングマニフェスト{0}の読み取りに失敗しました：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_" xml:space="preserve">
+    <value>ライブラリデコイは、タンパク質アクセッションのプレフィックス{0}で認識されます</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_" xml:space="preserve">
+    <value>{0}からデコイペアリングマニフェストを読み込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___" xml:space="preserve">
+    <value>ターゲットとペアにできたライブラリデコイは{0:F1}%のみ（少なくとも{1:F0}%が必要）のため、FDR推定の信頼性が低くなります。{2}を指定するか、ライブラリデコイにプレフィックス{3}のいずれかを付けたターゲットのタンパク質アクセッションを付与するか、{4}を省略してOspreyに独自のデコイを生成させてください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_by_amino_acid_composition__no_manifest_provided__" xml:space="preserve">
+    <value>アミノ酸組成によりライブラリデコイをターゲットとペアリング中（マニフェストの指定なし）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Replaced_the_protein_accessions_of__0__library_precursors_with_the_source_protein_" xml:space="preserve">
+    <value>{0:N0}個のライブラリプリカーサーのタンパク質アクセッションを、ペアリングマニフェスト内のソースタンパク質のアクセッションに置き換えました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_The_pairing_manifest_marked__0__more_library_precursors_as_decoys__their_protein_" xml:space="preserve">
+    <value>ペアリングマニフェストにより、さらに{0:N0}個のライブラリプリカーサーがデコイとしてマークされました（タンパク質アクセッションにデコイプレフィックスがありません）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys___decoys_in_library_was_given__but_no_library_precursor_has_a_protein_accession_starting_" xml:space="preserve">
+    <value>{1}が指定されましたが、デコイプレフィックス{0}のいずれかで始まるタンパク質アクセッションを持つライブラリプリカーサーがありません。これらのプレフィックスのいずれかを持つデコイがライブラリに含まれていることを確認するか、{1}を省略してOspreyに独自のデコイを生成させてください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryValidation_ValidatePeptideLength_Library_peptide___0___has__1__residues__the_minimum_supported_length_is__2___Peptides_" xml:space="preserve">
+    <value>ライブラリペプチド「{0}」の残基数は{1}ですが、サポートされる最小長は{2}です。これほど短いペプチドは同定に十分な特異性がないため、慣例によりスペクトルライブラリから除外されます。より長い最小長でライブラリを再構築してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_" xml:space="preserve">
+    <value>{0}にはスコアリング時の検索設定が記録されていないため、再利用できません。ファイルを再度スコアリングしてください（{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_" xml:space="preserve">
+    <value>{0}には書き込んだOspreyビルドが記録されていないため、再利用できません。このビルドでファイルを再度スコアリングしてください（{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__" xml:space="preserve">
+    <value>{0}にはスコアリングに使用したスペクトルライブラリが記録されていないため、再利用できません。ファイルを再度スコアリングしてください（{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_" xml:space="preserve">
+    <value>{0}は{3}で指定されたものとは異なるスペクトルライブラリでスコアリングされています（ライブラリハッシュ{1}、今回の実行{2}）。このライブラリでファイルを再度スコアリングする（{4}）か、スコアリングに使用したライブラリを指定してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_" xml:space="preserve">
+    <value>{0}はOsprey {1}でスコアリングされており、このビルド（{2}）とは互換性がありません。このビルドでファイルを再度スコアリングしてください（{3}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_" xml:space="preserve">
+    <value>{0}はOspreyの別のデイリービルド（{1}、現在は{2}）でスコアリングされています。このビルドでファイルを再度スコアリングする（{3}）か、スコアリングしたビルドでこのタスクを実行してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_" xml:space="preserve">
+    <value>{0}は今回の実行とは異なる検索設定でスコアリングされています（設定ハッシュ{1}、今回の実行{2}）。この設定でファイルを再度スコアリングする（{3}）か、スコアリング時の設定を使用してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_" xml:space="preserve">
+    <value>{0}はこのビルドが認識できないOspreyビルドで書き込まれている（{1}、現在は{2}）ため、再利用できません。このビルドでファイルを再度スコアリングしてください（{3}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__" xml:space="preserve">
+    <value>ファイルが破損しています：保存された値リストの長さが{0:N0}バイトで、{1}の倍数ではありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_" xml:space="preserve">
+    <value>{0}：行グループ{1}に保存されたピーク候補の型が想定外です（{2}）。ファイルが破損しているか、別のバージョンのOspreyで書き込まれています。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
+    <value>{0}は破損しています：行グループ{5}の行{1}（{3} {2}）の電荷が0ですが、これはプリカーサーの電荷としてあり得ません。ファイルを削除し、{4}を再実行して書き直してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
+    <value>スコアファイル「{0}」が破損しています：行グループ{1}に読み取り可能な{2}列がないため、行の順序を確定できません。削除してファイルを再度スコアリングしてください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_" xml:space="preserve">
+    <value>{0}：再スコアリングされたプリカーサー候補ピークが、スコアファイルの末尾（{2:N0}行）を超える行{1:N0}を参照しているため、書き込まれませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup_Could_not_read_the_scores_file__0____1_" xml:space="preserve">
+    <value>スコアファイル{0}を読み取れませんでした：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes" xml:space="preserve">
+    <value>{2}には{3}が書き込む整合済みスコアファイルが必要ですが、{0}はそうではありません（{4} = 「{1}」）。先に{3}を実行してください。ファイルがより新しいバージョンのOspreyで書き込まれた場合は、そのバージョンを使用してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>{0:N0}個のプリカーサー候補ピークを書き込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_static_Writing_precursor_candidate_peaks" xml:space="preserve">
+    <value>プリカーサー候補ピークを書き込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__" xml:space="preserve">
+    <value>このファイルはOsprey中間ファイルではありません：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_" xml:space="preserve">
+    <value>この中間ファイルはもう一方のFDRパスのものです（パス{0}、想定{1}）：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_" xml:space="preserve">
+    <value>中間ファイルが破損しています（{0:N0}バイトのレコードが{1}バイトのレコードの整数倍ではありません）：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_" xml:space="preserve">
+    <value>中間ファイルが破損しています（レコード{0:N0}で途切れています）：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___" xml:space="preserve">
+    <value>中間ファイルが破損しています（ヘッダーが途切れています）：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_" xml:space="preserve">
+    <value>中間ファイルが破損しています（{0:N0}バイトしかありません）：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__" xml:space="preserve">
+    <value>中間ファイルは別のバージョンのOspreyで書き込まれています（形式{0}、想定{1}）：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
+    <value>中間ファイル「{0}」の読み取りが、{1:N0}個のレコードを読み取った後に途中で失敗しました。ファイルの値の一部だけで続行せず、ここで実行を停止します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
+    <value>整合ファイル{0}の{2}は{1}ですが、第1パスのプリカーサーセットが含まれていません。この解析の{3}ファイルを削除し、第1パスを再実行してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
+    <value>整合ファイル{0}の{2}は{1}ですが、対象とする入力ファイル（{3}）が記載されていません。この解析の{4}ファイルを削除し、第1パスを再実行してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">
+    <value>整合ファイル{0}の{3} {1}はサポートされていません（想定{2}）。この解析の{4}ファイルを削除し、第1パスを再実行してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file_not_found__" xml:space="preserve">
+    <value>整合ファイルが見つかりません：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file_parsed_as_null__" xml:space="preserve">
+    <value>整合ファイルが空か、有効ではありません：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RoundtripDoubleConverter_ReadJson_A_number_in_the_JSON_file_has_no_value_" xml:space="preserve">
+    <value>JSONファイル内の数値に値がありません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RoundtripDoubleConverter_ReadJson_Expected_a_number_in_the_JSON_file__but_found__0__" xml:space="preserve">
+    <value>JSONファイルには数値が必要ですが、{0}が見つかりました。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RoundtripDoubleConverter_WriteJson_Cannot_write__0__to_a_JSON_file__only_finite_numbers_can_be_stored_" xml:space="preserve">
+    <value>{0}をJSONファイルに書き込めません：保存できるのは有限の数値のみです。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_no_file_exists_at_that_path" xml:space="preserve">
+    <value>そのパスにファイルが存在しません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_cache_was_refused_for_an_unrecorded_reason" xml:space="preserve">
+    <value>不明な理由でキャッシュが拒否されました</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_cache_was_written_without_a_usable_source_fingerprint__so_it_can_never_be_validated_" xml:space="preserve">
+    <value>キャッシュが有効なソースフィンガープリントなしで書き込まれたため、ソースファイルに対して検証できません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_is_not_a_spectra_cache__wrong_magic_bytes_" xml:space="preserve">
+    <value>ファイルはスペクトルキャッシュではありません（マジックバイトが不正）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_is_truncated___it_is_too_short_to_hold_a_cache_header" xml:space="preserve">
+    <value>ファイルが途切れています - キャッシュヘッダーを格納するには短すぎます</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_was_written_in_an_older_spectra_cache_format_and_must_be_rebuilt" xml:space="preserve">
+    <value>ファイルは古いスペクトルキャッシュ形式で書き込まれているため、再構築する必要があります</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_source_file_cannot_be_measured__so_the_cache_cannot_be_checked_for_staleness" xml:space="preserve">
+    <value>ソースファイルを計測できないため、キャッシュが古いかどうかを確認できません</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_source_file_s_size_or_timestamp_has_changed_since_the_cache_was_written__so_the_cache_" xml:space="preserve">
+    <value>キャッシュの書き込み後にソースファイルのサイズまたはタイムスタンプが変更されたため、キャッシュは古くなっています</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_LoadSpectraCache_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
+    <value>スペクトルキャッシュが破損しています：レコードがインデックスの示す位置にありません（想定バイト{0}、実際{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_ReadDoubleArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>スペクトルキャッシュが破損しています：レコードの途中で終わっています。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_ReadFloatArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>スペクトルキャッシュが破損しています：レコードの途中で終わっています。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_ReadIndex_The_spectra_cache_is_damaged__it_is_too_small_to_hold_its_footer__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>スペクトルキャッシュが破損しています：フッターを格納するには小さすぎます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_SaveSpectraCache_Writing_spectra_cache" xml:space="preserve">
+    <value>スペクトルキャッシュを書き込み中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
+    <value>スペクトルキャッシュが破損しています：レコードがインデックスの示す位置にありません（想定バイト{0}、実際{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_" xml:space="preserve">
+    <value>スペクトルインデックス{0}に有効な単離ウィンドウの下限オフセットがありません（cvParam {1}がないか、正の値ではありません）。OspreyでDIAデータを処理するには、実際の単離ウィンドウが必要です。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_" xml:space="preserve">
+    <value>スペクトルインデックス{0}に有効な単離ウィンドウの上限オフセットがありません（cvParam {1}がないか、正の値ではありません）。OspreyでDIAデータを処理するには、実際の単離ウィンドウが必要です。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumBuilder_EnsureSorted_NaN_m_z_at_index__0__of_spectrum_index__1___n_peaks__2____cannot_sort_or_fragment_match_a_" xml:space="preserve">
+    <value>スペクトルインデックス{1}のインデックス{0}のm/zがNaNです（{2:N0}個のピーク）。不正なセントロイド配列はソートもフラグメントマッチングもできません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_" xml:space="preserve">
+    <value>「{0}」を読み取れません：ProteoWizardにはこの形式のベンダーピークピッキングがなく、Ospreyはセントロイド化されたピークをスコアリングします。{1}でファイルをmzMLに変換し、そちらを読み取ってください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_" xml:space="preserve">
+    <value>「{0}」を読み取れません：このOspreyビルドはベンダー装置をサポートしていません。{2}上で{1}を指定して再ビルドするか、「{3}」で再ビルドしてください。または、{4}でファイルをmzMLに変換し、そちらを読み取ってください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Reading__0_" xml:space="preserve">
+    <value>{0}を読み取り中</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

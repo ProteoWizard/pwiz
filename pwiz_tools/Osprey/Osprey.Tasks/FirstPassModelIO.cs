@@ -43,14 +43,16 @@ namespace pwiz.Osprey.Tasks
     ///
     /// Only the slice <see cref="FrozenModelScorer"/> consumes is stored: the feature
     /// standardizer (<see cref="FeatureStandardizer.Means"/>/<see cref="FeatureStandardizer.Stds"/>)
-    /// plus the per-fold linear weights and biases. Doubles route through
+    /// plus the per-fold linear weights and biases, or for <c>OSPREY_FDR_MODEL=gbdt</c> the per-fold
+    /// tree ensembles in their <see cref="GbtModelData"/> form. Doubles route through
     /// <see cref="RoundtripDoubleConverter"/> so a reloaded model scores BIT-IDENTICALLY to
     /// the in-process original (the <see cref="FrozenModelScorer.TryCreate"/> fold-average is
-    /// applied to the same per-fold values either way).
+    /// applied to the same per-fold values either way, and a tree's node arrays ARE the model).
     ///
-    /// GBDT (<c>--fdr-method gbdt</c>) is NOT persisted here: the tree ensembles carry no
-    /// linear weights, so <see cref="Save"/> declines and a GBDT SecondPassFDR node keeps the prior
-    /// fail-fast behavior (unchanged) until tree serialization is added.
+    /// GBDT was not persisted until the default first pass trained trees at all: the lean path
+    /// trained the SVM under the gbdt flag, so the file this wrote for a gbdt run was a linear
+    /// model. A tree file writes EMPTY weight and bias arrays beside the ensembles, so a reader
+    /// that predates them refuses it on its no-weights check rather than mis-scoring.
     ///
     /// The <see cref="ProteinCompactStratum"/> base ids live in a SECOND file
     /// (<c>.1st-pass.stratum.json</c>) rather than this one, because a different phase
@@ -65,19 +67,30 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal static class FirstPassModelIO
     {
-        private const string ModelSuffix = @".1st-pass.model.json";
-        private const string StratumSuffix = @".1st-pass.stratum.json";
+        public const string EXT_MODEL = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".model.json";
+        public const string EXT_STRATUM = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".stratum.json";
 
         /// <summary>Serializable slice of <see cref="PercolatorResults"/> the frozen scorer needs,
         /// plus the pass-1 provenance a SecondPassFDR node cannot otherwise know.</summary>
         private sealed class ModelDto
         {
+            /// <summary>The writing task's <see cref="ArtifactStamp"/>, serialized first.</summary>
+            [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+            public string OspreyValidity { get; set; }
+
             public int SchemaVersion { get; set; }
             public int NumFeatures { get; set; }
             public double[] Means { get; set; }
             public double[] Stds { get; set; }
             public double[][] FoldWeights { get; set; }
             public double[] FoldBiases { get; set; }
+
+            /// <summary>The per-fold tree ensembles of a <c>OSPREY_FDR_MODEL=gbdt</c> model, or null for
+            /// the linear SVM. Omitted from the file when null, so a linear model serializes
+            /// byte-for-byte as it did before this property existed; added without bumping
+            /// <see cref="SchemaVersion"/> for the reason <see cref="ExperimentAgg"/> was.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public GbtModelData[] FoldGbtModels { get; set; }
 
             /// <summary>Normalized OSPREY_EXPERIMENT_AGG of the process that TRAINED this model.
             /// Deliberately added WITHOUT bumping <see cref="SchemaVersion"/>: it is an optional
@@ -100,6 +113,10 @@ namespace pwiz.Osprey.Tasks
         /// library precursor belonging to a protein with at least two detected peptides.</summary>
         private sealed class StratumDto
         {
+            /// <summary>The writing task's <see cref="ArtifactStamp"/>, serialized first.</summary>
+            [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+            public string OspreyValidity { get; set; }
+
             public int SchemaVersion { get; set; }
 
             /// <summary>Sorted ascending on write: the in-memory source is a
@@ -118,6 +135,8 @@ namespace pwiz.Osprey.Tasks
             public PercolatorResults Model { get; set; }
             public string ExperimentAgg { get; set; }
             public HashSet<uint> StratumBaseIds { get; set; }
+            /// <summary>The model file's own stamp, when <see cref="LoadFromAny"/> loaded it.</summary>
+            public ArtifactStamp Stamp { get; set; }
         }
 
         /// <summary>
@@ -132,7 +151,7 @@ namespace pwiz.Osprey.Tasks
         public static string PathFor(string parquetPath, string fileStem)
         {
             string dir = Path.GetDirectoryName(Path.GetFullPath(parquetPath)) ?? string.Empty;
-            return Path.Combine(dir, fileStem + ModelSuffix);
+            return Path.Combine(dir, fileStem + EXT_MODEL);
         }
 
         /// <summary>
@@ -144,77 +163,152 @@ namespace pwiz.Osprey.Tasks
         public static string StratumPathFor(string parquetPath, string fileStem)
         {
             string dir = Path.GetDirectoryName(Path.GetFullPath(parquetPath)) ?? string.Empty;
-            return Path.Combine(dir, fileStem + StratumSuffix);
+            return Path.Combine(dir, fileStem + EXT_STRATUM);
         }
 
         /// <summary>
-        /// Load from the first per-file sidecar that exists among
-        /// <paramref name="perFileParquetPaths"/> (stem -&gt; score parquet path), or null when
-        /// none is present. The copies are identical, so the first hit is authoritative.
+        /// Load from the per-file sidecars among <paramref name="perFileParquetPaths"/>
+        /// (stem -&gt; score parquet path), or null when none is readable. The copies are
+        /// identical, so ONE model is parsed: the first stem that also has its stratum file, or
+        /// failing that the first readable model.
+        ///
+        /// <para>The stratum is a SEPARATE artifact written by a later phase, so a run killed
+        /// between training and protein FDR legitimately has the model and no stratum - that is
+        /// not a reason to reject the model. But the two must come from the SAME stem: splitting
+        /// them removed the structural guarantee that they matched, and with parquets spanning
+        /// directories (-LinkFrom junctions, per-file worker dirs, a partly-rewritten directory)
+        /// an independent scan for each could pair one run's model with another run's stratum
+        /// and publish that as the frozen first-pass state.</para>
+        ///
+        /// <para>The stem is found by file EXISTENCE before anything is parsed. This used to
+        /// parse every stem's model in turn while looking for one with a stratum, and under every
+        /// mode but protein-compact no stem has one, so it parsed every copy - 446 of them at 446
+        /// files, 3.4 MB each for a tree model - to return the first.</para>
         /// </summary>
         public static Sidecar LoadFromAny(IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
             if (perFileParquetPaths == null)
                 return null;
-            // The stratum is a SEPARATE artifact written by a later phase, so a run killed
-            // between training and protein FDR legitimately has the model and no stratum - that
-            // is not a reason to reject the model. But the two must come from the SAME stem:
-            // splitting them removed the structural guarantee that they matched, and with
-            // parquets spanning directories (-LinkFrom junctions, per-file worker dirs, a
-            // partly-rewritten directory) an independent scan for each could pair one run's
-            // model with another run's stratum and publish that as the frozen first-pass state.
-            Sidecar first = null;
             foreach (var kvp in perFileParquetPaths)
             {
-                var sidecar = Load(PathFor(kvp.Value, kvp.Key));
+                string stratumPath = StratumPathFor(kvp.Value, kvp.Key);
+                if (!File.Exists(stratumPath))
+                    continue;
+                // The same FirstPassFDR run stamps the model and the stratum alike, so they
+                // pair only when their stamps match. A stratum left by an earlier run under
+                // another key - this run computed an empty one and wrote none, or its write
+                // failed - would otherwise be published with this run's model.
+                string modelPath = PathFor(kvp.Value, kvp.Key);
+                var modelStamp = ArtifactStamp.TryReadJsonHead(modelPath);
+                if (modelStamp == null ||
+                    !string.Equals(modelStamp.ToString(), ArtifactStamp.TryReadJsonHead(stratumPath)?.ToString(), StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                var stratum = LoadStratum(stratumPath);
+                var sidecar = stratum != null ? Load(modelPath) : null;
                 if (sidecar == null)
                     continue;
-                // sidecar.StratumBaseIds is whatever the model file itself carried, which is
-                // non-null only for a directory written before the split; the dedicated file
-                // beside the same stem wins where it exists.
-                var stratum = LoadStratum(StratumPathFor(kvp.Value, kvp.Key));
-                if (stratum != null)
-                    sidecar.StratumBaseIds = stratum;
-                if (sidecar.StratumBaseIds != null)
-                    return sidecar;
-                first = first ?? sidecar;
+                // The dedicated file wins over anything the model file itself carried.
+                sidecar.StratumBaseIds = stratum;
+                sidecar.Stamp = modelStamp;
+                return sidecar;
             }
-            // No stem had both. Return the first model found, with whatever it carried - the
-            // caller's mode gate decides whether a missing stratum is fatal.
-            return first;
+            // No stem pairs a model with a matching stratum file. Return the first readable
+            // model, with whatever stratum it carries itself - non-null only in a directory
+            // written before the split, where every copy was written together - and let the
+            // caller's mode gate decide whether a missing stratum is fatal.
+            foreach (var kvp in perFileParquetPaths)
+            {
+                string modelPath = PathFor(kvp.Value, kvp.Key);
+                var sidecar = Load(modelPath);
+                if (sidecar != null)
+                {
+                    sidecar.Stamp = ArtifactStamp.TryReadJsonHead(modelPath);
+                    return sidecar;
+                }
+            }
+            return null;
         }
 
         /// <summary>
-        /// Write the frozen-scorer slice of <paramref name="model"/> to <paramref name="path"/>.
-        /// Returns false (writing nothing) when the model has no linear weights or standardizer
-        /// -- the GBDT path, or an empty/degenerate model -- so the caller does not advertise a
-        /// sidecar SecondPassFDR cannot use.
+        /// Write the frozen-scorer slice of <paramref name="model"/> to <paramref name="path"/>:
+        /// its tree ensembles when it has them, otherwise its linear weights. Returns false
+        /// (writing nothing) when <see cref="Serialize"/> declines the model, so the caller does
+        /// not advertise a sidecar SecondPassFDR cannot use. A caller writing the identical copy
+        /// beside every input serializes once and writes each copy with <see cref="WriteText"/>.
         /// </summary>
         /// <param name="path">Sidecar path to write.</param>
+        /// <param name="model">The trained 1st-pass model.</param>
+        /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process;
+        ///   see <see cref="Serialize"/>.</param>
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static bool Save(string path, PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
+        {
+            string json = Serialize(model, experimentAgg, stamp);
+            if (json == null)
+                return false;
+            WriteText(path, json);
+            return true;
+        }
+
+        /// <summary>
+        /// The model file's serialized form, or null when there is nothing <see cref="Load"/>
+        /// could read back: no standardizer, neither linear weights nor trees (an empty or
+        /// degenerate model), or trees <see cref="Load"/> would refuse. Separate from
+        /// <see cref="Save"/> so the caller writing a copy beside every input clones and renders
+        /// the model ONCE: a tree model is ~3.4 MB of JSON and took 1.15 s to render per copy,
+        /// measured, for byte-identical output.
+        /// </summary>
         /// <param name="model">The trained 1st-pass model.</param>
         /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process,
         ///   stamped so a SecondPassFDR node reads the pass-1 arm instead of guessing it from its own
         ///   environment. Comes from the caller (which holds the byproduct) rather than being
         ///   re-read here, so this stays a pure serializer.</param>
-        public static bool Save(string path, PercolatorResults model, string experimentAgg)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static string Serialize(PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
         {
-            if (model?.Standardizer == null ||
-                model.FoldWeights == null || model.FoldWeights.Count == 0 ||
-                model.FoldBiases == null || model.FoldBiases.Count != model.FoldWeights.Count)
-                return false;
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
+            if (model?.Standardizer == null)
+                return null;
 
             var dto = new ModelDto
             {
+                OspreyValidity = stamp.ToString(),
                 SchemaVersion = 1,
                 NumFeatures = model.Standardizer.NumFeatures,
                 Means = model.Standardizer.Means,
                 Stds = model.Standardizer.Stds,
-                FoldWeights = model.FoldWeights.ToArray(),
-                FoldBiases = model.FoldBiases.ToArray(),
                 ExperimentAgg = experimentAgg,
             };
-            WriteJson(path, dto);
-            return true;
+            if (model.IsGradientBoostedTrees)
+            {
+                // Declined rather than written when any fold would fail Load's own check, since
+                // the stamp embedded in the file would then attest a model nobody can read.
+                var foldData = new GbtModelData[model.FoldGbtModels.Count];
+                for (int f = 0; f < foldData.Length; f++)
+                {
+                    foldData[f] = model.FoldGbtModels[f]?.ToModelData();
+                    if (!IsLoadableTree(foldData[f], dto.NumFeatures))
+                        return null;
+                }
+                // Empty, not null: the shape an in-process tree model has, and what makes a
+                // reader that predates the ensembles refuse the file instead of reading it as
+                // a linear model with no folds.
+                dto.FoldWeights = Array.Empty<double[]>();
+                dto.FoldBiases = Array.Empty<double>();
+                dto.FoldGbtModels = foldData;
+            }
+            else
+            {
+                if (model.FoldWeights == null || model.FoldWeights.Count == 0 ||
+                    model.FoldBiases == null || model.FoldBiases.Count != model.FoldWeights.Count)
+                    return null;
+                dto.FoldWeights = model.FoldWeights.ToArray();
+                dto.FoldBiases = model.FoldBiases.ToArray();
+            }
+            return SerializeJson(dto);
         }
 
         /// <summary>
@@ -229,9 +323,10 @@ namespace pwiz.Osprey.Tasks
         /// <param name="path">Stratum sidecar path to write.</param>
         /// <param name="stratumBaseIds">The protein-compact stratum base ids. Sorted here so
         ///   the artifact is stable across runs.</param>
-        public static bool SaveStratum(string path, HashSet<uint> stratumBaseIds)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static bool SaveStratum(string path, HashSet<uint> stratumBaseIds, ArtifactStamp stamp)
         {
-            string json = SerializeStratum(stratumBaseIds);
+            string json = SerializeStratum(stratumBaseIds, stamp);
             if (json == null)
                 return false;
             WriteText(path, json);
@@ -245,15 +340,22 @@ namespace pwiz.Osprey.Tasks
         /// cohort, which is ~12 MB of indented JSON, and re-rendering it per file spends
         /// several GB of writes plus 446 sorts producing byte-identical output.
         /// </summary>
-        public static string SerializeStratum(HashSet<uint> stratumBaseIds)
+        public static string SerializeStratum(HashSet<uint> stratumBaseIds, ArtifactStamp stamp)
         {
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
             if (stratumBaseIds == null || stratumBaseIds.Count == 0)
                 return null;
 
             var sortedBaseIds = new uint[stratumBaseIds.Count];
             stratumBaseIds.CopyTo(sortedBaseIds);
             Array.Sort(sortedBaseIds); // Array.Sort OK: distinct uint keys, so stability cannot change the result
-            return SerializeJson(new StratumDto { SchemaVersion = 1, StratumBaseIds = sortedBaseIds });
+            return SerializeJson(new StratumDto
+            {
+                OspreyValidity = stamp.ToString(),
+                SchemaVersion = 1,
+                StratumBaseIds = sortedBaseIds,
+            });
         }
 
         /// <summary>Write an already-serialized artifact through <see cref="FileSaver"/>.</summary>
@@ -273,8 +375,8 @@ namespace pwiz.Osprey.Tasks
         /// Load a persisted model, or return null when <paramref name="path"/> is absent or
         /// unreadable (the caller then fails fast exactly as it did before persistence existed).
         /// The returned <see cref="PercolatorResults"/> carries only the scorer slice
-        /// (standardizer + per-fold weights/biases); <see cref="FrozenModelScorer.TryCreate"/>
-        /// needs nothing else.
+        /// (standardizer + per-fold weights/biases, or standardizer + per-fold tree ensembles);
+        /// <see cref="FrozenModelScorer.TryCreate"/> needs nothing else.
         ///
         /// <see cref="Sidecar.ExperimentAgg"/> is null when the sidecar predates that field, so
         /// null there means "unknown", never "max" - a caller that gates on the arm must treat it
@@ -296,29 +398,18 @@ namespace pwiz.Osprey.Tasks
                 var dto = JsonConvert.DeserializeObject<ModelDto>(File.ReadAllText(path), settings);
                 if (dto == null || dto.SchemaVersion != 1 ||
                     dto.Means == null || dto.Stds == null || dto.Means.Length != dto.Stds.Length ||
-                    dto.NumFeatures != dto.Means.Length ||
-                    dto.FoldWeights == null || dto.FoldWeights.Length == 0 ||
-                    dto.FoldBiases == null || dto.FoldBiases.Length != dto.FoldWeights.Length)
+                    dto.NumFeatures != dto.Means.Length)
                     return null;
 
-                // Each fold's linear weights must be present and match the feature width,
-                // or the frozen scorer would dereference null / index past the end while
-                // scoring on SecondPassFDR -- an opaque crash outside this method's
-                // documented null-on-unreadable contract.
-                foreach (var foldWeights in dto.FoldWeights)
-                {
-                    if (foldWeights == null || foldWeights.Length != dto.Means.Length)
-                        return null;
-                }
+                var model = dto.FoldGbtModels != null && dto.FoldGbtModels.Length > 0
+                    ? LoadTreeModel(dto)
+                    : LoadLinearModel(dto);
+                if (model == null)
+                    return null;
 
                 return new Sidecar
                 {
-                    Model = new PercolatorResults
-                    {
-                        Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
-                        FoldWeights = new List<double[]>(dto.FoldWeights),
-                        FoldBiases = new List<double>(dto.FoldBiases),
-                    },
+                    Model = model,
                     ExperimentAgg = dto.ExperimentAgg,
                     StratumBaseIds = dto.StratumBaseIds == null || dto.StratumBaseIds.Length == 0
                         ? null
@@ -357,14 +448,66 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Serialize <paramref name="dto"/> to <paramref name="path"/> through
-        /// <see cref="FileSaver"/>, so the artifact is committed by an atomic rename and is
-        /// therefore absent or complete - never half-written. LF + trailing newline, matching
-        /// the reconciliation.json convention so the artifact is stable across platforms.
+        /// The linear SVM a file carries, or null when its weights are missing or inconsistent.
+        /// Each fold's linear weights must be present and match the feature width, or the frozen
+        /// scorer would dereference null / index past the end while scoring on SecondPassFDR,
+        /// an opaque crash outside <see cref="Load"/>'s documented null-on-unreadable contract.
         /// </summary>
-        private static void WriteJson(string path, object dto)
+        private static PercolatorResults LoadLinearModel(ModelDto dto)
         {
-            WriteText(path, SerializeJson(dto));
+            if (dto.FoldWeights == null || dto.FoldWeights.Length == 0 ||
+                dto.FoldBiases == null || dto.FoldBiases.Length != dto.FoldWeights.Length)
+                return null;
+            foreach (var foldWeights in dto.FoldWeights)
+            {
+                if (foldWeights == null || foldWeights.Length != dto.Means.Length)
+                    return null;
+            }
+            return new PercolatorResults
+            {
+                Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
+                FoldWeights = new List<double[]>(dto.FoldWeights),
+                FoldBiases = new List<double>(dto.FoldBiases),
+            };
+        }
+
+        /// <summary>
+        /// The tree ensembles a file carries, or null when they are inconsistent. A file holding
+        /// linear weights BESIDE its trees is refused, since the scorer would have to pick one of
+        /// two models silently. Each ensemble must pass <see cref="IsLoadableTree"/>; a corrupt
+        /// node graph throws out of <see cref="GradientBoostedTrees.FromModelData"/>, which
+        /// <see cref="Load"/> turns into null like any other unreadable file.
+        /// </summary>
+        private static PercolatorResults LoadTreeModel(ModelDto dto)
+        {
+            if ((dto.FoldWeights != null && dto.FoldWeights.Length > 0) ||
+                (dto.FoldBiases != null && dto.FoldBiases.Length > 0))
+                return null;
+            var trees = new List<GradientBoostedTrees>(dto.FoldGbtModels.Length);
+            foreach (var data in dto.FoldGbtModels)
+            {
+                if (!IsLoadableTree(data, dto.NumFeatures))
+                    return null;
+                trees.Add(GradientBoostedTrees.FromModelData(data));
+            }
+            return new PercolatorResults
+            {
+                Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
+                FoldGbtModels = trees,
+            };
+        }
+
+        /// <summary>
+        /// Whether one fold ensemble is a model the frozen scorer can use: present, exactly as
+        /// wide as the standardizer, and fit under the binary log-odds objective the competition
+        /// ranks on. The ONE check both directions apply - <see cref="LoadTreeModel"/> to what it
+        /// reads and <see cref="Serialize"/> to what it would write - so the writer cannot stamp
+        /// a file the reader turns into null.
+        /// </summary>
+        private static bool IsLoadableTree(GbtModelData data, int numFeatures)
+        {
+            return data != null && data.FeatureCount == numFeatures &&
+                   data.Objective == GbtObjective.LogisticBinary;
         }
 
         /// <summary>
@@ -374,12 +517,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static string SerializeJson(object dto)
         {
-            var settings = new JsonSerializerSettings { Converters = { new RoundtripDoubleConverter() } };
-            string json = JsonConvert.SerializeObject(dto, Formatting.Indented, settings);
-            json = json.Replace("\r\n", "\n");
-            if (!json.EndsWith("\n", StringComparison.Ordinal))
-                json += "\n";
-            return json;
+            return RoundtripDoubleConverter.SerializeIndented(dto);
         }
     }
 }

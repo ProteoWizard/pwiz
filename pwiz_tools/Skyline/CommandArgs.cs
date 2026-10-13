@@ -139,8 +139,6 @@ namespace pwiz.Skyline
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
             (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
-        public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-CHS...",
-            (c, p) => SetCulture(p.Value)) { InternalUse = true };
 
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
@@ -161,11 +159,57 @@ namespace pwiz.Skyline
             ANNOTATION_TARGET_LIST_VALUE
         });
 
-        private static void SetCulture(string cultureName)
+        private static void SetCulture(NameValuePair pair)
         {
-            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = new CultureInfo(cultureName);
+            Assume.IsNotNull(pair.Match); // Must be matched before accessing this
+            var culture = GetKnownCulture(pair.Value);
+            if (culture == null)
+                throw new ValueInvalidException(pair.Match, pair.Value, pair.Match.ValuesForError);
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = culture;
             LocalizationHelper.InitThread(Thread.CurrentThread);
         }
+
+        /// <summary>
+        /// Returns the culture a name resolves to, or null if neither it nor any of its parents is a culture the
+        /// system knows. The resolved name is checked rather than the text, so any spelling the system maps to a
+        /// known culture is accepted (e.g. "EN-us", or "en_US" on versions of Windows that resolve it), and the
+        /// parents are checked so that a deprecated name whose parent is known is accepted (e.g. "zh-CHS", which
+        /// .NET no longer lists but parents to "zh-Hans"). The check is needed because Windows makes up a culture
+        /// for any well-formed name (e.g. "not-a-culture") instead of failing, with only the invariant culture as
+        /// its parent.
+        /// </summary>
+        private static CultureInfo GetKnownCulture(string name)
+        {
+            CultureInfo culture;
+            try
+            {
+                culture = new CultureInfo(name);
+            }
+            catch (CultureNotFoundException)
+            {
+                return null;
+            }
+            var knownNames = new HashSet<string>(GetKnownCultureNames());
+            for (var ancestor = culture; !string.IsNullOrEmpty(ancestor.Name); ancestor = ancestor.Parent)
+            {
+                if (knownNames.Contains(ancestor.Name))
+                    return culture;
+            }
+            return null;
+        }
+
+        private static string[] GetKnownCultureNames()
+        {
+            return CultureInfo.GetCultures(CultureTypes.AllCultures).Select(culture => culture.Name)
+                .Where(name => !string.IsNullOrEmpty(name)).ToArray();
+        }
+
+        /// <summary>
+        /// The languages Skyline has been localized to, as the culture names --culture lists. Found only when
+        /// needed and then cached, because finding them probes every culture on the system for localized resources.
+        /// </summary>
+        private static readonly Lazy<string[]> DISPLAY_LANGUAGE_NAMES = new Lazy<string[]>(() =>
+            CultureUtil.AvailableDisplayLanguages().Select(culture => culture.Name).ToArray());
         // Multi process import
         public static readonly Argument ARG_INTERNAL_IMPORT_FILE_CACHE = new DocArgument(@"import-file-cache", PATH_TO_FILE,
             (c, p) => Program.ReplicateCachePath = p.Value) {InternalUse = true};
@@ -181,7 +225,7 @@ namespace pwiz.Skyline
             (c, p) => c.IsTestExceptions = true) { InternalUse = true };
 
         private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
-            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_CULTURE, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
+            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
             ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG, ARG_TEST_EXCEPTION);
 
         public bool HideAllChromatogramsGraph { get; private set; }
@@ -277,11 +321,16 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
+        // Help lists the languages Skyline is localized to, but any culture the system knows is accepted (e.g. "en-US").
+        // Parsing checks the value in SetCulture, which also accepts other spellings of a known culture name.
+        public static readonly Argument ARG_CULTURE = new Argument(@"culture",
+            () => DISPLAY_LANGUAGE_NAMES.Value, (c, p) => SetCulture(p))
+            { HasValueChecking = true, AcceptedValues = GetKnownCultureNames };
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,
             ARG_DISCARD_CHANGES, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
+            ARG_LOG_FILE, ARG_CULTURE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
             Validate = c => c.ValidateGeneralArgs()
         };
@@ -1576,10 +1625,14 @@ namespace pwiz.Skyline
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_START_ION = new DocArgument(@"tran-product-start-ion",
             () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
-            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(TransitionFilter.GetStartFragmentNameFromLabel(p.Value))) { WrapValue = true };
+            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(
+                ParseLabeledValueName(p, TransitionFilter.GetAllStartFragmentFinders())))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(TransitionFilter.GetAllStartFragmentFinders()) };
         public static readonly Argument ARG_TRAN_PRODUCT_END_ION = new DocArgument(@"tran-product-end-ion",
             () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
-            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(TransitionFilter.GetEndFragmentNameFromLabel(p.Value))) { WrapValue = true };
+            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(
+                ParseLabeledValueName(p, TransitionFilter.GetAllEndFragmentFinders())))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(TransitionFilter.GetAllEndFragmentFinders()) };
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR = new DocArgument(@"tran-product-clear-special-ions",
                 (c, p) => c.FilterSpecialIons = Array.Empty<string>());
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD = new DocArgument(@"tran-product-add-special-ion",
@@ -1600,13 +1653,17 @@ namespace pwiz.Skyline
             (c, p) => c.LibraryPickIons = p);
 
         public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
-            (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
+            (c, p) => c.PredictCEName = ParseSettingsListKey(p, Settings.Default.CollisionEnergyList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.CollisionEnergyList) };
         public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
-            (c, p) => c.PredictDPName = p.Value) { WrapValue = true };
+            (c, p) => c.PredictDPName = ParseSettingsListKey(p, Settings.Default.DeclusterPotentialList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.DeclusterPotentialList) };
         public static readonly Argument ARG_TRAN_PREDICT_COV = new DocArgument(@"tran-predict-cov", () => GetDisplayNames(Settings.Default.CompensationVoltageList),
-            (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
+            (c, p) => c.PredictCoVName = ParseSettingsListKey(p, Settings.Default.CompensationVoltageList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.CompensationVoltageList) };
         public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
-            (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
+            (c, p) => c.PredictOpimizationLibraryName = ParseSettingsListKey(p, Settings.Default.OptimizationLibraryList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.OptimizationLibraryList) };
 
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPES = DocArgument.FromEnumType<FullScanPrecursorIsotopes>(@"full-scan-precursor-isotopes",
             (c, p) => c.FullScanPrecursorIsotopes = p);
@@ -1616,8 +1673,8 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT = new DocArgument(@"full-scan-precursor-isotope-enrichment",
                 () => GetDisplayNames(Settings.Default.IsotopeEnrichmentsList),
-                (c, p) => c.FullScanPrecursorIsotopeEnrichment = p.Value)
-            { WrapValue = true };
+                (c, p) => c.FullScanPrecursorIsotopeEnrichment = ParseSettingsListKey(p, Settings.Default.IsotopeEnrichmentsList))
+            { WrapValue = true, AcceptedValues = () => GetAcceptedValues(Settings.Default.IsotopeEnrichmentsList) };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM = new DocArgument(@"full-scan-precursor-ignore-sim",
                 (c, p) => c.FullScanPrecursorIgnoreSimScans = p.IsNameOnly || bool.Parse(p.Value))
             { WrapValue = true, OptionalValue = true };
@@ -1780,6 +1837,22 @@ namespace pwiz.Skyline
             return list.Select(list.GetDisplayName).ToArray();
         }
 
+        private static string[] GetAcceptedValues<TItem>(SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return GetAcceptedValues(GetKeysAndDisplayNames(list));
+        }
+
+        private static string[] GetAcceptedValues(IEnumerable<LabeledValues<string>> choices)
+        {
+            return GetAcceptedValues(GetNamesAndLabels(choices));
+        }
+
+        private static string[] GetAcceptedValues(IEnumerable<KeyValuePair<string, string>> keysAndDisplayNames)
+        {
+            return keysAndDisplayNames.SelectMany(kd => new[] { kd.Key, kd.Value })
+                .Where(v => !string.IsNullOrEmpty(v)).Distinct().ToArray();
+        }
+
         private static Adduct[] ParseIonCharges(NameValuePair p, int min, int max)
         {
             Assume.IsNotNull(p.Match); // Must be matched before accessing this
@@ -1793,6 +1866,64 @@ namespace pwiz.Skyline
                     throw new ValueOutOfRangeIntException(p.Match, charge.AdductCharge, min, max);
             }
             return charges;
+        }
+
+        private static string ParseSettingsListKey<TItem>(NameValuePair p, SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            return ParseKey(p, GetKeysAndDisplayNames(list));
+        }
+
+        private static string ParseLabeledValueName(NameValuePair p, IEnumerable<LabeledValues<string>> choices)
+        {
+            return ParseKey(p, GetNamesAndLabels(choices));
+        }
+
+        /// <summary>
+        /// Keys and display names of the items in a settings list, plus the display names of the defaults
+        /// still in the list, which are localized only for the default instances themselves.
+        /// </summary>
+        private static IList<KeyValuePair<string, string>> GetKeysAndDisplayNames<TItem>(SettingsListBase<TItem> list) where TItem : IKeyContainer<string>, IXmlSerializable
+        {
+            var keysAndDisplayNames = list.Select(item => new KeyValuePair<string, string>(item.GetKey(), list.GetDisplayName(item))).ToList();
+            var keys = new HashSet<string>(keysAndDisplayNames.Select(kd => kd.Key));
+            keysAndDisplayNames.AddRange(list.GetDefaults()
+                .Where(item => keys.Contains(item.GetKey()))
+                .Select(item => new KeyValuePair<string, string>(item.GetKey(), list.GetDisplayName(item))));
+            return keysAndDisplayNames;
+        }
+
+        private static IList<KeyValuePair<string, string>> GetNamesAndLabels(IEnumerable<LabeledValues<string>> choices)
+        {
+            return choices.Select(choice => new KeyValuePair<string, string>(choice.Name, choice.Label)).ToList();
+        }
+
+        /// <summary>
+        /// Returns the key for a value that may be an invariant key, as sent by external tools, or a
+        /// localized display name. Exact matches take precedence over case-insensitive matches, and
+        /// keys take precedence over display names.
+        /// </summary>
+        private static string ParseKey(NameValuePair p, IList<KeyValuePair<string, string>> keysAndDisplayNames)
+        {
+            Assume.IsNotNull(p.Match); // Must be matched before accessing this
+            // Display names are compared both ways used by ArgumentBase.IsValidValue, so that every
+            // value accepted by validation also resolves here.
+            var matchers = new Func<KeyValuePair<string, string>, bool>[]
+            {
+                kd => Equals(kd.Key, p.Value),
+                kd => Equals(kd.Value, p.Value),
+                kd => string.Equals(kd.Key, p.Value, StringComparison.OrdinalIgnoreCase),
+                kd => string.Equals(kd.Value, p.Value, StringComparison.CurrentCultureIgnoreCase),
+                kd => string.Equals(kd.Value, p.Value, StringComparison.OrdinalIgnoreCase)
+            };
+            foreach (var matches in matchers)
+            {
+                foreach (var keyAndDisplayName in keysAndDisplayNames)
+                {
+                    if (matches(keyAndDisplayName))
+                        return keyAndDisplayName.Key;
+                }
+            }
+            throw new ValueInvalidException(p.Match, p.Value, p.Match.ValuesForError);
         }
 
         private static IonType[] ParseIonTypes(NameValuePair p)
