@@ -37,14 +37,11 @@ namespace pwiz.Common.GUI
     /// </summary>
     public partial class CommonAlertDlg : CommonFormEx
     {
+        // 96-DPI design values, scaled through Scale() (issue #4599)
         private const int MAX_HEIGHT = 500;
+        private const int MIN_LABEL_WIDTH = 100;
         private const int LABEL_LEFT_PADDING = 24;  // Left margin to match original designer position
         private const int LABEL_RIGHT_PADDING = 18; // Right margin original 18
-        // The paddings and the default button width are 96-DPI design values (issue #4599)
-        private int Scale(int pixels)
-        {
-            return (int) Math.Round(pixels * DeviceDpi / 96f);
-        }
         private readonly int _originalFormHeight;
         private readonly int _originalMessageHeight;
         private string _message;
@@ -92,7 +89,7 @@ namespace pwiz.Common.GUI
         private void UpdateLabelMessageSize()
         {
             labelMessage.MaximumSize =
-                new Size(Math.Max(100, messageScrollPanel.Width - labelMessage.Left - Scale(LABEL_RIGHT_PADDING)), 0);
+                new Size(Math.Max(Scale(MIN_LABEL_WIDTH), messageScrollPanel.Width - labelMessage.Left - Scale(LABEL_RIGHT_PADDING)), 0);
         }
 
         private void UpdateFormHeight()
@@ -100,8 +97,13 @@ namespace pwiz.Common.GUI
             UpdateLabelMessageSize();
             int formGrowth = Math.Max(labelMessage.Height - _originalMessageHeight * 3, 0);
             formGrowth = Math.Max(formGrowth, 0);
-            formGrowth = Math.Min(formGrowth, MAX_HEIGHT);
+            formGrowth = Math.Min(formGrowth, Scale(MAX_HEIGHT));
             Height = _originalFormHeight + formGrowth;
+        }
+
+        private int Scale(int pixels)
+        {
+            return (int) Math.Round(pixels * DeviceDpi / 96f);
         }
 
         public string DetailMessage

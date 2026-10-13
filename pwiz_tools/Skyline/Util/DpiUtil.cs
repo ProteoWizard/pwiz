@@ -193,17 +193,33 @@ namespace pwiz.Skyline.Util
                 var doc = XDocument.Load(path);
                 if (!ScaleFloatingWindowSizes(doc, 1 / factor))
                     return;
-                using (var writer = XmlWriter.Create(path,
-                           new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = true }))
+                // Serialize completely in memory first: a failure part-way through must not
+                // leave a truncated file where the caller is about to commit it.
+                var transformed = new MemoryStream();
+                using (var writer = XmlWriter.Create(transformed,
+                           new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = true, CloseOutput = false }))
                 {
                     doc.Save(writer);
                 }
+                File.WriteAllBytes(path, transformed.ToArray());
             }
             catch (Exception)
             {
                 // A layout that cannot be transformed is saved in device pixels - degraded
                 // but functional, and preferable to failing the document save.
             }
+        }
+
+        /// <summary>
+        /// Stream form of <see cref="NormalizeDockLayoutFile"/>, for a layout captured
+        /// with DockPanel.SaveAsXml that will later be reloaded through
+        /// <see cref="DenormalizeDockLayoutStream"/>. Returns the original stream untouched
+        /// at 100% scaling or if the stream cannot be transformed.
+        /// </summary>
+        public static Stream NormalizeDockLayoutStream(Control control, Stream layoutStream)
+        {
+            var factor = GetFactor(control);
+            return Math.Abs(factor - 1) < 0.01f ? layoutStream : TransformDockLayoutStream(layoutStream, 1 / factor);
         }
 
         /// <summary>
@@ -215,8 +231,11 @@ namespace pwiz.Skyline.Util
         public static Stream DenormalizeDockLayoutStream(Control control, Stream layoutStream)
         {
             var factor = GetFactor(control);
-            if (Math.Abs(factor - 1) < 0.01f)
-                return layoutStream;
+            return Math.Abs(factor - 1) < 0.01f ? layoutStream : TransformDockLayoutStream(layoutStream, factor);
+        }
+
+        private static Stream TransformDockLayoutStream(Stream layoutStream, float factor)
+        {
             var startPosition = layoutStream.CanSeek ? layoutStream.Position : 0;
             try
             {

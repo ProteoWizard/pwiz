@@ -1553,7 +1553,7 @@ namespace pwiz.Skyline
 
         public void ImportLayout(string viewFilePath)
         {
-            MemoryStream previousLayout = null;
+            Stream previousLayout = null;
             try
             {
                 using var stream = File.OpenRead(viewFilePath);
@@ -1563,7 +1563,9 @@ namespace pwiz.Skyline
                     // Remember the current layout in case something goes wrong.
                     dockPanel.SaveAsXml(memoryStream, new UTF8Encoding(false), true); // UTF-8 without BOM
                     memoryStream.Position = 0;
-                    previousLayout = memoryStream;
+                    // SaveAsXml writes device pixels; LoadLayout expects the logical units
+                    // of a saved .view file, so normalize the backup the same way (issue #4599)
+                    previousLayout = DpiUtil.NormalizeDockLayoutStream(this, memoryStream);
                 }
                 catch
                 {

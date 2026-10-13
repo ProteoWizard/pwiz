@@ -672,7 +672,7 @@ namespace pwiz.Skyline.Controls
             // Draw images associated with the node. The ImageList images are pre-scaled
             // to the DPI-sized ImageList.ImageSize, which agrees with ImgWidth.
             int imgLocX = XIndent + treeView.DashLength;
-            int imgWidth = treeView.ImgWidth, imgHeight = treeView.ImgWidth;
+            int imgWidth = treeView.ImgWidth;
             // Draw into explicit destination rectangles: DrawImageUnscaled honors the
             // image's DPI metadata, so bitmaps created in a high-DPI process would be
             // re-inflated past the layout's imgWidth and overlap their neighbors.

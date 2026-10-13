@@ -68,12 +68,6 @@ namespace pwiz.Skyline.EditUI
 
         public enum NormalizeType {total, frac_manual, frac_all}
 
-        private static void DockGraphBelowStrip(TabPage page, Control graph)
-        {
-            page.Padding = new Padding(0, graph.Top, 0, 0);
-            graph.Dock = DockStyle.Fill;
-        }
-
         public ComparePeakPickingDlg(SrmDocument document)
         {
             InitializeComponent();
@@ -907,6 +901,12 @@ namespace pwiz.Skyline.EditUI
             }
             UpdateAll();
             btnRefresh.Enabled = false;
+        }
+
+        private static void DockGraphBelowStrip(TabPage page, Control graph)
+        {
+            page.Padding = new Padding(0, graph.Top, 0, 0);
+            graph.Dock = DockStyle.Fill;
         }
     }
 

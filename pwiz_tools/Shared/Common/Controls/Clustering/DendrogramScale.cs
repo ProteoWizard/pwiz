@@ -96,9 +96,10 @@ namespace pwiz.Common.Controls.Clustering
             {
                 return new SizeF(0, 0);
             }
-            // The tree depth is a pixel size, so it follows the scale factor the way fonts
-            // and symbols do - otherwise the trees shrink against the heat map at high DPI
-            return new SizeF(Width, DENDROGRAM_DEPTH * scaleFactor);
+            // The tree depth is a pixel size, so it follows the display DPI - otherwise the
+            // trees shrink against the heat map at high DPI. Not the pane's scaleFactor:
+            // the heat map scales fonts by pane size, and the depth must not follow that.
+            return new SizeF(Width, DENDROGRAM_DEPTH * PaneBase.DpiScaleFactor);
         }
 
         /// <summary>
@@ -140,13 +141,13 @@ namespace pwiz.Common.Controls.Clustering
             {
                 transformScale = pane.YAxis.Scale;
                 Height = pane.CalcChartRect(graphics).Height;
-                Width = DENDROGRAM_DEPTH * scaleFactor;
+                Width = DENDROGRAM_DEPTH * PaneBase.DpiScaleFactor;
             }
             else
             {
                 transformScale = pane.XAxis.Scale;
                 Width = pane.CalcChartRect(graphics).Width;
-                Height = DENDROGRAM_DEPTH * scaleFactor;
+                Height = DENDROGRAM_DEPTH * PaneBase.DpiScaleFactor;
             }
 
             var yAxisWidth = pane.YAxis.CalcSpace(graphics, pane, scaleFactor, out float _);
