@@ -100,24 +100,59 @@ namespace pwiz.CarafeSharp.Test
         private const ulong FNV_OFFSET_BASIS = 14695981039346656037UL;
         private const ulong FNV_PRIME = 1099511628211UL;
 
+        /// <summary>The dataset whose inputs are the committed RegressionSubset.zip.</summary>
+        public const string SUBSET_DATASET = @"StellarSubset";
+        /// <summary>The committed inputs of <see cref="SUBSET_DATASET"/>, beside the test assembly.</summary>
+        public const string SUBSET_ZIP = @"RegressionSubset.zip";
+
+        /// <summary>Each dataset's folder of regression.data, as regression.ps1 names it.</summary>
+        private static readonly IReadOnlyDictionary<string, string> DATASET_FOLDERS = new Dictionary<string, string>
+        {
+            { @"Stellar", @"stellar" }, { @"Astral", @"astral" }, { SUBSET_DATASET, @"stellar-subset" },
+        };
+
         // Calibrated tolerances (2026-09-27 calibration, each at least 3x the largest spread seen
         // across GPU repeats, CPU vs GPU and Windows vs Linux; Stellar and Astral).
-        private const double PRETRAINED_METRIC_TOLERANCE = 1e-5;
-        private static readonly IReadOnlyDictionary<string, double> FINETUNED_METRIC_TOLERANCES = new Dictionary<string, double>
+        private static readonly Tolerances FULL_TOLERANCES = new Tolerances
         {
-            { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
+            PretrainedMetric = 1e-5,
+            FinetunedMetric = new Dictionary<string, double>
+            {
+                { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
+            },
+            PeakCountFraction = 0.01,
+            // The written precursor set, and with it the DecoyPairs rows, may lose a few precursors
+            // near the -lf_min_n_frag cutoff on another device (Astral GPU vs GPU: 1.7e-5).
+            PrecursorCountFraction = 1e-4,
+            PrecursorCountMinAllowed = 2,
+            CosineMedianMin = 0.99925,
+            CosineP5Min = 0.991,
+            CosineP1Min = 0.975,
+            RtMedianMax = 0.03,
+            RtP95Max = 0.10,
+            RtP99Max = 0.16,
         };
-        private const double PEAK_COUNT_TOLERANCE = 0.01;
-        // The written precursor set, and with it the DecoyPairs rows, may lose a few precursors
-        // near the -lf_min_n_frag cutoff on another device (Astral GPU vs GPU: 1.7e-5).
-        private const double PRECURSOR_COUNT_TOLERANCE = 1e-4;
-        private const int PRECURSOR_COUNT_MIN_ALLOWED = 2;
-        private const double COSINE_MEDIAN_MIN = 0.99925;
-        private const double COSINE_P5_MIN = 0.991;
-        private const double COSINE_P1_MIN = 0.975;
-        private const double RT_MEDIAN_MAX = 0.03;
-        private const double RT_P95_MAX = 0.10;
-        private const double RT_P99_MAX = 0.16;
+
+        // The subset's held-out sets are about a tenth of Stellar's (90 MS2 spectra, 152 RT
+        // forms), so its fine-tuned metrics move more between machines. Calibrated as above, on
+        // the subset itself (see SUBSET_CALIBRATION).
+        private static readonly Tolerances SUBSET_TOLERANCES = new Tolerances
+        {
+            PretrainedMetric = 1e-5,
+            FinetunedMetric = new Dictionary<string, double>
+            {
+                { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
+            },
+            PeakCountFraction = 0.01,
+            PrecursorCountFraction = 1e-4,
+            PrecursorCountMinAllowed = 2,
+            CosineMedianMin = 0.99925,
+            CosineP5Min = 0.991,
+            CosineP1Min = 0.975,
+            RtMedianMax = 0.03,
+            RtP95Max = 0.10,
+            RtP99Max = 0.16,
+        };
 
         /// <summary>A precursor may be in one library only when it has at most this many fragments (lf_min_n_frag + 1).</summary>
         private const int FEW_FRAGMENTS = 3;
@@ -158,6 +193,8 @@ namespace pwiz.CarafeSharp.Test
         private static readonly string[] MODEL_FILES = { ModelFiles.MS2_SAFETENSORS, ModelFiles.RT_SAFETENSORS };
 
         private readonly List<string> _report = new List<string>();
+        /// <summary>The tolerances of the dataset being compared.</summary>
+        private Tolerances _tolerances = FULL_TOLERANCES;
         private readonly List<string> _failures = new List<string>();
 
         public TestContext TestContext { get; set; }
@@ -183,6 +220,7 @@ namespace pwiz.CarafeSharp.Test
             }
 
             var run = RunMeasurement.Measure(runFolder, TorchSharp.torch.get_num_threads());
+            _tolerances = Tolerances.For(run.Dataset);
             if (!string.IsNullOrEmpty(createFolder))
             {
                 CreateGolden(run, createFolder);
@@ -195,6 +233,87 @@ namespace pwiz.CarafeSharp.Test
             WriteReport(runFolder);
             Assert.AreEqual(0, _failures.Count, @"The run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
                 Environment.NewLine, string.Join(Environment.NewLine, _failures));
+        }
+
+        /// <summary>
+        /// The regression on every commit: <see cref="SUBSET_DATASET"/>'s fine-tune and library,
+        /// from the committed <see cref="SUBSET_ZIP"/> and with the arguments its golden records,
+        /// run in-process and compared with that golden as regression.ps1 compares a run.
+        /// </summary>
+        [TestMethod]
+        public void TestRegressionSubset()
+        {
+            string runFolder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"RegressionSubset_" + Guid.NewGuid().ToString(@"N"));
+            string inputs = Path.Combine(runFolder, @"inputs");
+            ZipFile.ExtractToDirectory(TestData.RequireFile(Path.Combine(AppContext.BaseDirectory, @"TestData", SUBSET_ZIP)), inputs);
+            string goldenFolder = GetGoldenFolder(SUBSET_DATASET);
+            var golden = Golden.Read(goldenFolder);
+
+            string fasta = Path.Combine(inputs, @"library_subset_peptides.fasta");
+            string pairing = Path.Combine(inputs, @"library_subset_pairing.tsv");
+            string exportFolder = Path.Combine(inputs, @"stellar");
+            string export = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).Single();
+            string runFile = Path.GetFileName(export).Substring(0, Path.GetFileName(export).Length - OspreyTrainingExport.FILE_SUFFIX.Length) + @".raw";
+            var args = new List<string>
+            {
+                @"-db", fasta, @"-i", exportFolder, @"-ms", Path.Combine(exportFolder, runFile), @"-o", Path.Combine(runFolder, OUTPUT_FOLDER),
+                @"-pairing_manifest", pairing,
+            };
+            args.AddRange(golden.Arguments);
+            args.AddRange(new[] { @"-tf", @"all" });
+
+            int exitCode;
+            using (var log = new StreamWriter(Path.Combine(runFolder, @"carafesharp.log")))
+                exitCode = Program.Run(args.ToArray(), log, log);
+            WriteSubsetRunInfo(runFolder, golden.Arguments, exitCode, export, fasta, pairing);
+            Assert.AreEqual(0, exitCode, @"CarafeSharp failed; see {0}", Path.Combine(runFolder, @"carafesharp.log"));
+
+            var run = RunMeasurement.Measure(runFolder, TorchSharp.torch.get_num_threads());
+            _tolerances = Tolerances.For(run.Dataset);
+            Compare(golden, run);
+            WriteReport(runFolder);
+            Assert.AreEqual(0, _failures.Count, @"The subset run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
+                Environment.NewLine, string.Join(Environment.NewLine, _failures));
+        }
+
+        /// <summary>The regression-run.json regression.ps1 would write for this in-process run of the subset.</summary>
+        private static void WriteSubsetRunInfo(string runFolder, IReadOnlyList<string> arguments, int exitCode, string export, string fasta, string pairing)
+        {
+            using (var stream = File.Create(Path.Combine(runFolder, RUN_INFO_FILE)))
+            using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+            {
+                json.WriteStartObject();
+                json.WriteString(@"format", @"carafesharp-regression-run-1");
+                json.WriteString(@"dataset", SUBSET_DATASET);
+                json.WriteString(@"leg", @"isolated");
+                json.WriteString(@"device_used", @"cpu");
+                json.WriteString(@"commit", @"in-process (TestRegressionSubset)");
+                json.WriteBoolean(@"dirty", false);
+                json.WriteString(@"os_platform", OperatingSystem.IsWindows() ? @"Windows" : OperatingSystem.IsLinux() ? @"Linux" : @"other");
+                json.WriteString(@"processor", Environment.GetEnvironmentVariable(@"PROCESSOR_IDENTIFIER") ?? System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString());
+                json.WriteStartArray(@"arguments");
+                foreach (string argument in arguments)
+                    json.WriteStringValue(argument);
+                json.WriteEndArray();
+                json.WriteNumber(@"exit_code", exitCode);
+                json.WriteStartObject(@"inputs");
+                WriteInput(json, INPUT_EXPORT, runFolder, export);
+                WriteInput(json, @"library_fasta", runFolder, fasta);
+                WriteInput(json, @"library_pairing", runFolder, pairing);
+                // The zip holds the subset itself, which regression.ps1 keeps whole (modulus 1).
+                WriteInput(json, @"subset_fasta", runFolder, fasta);
+                WriteInput(json, @"subset_pairing", runFolder, pairing);
+                json.WriteEndObject();
+                json.WriteEndObject();
+            }
+        }
+
+        private static void WriteInput(Utf8JsonWriter json, string name, string runFolder, string path)
+        {
+            json.WriteStartObject(name);
+            json.WriteString(@"path", Path.GetRelativePath(runFolder, path).Replace('\\', '/'));
+            json.WriteString(@"sha256", Sha256(path));
+            json.WriteEndObject();
         }
 
         private void CreateGolden(RunMeasurement run, string folder)
@@ -222,7 +341,7 @@ namespace pwiz.CarafeSharp.Test
             LibrarySample.Write(samplePath, sample);
             long sampleBytes = new FileInfo(samplePath).Length;
             Assert.IsTrue(sampleBytes <= MAX_SAMPLE_BYTES, @"The library sample is {0} bytes, more than {1}.", sampleBytes, MAX_SAMPLE_BYTES);
-            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run, modulus, sample.Count);
+            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run, modulus, sample.Count, _tolerances);
             TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} DecoyPairs rows, {4} sampled at modulus {5} ({6} bytes).",
                 folder, run.Library.Precursors, run.Library.Peaks, pairs.Rows, sample.Count, modulus, sampleBytes);
         }
@@ -427,7 +546,7 @@ namespace pwiz.CarafeSharp.Test
                     Check(false, @"metric {0}: missing from the run", pair.Key);
                     continue;
                 }
-                double tolerance = GetMetricTolerance(pair.Key);
+                double tolerance = _tolerances.GetMetricTolerance(pair.Key);
                 double difference = value - pair.Value;
                 Check(Math.Abs(difference) <= tolerance, @"metric {0}: golden {1}, run {2}, difference {3} (tolerance {4})", pair.Key,
                     Format(pair.Value), Format(value), difference.ToString(@"E2", CultureInfo.InvariantCulture),
@@ -439,8 +558,8 @@ namespace pwiz.CarafeSharp.Test
         {
             CheckCount(@"library precursors", golden.Library.Precursors, run.Library.Precursors);
             double peakChange = golden.Library.Peaks > 0 ? (double)(run.Library.Peaks - golden.Library.Peaks) / golden.Library.Peaks : 0;
-            Check(Math.Abs(peakChange) <= PEAK_COUNT_TOLERANCE, @"library peaks: golden {0}, run {1}, change {2:P2} (tolerance {3:P0})",
-                golden.Library.Peaks, run.Library.Peaks, peakChange, PEAK_COUNT_TOLERANCE);
+            Check(Math.Abs(peakChange) <= _tolerances.PeakCountFraction, @"library peaks: golden {0}, run {1}, change {2:P2} (tolerance {3:P0})",
+                golden.Library.Peaks, run.Library.Peaks, peakChange, _tolerances.PeakCountFraction);
         }
 
         /// <summary>
@@ -484,16 +603,17 @@ namespace pwiz.CarafeSharp.Test
             double cosineMedian = comparison.CosinePercentile(0.5);
             double cosineP5 = comparison.CosinePercentile(0.05);
             double cosineP1 = comparison.CosinePercentile(0.01);
-            Check(cosineMedian >= COSINE_MEDIAN_MIN && cosineP5 >= COSINE_P5_MIN && cosineP1 >= COSINE_P1_MIN,
+            var t = _tolerances;
+            Check(cosineMedian >= t.CosineMedianMin && cosineP5 >= t.CosineP5Min && cosineP1 >= t.CosineP1Min,
                 @"sampled spectral cosine over {0} precursors: median {1:F6} (min {2}), p5 {3:F6} (min {4}), p1 {5:F6} (min {6}), lowest {7:F6}",
-                comparison.Shared, cosineMedian, COSINE_MEDIAN_MIN, cosineP5, COSINE_P5_MIN, cosineP1, COSINE_P1_MIN,
+                comparison.Shared, cosineMedian, t.CosineMedianMin, cosineP5, t.CosineP5Min, cosineP1, t.CosineP1Min,
                 comparison.CosinePercentile(0));
             double rtMedian = comparison.RetentionTimePercentile(0.5);
             double rtP95 = comparison.RetentionTimePercentile(0.95);
             double rtP99 = comparison.RetentionTimePercentile(0.99);
-            Check(rtMedian <= RT_MEDIAN_MAX && rtP95 <= RT_P95_MAX && rtP99 <= RT_P99_MAX,
+            Check(rtMedian <= t.RtMedianMax && rtP95 <= t.RtP95Max && rtP99 <= t.RtP99Max,
                 @"sampled |RT difference| (min): median {0:F4} (max {1}), p95 {2:F4} (max {3}), p99 {4:F4} (max {5}), largest {6:F4}",
-                rtMedian, RT_MEDIAN_MAX, rtP95, RT_P95_MAX, rtP99, RT_P99_MAX, comparison.RetentionTimePercentile(1));
+                rtMedian, t.RtMedianMax, rtP95, t.RtP95Max, rtP99, t.RtP99Max, comparison.RetentionTimePercentile(1));
             Report(@"INFO sampled precursors with the golden's fragment m/z set: {0} of {1} ({2:P1})", comparison.SameFragmentSet,
                 comparison.Shared, (double)comparison.SameFragmentSet / comparison.Shared);
         }
@@ -518,16 +638,6 @@ namespace pwiz.CarafeSharp.Test
                 golden.Library.Peaks, golden.DecoyPairRows, run.Library.Precursors, run.Library.Peaks, run.Pairs.Rows);
         }
 
-        /// <summary>The tolerance of a metric key such as "ms2.finetuned.cos": tight for the pretrained model, calibrated for the fine-tuned one.</summary>
-        private static double GetMetricTolerance(string key)
-        {
-            if (key.Contains(@"." + ModelFiles.METRICS_PRETRAINED + @"."))
-                return PRETRAINED_METRIC_TOLERANCE;
-            if (!FINETUNED_METRIC_TOLERANCES.TryGetValue(key.Substring(key.LastIndexOf('.') + 1), out double tolerance))
-                Assert.Fail(@"No tolerance is calibrated for the metric {0}", key);
-            return tolerance;
-        }
-
         private static string GetGoldenFolder(string dataset)
         {
             string folder = Environment.GetEnvironmentVariable(DATA_VARIABLE);
@@ -538,7 +648,8 @@ namespace pwiz.CarafeSharp.Test
                     string candidate = Path.Combine(dir, DATA_FOLDER);
                     if (Directory.Exists(candidate))
                     {
-                        folder = Path.Combine(candidate, dataset.ToLowerInvariant());
+                        Assert.IsTrue(DATASET_FOLDERS.TryGetValue(dataset, out string datasetFolder), @"No regression.data folder is named for the dataset {0}", dataset);
+                        folder = Path.Combine(candidate, datasetFolder);
                         break;
                     }
                 }
@@ -551,7 +662,7 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>A count within the precursor-count tolerance of the golden's.</summary>
         private void CheckCount(string what, long golden, long run)
         {
-            long allowed = Math.Max(PRECURSOR_COUNT_MIN_ALLOWED, (long)(PRECURSOR_COUNT_TOLERANCE * golden));
+            long allowed = Math.Max(_tolerances.PrecursorCountMinAllowed, (long)(_tolerances.PrecursorCountFraction * golden));
             Check(Math.Abs(run - golden) <= allowed, @"{0}: golden {1}, run {2} (at most {3} may differ)", what, golden, run, allowed);
         }
 
@@ -1289,7 +1400,7 @@ namespace pwiz.CarafeSharp.Test
             }
 
             /// <summary>Writes golden.json for <paramref name="run"/>, whose sample at <paramref name="modulus"/> is written beside it.</summary>
-            public static void Write(string path, RunMeasurement run, int modulus, int sampled)
+            public static void Write(string path, RunMeasurement run, int modulus, int sampled, Tolerances tolerances)
             {
                 using (var stream = File.Create(path))
                 using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
@@ -1336,19 +1447,19 @@ namespace pwiz.CarafeSharp.Test
                     json.WriteString(@"rule", @"the precursors whose 64-bit FNV-1a hash of modseq/charge, shifted right 32 bits, is 0 modulo the modulus");
                     json.WriteEndObject();
                     json.WriteStartObject(@"tolerances");
-                    json.WriteNumber(@"pretrained_metric", PRETRAINED_METRIC_TOLERANCE);
+                    json.WriteNumber(@"pretrained_metric", tolerances.PretrainedMetric);
                     json.WriteStartObject(@"finetuned_metric");
-                    foreach (var pair in FINETUNED_METRIC_TOLERANCES)
+                    foreach (var pair in tolerances.FinetunedMetric)
                         json.WriteNumber(pair.Key, pair.Value);
                     json.WriteEndObject();
-                    json.WriteNumber(@"precursor_and_decoy_pair_count_fraction", PRECURSOR_COUNT_TOLERANCE);
-                    json.WriteNumber(@"peak_count_fraction", PEAK_COUNT_TOLERANCE);
-                    json.WriteNumber(@"cosine_median_min", COSINE_MEDIAN_MIN);
-                    json.WriteNumber(@"cosine_p5_min", COSINE_P5_MIN);
-                    json.WriteNumber(@"cosine_p1_min", COSINE_P1_MIN);
-                    json.WriteNumber(@"rt_minutes_median_max", RT_MEDIAN_MAX);
-                    json.WriteNumber(@"rt_minutes_p95_max", RT_P95_MAX);
-                    json.WriteNumber(@"rt_minutes_p99_max", RT_P99_MAX);
+                    json.WriteNumber(@"precursor_and_decoy_pair_count_fraction", tolerances.PrecursorCountFraction);
+                    json.WriteNumber(@"peak_count_fraction", tolerances.PeakCountFraction);
+                    json.WriteNumber(@"cosine_median_min", tolerances.CosineMedianMin);
+                    json.WriteNumber(@"cosine_p5_min", tolerances.CosineP5Min);
+                    json.WriteNumber(@"cosine_p1_min", tolerances.CosineP1Min);
+                    json.WriteNumber(@"rt_minutes_median_max", tolerances.RtMedianMax);
+                    json.WriteNumber(@"rt_minutes_p95_max", tolerances.RtP95Max);
+                    json.WriteNumber(@"rt_minutes_p99_max", tolerances.RtP99Max);
                     json.WriteEndObject();
 
                     // Reported, never gated.
@@ -1393,6 +1504,38 @@ namespace pwiz.CarafeSharp.Test
                 foreach (var pair in map)
                     json.WriteString(pair.Key, pair.Value);
                 json.WriteEndObject();
+            }
+        }
+
+        /// <summary>The gates of one dataset's comparison with its golden.</summary>
+        private sealed class Tolerances
+        {
+            public static Tolerances For(string dataset)
+            {
+                return dataset == SUBSET_DATASET ? SUBSET_TOLERANCES : FULL_TOLERANCES;
+            }
+
+            public double PretrainedMetric { get; set; }
+            /// <summary>By metric name (cos, pcc, sa, spc, r2, mae_normalized), for either model.</summary>
+            public IReadOnlyDictionary<string, double> FinetunedMetric { get; set; }
+            public double PeakCountFraction { get; set; }
+            public double PrecursorCountFraction { get; set; }
+            public int PrecursorCountMinAllowed { get; set; }
+            public double CosineMedianMin { get; set; }
+            public double CosineP5Min { get; set; }
+            public double CosineP1Min { get; set; }
+            public double RtMedianMax { get; set; }
+            public double RtP95Max { get; set; }
+            public double RtP99Max { get; set; }
+
+            /// <summary>The tolerance of a metric key such as "ms2.finetuned.cos": tight for the pretrained model, calibrated for the fine-tuned one.</summary>
+            public double GetMetricTolerance(string key)
+            {
+                if (key.Contains(@"." + ModelFiles.METRICS_PRETRAINED + @"."))
+                    return PretrainedMetric;
+                if (!FinetunedMetric.TryGetValue(key.Substring(key.LastIndexOf('.') + 1), out double tolerance))
+                    Assert.Fail(@"No tolerance is calibrated for the metric {0}", key);
+                return tolerance;
             }
         }
 

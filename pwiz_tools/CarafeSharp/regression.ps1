@@ -46,8 +46,11 @@
     the isolated leg gates.
 
 .PARAMETER Dataset
-    Stellar (default) or Astral. Each dataset is an entry of $datasets below and a folder of
-    regression.data. Astral needs the Astral packages (carafesharp-testfiles-astral-v1 and
+    Stellar (default), Astral or StellarSubset. Each dataset is an entry of $datasets below and a
+    folder of regression.data. StellarSubset needs no test data: its inputs are the committed
+    CarafeSharp.Test/TestData/RegressionSubset.zip (1/15 of Stellar's export and 1/500 of its pair
+    groups, built by ai/scripts/CarafeSharp/SubsetData/build_regression_subset.py), and
+    TestRegressionSubset runs it on every commit. Astral needs the Astral packages (carafesharp-testfiles-astral-v1 and
     carafesharp-export-astral-v2); its export has about four times Stellar's precursors, so a
     run is best made with -Torch cuda. Its golden, like Stellar's, comes from the CPU. -Leg Chained
     runs on Stellar only.
@@ -120,7 +123,7 @@
 #requires -Version 7
 [CmdletBinding()]
 param(
-    [ValidateSet('Stellar', 'Astral')] [string]$Dataset = 'Stellar',
+    [ValidateSet('Stellar', 'Astral', 'StellarSubset')] [string]$Dataset = 'Stellar',
     [ValidateSet('cpu', 'cuda')] [string]$Torch = 'cpu',
     [switch]$NoBuild,
     [switch]$CreateGolden,
@@ -150,8 +153,8 @@ $goldenRoot = Join-Path $scriptRoot 'regression.data'
 
 # The subset keeps the pair groups whose peptide_pair_index is a multiple of this, as
 # LibraryParityTest.SUBSET_STRIDE keeps every 50th record, but whole groups, so the library
-# still pairs its targets and decoys.
-$subsetModulus = 50
+# still pairs its targets and decoys. A dataset whose inputs are already a subset sets its own.
+$defaultSubsetModulus = 50
 
 # The datasets. Package paths are '/'-separated, relative to the package's top folder.
 $datasets = @{
@@ -173,6 +176,22 @@ $datasets = @{
         Subset        = 'Osprey.Test/TestData/StellarSubset.zip'
         SubsetLibrary = 'stellar-subset-library.tsv'
     }
+    # Stellar's inputs cut down to a committed zip, so it runs with no test data (on every
+    # commit, as TestRegressionSubset). Paths are inside the zip.
+    StellarSubset = @{
+        Folder        = 'stellar-subset'
+        Export        = @{ Committed = 'CarafeSharp.Test/TestData/RegressionSubset.zip'; Path = 'stellar/Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.training.parquet' }
+        LibraryFasta  = @{ Committed = 'CarafeSharp.Test/TestData/RegressionSubset.zip'; Path = 'library_subset_peptides.fasta' }
+        Pairing       = @{ Committed = 'CarafeSharp.Test/TestData/RegressionSubset.zip'; Path = 'library_subset_pairing.tsv' }
+        SubsetModulus = 1
+        RunFile       = 'Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.raw'
+        Itol          = '0.4'
+        ItolUnit      = 'Da'
+        MinPeptideMz  = '400'
+        MaxPeptideMz  = '900'
+        ExportNote    = 'RegressionSubset.zip: the peptide forms of carafesharp-export-v2 Stellar _21 whose FNV-1a key is 0 modulo 15 ' +
+                        '(build_regression_subset.py).'
+    }
     Astral = @{
         Folder        = 'astral'
         Export        = @{ Package = 'astral-export'; Path = 'astral/Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_55.training.parquet' }
@@ -188,6 +207,7 @@ $datasets = @{
     }
 }
 $config = $datasets[$Dataset]
+$subsetModulus = if ($config.SubsetModulus) { $config.SubsetModulus } else { $defaultSubsetModulus }
 $device = if ($Torch -eq 'cuda') { 'gpu' } else { 'cpu' }
 
 # The library arguments of the CarafeSharp workflow's stage 4-5 (ai/scripts/CarafeSharp/
@@ -229,6 +249,9 @@ function Write-Step([string]$Message) {
 . (Join-Path $scriptRoot 'scripts/TestData.ps1')
 
 function Resolve-PackageFile([hashtable]$Entry) {
+    if ($Entry.Committed) {
+        return Resolve-CommittedFile $Entry
+    }
     $package = $packages | Where-Object { $_.id -eq $Entry.Package }
     if (-not $package) {
         throw "testdata.json lists no package '$($Entry.Package)'"
@@ -245,6 +268,30 @@ function Resolve-PackageFile([hashtable]$Entry) {
         throw "The test data package $folder has no $($Entry.Path)"
     }
     return [PSCustomObject]@{ Path = $path; Relative = "$($package.folder)/$($Entry.Path)" }
+}
+
+# A file inside a committed zip of test data, extracted once per zip content into
+# TestResults/regression-inputs/<zip name>-<hash prefix>.
+function Resolve-CommittedFile([hashtable]$Entry) {
+    $zip = Join-Path $scriptRoot ($Entry.Committed -replace '/', [IO.Path]::DirectorySeparatorChar)
+    if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) {
+        throw "The committed test data $($Entry.Committed) is not at $zip."
+    }
+    $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.Substring(0, 12).ToLowerInvariant()
+    $folder = Join-Path $scriptRoot "TestResults/regression-inputs/$([IO.Path]::GetFileNameWithoutExtension($zip))-$hash"
+    if (-not (Test-Path -LiteralPath $folder -PathType Container)) {
+        $staging = "$folder.extracting"
+        if (Test-Path -LiteralPath $staging) {
+            Remove-Item -LiteralPath $staging -Recurse -Force
+        }
+        Expand-Archive -LiteralPath $zip -DestinationPath $staging
+        Move-Item -LiteralPath $staging -Destination $folder
+    }
+    $path = Join-Path $folder ($Entry.Path -replace '/', [IO.Path]::DirectorySeparatorChar)
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "$($Entry.Committed) has no $($Entry.Path)"
+    }
+    return [PSCustomObject]@{ Path = $path; Relative = "$($Entry.Committed)/$($Entry.Path)" }
 }
 
 # ---------------------------------------------------------------------------
