@@ -267,8 +267,9 @@ namespace pwiz.CarafeSharp.Test
         public static IDisposable UseSubset(TestContext context, string zipName)
         {
             string zip = RequireFile(Path.Combine(AppContext.BaseDirectory, SUBSET_FOLDER, zipName));
+            // A short unique suffix: SQLite cannot open a .blib whose path exceeds MAX_PATH.
             string folder = Path.Combine(context.TestRunDirectory ?? Path.GetTempPath(),
-                Path.GetFileNameWithoutExtension(zipName) + @"_" + Guid.NewGuid().ToString(@"N"));
+                Path.GetFileNameWithoutExtension(zipName) + @"_" + Guid.NewGuid().ToString(@"N").Substring(0, 8));
             System.IO.Compression.ZipFile.ExtractToDirectory(zip, folder);
             _subsetRoot = folder;
             return new SubsetScope();

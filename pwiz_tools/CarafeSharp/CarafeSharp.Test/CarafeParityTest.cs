@@ -69,17 +69,29 @@ namespace pwiz.CarafeSharp.Test
             ComparePredictions(TestData.PretrainedLibraries, TestData.FineTunedLibraries);
         }
 
+        /// <summary>
+        /// The pretrained comparison on the committed subset, with no download. The subset keeps no
+        /// fine-tuned models, so the fine-tuned comparison needs the full package.
+        /// </summary>
+        [TestMethod]
+        public void TestPretrainedPredictionsMatchCarafeSubset()
+        {
+            using (TestData.UseSubset(TestContext, LibraryParityTest.SUBSET_ZIP))
+                ComparePredictions(TestData.PretrainedLibraries, null);
+        }
+
         [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
         public void TestAstralPredictionsMatchCarafe()
         {
             ComparePredictions(TestData.AstralPretrainedLibraries, TestData.AstralFineTunedLibraries);
         }
 
+        /// <summary>Compares the pretrained folders, and the fine-tuned ones unless <paramref name="finetunedItem"/> is null.</summary>
         private void ComparePredictions(TestData.Item pretrainedItem, TestData.Item finetunedItem)
         {
-            TestData.InconclusiveUnlessAvailable(pretrainedItem, finetunedItem);
+            TestData.InconclusiveUnlessAvailable(new[] { pretrainedItem, finetunedItem }.Where(i => i != null).ToArray());
             var pretrainedDirs = pretrainedItem.Resolve();
-            var finetunedDirs = finetunedItem.Resolve();
+            var finetunedDirs = finetunedItem != null ? finetunedItem.Resolve() : Array.Empty<string>();
             foreach (string folder in pretrainedDirs)
                 TestData.RequireFiles(folder, MS2_FRAME_FILE, MS2_PREDICTION_FILE, RT_PREDICTION_FILE);
             foreach (string folder in finetunedDirs)
