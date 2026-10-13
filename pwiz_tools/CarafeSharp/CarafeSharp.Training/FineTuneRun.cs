@@ -128,8 +128,15 @@ namespace pwiz.CarafeSharp.Training
             RequireRows(ms2Rows, @"MS2");
             log = log ?? (_ => { });
             Directory.CreateDirectory(outputDirectory);
-            // An earlier run's base model would otherwise predict in place of this run's choice.
+            // An earlier run's base model would otherwise predict in place of this run's choice, and should this
+            // run fail part way, its metrics, summary and models would describe a mixture of the two runs.
             File.Delete(Path.Combine(outputDirectory, ModelFiles.MS2_BASE_SAFETENSORS));
+            File.Delete(Path.Combine(outputDirectory, ModelFiles.METRICS));
+            File.Delete(Path.Combine(outputDirectory, MODEL_INFO_FILE));
+            if (rtRows != null)
+                DeleteUnlessStart(Path.Combine(outputDirectory, RT_MODEL_FILE), options);
+            if (ms2Rows != null)
+                DeleteUnlessStart(Path.Combine(outputDirectory, MS2_MODEL_FILE), options);
             manual_seed(options.Seed);
             // TorchSharp's manual_seed leaves the CUDA generator unseeded, so dropout differed on every GPU run.
             if (options.Device.type == TorchSharp.DeviceType.CUDA)
@@ -145,6 +152,15 @@ namespace pwiz.CarafeSharp.Training
             WriteMetrics(Path.Combine(outputDirectory, ModelFiles.METRICS), result);
             WriteModelInfo(Path.Combine(outputDirectory, MODEL_INFO_FILE), pretrained, options, result);
             return result;
+        }
+
+        /// <summary>Deletes an earlier run's model file, unless this run starts from it (-ms2_model or -model in the output folder).</summary>
+        private static void DeleteUnlessStart(string path, FineTuneOptions options)
+        {
+            bool isStart = new[] { options.Ms2Model, options.RtModel }.Any(start => start != null &&
+                string.Equals(Path.GetFullPath(start), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase));
+            if (!isStart)
+                File.Delete(path);
         }
 
         private static void RequireRows<T>(IReadOnlyList<T> rows, string model)

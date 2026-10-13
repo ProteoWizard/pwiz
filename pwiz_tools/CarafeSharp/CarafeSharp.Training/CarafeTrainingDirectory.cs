@@ -96,11 +96,12 @@ namespace pwiz.CarafeSharp.Training
         public static void Write(string directory, IReadOnlyList<RtTrainingExample> rt, IReadOnlyList<Ms2TrainingExample> ms2)
         {
             Directory.CreateDirectory(directory);
-            // "\n" on every system, so the tables are the same bytes on Windows and Linux.
-            using (var psms = new StreamWriter(Path.Combine(directory, PSM_FILE)) { NewLine = "\n" })
-            using (var intensities = new StreamWriter(Path.Combine(directory, INTENSITY_FILE)) { NewLine = "\n" })
-            using (var valid = new StreamWriter(Path.Combine(directory, VALID_FILE)) { NewLine = "\n" })
+            using (var psms = new StreamWriter(Path.Combine(directory, PSM_FILE)))
+            using (var intensities = new StreamWriter(Path.Combine(directory, INTENSITY_FILE)))
+            using (var valid = new StreamWriter(Path.Combine(directory, VALID_FILE)))
             {
+                // "\n" on every system, so the tables are the same bytes on Windows and Linux.
+                psms.NewLine = intensities.NewLine = valid.NewLine = "\n";
                 psms.WriteLine(string.Join(TAB, @"psm_id", @"peptide", @"charge", @"mods", @"mod_sites", @"frag_start_idx",
                     @"frag_stop_idx", @"n_valid_fragment_ions", @"n_total_matched_ions"));
                 string header = string.Join(TAB, FRAGMENT_COLUMNS);
@@ -128,8 +129,9 @@ namespace pwiz.CarafeSharp.Training
                     row += rows;
                 }
             }
-            using (var rtFile = new StreamWriter(Path.Combine(directory, RT_FILE)) { NewLine = "\n" })
+            using (var rtFile = new StreamWriter(Path.Combine(directory, RT_FILE)))
             {
+                rtFile.NewLine = "\n";
                 rtFile.WriteLine(string.Join(TAB, @"peptide", @"sequence", @"mods", @"mod_sites", @"rt_norm"));
                 foreach (var example in rt)
                 {

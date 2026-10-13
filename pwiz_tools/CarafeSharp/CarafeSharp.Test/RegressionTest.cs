@@ -345,6 +345,7 @@ namespace pwiz.CarafeSharp.Test
                 json.WriteString(@"device_used", deviceUsed);
                 json.WriteString(@"commit", @"in-process (TestRegressionSubset)");
                 json.WriteBoolean(@"dirty", false);
+                json.WriteBoolean(@"in_process", true);
                 json.WriteString(@"os_platform", OperatingSystem.IsWindows() ? @"Windows" : OperatingSystem.IsLinux() ? @"Linux" : @"other");
                 json.WriteString(@"processor", GetProcessorName());
                 json.WriteStartArray(@"arguments");
@@ -698,14 +699,16 @@ namespace pwiz.CarafeSharp.Test
         /// The exact comparisons. The training tables repeat on every system and device, so they are
         /// gated everywhere but on another export. The models, held-out metrics and library repeat
         /// byte for byte only with the same training arithmetic, so they are gated on the golden's
-        /// environment and reported elsewhere.
+        /// environment, in a process of their own as regression.ps1 runs CarafeSharp, and reported
+        /// elsewhere. A fine-tune in the test process, after other tests, can sum in another order
+        /// (the MS2 model differed while the training tables matched, 2026-10-13).
         /// </summary>
         private void CheckExactComparisons(Golden golden, RunMeasurement run)
         {
-            bool sameEnvironment = golden.OsPlatform == run.OsPlatform && golden.Device == run.Device &&
+            bool sameEnvironment = !run.InProcess && golden.OsPlatform == run.OsPlatform && golden.Device == run.Device &&
                                    golden.Processor == run.Processor && golden.TorchThreads == run.TorchThreads;
             Report(@"Exact: training tables gated{0}; models, metrics and library gated on the golden's environment " +
-                   @"({1}, {2}, {3}, {4} torch threads), which this run {5}.",
+                   @"({1}, {2}, {3}, {4} torch threads, a process of its own), which this run {5}.",
                 run.OtherExport ? @" except on another export (this run)" : string.Empty, golden.OsPlatform, golden.Device, golden.Processor,
                 golden.TorchThreads, sameEnvironment ? @"is on" : @"is not on, so they are reported only");
             CompareMaps(!run.OtherExport, @"training table", golden.TrainingTables, run.TrainingTables);
@@ -944,6 +947,7 @@ namespace pwiz.CarafeSharp.Test
                     run.Processor = root.GetProperty(@"processor").GetString();
                     run.Arguments = root.GetProperty(@"arguments").EnumerateArray().Select(a => a.GetString()).ToList();
                     run.OtherExport = root.TryGetProperty(@"other_export", out var otherExport) && otherExport.GetBoolean();
+                    run.InProcess = root.TryGetProperty(@"in_process", out var inProcess) && inProcess.GetBoolean();
                     Assert.AreEqual(0, root.GetProperty(@"exit_code").GetInt32(), @"CarafeSharp failed in {0}", folder);
                     var inputs = root.GetProperty(@"inputs");
                     foreach (var input in inputs.EnumerateObject())
@@ -972,6 +976,8 @@ namespace pwiz.CarafeSharp.Test
             public bool Dirty { get; private set; }
             /// <summary>The run trained on an export given with regression.ps1 -Export.</summary>
             public bool OtherExport { get; private set; }
+            /// <summary>CarafeSharp ran in the test process (TestRegressionSubset), not a process of its own.</summary>
+            public bool InProcess { get; private set; }
             public string OsPlatform { get; private set; }
             public string Processor { get; private set; }
             public int TorchThreads { get; private set; }

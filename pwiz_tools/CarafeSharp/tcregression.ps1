@@ -11,6 +11,8 @@
          runs every test, the Carafe parity tests included.
       2. regression.ps1 -Dataset Stellar: the full fine-tune on Stellar's export, against its golden.
       3. regression.ps1 -Leg Chained: Osprey's export of its committed Stellar subset, trained on.
+      4. regression.ps1 -Dataset StellarSubset twice, each in a process of its own: the two runs'
+         models and training tables must be the same bytes, so a rerun on this agent repeats.
 
     The test data goes in <Downloads>\Perftests\carafesharp, not <Downloads>\Perftests, unless
     CARAFESHARP_TESTDATA names a folder: a per-commit build on the same agent finds data in the
@@ -40,6 +42,11 @@ $steps = @(
     @{ Name = 'CarafeSharp regression (Stellar)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Dataset', 'Stellar', '-NoBuild') },
     @{ Name = 'CarafeSharp regression (chained with Osprey)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Leg', 'Chained', '-NoBuild') }
 )
+$repeatFolder = Join-Path $root ('TestResults/regression-repeat-' + (Get-Date).ToString('yyyyMMdd-HHmmss'))
+foreach ($name in 'first', 'second') {
+    $steps += @{ Name = "CarafeSharp regression (StellarSubset, $name of two)"; Args = @('-File', (Join-Path $root 'regression.ps1'),
+        '-Dataset', 'StellarSubset', '-NoBuild', '-WorkDir', $repeatFolder, '-RunName', $name) }
+}
 $exitCode = 0
 foreach ($step in $steps) {
     if ($TeamCity) {
@@ -56,6 +63,33 @@ foreach ($step in $steps) {
         if ($exitCode -eq 0) {
             $exitCode = $code
         }
+    }
+}
+
+# The two StellarSubset runs: the same models and training tables, byte for byte.
+$runs = @(Get-ChildItem -LiteralPath $repeatFolder -Directory -ErrorAction SilentlyContinue | Sort-Object Name)
+$problem = $null
+if ($runs.Count -ne 2) {
+    $problem = "expected two StellarSubset runs in $repeatFolder, found $($runs.Count)"
+} else {
+    foreach ($file in 'ms2.safetensors', 'rt.safetensors', 'fragment_intensity_df.tsv', 'fragment_intensity_valid.tsv', 'psm_pdv.txt', 'rt_train_data.tsv') {
+        $hashes = @($runs | ForEach-Object {
+            $path = Join-Path (Join-Path $_.FullName 'out') $file
+            if (Test-Path -LiteralPath $path) { (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash } else { 'missing' }
+        })
+        Write-Host ("  repeat {0}: {1}" -f $file, $(if ($hashes[0] -eq $hashes[1]) { 'SAME' } else { "DIFFERS ($($hashes -join ' / '))" }))
+        if ($hashes[0] -ne $hashes[1] -or $hashes[0] -eq 'missing') {
+            $problem = "the two StellarSubset runs differ in $file"
+        }
+    }
+}
+if ($problem) {
+    Write-Host "CarafeSharp repeat: $problem" -ForegroundColor Red
+    if ($TeamCity) {
+        Write-Host "##teamcity[buildProblem description='CarafeSharp repeat: $problem']"
+    }
+    if ($exitCode -eq 0) {
+        $exitCode = 1
     }
 }
 exit $exitCode

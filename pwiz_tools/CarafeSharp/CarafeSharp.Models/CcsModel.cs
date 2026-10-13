@@ -55,13 +55,25 @@ namespace pwiz.CarafeSharp.Models
         /// <summary>The model with <paramref name="weights"/>, which it disposes once loaded.</summary>
         internal static CcsModel Create(IReadOnlyDictionary<string, Tensor> weights, Device device)
         {
-            var network = new ModelCcsLstm();
-            StateDict.Load(network, weights);
-            foreach (var tensor in weights.Values)
-                tensor.Dispose();
-            network.to(device);
-            network.eval();
-            return new CcsModel(network, device);
+            ModelCcsLstm network = null;
+            try
+            {
+                network = new ModelCcsLstm();
+                StateDict.Load(network, weights);
+                network.to(device);
+                network.eval();
+                return new CcsModel(network, device);
+            }
+            catch
+            {
+                network?.Dispose();
+                throw;
+            }
+            finally
+            {
+                foreach (var tensor in weights.Values)
+                    tensor.Dispose();
+            }
         }
 
         private CcsModel(ModelCcsLstm network, Device device)
