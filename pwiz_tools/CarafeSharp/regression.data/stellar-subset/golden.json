@@ -1,19 +1,19 @@
 {
   "format": "carafesharp-regression-golden-3",
-  "created": "2026-10-13T12:24:32",
+  "created": "2026-10-13T13:29:49",
   "provenance": {
     "dataset": "StellarSubset",
     "leg": "isolated",
     "torch": "cpu",
     "device_used": "cpu",
-    "commit": "9ad6df49f4e4b0d0bb411779b1971e0b95b07c47",
+    "commit": "ea3997b2e40bedf9f504bb71503a1db14ef7f9a5",
     "branch": "Skyline/work/20260923_carafesharp",
     "os": "Microsoft Windows 10.0.26200",
     "os_platform": "Windows",
     "processor": "Intel(R) Core(TM) i9-14900",
     "logical_processors": 32,
     "omp_num_threads": null,
-    "minutes": 1.45,
+    "minutes": 1.29,
     "subset_rule": "the pair groups whose peptide_pair_index is a multiple of 1, with all their members",
     "subset_groups": 438,
     "subset_records": 1752,
@@ -96,12 +96,12 @@
     "rt_minutes_p99_max": 0.5
   },
   "exact": {
-    "use": "information only: reported as SAME or DIFFERS, never failing a run",
+    "use": "training tables gated on every run but one on another export; models and library gated on the golden\u0027s environment",
     "training_tables": {
       "fragment_intensity_df.tsv": "afdc59329f37bbf1e98b8f439cf598badb25e22fb1bae41e535478bf4a35d31e",
       "fragment_intensity_valid.tsv": "d27eb718a98957dd38e5759e9bfac1990de13e5fcf6aecc87ac6d26f47c46903",
       "psm_pdv.txt": "712749cae2070263d830a5dec3cd30cdd903e6f785c9035f7c080d47b6d7afa9",
-      "rt_train_data.tsv": "854cf9bfe28c5c235d667a4aa51a8ad3031c72a33d85e80a55f0f0b8a0010bb7"
+      "rt_train_data.tsv": "08d6cc8b78a719fc216a9e46972d1d8bd8db4666d13bc7aab48e2eba05497758"
     },
     "models": {
       "ms2.safetensors": "1d6bc0580401c0429b0c15332deba1d256a716189e54f895c8174544856e87be",
