@@ -75,8 +75,8 @@ internal static class ArgParser
                     config.WriteConfig.Format = WriteFormat.Mgf;
                     break;
                 case "--text":
-                    config.WriteConfig.Format = WriteFormat.Text;
-                    break;
+                    throw new ArgumentException(
+                        "--text is no longer supported: msconvert does not write the pwiz text format. Use --mzML instead.");
                 case "--ms1":
                     config.WriteConfig.Format = WriteFormat.Ms1;
                     break;
@@ -443,7 +443,6 @@ internal static class ArgParser
         "  --mgf                    Mascot Generic Format",
         "  --mzXML                  mzXML 3.2",
         "  --mzMLb                  mzML embedded in HDF5",
-        "  --text (unimplemented)",
         "  --ms1, --bms1, --cms1, --ms2, --bms2, --cms2",
         "",
         "Filters:",

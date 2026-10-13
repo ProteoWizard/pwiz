@@ -135,7 +135,6 @@ namespace MSConvertGUI
             string filelistFilename = null;
             string configFilename = null;
 
-            var formatText = false;
             var formatMzMl = false;
             var formatMzMlB = false;
             var formatMzXml = false;
@@ -182,11 +181,10 @@ namespace MSConvertGUI
                         break;
                     case "--mz5":
                         throw new Exception("[msconvert] mz5 output is no longer supported (mz5 files can still be read). Use mzML or mzMLb instead.");
+                    case "--text":
+                        throw new Exception("[msconvert] text output is no longer supported. Use mzML instead.");
                     case "--mgf":
                         formatMgf = true;
-                        break;
-                    case "--text":
-                        formatText = true;
                         break;
                     case "--ms1":
                         formatMs1 = true;
@@ -298,9 +296,10 @@ namespace MSConvertGUI
                         case "--mgf":
                             formatMgf = true;
                             break;
+                        case "--mz5":
+                            throw new Exception("[msconvert] mz5 output is no longer supported (mz5 files can still be read). Use mzML or mzMLb instead.");
                         case "--text":
-                            formatText = true;
-                            break;
+                            throw new Exception("[msconvert] text output is no longer supported. Use mzML instead.");
                         case "--ms1":
                             formatMs1 = true;
                             break;
@@ -375,8 +374,7 @@ namespace MSConvertGUI
             if (config.Filenames.Count == 0)
                 throw new Exception("[msconvert] No files specified.");
 
-            var count = (formatText ? 1 : 0) 
-                + (formatMzMl ? 1 : 0)
+            var count = (formatMzMl ? 1 : 0)
                 + (formatMzXml ? 1 : 0)
                 + (formatMzMlB ? 1 : 0)
                 + (formatMgf ? 1 : 0)
@@ -385,7 +383,6 @@ namespace MSConvertGUI
                 + (formatMs2 ? 1 : 0)
                 + (formatCms2 ? 1 : 0);
             if (count > 1) throw new Exception("[msconvert] Multiple format flags specified.");
-            if (formatText) config.WriteConfig.Format = WriteFormat.Text;
             if (formatMzMl) config.WriteConfig.Format = WriteFormat.Mzml;
             if (formatMzXml) config.WriteConfig.Format = WriteFormat.MzXml;
             if (formatMzMlB) config.WriteConfig.Format = WriteFormat.MzMLb;
@@ -401,9 +398,6 @@ namespace MSConvertGUI
             {
                 switch (config.WriteConfig.Format)
                 {
-                    case WriteFormat.Text:
-                        config.Extension = ".txt";
-                        break;
                     case WriteFormat.Mzml:
                         config.Extension = ".mzML";
                         break;

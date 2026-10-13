@@ -650,9 +650,6 @@ namespace MSConvertGUI
                 case "mgf":
                     commandLine.Append("--mgf|");
                     break;
-                case "text":
-                    commandLine.Append("--text|");
-                    break;
                 case "ms1":
                     commandLine.Append("--ms1|");
                     break;
@@ -747,7 +744,6 @@ namespace MSConvertGUI
                     case "--mzXML":
                     case "--mzMLb":
                     case "--mgf":
-                    case "--text":
                     case "--ms1":
                     case "--cms1":
                     case "--ms2":
@@ -866,10 +862,13 @@ namespace MSConvertGUI
                 return false;
             }
             string cmdline = File.ReadAllText(cfgFileName);
-            if (cmdline.Split('|').Contains("--mz5"))
+            var tokens = cmdline.Split('|');
+            string unsupportedFormat = tokens.Contains("--mz5") ? "mz5 output, which is no longer supported (mz5 files can still be read)"
+                : tokens.Contains("--text") ? "text output, which is no longer supported"
+                : null;
+            if (unsupportedFormat != null)
             {
-                MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) +
-                                "\" uses mz5 output, which is no longer supported (mz5 files can still be read). " +
+                MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) + "\" uses " + unsupportedFormat + ". " +
                                 "The preset was not loaded. To replace it, set the options you want and use Save As with the same name.");
                 return false;
             }
