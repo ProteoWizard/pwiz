@@ -31,6 +31,7 @@ internal static class ArgParser
             {
                 if (s_removedOptions.TryGetValue(a, out string? removedReason))
                     throw new ArgumentException(removedReason);
+
                 if (a.StartsWith('-'))
                     throw new ArgumentException($"Unknown option: {a}");
                 config.InputFiles.Add(a);
