@@ -292,7 +292,8 @@ public class ArgParserTests
         string tmp = Path.GetTempFileName();
         try
         {
-            File.WriteAllLines(tmp, new[] { "mzXML=true", "zlib=true", "gzip=false", "filter=index [3,7]" });
+            // mz5 and text output are no longer supported, but turning them off is harmless.
+            File.WriteAllLines(tmp, new[] { "mzXML=true", "zlib=true", "gzip=false", "mz5=false", "text=false", "filter=index [3,7]" });
             var c = Invoke("in.mzML", "-c", tmp);
             CollectionAssert.AreEqual(new[] { "in.mzML" }, c.InputFiles, "switch values are not input files");
             Assert.AreEqual(WriteFormat.MzXml, c.WriteConfig.Format);

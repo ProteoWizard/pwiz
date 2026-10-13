@@ -29,8 +29,8 @@ internal static class ArgParser
             string a = args[i];
             if (!s_optionsByName.TryGetValue(a, out var option))
             {
-                if (s_removedOptions.TryGetValue(a, out string? removedReason))
-                    throw new ArgumentException(removedReason);
+                if (UnsupportedWriteFormats.TryGetReason(a, out string? unsupportedReason))
+                    throw new ArgumentException($"{a}: {unsupportedReason}");
 
                 if (a.StartsWith('-'))
                     throw new ArgumentException($"Unknown option: {a}");
@@ -136,14 +136,6 @@ internal static class ArgParser
 
     /// <summary>Where the help's default values come from, so they follow the code's defaults.</summary>
     private static readonly MsConvertConfig s_defaults = new();
-
-    /// <summary>Options the C++ msconvert accepted that this one does not, with the reason
-    /// given to a user who still passes one. They are left out of help.</summary>
-    private static readonly Dictionary<string, string> s_removedOptions = new()
-    {
-        ["--mz5"] = "--mz5 is no longer supported: msconvert reads mz5 files but no longer writes them. Use --mzML or --mzMLb instead.",
-        ["--text"] = "--text is no longer supported: msconvert does not write the pwiz text format. Use --mzML instead.",
-    };
 
     /// <summary>Every option, in the order the help lists them (the C++ msconvert's order).</summary>
     private static readonly Option[] s_options =
@@ -388,6 +380,9 @@ internal static class ArgParser
             if (eq < 0) { replay.Add("--" + line); continue; }
             string key = "--" + line[..eq].Trim();
             string val = line[(eq + 1)..].Trim();
+            // "mz5=false" asks for nothing this msconvert lacks, so it is dropped rather than refused.
+            if (UnsupportedWriteFormats.TryGetReason(key, out _) && IsFalse(val))
+                continue;
             // A switch takes no value on the command line, so "mzXML=true" turns it on and
             // "mzXML=false" leaves it off, as in a C++ msconvert config file.
             if (s_optionsByName.TryGetValue(key, out var option) && option.Value == OptionValue.None)

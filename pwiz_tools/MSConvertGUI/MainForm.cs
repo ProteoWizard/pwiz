@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 // pwiz.CLI.msdata, pwiz.Common.Collections types (MSData, MSDataFile, ReaderList, ReaderConfig,
 // Map<,>, ...) are provided by Compat.cs in this namespace — no using needed.
+using Pwiz.Data.MsData;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
@@ -93,24 +94,25 @@ namespace MSConvertGUI
             if (presetName == String.Empty)
                 presetName = "Generic";
             presetName += " Defaults";
+            const string genericDefaults = "Generic Defaults";
 
-            try
+            if (presetComboBox.Items.Contains(presetName))
             {
                 SelectPreset(presetName);
+                // Done unless the preset was refused and Generic Defaults is still untried.
+                if (_loadedPreset == presetName || presetName == genericDefaults)
+                    return;
             }
-            catch (FileNotFoundException)
+
+            if (presetComboBox.Items.Contains(genericDefaults))
             {
-                try
-                {
-                    SelectPreset("Generic Defaults");
-                }
-                catch
-                {
-                    // generic defaults not found, so create it
-                    setCfgFromGUI(MakePresetFilename("Generic Defaults"));
-                    SelectPreset("Generic Defaults");
-                }
+                SelectPreset(genericDefaults);
+                return;
             }
+
+            // generic defaults not found, so create it
+            setCfgFromGUI(MakePresetFilename(genericDefaults));
+            SelectPreset(genericDefaults);
         }
 
         public MainForm(IList<string> args)
@@ -814,6 +816,12 @@ namespace MSConvertGUI
         private void presetSaveButton_Click(object sender, EventArgs e)
         {
             string presetName = presetComboBox.SelectedItem as string;
+            if (presetName == null)
+            {
+                // No preset is loaded (one was refused), so ask for a name rather than guess one.
+                presetSaveAsButton_Click(sender, e);
+                return;
+            }
             setCfgFromGUI(MakePresetFilename(presetName));
             SelectPreset(presetName);
         }
@@ -862,15 +870,14 @@ namespace MSConvertGUI
                 return false;
             }
             string cmdline = File.ReadAllText(cfgFileName);
-            var tokens = cmdline.Split('|');
-            string unsupportedFormat = tokens.Contains("--mz5") ? "mz5 output, which is no longer supported (mz5 files can still be read)"
-                : tokens.Contains("--text") ? "text output, which is no longer supported"
-                : null;
-            if (unsupportedFormat != null)
+            foreach (var token in cmdline.Split('|'))
             {
-                MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) + "\" uses " + unsupportedFormat + ". " +
-                                "The preset was not loaded. To replace it, set the options you want and use Save As with the same name.");
-                return false;
+                if (UnsupportedWriteFormats.TryGetReason(token, out var reason))
+                {
+                    MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) + "\" uses " + token + ": " + reason + Environment.NewLine + Environment.NewLine +
+                                    "The preset was not loaded. To replace it, set the options you want and use Save As with the same name.");
+                    return false;
+                }
             }
             SetControlsFromCommandline(cmdline);
             return true;

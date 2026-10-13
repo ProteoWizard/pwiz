@@ -128,6 +128,12 @@ namespace MSConvertGUI
             _calculateSHA1Mutex = calculateSHA1Mutex;
         }
 
+        private static void ThrowIfUnsupportedWriteFormat(string option)
+        {
+            if (UnsupportedWriteFormats.TryGetReason(option, out var reason))
+                throw new Exception("[msconvert] " + option + ": " + reason);
+        }
+
         public Config ParseCommandLine(string outputFolder, string argv)
         {
 
@@ -153,6 +159,7 @@ namespace MSConvertGUI
 
             for (var x = 0; x < commandList.Length; x++)
             {
+                ThrowIfUnsupportedWriteFormat(commandList[x]);
                 switch (commandList[x])
                 {
                     case "--filelist":
@@ -179,10 +186,6 @@ namespace MSConvertGUI
                     case "--mzXML":
                         formatMzXml = true;
                         break;
-                    case "--mz5":
-                        throw new Exception("[msconvert] mz5 output is no longer supported (mz5 files can still be read). Use mzML or mzMLb instead.");
-                    case "--text":
-                        throw new Exception("[msconvert] text output is no longer supported. Use mzML instead.");
                     case "--mgf":
                         formatMgf = true;
                         break;
@@ -270,6 +273,7 @@ namespace MSConvertGUI
 
                 for (var x = 0; x < commandList.Length; x++)
                 {
+                    ThrowIfUnsupportedWriteFormat(commandList[x]);
                     switch (commandList[x])
                     {
                         case "--filelist":
@@ -296,10 +300,6 @@ namespace MSConvertGUI
                         case "--mgf":
                             formatMgf = true;
                             break;
-                        case "--mz5":
-                            throw new Exception("[msconvert] mz5 output is no longer supported (mz5 files can still be read). Use mzML or mzMLb instead.");
-                        case "--text":
-                            throw new Exception("[msconvert] text output is no longer supported. Use mzML instead.");
                         case "--ms1":
                             formatMs1 = true;
                             break;

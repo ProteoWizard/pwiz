@@ -254,9 +254,8 @@ namespace pwiz.Skyline.Model
 
         private void ApplyOutputFormat(string formatName)
         {
-            // The net8 msconvert (msconvert-sharp) does not write mz5 (it rejects --mz5), but
-            // it does write the equivalent HDF5 spill format mzMLb; use that in place of mz5.
-            // net472 keeps mz5 via the native C++ msconvert. The DIA-Umpire spectra are
+            // msconvert does not write mz5 (it rejects --mz5), but it does write the equivalent
+            // HDF5 spill format mzMLb; use that in place of mz5. The DIA-Umpire spectra are
             // identical either way; only the intermediate container differs.
             if (formatName == @"mz5")
                 formatName = @"mzMLb";

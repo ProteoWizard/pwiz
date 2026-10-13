@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Pwiz.Data.MsData.Encoding;
 
 namespace Pwiz.Data.MsData;
@@ -30,6 +31,23 @@ public enum WriteFormat
     Cms2,
 }
 
+/// <summary>Output formats the cpp msconvert offered that pwiz-sharp does not write, keyed by
+/// the msconvert option that selected each. Tools that still see one of these options explain
+/// why it is refused instead of treating it as unknown.</summary>
+public static class UnsupportedWriteFormats
+{
+    private static readonly Dictionary<string, string> s_reasons = new()
+    {
+        ["--mz5"] = "mz5 output is no longer supported: mz5 files can still be read, but are no longer written. Use mzML or mzMLb instead.",
+        ["--text"] = "text output is no longer supported. Use mzML instead.",
+    };
+
+    /// <summary>True when <paramref name="option"/> selected an unsupported output format, with
+    /// <paramref name="reason"/> the explanation to show the user.</summary>
+    public static bool TryGetReason(string option, [NotNullWhen(true)] out string? reason) =>
+        s_reasons.TryGetValue(option, out reason);
+}
+
 /// <summary>
 /// Output-side configuration consumed by every pwiz-sharp writer. Mirrors cpp
 /// <c>MSDataFile::WriteConfig</c>.
@@ -59,7 +77,7 @@ public sealed class WriteConfig
     public BinaryEncoderConfig EncoderConfig { get; set; } = new();
 
     /// <summary>When true, write an <c>indexedmzML</c> wrapper (default). False means a raw mzML element.
-    /// Ignored by formats that don't have an index concept (MGF / text).</summary>
+    /// Ignored by formats that don't have an index concept (MGF and the MS1/MS2 family).</summary>
     public bool Indexed { get; set; } = true;
 
     /// <summary>When true, gzip the final output file (caller appends <c>.gz</c> to the filename).</summary>

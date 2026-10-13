@@ -225,7 +225,7 @@ public static class MSDataFile
                 break;
             default:
                 throw new NotImplementedException(
-                    $"pwiz-sharp doesn't yet implement a writer for {config.Format}.");
+                    $"pwiz-sharp has no writer for {config.Format}.");
         }
     }
 
