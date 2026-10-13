@@ -35,9 +35,9 @@ namespace pwiz.Osprey.Tasks
     /// <para>It replaces a full <see cref="FdrEntry"/> stub list per run (issue #4664). That list
     /// decoded eleven parquet columns into one object per row - ~3.8 M rows per run on the 446-run
     /// cohort - to hand the fold four of them, and was rebuilt for every run. This reads four
-    /// columns into parallel buffers that are REUSED across runs and grow geometrically, so a
-    /// buffer is reallocated a logarithmic number of times over the whole fold rather than once
-    /// per run.</para>
+    /// columns into one array of <see cref="Row"/> structs that is REUSED across runs and grows
+    /// geometrically, so it is reallocated a logarithmic number of times over the whole fold
+    /// rather than once per run.</para>
     ///
     /// <para><see cref="TryJoinFirstPassSidecar"/> joins the sidecar through
     /// <see cref="FdrScoresSidecar.TryJoinRows"/>, the same walk
@@ -47,132 +47,111 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public sealed class FirstPassFoldRows
     {
-        private readonly List<uint> _entryIds = new List<uint>();
-        private readonly List<byte> _charges = new List<byte>();
-        private readonly List<bool> _isDecoys = new List<bool>();
-        private readonly List<string> _modifiedSequences = new List<string>();
+        /// <summary>
+        /// One row: the parquet identity, then the first-pass statistics the join lands on it.
+        /// A row is created with Score 0 and every q-value 1.0, the defaults a stub carried, so
+        /// a row no sidecar record maps to folds exactly as its stub did.
+        /// </summary>
+        public struct Row
+        {
+            public uint EntryId;
+            public byte Charge;
+            public bool IsDecoy;
+            public string ModifiedSequence;
+            public double Score;
+            public double RunPrecursorQvalue;
+            public double RunPeptideQvalue;
+            public double ExperimentPrecursorQvalue;
+            public double ExperimentPeptideQvalue;
+        }
+
         private readonly Dictionary<uint, int> _rowByEntryId = new Dictionary<uint, int>();
-        private double[] _scores = Array.Empty<double>();
-        private double[] _runPrecursorQvalues = Array.Empty<double>();
-        private double[] _runPeptideQvalues = Array.Empty<double>();
-        private double[] _experimentPrecursorQvalues = Array.Empty<double>();
-        private double[] _experimentPeptideQvalues = Array.Empty<double>();
+        private Row[] _rows = Array.Empty<Row>();
+        private int _count;
 
         /// <summary>Rows read from the current run's parquet.</summary>
-        public int Count => _entryIds.Count;
+        public int Count => _count;
 
         /// <summary>
-        /// Replace the buffers' contents with <paramref name="parquetPath"/>'s rows, in parquet
-        /// row order, skipping the row groups <c>LoadFdrStubsFromParquet</c> skips - the two
-        /// readers share that rule. Each modified sequence is canonicalized through
-        /// <paramref name="sequencePool"/> as the stub loader did, because the fold keeps
-        /// sequences it has seen and would otherwise keep one copy per run.
+        /// Replace the rows with <paramref name="parquetPath"/>'s, in parquet row order, skipping
+        /// the row groups <c>LoadFdrStubsFromParquet</c> skips - the two readers share that rule.
+        /// Each modified sequence is canonicalized through <paramref name="sequencePool"/> as the
+        /// stub loader did, because the fold keeps sequences it has seen and would otherwise keep
+        /// one copy per run.
         /// </summary>
         public void Load(string parquetPath, LibraryStringInterner sequencePool)
         {
-            _entryIds.Clear();
-            _charges.Clear();
-            _isDecoys.Clear();
-            _modifiedSequences.Clear();
+            _count = 0;
             ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                 (entryId, charge, isDecoy, coelutionSum, modifiedSequence, apexRt) =>
                 {
-                    _entryIds.Add(entryId);
-                    _charges.Add(charge);
-                    _isDecoys.Add(isDecoy);
-                    _modifiedSequences.Add(LibraryStringInterner.Canonicalize(sequencePool, modifiedSequence));
+                    if (_count == _rows.Length)
+                    {
+                        // Geometric, as List<T> grows: runs arriving in increasing size would
+                        // otherwise reallocate the array for every run.
+                        Array.Resize(ref _rows, Math.Max(1024, 2 * _rows.Length));
+                    }
+                    _rows[_count++] = new Row
+                    {
+                        EntryId = entryId,
+                        Charge = charge,
+                        IsDecoy = isDecoy,
+                        ModifiedSequence = LibraryStringInterner.Canonicalize(sequencePool, modifiedSequence),
+                        Score = 0,
+                        RunPrecursorQvalue = 1.0,
+                        RunPeptideQvalue = 1.0,
+                        ExperimentPrecursorQvalue = 1.0,
+                        ExperimentPeptideQvalue = 1.0,
+                    };
                 },
                 StubColumns.SkipCoelutionSum);
         }
 
         /// <summary>
-        /// Join the run's first-pass sidecar onto the loaded rows by entry_id. False when the
-        /// sidecar is unreadable, or carries a record with no row here that
-        /// <paramref name="expectedAbsent"/> does not account for - in which case the values
-        /// must not be used.
+        /// Join the run's first-pass sidecar onto the loaded rows by entry_id, once per
+        /// <see cref="Load"/>. False when the sidecar is unreadable, or carries a record with no
+        /// row here that <paramref name="expectedAbsent"/> does not account for - in which case
+        /// the values must not be used.
         ///
         /// <para>The join rules are <see cref="FdrScoresSidecar.TryJoinRows"/>'s, mapping each
-        /// entry_id to its LAST row as <c>TryRead</c> does. A row with no record keeps Score 0
-        /// and q = 1, the defaults a stub carried.</para>
+        /// entry_id to its LAST row as <c>TryRead</c> does. A row with no record keeps the
+        /// defaults it was loaded with.</para>
         /// </summary>
         public bool TryJoinFirstPassSidecar(string sidecarPath,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Func<uint, bool> expectedAbsent)
         {
-            int count = Count;
-            EnsureCapacity(count);
-            Array.Clear(_scores, 0, count);
-            Fill(_runPrecursorQvalues, count, 1.0);
-            Fill(_runPeptideQvalues, count, 1.0);
-            Fill(_experimentPrecursorQvalues, count, 1.0);
-            Fill(_experimentPeptideQvalues, count, 1.0);
-
-            // Reused like the buffers: Clear keeps the largest run's capacity, so the map is
+            // Reused like the rows: Clear keeps the largest run's capacity, so the map is
             // allocated (and grown) a few times over the fold rather than once per run.
             _rowByEntryId.Clear();
-            for (int i = 0; i < count; i++)
-                _rowByEntryId[_entryIds[i]] = i;
+            for (int i = 0; i < _count; i++)
+                _rowByEntryId[_rows[i].EntryId] = i;
 
             return FdrScoresSidecar.TryJoinRows(sidecarPath, FdrScoresSidecar.Pass.FirstPass,
                 _rowByEntryId, expectedAbsent, experimentRecords,
-                (row, record, experiment) =>
+                (index, record, experiment) =>
                 {
-                    _scores[row] = record.Score;
-                    _runPrecursorQvalues[row] = record.RunPrecursorQvalue;
-                    _runPeptideQvalues[row] = record.RunPeptideQvalue;
+                    ref var row = ref _rows[index];
+                    row.Score = record.Score;
+                    row.RunPrecursorQvalue = record.RunPrecursorQvalue;
+                    row.RunPeptideQvalue = record.RunPeptideQvalue;
                     if (experiment.HasValue)
                     {
-                        _experimentPrecursorQvalues[row] = experiment.Value.ExperimentPrecursorQvalue;
-                        _experimentPeptideQvalues[row] = experiment.Value.ExperimentPeptideQvalue;
+                        row.ExperimentPrecursorQvalue = experiment.Value.ExperimentPrecursorQvalue;
+                        row.ExperimentPeptideQvalue = experiment.Value.ExperimentPeptideQvalue;
                     }
                 });
         }
 
-        /// <summary>The modified sequence of row <paramref name="row"/>.</summary>
-        public string ModifiedSequence(int row) => _modifiedSequences[row];
-
-        /// <summary>The precursor charge of row <paramref name="row"/>.</summary>
-        public byte Charge(int row) => _charges[row];
-
-        /// <summary>The library entry_id of row <paramref name="row"/>.</summary>
-        public uint EntryId(int row) => _entryIds[row];
-
-        /// <summary>Whether row <paramref name="row"/> is a decoy.</summary>
-        public bool IsDecoy(int row) => _isDecoys[row];
-
-        /// <summary>The first-pass SVM score of row <paramref name="row"/>, after the join.</summary>
-        public double Score(int row) => _scores[row];
-
-        /// <summary>The run-level precursor q-value of row <paramref name="row"/>, after the join.</summary>
-        public double RunPrecursorQvalue(int row) => _runPrecursorQvalues[row];
-
-        /// <summary>The run-level peptide q-value of row <paramref name="row"/>, after the join.</summary>
-        public double RunPeptideQvalue(int row) => _runPeptideQvalues[row];
-
-        /// <summary>The experiment-level precursor q-value of row <paramref name="row"/>, after the join.</summary>
-        public double ExperimentPrecursorQvalue(int row) => _experimentPrecursorQvalues[row];
-
-        /// <summary>The experiment-level peptide q-value of row <paramref name="row"/>, after the join.</summary>
-        public double ExperimentPeptideQvalue(int row) => _experimentPeptideQvalues[row];
-
-        private void EnsureCapacity(int count)
+        /// <summary>Row <paramref name="index"/>, read-only; valid until the next <see cref="Load"/>.</summary>
+        public ref readonly Row this[int index]
         {
-            if (_scores.Length >= count)
-                return;
-            // Geometric, as List<T> grows the parquet buffers: runs arriving in increasing size
-            // would otherwise reallocate all five arrays for every run.
-            int capacity = Math.Max(count, 2 * _scores.Length);
-            _scores = new double[capacity];
-            _runPrecursorQvalues = new double[capacity];
-            _runPeptideQvalues = new double[capacity];
-            _experimentPrecursorQvalues = new double[capacity];
-            _experimentPeptideQvalues = new double[capacity];
-        }
-
-        private static void Fill(double[] values, int count, double value)
-        {
-            for (int i = 0; i < count; i++)
-                values[i] = value;
+            get
+            {
+                if ((uint)index >= (uint)_count)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+                return ref _rows[index];
+            }
         }
     }
 }

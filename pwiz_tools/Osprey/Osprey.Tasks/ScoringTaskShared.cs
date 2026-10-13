@@ -1022,10 +1022,11 @@ namespace pwiz.Osprey.Tasks
         {
             for (int i = 0; i < rows.Count; i++)
             {
-                accumulator.Add(fileIdx, rows.ModifiedSequence(i), rows.Charge(i), rows.EntryId(i),
-                    rows.IsDecoy(i), rows.Score(i),
-                    new FdrQValues(rows.RunPrecursorQvalue(i), rows.RunPeptideQvalue(i),
-                        rows.ExperimentPrecursorQvalue(i), rows.ExperimentPeptideQvalue(i), 1.0));
+                ref readonly var row = ref rows[i];
+                accumulator.Add(fileIdx, row.ModifiedSequence, row.Charge, row.EntryId,
+                    row.IsDecoy, row.Score,
+                    new FdrQValues(row.RunPrecursorQvalue, row.RunPeptideQvalue,
+                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0));
             }
         }
 
