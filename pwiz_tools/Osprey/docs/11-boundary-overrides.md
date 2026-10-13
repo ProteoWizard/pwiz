@@ -271,19 +271,17 @@ selects the task and runs `AnalysisPipeline.Run` like every other invocation, an
 upstream boundary state is rehydrated lazily rather than hand-assembled. (The
 `RescoreWorker.Run` alias that survived the collapse with no callers was removed.)
 
-- `RescoreHydration.HydrateForRescore` (`Osprey.Tasks/RescoreHydration.cs:166`)
-  loads pre-compaction `FdrEntry` stubs from each `.scores.parquet`, overlays the
-  `.1st-pass.fdr_scores.bin` v3 sidecar (SVM scores + 4 q-values + PEP +
-  `RunProteinQvalue`), and parses each `reconciliation.json` envelope into the
-  action map + refined calibration + gap-fill targets + join-wide
-  `first_pass_base_ids` (v3).
-- `RescoreCompaction.Apply` (`Osprey.Tasks/RescoreCompaction.cs:113`) reproduces
-  the in-process first-pass compaction: it keeps exactly the join-wide
-  `GlobalFirstPassBaseIds` set (hard-fails if absent), **unioned** with the
-  base_ids of every reconciliation-action target so cross-file-rescued entries
-  survive. Compaction is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and
-  its paired decoy stay together, and the action map is re-keyed to
-  post-compaction indices.
+- `RescoreHydration.HydrateOneRun` (`Osprey.Tasks/RescoreHydration.cs`) hydrates ONE
+  run: it loads the run's pre-compaction `FdrEntry` stubs from its `.scores.parquet`,
+  overlays its `.1st-pass.fdr_scores.bin` sidecar (SVM scores + q-values + PEP), parses
+  its `reconciliation.json` envelope into the action map + refined calibration +
+  gap-fill targets, and compacts the stubs against the analysis-wide retained base_id
+  summary (`RetainedBaseIdSidecar`): the join-wide first-pass base_ids **unioned** with
+  the base_ids of every reconciliation-action target, so cross-file-rescued entries
+  survive. Compaction is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and its
+  paired decoy stay together, and the actions are mapped to post-compaction indices.
+  The all-runs equivalent (`HydrateCompactedStreaming` + `RescoreCompaction.Apply`) was
+  removed on 2026-10-12: no route that could finish still reached it.
 
 ## Flags and switches
 
@@ -304,11 +302,14 @@ computed by Stage 6 planning. The flags that affect this stage:
 | `--protein-fdr <v>` | optional (`EffectiveProteinFdr`) | Feeds the protein-rescue gate into consensus RT computation (`Stage6Planner.cs:176`), affecting which entries become reconciliation targets. |
 
 Diagnostic env vars that dump this stage (each with a `*_ONLY=1` early-exit
-variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
-`OSPREY_DUMP_INV_PREDICT`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT`,
-`OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_RESCORED`, plus the per-entry
+variant): `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_INV_PREDICT`,
+`OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT`, plus the per-entry
 `OSPREY_DIAG_SEARCH_ENTRY_IDS` search-XIC dump and `OSPREY_DUMP_CWT_PATH`
-(`Stage6Planner.cs`, `PerFileRescoreTask.cs:297`, `PeakDataExtractor.cs:154`).
+(`Stage6Planner.cs`, `PeakDataExtractor.cs:154`). The multicharge,
+reconciliation, and rescored dumps (`OSPREY_DUMP_MULTICHARGE`,
+`OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_RESCORED`) were removed from C# on
+2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic) and are
+Rust-only.
 `OSPREY_TRACE_PEPTIDE` per-peptide tracing is documented in 18-peptide-trace.md.
 
 ## Divergences from the Rust documentation

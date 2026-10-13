@@ -319,17 +319,7 @@ namespace pwiz.Osprey.IO
                 using (var stream = BlockReadStream.OpenRead(path))
                 using (var reader = OpenReader(stream))
                 {
-                    reader.CustomMetadata.TryGetValue(META_RECONCILED, out string marker);
-                    if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
-                        return false;
-                    foreach (var f in reader.Schema.GetDataFields())
-                    {
-                        if (!string.Equals(f.Name, FIELD_SCORE_INDEX.Name, StringComparison.Ordinal))
-                            continue;
-                        hasScoreIndex = true;
-                        break;
-                    }
-                    return true;
+                    return HasSurvivorMarker(reader, out hasScoreIndex);
                 }
             }
             catch (Exception ex) when (!(ex is OutOfMemoryException))
@@ -338,6 +328,27 @@ namespace pwiz.Osprey.IO
                 // cares which file it was names it; see SecondPassFdrTask.UnusableReconciledParquets.
                 return false;
             }
+        }
+
+        /// <summary>
+        /// The test behind <see cref="ProbeReconciledSurvivorShape"/> and <see cref="ReadStamp"/>,
+        /// over a reader the caller already opened: the current marker, and whether the
+        /// <c>score_index</c> column is present.
+        /// </summary>
+        private static bool HasSurvivorMarker(SyncParquetReader reader, out bool hasScoreIndex)
+        {
+            hasScoreIndex = false;
+            reader.CustomMetadata.TryGetValue(META_RECONCILED, out string marker);
+            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+                return false;
+            foreach (var f in reader.Schema.GetDataFields())
+            {
+                if (!string.Equals(f.Name, FIELD_SCORE_INDEX.Name, StringComparison.Ordinal))
+                    continue;
+                hasScoreIndex = true;
+                break;
+            }
+            return true;
         }
 
         /// <summary>Whether a parquet's schema carries a column by this name.</summary>
@@ -1344,33 +1355,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// One file's <c>apex_rt</c> column, indexed by <c>FdrProjection.ParquetIndex</c> - the
-        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/> rather
-        /// than opening the column directly, so the ordinal this array is keyed by and the
-        /// ordinal the projection rows carry are produced by the same walk and the same
-        /// row-group skip rule. A second reader with its own copy of that rule is how a join
-        /// like this drifts.
-        ///
-        /// <para>ONE production caller: the RESIDENT-projection arm of the FIRST pass, the
-        /// <c>else</c> of <c>projections.IsCountsOnly</c>. Its sink assembles the per-file FDR
-        /// sidecar from projection rows, and those carry no retention time, while the sidecar
-        /// has a column for one (format v7, issue #4522). Not the 2nd pass, which this used to
-        /// claim, and NOT a cost the ordinary pipeline pays: a default run takes the lean arm
-        /// (<c>PerFileScoringTask.CanUseLeanProjection</c>), so reaching this read means the run
-        /// carries reconciled input. The STREAMING first pass needs none
-        /// of it: it already has each row's apex RT in hand from the same stream that produced
-        /// its score, which is the point of putting the column in the sidecar at all.</para>
-        /// </summary>
-        public static double[] ReadApexRtsByParquetIndex(string path)
-        {
-            var apexRts = new List<double>();
-            ReadFdrStubScalars(path,
-                (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => apexRts.Add(apexRt),
-                StubColumns.ApexRt);
-            return apexRts.ToArray();
-        }
-
-        /// <summary>
         /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
         /// single <see cref="FdrEntry"/>. Reads exactly the six columns the first-pass score
         /// pass needs -- entry_id, charge, is_decoy, coelution_sum, modified_sequence and
@@ -2341,6 +2325,16 @@ namespace pwiz.Osprey.IO
         /// The validity stamp in a parquet artifact's footer (<see cref="ArtifactStamp.PARQUET_KEY"/>),
         /// read from the footer alone. Null when the file is missing, unreadable or unstamped -
         /// never throws, because "I cannot tell" resolves to recomputing the artifact.
+        ///
+        /// <para>Also null for a reconciled parquet this build cannot read in the survivor-subset
+        /// shape (<see cref="IsCurrentReconciledSurvivorSubset"/>), whatever its stamp says. The
+        /// stamp names the task, version and key that wrote the file, and
+        /// OSPREY_VERSION_OVERRIDE - the sanctioned way to consume another build's artifacts -
+        /// makes an older build's file carry a current one, so only the shape can say the rows
+        /// are unreadable. Answering it here, from the same open, puts every currency question
+        /// on the same side: a resume re-scores that run, and <c>--task SecondPassFDR</c> refuses
+        /// it before loading any run. Accepted as current, it once took the run past every check
+        /// and failed in Stage 7, after an all-runs load and with a stack trace.</para>
         /// </summary>
         public static ArtifactStamp ReadStamp(string path)
         {
@@ -2348,9 +2342,18 @@ namespace pwiz.Osprey.IO
                 return null;
             try
             {
-                return LoadFooterMetadata(path).TryGetValue(ArtifactStamp.PARQUET_KEY, out string text)
-                    ? ArtifactStamp.Parse(text)
-                    : null;
+                using (var stream = BlockReadStream.OpenRead(path))
+                using (var reader = OpenReader(stream))
+                {
+                    if (!reader.CustomMetadata.TryGetValue(ArtifactStamp.PARQUET_KEY, out string text))
+                        return null;
+                    if (IsReconciledScoresPath(path) &&
+                        !(HasSurvivorMarker(reader, out bool hasScoreIndex) && hasScoreIndex))
+                    {
+                        return null;
+                    }
+                    return ArtifactStamp.Parse(text);
+                }
             }
             catch (Exception ex) when (!(ex is OutOfMemoryException))
             {

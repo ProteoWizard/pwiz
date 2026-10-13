@@ -97,72 +97,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         };
 
         /// <summary>
-        /// Build and write the report. Called from the Stage 5 boundary where the
-        /// per-file <see cref="FdrEntry"/> lists are scored and q-valued (pre
-        /// compaction, so decoys and entrapment are still present).
-        /// </summary>
-        public static void Write(
-            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            FeatureContributions contributions,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            ModelDiagnosticsData.CalibrationData cal,
-            OspreyConfig config,
-            IOspreyLog log,
-            string validityKey = null)
-        {
-            try
-            {
-                Dictionary<uint, EntrapmentClass> classByBaseId;
-                Dictionary<uint, uint> pairByBaseId;
-                double entrapmentRatio;
-                BuildClassificationFromLibrary(config, libraryById, log, 1,
-                    out classByBaseId, out pairByBaseId, out entrapmentRatio);
-
-                var data = ModelDiagnosticsData.Build(
-                    perFileEntries, contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById));
-                // The CAL view: per-file calibration diagnostics captured at Stage 3
-                // (null when none were captured -- a resumed run, or no files calibrated).
-                // Serialized into the pass-1 data sidecar below, so it round-trips into
-                // WritePass2AndFinalize's reloaded object graph and survives to the final page.
-                data.Cal = cal;
-                LogModelTabNote(contributions, log);
-                data.GeneratedUtc = DateTime.UtcNow.ToString(
-                    @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                data.OspreyVersion = OspreyVersion.DisplayVersion;
-                data.OutputName = OutputStem(config);
-
-                // Unmatched entrapment excluded from the FDP is reported by
-                // EntrapmentPairing.LogSummary during classification; no separate
-                // NUnclassified warning needed (it counts the same intended drops).
-
-                // The pass-1 product first, then the page: the page is a view of it, so an
-                // interruption between the two leaves the artifact that can rebuild the view
-                // rather than a view with nothing behind it.
-                WritePass1Sidecar(data, config, validityKey, log.LogInfo);
-                string outPath = RenderAndWrite(data, config, ProductStamp(FirstPassTaskName, validityKey));
-
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_, outPath));
-            }
-            catch (Exception ex)
-            {
-                // Never let a diagnostics-only artifact take down a real run.
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_, ex.Message));
-            }
-        }
-
-        /// <summary>
-        /// Projection-path counterpart of <see cref="Write"/>: build and write the pass-1 report
-        /// from the streamed <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the
-        /// first-pass score sink) instead of the resident pre-compaction pool that OOM'd an
-        /// 82-file run at FirstPassFDR. The accumulator already holds the entrapment classification
+        /// Build and write the pass-1 report from the streamed
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the first-pass score
+        /// sink or the streaming rehydrate) instead of the resident pre-compaction pool that
+        /// OOM'd an 82-file run at FirstPassFDR. The accumulator already holds the entrapment classification
         /// (built by <see cref="BuildClassificationFromLibrary"/> when it was constructed, and
         /// logged once there), so this only assembles the data model, attaches the CAL view + run
         /// metadata, renders the HTML, and stashes the pass-1 data sidecar for SecondPassFdrTask's
-        /// pass-2 enrichment. Byte-identical to <see cref="Write"/> on the same input: the
-        /// accumulator's streamed reductions reproduce the resident reductions (they are
-        /// order-independent). Any failure is logged and swallowed; a diagnostics artifact never
+        /// pass-2 enrichment. Byte-identical to the batch <c>ModelDiagnosticsData.Build</c>
+        /// test oracle on the same input: the accumulator's streamed reductions reproduce the
+        /// resident reductions (they are order-independent). Any failure is logged and swallowed; a diagnostics artifact never
         /// aborts a real run.
         ///
         /// <c>coAssignment</c> is the pass-1 peak co-assignment panel (issue #4522), built by
@@ -184,8 +128,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 data.CoAssignment = coAssignment;
                 // The CAL view: per-file calibration diagnostics captured at Stage 3 (null when
                 // none were captured -- a resumed run, or no files calibrated). Serialized into the
-                // pass-1 data sidecar below so it round-trips into WritePass2AndFinalize's reloaded
-                // object graph and survives to the final page (same as Write).
+                // pass-1 data sidecar below so it round-trips into the object graph
+                // WritePass2AndFinalizeFromAccumulator reloads and survives to the final page.
                 data.Cal = cal;
                 LogModelTabNote(contributions, log);
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
@@ -232,86 +176,23 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         }
 
         /// <summary>
-        /// End-of-run enrichment: reload the pass-1 data sidecar, compute the
-        /// pass-2 (final reported pool) FDP calibration views from the
-        /// post-compaction, second-pass-q-valued <paramref name="perFileEntries"/>
-        /// (SecondPassFdrTask's <c>RescoredEntries</c>), append them, and re-render the
-        /// page so its FDR-calibration view selector offers both passes. Uses the
-        /// same library-derived classification / pairing as pass 1, so the HTML
-        /// pass-2 curve matches stock FDRBench (<c>--fdrbench-pass 2</c>) by
-        /// construction. A no-op (with a log line) if the sidecar is absent -- the
-        /// pass-1 page FirstPassFDR already wrote then stands unchanged. Any failure is
-        /// logged and swallowed; a diagnostics artifact never aborts a real run.
-        /// </summary>
-        public static void WritePass2AndFinalize(
-            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            OspreyConfig config,
-            IOspreyLog log,
-            HashSet<uint> stratumBaseIds = null,
-            string validityKey = null)
-        {
-            try
-            {
-                var data = ReadPass1ForEnrichment(config, log);
-                if (data == null)
-                    return;
-
-                Dictionary<uint, EntrapmentClass> classByBaseId;
-                Dictionary<uint, uint> pairByBaseId;
-                double entrapmentRatio;
-                BuildClassificationFromLibrary(config, libraryById, log, 2,
-                    out classByBaseId, out pairByBaseId, out entrapmentRatio);
-
-                // Build the complete pass-2 (final reported pool) bundle -- every
-                // pass-dependent card recomputed on this post-compaction, second-pass
-                // q-valued pool -- so the page's top-level Pass 1 / Pass 2 switch can
-                // re-source the whole page. The structural half is null in every surviving
-                // mode: with the retrain removed (#4484) there is no retrained pass-2 model
-                // to describe, which is why null is passed as the contributions rather than
-                // sourced. The q-driven half is always built (FdpViews empty without an
-                // entrapment pool).
-                // These two steps shared a 71 s silence on the 82-file SEA-AD run of 2026-08-14,
-                // between the classification's [ENTRAPMENT] line and "finalized report" (#4571).
-                // BuildPass2 owns essentially all of it and carries its own per-card
-                // ProgressReporter; no heading is added here, because a reporter already prints
-                // one and then only as many percent lines as the elapsed time needs, while a
-                // heading at this call site would print unconditionally on every run forever.
-                // Measured 2026-08-15: the render that follows completes inside the same second
-                // it starts, so it gets no line at all.
-                data.Pass2 = ModelDiagnosticsData.BuildPass2(
-                    perFileEntries, null, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById), stratumBaseIds);
-
-                FinalizePass2(data, config, validityKey, log);
-            }
-            catch (Exception ex)
-            {
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_, ex.Message));
-            }
-        }
-
-        /// <summary>
-        /// End-of-run enrichment from the STREAMED pass-2 fold, the accumulator sibling of
-        /// <see cref="WritePass2AndFinalize"/>. Same product, same page, same log line - the only
-        /// difference is that the pass-2 cards come from reductions folded run by run through
-        /// <see cref="ModelDiagnosticsData.Accumulator"/> instead of from the resident survivor
-        /// pool, which is what lets <c>CanStreamStage7Join</c> stop declining the streamed join
-        /// whenever <c>--model-diagnostics</c> is asked for.
+        /// End-of-run enrichment from the STREAMED pass-2 fold: reload the pass-1 data, append
+        /// the pass-2 (final reported pool) cards, and re-render the page so its view selector
+        /// offers both passes. The pass-2 cards come from reductions folded run by run through
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> rather than from a resident survivor
+        /// pool - the batch builder this replaced held every run's survivors at once.
         ///
-        /// <para>Byte-identical to <see cref="WritePass2AndFinalize"/> on the same input for the
-        /// reason the pass-1 pair already is: every reduction the accumulator performs is
-        /// order-independent, and both paths enumerate the reduced best-per-precursor set in the
-        /// same nested (file, row) order. The classification / pairing / ratio are not rebuilt
-        /// here - the accumulator was constructed with them, and rebuilding runs for minutes at
-        /// 6.3M library entries.</para>
+        /// <para>Every reduction the accumulator performs is order-independent and enumerates
+        /// the reduced best-per-precursor set in nested (file, row) order, which is what keeps it
+        /// byte-identical to the batch <c>ModelDiagnosticsData.BuildPass2</c> its tests
+        /// compare against. The classification / pairing / ratio are not rebuilt here - the
+        /// accumulator was constructed with them, and rebuilding runs for minutes at 6.3M
+        /// library entries.</para>
         ///
         /// <para><paramref name="coAssignment"/> is built by the caller from its own second
         /// stream pass, because that panel's acceptance boundary is a reduction over every row
         /// that its per-row verdicts are then compared against - it cannot be folded in the pass
-        /// that computes it. Null leaves the panel out, exactly as a null library lookup does on
-        /// the resident path.</para>
+        /// that computes it. Null leaves the panel out.</para>
         ///
         /// <para><c>data</c> is the pass-1 object the caller already read in order to decide
         /// whether folding was worth doing at all. It is handed in rather than re-read here:

@@ -21,6 +21,8 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -32,6 +34,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -42,6 +45,7 @@ namespace pwiz.SkylineTestFunctional
     public class RetentionTimeAlignmentTest : AbstractFunctionalTest
     {
         private const double CHROMATOGRAM_WINDOW_LENGTH_MINUTES = 1.0;
+        private const string LIBRARY_NAME = "RetentionTimeAlignmentTest";
         [TestMethod]
         public void TestRetentionTimeAlignment()
         {
@@ -109,6 +113,7 @@ namespace pwiz.SkylineTestFunctional
                           var goodPointsCurve = curves.Find(curveItem => curveItem.Label.Text ==
                                                                          Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, SkylineWindow.Document.DocumentType));
                       });
+            VerifyCancelledShutdownLeavesOwnedFormsWorking(alignmentForm);
             RunUI(alignmentForm.Close);
             RunUI(()=>SkylineWindow.ComboResults.SelectedIndex = 0);
             var alignmentForm2 = ShowDialog<AlignmentForm>(() => SkylineWindow.ShowRetentionTimeAlignmentForm());
@@ -132,9 +137,58 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        /// <summary>
+        /// Verifies that a shutdown the user cancels leaves the forms SkylineWindow owns in
+        /// working order. WinForms raises FormClosing on owned forms before the owner's own
+        /// OnFormClosing, so cleanup done there runs even when the owner goes on to cancel,
+        /// which leaves the forms open with that cleanup already applied.
+        /// </summary>
+        private void VerifyCancelledShutdownLeavesOwnedFormsWorking(AlignmentForm alignmentForm)
+        {
+            var viewLibraryDlg = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(LIBRARY_NAME));
+            CheckBox aIonButton = null;
+            RunUI(() =>
+            {
+                // The ion type selector is built on demand, so do what right-clicking the spectrum
+                // and opening the Ion Types submenu does. Until that happens there is nothing
+                // subscribed and nothing for a cancelled shutdown to disconnect.
+                var graphControl = (ZedGraphControl) viewLibraryDlg.Controls.Find(@"graphControl", true).First();
+                viewLibraryDlg.BuildSpectrumMenu(graphControl, graphControl.ContextMenuStrip);
+                viewLibraryDlg.UpdateIonTypeMenu();
+
+                var ionTypeSelector = viewLibraryDlg.GetHostedControl<IonTypeSelectionPanel>();
+                Assert.IsNotNull(ionTypeSelector);
+                aIonButton = ionTypeSelector.HostedControl.Controls.OfType<CheckBox>()
+                    .FirstOrDefault(checkBox => Equals(checkBox.Tag, IonType.a));
+                Assert.IsNotNull(aIonButton);
+                AssertEx.IsTrue(alignmentForm.IsAlignmentActive);
+                // Without unsaved changes the close would not stop to ask, and would succeed.
+                AssertEx.IsTrue(SkylineWindow.Dirty);
+            });
+
+            var saveDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Close);
+            OkDialog(saveDlg, saveDlg.BtnCancelClick);
+
+            bool showAIons = Settings.Default.ShowAIons;
+            RunUI(() =>
+            {
+                AssertEx.IsFalse(SkylineWindow.IsDisposed);
+                AssertEx.IsFalse(alignmentForm.IsDisposed);
+                AssertEx.IsFalse(viewLibraryDlg.IsDisposed);
+                // The alignment form must still be able to run row update work.
+                AssertEx.IsTrue(alignmentForm.IsAlignmentActive);
+                // The library explorer's ion type selector must still be connected.
+                bool showAIonsToggled = !aIonButton.Checked;
+                aIonButton.Checked = showAIonsToggled;
+                AssertEx.AreEqual(showAIonsToggled, viewLibraryDlg.GraphSettings.ShowAIons);
+            });
+            OkDialog(viewLibraryDlg, viewLibraryDlg.CancelDialog);
+            RunUI(() => Settings.Default.ShowAIons = showAIons);
+        }
+
         private void SetPeptideSettings()
         {
-            const string libName = "RetentionTimeAlignmentTest";
+            const string libName = LIBRARY_NAME;
             var peptideSettingsUI = ShowPeptideSettings();
             Assert.IsFalse(peptideSettingsUI.AvailableLibraries.Contains(libName));
             var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);

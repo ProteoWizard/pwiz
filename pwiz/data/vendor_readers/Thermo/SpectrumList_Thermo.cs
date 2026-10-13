@@ -1219,6 +1219,10 @@ public sealed class SpectrumList_Thermo : SpectrumListBase, IVendorCentroidingSp
         // Mirror that: only fall back to scan-window matching when the trailer is truly
         // missing.
         long masterScan = TryGetTrailerInt(currentScan, "Master Scan Number:", out long m) ? m : -1;
+        // 0 means none (every DIA scan has it) and matches no scan; the walk would only find that
+        // out after visiting every earlier spectrum, O(n^2) over the run.
+        if (masterScan == 0)
+            return -1;
 
         for (int j = fromIndex - 1; j >= 0; j--)
         {

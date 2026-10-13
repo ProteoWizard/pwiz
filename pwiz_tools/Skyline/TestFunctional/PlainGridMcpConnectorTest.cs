@@ -49,8 +49,7 @@ namespace pwiz.SkylineTestFunctional
 
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() => documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules));
-            var ruleSetEditor = ShowDialog<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule);
-            string editorId = GetOpenFormId<MetadataRuleSetEditor>();
+            var ruleSetEditor = ShowMcpConnectorForm<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule, out var editorId);
 
             // The visible index of the "Pattern" column (matched by its column Name, not its header).
             var rulesGrid = (DataGridView)ruleSetEditor.Controls.Find(@"dataGridViewRules", true).First();

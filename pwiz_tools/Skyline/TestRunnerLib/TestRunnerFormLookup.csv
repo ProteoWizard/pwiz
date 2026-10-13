@@ -219,6 +219,7 @@ ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
 ShareResultsFilesDlg,TestDocumentSharing
 SkylineWindow,*
+SlowLoadingForm,*
 SpectrumGridForm,TestSpectrumGrid
 SpectrumChartPropertyDlg,TestMs1Tutorial
 SpectrumLibraryInfoDlg,TestManageLibraryRuns

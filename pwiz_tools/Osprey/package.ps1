@@ -53,8 +53,8 @@
 
 .PARAMETER Sign
     Authenticode-sign Osprey.exe, the Setup.exe and its uninstaller. OFF by default. Also enabled by
-    setting OSPREY_SIGN=1. Requires signtool on PATH (or OSPREY_SIGNTOOL) and a
-    cert: either OSPREY_SIGN_PFX (+ OSPREY_SIGN_PFX_PASSWORD) or, with no PFX,
+    setting OSPREYDEV_SIGN=1. Requires signtool on PATH (or OSPREYDEV_SIGNTOOL) and a
+    cert: either OSPREYDEV_SIGN_PFX (+ OSPREYDEV_SIGN_PFX_PASSWORD) or, with no PFX,
     signtool's machine-store auto-select (/a). If signing is requested but the
     tool or cert is unavailable this script HARD-FAILS rather than shipping an
     unsigned artifact that looks signed.
@@ -126,33 +126,33 @@ function Publish-Artifact-Tc([string]$path) {
 
 # --- Signing (env-gated, hard-fail when requested-but-unavailable) -------
 function Test-OspreySignEnabled {
-    return $Sign -or ($env:OSPREY_SIGN -eq '1')
+    return $Sign -or ($env:OSPREYDEV_SIGN -eq '1')
 }
 
 # The signtool.exe path and the arguments that precede the file to sign, resolved
-# from the OSPREY_SIGN* environment. Shared by Invoke-OspreySign (Osprey.exe in the
+# from the OSPREYDEV_SIGN* environment. Shared by Invoke-OspreySign (Osprey.exe in the
 # stage) and New-OspreySetup, which hands the same command to ISCC so the Setup.exe
 # and its uninstaller are signed as part of the compile.
 function Get-OspreySignCommand {
-    $signtool = $env:OSPREY_SIGNTOOL
+    $signtool = $env:OSPREYDEV_SIGNTOOL
     if (-not $signtool) {
         $cmd = Get-Command signtool.exe -ErrorAction SilentlyContinue
         if ($cmd) { $signtool = $cmd.Source }
     }
     if (-not $signtool -or -not (Test-Path $signtool)) {
-        Write-Error "Signing requested but signtool.exe not found (set OSPREY_SIGNTOOL or add it to PATH). Refusing to ship an unsigned artifact."
+        Write-Error "Signing requested but signtool.exe not found (set OSPREYDEV_SIGNTOOL or add it to PATH). Refusing to ship an unsigned artifact."
         exit 3
     }
 
-    $timestampUrl = if ($env:OSPREY_SIGN_TIMESTAMP_URL) { $env:OSPREY_SIGN_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
+    $timestampUrl = if ($env:OSPREYDEV_SIGN_TIMESTAMP_URL) { $env:OSPREYDEV_SIGN_TIMESTAMP_URL } else { 'http://timestamp.digicert.com' }
     $signArgs = @('sign', '/fd', 'SHA256', '/tr', $timestampUrl, '/td', 'SHA256')
-    if ($env:OSPREY_SIGN_PFX) {
-        if (-not (Test-Path $env:OSPREY_SIGN_PFX)) {
-            Write-Error "OSPREY_SIGN_PFX points to a missing file: $($env:OSPREY_SIGN_PFX)"
+    if ($env:OSPREYDEV_SIGN_PFX) {
+        if (-not (Test-Path $env:OSPREYDEV_SIGN_PFX)) {
+            Write-Error "OSPREYDEV_SIGN_PFX points to a missing file: $($env:OSPREYDEV_SIGN_PFX)"
             exit 3
         }
-        $signArgs += @('/f', $env:OSPREY_SIGN_PFX)
-        if ($env:OSPREY_SIGN_PFX_PASSWORD) { $signArgs += @('/p', $env:OSPREY_SIGN_PFX_PASSWORD) }
+        $signArgs += @('/f', $env:OSPREYDEV_SIGN_PFX)
+        if ($env:OSPREYDEV_SIGN_PFX_PASSWORD) { $signArgs += @('/p', $env:OSPREYDEV_SIGN_PFX_PASSWORD) }
     } else {
         # No PFX: let signtool auto-select a suitable cert from the machine store.
         $signArgs += '/a'

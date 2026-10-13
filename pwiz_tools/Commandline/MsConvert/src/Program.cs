@@ -21,16 +21,16 @@ public static class Program
             int converted = converter.Run();
             return converted == config.InputFiles.Count ? 0 : 1;
         }
-        catch (ArgParseHelpRequested)
+        catch (ArgParseHelpRequested help)
         {
-            Console.Out.WriteLine(ArgParser.Usage());
+            Console.Out.Write(ArgParser.HelpText(help.Request, ArgParser.ConsoleWidth(Console.IsOutputRedirected)));
             return 0;
         }
         catch (ArgumentException ex)
         {
             Console.Error.WriteLine("Error: " + ex.Message);
             Console.Error.WriteLine();
-            Console.Error.WriteLine(ArgParser.Usage());
+            Console.Error.WriteLine(ArgParser.Usage(maxLineLength: ArgParser.ConsoleWidth(Console.IsErrorRedirected)));
             return 2;
         }
         catch (Exception ex)

@@ -106,6 +106,9 @@
   <data name="_decoys_in_library" xml:space="preserve">
     <value>Trust decoys already in the spectral library instead of generating reverse decoys. Stops with an error if none are recognized.</value>
   </data>
+  <data name="_demux" xml:space="preserve">
+    <value>Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: {0})</value>
+  </data>
   <data name="_diagnostics" xml:space="preserve">
     <value>Write developer diagnostic dump files, for comparison with the Rust implementation</value>
   </data>
