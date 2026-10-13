@@ -113,7 +113,8 @@ namespace pwiz.SkylineTestData.Results
             TestFilesDirs = new[]
             {
                 new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip", null, @"WindowOnly"),
-                new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip", null, @"NoWindow")
+                new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip", null, @"NoWindow"),
+                new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip", null, @"ZeroResolvingPower")
             };
 
             // A usable filter window is configured, so enabling the spectral library option is the
@@ -124,6 +125,12 @@ namespace pwiz.SkylineTestData.Results
 
             // No filter window either, so the user needs both changes.
             AssertFilteringDisabledWarning(TestFilesDirs[1], IonMobilityWindowWidthCalculator.EMPTY,
+                ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary);
+
+            // Resolving power 0 is accepted as "no filtering", but widens to an unbounded window
+            // rather than an empty one. It must still count as no window, so the user is told to set
+            // one as well, not only to enable the spectral library option.
+            AssertFilteringDisabledWarning(TestFilesDirs[2], new IonMobilityWindowWidthCalculator(0),
                 ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary);
         }
 
