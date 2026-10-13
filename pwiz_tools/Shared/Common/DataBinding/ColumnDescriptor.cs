@@ -80,8 +80,12 @@ namespace pwiz.Common.DataBinding
         /// <see cref="GetPropertyValue"/> is the same as calling this with the parent's GetPropertyValue,
         /// but a caller evaluating many columns of one row can use this to calculate each ancestor
         /// shared by several columns once instead of once per column.
+        /// The default implementation ignores <paramref name="parentValue"/> and calls <see cref="GetPropertyValue"/>.
         /// </summary>
-        public abstract object GetValueFromParent(object parentValue, RowItem rowItem, PivotKey pivotKey);
+        public virtual object GetValueFromParent(object parentValue, RowItem rowItem, PivotKey pivotKey)
+        {
+            return GetPropertyValue(rowItem, pivotKey);
+        }
 
         /// <summary>
         /// True if <see cref="GetPropertyValue"/> with a null pivot key looks only at <see cref="RowItem.Value"/>,

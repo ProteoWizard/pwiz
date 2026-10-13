@@ -61,7 +61,7 @@ namespace pwiz.Common.DataBinding
                 return null;
             }
             return _getters.GetOrAdd(Tuple.Create(propertyDescriptor.ComponentType, propertyDescriptor.Name),
-                key => CompileGetter(propertyDescriptor));
+                _ => CompileGetter(propertyDescriptor));
         }
 
         /// <summary>

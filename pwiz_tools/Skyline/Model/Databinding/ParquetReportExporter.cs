@@ -294,6 +294,15 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             /// <summary>
+            /// True if the user canceled the export or another stage failed, so a chunk
+            /// being populated will never be written.
+            /// </summary>
+            private bool IsStopping
+            {
+                get { return _rowItemEnumerator.IsCanceled || _cancellationToken.IsCancellationRequested; }
+            }
+
+            /// <summary>
             /// Calculates every column's value for every row in the chunk into the buffers and packs
             /// them, ready to be written as one row group.
             /// </summary>
@@ -318,7 +327,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 ParallelEx.For(0, runStarts.Count, runIndex =>
                 {
-                    if (_rowItemEnumerator.IsCanceled)
+                    if (IsStopping)
                     {
                         return;
                     }
@@ -344,7 +353,7 @@ namespace pwiz.Skyline.Model.Databinding
                                 }
                             }
                         }
-                        for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                        for (int rowIndex = startRow; rowIndex < endRow && !IsStopping; rowIndex++)
                         {
                             var rowItem = rowItems[rowIndex];
                             _columnValueTree.Evaluate(rowItem, nodeValues, false);
@@ -370,6 +379,10 @@ namespace pwiz.Skyline.Model.Databinding
                         rowItems[rowIndex] = null;
                     }
                 }, threadName: nameof(PopulateChunk));
+                if (IsStopping)
+                {
+                    return;
+                }
                 // A column with nulls has to be packed, and a list column flattened, so the columns are
                 // packed in parallel rather than one after another on this thread while the workers wait
                 // for the next chunk

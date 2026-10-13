@@ -52,6 +52,7 @@ namespace pwiz.Common.SystemUtil
         private ArraySegment<byte> _currentBlock;
         private int _currentPosition;
         private long _position;
+        private bool _disposed;
 
         public SequentialReadStream(Stream inner, bool keepOpen, int blockSize = DEFAULT_BLOCK_SIZE, int maxQueuedBlocks = DEFAULT_MAX_QUEUED_BLOCKS)
         {
@@ -145,8 +146,9 @@ namespace pwiz.Common.SystemUtil
         {
             base.Dispose(disposing);
 
-            if (disposing)
+            if (disposing && !_disposed)
             {
+                _disposed = true;
                 // Unblocks the reading thread if it is waiting for room in the queue. The token stays
                 // cancelled after the source is disposed, so the thread can keep checking it
                 _cancellationTokenSource.Cancel();
