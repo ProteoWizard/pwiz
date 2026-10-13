@@ -32,17 +32,19 @@ internal static class ArgParser
         // Config files are applied first, so an option on the command line overrides the same
         // option in a config file, as in the C++ msconvert (repeatable options such as --filter
         // add to it).
-        var config = new MsConvertConfig();
+        var ordered = new List<Token>();
         foreach (var token in tokens.Where(t => ReferenceEquals(t.Option, s_configOption)))
+            ordered.AddRange(ReadConfigFile(token.Value!));
+        ordered.AddRange(tokens.Where(t => !ReferenceEquals(t.Option, s_configOption)));
+
+        var config = new MsConvertConfig();
+        for (int i = 0; i < ordered.Count; i++)
         {
-            foreach (var configToken in ReadConfigFile(token.Value!))
-                configToken.Option!.Apply!(config, configToken.Value);
-        }
-        foreach (var token in tokens)
-        {
+            var token = ordered[i];
             if (token.Option is null)
                 config.InputFiles.Add(token.Value!);
-            else if (!ReferenceEquals(token.Option, s_configOption))
+            // An option turned off (--gzip=false) cancels the same option turned on before it.
+            else if (!token.Off && !ordered.Skip(i + 1).Any(t => t.Off && ReferenceEquals(t.Option, token.Option)))
                 token.Option.Apply!(config, token.Value);
         }
 
@@ -51,8 +53,8 @@ internal static class ArgParser
         return config;
     }
 
-    /// <summary>One option and its value, or, with no option, an input file.</summary>
-    private readonly record struct Token(Option? Option, string? Value);
+    /// <summary>One option and its value, or, with no option, an input file. <paramref name="Off"/> is an option turned off.</summary>
+    private readonly record struct Token(Option? Option, string? Value, bool Off = false);
 
     /// <summary>
     /// Splits <paramref name="args"/> into options and input files, collecting help options into
@@ -90,8 +92,11 @@ internal static class ArgParser
             try
             {
                 if (!TryTakeValue(option, a, inlineValue, args, ref i, out string? value))
-                    continue; // turned off, e.g. mzXML=false
-                if (option.Help != HelpFlag.None)
+                {
+                    if (option.Help == HelpFlag.None)
+                        tokens.Add(new Token(option, null, Off: true)); // e.g. mzXML=false
+                }
+                else if (option.Help != HelpFlag.None)
                     help.Add(option.Help, value);
                 else
                     tokens.Add(new Token(option, value));
@@ -458,9 +463,8 @@ internal static class ArgParser
         foreach (var type in arrayTypes)
         {
             config.WriteConfig.EncoderConfig.NumpressOverrides[type] = kind;
-            // pwiz C++ stacks numpress with zlib by default (the combined "followed_by_zlib" CV term)
-            // and marks numpress arrays as 32-bit precision semantically.
-            config.WriteConfig.EncoderConfig.CompressionOverrides[type] = BinaryCompression.Zlib;
+            // Compression follows --zlib, as in pwiz C++ ("followed_by_zlib" by default); numpress
+            // arrays are marked as 32-bit precision semantically.
             config.WriteConfig.EncoderConfig.PrecisionOverrides[type] = BinaryPrecision.Bits32;
         }
     }
@@ -553,9 +557,18 @@ internal static class ArgParser
 
     private static string RequireNext(IReadOnlyList<string> args, ref int i, string option)
     {
-        if (i + 1 >= args.Count)
+        // An option's name is never taken as a value, so "-o --help" is -o missing its value, as in boost.
+        if (i + 1 >= args.Count || IsOptionName(args[i + 1]))
             throw new ArgumentException($"{option} requires a value.");
         return args[++i];
+    }
+
+    private static bool IsOptionName(string arg)
+    {
+        if (s_optionsByName.ContainsKey(arg))
+            return true;
+        int eq = arg.StartsWith("--", StringComparison.Ordinal) ? arg.IndexOf('=') : -1;
+        return eq > 0 && s_optionsByName.ContainsKey(arg[..eq]);
     }
 
 

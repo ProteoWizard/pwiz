@@ -122,6 +122,11 @@ public class ArgParserTests
         foreach (var (arg, expected) in cases)
             Assert.AreEqual(expected, Invoke("in.mzML", arg).WriteConfig.EncoderConfig.Compression, arg);
         Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--zlib=maybe"));
+
+        // Numpress arrays follow the zlib setting.
+        var numpress = Invoke("in.mzML", "--zlib=off", "--numpressAll").WriteConfig.EncoderConfig;
+        Assert.AreEqual(BinaryCompression.None, numpress.Compression);
+        Assert.AreEqual(0, numpress.CompressionOverrides.Count);
     }
 
     [TestMethod]
@@ -196,6 +201,7 @@ public class ArgParserTests
         Assert.ThrowsException<ArgumentException>(() => Invoke("--notanoption"), "unknown option");
         Assert.ThrowsException<ArgumentException>(() => Invoke(), "no input files");
         Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--filter"), "missing value");
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "-o", "--mzXML"), "option name as value");
 
         // A file list or config file that cannot be read is a command-line error, not a crash.
         string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
@@ -282,6 +288,7 @@ public class ArgParserTests
         // Help wins over anything else wrong with the command line, and comes before any file is read.
         string missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
         Assert.IsTrue(HelpFor("--help", "-o").Detailed);
+        Assert.IsTrue(HelpFor("-o", "--help").Detailed, "an option's name is not taken as a value");
         Assert.IsTrue(HelpFor("--notanoption", "--help").Detailed);
         Assert.IsTrue(HelpFor("-c", missing, "--help").Detailed);
         Assert.IsTrue(HelpFor("-f", missing, "--doc").Doc);
@@ -366,6 +373,9 @@ public class ArgParserTests
             var precision = Invoke("in.mzML", "--inten64", "-c", tmp).WriteConfig.EncoderConfig.PrecisionOverrides;
             Assert.AreEqual(BinaryPrecision.Bits64, precision[Pwiz.Data.Common.Cv.CVID.MS_intensity_array]);
             Assert.AreEqual(BinaryCompression.Zlib, Invoke("in.mzML", "-c", tmp, "--zlib").WriteConfig.EncoderConfig.Compression);
+            Assert.IsFalse(Invoke("in.mzML", "-c", tmp, "--mzDelta=false").MzDelta, "a later off cancels an earlier on");
+            Assert.AreEqual(0, Invoke("in.mzML", "-c", tmp, "--singleThreaded=false").SingleThreaded);
+            Assert.IsTrue(Invoke("in.mzML", "--mzDelta=false", "--mzDelta").MzDelta, "a later on wins over an earlier off");
 
             // A bad line names the config file.
             File.WriteAllLines(tmp, new[] { "notanoption=1" });
