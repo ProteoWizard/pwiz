@@ -26,7 +26,7 @@ public delegate ISpectrumList SpectrumListFilterBuilder(string args, ISpectrumLi
 /// <c>"threshold count 50 most-intense"</c> into <see cref="ISpectrumList"/> wrappers.
 /// Port of pwiz::analysis::SpectrumListFactory (slimmed — registers the filters we've ported so far).
 /// </summary>
-public static class SpectrumListFactory
+public static partial class SpectrumListFactory
 {
     private static readonly Dictionary<string, SpectrumListFilterBuilder> s_builders = BuildDefaultRegistry();
 
