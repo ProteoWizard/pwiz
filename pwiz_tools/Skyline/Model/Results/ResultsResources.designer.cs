@@ -779,7 +779,7 @@ namespace pwiz.Skyline.Model.Results {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Note: the spectral library has ion mobility values for &quot;{0}&quot;, but they are being ignored because &quot;Use spectral library ion mobility values when present&quot; is not enabled. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and enable that option..
+        ///   Looks up a localized string similar to Note: the spectral library has ion mobility values for &quot;{0}&quot;, but they are being ignored because &quot;Use spectral library ion mobility values when present&quot; is not enabled. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and enable that option, then re-import the results so chromatograms are extracted with ion mobility filtering applied..
         /// </summary>
         public static string SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary {
             get {
@@ -788,7 +788,7 @@ namespace pwiz.Skyline.Model.Results {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Note: ion mobility values are available for &quot;{0}&quot;, but no effective filter window is configured. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and set a window type (resolving power, fixed width, or linear range) with a non-zero value..
+        ///   Looks up a localized string similar to Note: ion mobility values are available for &quot;{0}&quot;, but no effective filter window is configured. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and set a window type (resolving power, fixed width, or linear range) with a non-zero value, then re-import the results so chromatograms are extracted with ion mobility filtering applied..
         /// </summary>
         public static string SpectrumFilter_IonMobilityFilteringDisabled_SetWindow {
             get {
@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Model.Results {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Note: the spectral library has ion mobility values for &quot;{0}&quot;, but ion mobility filtering is disabled. To apply filtering, open Settings &gt; Transition Settings &gt; Ion Mobility, set a window type (resolving power, fixed width, or linear range) with a value, and enable &quot;Use spectral library ion mobility values when present&quot;..
+        ///   Looks up a localized string similar to Note: the spectral library has ion mobility values for &quot;{0}&quot;, but ion mobility filtering is disabled. To apply filtering, open Settings &gt; Transition Settings &gt; Ion Mobility, set a window type (resolving power, fixed width, or linear range) with a value, and enable &quot;Use spectral library ion mobility values when present&quot;, then re-import the results so chromatograms are extracted with ion mobility filtering applied..
         /// </summary>
         public static string SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary {
             get {

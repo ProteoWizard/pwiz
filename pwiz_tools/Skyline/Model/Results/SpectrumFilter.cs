@@ -134,8 +134,9 @@ namespace pwiz.Skyline.Model.Results
             
             // If we're using bare measured ion mobility values from spectral libraries, go get those now
             // TODO(bspratt): Should be queried out of the libraries as needed, as with RT not bulk copied all at once
-            var libraryIonMobilityInfo = _isWatersSonar ? null : document.Settings.GetIonMobilities(moleculesThisPass.SelectMany(
-                    node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray(), msDataFileUri);
+            var libKeys = moleculesThisPass.SelectMany(
+                node => node.TransitionGroups.Select(nodeGroup => nodeGroup.GetLibKey(document.Settings, node))).ToArray();
+            var libraryIonMobilityInfo = _isWatersSonar ? null : document.Settings.GetIonMobilities(libKeys, msDataFileUri);
             var ionMobilityMax = maxObservedIonMobilityValue ?? 0;
 
             // TIC and Base peak are meaningless with FAIMS, where we can't know the actual overall ion counts -also can't reliably share times with any ion mobility scheme
@@ -153,7 +154,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!_isIonMobilityFiltered && (retentionTimePredictor == null || !firstPass))
                 {
                     WarnIfSettingsChangeWouldEnableFiltering(
-                        document.Settings, libraryIonMobilityInfo, moleculesThisPass, msDataFileUri, ionMobilityMax);
+                        document.Settings, libKeys, libraryIonMobilityInfo, moleculesThisPass, msDataFileUri, ionMobilityMax);
                 }
             }
 
@@ -522,37 +523,48 @@ namespace pwiz.Skyline.Model.Results
         // Issue 4150: with current settings no precursor produces an ion mobility filter. Probe
         // the obvious setting variations (add a window width, enable spectral-library IM, both)
         // to see whether a specific change would enable filtering. If one would, emit a
-        // non-blocking notice that tells the user exactly which setting to flip. Spectral-library
-        // IM info is settings-invariant so can be reused across probes.
+        // non-blocking notice that tells the user exactly which setting to flip.
         private void WarnIfSettingsChangeWouldEnableFiltering(SrmSettings settings,
-            LibraryIonMobilityInfo libraryIonMobilityInfo,
+            LibKey[] libKeys, LibraryIonMobilityInfo libraryIonMobilityInfo,
             IList<PeptideDocNode> molecules, MsDataFileUri msDataFileUri, double ionMobilityMax)
         {
-            bool WouldWith(SrmSettings probe) =>
-                WouldApplyIonMobilityFiltering(probe, libraryIonMobilityInfo, molecules, ionMobilityMax);
-
             // Skip probes that can't change the outcome: if a setting is already on, the
             // corresponding "With..." variation is a no-op, and since base filtering is already
             // false that probe would also be false. When both are on, no setting change can
             // enable filtering, so there's no actionable warning.
             var imFiltering = settings.TransitionSettings.IonMobilityFiltering;
-            var existingCalc = imFiltering?.FilterWindowWidthCalculator;
-            bool hasWindow = HasUsableWindow(existingCalc);
+            bool hasWindow = HasUsableWindow(imFiltering?.FilterWindowWidthCalculator);
             bool hasSpectralLib = imFiltering?.UseSpectralLibraryIonMobilityValues ?? false;
             if (hasWindow && hasSpectralLib)
             {
                 return;
             }
 
-            // Prefer the user's existing window if one is both selected and usable - probing with
-            // their real values keeps the "would this change fix it?" test faithful instead of
-            // substituting an arbitrary resolving power. Fall back to a default probe if no
-            // window type is set OR the selected type has a zero-valued primary field
-            // (e.g., fixed_width=0, linear_range widths both 0), which would produce a
-            // zero-width filter and make the probe a silent no-op.
-            var probeWindow = hasWindow
-                ? existingCalc
-                : new IonMobilityWindowWidthCalculator(PROBE_RESOLVING_POWER);
+            // A probe needs library ion mobility info harvested under its own settings:
+            // GetIonMobilities only reads spectral-library IM values when "use spectral library ion
+            // mobility values" is enabled, so reusing the construction-time info (built with the
+            // user's real, disabled setting) would blind the "enable spectral library" probes to the
+            // very values they exist to detect (issue 4150). That flag and the ion mobility library
+            // are the only inputs to harvesting - the filter window plays no part - so cache by the
+            // flag. Seeding the cache with the construction-time info spares any probe that leaves
+            // the flag alone from repeating what can be a bulk read of the spectral libraries.
+            var infoByUseSpectralLib = new Dictionary<bool, LibraryIonMobilityInfo>
+                { { hasSpectralLib, libraryIonMobilityInfo } };
+            bool WouldWith(SrmSettings probe)
+            {
+                bool useSpectralLib = probe.TransitionSettings.IonMobilityFiltering
+                    ?.UseSpectralLibraryIonMobilityValues ?? false;
+                if (!infoByUseSpectralLib.TryGetValue(useSpectralLib, out var probeInfo))
+                {
+                    probeInfo = probe.GetIonMobilities(libKeys, msDataFileUri);
+                    infoByUseSpectralLib.Add(useSpectralLib, probeInfo);
+                }
+                return WouldApplyIonMobilityFiltering(probe, probeInfo, molecules, ionMobilityMax);
+            }
+
+            // WithWindow is only ever probed when the user has no usable window, so it always
+            // substitutes a representative non-empty window rather than the user's own values.
+            var probeWindow = new IonMobilityWindowWidthCalculator(PROBE_RESOLVING_POWER);
             SrmSettings WithWindow(SrmSettings s) => s.ChangeTransitionSettings(
                 s.TransitionSettings.ChangeIonMobilityFiltering(
                     s.TransitionSettings.IonMobilityFiltering.ChangeFilterWindowWidthCalculator(probeWindow)));
