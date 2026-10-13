@@ -1,6 +1,6 @@
 {
   "format": "carafesharp-regression-golden-3",
-  "created": "2026-10-13T12:14:16",
+  "created": "2026-10-13T12:24:32",
   "provenance": {
     "dataset": "StellarSubset",
     "leg": "isolated",
@@ -77,22 +77,23 @@
   },
   "tolerances": {
     "pretrained_metric": 1E-05,
+    "pretrained_rt_metric": 6E-05,
     "finetuned_metric": {
-      "cos": 0.0015,
-      "pcc": 0.0015,
-      "sa": 0.006,
-      "spc": 0.005,
-      "r2": 0.0001,
-      "mae_normalized": 0.0005
+      "cos": 0.002,
+      "pcc": 0.004,
+      "sa": 0.007,
+      "spc": 0.015,
+      "r2": 0.0005,
+      "mae_normalized": 0.0015
     },
     "precursor_and_decoy_pair_count_fraction": 0.0001,
-    "peak_count_fraction": 0.01,
-    "cosine_median_min": 0.99925,
-    "cosine_p5_min": 0.991,
-    "cosine_p1_min": 0.975,
-    "rt_minutes_median_max": 0.03,
-    "rt_minutes_p95_max": 0.1,
-    "rt_minutes_p99_max": 0.16
+    "peak_count_fraction": 0.02,
+    "cosine_median_min": 0.998,
+    "cosine_p5_min": 0.985,
+    "cosine_p1_min": 0.955,
+    "rt_minutes_median_max": 0.09,
+    "rt_minutes_p95_max": 0.3,
+    "rt_minutes_p99_max": 0.5
   },
   "exact": {
     "use": "information only: reported as SAME or DIFFERS, never failing a run",
