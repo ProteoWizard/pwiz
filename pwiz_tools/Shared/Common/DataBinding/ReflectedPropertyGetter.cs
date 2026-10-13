@@ -26,7 +26,7 @@ namespace pwiz.Common.DataBinding
 {
     /// <summary>
     /// Provides compiled getters for the descriptors which <see cref="TypeDescriptor"/> creates through
-    /// reflection, so that a report can read a property without going through <see cref="MethodInfo.Invoke"/>.
+    /// reflection, so that a report can read a property without going through <see cref="MethodBase.Invoke(object?,object?[])"/>.
     /// Reflection invocation costs far more than the property getter itself: security checks,
     /// argument validation and target lookup were close to half of the CPU time when exporting a large report.
     /// Only the framework's own reflected descriptor is handled, because that is the only descriptor
