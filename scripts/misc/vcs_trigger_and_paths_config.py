@@ -178,14 +178,14 @@ matchPaths = [
     ("pwiz_tools/Skyline/Executables/Hardklor/.*", merge(targets['NativeShims'], targets['Skyline'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    # Osprey and CarafeSharp import Shared/Lib/Parquet/ParquetNet.targets and its patched Parquet.dll.
+    ("pwiz_tools/Shared/Lib/Parquet/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
     # pwiz compiles Shared/zedgraph + Shared/MSGraph in place and links Shared/Lib binaries.
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['Osprey']),
-    # CarafeSharp (the C# Carafe port) has no TeamCity config yet, and no other build compiles
-    # it: it depends on pwiz_tools/Shared/CommonUtil, never the reverse. Without this entry a
-    # CarafeSharp-only change falls through to pwiz_tools/.* and rebuilds All for nothing. Point
-    # it at the CarafeSharp config once one exists.
-    ("pwiz_tools/CarafeSharp/.*", {}),
+    # CarafeSharp (the C# Carafe port) has no config of its own: Osprey's tcbuild.bat and
+    # tcbuild.sh build and test it.
+    ("pwiz_tools/CarafeSharp/.*", targets['Osprey']),
     ("pwiz_tools/.*", targets['All']),
     (".*\\.bat", targets['Windows']),
     (".*\\.sh", targets['Linux'])
