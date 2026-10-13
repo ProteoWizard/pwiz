@@ -115,6 +115,9 @@ namespace TestRunner
             // with no potential for infinite looping on a detected leak.
             {"TestLibraryExplorer", new ExpandedLeakCheck()},
             {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
+            // Native heap keeps growing while tiered JIT recompiles the vendor readers' hot methods,
+            // and Mobilion's SDK frees its internal HDF5 caches only periodically
+            {"TestTicChromatogram", new ExpandedLeakCheck()},
             // Tests which show the native common file dialog need more iterations to stabilize
             // because the Windows shell cache grows
             {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
