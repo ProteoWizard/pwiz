@@ -185,6 +185,18 @@ internal static class ArgParser
                     config.WriteConfig.EncoderConfig.Compression = BinaryCompression.Zlib;
                     break;
 
+                // Applied after the loop by ApplyZstd, so they win over -z and numpress's
+                // stacked zlib wherever they appear on the command line, as in cpp.
+                case "--zstd":
+                    config.Zstd = true;
+                    break;
+                case "--mzShuffleZstd":
+                    config.MzShuffleZstd = true;
+                    break;
+                case "--dictZstd":
+                    config.DictZstd = true;
+                    break;
+
                 // pwiz C++ numpress flags set per-array overrides; --numpressAll combines Linear+Slof.
                 case "--numpressLinear":
                     SetNumpress(config, BinaryNumpress.Linear, CVID.MS_m_z_array, CVID.MS_time_array);
@@ -304,8 +316,72 @@ internal static class ArgParser
         if (config.InputFiles.Count == 0)
             throw new ArgumentException("No input files specified. Use --help for usage.");
 
+        ApplyZstd(config);
         return config;
     }
+
+    /// <summary>
+    /// Turns the zstd switches into encoder settings, as cpp msconvert.cpp does after parsing.
+    /// Idempotent, because a <c>--config</c> file's nested parse applies it before the outer
+    /// parse applies it again to the merged result.
+    /// </summary>
+    private static void ApplyZstd(MsConvertConfig config)
+    {
+        var encoder = config.WriteConfig.EncoderConfig;
+        if (config.Zstd)
+        {
+            encoder.Compression = BinaryCompression.Zstd;
+            // SetNumpress stacks zlib on the numpress arrays; cpp's numpress arrays take the
+            // global compression, so under --zstd they get the "followed by zstd" encodings.
+            foreach (var type in encoder.CompressionOverrides.Keys.ToList())
+            {
+                if (encoder.CompressionOverrides[type] == BinaryCompression.Zlib)
+                    encoder.CompressionOverrides[type] = BinaryCompression.Zstd;
+            }
+        }
+
+        if (config.DictZstd)
+        {
+            encoder.CompressionOverrides[CVID.MS_m_z_array] = BinaryCompression.DictZstd;
+            encoder.CompressionOverrides[CVID.MS_time_array] = BinaryCompression.ByteShuffleZstd;
+            foreach (var type in s_ionMobilityArrays)
+                encoder.CompressionOverrides[type] = BinaryCompression.DictZstd;
+        }
+        else if (config.MzShuffleZstd)
+        {
+            encoder.CompressionOverrides[CVID.MS_m_z_array] = BinaryCompression.ByteShuffleZstd;
+            encoder.CompressionOverrides[CVID.MS_time_array] = BinaryCompression.ByteShuffleZstd;
+        }
+
+        if (!config.DictZstd && !config.MzShuffleZstd)
+            return;
+
+        // cpp accepts both conflicts below at parse time and then fails, writing the first
+        // spectrum (numpress) or reading the file back (mzMLb); report them here instead.
+        if (config.WriteConfig.Format == WriteFormat.MzMLb)
+            throw new ArgumentException("--mzShuffleZstd and --dictZstd are not supported for mzMLb output.");
+        foreach (var (type, compression) in encoder.CompressionOverrides)
+        {
+            if (!compression.IsValueWise())
+                continue;
+            var numpress = encoder.NumpressOverrides.GetValueOrDefault(type, encoder.Numpress);
+            if (numpress != BinaryNumpress.None)
+            {
+                throw new ArgumentException(
+                    $"--mzShuffleZstd and --dictZstd cannot be combined with numpress on the same array ({CvLookup.CvTermInfo(type).Name} has {numpress}).");
+            }
+        }
+    }
+
+    /// <summary>The arrays cpp msconvert's --dictZstd dictionary-encodes besides m/z.</summary>
+    private static readonly CVID[] s_ionMobilityArrays =
+    {
+        CVID.MS_ion_mobility_array,
+        CVID.MS_raw_ion_mobility_drift_time_array,
+        CVID.MS_mean_inverse_reduced_ion_mobility_array,
+        CVID.MS_mean_ion_mobility_drift_time_array,
+        CVID.MS_deconvoluted_ion_mobility_drift_time_array,
+    };
 
     private static void SetNumpress(MsConvertConfig config, BinaryNumpress kind, params CVID[] arrayTypes)
     {
@@ -375,6 +451,9 @@ internal static class ArgParser
         foreach (var kv in s.PrecisionOverrides) d.PrecisionOverrides[kv.Key] = kv.Value;
         foreach (var kv in s.CompressionOverrides) d.CompressionOverrides[kv.Key] = kv.Value;
         foreach (var kv in s.NumpressOverrides) d.NumpressOverrides[kv.Key] = kv.Value;
+        dest.Zstd |= src.Zstd;
+        dest.MzShuffleZstd |= src.MzShuffleZstd;
+        dest.DictZstd |= src.DictZstd;
 
         // Boolean toggles copy through directly. Indexed defaults to true, so "indexed got
         // explicitly turned off in the config file" means src.WriteConfig.Indexed == false.
@@ -454,6 +533,10 @@ internal static class ArgParser
         "  --mz32 / --mz64          Per-array precision for m/z + retention-time",
         "  --inten32 / --inten64    Per-array precision for intensity",
         "  -z, --zlib               zlib-compress binary arrays",
+        "  --zstd                   Zstandard in place of zlib for all arrays",
+        "  --mzShuffleZstd          Byte-shuffled Zstandard for m/z + retention time",
+        "  --dictZstd               Dictionary-encoded Zstandard for m/z + ion mobility",
+        "                           (overrides --mzShuffleZstd)",
         "  --numpressLinear[=tol]   Numpress Linear (m/z / retention time)",
         "  --numpressPic            Numpress Pic (integer intensities)",
         "  --numpressSlof[=tol]     Numpress Slof (log-scaled intensities)",
