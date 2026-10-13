@@ -242,12 +242,8 @@ namespace pwiz.Osprey.Core
         public const string ROUTE_RESCORE_HYDRATE = @"rescore-hydrate";
         /// <summary>How the second-pass join visits runs.</summary>
         public const string ROUTE_SECOND_PASS_JOIN = @"second-pass-join";
-        /// <summary>The O(files x entries) all-runs reconciliation bundle was built or refused.</summary>
-        public const string ROUTE_ALL_RUNS_BUNDLE = @"all-runs-bundle";
         /// <summary>The frozen-competition second-pass fold and how many worker answers it read.</summary>
         public const string ROUTE_SECOND_PASS_FOLD = @"second-pass-fold";
-        /// <summary>The whole-run survivor pool was materialized at once.</summary>
-        public const string ROUTE_SURVIVOR_POOL = @"survivor-pool";
         /// <summary>The pass-2 q-value mode in force.</summary>
         public const string ROUTE_PASS2_QVALUE = @"pass2-qvalue";
         /// <summary>The experiment-wide aggregation in force.</summary>
@@ -261,8 +257,6 @@ namespace pwiz.Osprey.Core
         /// file's stubs held at once) or <c>lean</c> (calibration and footer counts only).
         /// </summary>
         public const string ROUTE_SCORED_ENTRIES = @"scored-entries";
-        /// <summary>The resident pre-compaction first-pass pool was held (O(files)).</summary>
-        public const string ROUTE_PRE_COMPACTION_POOL = @"pre-compaction-pool";
         /// <summary>
         /// The exit code and the "Error:" lines disagreed and Program reconciled them
         /// (<c>error-with-success</c> or <c>failure-without-error</c>). Always a defect.

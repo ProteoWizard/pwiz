@@ -97,73 +97,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         };
 
         /// <summary>
-        /// Build and write the report. Called from the Stage 5 boundary where the
-        /// per-file <see cref="FdrEntry"/> lists are scored and q-valued (pre
-        /// compaction, so decoys and entrapment are still present).
-        /// </summary>
-        public static void Write(
-            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            FeatureContributions contributions,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            ModelDiagnosticsData.CalibrationData cal,
-            OspreyConfig config,
-            IOspreyLog log,
-            string validityKey = null)
-        {
-            try
-            {
-                Dictionary<uint, EntrapmentClass> classByBaseId;
-                Dictionary<uint, uint> pairByBaseId;
-                double entrapmentRatio;
-                BuildClassificationFromLibrary(config, libraryById, log, 1,
-                    out classByBaseId, out pairByBaseId, out entrapmentRatio);
-
-                var data = ModelDiagnosticsData.Build(
-                    perFileEntries, contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel,
-                    BuildPrecursorMzLookup(libraryById));
-                // The CAL view: per-file calibration diagnostics captured at Stage 3
-                // (null when none were captured -- a resumed run, or no files calibrated).
-                // Serialized into the pass-1 data sidecar below, so it round-trips into the
-                // object graph WritePass2AndFinalizeFromAccumulator reloads and survives to the
-                // final page.
-                data.Cal = cal;
-                LogModelTabNote(contributions, log);
-                data.GeneratedUtc = DateTime.UtcNow.ToString(
-                    @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
-                data.OspreyVersion = OspreyVersion.DisplayVersion;
-                data.OutputName = OutputStem(config);
-
-                // Unmatched entrapment excluded from the FDP is reported by
-                // EntrapmentPairing.LogSummary during classification; no separate
-                // NUnclassified warning needed (it counts the same intended drops).
-
-                // The pass-1 product first, then the page: the page is a view of it, so an
-                // interruption between the two leaves the artifact that can rebuild the view
-                // rather than a view with nothing behind it.
-                WritePass1Sidecar(data, config, validityKey, log.LogInfo);
-                string outPath = RenderAndWrite(data, config, ProductStamp(FirstPassTaskName, validityKey));
-
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_, outPath));
-            }
-            catch (Exception ex)
-            {
-                // Never let a diagnostics-only artifact take down a real run.
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_, ex.Message));
-            }
-        }
-
-        /// <summary>
-        /// Projection-path counterpart of <see cref="Write"/>: build and write the pass-1 report
-        /// from the streamed <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the
-        /// first-pass score sink) instead of the resident pre-compaction pool that OOM'd an
-        /// 82-file run at FirstPassFDR. The accumulator already holds the entrapment classification
+        /// Build and write the pass-1 report from the streamed
+        /// <see cref="ModelDiagnosticsData.Accumulator"/> (fed per-row by the first-pass score
+        /// sink or the streaming rehydrate) instead of the resident pre-compaction pool that
+        /// OOM'd an 82-file run at FirstPassFDR. The accumulator already holds the entrapment classification
         /// (built by <see cref="BuildClassificationFromLibrary"/> when it was constructed, and
         /// logged once there), so this only assembles the data model, attaches the CAL view + run
         /// metadata, renders the HTML, and stashes the pass-1 data sidecar for SecondPassFdrTask's
-        /// pass-2 enrichment. Byte-identical to <see cref="Write"/> on the same input: the
-        /// accumulator's streamed reductions reproduce the resident reductions (they are
-        /// order-independent). Any failure is logged and swallowed; a diagnostics artifact never
+        /// pass-2 enrichment. Byte-identical to the batch <c>ModelDiagnosticsData.Build</c>
+        /// test oracle on the same input: the accumulator's streamed reductions reproduce the
+        /// resident reductions (they are order-independent). Any failure is logged and swallowed; a diagnostics artifact never
         /// aborts a real run.
         ///
         /// <c>coAssignment</c> is the pass-1 peak co-assignment panel (issue #4522), built by
@@ -186,8 +129,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // The CAL view: per-file calibration diagnostics captured at Stage 3 (null when
                 // none were captured -- a resumed run, or no files calibrated). Serialized into the
                 // pass-1 data sidecar below so it round-trips into the object graph
-                // WritePass2AndFinalizeFromAccumulator reloads and survives to the final page
-                // (same as Write).
+                // WritePass2AndFinalizeFromAccumulator reloads and survives to the final page.
                 data.Cal = cal;
                 LogModelTabNote(contributions, log);
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
@@ -242,7 +184,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         ///
         /// <para>Every reduction the accumulator performs is order-independent and enumerates
         /// the reduced best-per-precursor set in nested (file, row) order, which is what keeps it
-        /// byte-identical to the batch <see cref="ModelDiagnosticsData.BuildPass2"/> its tests
+        /// byte-identical to the batch <c>ModelDiagnosticsData.BuildPass2</c> its tests
         /// compare against. The classification / pairing / ratio are not rebuilt here - the
         /// accumulator was constructed with them, and rebuilding runs for minutes at 6.3M
         /// library entries.</para>
