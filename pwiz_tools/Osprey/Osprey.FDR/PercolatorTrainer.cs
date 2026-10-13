@@ -113,7 +113,7 @@ namespace pwiz.Osprey.FDR
             //     N times, which would inflate apparent target/decoy separation and
             //     cause the SVM to learn file-specific noise rather than peptide
             //     discriminating features. Mirrors the streaming Percolator path's
-            //     dedup step (RunPercolatorStreaming); the Rust direct path
+            //     dedup step; the Rust direct path
             //     historically omitted this step, but on multi-file inputs sized
             //     below the streaming threshold (Stellar 3-file at 393k entries)
             //     the omission produced a statistically incorrect training set
@@ -358,7 +358,7 @@ namespace pwiz.Osprey.FDR
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
             // each experiment q up to the entry's best (min-over-runs) combined run q, so an
             // experiment-level q is never more confident than the entry's best single run.
-            // Identical floors to PercolatorEngine.ClampExperimentQToBestRun, over the flat
+            // Identical floors to PercolatorEngine.AccumulateExperimentQFloors, over the flat
             // score-pass arrays (no resident FdrEntry buffer). Covers the direct dispatch.
             PercolatorQValues.ClampExperimentQToBestRunFlat(
                 entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
@@ -370,7 +370,7 @@ namespace pwiz.Osprey.FDR
             // model it decomposes -- a pure read of stdFeatures + foldWeights that
             // never perturbs finalScores / q-values (serial in row/index order).
             // The table characterizes the AVERAGED model -- the same object the
-            // production streaming path (ScorePopulationAndComputeFdr) actually
+            // production streaming path actually
             // scores with -- not the per-entry CV ensemble that produced
             // finalScores on this test / small-input standalone path.
             // Null on the gradient-boosted-trees path: the report decomposes a score

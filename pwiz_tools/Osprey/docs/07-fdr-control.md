@@ -15,9 +15,8 @@ Primary C# code:
 
 | File | Role |
 |------|------|
-| `Osprey.FDR/PercolatorEngine.cs` | Orchestration: build `PercolatorEntry` input, dispatch, write results back onto stubs, best-of-runs clamp |
+| `Osprey.FDR/PercolatorEngine.cs` | Orchestration over the projection buffer and the streamed first pass, plus the best-of-runs experiment-q floors |
 | `Osprey.FDR/PercolatorTrainer.cs`, `PercolatorSampling.cs`, `PercolatorScorer.cs`, `PercolatorQValues.cs`, `StreamingFdr.cs` | Native Percolator (split out of the former `PercolatorFdr.cs` in #4490): standardize, subsample, fold assignment, SVM training, Granholm calibration, PEP, q-values |
-| `Osprey.FDR/PercolatorEntryBuilder.cs` | Build the flat `PercolatorEntry` list from `FdrEntry` stubs |
 | `Osprey.FDR/FdrController.cs` | Generic target-decoy competition (`CompeteAndFilter`), the port of Rust's `FdrController`; kept with its tests, though no pipeline path calls it since the `simple` method was removed (#4543) |
 | `Osprey.FDR/FdrProjection.cs`, `FdrProjectionOutput.cs` | Thin peak-buffer projection path (issue #4355) driving the identical SVM core |
 | `Osprey.ML/LinearSvmClassifier.cs` | L2-regularized linear SVM via dual coordinate descent + grid search for C |
@@ -55,9 +54,10 @@ Stage 7 (second pass, authoritative):
   9. Second-pass protein FDR (authoritative) + blib output.
 ```
 
-The two passes call the **same** `PercolatorEngine.RunPercolatorFdr` core (with
-`passLabel` `"First-pass"` vs `"Second-pass"`), so training, calibration, and q-value
-math are shared source (`PercolatorEngine.cs:59`, `Pass2FdrSidecar.cs:521`).
+The first pass trains Percolator through `PercolatorEngine.RunFirstPassStreaming`. The second
+pass trains nothing: each run is re-scored with the frozen first-pass model
+(`FrozenModelScorer`, applied per run by `Pass2PerFileWorker` on the PerFileRescoring
+worker), and SecondPassFDR folds the per-run answers.
 
 ---
 
@@ -75,20 +75,22 @@ Target/decoy pairing uses the high bit of `EntryId`: `base_id = EntryId & 0x7FFF
 (`PercolatorEntry.cs:42`, `BASE_ID_MASK = 0x7FFFFFFF`). A target and its paired decoy
 share `base_id`; the decoy has the high bit set.
 
-`PercolatorEntryBuilder.Build` (`PercolatorEntryBuilder.cs:52`) emits exactly one
-`PercolatorEntry` per stub in nested `(file, entry)` order. Results are later zipped
-back **by position** — the former psm_id-keyed re-join was removed as redundant
-(`PercolatorEngine.ApplyPercolatorResults`, `PercolatorEngine.cs:519`). Before
-building, each file's entries are sorted by `(EntryId, Charge, ScanNumber,
-ParquetIndex)` so the SVM working-set order is canonical across Rust and C#
-(`PercolatorEngine.cs:82`).
+Every score pass walks its rows in nested `(file, row)` order and hands each row's score
+and q-values to the pass's output sink **by position** - no psm_id-keyed re-join. Before
+scoring, each file's projection rows are sorted by `(EntryId, Charge, ParquetIndex)`, which
+on a parquet written in `(entry_id, charge, scan_number)` order is the canonical SVM
+working-set order across Rust and C#; the streaming first pass reads its rows in exactly that
+order from the parquet. The `FdrEntry`-list builder and positional write-back that served the
+resident first pass were removed with `OSPREY_FDR_PROJECTION` (2026-10-10), and the resident
+projection scorer (`PercolatorEngine.RunPercolatorFdr`) is an internal test oracle since
+2026-10-12.
 
 ---
 
 ## Step 2 — Classifier selection (`OSPREY_FDR_MODEL`)
 
 There is no dispatch on an FDR method: every run goes through the one Percolator framework
-(`FirstPassFdrTask.RunPercolatorFdr` -> `PercolatorEngine.RunPercolatorFdr`), and
+(`PercolatorEngine.RunFirstPassStreaming`), and
 `config.FdrClassifier` only selects the classifier trained inside it:
 
 - `FdrClassifier.LinearSvm` (default) - the linear SVM
@@ -173,15 +175,15 @@ is a baseline for feature work, not a verdict on either classifier.
 
 **Every first-pass path trains and scores the trees.** A default run takes the lean
 counts-only first pass (`PercolatorScorer.RunStreamingFirstPass`) for `gbdt` exactly as for
-the SVM, since both are the Percolator framework; the projection buffer and
-`OSPREY_FDR_PROJECTION=0` take the resident paths. All three hand the trainer the same
+the SVM, since both are the Percolator framework; the projection buffer takes the resident
+path. Both hand the trainer the same
 `PercolatorConfig.CloneForTrainOnly()` copy and score through the same per-classifier code:
 the averaged weights for the SVM, the fold tree margins averaged per row for GBDT. On the lean
 first pass and the projection buffer (`ScoreProjectionAndComputeFdrInPlace`), trees score a
 whole file at a time in parallel (`--threads`), because a tree score depends only on its own
-row; the resident `FdrEntry` path (`ScorePopulationAndComputeFdr`, under
-`OSPREY_FDR_PROJECTION=0`) scores them serially, row by row. The SVM keeps its serial,
-parity-locked loop on every path. The lean path used to build its own training config without
+row. The SVM keeps its serial, parity-locked loop on every path. (A third, resident
+`FdrEntry` path under `OSPREY_FDR_PROJECTION=0` scored trees serially; it was removed on
+2026-10-10.) The lean path used to build its own training config without
 the classifier choice, so a default gbdt run (then `--fdr-method gbdt`) trained the linear SVM (at the tree
 iteration cap, ignoring `OSPREY_GBT_*`) and pass 2 froze that SVM.
 `FdrTest.TestStreamingFirstPassTrainsGbdt` pins the fix against the resident projection path,
@@ -231,14 +233,14 @@ upstream competition. The C# port is **streaming-only**: the former sub-threshol
 "direct" branch that trained on all entries was removed to match Rust's streaming-only
 change, so C# and Rust fit the standardizer on subsets built by the same selection code at
 every scale — though **no longer on the same subset by default**, since the training
-selection below is C#-only (`PercolatorEngine.DispatchSvm`, `PercolatorEngine.cs:413`;
-`RunPercolatorStreaming`, `PercolatorEngine.cs:589`).
+selection below is C#-only (`PercolatorEngine.RunStreamingIntoProjection`,
+`PercolatorScorer.RunStreamingFirstPass`).
 
 ### 3a. Standardize features
 
 `FeatureStandardizer.FitTransform` standardizes every feature to zero mean / unit
 variance (`PercolatorTrainer.cs:82`). On the streaming path the standardizer is fit on the
-**training subset**, not the full population (`RunPercolatorStreaming`).
+**training subset**, not the full population (`RunStreamingIntoProjection`).
 
 ### 3b. Best-per-precursor dedup + peptide-grouped subsample
 
@@ -355,8 +357,7 @@ callers) are held-out CV entries scored by their fold's model and entries outsid
 training subset by the **average** of all fold models (`ScoreEntriesWithFoldModels`,
 `PercolatorTrainer.cs:433-490`). Every production path trains with `TrainOnly`, which returns
 before that step (`PercolatorTrainer.cs:264-289`). The streaming score passes -
-`ScorePopulationAndComputeFdr`, `ScoreProjectionAndComputeFdrInPlace` and
-`RunStreamingFirstPass` - then apply `standardizer` + the fold average (the averaged weights +
+`ScoreProjectionAndComputeFdrInPlace` and `RunStreamingFirstPass` - then apply `standardizer` + the fold average (the averaged weights +
 bias for the SVM, the fold margins averaged per row for trees) to **every** entry, the
 training-subset entries included, reloading features one file at a time
 (`PercolatorScorer.cs:63`, `PercolatorScorer.cs:272`). See "GBDT" above for what that
@@ -410,7 +411,7 @@ implementation.
 All q-values use the conservative `(decoys + 1) / targets` estimate with a backward
 monotonicity sweep (`ComputeQvaluesCore`, `PercolatorQValues.cs:374`,
 `decoyOffset = 1` for conservative). The four levels
-(`ScorePopulationAndComputeFdr` / `ComputeStreamingCompetitionQvalues`,
+(`ComputeStreamingCompetitionQvalues`,
 `StreamingFdr.cs:102-121`):
 
 | Level | Scope | Method |
@@ -445,9 +446,9 @@ ExperimentPeptideQvalue   <- max(ExperimentPeptideQvalue,   min-over-runs runBot
 Both floors key on the target/decoy-specific identity (never the shared `base_id` or bare
 sequence), so a decoy's good run cannot lower its paired target's floor. Two identical
 implementations exist: the memory-bounded flat form `ClampExperimentQToBestRunFlat`
-runs in-pass over the score arrays (`PercolatorQValues.cs:122`); the resident overload
-`PercolatorEngine.ClampExperimentQToBestRun` (`PercolatorEngine.cs:1009`) is re-applied
-after Stage 6 reconciliation in `SecondPassFdrTask`, because reconciliation resets the run
+runs in-pass over the score arrays (`PercolatorQValues.cs:122`); the per-run pair
+`PercolatorEngine.AccumulateExperimentQFloors` / `ApplyExperimentQFloors` (held together by
+`ExperimentQFloors`) is re-applied after Stage 6 reconciliation in `SecondPassFdrTask`, because reconciliation resets the run
 q-values of moved and gap-filled peaks (issue #4390).
 
 **The second pass applies the floor BEFORE it writes.** It did not, and that was the defect
@@ -892,10 +893,10 @@ calibration LDA, not Percolator.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Streaming-only, matching Rust's v26.7.0 change** - The
   Rust doc notes the direct (non-streaming) path was removed in v26.7.0 and Percolator
-  "always streams". C# matches: `DispatchSvm` always takes the streaming path and the
-  in-code comments state the former sub-threshold direct branch was removed for parity
-  (`PercolatorEngine.cs:413`). This is agreement, recorded for
-  completeness. Evidence: `Osprey.FDR/PercolatorEngine.cs:413`. Severity: info.
+  "always streams". C# matches: every production score pass streams, and the in-code
+  comments state the former sub-threshold direct branch was removed for parity
+  (`PercolatorEngine.RunFirstPassStreaming`). This is agreement, recorded for
+  completeness. Evidence: `Osprey.FDR/PercolatorEngine.cs`. Severity: info.
 
 - **[RESOLVED] First-pass C selection keeps the most regularized C within 1% of the best**
   - C# adopted it first (pwiz #4703, `PercolatorTrainer.SelectC`) and Rust followed in

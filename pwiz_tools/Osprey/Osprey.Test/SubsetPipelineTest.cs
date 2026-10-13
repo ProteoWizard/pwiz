@@ -26,6 +26,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
@@ -155,7 +156,7 @@ namespace pwiz.Osprey.Test
 
             // Mode 2: invalidate the join and the library, and resume from the spectra caches
             // alone - the inputs are named in the work directory, where no mzML exists.
-            DeleteFiles(straightDir, Path.GetFileName(TaskValiditySidecar.PathFor(@"*", FirstPassFdrTask.TASK_NAME)));
+            DeleteFiles(straightDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
             DeleteSecondPassOutputs(blib);
             log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(true));
             AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
@@ -181,17 +182,36 @@ namespace pwiz.Osprey.Test
             // are released, against the summary the straight-through run wrote (#4650).
             AssertStreamedJoin(log);
             AssertFragmentRelease(log, straightLog);
+
+            // --task FirstPassFDR over the finished directory, with its retained summary deleted
+            // so the task owes an output. The cross-run reconciliation files the finished run left
+            // beside each parquet once sent it down the resident route: every run's first-pass
+            // candidates, plus an all-runs reconciliation bundle the training never reads. That
+            // route is gone; the re-run must take the lean load and rebuild the same summary.
+            Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(straightDir, @"*" + ReconciliationFile.EXT).Length,
+                @"no cross-run reconciliation files to tempt the resident route");
+            string summary = Path.Combine(straightDir,
+                OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
+            byte[] summaryHash = HashFile(summary);
+            File.Delete(summary);
+            log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(false),
+                OspreyCommandArgs.ARG_TASK.ArgumentText, FirstPassFdrTask.TASK_NAME);
+            CollectionAssert.AreEqual(summaryHash, HashFile(summary), @"the re-run wrote a different retained summary");
         }
 
         /// <summary>
         /// The four-task HPC chain, each phase in its own directory holding only the files the
         /// previous phase shipped, as separate computers would run it. The chain's library and
-        /// every FDR sidecar it wrote must equal the straight-through run's.
+        /// every FDR sidecar it wrote must equal the straight-through run's. Under both pass-2
+        /// modes: the transfer's per-file half runs on the phase-3 workers like the default's
+        /// (#4665), so phase 4 is shipped no first-pass file in either.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetHpcTaskChain()
         {
             AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES));
+            AssertHpcChainMatchesStraight(new Subset(_dataDir, LIBRARY_FILE, @"unit", RUN_NAMES,
+                OspreyEnvironment.PASS2_QVALUE_TRANSFER), OspreyEnvironment.PASS2_QVALUE_TRANSFER + @"-");
         }
 
         /// <summary>
@@ -282,6 +302,21 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
+
+            // An older build's reconciled parquet under a stamp this build accepts, as
+            // OSPREY_VERSION_OVERRIDE produces: --task SecondPassFDR must refuse it before loading
+            // any run, and a resume must re-score that run alone. Both once took it as current,
+            // loaded every run, and then died on it with a stack trace.
+            ForgeOlderBuildReconciledParquet(workDir, cutRun);
+            DeleteSecondPassOutputs(blib);
+            log = RunAnalysisExpecting(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true),
+                Program.EXIT_CODE_FAILURE_TO_START,
+                args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, SecondPassFdrTask.TASK_NAME }).ToArray());
+            Assert.IsTrue(SplitLines(log).Any(line => CommandStatusWriter.IsErrorLine(line) && line.Contains(cutRun)),
+                @"the refusal did not name the run" + Environment.NewLine + log);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
+            AssertRescoredOnly(log, 1);
+            AssertBlibsEqual(uninterruptedBlib, blib);
         }
 
         /// <summary>
@@ -321,7 +356,7 @@ namespace pwiz.Osprey.Test
             string ReferenceOf(string product) => Path.Combine(referenceDir, Path.GetFileName(product));
 
             // Mode 5: the rehydrated second pass re-emits the pass-2 product and the report,
-            // unchanged. Deleted first: a product left in place would be restamped as current and
+            // unchanged. Deleted first: a product left in place would be adopted as current and
             // compared against itself.
             DeleteSecondPassOutputs(blib);
             DeleteDiagnosticsProducts(workDir, pass2, report);
@@ -331,11 +366,17 @@ namespace pwiz.Osprey.Test
                 @"the rehydrated second pass wrote a different pass-2 diagnostics product");
 
             // Mode 7: regenerating the report rewrites the report and nothing else.
+            // Backdated first, or the rewrite can be invisible: NTFS stamps a write from the coarse
+            // system tick (up to ~15.6 ms), the regeneration takes a few milliseconds, and the page
+            // is byte-identical by design - so the previous write and this one could share a size
+            // AND a timestamp, and the fingerprint would report that nothing changed.
+            File.SetLastWriteTimeUtc(report, File.GetLastWriteTimeUtc(report).AddHours(-1));
             var before = FingerprintDir(workDir);
             log = RunDiagnostics(ModelDiagnosticsTask.TASK_NAME);
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)), log);
-            CollectionAssert.AreEqual(new[] { Path.GetFileName(report) }, ChangedFiles(before, workDir),
-                @"regeneration changed something other than the report" + Environment.NewLine + log);
+            var regenerated = ChangedFiles(before, workDir);
+            CollectionAssert.AreEqual(new[] { Path.GetFileName(report) }, regenerated,
+                @"regeneration changed something other than the report: " + string.Join(@", ", regenerated) +
+                Environment.NewLine + log);
             CollectionAssert.AreEqual(File.ReadAllBytes(ReferenceOf(report)), File.ReadAllBytes(report),
                 @"the regenerated report differs from the one the analysis wrote");
 
@@ -344,12 +385,10 @@ namespace pwiz.Osprey.Test
             // why the fold markers and the absence of analysis are what is asserted.
             string[] noAnalysis =
             {
-                PathLine(LogKey.ROUTE_PRE_COMPACTION_POOL, @"resident"),
                 PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty),
                 PathLine(LogKey.ROUTE_SCORED_ENTRIES, @"resident"),
                 @"[" + LogTag.STAGE_WALL + @"] second-pass-fdr",
-                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty),
-                PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)
+                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty)
             };
             string foldPass1 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass1");
             string foldPass2 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass2");
@@ -364,7 +403,7 @@ namespace pwiz.Osprey.Test
             foreach (string changed in ChangedFiles(before, workDir))
             {
                 Assert.IsTrue(changed == Path.GetFileName(pass1) || changed == Path.GetFileName(pass2) ||
-                              changed == Path.GetFileName(report) || changed.EndsWith(TaskValiditySidecar.EXT, StringComparison.Ordinal),
+                              changed == Path.GetFileName(report),
                     @"the pay-later fold touched an artifact other than the report: " + changed);
             }
 
@@ -419,6 +458,19 @@ namespace pwiz.Osprey.Test
             RunAnalysis(parallelDir, DataInputs(), FdrLanes(RUN_NAMES.Length),
                 OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
             AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
+
+            // Each per-file stage resolves its own count: scoring and re-scoring on different lane
+            // counts, over a shared --parallel-files they both override, still give the sequential
+            // answer, and each stage's decision line names the flag that set it.
+            string stagesDir = CreateDir(@"parallel-files-stages");
+            int rescoringLanes = RUN_NAMES.Length - 1;
+            string stagesLog = RunAnalysis(stagesDir, DataInputs(), FdrLanes(1),
+                OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, @"1",
+                OspreyCommandArgs.ARG_PARALLEL_FILES_SCORING.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture),
+                OspreyCommandArgs.ARG_PARALLEL_FILES_RESCORING.ArgumentText, rescoringLanes.ToString(CultureInfo.InvariantCulture));
+            AssertBlibsEqual(baseBlib, Path.Combine(stagesDir, BLIB_FILE));
+            StringAssert.Contains(stagesLog, ExplicitParallelismLine(RUN_NAMES.Length, OspreyArgNames.PARALLEL_FILES_SCORING));
+            StringAssert.Contains(stagesLog, ExplicitParallelismLine(rescoringLanes, OspreyArgNames.PARALLEL_FILES_RESCORING));
 
             // --diagnostics writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
@@ -511,6 +563,9 @@ namespace pwiz.Osprey.Test
                 });
                 AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
                 AssertHasLine(transferLog, PathLine(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
+                // Transfer's per-file half runs in the rescore worker like every other mode
+                // (#4665), so Stage 7 folds run by run instead of holding every run's survivors.
+                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             }
             finally
             {
@@ -526,6 +581,11 @@ namespace pwiz.Osprey.Test
             {
                 string sidecar = Path.Combine(transferDir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
                 Assert.IsTrue(File.Exists(sidecar), @"the transfer arm wrote no second-pass sidecar: " + sidecar);
+                // Written by PerFileRescoring, not by SecondPassFDR: the per-run 2nd-pass sidecar
+                // has one producer in every pass-2 mode (#4665).
+                Assert.AreEqual(PerFileRescoreTask.TASK_NAME,
+                    FdrScoresSidecar.ReadStamp(sidecar, FdrScoresSidecar.Pass.SecondPass)?.Task,
+                    @"the transfer arm's second-pass sidecar was not written by re-scoring: " + sidecar);
             }
 
             // Calibration from a sample of the library, as on a full-size library: sampled
@@ -541,12 +601,28 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(sampledDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"sampled calibration reported no precursors");
 
-            // The spectra-cache task alone writes one cache per run and nothing downstream.
+            // The spectra-cache task alone writes one cache per run and nothing downstream. Pinned
+            // to one lane, so the lane comparison below always has a sequential baseline.
             string cacheDir = CreateDir(@"spectra-cache");
             RunAnalysis(cacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
-                SpectraCacheTask.TASK_NAME);
+                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES_CACHING.ArgumentText, @"1");
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(cacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length);
             Assert.IsFalse(File.Exists(Path.Combine(cacheDir, BLIB_FILE)));
+
+            // With --parallel-files the runs cache on lanes at once, and every cache is
+            // byte-identical to the one-lane result: a file's cache depends only on its input.
+            string laneCacheDir = CreateDir(@"spectra-cache-lanes");
+            string laneLog = RunAnalysis(laneCacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
+                SpectraCacheTask.TASK_NAME, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
+                RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
+            StringAssert.Contains(laneLog, string.Format(OspreyTasksResources.SpectraCacheTask_Run_Caching__0__files___1__at_a_time_,
+                RUN_NAMES.Length, RUN_NAMES.Length));
+            foreach (string run in RUN_NAMES)
+            {
+                CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(cacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    File.ReadAllBytes(Path.Combine(laneCacheDir, run + SPECTRA_CACHE_EXTENSION)),
+                    @"a cache built on a lane differs from the one-lane cache: " + run);
+            }
         }
 
         /// <summary>
@@ -744,6 +820,17 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The decision line a per-file stage logs when <paramref name="argName"/> set its count to
+        /// <paramref name="lanes"/> over the subset's runs.
+        /// </summary>
+        private static string ExplicitParallelismLine(int lanes, string argName)
+        {
+            return string.Format(
+                OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_,
+                lanes, RUN_NAMES.Length, OspreyArgNames.Text(argName));
+        }
+
+        /// <summary>
         /// Every OSPREY_* variable in the process environment, to restore after a command line that
         /// sets some.
         /// </summary>
@@ -861,8 +948,6 @@ namespace pwiz.Osprey.Test
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on"));
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, string.Empty)),
-                @"the second pass materialized an all-runs survivor pool");
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
             {
@@ -907,81 +992,73 @@ namespace pwiz.Osprey.Test
         /// Run <paramref name="data"/> straight through, then as the four-task chain, and assert
         /// the chain reproduced the straight run's library and FDR sidecars.
         /// </summary>
-        private void AssertHpcChainMatchesStraight(Subset data)
+        /// <param name="data">The subset and pass-2 mode.</param>
+        /// <param name="dirPrefix">Prefixes every directory, so two chains in one test do not
+        /// share any.</param>
+        private void AssertHpcChainMatchesStraight(Subset data, string dirPrefix = @"")
         {
             // The straight run verifies the second pass's worker answers and the chain folds them
             // unverified, so the two legs cover different second-pass paths.
-            string straightDir = CreateDir(@"straight");
-            string straightLog = RunOsprey(data.AnalysisArgs(straightDir), Verifier(true));
+            string straightDir = CreateDir(dirPrefix + @"straight");
+            string straightLog = RunOsprey(data.AnalysisArgs(straightDir), data.Variables(true));
             string straightBlib = Path.Combine(straightDir, BLIB_FILE);
 
             // Phase 1, one worker per run: score it from its mzML.
             foreach (string run in data.Runs)
             {
-                string phaseDir = CreateDir(@"phase1_" + run);
+                string phaseDir = CreateDir(dirPrefix + @"phase1_" + run);
                 File.Copy(Path.Combine(data.DataDir, run + MZML_EXTENSION), Path.Combine(phaseDir, run + MZML_EXTENSION));
                 RunTask(data, phaseDir, PerFileScoringTask.TASK_NAME, run);
             }
 
             // Phase 2, one node over every run: first-pass FDR from the scores and calibrations.
-            string phase2Dir = CreateDir(@"phase2");
+            string phase2Dir = CreateDir(dirPrefix + @"phase2");
             foreach (string run in data.Runs)
             {
-                ShipFiles(@"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
+                ShipFiles(dirPrefix + @"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
             }
             RunTask(data, phase2Dir, FirstPassFdrTask.TASK_NAME, data.Runs);
 
             // Phase 3, one worker per run: rescore with the first pass's answer.
             foreach (string run in data.Runs)
             {
-                string phaseDir = CreateDir(@"phase3_" + run);
-                ShipFiles(@"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
+                string phaseDir = CreateDir(dirPrefix + @"phase3_" + run);
+                ShipFiles(dirPrefix + @"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
                     run + CalibrationIO.EXT);
-                ShipFiles(@"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT), run + ReconciliationFile.EXT,
+                ShipFiles(dirPrefix + @"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT), run + ReconciliationFile.EXT,
                     OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
-                ShipFilesIfPresent(@"phase2", phaseDir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM,
+                ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM,
                     ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
             }
 
             // Phase 4, one node over every run: second-pass FDR and the library.
-            string phase4Dir = CreateDir(@"phase4");
+            string phase4Dir = CreateDir(dirPrefix + @"phase4");
             foreach (string run in data.Runs)
             {
-                string phase3 = @"phase3_" + run;
+                string phase3 = dirPrefix + @"phase3_" + run;
                 ShipFiles(phase3, phase4Dir, run + ParquetScoreCache.EXT_SCORES_RECONCILED, run + CalibrationIO.EXT,
                     run + ReconciliationFile.EXT);
                 ShipFilesIfPresent(phase3, phase4Dir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM);
-                string pass2Scores = PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT);
-                string pass2Decoys = PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT);
-                if (File.Exists(Path.Combine(_testDir, phase3, pass2Scores)))
-                {
-                    ShipFiles(phase3, phase4Dir, pass2Scores, pass2Decoys,
-                        Path.GetFileName(TaskValiditySidecar.PathFor(pass2Scores, PerFileRescoreTask.TASK_NAME)),
-                        Path.GetFileName(TaskValiditySidecar.PathFor(pass2Decoys, PerFileRescoreTask.TASK_NAME)));
-                }
-                else
-                {
-                    ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT));
-                }
+                // Every run's second-pass answer, and nothing from its first pass: PerFileRescoring
+                // writes the answer for every run (#4665), so a SecondPassFDR node needs no
+                // per-run 1st-pass file.
+                ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
+                // The decoy side of a competition; the transfer competes nothing and writes none.
+                if (data.Pass2Mode == null)
+                    ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
-            ShipFiles(@"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
-            ShipFilesIfPresent(@"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
+            ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
+            ShipFilesIfPresent(dirPrefix + @"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
                 OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
             string phase4Log = RunTask(data, phase4Dir, SecondPassFdrTask.TASK_NAME, data.Runs);
             AssertHasLine(phase4Log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            // Every run's per-file worker answer was folded, none recomputed here.
-            var fold = new Regex(Regex.Escape(PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, string.Empty)) +
-                                 @"verify=\w+ answered=(\d+)/\1\b");
-            Assert.IsTrue(fold.IsMatch(phase4Log), @"second pass did not fold every worker answer" +
-                                                   Environment.NewLine + phase4Log);
-            // The verifier split: if the variable stopped reaching a run, both legs would take
-            // the same path and every comparison below would still pass.
-            string verified = PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on ");
-            AssertHasLine(straightLog, verified);
-            Assert.IsFalse(HasLine(phase4Log, verified), @"the chain verified its worker answers" +
-                                                         Environment.NewLine + phase4Log);
+            // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
+            // otherwise, so the fold line is the evidence it ran. It and the verifier belong to
+            // the competition; the transfer fold has neither.
+            if (data.Pass2Mode == null)
+                AssertCompetitionFoldSplit(data, straightLog, phase4Log);
 
             AssertBlibsEqual(straightBlib, Path.Combine(phase4Dir, BLIB_FILE));
             // The library carries no per-entry score or protein q-value, so a route that writes
@@ -989,7 +1066,7 @@ namespace pwiz.Osprey.Test
             // first-pass sidecars are compared where the phase-3 workers read them.
             foreach (string run in data.Runs)
             {
-                AssertFdrSidecarsEqual(straightDir, Path.Combine(_testDir, @"phase3_" + run),
+                AssertFdrSidecarsEqual(straightDir, Path.Combine(_testDir, dirPrefix + @"phase3_" + run),
                     FdrScoresSidecar.Pass.FirstPass, run);
             }
             AssertFdrSidecarsEqual(straightDir, phase4Dir, FdrScoresSidecar.Pass.SecondPass, data.Runs);
@@ -997,6 +1074,23 @@ namespace pwiz.Osprey.Test
             // the files must be byte-identical.
             AssertFilesEqual(straightDir, phase2Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass));
             AssertFilesEqual(straightDir, phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.SecondPass));
+        }
+
+        /// <summary>
+        /// The competition's fold line in the HPC chain: phase 4 folded every run's answer, and
+        /// only the straight leg verified them - if the variable stopped reaching a run, both
+        /// legs would take the same path and every comparison would still pass.
+        /// </summary>
+        private static void AssertCompetitionFoldSplit(Subset data, string straightLog, string phase4Log)
+        {
+            var fold = new Regex(Regex.Escape(PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, string.Empty)) +
+                                 @"verify=\w+ runs=" + data.Runs.Length + @"\b");
+            Assert.IsTrue(fold.IsMatch(phase4Log), @"second pass did not fold every worker answer" +
+                                                   Environment.NewLine + phase4Log);
+            string verified = PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on ");
+            AssertHasLine(straightLog, verified);
+            Assert.IsFalse(HasLine(phase4Log, verified), @"the chain verified its worker answers" +
+                                                         Environment.NewLine + phase4Log);
         }
 
         /// <summary>
@@ -1015,13 +1109,23 @@ namespace pwiz.Osprey.Test
         private string RunAnalysis(string workDir, IEnumerable<string> inputs, string libraryFile,
             IReadOnlyDictionary<string, string> variables, params string[] extraArgs)
         {
+            return RunAnalysisExpecting(workDir, inputs, libraryFile, variables, Program.EXIT_CODE_SUCCESS, extraArgs);
+        }
+
+        /// <summary>
+        /// The same, exiting with <paramref name="expectedExitCode"/> - a designed refusal when
+        /// it is not success, with one "Error:" line and no stack trace.
+        /// </summary>
+        private string RunAnalysisExpecting(string workDir, IEnumerable<string> inputs, string libraryFile,
+            IReadOnlyDictionary<string, string> variables, int expectedExitCode, params string[] extraArgs)
+        {
             var args = InputArgs(inputs).Concat(new[]
             {
                 OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, libraryFile),
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
             }).Concat(CommonArgs()).Concat(extraArgs);
-            return RunOsprey(args.ToArray(), variables);
+            return RunOspreyExpecting(args.ToArray(), variables, expectedExitCode);
         }
 
         /// <summary>
@@ -1040,7 +1144,7 @@ namespace pwiz.Osprey.Test
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(phaseDir, BLIB_FILE)
                 }).Concat(CommonArgs(data.Resolution));
-            return RunOsprey(args.ToArray(), Verifier(false));
+            return RunOsprey(args.ToArray(), data.Variables(false));
         }
 
         /// <summary>
@@ -1109,7 +1213,6 @@ namespace pwiz.Osprey.Test
             return new Dictionary<string, string>
             {
                 { @"OSPREY_PASS2_VERIFY_WORKER", on ? @"1" : string.Empty },
-                { @"OSPREY_ALLOW_UNFIXED_RESIDENT", string.Empty },
                 { @"OSPREY_PASS2_QVALUE", string.Empty },
                 { FDR_FILE_LANES, string.Empty }
             };
@@ -1172,10 +1275,9 @@ namespace pwiz.Osprey.Test
 
         private static void DeleteSecondPassOutputs(string blib)
         {
-            string stamp = TaskValiditySidecar.PathFor(blib, SecondPassFdrTask.TASK_NAME);
-            Assert.IsTrue(File.Exists(blib) && File.Exists(stamp), @"no second-pass outputs to invalidate");
+            Assert.AreEqual(SecondPassFdrTask.TASK_NAME, ArtifactValidity.ReadStamp(blib)?.Task,
+                @"no second-pass outputs to invalidate");
             File.Delete(blib);
-            File.Delete(stamp);
         }
 
         /// <summary>
@@ -1196,19 +1298,35 @@ namespace pwiz.Osprey.Test
                 string path = Path.Combine(workDir, product);
                 Assert.IsTrue(File.Exists(path), @"no rescore product to cut: " + path);
                 File.Delete(path);
-                File.Delete(TaskValiditySidecar.PathFor(path, PerFileRescoreTask.TASK_NAME));
             }
         }
 
         /// <summary>
-        /// Stage 7 folded the survivors run by run: the per-run source was published and nothing
-        /// then pulled the whole pool through it. The output is the same either way.
+        /// Replace <paramref name="run"/>'s reconciled parquet with the generation written before
+        /// #4486 - every Stage 4 row, marked <c>"true"</c> rather than as a survivor subset -
+        /// keeping the current file's stamp, so only the shape says it is from an older build.
+        /// Written by the real producer from the run's own Stage 4 parquet.
+        /// </summary>
+        private static void ForgeOlderBuildReconciledParquet(string workDir, string run)
+        {
+            string reconciled = Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES_RECONCILED);
+            var metadata = ParquetScoreCache.LoadFooterMetadata(reconciled);
+            Assert.IsTrue(metadata.ContainsKey(ArtifactStamp.PARQUET_KEY), @"no stamp to keep: " + reconciled);
+            metadata[ParquetScoreCache.META_RECONCILED] = @"true";
+            File.Delete(reconciled);
+            ParquetScoreCache.StreamReconciledScoresParquet(Path.Combine(workDir, run + ParquetScoreCache.EXT_SCORES),
+                reconciled, null, null, metadata, null, run + MZML_EXTENSION, null,
+                PerFileRescoreTask.TASK_NAME, null, null);
+            Assert.IsFalse(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciled));
+        }
+
+        /// <summary>
+        /// Stage 7 folded the survivors run by run: the per-run source was published. The output
+        /// is the same either way.
         /// </summary>
         private static void AssertStreamedJoin(string log)
         {
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, string.Empty)),
-                @"a consumer pulled the whole survivor pool through the per-run source" + Environment.NewLine + log);
         }
 
         /// <summary>
@@ -1475,6 +1593,42 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The hash of an artifact's bytes with its embedded validity stamp blanked: the content
+        /// every route must reproduce byte for byte, without the provenance record, whose key can
+        /// legitimately differ - a training export's key names its inputs' file identities, and
+        /// two analyses in two directories wrote those inputs at different times. The stamp keeps
+        /// its length (the identity terms are fixed-width hashes), so everything else in the file
+        /// is still compared at the same offsets.
+        /// </summary>
+        private static byte[] HashArtifactContent(string path)
+        {
+            byte[] bytes = File.ReadAllBytes(path);
+            var stamp = ArtifactValidity.ReadStamp(path);
+            Assert.IsNotNull(stamp, path + @" carries no validity stamp");
+            byte[] stampBytes = Encoding.UTF8.GetBytes(stamp.ToString());
+            int at = IndexOf(bytes, stampBytes);
+            Assert.IsTrue(at >= 0, path + @": the stamp is not stored verbatim");
+            Array.Clear(bytes, at, stampBytes.Length);
+            using (var sha = SHA256.Create())
+            {
+                return sha.ComputeHash(bytes);
+            }
+        }
+
+        private static int IndexOf(byte[] haystack, byte[] needle)
+        {
+            for (int i = haystack.Length - needle.Length; i >= 0; i--)
+            {
+                int j = 0;
+                while (j < needle.Length && haystack[i + j] == needle[j])
+                    j++;
+                if (j == needle.Length)
+                    return i;
+            }
+            return -1;
+        }
+
+        /// <summary>
         /// The library's precursors as "SEQUENCE|charge" keys, with whether the full 3-file run
         /// detected each one.
         /// </summary>
@@ -1521,18 +1675,35 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private sealed class Subset
         {
-            public Subset(string dataDir, string libraryFile, string resolution, string[] runs)
+            public Subset(string dataDir, string libraryFile, string resolution, string[] runs,
+                string pass2Mode = null)
             {
                 DataDir = dataDir;
                 LibraryFile = libraryFile;
                 Resolution = resolution;
                 Runs = runs;
+                Pass2Mode = pass2Mode;
             }
 
             public string DataDir { get; }
             public string LibraryFile { get; }
             public string Resolution { get; }
             public string[] Runs { get; }
+
+            /// <summary>The OSPREY_PASS2_QVALUE every phase runs under, or null for the default.</summary>
+            public string Pass2Mode { get; }
+
+            /// <summary>
+            /// <see cref="Verifier"/>, with this subset's pass-2 mode set on every phase - a chain
+            /// whose phases disagreed on it would compare two analyses, not two routes.
+            /// </summary>
+            public IReadOnlyDictionary<string, string> Variables(bool verify)
+            {
+                var variables = Verifier(verify).ToDictionary(kv => kv.Key, kv => kv.Value);
+                if (Pass2Mode != null)
+                    variables[@"OSPREY_PASS2_QVALUE"] = Pass2Mode;
+                return variables;
+            }
 
             /// <summary>
             /// The straight-through analysis of every run, with every derived artifact and cache

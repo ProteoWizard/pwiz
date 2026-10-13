@@ -19,6 +19,16 @@ WiX admin .msi (per-machine) of the .NET Framework build:
   * Two variants: <channel>-Setup-<version>.exe bundles the .NET 10 Desktop
     Runtime installer (run only when the runtime is missing);
     <channel>-NoNetRuntime-Setup-<version>.exe only checks for it
+  * A portable <channel>-<version>.zip beside them, the installed tree under a
+    <channel>\ folder: extract it and run <channel>.exe without installing (as
+    the ClickOnce "unplugged" zip allowed). No shortcuts, associations or
+    InstallDir record, and no update check; the .NET 10 Desktop Runtime must
+    already be installed. Downloaded zips should be unblocked (Properties >
+    Unblock) before extracting.
+  * A download page <channel>.html beside them (a copy of DownloadPage.html),
+    for unofficial builds: it reads the version from the manifest in its own
+    folder and links to that version's installer and zip. The product is the
+    page's own name, or the folder's name when it is uploaded as index.html.
 
 Build:
   1. Build Skyline Release x64 (pwiz_tools\Skyline\build.bat --build-only, or
@@ -29,7 +39,22 @@ Build:
      Inno Setup 6 is fetched by scripts\installer\Ensure-InnoSetup.ps1 if the
      machine lacks it; the runtime EXE is cached under scripts\installer\cache.
      Pass -SignToolCommand '<signtool command with $f>' for a signed build.
-  3. Installers land in pwiz_tools\Skyline\bin\installer\.
+  3. Installers land in pwiz_tools\Skyline\bin\installer\, with the update
+     manifest <product>.json beside them. Skyline's startup check reads the
+     manifest to learn the published version. The InstallUrl application
+     setting (app.config) is a folder, and in it <product>.json is the
+     manifest and <product>-Setup-<version>.exe is that version's installer,
+     which is the name the build gives it. To publish, upload the manifest and
+     the bundled installer as they are into that folder; the build prints both
+     URLs.
+     Both values are Skyline application settings (Properties\Settings.settings
+     and app.config), so they reach every build of the branch, and the
+     installer build reads them from the staged <channel>.dll.config. An empty
+     ProductName means the channel; another name is what Programs and
+     Features, the Start Menu, the install folder, the installer and the
+     manifest are called, so a private build such as SkylineNet10Preview
+     installs beside the channels as a product of its own. Anything that can
+     be in a file name can be in the product name, spaces included.
   4. pwsh -File pwiz_tools\Skyline\Executables\Installer\Test-Installer.ps1
      installs the newest one silently, checks the deployment, runs
      SkylineCmd --version, uninstalls, and checks the cleanup (-AllUsers from

@@ -61,7 +61,8 @@ namespace pwiz.Osprey.Tasks
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
             List<PassingObservation> passingEntries,
-            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts)
+            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,
+            ArtifactStamp stamp)
         {
             double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
             // Write the blib to a FileSaver sibling temp, then atomically rename it into
@@ -108,6 +109,9 @@ namespace pwiz.Osprey.Tasks
                     writer.Commit();
 
                     WriteMetadata(writer, config);
+                    // The blib carries its own validity record, so SecondPassFDR's resume check
+                    // reads it from the library rather than from a file beside it.
+                    writer.AddStamp(stamp);
 
                     writer.FinalizeDatabase();
                 }

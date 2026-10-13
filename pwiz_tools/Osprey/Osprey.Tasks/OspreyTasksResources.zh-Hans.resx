@@ -337,14 +337,6 @@
     <value>{0:N0} 个蛋白质的检测数不少于 2（{1:N0} 个已检测肽段）；其 {2:N0} 个母离子候选进入第二轮 FDR。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates__1_file_" xml:space="preserve">
-    <value>正在将第一轮结果精简为保留的母离子候选（1 个文件）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates___0__files_" xml:space="preserve">
-    <value>正在将第一轮结果精简为保留的母离子候选（{0:N0} 个文件）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
     <value>无法找到“{0}”的第一轮中间文件。</value>
     <comment>Needs Review:New resource</comment>
@@ -397,27 +389,11 @@
     <value>没有输出 {0}，因此没有可从中读取蛋白质 q 值的整个实验的第一轮中间文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__no__scores_parquet_file_is_known_for__0__" xml:space="preserve">
-    <value>无法恢复运行：没有已知的 {0} 的 {1} 文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__the_first_pass_intermediate_files_could_not_be_read___0_" xml:space="preserve">
-    <value>无法恢复运行：无法读取第一轮中间文件。{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_first_pass_precursor_candidates_of_every_run_in_" xml:space="preserve">
-    <value>此配置在恢复运行时会同时将每次运行的第一轮母离子候选载入内存，内存用量随运行次数增长（每次运行约 0.1 GB），在大型队列上可能耗尽内存。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_" xml:space="preserve">
     <value>无法从 {1} 加载 {0} 的得分：{2}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR" xml:space="preserve">
-    <value>{0}：在 {2:P1} 运行水平 FDR 下有 {1:N0} 个母离子</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR" xml:space="preserve">
     <value>{0}：在 {2:P1} 运行水平 FDR 下有 {1:N0} 个母离子</value>
     <comment>Needs Review:New resource</comment>
   </data>
@@ -475,26 +451,6 @@
   </data>
   <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Re_scoring_loads_the_file_on_its_own__so_no_combined_cross_run_reconciliation_data_is_" xml:space="preserve">
     <value>重新评分时单独加载该文件，因此不构建合并的跨运行协调数据。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from_1_cross_run_reconciliation_file_" xml:space="preserve">
-    <value>已在 {1:F1}s 内从 1 个跨运行协调文件读取缺失峰目标和优化后的校准</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_" xml:space="preserve">
-    <value>已在 {1:F1}s 内从 {0:N0} 个跨运行协调文件读取缺失峰目标和优化后的校准</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
-    <value>使用中间文件中保存的第一轮 q 值；不再重新运行第一轮 Percolator。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>正在从 1 个文件重新加载保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>正在从 {0:N0} 个文件重新加载保留的母离子候选</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
@@ -609,26 +565,6 @@
     <value>读取“{0}”的第一轮中间文件失败：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_StreamOwnReconciliationBundle_Resuming__reloading_first_pass_intermediate_files_for_1_file_" xml:space="preserve">
-    <value>恢复运行：正在为 1 个文件重新加载第一轮中间文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_StreamOwnReconciliationBundle_Resuming__reloading_first_pass_intermediate_files_for__0__files_" xml:space="preserve">
-    <value>恢复运行：正在为 {0:N0} 个文件重新加载第一轮中间文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_StreamOwnReconciliationBundle___model_diagnostics__could_not_prepare_the_report_on_this_resume__so_no_report_will_be_" xml:space="preserve">
-    <value>“{1}”：本次恢复运行时无法准备报告，因此不会写入报告。搜索不受影响。{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__no__scores_parquet_file_is_known_for__0___so_its_first_pass_precursor_" xml:space="preserve">
-    <value>无法恢复运行：没有已知的 {0} 的 {1} 文件，因此无法重新加载其第一轮母离子候选以进行重新评分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__the_first_pass_intermediate_files_for__0__files_are_missing_the_list_of_" xml:space="preserve">
-    <value>无法恢复运行：{0:N0} 个文件的第一轮中间文件缺少为跨运行协调保留的母离子候选列表。请删除这些输入的 {1} 文件并重新运行。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_" xml:space="preserve">
     <value>“{0}”需要至少 2 个输入文件（“{3}”），但只提供了 {1:N0} 个。仅当有其他运行可供协调时，它为 {2} 写入的中间文件才有用。</value>
     <comment>Needs Review:New resource</comment>
@@ -655,14 +591,6 @@
   </data>
   <data name="FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files" xml:space="preserve">
     <value>正在为 {0:N0} 个文件写入第一轮 FDRBench 输入</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
-    <value>无法写入“{0}”的第一轮中间文件：无法根据其输入路径确定位置。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Failed_to_write_the_first_pass_intermediate_file_for__0____1_" xml:space="preserve">
-    <value>写入 {0} 的第一轮中间文件失败：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_" xml:space="preserve">
@@ -749,18 +677,6 @@
     <value>无法将第二轮结果添加到模型诊断报告：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>无法将第二轮结果添加到模型诊断报告：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_" xml:space="preserve">
-    <value>无法写入模型诊断报告：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>已写入模型诊断报告：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ModelDiagnosticsTask_DescribeOutput__0___report_only__no_other_file_is_written_" xml:space="preserve">
     <value>{0}（仅报告；不写入其他文件）</value>
     <comment>Needs Review:New resource</comment>
@@ -821,14 +737,6 @@
     <value>已恢复 1 个文件中 {1:N0} 个保留的母离子候选峰的第一轮得分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_missing_or_unreadable_for_" xml:space="preserve">
-    <value>1 个文件的第一轮中间文件（{2}）缺失或无法读取：{1}。本次运行的蛋白质水平结果应视为不可靠。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__are_missing_or_unreadable_" xml:space="preserve">
-    <value>{0:N0} 个文件的第一轮中间文件（{2}）缺失或无法读取：{1}。本次运行的蛋白质水平结果应视为不可靠。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for_1_file_" xml:space="preserve">
     <value>正在为 1 个文件计算第二轮 FDR 得分。</value>
     <comment>Needs Review:New resource</comment>
@@ -837,68 +745,8 @@
     <value>正在为 {0:N0} 个文件计算第二轮 FDR 得分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_" xml:space="preserve">
-    <value>未改动 1 个文件的第二轮 FDR 得分文件（“{1}”只写入报告）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_" xml:space="preserve">
-    <value>未改动 {0:N0} 个文件的第二轮 FDR 得分文件（{1} 只写入报告）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for_1_file" xml:space="preserve">
-    <value>正在为 1 个文件写入第二轮 FDR 得分</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for__0__files" xml:space="preserve">
-    <value>正在为 {0:N0} 个文件写入第二轮 FDR 得分</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for_1_file" xml:space="preserve">
-    <value>已为 1 个文件写入第二轮 FDR 得分</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for__0__files" xml:space="preserve">
-    <value>已为 {0:N0} 个文件写入第二轮 FDR 得分</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run__so_no_second_pass_" xml:space="preserve">
-    <value>第一轮中有 {0:N0} 个文件不在本次运行的输入中，因此不为其写入第二轮中间文件：[{1}]。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__1__of_1_file_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_re_" xml:space="preserve">
-    <value>1 个文件中有 {1:N0} 个没有已保存的第二轮 FDR 得分；{2:N0} 个的得分由逐文件重新评分写入。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__1__of__0__files_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_" xml:space="preserve">
-    <value>{0:N0} 个文件中有 {1:N0} 个没有已保存的第二轮 FDR 得分；{2:N0} 个的得分由逐文件重新评分写入。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_" xml:space="preserve">
-    <value>“{2}”：第一轮中有 {0:N0} 个文件不在本次运行的输入中，将被跳过：[{1}]。这通常意味着在第一轮和第二轮任务之间有输入被重命名或移动。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__" xml:space="preserve">
     <value>无法运行第二轮 FDR：已保存的第一轮模型、某个第一轮中间文件，或来自检测数不少于 2 的蛋白质的母离子候选列表缺失或无法读取（如果是某个文件的问题，上方警告会指出该文件）。请不使用“{0}”从头到尾运行分析。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from_1_file" xml:space="preserve">
-    <value>正在从 1 个文件重新加载重新评分的峰特征</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from__0__files" xml:space="preserve">
-    <value>正在从 {0:N0} 个文件重新加载重新评分的峰特征</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__could_not_read_the_re_scored_intermediate_file__0____1_" xml:space="preserve">
-    <value>第二轮 FDR：无法读取重新评分的中间文件 {0}：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so__1__precursor_candidates_" xml:space="preserve">
-    <value>第二轮 FDR：没有已知的“{0}”的 {2} 文件，因此 {1:N0} 个母离子候选将在没有特征的情况下评分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_file___3___does_not_match_the_first_pass_" xml:space="preserve">
-    <value>第二轮 FDR：重新评分的中间文件“{3}”与“{0}”的第一轮中间文件不匹配（{1:N0} 行，应为 {2:N0} 行）；{4:N0} 个母离子候选将在没有特征的情况下评分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
@@ -953,24 +801,8 @@
     <value>第二轮 FDR：无法使用已保存的第一轮模型。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_no_results_from_re_scoring_for_the_file__so_they_are_recomputed_from_" xml:space="preserve">
-    <value>第二轮 FDR 没有该文件的重新评分结果，因此根据其第一轮中间文件重新计算。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_results_from_re_scoring_for__1__of__0__files__the_other__2__are_" xml:space="preserve">
-    <value>第二轮 FDR 有 {0:N0} 个文件中 {1:N0} 个的重新评分结果；其他 {2:N0} 个根据其第一轮中间文件重新计算。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_" xml:space="preserve">
     <value>对 {0:N0} 个文件进行第二轮 FDR：正在为来自检测数不少于 2 的蛋白质的 {1:N0} 个母离子候选重新计算 q 值；其他候选保留其第一轮 q 值。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_all__0__files_" xml:space="preserve">
-    <value>第二轮 FDR 使用重新评分期间为全部 {0:N0} 个文件写入的结果。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_the_file_" xml:space="preserve">
-    <value>第二轮 FDR 使用重新评分期间为该文件写入的结果。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_experiment_level_q_values_could_not_be_written_for__0__files____1____Stopping_" xml:space="preserve">
@@ -1013,30 +845,6 @@
     <value>无法从 {0} 重新加载峰特征：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1_file" xml:space="preserve">
-    <value>正在为 1 个文件检查第二轮中间文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for__0__files" xml:space="preserve">
-    <value>正在为 {0:N0} 个文件检查第二轮中间文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for_1_file" xml:space="preserve">
-    <value>已为 1 个文件重新加载第二轮 FDR 得分（{1}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2__of__0__files" xml:space="preserve">
-    <value>已为 {0:N0} 个文件中的 {2:N0} 个重新加载第二轮 FDR 得分（{1}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for_1_file" xml:space="preserve">
-    <value>正在为 1 个文件恢复第一轮得分</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for__0__files" xml:space="preserve">
-    <value>正在为 {0:N0} 个文件恢复第一轮得分</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_" xml:space="preserve">
     <value>无法读取 {0} 的重新评分结果：{1}</value>
     <comment>Needs Review:New resource</comment>
@@ -1071,14 +879,6 @@
   </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_for__1__precursor_candidates_to__0_" xml:space="preserve">
     <value>已将 {1:N0} 个母离子候选的实验水平 FDR 结果写入 {0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>无法记录“{0}”已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_" xml:space="preserve">
-    <value>写入“{0}”的第二轮中间文件失败：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeakCoAssignmentSource_AddFile_could_not_read__0_" xml:space="preserve">
@@ -1161,14 +961,6 @@
     <value>重新评分时从该文件自己的中间文件加载该文件；{1:N0} 个保留的目标-诱饵对列表只读取一次。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>正在从 1 个文件重新构建保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>正在从 {0:N0} 个文件重新构建保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileRescoreTask_BuildResumePerRunSource_Second_pass_FDR_reads_the_re_scored_results_of_the_file___1__of_1_current__" xml:space="preserve">
     <value>第二轮 FDR 读取该文件的重新评分结果（1 个中 {1:N0} 个为最新）。</value>
     <comment>Needs Review:New resource</comment>
@@ -1183,14 +975,6 @@
   </data>
   <data name="PerFileRescoreTask_BuildRunPerRunSource_Second_pass_FDR_will_read_the_file_from_its_own_intermediate_files_" xml:space="preserve">
     <value>第二轮 FDR 将从该文件自己的中间文件读取该文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_" xml:space="preserve">
-    <value>第二轮 FDR 每次从各自的中间文件读取一个文件（{0:N0} 个文件）；{1:N0} 个保留的目标-诱饵对列表只读取一次，{0:N0} 个文件中已有 {2:N0} 个具有第二轮结果。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_" xml:space="preserve">
-    <value>第二轮 FDR 从该文件自己的中间文件读取该文件；{1:N0} 个保留的目标-诱饵对列表只读取一次，1 个文件中已有 {2:N0} 个具有第二轮结果。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_" xml:space="preserve">
@@ -1227,34 +1011,6 @@
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">
     <value>正在从缓存流式读取 {2} 的 {1:N0} 个 MS1 谱图和 {0:N0} 个 MS/MS 谱图</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>正在从 1 个文件加载保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>正在从 {0:N0} 个文件加载保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_all__0__files_into_memory_at_" xml:space="preserve">
-    <value>第二轮 FDR 正在将全部 {0:N0} 个文件的保留母离子候选一次性载入内存；内存用量随文件数增长。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_the_file_into_memory_" xml:space="preserve">
-    <value>第二轮 FDR 正在将该文件的保留母离子候选载入内存。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>正在从 1 个文件重新构建保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>正在从 {0:N0} 个文件重新构建保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_OverlayReconciledIntoBuffer_Failed_to_reload_the_re_scored_results_file__0____1_" xml:space="preserve">
-    <value>无法重新加载重新评分结果文件 {0}：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_" xml:space="preserve">
@@ -1309,14 +1065,6 @@
     <value>{0:N0} 个峰需在新边界处重新评分，{1:N0} 个缺失峰</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_" xml:space="preserve">
-    <value>没有可读取的已保存第一轮模型，因此本次运行中第二轮 FDR 的逐文件部分在 {0} 中运行。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used__so_the_per_file_part_of_second_pass_FDR_runs_" xml:space="preserve">
-    <value>无法使用已保存的第一轮模型，因此本次运行中第二轮 FDR 的逐文件部分在 {0} 中运行。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileRescoreTask_TryResumeRescoredFile_File__0___1____2__was_already_re_scored__keeping_it_" xml:space="preserve">
     <value>文件 {0:N0}/{1:N0}：{2} 已重新评分；保留该结果。</value>
     <comment>Needs Review:New resource</comment>
@@ -1339,10 +1087,6 @@
   </data>
   <data name="PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_" xml:space="preserve">
     <value>{0:N0} 个目标在其新峰边界内没有信号；已重置其得分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>无法记录“{0}”已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">
@@ -1397,14 +1141,6 @@
     <value>“{0}”已完成。FDR 和 {2} 留给下一个任务（{1}）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_HydrateRescoreBundleIfPresent_Loaded_cross_run_reconciliation_files_for__0__runs___1__peak_re_picks_and_boundary_" xml:space="preserve">
-    <value>已加载 {0:N0} 次运行的跨运行协调文件：{1:N0} 个峰重新拣选和边界划定，{2:N0} 个缺失峰，{3:N0} 个优化后的 RT 校准。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_HydrateRescoreBundleOrNull_Failed_to_load_the_scores_files___0_" xml:space="preserve">
-    <value>无法加载得分文件：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_LoadCalibrationAndIsolation___Failed_to_load_calibration_for__0____1_" xml:space="preserve">
     <value>无法加载 {0} 的校准：{1}</value>
     <comment>Needs Review:New resource</comment>
@@ -1419,18 +1155,6 @@
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyPerRunNames__1__loads_the_file_on_its_own_" xml:space="preserve">
     <value>{1} 单独加载该文件。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile__0__is_missing_the_feature_columns_of_an_Osprey__scores_parquet_file__Delete_it_and_re_" xml:space="preserve">
-    <value>{0} 缺少 Osprey {1} 文件的特征列。请将其删除并重新运行以重新生成。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile_____Loading_file__0___1____2___from__3__" xml:space="preserve">
-    <value>正在加载文件 {0}/{1}：{2}（来自 {3}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile_______Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>已加载 {0:N0} 个第一轮母离子候选峰（此处不需要特征）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for_1_file" xml:space="preserve">
@@ -1459,18 +1183,6 @@
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores_Second_pass_FDR" xml:space="preserve">
     <value>第二轮 FDR</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>已加载 {0:N0} 个第一轮母离子候选峰（此处不需要特征）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features" xml:space="preserve">
-    <value>已加载 {0:N0} 个第一轮母离子候选峰及其特征</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candidate_peaks_but__2__feature_rows_" xml:space="preserve">
-    <value>{0} 有 {1:N0} 个母离子候选峰，但有 {2:N0} 个特征行。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_" xml:space="preserve">
@@ -1503,14 +1215,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>已从 {1:N0} 个文件加载 {0:N0} 个第一轮母离子候选峰。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">
-    <value>在没有跨运行协调文件的情况下恢复运行</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Training_the_first_pass_Percolator_model" xml:space="preserve">
-    <value>训练第一轮 Percolator 模型</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_" xml:space="preserve">
@@ -1565,14 +1269,6 @@
     <value>{0} 包含 {1:N0} 行，超过此版本 Osprey 可处理的行数（{2:N0}）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from_1_file" xml:space="preserve">
-    <value>正在从 1 个文件加载第一轮母离子候选峰</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from__0__files" xml:space="preserve">
-    <value>正在从 {0:N0} 个文件加载第一轮母离子候选峰</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_Run_Scoring__0__files_in_parallel_" xml:space="preserve">
     <value>正在并行评分 {0:N0} 个文件：</value>
     <comment>Needs Review:New resource</comment>
@@ -1593,24 +1289,8 @@
     <value>恢复运行：{0} 有 {1:N0} 个母离子候选峰，但有 {2:N0} 个特征行；正在重新评分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_" xml:space="preserve">
-    <value>恢复运行：{0} 有 {1:N0} 个母离子候选峰，但有 {2:N0} 个特征行，因此无法加载其已保存的得分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_" xml:space="preserve">
     <value>恢复运行：加载 {0} 失败：{1}；正在重新评分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_" xml:space="preserve">
-    <value>恢复运行：无法从 {0} 加载已保存的得分：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">
-    <value>此配置</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool__0__needs_the_first_pass_precursor_candidates_of_every_file_in_memory_at_once__memory_" xml:space="preserve">
-    <value>{0}需要同时将每个文件的第一轮母离子候选载入内存；内存用量随文件数增长，在大型队列上可能耗尽内存。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1__from__0____2_" xml:space="preserve">
@@ -1625,48 +1305,12 @@
     <value>{0} 步骤无法从中间文件重新加载其结果（退出代码 {1}）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="RescoreCompaction_Apply_Trimming_each_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation___0__" xml:space="preserve">
-    <value>正在将每个文件精简为跨运行协调所保留的母离子候选（{0:N0} 个文件）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation" xml:space="preserve">
-    <value>正在将该文件精简为跨运行协调所保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_re_scoring_and_second_pass_FDR" xml:space="preserve">
-    <value>正在将该文件精简为重新评分和第二轮 FDR 所保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_" xml:space="preserve">
     <value>无法根据名称判断得分文件 {0} 属于哪个输入文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_" xml:space="preserve">
-    <value>{0} 所针对的库或搜索设置与此分析的其他协调文件不同（库 {1} 对 {2}，搜索 {3} 对 {4}）。请删除此分析的 {5} 文件，然后重新运行第一轮。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_" xml:space="preserve">
-    <value>{0} 所针对的输入文件集与此分析的其他协调文件不同。应为：{1}。实际为：{2}。请删除此分析的 {3} 文件，然后重新运行第一轮。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report" xml:space="preserve">
     <value>正在为模型诊断报告读取第一轮结果</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateCompactedStreaming_Loading_cross_run_reconciliation_files" xml:space="preserve">
-    <value>正在加载跨运行协调文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateCompactedStreaming_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
-    <value>正在将全部 {0:N0} 次运行的跨运行协调文件一次性载入内存；内存用量随文件数增长。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_files" xml:space="preserve">
-    <value>正在加载跨运行协调文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
-    <value>正在将全部 {0:N0} 次运行的跨运行协调文件一次性载入内存；内存用量随文件数增长。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="RescoreHydration_LoadEnvelope_Failed_to_read__0____1_" xml:space="preserve">
@@ -1687,10 +1331,6 @@
   </data>
   <data name="RescoredEntries_StreamFiles__1____0__files_" xml:space="preserve">
     <value>{1}（{0:N0} 个文件）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ScoringTaskShared_AllRunsBundleGuardError_Stopped_before_holding_the_first_pass_precursor_candidates_of_every_run_in_memory_at_once_" xml:space="preserve">
-    <value>在将每次运行的第一轮母离子候选同时载入内存之前已停止，其内存用量随运行次数增长（每次运行约 0.1 GB）。此分析可以每次处理一次运行，因此到达此处属于 Osprey 缺陷；请报告此问题。{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___" xml:space="preserve">
@@ -1847,10 +1487,6 @@
   </data>
   <data name="SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__" xml:space="preserve">
     <value>“{0}”：跳过写入 {1}（仅报告）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_candidates_of_all__0__runs_in_memory_at_once__" xml:space="preserve">
-    <value>第二轮 FDR 将同时在内存中保存全部 {0:N0} 次运行的母离子候选（约 {1:N0} GB）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">

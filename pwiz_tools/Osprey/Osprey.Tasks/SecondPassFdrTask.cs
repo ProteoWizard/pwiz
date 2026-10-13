@@ -66,27 +66,26 @@ namespace pwiz.Osprey.Tasks
             config.ExpectReconciledInput = true;
         }
 
-        // Phase B resume surface. Reads each file's reconciled
-        // .scores.parquet, writes the .2nd-pass.fdr_scores.bin
-        // sidecars (whenever Stage 6 rescored -- see AnyReconciledParquet) and the
-        // .blib output. ValidityKey adds the reconciliation hash
-        // because the reconciled parquet is read.
+        // Phase B resume surface. Reads each file's reconciled .scores.parquet and its
+        // .2nd-pass.fdr_scores.bin (both written by PerFileRescoring), writes the analysis-wide
+        // .2nd-pass.fdr_experiment.bin and the .blib output. ValidityKey adds the
+        // reconciliation hash because the reconciled parquet is read.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             if (ctx.Config.InputFiles == null) yield break;
             // Stage 7 reads the reconciled parquet, which Stage 6 writes for every run -
             // a run without one fails in UnusableReconciledParquets rather than being read
             // from its Stage 4 file, which a SecondPassFDR node is not even shipped.
-            // Recorded for provenance only -- the driver validates tasks by output sidecar
-            // key, never by re-checking Inputs() existence (TaskValiditySidecar).
+            // Documentation only - the driver validates tasks by each output's embedded
+            // stamp, never by re-checking Inputs() existence.
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
 
-            // Under the frozen modes the per-run 2nd-pass FDR sidecars are this task's INPUTS:
-            // the rescore worker computed and wrote them, and the join folds the per-base_id
-            // bests out of them rather than recomputing from the 1st-pass sidecars (#4486).
-            // That inversion - from output to input - is the whole point of the move, so it is
-            // recorded here where the task graph can be read.
+            // The per-run 2nd-pass FDR sidecars are this task's INPUTS, in every pass-2 mode: the
+            // rescore worker computed and wrote them, and the join folds them rather than
+            // recomputing from the 1st-pass sidecars (#4486, #4665). That inversion - from output
+            // to input - is the whole point of the move, so it is recorded here where the task
+            // graph can be read.
             // THE PER-FILE 1st-PASS SIDECARS ARE NOT INPUTS TO THIS TASK on the default path,
             // and that is the contract issue #4486 exists to establish - an HPC orchestrator
             // hands a SecondPassFDR node the per-run 2nd-pass artifacts and the analysis-wide
@@ -129,14 +128,14 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(retainedSummary))
                 yield return retainedSummary;
 
-            if (!OspreyEnvironment.Pass2ProteinCompact)
-                yield break;
             foreach (var input in ctx.Config.InputFiles)
             {
                 yield return FdrScoresSidecar.Pass2Path(input);
                 // The decoy side of that file's competition - the null this stage folds. Also an
-                // input, for the same reason and from the same producer.
-                yield return Pass2CompetitionDecoys.PathFor(input);
+                // input, for the same reason and from the same producer, where there is a
+                // competition: the transfer competes nothing.
+                if (OspreyEnvironment.Pass2ProteinCompact)
+                    yield return Pass2CompetitionDecoys.PathFor(input);
             }
         }
 
@@ -154,8 +153,8 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
                 yield return ctx.Config.OutputBlib;
             // The --model-diagnostics report is an output of THIS task (it is finalized in
-            // WritePass2AndFinalize), so declare it and let ordinary task validity regenerate
-            // it. Task validity requires every declared output to exist, so a deleted or
+            // WritePass2AndFinalizeFromAccumulator), so declare it and let ordinary task
+            // validity regenerate it. Task validity requires every declared output to exist, so a deleted or
             // renamed report invalidates this task alone - Stages 1-5 stay cached and the
             // pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars, the same path
             // SubsetPipelineTest's diagnostics rehydrate already covers.
@@ -168,8 +167,8 @@ namespace pwiz.Osprey.Tasks
             // in no validity key and the HTML was in no Outputs list, so adding it to a re-run
             // changed nothing, every task reported "outputs valid", and no report was produced.
             //
-            // AND conditional on FirstPassFDR being in this graph. WritePass2AndFinalize needs
-            // the pass-1 .data.json hand-off sidecar, which only FirstPassFdrTask writes - so
+            // AND conditional on FirstPassFDR being in this graph.
+            // WritePass2AndFinalizeFromAccumulator needs the pass-1 .data.json hand-off sidecar, which only FirstPassFdrTask writes - so
             // under `--task SecondPassFDR --model-diagnostics` no report can ever be produced.
             // Declaring it there recreated the very loop the paragraph above set out to avoid,
             // one step later: CanRehydrate requires every declared output to exist, so the task
@@ -199,29 +198,13 @@ namespace pwiz.Osprey.Tasks
                     yield return pass2Product;
             }
 
-            // EVERY input file gets a 2nd-pass FDR sidecar, and they are declared here
-            // unconditionally. This used to be gated on AnyReconciledParquet, so a run where
-            // Stage 6 rescored nothing produced no 2nd-pass files at all - and a MISSING file
-            // is an ambiguous signal: a reader cannot tell "this run had no rescore work" from
-            // "the write failed and the FileSaver never committed". The reconciled parquet had
-            // the same gate and lost it for the same reason (WriteUnchangedReconciled); the
-            // 1st-pass sidecar never had it, writing a 0-record file for a file with no scored
-            // rows. A run with no rescore work writes the standing values, which ARE its
-            // second-pass answer.
-            //
-            // ...but ONLY where this task still writes them. Under the frozen modes the per-file
-            // half of the second pass runs in the rescore worker (#4486), so those sidecars are
-            // PerFileRescoring's output and this task's INPUT - see Inputs(). Declaring an output
-            // another task produces gives one binary two owners (both stamp a validity sidecar
-            // via AnalysisPipeline.WriteTaskSidecars) and, worse, lets the driver's
-            // IsTaskAlreadyDone - which requires every declared output to exist - skip THIS task
-            // the moment Stage 6 has written them, which is the join never running at all.
-            bool workerOwnsPerFileSidecars = OspreyEnvironment.Pass2ProteinCompact;
-            if (ctx.Config.InputFiles != null && !workerOwnsPerFileSidecars)
-            {
-                foreach (var input in ctx.Config.InputFiles)
-                    yield return FdrScoresSidecar.Pass2Path(input);
-            }
+            // NO per-run file is declared here, in any mode (#4665). Every run's 2nd-pass FDR
+            // sidecar is PerFileRescoring's output and this task's INPUT - see Inputs().
+            // Declaring an output another task produces gives one binary two owners (whose stamps
+            // would disagree on the task) and, worse, lets the driver's IsTaskAlreadyDone - which
+            // requires every declared output to exist - skip THIS task the moment Stage 6 has
+            // written them, which is the join never running at all. The transfer mode was the
+            // last to write them here, from the resident pool.
 
             // The analysis-wide 2nd-pass EXPERIMENT sidecar (format v5, issue #4486): the
             // experiment-scope half of the split, and unambiguously this task's own product -
@@ -236,10 +219,10 @@ namespace pwiz.Osprey.Tasks
             // resume. That gate was a symptom, and the comment here said so.
             //
             // The cause is fixed: `transfer` now publishes its experiment scope like every other
-            // mode (Pass2FdrSidecar.TransferPerRunQ). Its values are derived differently - from
-            // the composite-score -> q table FirstPassFDR established, with no re-competition and
-            // no decoy pool - but the artifact is the same artifact, and a consumer cannot be
-            // asked to know which mode wrote it. So the declaration is now what it always should
+            // mode (Pass2FdrSidecar.ComputePass2TransferFold). Its values are derived differently
+            // - carried from the first pass, with no re-competition and no decoy pool - but the
+            // artifact is the same artifact, and a consumer cannot be asked to know which mode
+            // wrote it. So the declaration is now what it always should
             // have been: every mode that computes a second pass produces this file.
             string experimentPath = FdrExperimentSidecar.PathFor(
                 ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config),
@@ -314,18 +297,11 @@ namespace pwiz.Osprey.Tasks
             // admissible streamed one. It went with OSPREY_STAGE7_STREAM (2026-09-10), which was
             // the choice it existed to refuse.
             //
-            // ONE operator-chosen route into the resident arm outlives it, and this comment is
-            // now the only code-level record of it, because deleting that guard deleted the
-            // other: OSPREY_PASS2_QVALUE=transfer leaves Pass2ProteinCompact false, and
-            // Stage7StreamAdmittedBeforeRescore declines on that term - with no token, since
-            // ResidentPaths names none for it. It is exempt for a stated reason rather than
-            // overlooked: transfer computes its per-file half HERE, over the whole pool, so
-            // streaming underneath it does not make it per-run, it takes its input away. The
-            // exemption ends when transfer's per-file half moves to Pass2PerFileWorker, and
-            // WarnResidentStage7Join is what discloses it in the meantime.
-            //
-            // Every other route in is NeedsResidentPool's, which the first-pass guard already
-            // names and tokens.
+            // The one operator-chosen route into the resident arm that outlived it -
+            // OSPREY_PASS2_QVALUE=transfer, whose per-file half ran here over the whole pool - went
+            // with #4665, which moved that half to Pass2PerFileWorker. The routes left in are
+            // disk-state ones (no current retained summary, or a stale reconciled parquet), which
+            // the sprint retiring O(files x entries) structures is deciding route by route.
 
             // The pass-2 diagnostics product is the ONLY outstanding output: every
             // computational artifact this task produces is already on disk and key-current, and
@@ -334,11 +310,10 @@ namespace pwiz.Osprey.Tasks
             // is added later. Fold the report from the completed second pass rather than
             // re-running the join (P16: a report is a derived view over the artifacts).
             //
-            // AHEAD OF THE MARKER WIPE BELOW, and that placement is the whole correctness
-            // argument. The wipe clears every declared output's validity stamp; running it
-            // first would destroy the record that this second pass is complete - which is the
-            // only evidence the fold is entitled to adopt it - and the next resume would then
-            // re-run the join it was just spared. Pass 1 has the same arm above its own writers
+            // AHEAD OF EVERY WRITER BELOW, and that placement is the whole correctness
+            // argument. Once a writer runs, the join is being redone: the completed second pass
+            // - the only evidence the fold is entitled to adopt - is overwritten rather than
+            // adopted, and the run pays for the join it should have been spared. Pass 1 has the same arm above its own writers
             // for the same reason (FirstPassFdrTask.Run).
             //
             // The cost of getting this wrong is the pass-1 trap restated: a SecondPassFDR that
@@ -373,24 +348,17 @@ namespace pwiz.Osprey.Tasks
                 return FoldPass2DiagnosticsOnly(ctx);
             }
 
-            // Mid-Run crash safety: see FirstPassFdrTask.Run for rationale.
-            foreach (var output in Outputs(ctx))
-                TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
             // RescoredEntries is the final milestone of the shared buffer:
             // demanding it materializes PerFileRescore (running its rescore /
             // reconciled-input compaction when the driver skipped it), which is what
             // produces the post-rescore version this stage reads.
             //
-            // Reading .Value on that milestone is also what BUILDS the global survivor pool
-            // after a streamed rescore (issue #4597): PerFileRescore leaves it deferred,
-            // because re-reading every file's artifacts is whole-run join work and that task
-            // is a per-file HPC exit point. Stage 7 is the stage that needs a global pool -
-            // the protein-compact competition is over a global stratum - so Stage 7 is where
-            // the work lands, and a worker that never reaches this line never pays it.
-            // Taken as a TOKEN first, so the probes below can bracket that build.
+            // Its runs are rebuilt one at a time, by the folds below, through the milestone's
+            // per-run source (issue #4597): PerFileRescore re-reads nothing at its own exit, so a
+            // worker that never reaches this line never pays for it. Reading .Value is refused.
             var rescored = ctx.Get<RescoredEntries>();
-            WarnResidentStage7Join(rescored, ctx);
+            RequireStreamedJoin(rescored);
 
             // Stage 7's INHERITED baseline, post-GC, before this stage does any work
             // (#4486). Every figure that issue has ever quoted came from --memstamp, i.e.
@@ -398,12 +366,8 @@ namespace pwiz.Osprey.Tasks
             // tell a live survivor pool from Server-GC committed-but-free gray - which is
             // precisely the question.
             //
-            // BEFORE the .Value read, deliberately. #4597 moved the pool build onto that
-            // read, and this probe exists to separate what Stage 7 inherits from what it
-            // allocates - so taking it after the build would fold the build's own transients
-            // (each file's pre-filter stub superset, the overlay's loaded list and maps) into
-            // the "inherited" number and break comparability with the whole #4486 series.
-            // The stage7-pool probe below is the one that measures the build.
+            // BEFORE the first fold, deliberately: this probe separates what Stage 7 inherits
+            // from what it allocates, which keeps it comparable with the whole #4486 series.
             int nFiles = ctx.Config.InputFiles?.Count ?? 0;
             string memDetail = string.Format(@"(files={0})", nFiles);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"stage7 start (pre-GC)");
@@ -430,24 +394,12 @@ namespace pwiz.Osprey.Tasks
             // refuses outright no longer pays for 289 M survivors it is about to discard.
             // Its own transients are footer metadata, which is why it can sit between the
             // stage7-inherited and stage7-pool probes without distorting either.
-            var unusable = UnusableReconciledParquets(rescored.FileNames, perFileParquetPaths);
-            if (unusable.Missing.Count > 0)
-            {
-                throw new InvalidOperationException(string.Format(
-                    OspreyTasksResources.SecondPassFdrTask_Run__0__of__1__runs_have_no_re_scored_results_file___scores_reconciled_parquet___which_,
-                    unusable.Missing.Count, rescored.FileCount,
-                    string.Join(@", ", unusable.Missing), ParquetScoreCache.EXT_SCORES_RECONCILED,
-                    PerFileRescoreTask.TASK_NAME, ParquetScoreCache.EXT_SCORES,
-                    OspreyArgNames.TaskText(PerFileRescoreTask.TASK_NAME)));
-            }
-            if (unusable.Stale.Count > 0)
-            {
-                throw new InvalidOperationException(CountText.Format(unusable.Stale.Count,
-                    OspreyTasksResources.SecondPassFdrTask_Run_1_of__1__re_scored_intermediate_files_was_written_by_an_older_Osprey_build_and_cannot_be_,
-                    OspreyTasksResources.SecondPassFdrTask_Run__0__of__1__re_scored_intermediate_files_were_written_by_an_older_Osprey_build_and_cannot_,
-                    rescored.FileCount, string.Join(@", ", unusable.Stale),
-                    OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
-            }
+            //
+            // --task SecondPassFDR asks the same question before it loads anything
+            // (PerFileScoringTask), so on that leg this is the backstop, not the refusal.
+            string unusableError = UnusableReconciledParquetsError(rescored.FileNames, perFileParquetPaths);
+            if (unusableError != null)
+                throw new InvalidOperationException(unusableError);
 
             // NO .Value here any more (#4486). Every consumer below folds through
             // RescoredEntries.StreamFiles, which on the per-run source rebuilds one run, hands
@@ -464,26 +416,14 @@ namespace pwiz.Osprey.Tasks
 
             ReleaseUnscorableLibraryFragments(rescored.FileCount, fullLibrary, ctx);
 
-            // Second-pass FDR. ALWAYS runs, because it always has a file to write.
-            //
-            // What is conditional is the RECOMPUTE, not the artifact: the second Percolator
-            // pass fires only when Stage 6 reconciliation / multi-charge consensus / gap-fill
-            // actually rescored entries - the C# analog of Rust's `total_rescored > 0` gate
-            // (pipeline.rs:5209), and INDEPENDENT of protein FDR. That test lives inside
-            // ComputeAndPersist now. A run with no rescore work still writes every file's
-            // .2nd-pass.fdr_scores.bin, carrying the standing values, because those ARE its
-            // second-pass answer - and because a missing file cannot be told apart from a
-            // failed write (see Outputs).
-            //
-            // This gate used to wrap the whole call. Before that it was wrongly nested inside
-            // the ProteinFdr.HasValue block, so a run without --protein-fdr wrote the blib from
-            // stale first-pass (pre-reconciliation) scores. ComputeAndPersist reloads the
-            // reconciled features, reruns Percolator, writes the .2nd-pass sidecars, and
-            // reloads them onto the stubs so downstream protein FDR + blib see the 2nd-pass
-            // q-values.
+            // Second-pass FDR: fold every run's per-run answer into the experiment scope. Each
+            // answer was computed and written by PerFileRescoring, in every pass-2 mode and for
+            // every run, including one Stage 6 had no work for (#4665). This stage requires them
+            // (a run without a current one stops the analysis), recomputes none and writes no
+            // per-run file; ComputeAndPersist folds them and puts the second-pass values back on
+            // the survivors, so downstream protein FDR and the blib see the 2nd-pass q-values.
             Pass2FdrSidecar.ComputeAndPersist(
-                ctx, AnyReconciledParquet(config), rescored, perFileParquetPaths,
-                Name, ValidityKey(ctx));
+                ctx, rescored, perFileParquetPaths, Name, ValidityKey(ctx));
             // From here on, every fold must see the SECOND pass's answer. On the resident pool
             // ComputeAndPersist has just stamped it onto the entries; on the streamed one the
             // entries it stamped are gone, so the same overlay is installed as a per-run hook
@@ -541,6 +481,51 @@ namespace pwiz.Osprey.Tasks
             // The golden .blib comparison is what holds this: it was produced WITH the old
             // re-clamp, so flooring at the source has to reproduce it byte for byte.
 
+            // FDRBench input TSV (pass 2): the peptides we report - the final merged/rescored set
+            // written to the output - each with its final second-pass q-value and raw SVM
+            // discriminant, so FDRBench can evaluate the FDR/FDP of what Osprey actually outputs.
+            // (The blib writer only persists a 0.0 placeholder discriminant, so this is the only
+            // path to a usable FDRBench score.) Pass 1 (the full pre-compaction first-pass pool)
+            // is emitted earlier, in FirstPassFdrTask before compaction; --fdrbench-pass selects one
+            // or both (both writes .pass1/.pass2-suffixed files).
+            //
+            // Written BEFORE the blib. The blib carries this task's stamp, and its commit is what
+            // makes the task read as done, so it must be the last thing the task writes: a
+            // failure or kill during these writes after a stamped blib had landed would leave a
+            // re-run skipping SecondPassFDR with this TSV missing or left over from another run.
+            var benchPath = FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_2);
+            if (benchPath != null)
+            {
+                var swFdrBench = Stopwatch.StartNew();
+                var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+                var benchResult = FdrBenchInputWriter.WritePeptideInput(
+                    benchPath, rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_Run_Writing_second_pass_FDRBench_input), libraryById, config.FdrLevel,
+                    config.FdrBenchPerRun, pairing.ExcludedEntrapment);
+                // Emit the corrected pairing manifest from the same library so FDRBench
+                // classifies every reported peptide and drops nothing (feed FDRBench -pep with this).
+                string manifestPath = benchPath + FdrBenchInputWriter.EXT_PAIRING;
+                int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
+                swFdrBench.Stop();
+                ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run_Wrote_second_pass_FDRBench_input___0___to__1____2__rows,
+                    config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
+                    benchPath, benchResult.Rows));
+                ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run_Wrote_the_FDRBench_pairing_manifest__from_the_searched_library__to__0____1__peptides,
+                    manifestPath, manifestRows));
+                pairing.LogSummary(ctx);
+                if (benchResult.MissingLibrary > 0)
+                    ctx.LogInfo(string.Format(
+                        OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_no_matching_library_peptide__their_peptide_and_protein_columns_were_,
+                        benchResult.MissingLibrary));
+                if (benchResult.TruncatedProtein > 0)
+                {
+                    ctx.LogInfo(string.Format(
+                        OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_very_long_protein_ID_lists__which_were_truncated_with_______N_more__,
+                        benchResult.TruncatedProtein, FdrBenchInputWriter.TRUNCATION_MARKER_PATTERN));
+                }
+                ctx.LogInfo(LogTag.STAGE_WALL, @"fdrbench: {0:F1}s",
+                    swFdrBench.Elapsed.TotalSeconds);
+            }
+
             // Write output blib - unless this is a diagnostics-only regeneration, whose whole
             // contract is that it touches no artifact but the report.
             ctx.LogInfo(string.Empty);
@@ -583,46 +568,6 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"stage7-blib-written",
                 memDetail);
 
-            // FDRBench input TSV (pass 2): the peptides we report - the final merged/rescored set
-            // written to the output - each with its final second-pass q-value and raw SVM
-            // discriminant, so FDRBench can evaluate the FDR/FDP of what Osprey actually outputs.
-            // (The blib writer only persists a 0.0 placeholder discriminant, so this is the only
-            // path to a usable FDRBench score.) Pass 1 (the full pre-compaction first-pass pool)
-            // is emitted earlier, in FirstPassFdrTask before compaction; --fdrbench-pass selects one
-            // or both (both writes .pass1/.pass2-suffixed files).
-            var benchPath = FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_2);
-            if (benchPath != null)
-            {
-                var swFdrBench = Stopwatch.StartNew();
-                var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
-                var benchResult = FdrBenchInputWriter.WritePeptideInput(
-                    benchPath, rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_Run_Writing_second_pass_FDRBench_input), libraryById, config.FdrLevel,
-                    config.FdrBenchPerRun, pairing.ExcludedEntrapment);
-                // Emit the corrected pairing manifest from the same library so FDRBench
-                // classifies every reported peptide and drops nothing (feed FDRBench -pep with this).
-                string manifestPath = benchPath + FdrBenchInputWriter.EXT_PAIRING;
-                int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
-                swFdrBench.Stop();
-                ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run_Wrote_second_pass_FDRBench_input___0___to__1____2__rows,
-                    config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
-                    benchPath, benchResult.Rows));
-                ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run_Wrote_the_FDRBench_pairing_manifest__from_the_searched_library__to__0____1__peptides,
-                    manifestPath, manifestRows));
-                pairing.LogSummary(ctx);
-                if (benchResult.MissingLibrary > 0)
-                    ctx.LogInfo(string.Format(
-                        OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_no_matching_library_peptide__their_peptide_and_protein_columns_were_,
-                        benchResult.MissingLibrary));
-                if (benchResult.TruncatedProtein > 0)
-                {
-                    ctx.LogInfo(string.Format(
-                        OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_very_long_protein_ID_lists__which_were_truncated_with_______N_more__,
-                        benchResult.TruncatedProtein, FdrBenchInputWriter.TRUNCATION_MARKER_PATTERN));
-                }
-                ctx.LogInfo(LogTag.STAGE_WALL, @"fdrbench: {0:F1}s",
-                    swFdrBench.Elapsed.TotalSeconds);
-            }
-
             // --model-diagnostics: append the pass-2 (final reported pool) FDR
             // calibration views to the page FirstPassFdrTask wrote for pass 1, from
             // this post-compaction, second-pass-q-valued pool -- the same
@@ -637,32 +582,26 @@ namespace pwiz.Osprey.Tasks
                 if (OspreyEnvironment.Pass2ProteinCompact &&
                     ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
                     stratumBaseIds = pcStratum.BaseIds;
-                // Two shapes, one report. The streamed arm folds the run-by-run reductions the
-                // pass-2 cards are made of instead of holding every run's survivors, which is
-                // what removed the last O(runs x entries) structure in Stage 7 and let
-                // CanStreamStage7Join stop declining this leg outright. The resident arm is
-                // unchanged and is the A/B oracle the streamed one is verified against: same
-                // page, same 2nd-pass.model-diagnostics.json.
-                if (rescored.Streams)
-                {
-                    WritePass2DiagnosticsStreamed(ctx, rescored, libraryById,
-                        config, stratumBaseIds);
-                }
-                else
-                {
-                    ModelDiagnosticsReport.WritePass2AndFinalize(
-                        rescored.Value, libraryById, config, ctx,
-                        stratumBaseIds, ValidityKey(ctx));
-                }
+                // Folds the run-by-run reductions the pass-2 cards are made of instead of
+                // holding every run's survivors, which is what removed the last
+                // O(runs x entries) structure in Stage 7.
+                WritePass2DiagnosticsStreamed(ctx, rescored, libraryById,
+                    config, stratumBaseIds);
             }
 
             return true;
         }
 
         /// <summary>
-        /// True when the pass-2 diagnostics product is the single declared output this task
-        /// still owes: it is absent, and every other declared output exists with a current
+        /// True when the diagnostics are all this task still owes: the pass-2 product or the
+        /// page is absent or not current, and every other declared output exists with a current
         /// validity stamp. The condition <see cref="Run"/>'s fold arm turns on.
+        ///
+        /// <para>"Or the page", and "not current" rather than "absent": FirstPassFDR re-renders
+        /// a pass-1-only page under its own stamp when it rebuilds its product, which leaves
+        /// the pass-2 product current and the page stale. Declining whenever the pass-2 product
+        /// existed sent that case into the full join - pass-2 FDR, protein FDR and the blib
+        /// rewrite, 69 minutes at 446 runs - to rebuild a page this arm builds in minutes.</para>
         ///
         /// <para>Asked over <see cref="Outputs"/> rather than a hand-listed set, so a future
         /// output is covered without anyone remembering to add it here - the failure direction
@@ -674,15 +613,20 @@ namespace pwiz.Osprey.Tasks
         private bool OnlyDiagnosticsProductOutstanding(PipelineContext ctx)
         {
             string pass2Path = ModelDiagnosticsReport.Pass2SidecarPath(ctx.Config);
-            if (string.IsNullOrEmpty(pass2Path) || File.Exists(pass2Path))
+            if (string.IsNullOrEmpty(pass2Path))
                 return false;
+            string reportPath = ModelDiagnosticsReport.ReportPath(ctx.Config);
+            string validityKey = ValidityKey(ctx);
+            if (PerFileResumeDriver.IsCurrent(pass2Path, Name, validityKey) &&
+                PerFileResumeDriver.IsCurrent(reportPath, Name, validityKey))
+            {
+                return false;
+            }
             // A second pass that never completed has nothing to fold FROM, and adopting it
             // would describe a partial cohort as a whole one. Asked of the analysis-wide
             // 2nd-pass experiment sidecar, which is this task's own end-of-join output.
             if (!ModelDiagnosticsReport.HasCompletedSecondPass(ctx.Config))
                 return false;
-            string reportPath = ModelDiagnosticsReport.ReportPath(ctx.Config);
-            string validityKey = ValidityKey(ctx);
             var outputs = Outputs(ctx).ToList();
             foreach (string output in outputs)
             {
@@ -718,35 +662,20 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Say so when Stage 7 is about to build the whole-run survivor pool, naming the shape,
-        /// the issue and the cost model.
-        ///
-        /// <para>The run that CANNOT stream is not refused - there is no alternative to choose,
-        /// and demanding a token would make the ordinary path unusable. But it must not be
-        /// silent either: until #4642 the only statement of this deficiency lived in
-        /// regression.ps1's end-of-run table, which prints for the developers who already know
-        /// and never for the operator whose run is about to take it, and what they got instead
-        /// was an OOM at a file count nothing had warned them about.</para>
-        ///
-        /// <para>Keyed on the MILESTONE, not on <c>CanStreamStage7Join</c>. The predicate says
-        /// the run is ADMISSIBLE; only the milestone says a per-run source was actually built,
-        /// and the two stopped being the same statement once the admission was derived from disk
-        /// rather than named by one CLI flag. Reading the fact off the thing that decides it is
-        /// what keeps this line honest as each remaining arm is converted.</para>
+        /// Stage 7 folds the survivors run by run, always: every route that reaches it publishes
+        /// a per-run source (#4486). The whole-run survivor pool - O(files), 91.1 GB private at
+        /// 446 runs - had one remaining trigger, a directory Stage 7 could not stream, and that
+        /// is now refused before anything is loaded (<see cref="ScoringTaskShared.UnstreamableJoinError"/>).
+        /// A milestone without a source here is therefore a routing defect, not a configuration,
+        /// and it fails rather than taking an all-runs arm nothing exercises.
         ///
         /// <para>Called from both arms that pull the milestone, each right after its pull. The
-        /// diagnostics-only fold returns before <see cref="Run"/> reaches its own call, so a
-        /// single site would go silent on exactly the run that most needs it.</para>
+        /// diagnostics-only fold returns before <see cref="Run"/> reaches its own call.</para>
         /// </summary>
-        private static void WarnResidentStage7Join(RescoredEntries rescored, PipelineContext ctx)
+        private static void RequireStreamedJoin(RescoredEntries rescored)
         {
-            if (rescored.Streams)
-                return;
-            int nFiles = ctx.Config.InputFiles?.Count ?? 0;
-            // The RESIDENT Stage 7 join: every run's survivors are rebuilt at once and held for
-            // the whole stage, O(files) (issue #4486). Measured ~4.4 GB plus ~0.197 GB per file.
-            ctx.LogWarning(string.Format(
-                OspreyTasksResources.SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_candidates_of_all__0__runs_in_memory_at_once__, nFiles, 4.4 + 0.197 * nFiles));
+            if (!rescored.Streams)
+                throw new InvalidOperationException(@"Second-pass FDR was handed no per-run source for its survivors");
         }
 
         /// <summary>
@@ -787,10 +716,8 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogMemoryStats(ctx, @"pass2-fold: before the second-pass join");
             var rescored = ctx.Get<RescoredEntries>();
             ProfilerHooks.LogMemoryStats(ctx, @"pass2-fold: after RescoredEntries (join done)");
-            // This arm is ITSELF a resident-pool path when the source is absent - it pulls the
-            // same survivor buffer, which is where 91.1 GB was measured at 446 files - and it
-            // returns before Run's own call, so it has to make the statement itself.
-            WarnResidentStage7Join(rescored, ctx);
+            // It returns before Run's own call, so it has to ask for itself.
+            RequireStreamedJoin(rescored);
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             // AFTER the lazy byproducts are resolved, not before, and that placement is the whole
@@ -821,20 +748,12 @@ namespace pwiz.Osprey.Tasks
             // analysis: the overlays apply values already on disk, and the reclamp is a fold
             // over them plus a per-run apply.
             //
-            // BOTH arms of the overlay, and each is a no-op on the other's arm. The join needs
-            // only the streamed one, because on a resident pool ComputeAndPersist has just
-            // stamped the second-pass values onto the entries as it computed them. This fold
-            // skips that compute, so on the resident arm nothing would carry pass 2 onto the
-            // pool and the report would describe the FIRST pass under a pass-2 heading -
-            // complete, plausible, every card populated, and wrong.
             // ONE resolution of the analysis-wide 2nd-pass experiment records for both overlays.
             // Each resolves it from the same place and each would otherwise deserialize its own
             // copy - on this arm, which has no in-memory scope, that is the whole file per
             // consumer (see LazyPass2ExperimentRecords).
             var experimentRecords = Pass2FdrSidecar.LazyPass2ExperimentRecords(ctx);
             Pass2FdrSidecar.InstallStreamedPass2Overlay(ctx, rescored, Name, ValidityKey(ctx),
-                experimentRecords);
-            Pass2FdrSidecar.OverlayPass2OntoResidentPool(ctx, rescored, Name, ValidityKey(ctx),
                 experimentRecords);
             // No re-clamp here either, for the reason the join gives: the experiment q this arm
             // overlays onto the pool comes from records that were floored before they were
@@ -846,19 +765,7 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogMemoryStats(ctx, @"pass2-fold: after the pass-2 overlays");
             ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-end");
 
-            // One report, two survivor shapes, and the choice is the stage's existing one -
-            // taken here rather than re-decided, so the fold and the join cannot render from
-            // different arms of the same comparison.
-            if (rescored.Streams)
-            {
-                WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds);
-            }
-            else
-            {
-                ModelDiagnosticsReport.WritePass2AndFinalize(
-                    rescored.Value, libraryById, config, ctx,
-                    stratumBaseIds, ValidityKey(ctx));
-            }
+            WritePass2DiagnosticsStreamed(ctx, rescored, libraryById, config, stratumBaseIds);
             return true;
         }
 
@@ -1106,7 +1013,7 @@ namespace pwiz.Osprey.Tasks
             // This MUST precede the dumps below: Stage7ProteinFdrOnly ends the process there,
             // and an unpatched record keeps whatever it held when the sidecar was written -
             // the ResetScores default for every entry Stage 6 rescored or gap-filled, since
-            // RestorePass1Scalars no longer seeds this field.
+            // nothing seeds this field from the first pass.
             // The patch and the report writer below shared a 125 s silence on the 82-file SEA-AD
             // run of 2026-08-14, between "N protein groups pass ..." and the blib write (#4571).
             // Each now carries its own ProgressReporter inside the callee rather than a heading
@@ -1124,7 +1031,8 @@ namespace pwiz.Osprey.Tasks
             if (!config.DiagnosticsOnly)
             {
                 Pass2FdrSidecar.WritePass2ExperimentSidecar(
-                    ctx, rescored.FileNames, perFileParquetPaths, result.ProteinFdr.PeptideQvalues);
+                    ctx, rescored.FileNames, perFileParquetPaths, result.ProteinFdr.PeptideQvalues,
+                    OutputStamp(ctx));
             }
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
@@ -1156,40 +1064,32 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// True iff any input file has a reconciled scores parquet on disk -- i.e.
-        /// Stage 6 rescored at least one file (multi-charge consensus, inter-replicate
-        /// reconciliation, or gap-fill). Disk-based so it reads identically in the
-        /// in-process pipeline (Stage 6 just wrote them) and the --task SecondPassFDR
-        /// node (the Stage 6 worker wrote them). The C# analog of Rust's
-        /// <c>total_rescored &gt; 0</c> gate (pipeline.rs:5209) for the second
-        /// Percolator pass.
+        /// The refusal for runs whose <c>.scores-reconciled.parquet</c> Stage 7 cannot read
+        /// (<see cref="UnusableReconciledParquets"/>), naming them, or null when every run's is
+        /// readable. Missing files are reported before older ones, each with its own remedy.
         /// </summary>
-        private static bool AnyReconciledParquet(OspreyConfig config)
+        internal static string UnusableReconciledParquetsError(IReadOnlyList<string> fileNames,
+            IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
-            if (config.InputFiles == null)
-                return false;
-            foreach (var input in config.InputFiles)
+            var unusable = UnusableReconciledParquets(fileNames, perFileParquetPaths);
+            if (unusable.Missing.Count > 0)
             {
-                string reconciledPath = ParquetScoreCache.GetReconciledScoresPath(input);
-                if (!File.Exists(reconciledPath))
-                    continue;
-                // Existence alone is no longer the answer. Stage 6 now writes a reconciled
-                // parquet for EVERY file, including one that had no rescore work at all
-                // (a faithful copy), so File.Exists would report total_rescored > 0 on a
-                // cohort Rust skips the second pass for entirely - the anti-conservative
-                // direction, since the pass-2 recalibration is what measured 1.57% FDP
-                // against 0.92%. The footer says which it is.
-                //
-                // A parquet written before the key existed is treated as WORK, because back
-                // then it was only written when there was some: the two statements meant the
-                // same thing, which is why existence was ever a sound test.
-                var footer = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
-                if (!footer.TryGetValue(@"osprey.rescored", out string rescored))
-                    return true;
-                if (!string.Equals(rescored, @"0", StringComparison.Ordinal))
-                    return true;
+                return string.Format(
+                    OspreyTasksResources.SecondPassFdrTask_Run__0__of__1__runs_have_no_re_scored_results_file___scores_reconciled_parquet___which_,
+                    unusable.Missing.Count, fileNames.Count,
+                    string.Join(@", ", unusable.Missing), ParquetScoreCache.EXT_SCORES_RECONCILED,
+                    PerFileRescoreTask.TASK_NAME, ParquetScoreCache.EXT_SCORES,
+                    OspreyArgNames.TaskText(PerFileRescoreTask.TASK_NAME));
             }
-            return false;
+            if (unusable.Stale.Count > 0)
+            {
+                return CountText.Format(unusable.Stale.Count,
+                    OspreyTasksResources.SecondPassFdrTask_Run_1_of__1__re_scored_intermediate_files_was_written_by_an_older_Osprey_build_and_cannot_be_,
+                    OspreyTasksResources.SecondPassFdrTask_Run__0__of__1__re_scored_intermediate_files_were_written_by_an_older_Osprey_build_and_cannot_,
+                    fileNames.Count, string.Join(@", ", unusable.Stale),
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
+            }
+            return null;
         }
 
         /// <summary>
@@ -1326,7 +1226,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.COUNT, @"Cross-file observations to write: {0}", passingEntries.Count);
 
             BlibOutputWriter.Write(config, rescored.FileNames, libraryById, bestByPrecursor,
-                bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);
+                bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts, OutputStamp(ctx));
 
             // One spectrum per passing precursor (its best run); the peaks are every run's
             // observation of those precursors, written as the per-run retention times.

@@ -68,7 +68,8 @@ namespace pwiz.Osprey.Tasks
         /// loaded by the caller, or null to load them here.
         /// </summary>
         public static void ExportRun(string input, string output, IReadOnlyDictionary<uint, LibraryEntry> library,
-            PipelineContext ctx, int maxThreads, SpectraWindowIndex spectra = null, MzCalibrationResult ms2Cal = null)
+            PipelineContext ctx, int maxThreads, ArtifactStamp stamp,
+            SpectraWindowIndex spectra = null, MzCalibrationResult ms2Cal = null)
         {
             var sw = Stopwatch.StartNew();
             var config = ctx.Config;
@@ -86,9 +87,9 @@ namespace pwiz.Osprey.Tasks
             }
             // The footer check --task SecondPassFDR makes - this build's version, this search and
             // library, and a reconciled file - on every route, since an export written from disk
-            // has nothing else vouching for the file. Another build is named apart: every other
-            // stage skips by its validity key, which carries no build, so the generic "score the
-            // file again" remedy would only skip again.
+            // has nothing else vouching for the file. Another build is named apart, because its
+            // remedy differs: the file is current only for the build that wrote it, so the
+            // message names that build rather than a generic "score the file again".
             string otherBuild = OtherBuild(reconciledPath);
             if (otherBuild != null)
             {
@@ -111,7 +112,7 @@ namespace pwiz.Osprey.Tasks
             var searchConfig = config.ShallowClone();
             searchConfig.FragmentTolerance = new FragmentToleranceConfig { Tolerance = tolerance, Unit = toleranceUnit };
             ScoringPipeline.DoubleCountingTolerance(ms2Cal, config, out double ddcTolerance, out ToleranceUnit ddcUnit);
-            var index = spectra ?? ScoringTaskShared.LoadSpectraForRescore(input, stem, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, false);
+            var index = spectra ?? ScoringTaskShared.LoadSpectraForRescore(input, stem, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, false, ctx);
             double rtNeighborhood = ScoringPipeline.DoubleCountingRtNeighborhood(index.AllMs2Rts);
             var evidenceSettings = new TrainingEvidenceSettings
             {
@@ -161,9 +162,9 @@ namespace pwiz.Osprey.Tasks
             int nUnplaced = nToExport - records.Count;
 
             var source = SpectrumFileReader.TryReadSourceMetadata(input);
-            var metadata = BuildMetadata(config, stem, index, observed, source, runQPass, ms2Cal, tolerance,
-                toleranceUnit, ddcTolerance, ddcUnit, rtNeighborhood, maxQ, claimantQ, nParity, nFittedParity,
-                nFitted, records.Count);
+            var metadata = ParquetScoreCache.WithStamp(BuildMetadata(config, stem, index, observed, source,
+                runQPass, ms2Cal, tolerance, toleranceUnit, ddcTolerance, ddcUnit, rtNeighborhood, maxQ, claimantQ,
+                nParity, nFittedParity, nFitted, records.Count), stamp);
             TrainingExportParquet.Write(output, records, metadata, settings.WriteXics);
             sw.Stop();
 
@@ -389,16 +390,18 @@ namespace pwiz.Osprey.Tasks
             return @";recon=" + IdentityOrAbsent(ParquetScoreCache.GetReconciledScoresPath(input))
                 + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:") + IdentityOrAbsent(runQPath)
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
-                + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input));
+                + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
+                + DemuxSpectraIdentity(input);
         }
 
-        /// <summary>The artifacts one run's export reads.</summary>
-        public static IEnumerable<string> RunInputs(string input)
+        /// <summary>
+        /// The demultiplexed cache's identity when the run has one, which a --demux auto export
+        /// reads in place of the .spectra.bin; empty otherwise, so no other run's key changes.
+        /// </summary>
+        private static string DemuxSpectraIdentity(string input)
         {
-            yield return ParquetScoreCache.GetReconciledScoresPath(input);
-            yield return RunQPath(input, out _);
-            yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
-            yield return SpectraCache.GetCachePath(input);
+            string demuxPath = SpectraCache.GetDemuxCachePath(input);
+            return File.Exists(demuxPath) ? @";demuxspectra=" + IdentityOrAbsent(demuxPath) : string.Empty;
         }
 
         /// <summary>
@@ -409,18 +412,14 @@ namespace pwiz.Osprey.Tasks
         /// export. Deciding by who wrote the file, which never changes once it is written, makes
         /// an export written while re-scoring and one written later from disk agree.
         ///
-        /// <para>Who wrote it is the worker's stamp beside the sidecar (the test SecondPassFDR
-        /// folds by, <see cref="Pass2FdrSidecar.HasWorkerStamp"/>) AND the worker's decoys file,
-        /// which only the worker writes. The stamp alone is not proof: after a later
-        /// PerFileRescoring run the driver stamps every declared output that exists, including a
-        /// second-pass sidecar SecondPassFDR wrote, which would flip the export to that sidecar
-        /// on the next invocation of the same command. The driver stamps files; it never
-        /// creates one.</para>
+        /// <para>Who wrote it is the test SecondPassFDR folds by,
+        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar AND the worker's decoys
+        /// file both carry the stamp of the reconciled parquet beside them. A worker sidecar
+        /// without its decoys is not the worker's complete answer.</para>
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {
-            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input) &&
-                               File.Exists(Pass2CompetitionDecoys.PathFor(input));
+            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input);
             pass = workerOwned ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass;
             return workerOwned ? FdrScoresSidecar.Pass2Path(input) : FdrScoresSidecar.Pass1Path(input);
         }
