@@ -112,10 +112,13 @@ namespace pwiz.CarafeSharp.Test
         };
 
         // Calibrated tolerances (2026-09-27 calibration, each at least 3x the largest spread seen
-        // across GPU repeats, CPU vs GPU and Windows vs Linux; Stellar and Astral).
+        // across GPU repeats, CPU vs GPU and Windows vs Linux; Stellar and Astral). The pretrained
+        // RT model's metrics move on the GPU since the run alignment (Stellar GPU 1.27e-5, 2026-10-12):
+        // its targets map each run onto the pretrained Chronologer's predictions, made on the device.
         private static readonly Tolerances FULL_TOLERANCES = new Tolerances
         {
             PretrainedMetric = 1e-5,
+            PretrainedRtMetric = 4e-5,
             FinetunedMetric = new Dictionary<string, double>
             {
                 { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
@@ -133,25 +136,29 @@ namespace pwiz.CarafeSharp.Test
             RtP99Max = 0.16,
         };
 
-        // The subset's held-out sets are about a tenth of Stellar's (90 MS2 spectra, 152 RT
-        // forms), so its fine-tuned metrics move more between machines. Calibrated as above, on
-        // the subset itself (see SUBSET_CALIBRATION).
+        // The subset's held-out sets are about a tenth of Stellar's (90 MS2 spectra, 152 RT forms)
+        // and its sample 200 precursors, so its fine-tuned metrics and library move more between
+        // machines. Each is at least 3x the largest change from the CPU golden seen over a CPU
+        // repeat, 4, 8 and 16 torch threads, two GPU runs and Linux (2026-10-13): MS2 cos 6.3e-4,
+        // pcc 1.2e-3, sa 2.1e-3, spc 4.8e-3; RT mae 4.3e-4, r2 1.5e-4; pretrained RT 1.85e-5 (GPU);
+        // peaks 0.5%; cosine median 0.99932, p5 0.9953, p1 0.9852; RT 0.030, 0.103, 0.172 min.
         private static readonly Tolerances SUBSET_TOLERANCES = new Tolerances
         {
             PretrainedMetric = 1e-5,
+            PretrainedRtMetric = 6e-5,
             FinetunedMetric = new Dictionary<string, double>
             {
-                { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
+                { @"cos", 2e-3 }, { @"pcc", 4e-3 }, { @"sa", 7e-3 }, { @"spc", 1.5e-2 }, { @"r2", 5e-4 }, { @"mae_normalized", 1.5e-3 },
             },
-            PeakCountFraction = 0.01,
+            PeakCountFraction = 0.02,
             PrecursorCountFraction = 1e-4,
             PrecursorCountMinAllowed = 2,
-            CosineMedianMin = 0.99925,
-            CosineP5Min = 0.991,
-            CosineP1Min = 0.975,
-            RtMedianMax = 0.03,
-            RtP95Max = 0.10,
-            RtP99Max = 0.16,
+            CosineMedianMin = 0.998,
+            CosineP5Min = 0.985,
+            CosineP1Min = 0.955,
+            RtMedianMax = 0.09,
+            RtP95Max = 0.3,
+            RtP99Max = 0.5,
         };
 
         /// <summary>A precursor may be in one library only when it has at most this many fragments (lf_min_n_frag + 1).</summary>
@@ -1448,6 +1455,7 @@ namespace pwiz.CarafeSharp.Test
                     json.WriteEndObject();
                     json.WriteStartObject(@"tolerances");
                     json.WriteNumber(@"pretrained_metric", tolerances.PretrainedMetric);
+                    json.WriteNumber(@"pretrained_rt_metric", tolerances.PretrainedRtMetric);
                     json.WriteStartObject(@"finetuned_metric");
                     foreach (var pair in tolerances.FinetunedMetric)
                         json.WriteNumber(pair.Key, pair.Value);
@@ -1515,7 +1523,10 @@ namespace pwiz.CarafeSharp.Test
                 return dataset == SUBSET_DATASET ? SUBSET_TOLERANCES : FULL_TOLERANCES;
             }
 
+            /// <summary>The pretrained MS2 model's metrics.</summary>
             public double PretrainedMetric { get; set; }
+            /// <summary>The pretrained RT model's metrics, which the run alignment makes depend on the device.</summary>
+            public double PretrainedRtMetric { get; set; }
             /// <summary>By metric name (cos, pcc, sa, spc, r2, mae_normalized), for either model.</summary>
             public IReadOnlyDictionary<string, double> FinetunedMetric { get; set; }
             public double PeakCountFraction { get; set; }
@@ -1532,7 +1543,7 @@ namespace pwiz.CarafeSharp.Test
             public double GetMetricTolerance(string key)
             {
                 if (key.Contains(@"." + ModelFiles.METRICS_PRETRAINED + @"."))
-                    return PretrainedMetric;
+                    return key.StartsWith(ModelFiles.METRICS_RT + @".", StringComparison.Ordinal) ? PretrainedRtMetric : PretrainedMetric;
                 if (!FinetunedMetric.TryGetValue(key.Substring(key.LastIndexOf('.') + 1), out double tolerance))
                     Assert.Fail(@"No tolerance is calibrated for the metric {0}", key);
                 return tolerance;
