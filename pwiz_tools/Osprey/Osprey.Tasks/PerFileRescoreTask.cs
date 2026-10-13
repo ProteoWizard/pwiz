@@ -709,37 +709,13 @@ namespace pwiz.Osprey.Tasks
                 joinFileStems = stems;
             }
 
-            // On the per-run path these four are dead weight, and on a straight-through run they
-            // are the planner's own whole-experiment output: the reconciliation action map
-            // (30.8 M entries at 446 runs), the gap-fill targets (8.85 M), the per-run consensus
-            // targets and the refined calibrations - order 13 GB, held for the whole rescore.
-            // Each run reads its own slice from its own reconciliation.json instead, so CONSUME
-            // rather than Get: taking the value and dropping the pipeline's reference in one
-            // step is what actually frees them, where a Get would leave the byproduct cache
-            // holding every one for the life of the process.
-            //
-            // Safe to release: FirstPassFdrTask publishes these four and PerFileRescoreTask is
-            // their only reader, so nothing downstream can find them missing. Release IS final -
-            // a later Get throws rather than rebuilding - which is why that two-party fact has
-            // to stay true; a third reader appearing is a compile-visible change to this line.
-            // CONSUME the three that nothing reads after this task, on EVERY path - not just the
-            // per-run one. They are FirstPassFDR's whole-experiment planning products, and this
-            // task is their only reader (verified by grepping every Get/Consume/TryGet: the
-            // action map, the consensus targets and the refined calibrations appear nowhere
-            // else). Held, they are order 13 GB at 446 runs for the whole rescore and beyond.
-            //
-            // Gap-fill joins them now: the Stage 7 rebuild that read it from here reads each
-            // run's targets from its own reconciliation.json, and the rescore does too.
-            // The HOLDERS, not .Value, for the deferred ones: dereferencing them would build the
-            // all-runs map only to drop it. Measured at 446 runs that read is 68-111 s. The
-            // action map is still read, for the run-wide count of planned actions.
-            ctx.Consume<PerFileGapFillForRescore>();
-            ctx.Consume<PerFileConsensusTargets>();
-            ctx.Consume<RefinedCalibrations>();
-            var reconciliationActions = ctx.Consume<ReconciliationActions>().Value;
+            // Each run's actions, gap-fill, consensus targets and refined calibration come from
+            // its own reconciliation.json through the per-run hydrate; FirstPassFDR publishes
+            // only the planned-action count, for the summary line. The whole-experiment planning
+            // maps that used to arrive here - order 13 GB at 446 runs - are no longer built.
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
-                reconciliationActions,
+                ctx.Get<PlannedActionCount>().Value,
                 ctx.Get<PerFileCalibrations>().Value,
                 ctx.Get<PerFileParquetPaths>().Value,
                 ctx.Get<FullLibrary>().Value,
@@ -944,7 +920,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal RescoreStats ExecuteRescore(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> reconciliationActions,
+            int totalReconciliation,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
@@ -953,16 +929,6 @@ namespace pwiz.Osprey.Tasks
             out HashSet<string> rescoredFiles,
             IReadOnlyList<string> joinFileStems = null)
         {
-            // The planner's run-wide count of non-Keep actions, for the summary line - counted,
-            // not grouped: grouping built a target list per action (30.8 M at 446 runs) only to
-            // keep the count. Each run's own actions come from its own reconciliation.json
-            // through the per-run hydrate.
-            int totalReconciliation = 0;
-            foreach (var action in reconciliationActions.Values)
-            {
-                if (action is ReconcileAction.UseCwtPeak || action is ReconcileAction.ForcedIntegration)
-                    totalReconciliation++;
-            }
 
             // file_name -> input_files index, used to pick the right mzML
             // path for spectra cache load + sibling .calibration.json.

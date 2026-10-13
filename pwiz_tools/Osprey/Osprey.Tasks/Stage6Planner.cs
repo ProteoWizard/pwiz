@@ -88,19 +88,19 @@ namespace pwiz.Osprey.Tasks
     internal sealed class Stage6Planner
     {
         /// <summary>
-        /// The four cross-file planning byproducts Stage 6 produces. Consumed by
-        /// <see cref="FirstPassFdrTask"/> to publish the typed byproduct slots
-        /// <see cref="PerFileRescoreTask"/> reads. <see cref="ReconciliationActions"/> is null
-        /// when reconciliation was skipped (single-file / empty consensus).
+        /// What planning returns once every file has been handed to the caller. Each file's
+        /// actions, gap-fill and refined calibration went out through <see cref="Stage6FilePlanned"/>
+        /// as that file finished, to be written into its own <c>.reconciliation.json</c>;
+        /// nothing here holds them for every file at once. The whole-experiment maps this used
+        /// to carry - the action map alone 30.8 M entries at 446 runs - had no reader but a
+        /// count.
         /// </summary>
         internal sealed class Stage6Plan
         {
-            public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> PerFileConsensusTargets;
             public IReadOnlyList<PeptideConsensusRT> Consensus;
-            // Concrete Dictionary (not IReadOnlyDictionary) to match the
-            // parameter the caller forwards it to.
-            public Dictionary<string, RTCalibration> RefinedCalibrations;
-            public IReadOnlyDictionary<(string File, int Index), ReconcileAction> ReconciliationActions;
+            /// <summary>Non-Keep actions planned across every file, or null when reconciliation
+            /// was skipped (single-file / empty consensus).</summary>
+            public int? ActionCount;
         }
 
         private readonly PipelineContext _ctx;
@@ -150,7 +150,6 @@ namespace pwiz.Osprey.Tasks
         /// entries), which is the whole point of the split.</summary>
         private sealed class ScanResult
         {
-            public Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> PerFileConsensusTargets;
             public ConsensusRts.Accumulator ConsensusAccumulator;
             public HashSet<(uint, byte)> PassingBaseIds;
             public HashSet<(string ModifiedSequence, byte Charge)> PassingPrecursors;
@@ -171,8 +170,6 @@ namespace pwiz.Osprey.Tasks
         {
             var scan = new ScanResult
             {
-                PerFileConsensusTargets =
-                    new Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>(),
                 // Cross-file consensus is only meaningful with > 1 file -- mirrors Rust
                 // pipeline.rs:4146 where reconciliation_enabled requires per_file_entries.len()
                 // > 1; single-file runs skip consensus, refit and reconciliation entirely,
@@ -219,9 +216,9 @@ namespace pwiz.Osprey.Tasks
                 {
                     string fileName = fileNames[i];
                     var entries = file.Entries;
-                    var targets = file.Targets;
-                    scan.PerFileConsensusTargets[fileName] = targets;
-                    scan.TotalMulticharge += targets.Count;
+                    // Counted, not kept: each run's rescore derives its own multi-charge targets
+                    // from its own survivors, so the cross-run map that stood here had no reader.
+                    scan.TotalMulticharge += file.Targets.Count;
                     scan.ConsensusAccumulator?.AddFile(fileName, entries);
                     ReconciliationPlanner.CollectPassingBaseIds(
                         entries, config.Reconciliation.ConsensusFdr, scan.PassingBaseIds);
@@ -345,7 +342,10 @@ namespace pwiz.Osprey.Tasks
             // Empty consensus (single-file / no cross-file evidence) is a legitimate
             // skip, not an error -- only a corrupt input aborts (in pass A).
             bool planning = consensus.Count > 0 && !refitOnlyExit;
-            var actions = planning ? new Dictionary<(string, int), ReconcileAction>() : null;
+            // Counted, not kept: each file's actions go into its own reconciliation.json through
+            // onFilePlanned, and nothing reads the whole-experiment map (30.8 M entries at 446
+            // runs) that used to be built here. DISTINCT (file, index) keys, as that map had.
+            int actionCount = 0;
             // The planner and the gap-fill identifier are handed refinedCalibrations, but the file
             // walk below passes each file's own refit to them explicitly: files are planned on
             // file lanes while the map is filled in file order, and a lookup would race those
@@ -407,10 +407,12 @@ namespace pwiz.Osprey.Tasks
                     if (filePlan.RefinedCalibration != null)
                         refinedCalibrations[filePlan.FileName] = filePlan.RefinedCalibration;
                     // Exists exactly when planning, which is also when the file plan has actions.
-                    if (actions != null && filePlan.Actions != null)
+                    if (planning && filePlan.Actions != null)
                     {
+                        var indices = new HashSet<int>();
                         foreach (var action in filePlan.Actions)
-                            actions[(filePlan.FileName, action.Key)] = action.Value;
+                            indices.Add(action.Key);
+                        actionCount += indices.Count;
                     }
 
                     // Nothing is handed on when a diagnostic dump is about to end the run: the
@@ -450,7 +452,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx.LogInfo(string.Format(
                     OspreyTasksResources.Stage6Planner_PlanFiles_Cross_run_reconciliation___0__peak_re_picks_and_boundary_imputations_planned_across__1__,
-                    actions.Count, fileNames.Count));
+                    actionCount, fileNames.Count));
             }
             else if (fileNames.Count == 1)
             {
@@ -466,10 +468,8 @@ namespace pwiz.Osprey.Tasks
 
             return new Stage6Plan
             {
-                PerFileConsensusTargets = scan.PerFileConsensusTargets,
                 Consensus = consensus,
-                RefinedCalibrations = refinedCalibrations,
-                ReconciliationActions = actions,
+                ActionCount = planning ? actionCount : null,
             };
         }
     }
