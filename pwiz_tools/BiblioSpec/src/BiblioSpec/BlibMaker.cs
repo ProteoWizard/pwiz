@@ -977,6 +977,9 @@ public class BlibMaker : IDisposable
             }
         }
 
+        foreach (var column in GetOptionalColumns(sourceDbName, BlibSchema.OptionalRefSpectraColumns))
+            sb.Append(", ").Append(column.Name);
+
         sb.Append(" FROM ").Append(sourceDbName).Append(".RefSpectra");
         SqlStmt(sb.ToString());
     }
@@ -1076,7 +1079,20 @@ public class BlibMaker : IDisposable
         if (!TableExists(schemaTmp, "Proteins"))
             return;
 
-        SqlStmt($"INSERT INTO main.Proteins (id, accession) SELECT id, accession FROM {schemaTmp}.Proteins");
+        var optionalColumns = OptionalColumnsCsv(schemaTmp, BlibSchema.OptionalProteinsColumns);
+        SqlStmt($"INSERT INTO main.Proteins (id, accession{optionalColumns}) SELECT id, accession{optionalColumns} FROM {schemaTmp}.Proteins");
+    }
+
+    /// <summary>
+    /// Adds to main the members of <paramref name="columns"/> that the <paramref name="schemaTmp"/>
+    /// library has, and returns them as a column list that starts with ", ", or "" when there are none.
+    /// </summary>
+    private string OptionalColumnsCsv(string schemaTmp, IReadOnlyList<OptionalColumn> columns)
+    {
+        var sourceColumns = GetOptionalColumns(schemaTmp, columns);
+        foreach (var column in sourceColumns)
+            AddOptionalColumn(column);
+        return string.Concat(sourceColumns.Select(c => ", " + c.Name));
     }
 
     /// <summary>
@@ -1194,18 +1210,21 @@ public class BlibMaker : IDisposable
             }
         }
 
+        // The optional columns hold global values, the same for every spectrum of a precursor
+        // or peptide, so the chosen spectrum's values stand for its whole group.
+        var optionalColumns = OptionalColumnsCsv(schemaTmp, BlibSchema.OptionalRefSpectraColumns);
         SqlStmt(
             "INSERT INTO RefSpectra(id, peptideSeq, precursorMZ, precursorCharge, " +
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, fileID, " +
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, " +
             "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, " +
-            "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType) " +
+            "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType" + optionalColumns + ") " +
 
             "SELECT ref.id, peptideSeq, precursorMZ, precursorCharge, " +
             "peptideModSeq, prevAA, nextAA, tmp.copies, numPeaks, fileID, " +
             "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, " +
             "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, " +
-            "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType " +
+            "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile, score, scoreType" + optionalColumns + " " +
             "FROM RefSpectraTransfer ref " +
             "JOIN TempSpectrumCopies tmp ON ref.id=tmp.id " +
             "GROUP BY ref.id");

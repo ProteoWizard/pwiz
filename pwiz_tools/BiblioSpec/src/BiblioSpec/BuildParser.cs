@@ -268,10 +268,8 @@ public abstract class BuildParser : IDisposable
         PrepareInsertSpectrumStatement();
     }
 
-    private static double? GetOptionalValue(NonRedundantPSM? psm, OptionalColumn column)
+    private static double? GetOptionalValue(PSM psm, OptionalColumn column)
     {
-        if (psm is null)
-            return null;
         if (column == BlibSchema.PrecursorQValue)
             return psm.PrecursorQValue;
         if (column == BlibSchema.PrecursorPep)
@@ -1183,7 +1181,7 @@ public abstract class BuildParser : IDisposable
         p[24].Value = psm.SmallMolMetadata.OtherKeys;
 
         for (var i = 0; i < _refSpectraOptionalColumns.Count; i++)
-            p[FixedSpectrumParamCount + i].Value = (object?)GetOptionalValue(nrpsm, _refSpectraOptionalColumns[i]) ?? DBNull.Value;
+            p[FixedSpectrumParamCount + i].Value = (object?)GetOptionalValue(psm, _refSpectraOptionalColumns[i]) ?? DBNull.Value;
 
         try
         {

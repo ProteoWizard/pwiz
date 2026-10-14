@@ -321,7 +321,8 @@ public static class BlibSchema
 /// <summary>
 /// A column that a library has only when its source supplied values for it, so a library without
 /// the values pays no size or read cost. It is added with <c>ALTER TABLE ... ADD COLUMN</c> when a
-/// reader that builds the non-redundant library directly enables it. BlibFilter and BlibBuild
-/// merges do not copy these columns.
+/// reader enables it, and BlibFilter carries it from the redundant library to the non-redundant one.
+/// BlibBuild merges do not copy these columns, because a global value from one experiment means
+/// nothing next to one from another.
 /// </summary>
 public sealed record OptionalColumn(string Table, string Name, string Type);

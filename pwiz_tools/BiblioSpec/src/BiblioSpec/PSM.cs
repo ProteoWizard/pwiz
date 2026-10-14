@@ -37,8 +37,10 @@ public sealed record Protein(string Accession)
     public double? Pep { get; init; }
 
     // A protein's statistics describe it rather than identify it, so they stay out of equality.
+    /// <inheritdoc/>
     public bool Equals(Protein? other) => other is not null && string.Equals(Accession, other.Accession, StringComparison.Ordinal);
 
+    /// <inheritdoc/>
     public override int GetHashCode() => Accession.GetHashCode(StringComparison.Ordinal);
 }
 
@@ -109,6 +111,22 @@ public class PSM
     /// <summary>Small-molecule metadata (only populated for small-molecule library entries).</summary>
     public SmallMolMetadata SmallMolMetadata { get; } = new();
 
+    // The global statistics describe the precursor or peptide, so a reader that builds a
+    // redundant library sets the same values on every PSM of it, and BlibFilter keeps the
+    // values of whichever spectrum it picks.
+
+    /// <summary>Global precursor q-value, written to <c>RefSpectra.PrecursorQValue</c> when that column is enabled.</summary>
+    public double? PrecursorQValue { get; set; }
+
+    /// <summary>Global precursor PEP, written to <c>RefSpectra.PrecursorPep</c> when that column is enabled.</summary>
+    public double? PrecursorPep { get; set; }
+
+    /// <summary>Global peptide q-value, written to <c>RefSpectra.PeptideQValue</c> when that column is enabled.</summary>
+    public double? PeptideQValue { get; set; }
+
+    /// <summary>Global peptide PEP, written to <c>RefSpectra.PeptidePep</c> when that column is enabled.</summary>
+    public double? PeptidePep { get; set; }
+
     /// <summary>
     /// Reset all fields to their default empty / zero values. Mirrors cpp PSM.h:94 <c>clear()</c>.
     /// </summary>
@@ -127,6 +145,10 @@ public class PSM
         SpecName = string.Empty;
         SmallMolMetadata.Clear();
         Proteins.Clear();
+        PrecursorQValue = null;
+        PrecursorPep = null;
+        PeptideQValue = null;
+        PeptidePep = null;
     }
 
     /// <summary>
@@ -203,31 +225,6 @@ public class NonRedundantPSM : PSM
 
     /// <summary>Overrides the <c>copies</c> field set by <c>buildTables()</c>.</summary>
     public int Copies { get; set; }
-
-    // The global statistics live here because they are written only when a reader builds the
-    // non-redundant library directly; BlibFilter and merges do not copy the optional columns.
-
-    /// <summary>Global precursor q-value, written to <c>RefSpectra.PrecursorQValue</c> when that column is enabled.</summary>
-    public double? PrecursorQValue { get; set; }
-
-    /// <summary>Global precursor PEP, written to <c>RefSpectra.PrecursorPep</c> when that column is enabled.</summary>
-    public double? PrecursorPep { get; set; }
-
-    /// <summary>Global peptide q-value, written to <c>RefSpectra.PeptideQValue</c> when that column is enabled.</summary>
-    public double? PeptideQValue { get; set; }
-
-    /// <summary>Global peptide PEP, written to <c>RefSpectra.PeptidePep</c> when that column is enabled.</summary>
-    public double? PeptidePep { get; set; }
-
-    /// <inheritdoc/>
-    public override void Clear()
-    {
-        base.Clear();
-        PrecursorQValue = null;
-        PrecursorPep = null;
-        PeptideQValue = null;
-        PeptidePep = null;
-    }
 }
 
 /// <summary>
