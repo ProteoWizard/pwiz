@@ -77,8 +77,9 @@ namespace pwiz.CarafeSharp.Models
                     return;
                 }
                 CheckTorchSharpFindsNoOtherLibTorch();
-                LoadLibraries();
+                // Before loading: a load that fails partway has still put some of these libraries in the process
                 Loaded = this;
+                LoadLibraries();
             }
         }
 

@@ -136,6 +136,34 @@ namespace pwiz.CarafeSharp.Models
             File.WriteAllText(Path.Combine(StagingDirectory, INSTALLED_FILE_NAME), PackageSet.Name);
             DeleteDirectory(RuntimeDirectory);
             Directory.Move(StagingDirectory, RuntimeDirectory);
+            DeleteOtherVersions();
+        }
+
+        /// <summary>
+        /// Removes the runtimes other versions of this package set installed, several GB each, which
+        /// nothing loads once this version is installed.
+        /// </summary>
+        private void DeleteOtherVersions()
+        {
+            foreach (var directory in Directory.EnumerateDirectories(RuntimesDirectory, PackageSet.Id + @".*"))
+            {
+                if (!string.Equals(Path.GetFileName(directory), PackageSet.Name, StringComparison.OrdinalIgnoreCase) &&
+                    File.Exists(Path.Combine(directory, INSTALLED_FILE_NAME)))
+                {
+                    // Renamed first, which fails while another running copy of the application has the
+                    // runtime loaded, so that one is left whole for a later install to remove
+                    string deletingDirectory = directory + STAGING_SUFFIX;
+                    try
+                    {
+                        DeleteDirectory(deletingDirectory);
+                        Directory.Move(directory, deletingDirectory);
+                        DeleteDirectory(deletingDirectory);
+                    }
+                    catch (Exception x) when (x is IOException || x is UnauthorizedAccessException)
+                    {
+                    }
+                }
+            }
         }
 
         /// <summary>

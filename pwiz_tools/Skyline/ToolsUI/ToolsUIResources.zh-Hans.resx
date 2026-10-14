@@ -343,9 +343,6 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>安装更新至{0}</value>
   </data>
-  <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
-    <value>{1} 需要安装 Python {0}，请等待 Python 的安装和配置完成……</value>
-  </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
     <value>SkylineProcessRunner 在 {0} 毫秒后超时</value>
   </data>

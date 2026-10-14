@@ -71,13 +71,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public abstract string TrainingFilePath { get; }
 
-        public float FractionOfExpectedOutputLinesGenerated => TotalExpectedLinesOfOutput != 0
-            ? TotalGeneratedLinesOfOutput / (float)TotalExpectedLinesOfOutput
-            : 1.0F;
-
-        public int TotalExpectedLinesOfOutput { get; private protected set; }
-        public int TotalGeneratedLinesOfOutput { get; private protected set; }
-
         public void PreparePrecursorInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus

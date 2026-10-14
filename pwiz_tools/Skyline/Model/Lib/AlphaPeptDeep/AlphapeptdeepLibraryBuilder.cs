@@ -37,29 +37,6 @@ using TorchSharp;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
-    public class ArgumentAndValue
-    {
-        private const string DEFAULT_DASH = @"--";
-
-        public ArgumentAndValue(string name, string value, bool quoteValue)
-            : this(name, value, DEFAULT_DASH, quoteValue)
-        {}
-
-        public ArgumentAndValue(string name, string value, string dash = DEFAULT_DASH, bool quoteValue = false)
-        {
-            Name = name;
-            Value = value;
-            if (quoteValue)
-                Value = '"' + Value + '"';
-            Dash = dash;
-        }
-        public string Name { get; private set; }
-        public string Value { get; private set; }
-        public string Dash { get; set; }
-
-        public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
-    }
-
     /// <summary>
     /// Builds a library of AlphaPeptDeep MS2 and RT predictions for the document's precursors. The
     /// models run in process through CarafeSharp's TorchSharp port of peptdeep, on an NVIDIA GPU when
@@ -261,7 +238,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 // Before anything touches TorchSharp, which would otherwise look for libtorch beside the executable
                 var runtime = TorchRuntimes.Load(UseGpu);
-                var device = TorchDevice.Resolve(runtime.IsCuda ? TorchDevice.GPU : TorchDevice.CPU, out _);
+                var device = TorchDevice.Resolve(UseGpu && runtime.IsCuda ? TorchDevice.GPU : TorchDevice.CPU, out _);
                 Messages.WriteAsyncUserMessage(device.type == DeviceType.CUDA
                     ? ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU
                     : ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU);

@@ -166,10 +166,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             var installer = CudaInstaller;
             var packages = installer.PackageSet.Packages;
-            // One segment per package, sized by the package, ending at its share of the total
+            // One segment per package, sized by the package, ending at its share of the total, but at
+            // least 1% long, since segment ends must increase
             long totalSize = installer.PackageSet.TotalSize;
             long sizeSoFar = 0;
-            var segmentEnds = packages.Select(package => (int)((sizeSoFar += package.Size) * 100 / totalSize)).ToArray();
+            int previousEnd = 0;
+            var segmentEnds = packages.Select(package => previousEnd =
+                Math.Max(previousEnd + 1, (int)((sizeSoFar += package.Size) * 100 / totalSize))).ToArray();
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList.ValueOf(segmentEnds));
 
             Directory.CreateDirectory(RuntimesDirectory);

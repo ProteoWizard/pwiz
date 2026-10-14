@@ -95,8 +95,17 @@ namespace pwiz.CarafeSharp.Test
             installer.Abandon();
             Assert.IsFalse(installer.IsInstalled);
 
+            // An older version's runtime goes once this one is installed; folders it did not install stay
+            string olderVersion = MakeFolder(installer.RuntimesDirectory, PACKAGE_SET_ID + @".0.9.0", LibTorchRuntimeInstaller.INSTALLED_FILE_NAME);
+            string notInstalled = MakeFolder(installer.RuntimesDirectory, PACKAGE_SET_ID + @".0.8.0", SMALL_LIBRARY);
+            string otherTool = MakeFolder(installer.RuntimesDirectory, @"OtherTool", LibTorchRuntimeInstaller.INSTALLED_FILE_NAME);
+
             Install(installer, packageFiles);
             Assert.IsTrue(installer.IsInstalled);
+            Assert.IsFalse(Directory.Exists(olderVersion));
+            Assert.IsFalse(Directory.Exists(olderVersion + @".partial"));
+            Assert.IsTrue(Directory.Exists(notInstalled));
+            Assert.IsTrue(Directory.Exists(otherTool));
             CollectionAssert.AreEqual(smallBytes, File.ReadAllBytes(Path.Combine(installer.RuntimeDirectory, SMALL_LIBRARY)));
             CollectionAssert.AreEqual(splitBytes, File.ReadAllBytes(Path.Combine(installer.RuntimeDirectory, SPLIT_LIBRARY)));
             CollectionAssert.AreEquivalent(new[] { SMALL_LIBRARY, SPLIT_LIBRARY, LibTorchRuntimeInstaller.INSTALLED_FILE_NAME },
@@ -115,6 +124,14 @@ namespace pwiz.CarafeSharp.Test
             foreach (var package in installer.PackageSet.Packages)
                 installer.AddPackage(package, GetPackageFile(packageFiles, package));
             installer.Complete();
+        }
+
+        private static string MakeFolder(string parent, string name, string fileName)
+        {
+            string path = Path.Combine(parent, name);
+            Directory.CreateDirectory(path);
+            File.WriteAllText(Path.Combine(path, fileName), name);
+            return path;
         }
 
         private static string GetPackageFile(Dictionary<string, string> packageFiles, LibTorchPackage package)
