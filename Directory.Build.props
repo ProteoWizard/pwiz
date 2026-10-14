@@ -111,8 +111,9 @@
     <!-- Warnings are NOT promoted to errors. A promoted warning stops the build before any test
          runs, and not every warning comes from the commit being built: a NuGet advisory
          published overnight (NU1901-NU1904) fails restore on every branch at once. The
-         warning-free policy is enforced after the build instead - pwiz_tools/Skyline/tcinspect.ps1
-         logs every restore and build warning and fails its GitHub status when there are any.
+         warning-free policy is enforced after the build instead - tcinspect.ps1 (and
+         pwiz_tools/Skyline/tcinspect.ps1 for Skyline) logs every restore and build warning and
+         fails its own GitHub status when there are any, leaving the build green.
          Demote a warning with NoWarn, with a comment saying why. -->
     <!-- .NET 9+ defaults NuGetAuditMode to "all" (transitive). "direct" restores the
          net8 default. This does NOT make the transitive advisories go away - they

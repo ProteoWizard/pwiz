@@ -19,13 +19,13 @@
     reported as state 'error' rather than quietly passing. The only outcome that reports
     'success' is a run that completed and found nothing at or above -Severity.
 
-    The script also enforces the warning-free build, and that one does fail the build. The
-    Directory.Build.props files do not promote warnings to errors, because a promoted warning
-    stops the build before any test runs - including one the commit did not cause, such as a NuGet
-    advisory published overnight. Instead the pre-build below logs every restore and build
-    warning, and any warning raises a TeamCity buildProblem and makes the status a failure. The
-    buildProblem marks the build failed while the script still exits 0, so the steps that follow,
-    tcbuild.bat and its tests included, still run. In the per-commit configuration this pre-build is
+    The same status enforces the warning-free build. The Directory.Build.props files do not
+    promote warnings to errors, because a promoted warning stops the build before any test runs -
+    including one the commit did not cause, such as a NuGet advisory published overnight. Instead
+    the pre-build below logs every restore and build warning, and any warning makes the status a
+    failure just as an inspection finding does, leaving the build itself green. A TeamCity
+    buildProblem would not do: it fails this step, and TeamCity then skips tcbuild.bat and every
+    test, which is the outcome all of this exists to avoid. In the per-commit configuration this pre-build is
     the first compile after clean.bat, and build.bat builds on top of it incrementally, so this is
     the one place every compiler warning is emitted; an up-to-date project re-emits none.
 
@@ -110,38 +110,23 @@ $ErrorActionPreference = 'Stop'
 # and turn it into a failed build step, which is the one thing this script must never do.
 $PSNativeCommandUseErrorActionPreference = $false
 
-# TeamCity service message values escape these six. Counts never contain them; the description
-# carries tool output on the failure paths, which can.
-function Format-TcValue([string] $text) {
-    if ([string]::IsNullOrEmpty($text)) { return '' }
-    return $text.Replace('|', '||').Replace("'", "|'").Replace("`n", '|n').Replace("`r", '|r').Replace('[', '|[').Replace(']', '|]')
+# Format-TcValue, Publish-GitHubStatus and the build-warnings check, shared with the pwiz-sharp
+# tcinspect.ps1. Loaded before anything that reports, since every report goes through it; if it
+# cannot load there is no way to post a verdict, and the step must still not fail the build.
+try {
+    Import-Module (Join-Path $PSScriptRoot '..\..\scripts\BuildWarnings.psm1') -Force
+} catch {
+    Write-Host "##teamcity[message text='Could not load scripts/BuildWarnings.psm1; code inspection did not run' status='WARNING']"
+    exit 0
 }
 
-# Never throws and never retries: a status that fails to post is worth a warning in the log,
-# not a failed build. The token is a TeamCity credentialsJSON value, so it is never echoed.
 function Send-GitHubStatus([string] $state, [string] $description) {
-    $missing = @()
-    if ([string]::IsNullOrEmpty($env:GITHUB_STATUS_TOKEN)) { $missing += 'GITHUB_STATUS_TOKEN' }
-    if ([string]::IsNullOrEmpty($CommitSha)) { $missing += 'BUILD_VCS_NUMBER' }
-    if ($missing.Count -gt 0) {
-        Write-Host "  (not posting '$state' to '$StatusContext': $($missing -join ' and ') $(if ($missing.Count -gt 1) { 'are' } else { 'is' }) empty)"
-        return
-    }
-    $body = @{ state = $state; context = $StatusContext; description = $description }
-    if (-not [string]::IsNullOrEmpty($TargetUrl)) { $body['target_url'] = $TargetUrl }
-    try {
-        Invoke-RestMethod -Method Post -ContentType 'application/json' `
-            -Uri "https://api.github.com/repos/$Repository/statuses/$CommitSha" `
-            -Headers @{ Authorization = "Bearer $env:GITHUB_STATUS_TOKEN" } `
-            -Body ($body | ConvertTo-Json -Compress) | Out-Null
-        Write-Host "  posted '$state' to GitHub status '$StatusContext' on $CommitSha"
-    } catch {
-        Write-Host "##teamcity[message text='Could not post the code inspection status: $(Format-TcValue $_.Exception.Message)' status='WARNING']"
-    }
+    Publish-GitHubStatus -State $state -Description $description -Context $StatusContext `
+                         -CommitSha $CommitSha -TargetUrl $TargetUrl -Repository $Repository
 }
 
-# The single exit point. Every path lands here, and every path exits 0: a non-zero exit would skip
-# the steps after this one. Build warnings fail the build through a buildProblem instead.
+# The single exit point. Every path lands here, and every path exits 0: this step must never be
+# the reason the Skyline build goes red.
 function Complete-Inspection([string] $state, [string] $summary) {
     # GitHub truncates a commit status description at 140 characters; a tool's exception text
     # runs well past that, so cut it here where the tail can still be read in the build log.
@@ -152,10 +137,6 @@ function Complete-Inspection([string] $state, [string] $summary) {
 }
 
 try {
-    # The warning gate shared with the pwiz-sharp tcinspect.ps1. Inside the try, so a module that
-    # fails to load still ends in a verdict rather than a failed step.
-    Import-Module (Join-Path $PSScriptRoot '..\..\scripts\BuildWarnings.psm1') -Force
-
     $Solution = [System.IO.Path]::GetFullPath($Solution)
     $ReportPath = [System.IO.Path]::GetFullPath($ReportPath)
     $BuildWarningsPath = [System.IO.Path]::GetFullPath($BuildWarningsPath)
@@ -289,9 +270,12 @@ try {
         if ($total -gt 100) { Write-Host "  ... and $($total - 100) more; see the Inspections tab" }
     }
 
-    $buildWarningCount = Write-BuildWarnings -LogPath $BuildWarningsPath -ProblemIdentity 'skyline-build-warnings' -ArtifactDir '.teamcity/skyline-inspectcode'
+    $buildWarningCount = Write-BuildWarnings -LogPath $BuildWarningsPath -ArtifactDir '.teamcity/skyline-inspectcode'
 
     $verdict = @()
+    # No log after a pre-build means no evidence the build is warning-free, so it cannot pass.
+    # -UseExistingReport may have no log to read, which only matters to whoever is iterating.
+    if ($null -eq $buildWarningCount -and -not $UseExistingReport) { $verdict += 'build warnings not checked' }
     if ($buildWarningCount -gt 0) { $verdict += "$buildWarningCount build warnings" }
     if ($total -gt 0) {
         $counts = ($bySeverity.GetEnumerator() | Sort-Object -Property Key |

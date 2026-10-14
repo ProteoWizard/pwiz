@@ -105,9 +105,10 @@ for %%d in (pwiz-sharp installer pwiz\src pwiz\test pwiz_tools\Skyline\Executabl
 REM # Build-warnings check. tcinspect.ps1 pre-builds what build.bat builds, with the same
 REM # properties, logging every restore and build warning. Running first is the point: it is
 REM # then the build's one from-scratch compile, and build.bat's build is incremental on top
-REM # of it. A warning raises a TeamCity buildProblem - the build goes red - but the script
-REM # always exits 0, so build.bat and the tests still run. The flags it needs are the subset
-REM # of %* that change build.bat's MSBUILD_PROPS.
+REM # of it. A warning turns its own GitHub status, "pwiz code inspection", red; the script
+REM # always exits 0 and leaves this build's status alone, so build.bat and the tests run and
+REM # pass or fail on their own. Vendor builds only - see tcinspect.ps1 for why. The flags it
+REM # needs are the subset of %* that change build.bat's MSBUILD_PROPS.
 set IAGREE=0
 set INSPECT_ARGS=
 for %%A in (%*) do (
@@ -116,8 +117,10 @@ for %%A in (%*) do (
     if /i "%%~A"=="--without-mascot" set "INSPECT_ARGS=!INSPECT_ARGS! -WithoutMascot"
     if /i "%%~A"=="Debug" set "INSPECT_ARGS=!INSPECT_ARGS! -Configuration Debug"
 )
-echo ##teamcity[progressMessage 'tcinspect.ps1%INSPECT_ARGS% ^(build warnings^)']
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\tcinspect.ps1"%INSPECT_ARGS%
+if %IAGREE%==1 (
+    echo ##teamcity[progressMessage 'tcinspect.ps1%INSPECT_ARGS% ^(build warnings^)']
+    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\tcinspect.ps1"%INSPECT_ARGS%
+)
 
 REM # --with-vendor-sdks is added here rather than left to the caller: the
 REM # vendor-bundled installer is a CI deliverable (the wine container installs
