@@ -8,10 +8,14 @@ import buildTypes.*
  *
  * 1. SCOPE. This file describes ONE subproject, not the ProteoWizard project.
  *    .teamcity/ holds two independent sets of versioned settings:
- *      - This Kotlin DSL (settings.kts, pom.xml, buildTypes/*.kt, and the
- *        patches/buildTypes/*.kts TeamCity writes when one of this
- *        subproject's configs is edited in the UI) is the VersionedConfigs
- *        subproject.
+ *      - This Kotlin DSL (settings.kts, pom.xml, the .kt files in buildTypes,
+ *        and the .kts patch scripts in patches/buildTypes that TeamCity writes
+ *        when one of this subproject's configs is edited in the UI) is the
+ *        VersionedConfigs subproject. Never write a slash followed by an
+ *        asterisk anywhere in this comment, a path glob included: Kotlin block
+ *        comments nest, so it opens a comment that never closes, everything
+ *        below - project() included - is commented out, and every
+ *        VersionedConfigs build fails with "project definition is not found".
  *      - The parent ProteoWizard project and its other subprojects - bt83,
  *        bt209 and the rest of scripts/misc/vcs_trigger_and_paths_config.py -
  *        are versioned in XML format, one file per config under
