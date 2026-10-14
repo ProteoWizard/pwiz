@@ -33,6 +33,7 @@ using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.SystemUtil;
 using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp
@@ -361,30 +362,36 @@ namespace pwiz.CarafeSharp
             int batchCount = (forms.Count + _settings.PeptidesPerBatch - 1) / Math.Max(1, _settings.PeptidesPerBatch);
             int chunkIndex = 0;
             int predicted = 0;
-            for (int batch = 0; batch < batchCount; batch++)
+            // Predicting is the long step: a throttled percent over the peptide forms says the run is
+            // alive between the per-batch lines (a batch is 200,000 forms).
+            using (var progress = new ProgressReporter(@"Predicting spectra", forms.Count, null, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                int batchStart = batch * _settings.PeptidesPerBatch;
-                int batchEnd = Math.Min(forms.Count, batchStart + _settings.PeptidesPerBatch);
-                int batchPredicted = 0;
-                var batchClock = Stopwatch.StartNew();
-                for (int start = batchStart; start < batchEnd; start += FORMS_PER_CHUNK)
+                for (int batch = 0; batch < batchCount; batch++)
                 {
-                    writer.ThrowIfFailed();
-                    BeforePredictChunk?.Invoke(chunkIndex++);
-                    var spectra = PredictChunk(forms, start, Math.Min(batchEnd, start + FORMS_PER_CHUNK), builder, ms2, rt, ccs, irt);
-                    writer.Add(spectra);
-                    batchPredicted += spectra.Count;
+                    int batchStart = batch * _settings.PeptidesPerBatch;
+                    int batchEnd = Math.Min(forms.Count, batchStart + _settings.PeptidesPerBatch);
+                    int batchPredicted = 0;
+                    var batchClock = Stopwatch.StartNew();
+                    for (int start = batchStart; start < batchEnd; start += FORMS_PER_CHUNK)
+                    {
+                        writer.ThrowIfFailed();
+                        BeforePredictChunk?.Invoke(chunkIndex++);
+                        var spectra = PredictChunk(forms, start, Math.Min(batchEnd, start + FORMS_PER_CHUNK), builder, ms2, rt, ccs, irt);
+                        writer.Add(spectra);
+                        batchPredicted += spectra.Count;
+                        progress.Report(Math.Min(batchEnd, start + FORMS_PER_CHUNK));
+                    }
+                    predicted += batchPredicted;
+                    string ccsTime = ccs != null
+                        ? string.Format(CultureInfo.InvariantCulture, @", CCS {0:F1} s", _ccsClock.Elapsed.TotalSeconds)
+                        : string.Empty;
+                    Log(string.Format(CultureInfo.InvariantCulture,
+                        @"Batch {0}/{1}: peptide forms {2}-{3}, {4} precursors predicted in {5:F1} s ({6} total, {7} written, {8:F1} s elapsed; " +
+                        @"MS2 {9:F1} s, RT {10:F1} s{14}, assembly {11:F1} s, writing {12:F1} s, waiting on writer {13:F1} s)",
+                        batch + 1, batchCount, batchStart + 1, batchEnd, batchPredicted, batchClock.Elapsed.TotalSeconds, predicted,
+                        writer.Written, _clock.Elapsed.TotalSeconds, _ms2Clock.Elapsed.TotalSeconds, _rtClock.Elapsed.TotalSeconds,
+                        _buildClock.Elapsed.TotalSeconds, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds, ccsTime));
                 }
-                predicted += batchPredicted;
-                string ccsTime = ccs != null
-                    ? string.Format(CultureInfo.InvariantCulture, @", CCS {0:F1} s", _ccsClock.Elapsed.TotalSeconds)
-                    : string.Empty;
-                Log(string.Format(CultureInfo.InvariantCulture,
-                    @"Batch {0}/{1}: peptide forms {2}-{3}, {4} precursors predicted in {5:F1} s ({6} total, {7} written, {8:F1} s elapsed; " +
-                    @"MS2 {9:F1} s, RT {10:F1} s{14}, assembly {11:F1} s, writing {12:F1} s, waiting on writer {13:F1} s)",
-                    batch + 1, batchCount, batchStart + 1, batchEnd, batchPredicted, batchClock.Elapsed.TotalSeconds, predicted,
-                    writer.Written, _clock.Elapsed.TotalSeconds, _ms2Clock.Elapsed.TotalSeconds, _rtClock.Elapsed.TotalSeconds,
-                    _buildClock.Elapsed.TotalSeconds, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds, ccsTime));
             }
         }
 

@@ -24,6 +24,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommonResources;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
@@ -236,6 +237,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(0, code, error);
             string droppedLine = Lines(output).Single(l => l.StartsWith(@"Pairs: dropped ", StringComparison.Ordinal));
             Assert.IsTrue(int.Parse(droppedLine.Split(' ')[2]) > 0, droppedLine);
+            // Progress (the shared ProgressReporter) lands in the same stream as the log lines.
+            StringAssert.Contains(output, string.Format(MessageResources.ProgressReporter_ProgressReporter__0____, @"Digesting proteins"));
             AssertDecoyPairs(Path.Combine(wholeFolder, BlibLibraryWriter.FILE_NAME));
             AssertPairsWhole(Path.Combine(wholeFolder, BlibLibraryWriter.FILE_NAME), manifest);
         }

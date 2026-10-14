@@ -81,7 +81,7 @@ namespace pwiz.Osprey.FDR
                 }
                 saver.Commit();
             }
-            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
+            CommandOutput.Out.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace pwiz.Osprey.FDR
                 }
                 saver.Commit();
             }
-            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
+            CommandOutput.Out.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace pwiz.Osprey.FDR
                 }
                 saver.Commit();
             }
-            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
+            CommandOutput.Out.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
         }
 
         /// <summary>
@@ -266,12 +266,12 @@ namespace pwiz.Osprey.FDR
                 }
                 saver.Commit();
             }
-            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
+            CommandOutput.Out.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
         }
 
         /// <summary>
         /// Writes the feature-contribution table (<see cref="FeatureContributions.ToReportLines"/>)
-        /// to <c>OspreyOutput.Out</c> after Stage 5 training -- one row per line so each
+        /// to <c>CommandOutput.Out</c> after Stage 5 training -- one row per line so each
         /// keeps its own log timestamp prefix. Pure reporting; never moves q-values.
         /// Gated behind <c>--verbose</c> (<see cref="OspreyOutput.Verbose"/>): the table is
         /// a model sanity check for implementers, not default-console output (per issue
@@ -283,7 +283,7 @@ namespace pwiz.Osprey.FDR
             if (!OspreyOutput.Verbose)
                 return;
             foreach (string line in contributions.ToReportLines())
-                OspreyOutput.Out.WriteLine(line);
+                CommandOutput.Out.WriteLine(line);
         }
     }
 }

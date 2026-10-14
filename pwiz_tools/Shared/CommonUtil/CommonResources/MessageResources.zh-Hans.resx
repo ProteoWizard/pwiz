@@ -201,4 +201,24 @@
     <value>在文件夹“{0}”中尝试 {1} 次后仍无法分配临时文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="ProgressReporter_FormatElapsed__0_h_1_00_m" xml:space="preserve">
+    <value>{0} 小时 {1:00} 分</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProgressReporter_FormatElapsed__0_m_1_00_s" xml:space="preserve">
+    <value>{0} 分 {1:00} 秒</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProgressReporter_FormatElapsed__0_s" xml:space="preserve">
+    <value>{0} 秒</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProgressReporter_ProgressReporter__0____" xml:space="preserve">
+    <value>{0}…</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ProgressReporter_Report__0____1_____2___3____4__elapsed_" xml:space="preserve">
+    <value>{0}  {1:0.00}%（{2:N0}/{3:N0}，消逝时间 {4}）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

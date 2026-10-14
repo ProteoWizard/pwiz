@@ -390,6 +390,51 @@ namespace pwiz.Common.CommonResources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}h{1:00}m.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_h_1_00_m {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_h_1_00_m", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}m{1:00}s.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_m_1_00_s {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_m_1_00_s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}s.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_s {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}....
+        /// </summary>
+        public static string ProgressReporter_ProgressReporter__0____ {
+            get {
+                return ResourceManager.GetString("ProgressReporter_ProgressReporter__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed).
+        /// </summary>
+        public static string ProgressReporter_Report__0____1_____2___3____4__elapsed_ {
+            get {
+                return ResourceManager.GetString("ProgressReporter_Report__0____1_____2___3____4__elapsed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Access denied: unable to create a file in the folder &apos;{0}&apos;. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder..
         /// </summary>
         public static string SimpleFileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_ {

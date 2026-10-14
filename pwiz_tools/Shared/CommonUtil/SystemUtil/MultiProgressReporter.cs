@@ -1,10 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
- *
- * Based on osprey (https://github.com/MacCossLab/osprey)
- *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -28,7 +25,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-namespace pwiz.Osprey.Core
+namespace pwiz.Common.SystemUtil
 {
     /// <summary>
     /// Where a <see cref="ProgressReporter"/> sends its 0..100 percent when it runs
@@ -37,8 +34,8 @@ namespace pwiz.Osprey.Core
     /// (<c>MultiProgressReporter.FileScope</c>'s segment sink) maps that percent
     /// into the file's composite percent; the aggregate <c>[i] p%</c> line shows the
     /// motion. A null sink (the common sequential / single-file path) means the
-    /// reporter prints inline as before -- so this seam is inert outside
-    /// <c>--parallel-files</c>.
+    /// reporter prints inline as before - so this seam is inert outside a
+    /// parallel-files run.
     /// </summary>
     public interface IProgressSink
     {
@@ -48,13 +45,13 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
-    /// Collapses concurrent per-file progress (<c>--parallel-files</c>) into
+    /// Collapses concurrent per-file progress (Osprey's <c>--parallel-files</c>) into
     /// Skyline's MultiProgressStatus look: a single throttled
     /// <c>[1] 42%  [2] 38%  [3] 51%</c> line while files run at once, plus each
     /// file's narrative buffered and flushed as one contiguous block when the file
     /// finishes (Boost-Build per-action buffering) so blocks never interleave. A
     /// thin wrapper over <see cref="ProgressReporter"/>'s stopwatch throttle and the
-    /// <see cref="OspreyOutput"/> seam -- deliberately NOT a port of Skyline's
+    /// <see cref="CommandOutput"/> seam - deliberately NOT a port of Skyline's
     /// IProgressMonitor / ProgressStatus / MultiProgressStatus machinery.
     ///
     /// Per-file percent uses the ProgressStatus *segments* model (mimicked, not the
@@ -67,19 +64,19 @@ namespace pwiz.Osprey.Core
     ///
     /// A file is entered with <see cref="BeginFile"/>, which redirects that async
     /// flow's narrative into the file's own buffer and makes the file the ambient
-    /// <see cref="Current"/> scope (flowing into the inner scoring
-    /// <c>Parallel.For</c> via ExecutionContext). The phase code advances segments
-    /// through <see cref="FileScope.BeginSegment"/>; <see cref="ProgressReporter"/> finds the
+    /// <see cref="Current"/> scope (flowing into an inner <c>Parallel.For</c> via
+    /// ExecutionContext). The phase code advances segments through
+    /// <see cref="FileScope.BeginSegment"/>; <see cref="ProgressReporter"/> finds the
     /// active segment sink through <see cref="CurrentSink"/> with no signature
-    /// changes through the IO / scoring stack. Disposing the file handle flushes its
-    /// block and drops it from the aggregate line.
+    /// changes through the caller's IO / scoring stack. Disposing the file handle flushes
+    /// its block and drops it from the aggregate line.
     /// </summary>
     public sealed class MultiProgressReporter
     {
         // The active per-file scope for THIS async flow. Set by BeginFile and flowed
         // into the inner scoring Parallel.For (ExecutionContext copy-on-write per
-        // iteration isolates one file's scope from its siblings), so ProcessFile can
-        // advance segments and ProgressReporter can read the active segment sink
+        // iteration isolates one file's scope from its siblings), so the per-file phase
+        // code can advance segments and ProgressReporter can read the active segment sink
         // without any per-file argument threaded through the scoring stack.
         private static readonly AsyncLocal<FileScope> _current = new AsyncLocal<FileScope>();
 
@@ -93,7 +90,7 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>The active file segment's percent sink for this async flow, or
-        /// null when not inside a per-file scope -- the seam <see cref="ProgressReporter"/>
+        /// null when not inside a per-file scope - the seam <see cref="ProgressReporter"/>
         /// reads to decide whether to route its percent or print it.</summary>
         internal static IProgressSink CurrentSink
         {
@@ -122,7 +119,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public MultiProgressReporter(double intervalSeconds = ProgressReporter.IO_INTERVAL_SECONDS)
         {
-            _out = OspreyOutput.RealOut;
+            _out = CommandOutput.RealOut;
             _intervalSeconds = intervalSeconds;
             _stopwatch = Stopwatch.StartNew();
         }
@@ -145,12 +142,12 @@ namespace pwiz.Osprey.Core
                 _slots[index] = slot;
                 RenderLocked(force: true);
             }
-            // Redirect narrative (ctx.LogInfo, ProgressReporter headings, WARN) for
-            // this async flow -- and the inner scoring Parallel.For it spawns -- into
-            // the file buffer until the scope is disposed, then publish the scope. Tagged
-            // lines need no filtering here: a disabled tag is never written
-            // (OspreyLog.Write), so the buffered block matches the unbuffered log.
-            scope.OutCookie = OspreyOutput.PushScopedOut(scope.ScopedWriter);
+            // Redirect narrative (log lines, ProgressReporter headings, warnings) for
+            // this async flow - and the inner Parallel.For it spawns - into the file
+            // buffer until the scope is disposed, then publish the scope. A line the host
+            // gates (Osprey's tagged machine lines) is never written in the first place, so
+            // the buffered block matches the unbuffered log.
+            scope.OutCookie = CommandOutput.PushScopedOut(scope.ScopedWriter);
             _current.Value = scope;
             return scope;
         }
@@ -271,14 +268,14 @@ namespace pwiz.Osprey.Core
                 get { return _currentSegmentSink; }
             }
 
-            // The cookie that restores the prior OspreyOutput.Out on dispose.
+            // The cookie that restores the prior CommandOutput.Out on dispose.
             internal IDisposable OutCookie { get; set; }
 
             // Snapshot of the buffered narrative. No lock by design: this runs only
             // from CompleteFile -> FileScope.Dispose, i.e. AFTER the file's `using`
             // body and its inner scoring Parallel.For have fully joined, so no
             // narrative writer is live to race the read. Safety is from that
-            // lifecycle, not a lock -- a future change that flushed a block mid-file
+            // lifecycle, not a lock - a future change that flushed a block mid-file
             // would have to synchronize on the _syncBuffer monitor the writers use.
             internal string BufferContents
             {
@@ -295,8 +292,8 @@ namespace pwiz.Osprey.Core
             public void BeginSegment()
             {
                 // No lock: a file's segments are advanced only from its own single
-                // phase thread (ProcessFile / RescoreOneFile call this sequentially at
-                // phase boundaries). The inner scoring Parallel.For never calls this --
+                // phase thread (the per-file phase code calls this sequentially at
+                // phase boundaries). The inner scoring Parallel.For never calls this -
                 // it drives the captured SegmentSink, whose cross-thread report path is
                 // synchronized by the owner's render lock.
                 if (_currentSegmentSink != null && _completedSegments < _segmentCount)

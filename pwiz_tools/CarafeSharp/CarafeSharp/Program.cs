@@ -99,12 +99,17 @@ namespace pwiz.CarafeSharp
                 log = errorLog = logFile;
             }
 
+            // The shared progress reporter writes to the process-wide seam; point it at the same
+            // writer the stages log to, so percent lines land between their lines, stamped alike.
+            var savedOut = CommandOutput.Out;
+            CommandOutput.Out = log;
             try
             {
                 return ReconcileExitCode(RunMode(commandLine, log, errorLog), errorLog.IsErrorReported || log.IsErrorReported);
             }
             finally
             {
+                CommandOutput.Out = savedOut;
                 logFile?.Dispose();
             }
         }

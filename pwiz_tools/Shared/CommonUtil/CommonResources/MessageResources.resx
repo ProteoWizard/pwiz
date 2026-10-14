@@ -211,4 +211,19 @@
   <data name="SimpleFileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_" xml:space="preserve">
     <value>Failed to allocate a temporary file in the folder '{0}' after {1} attempts.</value>
   </data>
+  <data name="ProgressReporter_FormatElapsed__0_h_1_00_m" xml:space="preserve">
+    <value>{0}h{1:00}m</value>
+  </data>
+  <data name="ProgressReporter_FormatElapsed__0_m_1_00_s" xml:space="preserve">
+    <value>{0}m{1:00}s</value>
+  </data>
+  <data name="ProgressReporter_FormatElapsed__0_s" xml:space="preserve">
+    <value>{0}s</value>
+  </data>
+  <data name="ProgressReporter_ProgressReporter__0____" xml:space="preserve">
+    <value>{0}...</value>
+  </data>
+  <data name="ProgressReporter_Report__0____1_____2___3____4__elapsed_" xml:space="preserve">
+    <value>{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)</value>
+  </data>
 </root>
