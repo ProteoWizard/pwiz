@@ -39,6 +39,7 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -96,7 +97,8 @@ namespace pwiz.SkylineTestFunctional
             public ExpectedResults ExpectedResultsFinal { get; set; }
             /// <summary>
             /// Target plus decoy hits the search engine reports scoring for each file of the final search,
-            /// in file order. When set, a final search reporting other counts is repeated.
+            /// in file order. When set, a failed search is repeated, and so is a final search reporting
+            /// other counts.
             /// </summary>
             public int[] ExpectedScoredHits { get; set; }
             public Action BeforeSettingsAction { get; set; }
@@ -104,6 +106,8 @@ namespace pwiz.SkylineTestFunctional
             public bool HasMissingDependencies { get; private set; }
             public bool TestDependencyErrors { get; set; }
         }
+
+        private const int MAX_SEARCH_ATTEMPTS = 3;
 
         DdaTestSettings TestSettings;
 
@@ -1316,15 +1320,20 @@ namespace pwiz.SkylineTestFunctional
 
             // Let the first search complete successfully
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value, null);
             Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
             searchSucceeded = null;
 
             // The diagnosis for a search Percolator scored nothing in, now that percolator is installed.
-            // It runs percolator, which writes its help to stderr, and this used to deadlock.
+            // It runs percolator, which writes its help to stderr, and this used to deadlock. A hang is
+            // killed after 30 seconds with the same message, so the time taken is what tells them apart.
             if (TestSettings.SearchEngine == SearchEngine.MSAmanda)
             {
-                Assert.AreEqual(string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing,
+                var diagnosisTime = Stopwatch.StartNew();
+                AssertEx.AreEqual(string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing,
                     MSAmandaSearchWrapper.PercolatorDirectory), MSAmandaSearchWrapper.DiagnosePercolator());
+                AssertEx.IsTrue(diagnosisTime.Elapsed < TimeSpan.FromSeconds(15),
+                    $@"Percolator diagnosis took {diagnosisTime.Elapsed.TotalSeconds:F1} seconds");
             }
 
             // Verify original data source filenames are preserved when going back after a successful search
@@ -1418,7 +1427,8 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
-                searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value);
+                searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value,
+                    TestSettings.ExpectedScoredHits);
 
                 RunUI(() =>
                 {
@@ -1506,36 +1516,47 @@ namespace pwiz.SkylineTestFunctional
             VerifyPresetInNewWizard(SEARCH_PRESET_NAME);
         }
 
-        private const int MAX_SEARCH_ATTEMPTS = 3;
-
         /// <summary>
-        /// Repeats the final search, from the search settings page, while it fails or the search engine
-        /// reports scoring other than <see cref="DdaTestSettings.ExpectedScoredHits"/>. A search too short
-        /// of hits can fail outright, when Percolator has too few to score. After the last attempt the test
-        /// goes on, so a search that keeps coming up short still fails.
+        /// Repeats a search, from the search settings page, while it fails or the search engine reports
+        /// scoring other than <paramref name="expectedScoredHits"/>. Applies only to tests that set
+        /// <see cref="DdaTestSettings.ExpectedScoredHits"/>. A search too short of hits can fail outright,
+        /// when Percolator has too few to score. After the last attempt the test goes on, so a search that
+        /// keeps failing or coming up short still fails.
         /// </summary>
+        /// <param name="importPeptideSearchDlg">The wizard, showing the search that just finished</param>
+        /// <param name="succeeded">Whether that search succeeded</param>
+        /// <param name="expectedScoredHits">Scored hits per file, or null to repeat only a failed search</param>
         /// <returns>Whether the last search attempted succeeded</returns>
-        private bool RetrySearchWhileScoredHitsDiffer(ImportPeptideSearchDlg importPeptideSearchDlg, bool succeeded)
+        private bool RetrySearchWhileScoredHitsDiffer(ImportPeptideSearchDlg importPeptideSearchDlg, bool succeeded,
+            int[] expectedScoredHits)
         {
             if (TestSettings.ExpectedScoredHits == null)
                 return succeeded;
 
             for (int attempt = 1; attempt < MAX_SEARCH_ATTEMPTS; attempt++)
             {
-                var scoredHits = new List<int>();
-                RunUI(() => scoredHits = GetScoredHits(importPeptideSearchDlg.SearchControl.LogText));
-                if (succeeded && scoredHits.SequenceEqual(TestSettings.ExpectedScoredHits))
+                string searchLog = null;
+                RunUI(() => searchLog = importPeptideSearchDlg.SearchControl.LogText);
+                var scoredHits = GetScoredHits(searchLog);
+                if (IsRecordMode && expectedScoredHits != null)
+                {
+                    Console.WriteLine($@"ExpectedScoredHits = new[] {{ {string.Join(@", ", scoredHits)} }}");
+                    return succeeded;
+                }
+                if (succeeded && (expectedScoredHits == null || scoredHits.SequenceEqual(expectedScoredHits)))
                     return true;
 
-                // Report the repeat, so its rate stays visible in the test output.
-                Console.WriteLine($@"Search succeeded={succeeded}, scored {string.Join(@", ", scoredHits)} hits, expected {string.Join(@", ", TestSettings.ExpectedScoredHits)} - repeating search");
+                // Report the repeat, and the log of a failed attempt, so neither is lost to the retry.
+                if (!succeeded)
+                    Console.WriteLine(searchLog);
+                Console.WriteLine($@"Search succeeded={succeeded}, scored {string.Join(@", ", scoredHits)} hits, expected {string.Join(@", ", expectedScoredHits ?? Array.Empty<int>())} - repeating search");
                 bool? searchSucceeded = null;
                 void OnSearchFinished(bool success) => searchSucceeded = success;
                 RunUI(() =>
                 {
                     importPeptideSearchDlg.SearchControl.SearchFinished += OnSearchFinished;
-                    Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                    AssertEx.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
                 });
                 SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
