@@ -633,15 +633,6 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python {0} set up is required for {1}, click &apos;OK&apos; to proceed..
-        /// </summary>
-        public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required {
-            get {
-                return ResourceManager.GetString("PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Python {0} set up is required for {1}, please wait for python to install and configure ....
         /// </summary>
         public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait {

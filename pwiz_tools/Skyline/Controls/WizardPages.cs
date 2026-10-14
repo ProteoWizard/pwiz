@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Controls
                 // Changing the selection with the native message and raising the change ourselves
                 // leaves TabControl's private UI-selection flag clear, so it shows the page without
                 // moving the focus
-                User32.SendMessage(Handle, User32.WinMessageType.TCM_SETCURSEL, (IntPtr)value, IntPtr.Zero);
+                User32.SendMessage(Handle, User32.WinMessageType.TCM_SETCURSEL, value, IntPtr.Zero);
                 OnSelectedIndexChanged(EventArgs.Empty);
             }
         }
