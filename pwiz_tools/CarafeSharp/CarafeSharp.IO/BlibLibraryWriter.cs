@@ -70,13 +70,6 @@ namespace pwiz.CarafeSharp.IO
         /// </summary>
         public const int MAX_PEAKS_PER_INSERT = 100;
 
-        /// <summary>
-        /// The key/value table a validity stamp is recorded in, the one Osprey's blib writer uses
-        /// (<c>OspreyMetadata</c>, with the stamp under <see cref="ArtifactStamp.PARQUET_KEY"/>),
-        /// so one reader finds the stamp in a library whichever tool wrote it. Created only when
-        /// a stamp is given; Skyline ignores the table.
-        /// </summary>
-        public const string METADATA_TABLE = @"OspreyMetadata";
 
         private const int SOURCE_FILE_ID = 1;
 
@@ -133,7 +126,8 @@ namespace pwiz.CarafeSharp.IO
         /// one source file named <paramref name="sourceFileName"/> (Carafe uses the library file
         /// name without its extension). It is written to a <see cref="SimpleFileSaver"/> temp, so until
         /// then any library already at <paramref name="path"/> is left as it is. With
-        /// <paramref name="stamp"/>, the library records it (<see cref="METADATA_TABLE"/>) in the
+        /// <paramref name="stamp"/>, the library records it (<see cref="ArtifactStamp.BLIB_TABLE"/>, the
+        /// slot Osprey's blib writer uses, which Skyline ignores) in the
         /// same commit as its content, so a resume check can tell whether to reuse it.
         /// </summary>
         public BlibLibraryWriter(string path, string sourceFileName, ArtifactStamp stamp = null)
@@ -397,8 +391,8 @@ namespace pwiz.CarafeSharp.IO
                     @"endTime REAL, score REAL, bestSpectrum INTEGER)");
             if (_stamp != null)
             {
-                Execute(@"CREATE TABLE " + METADATA_TABLE + @" (Key TEXT PRIMARY KEY, Value TEXT)");
-                using (var insert = new SQLiteCommand(@"INSERT INTO " + METADATA_TABLE + @" (Key, Value) VALUES (@key, @value)", _connection))
+                Execute(ArtifactStamp.BLIB_TABLE_DDL);
+                using (var insert = new SQLiteCommand(ArtifactStamp.BLIB_INSERT_SQL, _connection))
                 {
                     insert.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
                     insert.Parameters.AddWithValue(@"@value", _stamp.ToString());

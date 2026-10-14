@@ -37,6 +37,8 @@ namespace pwiz.CarafeSharp
         public const string TASK_NAME = @"Train";
 
         private readonly TrainingSettings _settings;
+        // The locator scans -i and reads each export's footer; once per task, not once per Inputs enumeration.
+        private TrainingExportSelection _selection;
 
         public TrainTask(TrainingSettings settings)
         {
@@ -48,7 +50,8 @@ namespace pwiz.CarafeSharp
         public override IEnumerable<string> Inputs(TaskContext ctx)
         {
             // The exports the locator selects for -i and -ms, as the run will read them.
-            foreach (string export in TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles).Exports)
+            _selection = _selection ?? TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles);
+            foreach (string export in _selection.Exports)
                 yield return export;
             yield return _settings.BaseModel;
             yield return _settings.Ms2Model;

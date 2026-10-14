@@ -152,13 +152,14 @@ namespace pwiz.CarafeSharp
         /// <see cref="CommonExceptionUtil.IsProgrammingDefect"/>'s user-actionable types,
         /// CarafeSharp's settings validation reports bad input as <see cref="ArgumentException"/>
         /// and an unported Carafe option as <see cref="NotSupportedException"/>, as Carafe's Java
-        /// did, so those two are messages too.
+        /// did, so those two are messages too - the exact types: the BCL's derived
+        /// <see cref="ArgumentNullException"/> and <see cref="ArgumentOutOfRangeException"/> are defects.
         /// </summary>
         internal static string DescribeFailure(Exception e)
         {
             var reported = CommonExceptionUtil.UnwrapUserException(e);
             bool userError = !CommonExceptionUtil.IsProgrammingDefect(reported) ||
-                             reported is ArgumentException || reported is NotSupportedException;
+                             reported.GetType() == typeof(ArgumentException) || reported is NotSupportedException;
             if (userError && !string.IsNullOrEmpty(reported.Message))
             {
                 var cause = reported.GetBaseException();

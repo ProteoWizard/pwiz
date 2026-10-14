@@ -78,11 +78,7 @@ namespace pwiz.Common.SystemUtil
         {
             RealName = Path.GetFullPath(fileName);
 
-            string dirName = Path.GetDirectoryName(RealName);
-            string tempName = GetTempFileName(dirName, TEMP_PREFIX);
-
-            if (!Equals(dirName, tempName))
-                SafeName = tempName;
+            SafeName = GetTempFileName(Path.GetDirectoryName(RealName), TEMP_PREFIX);
         }
 
         /// <summary>

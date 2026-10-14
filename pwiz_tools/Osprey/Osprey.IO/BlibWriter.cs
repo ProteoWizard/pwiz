@@ -485,9 +485,9 @@ namespace pwiz.Osprey.IO
                 using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;Read Only=True;"))
                 {
                     conn.Open();
-                    using (var cmd = new SQLiteCommand(@"SELECT Value FROM OspreyMetadata WHERE Key = @k", conn))
+                    using (var cmd = new SQLiteCommand(ArtifactStamp.BLIB_SELECT_SQL, conn))
                     {
-                        cmd.Parameters.AddWithValue(@"@k", ArtifactStamp.PARQUET_KEY);
+                        cmd.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
                         return ArtifactStamp.Parse(cmd.ExecuteScalar() as string);
                     }
                 }
@@ -505,9 +505,9 @@ namespace pwiz.Osprey.IO
         {
             using (var cmd = new SQLiteCommand(_conn))
             {
-                cmd.CommandText = @"INSERT OR REPLACE INTO OspreyMetadata (Key, Value) VALUES (@k, @v)";
-                cmd.Parameters.AddWithValue(@"@k", key);
-                cmd.Parameters.AddWithValue(@"@v", value);
+                cmd.CommandText = ArtifactStamp.BLIB_INSERT_SQL;
+                cmd.Parameters.AddWithValue(@"@key", key);
+                cmd.Parameters.AddWithValue(@"@value", value);
                 cmd.ExecuteNonQuery();
             }
         }
@@ -866,10 +866,7 @@ namespace pwiz.Osprey.IO
                     FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id)
                 );
 
-                CREATE TABLE OspreyMetadata (
-                    Key TEXT PRIMARY KEY,
-                    Value TEXT
-                );
+" + ArtifactStamp.BLIB_TABLE_DDL + @";
 
                 CREATE TABLE OspreyPeakBoundaries (
                     id INTEGER PRIMARY KEY,

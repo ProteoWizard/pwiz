@@ -30,7 +30,8 @@ namespace pwiz.CarafeSharp
     /// <summary>
     /// Carafe's library prediction from <c>-db</c> (<see cref="LibraryGenerator"/>). The
     /// <c>.blib</c> it writes carries the stamp, so a re-run with the same FASTA, models and
-    /// settings is skipped; a TSV-only run declares no output and always predicts.
+    /// settings is skipped; a run that writes a TSV (alone or beside the blib) declares no output
+    /// and always predicts.
     /// </summary>
     internal sealed class PredictLibraryTask : CarafeTask
     {
@@ -67,10 +68,16 @@ namespace pwiz.CarafeSharp
                 yield return blib;
         }
 
-        /// <summary>The <c>.blib</c> a prediction with <paramref name="settings"/> writes into <paramref name="outputDirectory"/>, or null when it writes none.</summary>
+        /// <summary>
+        /// The <c>.blib</c> a prediction with <paramref name="settings"/> writes into
+        /// <paramref name="outputDirectory"/> as its ONLY output, or null: a TSV has no stamp slot,
+        /// so a format that writes both declares nothing - a run that committed the blib and then
+        /// failed on the TSV must not be skipped as current.
+        /// </summary>
         public static string BlibOutput(LibrarySettings settings, string outputDirectory)
         {
-            return LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast).WritesBlib
+            var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
+            return outputs.WritesBlib && !outputs.WritesTsv
                 ? Path.Combine(outputDirectory, BlibLibraryWriter.FILE_NAME)
                 : null;
         }

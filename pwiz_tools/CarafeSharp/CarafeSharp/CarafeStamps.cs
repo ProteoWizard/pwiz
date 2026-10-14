@@ -21,7 +21,6 @@
 using System;
 using System.Data.SQLite;
 using System.IO;
-using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
@@ -57,7 +56,7 @@ namespace pwiz.CarafeSharp
                 using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = path, ReadOnly = true }.ToString()))
                 {
                     connection.Open();
-                    using (var command = new SQLiteCommand(@"SELECT Value FROM " + BlibLibraryWriter.METADATA_TABLE + @" WHERE Key = @key", connection))
+                    using (var command = new SQLiteCommand(ArtifactStamp.BLIB_SELECT_SQL, connection))
                     {
                         command.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
                         return ArtifactStamp.Parse(command.ExecuteScalar() as string);

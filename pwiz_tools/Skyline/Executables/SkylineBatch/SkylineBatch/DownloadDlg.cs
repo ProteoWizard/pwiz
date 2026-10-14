@@ -75,7 +75,16 @@ namespace SkylineBatch
                         // Cancellation now travels through the monitor rather than a
                         // Token.Register(wc.CancelAsync) callback.
                         httpClient.DownloadFile(downloadUri, fs.SafeName, size > 0 ? size : null);
-                        fs.Commit();
+                        try
+                        {
+                            fs.Commit();
+                        }
+                        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                        {
+                            // The destination could not be replaced (open in another program): the
+                            // download is discarded, as it was when the SharedBatch writer swallowed
+                            // this, and the dialog still closes below.
+                        }
                         if (Visible)
                             BeginInvoke((MethodInvoker)delegate { Close(); });
                     }

@@ -25,6 +25,8 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp
 {
@@ -50,7 +52,9 @@ namespace pwiz.CarafeSharp
 
         /// <summary>
         /// What distinguishes one version of a file from another without reading it: its name,
-        /// length and last write time; for a folder, the same for each file directly in it.
+        /// length and last write time; for a folder, the same for each file directly in it except
+        /// what CarafeSharp writes there itself (a library, a saved model, a temp file), since a run
+        /// commonly predicts into the folder it reads its models from and must not change its own key.
         /// </summary>
         private static string Identity(string path)
         {
@@ -62,7 +66,10 @@ namespace pwiz.CarafeSharp
                 Array.Sort(files, StringComparer.Ordinal);
                 var identities = new StringBuilder(new DirectoryInfo(path).Name).Append('[');
                 foreach (string file in files)
-                    identities.Append(Identity(file)).Append(',');
+                {
+                    if (!IsOwnOutput(file))
+                        identities.Append(Identity(file)).Append(',');
+                }
                 return identities.Append(']').ToString();
             }
             var info = new FileInfo(path);
@@ -70,6 +77,15 @@ namespace pwiz.CarafeSharp
                 return info.Name + @":missing";
             return info.Name + @":" + info.Length.ToString(CultureInfo.InvariantCulture) + @":" +
                    info.LastWriteTimeUtc.Ticks.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static bool IsOwnOutput(string file)
+        {
+            string name = Path.GetFileName(file);
+            return name.StartsWith(SimpleFileSaver.TEMP_PREFIX, StringComparison.Ordinal) ||
+                   name.EndsWith(@".blib", StringComparison.OrdinalIgnoreCase) ||
+                   name.EndsWith(@".tsv", StringComparison.OrdinalIgnoreCase) ||
+                   name.EndsWith(CarafeModelFile.EXTENSION, StringComparison.OrdinalIgnoreCase);
         }
 
         private static string Sha256(string text)

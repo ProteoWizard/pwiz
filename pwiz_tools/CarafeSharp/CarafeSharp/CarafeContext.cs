@@ -20,6 +20,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
@@ -33,8 +34,15 @@ namespace pwiz.CarafeSharp
     /// </summary>
     internal sealed class CarafeContext : TaskContext
     {
-        /// <summary>The build version every stamp carries (<see cref="TaskContext.Version"/>): the assembly's, in Skyline's YEAR.ORDINAL.BRANCH.DOY scheme.</summary>
-        public static readonly string BuildVersion = typeof(CarafeContext).Assembly.GetName().Version?.ToString() ?? @"0.0.0.0";
+        /// <summary>
+        /// The build version every stamp carries (<see cref="TaskContext.Version"/>): the informational
+        /// version, which the SDK stamps with the commit (<c>26.1.1.0+&lt;hash&gt;</c>), so an artifact from
+        /// another build is never current. The bare assembly version is constant between commits
+        /// locally and would let a rebuilt predictor reuse a stale library.
+        /// </summary>
+        public static readonly string BuildVersion =
+            typeof(CarafeContext).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ??
+            typeof(CarafeContext).Assembly.GetName().Version?.ToString() ?? @"0.0.0.0";
 
         public CarafeContext(CarafeCommandLine commandLine, IEnumerable<PipelineTask> tasks, TextWriter output, TextWriter error)
             : base(tasks, BuildVersion, CarafeStamps.Read, output.WriteLine, error.WriteLine, error.WriteLine)
