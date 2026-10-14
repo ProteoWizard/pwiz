@@ -108,13 +108,25 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Warnings are NOT promoted to errors. A promoted warning stops the build before any test
-         runs, and not every warning comes from the commit being built: a NuGet advisory
-         published overnight (NU1901-NU1904) fails restore on every branch at once. The
-         warning-free policy is enforced after the build instead - tcinspect.ps1 (and
-         pwiz_tools/Skyline/tcinspect.ps1 for Skyline) logs every restore and build warning and
-         fails its own GitHub status when there are any, leaving the build green.
-         Demote a warning with NoWarn, with a comment saying why. -->
+    <!-- Keep the build warning-free. Demote a warning with NoWarn, with a comment saying why.
+         A developer build promotes warnings to errors, so a new one fails where it was written.
+         TeamCity and the SkylineNightly build (build.bat no-warnings-as-errors) do not: a
+         promoted warning stops the build before any test runs, and not every warning comes from
+         the commit being built. There tcinspect.ps1 (pwiz_tools/Skyline/tcinspect.ps1 for
+         Skyline) logs every restore and build warning and fails its own GitHub status instead,
+         leaving the build green. Pass -p:PwizWarningsAsErrors=false to build like CI.
+         TreatWarningsAsErrors covers compiler, analyzer and NuGet diagnostics. MSBuild task
+         warnings are promoted by code, not wholesale: the git version-stamping Execs rely on
+         ContinueOnError, which logs a failed git as a warning that must stay soft.
+         MSB3568: duplicate .resx resource name. MSB3277: conflicting versions of a referenced
+         assembly. MSB3245: a reference that could not be resolved.
+         The NuGet advisories (NU1901-NU1904) are never errors, even here: they are published
+         overnight against a package nobody changed, and would fail every developer's restore
+         the next morning. -->
+    <PwizWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == '' and '$(TEAMCITY_VERSION)' == ''">true</PwizWarningsAsErrors>
+    <TreatWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">true</TreatWarningsAsErrors>
+    <MSBuildWarningsAsErrors Condition="'$(PwizWarningsAsErrors)' == 'true'">$(MSBuildWarningsAsErrors);MSB3568;MSB3277;MSB3245</MSBuildWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
     <!-- .NET 9+ defaults NuGetAuditMode to "all" (transitive). "direct" restores the
          net8 default. This does NOT make the transitive advisories go away - they
          are real and tracked separately; see the net10 TODO. -->
