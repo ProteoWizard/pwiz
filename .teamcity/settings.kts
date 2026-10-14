@@ -7,17 +7,30 @@ import buildTypes.*
  * ============================ READ BEFORE EDITING ============================
  *
  * 1. SCOPE. This file describes ONE subproject, not the ProteoWizard project.
- *    Every other build config on teamcity.labkey.org - the ~26 in
- *    scripts/misc/vcs_trigger_and_paths_config.py and more besides - is still
- *    UI-managed, and none of them appear here.
+ *    .teamcity/ holds two independent sets of versioned settings:
+ *      - This Kotlin DSL (settings.kts, pom.xml, buildTypes/*.kt, and the
+ *        patches/buildTypes/*.kts TeamCity writes when one of this
+ *        subproject's configs is edited in the UI) is the VersionedConfigs
+ *        subproject.
+ *      - The parent ProteoWizard project and its other subprojects - bt83,
+ *        bt209 and the rest of scripts/misc/vcs_trigger_and_paths_config.py -
+ *        are versioned in XML format, one file per config under
+ *        .teamcity/ProteoWizard/buildTypes/ (project-level parameters in
+ *        .teamcity/ProteoWizard/project-config.xml), and none of them appear
+ *        here.
+ *    The parent's versioned settings prefer settings from VCS (buildSettings
+ *    PREFER_VCS in project-config.xml), so its builds - PR builds included -
+ *    run with the settings on their own branch: change a config in the PR that
+ *    needs the change, not in the UI.
  *
- *    The footgun: TeamCity reads versioned settings from `.teamcity/` at the
- *    root of the settings VCS root. If anyone later enables versioned settings
- *    on the PARENT ProteoWizard project against this same repo, TeamCity will
- *    read this file as the whole project definition - i.e. as a project
- *    containing one build config and nothing else. Migrating the parent means
- *    exporting the live config first ("Download settings in Kotlin format")
- *    and merging this in, never pointing the parent at this file as-is.
+ *    The footgun: TeamCity reads Kotlin settings from settings.kts at the root
+ *    of `.teamcity/`. If anyone switches the PARENT ProteoWizard project's
+ *    versioned settings from XML to Kotlin format against this same repo,
+ *    TeamCity will read this file as the whole project definition - i.e. as a
+ *    project containing this subproject's configs and nothing else. Migrating
+ *    the parent means exporting the live config first ("Download settings in
+ *    Kotlin format") and merging this in, never pointing the parent at this
+ *    file as-is.
  *
  * 2. THE CONFIG ID IS AN API. smartBuildTrigger.py queues builds by POSTing
  *    <build branchName="..."><buildType id="..."/></build> to
