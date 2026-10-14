@@ -76,9 +76,11 @@ namespace pwiz.Skyline.Model.Results
         /// is not null) writes out the minimized cache file.
         /// </summary>
         public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream,
-            FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamScores = null)
+            FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamObservedPeakValues = null,
+            FileStream outStreamScores = null)
         {
-            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores);
+            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks,
+                outStreamObservedPeakValues, outStreamScores);
             var statisticsCollector = new MinStatisticsCollector(this);
 
             var chromGroupHeaderToIndex = new Dictionary<long, int>(ChromGroupHeaderInfos.Count);
@@ -593,6 +595,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly CacheFormat _cacheFormat;
             private readonly Stream _outputStream;
             private readonly FileStream _outputStreamPeaks;
+            private readonly FileStream _outputStreamObservedPeakValues;
             private readonly FileStream _outputStreamScans;
             private readonly FileStream _outputStreamScores;
             private int _peakCount;
@@ -609,13 +612,15 @@ namespace pwiz.Skyline.Model.Results
             private readonly ChromatogramGroupIds _chromatogramGroupIds = new ChromatogramGroupIds();
 
             public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream,
-                FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
+                FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamObservedPeakValues,
+                FileStream outputStreamScores)
             {
                 _originalCache = chromatogramCache;
                 _cacheFormat = cacheFormat;
                 _outputStream = outputStream;
                 _outputStreamScans = outputStreamScans;
                 _outputStreamPeaks = outputStreamPeaks;
+                _outputStreamObservedPeakValues = outputStreamObservedPeakValues;
                 _outputStreamScores = outputStreamScores;
                 _scoreTypes = chromatogramCache.ScoreTypes;
             }
@@ -689,6 +694,14 @@ namespace pwiz.Skyline.Model.Results
                 float? maxPeakScore = maxPeakIndex >= 0 ? originalChromGroup.Header.MaxPeakScore : null;
 
                 _cacheFormat.ChromPeakSerializer().WriteItems(_outputStreamPeaks, minimizedChromGroup.MinimizedPeaks);
+                // Written in the same order as the peaks, which is all that locates them
+                bool hasObservedPeakValues = _cacheFormat.HasObservedPeakValues &&
+                                             minimizedChromGroup.MinimizedPeaks.Any(peak => peak.HasObservedValues);
+                if (hasObservedPeakValues)
+                {
+                    PrimitiveArrays.Write(_outputStreamObservedPeakValues,
+                        ChromPeak.GetObservedValues(minimizedChromGroup.MinimizedPeaks));
+                }
 
                 long location = _outputStream.Position;
                 int lenUncompressed = (int) pointsStream.Length;
@@ -711,7 +724,7 @@ namespace pwiz.Skyline.Model.Results
                     flags,
                     originalHeader.StartTime, originalHeader.EndTime,
                     originalHeader.CollisionalCrossSection,
-                    originalHeader.IonMobilityUnits);
+                    originalHeader.IonMobilityUnits).ChangeHasObservedPeakValues(hasObservedPeakValues);
                 _chromGroupHeaderInfos.Add(_chromatogramGroupIds.SetId(header,
                     _originalCache.GetChromatogramGroupId(originalHeader)));
             }
@@ -755,6 +768,7 @@ namespace pwiz.Skyline.Model.Results
                     _outputStream,
                     _outputStreamScans,
                     _outputStreamPeaks,
+                    _outputStreamObservedPeakValues,
                     _outputStreamScores,
                     chromCachedFiles,
                     _chromGroupHeaderInfos,

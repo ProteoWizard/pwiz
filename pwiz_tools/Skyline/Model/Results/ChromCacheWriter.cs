@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Model.Results
         protected readonly FileSaver _fs;
         protected readonly FileSaver _fsScans;
         protected readonly FileSaver _fsPeaks;
+        protected readonly FileSaver _fsObservedPeakValues;
         protected readonly FileSaver _fsScores;
         protected readonly ILoadMonitor _loader;
         protected IProgressStatus _status;
@@ -60,6 +61,7 @@ namespace pwiz.Skyline.Model.Results
                 _fs = new FileSaver(CachePath);
                 _fsScans = new FileSaver(CachePath + ChromatogramCache.SCANS_EXT, true);
                 _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
+                _fsObservedPeakValues = new FileSaver(CachePath + ChromatogramCache.OBSERVED_PEAK_VALUES_EXT, true);
                 _fsScores = new FileSaver(CachePath + ChromatogramCache.SCORES_EXT, true);
             }
             catch (Exception)
@@ -69,6 +71,7 @@ namespace pwiz.Skyline.Model.Results
                 _fs?.Dispose();
                 _fsScans?.Dispose();
                 _fsPeaks?.Dispose();
+                _fsObservedPeakValues?.Dispose();
                 _fsScores?.Dispose();
                 throw;
             }
@@ -109,6 +112,7 @@ namespace pwiz.Skyline.Model.Results
                                                                _fs.Stream,
                                                                _fsScans.Stream,
                                                                _fsPeaks.Stream,
+                                                               _fsObservedPeakValues.Stream,
                                                                _fsScores.Stream,
                                                                _listCachedFiles,
                                                                listChromGroupHeaderInfos,
@@ -190,6 +194,7 @@ namespace pwiz.Skyline.Model.Results
             }
             _fs.Dispose();
             _fsPeaks.Dispose();
+            _fsObservedPeakValues.Dispose();
             _fsScans.Dispose();
             _fsScores.Dispose();
         }

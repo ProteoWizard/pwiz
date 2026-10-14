@@ -45,7 +45,10 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(32, Marshal.OffsetOf<ChromPeak>("_pointsAcross"));
             Assert.AreEqual(32, ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
             Assert.AreEqual(36, ChromPeak.GetStructSize(CacheFormatVersion.Twelve));
-            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Sixteen));
+            // The observed IM/CCS at the end of the struct are stored outside the peak on disk
+            Assert.AreEqual(52, Marshal.OffsetOf<ChromPeak>("_observedIonMobility"));
+            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
         }
 
         [TestMethod]
@@ -54,7 +57,6 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.SizeOf);
             Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.CURRENT));
             Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.SizeOf);
-            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
             Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.SizeOf);
             Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
         }

@@ -63,6 +63,7 @@ namespace pwiz.Skyline.Model.Results
 
         public const string EXT = ".skyd";
         public const string PEAKS_EXT = ".peaks";
+        public const string OBSERVED_PEAK_VALUES_EXT = ".observed";
         public const string SCANS_EXT = ".scans";
         public const string SCORES_EXT = ".scores";
         public const int SCORE_VALUE_SIZE = sizeof(float);
@@ -555,12 +556,18 @@ namespace pwiz.Skyline.Model.Results
                 {
                     Assume.AreEqual(ResultFileDatas.Count, ChromCacheFiles.Count);
                 }
+                IndexObservedPeakValues();
             }
 
             public RawData(CacheHeaderStruct header) : this(CacheFormat.FromCacheHeader(header))
             {
                 LocationPeaks = header.locationPeaks;
                 NumPeaks = header.numPeaks;
+                if (CacheFormat.HasObservedPeakValues)
+                {
+                    LocationObservedPeakValues = header.locationObservedPeakValues;
+                    NumObservedPeakValues = header.numObservedPeakValues;
+                }
                 NumScores = header.numScores;
                 LocationScanIds = header.locationScanIds;
                 if (FormatVersion > CacheFormatVersion.Eight)
@@ -612,6 +619,89 @@ namespace pwiz.Skyline.Model.Results
             }
             public long LocationPeaks { get; private set; }
             public int NumPeaks { get; private set; }
+
+            /// <summary>
+            /// Location of the block of observed IM/CCS values (<see cref="ChromPeak.OBSERVED_VALUES_PER_PEAK"/>
+            /// floats per peak) for the peaks of the groups with <see cref="ChromGroupHeaderInfo.HasObservedPeakValues"/>.
+            /// The block holds the values of those groups in the same order as their peaks in the peaks block,
+            /// so it needs no per-group index on disk, and non-IM data adds nothing to it.
+            /// </summary>
+            public long LocationObservedPeakValues { get; private set; }
+            public int NumObservedPeakValues { get; private set; }
+
+            /// <summary>
+            /// Maps the StartPeakIndex of each group with observed peak values to the index of its
+            /// first value in the observed peak values block, or null when there are none.
+            /// </summary>
+            private Dictionary<int, int> _observedPeakValueIndexes;
+
+            public RawData IndexObservedPeakValuesForEntries()
+            {
+                return ChangeProp(ImClone(this), im => im.IndexObservedPeakValues());
+            }
+
+            private void IndexObservedPeakValues()
+            {
+                _observedPeakValueIndexes = null;
+                if (NumObservedPeakValues == 0)
+                {
+                    return;
+                }
+                var indexes = new Dictionary<int, int>();
+                int valueIndex = 0;
+                foreach (var entry in ChromatogramEntries.Where(entry => entry.HasObservedPeakValues)
+                             .OrderBy(entry => entry.StartPeakIndex))
+                {
+                    if (indexes.ContainsKey(entry.StartPeakIndex))
+                    {
+                        throw new InvalidDataException(ResultsResources.ChromatogramCache_LoadStructs_FileCorrupted);
+                    }
+                    indexes.Add(entry.StartPeakIndex, valueIndex);
+                    valueIndex += entry.NumPeaks * entry.NumTransitions * ChromPeak.OBSERVED_VALUES_PER_PEAK;
+                }
+                if (valueIndex != NumObservedPeakValues)
+                {
+                    throw new InvalidDataException(ResultsResources.ChromatogramCache_LoadStructs_FileCorrupted);
+                }
+                _observedPeakValueIndexes = indexes;
+            }
+
+            /// <summary>
+            /// Reads the observed IM/CCS values of a group's peaks and sets them on the peaks, if the group has any.
+            /// </summary>
+            public void ReadObservedPeakValues(Stream stream, long startPeakIndex, IList<ChromPeak> peaks)
+            {
+                if (!TryGetObservedPeakValueIndex(startPeakIndex, out int valueIndex))
+                {
+                    return;
+                }
+                stream.Seek(LocationObservedPeakValues + (long) valueIndex * sizeof(float), SeekOrigin.Begin);
+                ChromPeak.SetObservedValues(peaks,
+                    PrimitiveArrays.Read<float>(stream, peaks.Count * ChromPeak.OBSERVED_VALUES_PER_PEAK));
+            }
+
+            /// <summary>
+            /// Copies the observed IM/CCS values of a group's peaks, if it has any, and returns whether it did.
+            /// </summary>
+            public bool TransferObservedPeakValues(Stream readStream, ChromGroupHeaderInfo entry, Stream writeStream)
+            {
+                if (!TryGetObservedPeakValueIndex(entry.StartPeakIndex, out int valueIndex))
+                {
+                    return false;
+                }
+                readStream.Seek(LocationObservedPeakValues + (long) valueIndex * sizeof(float), SeekOrigin.Begin);
+                readStream.TransferBytes(writeStream,
+                    (long) entry.NumPeaks * entry.NumTransitions * ChromPeak.OBSERVED_VALUES_PER_PEAK * sizeof(float));
+                return true;
+            }
+
+            private bool TryGetObservedPeakValueIndex(long startPeakIndex, out int valueIndex)
+            {
+                valueIndex = 0;
+                return _observedPeakValueIndexes != null &&
+                       _observedPeakValueIndexes.TryGetValue((int) startPeakIndex, out valueIndex);
+            }
+
             public FeatureNames ScoreTypes { get; private set; }
 
             public RawData ChangeScoreTypes(FeatureNames types, long locationScoreValues)
@@ -937,6 +1027,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 raw = raw.ChangeResultFileDatas(resultFileDatas);
             }
+            raw = raw.IndexObservedPeakValuesForEntries();
             if (progressMonitor != null)
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(50));
 
@@ -1060,6 +1151,7 @@ namespace pwiz.Skyline.Model.Results
                                         Stream outStream,
                                         Stream outStreamScans,
                                         Stream outStreamPeaks,
+                                        Stream outStreamObservedPeakValues,
                                         Stream outStreamScores,
                                         ICollection<ChromCachedFile> chromCachedFiles,
                                         ICollection<ChromGroupHeaderInfo> chromatogramEntries,
@@ -1083,6 +1175,16 @@ namespace pwiz.Skyline.Model.Results
             long locationPeaks = outStream.Position;
             outStreamPeaks.Seek(0, SeekOrigin.Begin);
             outStreamPeaks.CopyTo(outStream);
+
+            // Write the observed IM/CCS of the peaks of groups that have them
+            long locationObservedPeakValues = outStream.Position;
+            int numObservedPeakValues = 0;
+            if (cacheFormat.HasObservedPeakValues)
+            {
+                numObservedPeakValues = (int) (outStreamObservedPeakValues.Length / sizeof(float));
+                outStreamObservedPeakValues.Seek(0, SeekOrigin.Begin);
+                outStreamObservedPeakValues.CopyTo(outStream);
+            }
 
             // Write the transitions
             long locationTrans = outStream.Position;
@@ -1204,6 +1306,8 @@ namespace pwiz.Skyline.Model.Results
                 locationTextIdBytes = locationTextIdBytes,
                 numPeaks = peakCount,
                 locationPeaks = locationPeaks,
+                numObservedPeakValues = numObservedPeakValues,
+                locationObservedPeakValues = locationObservedPeakValues,
                 numTransitions = chromTransitions.Count,
                 locationTransitions = locationTrans,
                 numChromatograms = chromatogramEntries.Count,
@@ -1568,6 +1672,7 @@ namespace pwiz.Skyline.Model.Results
             ChromatogramGroupIds keepGroupIds = new ChromatogramGroupIds();
 
             using (var fsPeaks = new FileSaver(cachePathOpt + PEAKS_EXT, true))
+            using (var fsObservedPeakValues = new FileSaver(cachePathOpt + OBSERVED_PEAK_VALUES_EXT, true))
             using (var fsScans = new FileSaver(cachePathOpt + SCANS_EXT, true))
             using (var fsScores = new FileSaver(cachePathOpt + SCORES_EXT, true))
             using (var fs = new FileSaver(cachePathOpt))
@@ -1596,6 +1701,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         lastEntry = ChromGroupHeaderInfos[listEntries[iNext++].Item3];
 
+                        // Written in the same order as the peaks, which is all that locates them
+                        bool hasObservedPeakValues = cacheFormat.HasObservedPeakValues &&
+                            _rawData.TransferObservedPeakValues(inStream, lastEntry, fsObservedPeakValues.FileStream);
+
                         // Otherwise add entries to the keep lists
                         listKeepEntries.Add(new ChromGroupHeaderInfo(lastEntry.Precursor,
                             listKeepCachedFiles.Count,
@@ -1613,8 +1722,10 @@ namespace pwiz.Skyline.Model.Results
                             lastEntry.Flags,
                             lastEntry.StartTime,
                             lastEntry.EndTime,
-                            lastEntry.CollisionalCrossSection, 
-                            lastEntry.IonMobilityUnits).ChangeTextIdIndex(keepGroupIds.AddId(GetChromatogramGroupId(lastEntry))));
+                            lastEntry.CollisionalCrossSection,
+                            lastEntry.IonMobilityUnits)
+                            .ChangeHasObservedPeakValues(hasObservedPeakValues)
+                            .ChangeTextIdIndex(keepGroupIds.AddId(GetChromatogramGroupId(lastEntry))));
 
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
@@ -1695,6 +1806,7 @@ namespace pwiz.Skyline.Model.Results
                     fs.Stream,
                     fsScans.Stream,
                     fsPeaks.Stream,
+                    fsObservedPeakValues.Stream,
                     fsScores.Stream,
                     listKeepCachedFiles,
                     listKeepEntries,
@@ -1933,7 +2045,9 @@ namespace pwiz.Skyline.Model.Results
         {
             stream.Seek(_rawData.LocationPeaks + _rawData.CacheFormat.ChromPeakSize * startPeakIndex,
                 SeekOrigin.Begin);
-            return _rawData.CacheFormat.ChromPeakSerializer().ReadArray(stream, count);
+            var peaks = _rawData.CacheFormat.ChromPeakSerializer().ReadArray(stream, count);
+            _rawData.ReadObservedPeakValues(stream, startPeakIndex, peaks);
+            return peaks;
         }
 
 

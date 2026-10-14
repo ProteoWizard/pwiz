@@ -211,16 +211,49 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
-        public unsafe void TestChromPeakStructSize()
+        public unsafe void TestChromPeakObservedValuesStoredOutsidePeak()
         {
-            // v20 added ObservedIonMobility and ObservedCcs as floats. Locking in
-            // the struct size guards against accidental layout drift, since the
-            // cache writes peaks via Marshal.SizeOf<ChromPeak>().
-            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Nineteen));
-            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.Twenty));
-            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+            // The observed IM/CCS floats are in the in-memory struct, but a peak on disk stays at its
+            // v19 size: the values go in a separate block written only for groups that have them.
             Assert.AreEqual(60, sizeof(ChromPeak));
             Assert.AreEqual(60, Marshal.SizeOf<ChromPeak>());
+            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Nineteen));
+            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+
+            var peaks = Enumerable.Range(0, 3).Select(i => new ChromPeak(10f + i, 9.5f + i, 10.5f + i, 100f * (i + 1), 5f, 50f, 0.5f,
+                ChromPeak.FlagValues.time_normalized, i, i + 5, null)).ToArray();
+            peaks[0] = peaks[0].WithObservedIonMobility(1.25f).WithObservedCcs(345.5);
+            peaks[1] = peaks[1].WithObservedIonMobility(1.5f); // Fragment peaks have IM but no CCS
+
+            // Every peak written at the current size comes back with all it had except the observed values,
+            // which must read as unknown rather than 0 until set from the block.
+            var serializer = CacheFormat.CURRENT.ChromPeakSerializer();
+            using (var stream = new MemoryStream())
+            {
+                serializer.WriteItems(stream, peaks);
+                Assert.AreEqual(peaks.Length * 52, stream.Length);
+                stream.Position = 0;
+                var roundTripped = serializer.ReadArray(stream, peaks.Length);
+                for (int i = 0; i < peaks.Length; i++)
+                {
+                    Assert.AreEqual(peaks[i].RetentionTime, roundTripped[i].RetentionTime);
+                    Assert.AreEqual(peaks[i].Area, roundTripped[i].Area);
+                    Assert.AreEqual(peaks[i].MassError, roundTripped[i].MassError);
+                    Assert.AreEqual(peaks[i].PointsAcross, roundTripped[i].PointsAcross);
+                    Assert.IsNull(roundTripped[i].ObservedIonMobility);
+                    Assert.IsNull(roundTripped[i].ObservedCcs);
+                }
+
+                // The block restores exactly what each peak had, including which values were unknown
+                ChromPeak.SetObservedValues(roundTripped, ChromPeak.GetObservedValues(peaks));
+                for (int i = 0; i < peaks.Length; i++)
+                {
+                    Assert.AreEqual(peaks[i].ObservedIonMobility, roundTripped[i].ObservedIonMobility);
+                    Assert.AreEqual(peaks[i].ObservedCcs, roundTripped[i].ObservedCcs);
+                }
+            }
+            Assert.IsTrue(peaks[1].HasObservedValues);
+            Assert.IsFalse(peaks[2].HasObservedValues);
         }
 
         [TestMethod]
@@ -229,11 +262,11 @@ namespace pwiz.SkylineTest
             // A v19 cache wrote ChromPeak as 52 bytes - the observed IM/CCS fields
             // and the observed_ion_mobility_known / observed_ccs_known flag bits
             // did not exist. When the v20 reader encounters those records, the
-            // trailing 8 bytes (where the new floats now live) are zero-padded by
-            // StructSerializer and the unset flag bits make the getters return
-            // null. This locks in that contract by round-tripping through a
-            // 52-byte StructSerializer, which truncates on write and zero-pads on
-            // read - the same shape as a real v19-on-disk record.
+            // trailing 8 bytes (where the new floats live in memory) are zero-padded
+            // and the unset flag bits make the getters return null. This locks in
+            // that contract by round-tripping through a 52-byte serializer, which
+            // truncates on write and zero-pads on read - the same shape as a real
+            // v19-on-disk record.
             Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Nineteen));
 
             // Build a peak with mass error set but no observed IM/CCS - the
