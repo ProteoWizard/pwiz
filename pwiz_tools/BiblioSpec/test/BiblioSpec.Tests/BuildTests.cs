@@ -340,6 +340,7 @@ public class BuildTests
             skipLinesName: "zbuild.skip-lines");
     }
 
+#if !NO_VENDOR_SUPPORT // reads a Sciex .wiff
     /// <summary>Jamfile.jam:246 — <c>comet-prg2012-wiff</c>.</summary>
     [TestMethod]
     public void Comet_Prg2012_Wiff()
@@ -353,6 +354,7 @@ public class BuildTests
             referenceCheckName: "comet-prg2012-wiff.check",
             skipLinesName: "zbuild.skip-lines");
     }
+#endif
 
     /// <summary>Jamfile.jam:247 — <c>msfragger-tims</c> (input name contains %20 → literal space).</summary>
     [TestMethod]
@@ -1287,6 +1289,7 @@ public class BuildTests
             skipLinesName: "zbuild.skip-lines");
     }
 
+#if !NO_VENDOR_SUPPORT // reads a Sciex .wiff
     /// <summary>Jamfile.jam:311 — <c>maxquant-prg2012-wiff</c>.</summary>
     [TestMethod]
     public void MaxQuant_Prg2012_Wiff()
@@ -1306,6 +1309,7 @@ public class BuildTests
             referenceCheckName: "maxquant-prg2012-wiff.check",
             skipLinesName: "zbuild.skip-lines");
     }
+#endif
 
     /// <summary>Jamfile.jam:334 — <c>diann-speclib</c>.</summary>
     [TestMethod]
@@ -1493,6 +1497,7 @@ public class BuildTests
             referenceCheckName: "mse-mobility.check");
     }
 
+#if MASCOT_SUPPORT
     /// <summary>Jamfile.jam:363 — <c>mascot</c>.</summary>
     [TestMethod]
     public void Mascot()
@@ -1557,6 +1562,7 @@ public class BuildTests
             outputBlibName: "mascot_tims.blib",
             referenceCheckName: "mascot_tims.check");
     }
+#endif
 
     /// <summary>Jamfile.jam:371 — <c>openswath</c>.</summary>
     [TestMethod]
@@ -1612,6 +1618,7 @@ public class BuildTests
             outputBlibName: "openswath-invalid-tsv.blib");
     }
 
+#if MASCOT_SUPPORT
     /// <summary>Jamfile.jam:377 — <c>mascot_tims_bad</c>. Negative test:
     /// expects an error message containing the malformed IM substring
     /// "0.78079097398941". cpp uses <c>-e@&lt;substring&gt;</c>.</summary>
@@ -1629,6 +1636,7 @@ public class BuildTests
             inputFilenames: new[] { "mascot_tims_bad.dat" },
             outputBlibName: "mascot_tims_bad.blib");
     }
+#endif
 
     #endregion
 

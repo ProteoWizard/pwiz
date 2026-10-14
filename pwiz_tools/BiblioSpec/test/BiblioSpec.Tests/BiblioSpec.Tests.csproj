@@ -17,11 +17,17 @@
   </ItemGroup>
 
   <!-- The 4 CLI tools (BlibBuild / BlibFilter / BlibSearch / BlibToMs2) are
-       process-exec'd by ExecuteBlib.cs, but the tools' csprojs aren't
-       reference-able directly (they'd pull in main() entry points). We
-       depend on them via the build order — tcbuild builds them before this
-       test project runs. The TC build pipeline guarantees they exist; for
-       local runs the tests Inconclusive-skip when missing. -->
+       process-exec'd by ExecuteBlib.cs from their own bin folders. Referenced only so they
+       build before this project (ReferenceOutputAssembly=false: their assemblies, with their
+       entry points, are not referenced or copied here). Without this, a build of this project
+       alone - build.bat's no-vendor test step, or a local dotnet test - left the tools unbuilt
+       and their tests Inconclusive. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BlibBuild\BlibBuild.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\..\src\BlibFilter\BlibFilter.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\..\src\BlibSearch\BlibSearch.csproj" ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\..\src\BlibToMs2\BlibToMs2.csproj" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
 
   <!-- The MascotShim smoke tests reference internal types from BiblioSpec
        (MascotShimInterop, MascotResult) that are themselves gated on
@@ -34,6 +40,16 @@
   <ItemGroup Condition="'$(MascotSupport)' != 'true'">
     <Compile Remove="MascotShimSmokeTests.cs" />
   </ItemGroup>
+
+  <!-- BuildTests gates its .dat (Mascot) and .wiff (Sciex) cases on these (MASCOT_SUPPORT as
+       BiblioSpec.csproj defines it, NO_VENDOR_SUPPORT as Analysis.Tests does), so a build
+       without Mascot or the vendor readers compiles those cases out. -->
+  <PropertyGroup Condition="'$(MascotSupport)' == 'true'">
+    <DefineConstants>$(DefineConstants);MASCOT_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
 
   <!-- The golden-file tests read fixtures from pwiz_tools/BiblioSpec/tests/inputs/, which is
        gitignored and populated from inputs.tar.bz2 beside it. Without this the archive is never
