@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2020 University of Washington - Seattle, WA
  * 
@@ -38,6 +39,7 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -93,11 +95,19 @@ namespace pwiz.SkylineTestFunctional
             public Dictionary<string, string> AdditionalSettings { get; set; }
             public ExpectedResults ExpectedResults { get; set; }
             public ExpectedResults ExpectedResultsFinal { get; set; }
+            /// <summary>
+            /// Target plus decoy hits the search engine reports scoring for each file of the final search,
+            /// in file order. When set, a failed search is repeated, and so is a final search reporting
+            /// other counts.
+            /// </summary>
+            public int[] ExpectedScoredHits { get; set; }
             public Action BeforeSettingsAction { get; set; }
             public Action ExpectedErrorAction { get; set; }
             public bool HasMissingDependencies { get; private set; }
             public bool TestDependencyErrors { get; set; }
         }
+
+        private const int MAX_SEARCH_ATTEMPTS = 3;
 
         DdaTestSettings TestSettings;
 
@@ -121,7 +131,14 @@ namespace pwiz.SkylineTestFunctional
                 AdditionalSettings = new Dictionary<string, string>(),
                 // Counts for the standalone MS Amanda (3.0.22.864) + Percolator; only percolator-validated
                 // PSMs enter the library, so these are lower than the retired in-process integration's.
-                ExpectedResultsFinal = new ExpectedResults(79, 192, 241, 723, 93)
+                ExpectedResultsFinal = new ExpectedResults(79, 192, 241, 723, 93),
+                // TODO: Remove ExpectedScoredHits, and with it the search retry, once an MS Amanda release fixes
+                // the race in its lazy static Peptide._aminoAcids initialization
+                // (https://github.com/hgb-bin-proteomics/MSAmanda/issues/9). Threads scoring during MS Amanda's
+                // startup can silently lose candidates: on a 32-thread machine about 1 in 6 searches came up
+                // short, which shows in the hits MS Amanda reports scoring ("Scored 158 peptide hits and 46
+                // decoy peptide hits" for the first file), so a short search is repeated.
+                ExpectedScoredHits = new[] { 158 + 46, 121 + 34 }
             };
 
             RunFunctionalTest();
@@ -1303,8 +1320,21 @@ namespace pwiz.SkylineTestFunctional
 
             // Let the first search complete successfully
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value, null);
             Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
             searchSucceeded = null;
+
+            // The diagnosis for a search Percolator scored nothing in, now that percolator is installed.
+            // It runs percolator, which writes its help to stderr, and this used to deadlock. A hang is
+            // killed after 30 seconds with the same message, so the time taken is what tells them apart.
+            if (TestSettings.SearchEngine == SearchEngine.MSAmanda)
+            {
+                var diagnosisTime = Stopwatch.StartNew();
+                AssertEx.AreEqual(string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing,
+                    MSAmandaSearchWrapper.PercolatorDirectory), MSAmandaSearchWrapper.DiagnosePercolator());
+                AssertEx.IsTrue(diagnosisTime.Elapsed < TimeSpan.FromSeconds(15),
+                    $@"Percolator diagnosis took {diagnosisTime.Elapsed.TotalSeconds:F1} seconds");
+            }
 
             // Verify original data source filenames are preserved when going back after a successful search
             var expectedDataSources = SearchFiles.Take(1).Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
@@ -1397,6 +1427,8 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value,
+                    TestSettings.ExpectedScoredHits);
 
                 RunUI(() =>
                 {
@@ -1482,6 +1514,63 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify the preset can be loaded in a new wizard with all settings restored
             VerifyPresetInNewWizard(SEARCH_PRESET_NAME);
+        }
+
+        /// <summary>
+        /// Repeats a search, from the search settings page, while it fails or the search engine reports
+        /// scoring other than <paramref name="expectedScoredHits"/>. Applies only to tests that set
+        /// <see cref="DdaTestSettings.ExpectedScoredHits"/>. A search too short of hits can fail outright,
+        /// when Percolator has too few to score. After the last attempt the test goes on, so a search that
+        /// keeps failing or coming up short still fails.
+        /// </summary>
+        /// <param name="importPeptideSearchDlg">The wizard, showing the search that just finished</param>
+        /// <param name="succeeded">Whether that search succeeded</param>
+        /// <param name="expectedScoredHits">Scored hits per file, or null to repeat only a failed search</param>
+        /// <returns>Whether the last search attempted succeeded</returns>
+        private bool RetrySearchWhileScoredHitsDiffer(ImportPeptideSearchDlg importPeptideSearchDlg, bool succeeded,
+            int[] expectedScoredHits)
+        {
+            if (TestSettings.ExpectedScoredHits == null)
+                return succeeded;
+
+            for (int attempt = 1; attempt < MAX_SEARCH_ATTEMPTS; attempt++)
+            {
+                string searchLog = null;
+                RunUI(() => searchLog = importPeptideSearchDlg.SearchControl.LogText);
+                var scoredHits = GetScoredHits(searchLog);
+                if (IsRecordMode && expectedScoredHits != null)
+                {
+                    Console.WriteLine($@"ExpectedScoredHits = new[] {{ {string.Join(@", ", scoredHits)} }}");
+                    return succeeded;
+                }
+                if (succeeded && (expectedScoredHits == null || scoredHits.SequenceEqual(expectedScoredHits)))
+                    return true;
+
+                // Report the repeat, and the log of a failed attempt, so neither is lost to the retry.
+                if (!succeeded)
+                    Console.WriteLine(searchLog);
+                Console.WriteLine($@"Search succeeded={succeeded}, scored {string.Join(@", ", scoredHits)} hits, expected {string.Join(@", ", expectedScoredHits ?? Array.Empty<int>())} - repeating search");
+                bool? searchSucceeded = null;
+                void OnSearchFinished(bool success) => searchSucceeded = success;
+                RunUI(() =>
+                {
+                    importPeptideSearchDlg.SearchControl.SearchFinished += OnSearchFinished;
+                    AssertEx.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                });
+                SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished -= OnSearchFinished);
+                succeeded = searchSucceeded.Value;
+            }
+            return succeeded;
+        }
+
+        private static List<int> GetScoredHits(string searchLog)
+        {
+            // MS Amanda's own log line, e.g. "Scored 158 peptide hits and 46 decoy peptide hits in 0.12 sec"
+            return Regex.Matches(searchLog, @"Scored (\d+) peptide hits and (\d+) decoy peptide hits")
+                .Select(match => int.Parse(match.Groups[1].Value) + int.Parse(match.Groups[2].Value)).ToList();
         }
 
         private void VerifyPresetInNewWizard(string presetName)
