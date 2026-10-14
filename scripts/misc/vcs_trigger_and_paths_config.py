@@ -63,7 +63,7 @@ extraStatuses = \
     "bt209": ["Skyline code inspection"],
     # tcinspect.ps1's build-warnings status, posted by tcbuild.bat in vendor builds only, so
     # bt143 (no vendor DLLs) has none.
-    "bt83": ["pwiz code inspection"]
+    "bt83": ["Core code inspection"]
 }
 
 targets['SkylineWithTestConnected'] = \

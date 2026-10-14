@@ -105,7 +105,7 @@ for %%d in (pwiz-sharp installer pwiz\src pwiz\test pwiz_tools\Skyline\Executabl
 REM # Build-warnings check. tcinspect.ps1 pre-builds what build.bat builds, with the same
 REM # properties, logging every restore and build warning. Running first is the point: it is
 REM # then the build's one from-scratch compile, and build.bat's build is incremental on top
-REM # of it. A warning turns its own GitHub status, "pwiz code inspection", red; the script
+REM # of it. A warning turns its own GitHub status, "Core code inspection", red; the script
 REM # always exits 0 and leaves this build's status alone, so build.bat and the tests run and
 REM # pass or fail on their own. Vendor builds only - see tcinspect.ps1 for why. The flags it
 REM # needs are the subset of %* that change build.bat's MSBUILD_PROPS.

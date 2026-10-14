@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     The pwiz-sharp counterpart of pwiz_tools/Skyline/tcinspect.ps1. For now it does only that
-    script's build-warning half, under the status 'pwiz code inspection'; ReSharper inspection
+    script's build-warning half, under the status 'Core code inspection'; ReSharper inspection
     of Pwiz.sln can be added here later and reported under the same status.
 
     The Directory.Build.props files do not promote warnings to errors, because a promoted warning
@@ -45,7 +45,7 @@ param(
     # GitHub reporting. These come from TeamCity; with no token the script just prints its
     # verdict, which is what a developer running it locally wants.
     [string] $CommitSha = $env:BUILD_VCS_NUMBER,
-    [string] $StatusContext = 'pwiz code inspection',
+    [string] $StatusContext = 'Core code inspection',
     [string] $TargetUrl = $env:INSPECTION_TARGET_URL,
     [string] $Repository = 'ProteoWizard/pwiz'
 )
@@ -69,7 +69,7 @@ try {
 
 # The single exit point. Every path lands here, and every path exits 0.
 function Complete-Inspection([string] $state, [string] $summary) {
-    Write-Host "pwiz code inspection: $state - $summary"
+    Write-Host "${StatusContext}: $state - $summary"
     Publish-GitHubStatus -State $state -Description $summary -Context $StatusContext `
                          -CommitSha $CommitSha -TargetUrl $TargetUrl -Repository $Repository
     exit 0
