@@ -3879,7 +3879,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddHeaderRow(headerText, rt);
 
                 table.AddDetailRow(imAxisLabel,
-                    ObservedValueFormatter.FormatWithPercentError(observedIm.Value, targetIm, Formats.IonMobility), rt);
+                    FormatWithPercentError(observedIm.Value, targetIm, Formats.IonMobility), rt);
 
                 // CCS row from the observed CCS stored with the peak (the same value the properties
                 // pane and Document Grid show), which exists only for precursor ions and only when
@@ -3892,7 +3892,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     double targetCcsForError = imFilter.CollisionalCrossSectionSqA.GetValueOrDefault();
                     table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
-                        ObservedValueFormatter.FormatWithPercentError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
+                        FormatWithPercentError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
                 }
 
                 // Mobility-peak shape metrics from the current transition's mobilogram (the curve
@@ -3938,7 +3938,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var observedIm = chromInfo.ObservedIonMobility.Value;
                 string unitsLabel = IonMobilityValue.GetUnitsString(_msDataFileScanHelper.IonMobilityUnits);
-                string valueText = ObservedValueFormatter.FormatWithPercentError(observedIm,
+                string valueText = FormatWithPercentError(observedIm,
                     targetIm.GetValueOrDefault(), Formats.IonMobility);
                 props.ObservedIonMobility = TextUtil.SpaceSeparate(valueText, unitsLabel);
 
@@ -3950,9 +3950,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromInfo.ObservedCcs.HasValue && chromInfo.ObservedCcs.Value > 0)
                 {
                     double targetCcsForError = chromInfo.IonMobility?.CollisionalCrossSectionSqA ?? 0;
-                    props.ObservedCCS = ObservedValueFormatter.FormatWithPercentError(chromInfo.ObservedCcs.Value, targetCcsForError, Formats.CCS);
+                    props.ObservedCCS = FormatWithPercentError(chromInfo.ObservedCcs.Value, targetCcsForError, Formats.CCS);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns "{value} ({pct}% error)" when <paramref name="target"/> is non-zero, or just
+        /// "{value}" when there is no target to compare against. The percent error uses
+        /// <see cref="Formats.PercentError"/> (2 decimals) so a small but real difference stays
+        /// visible rather than rounding to "0".
+        /// </summary>
+        public static string FormatWithPercentError(double value, double target, string valueFormat)
+        {
+            string valueText = value.ToString(valueFormat);
+            if (target == 0)
+                return valueText;
+            double pct = 100.0 * (value - target) / target;
+            return string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                valueText, pct.ToString(Formats.PercentError));
         }
 
         // Isolation window formatted as "low:high (-windowLower:+windowUpper)" -
@@ -4496,30 +4512,5 @@ namespace pwiz.Skyline.Controls.Graphs
         public double RetentionTime { get; private set; }
         public Identity TransitionId { get; private set; }
         public int? OptStep { get; }
-    }
-
-    /// <summary>
-    /// Formats an observed value alongside its percent error vs a target (e.g. observed
-    /// ion mobility or CCS vs the library/explicit value), as shown in the Full Scan
-    /// observed-IM line tooltip and the properties pane. Extracted from
-    /// <see cref="GraphFullScan"/> so the formatting is unit-testable without the UI.
-    /// </summary>
-    public static class ObservedValueFormatter
-    {
-        /// <summary>
-        /// Returns "{value} ({pct}% error)" when <paramref name="target"/> is non-zero, or just
-        /// "{value}" when there is no target to compare against. The percent error uses
-        /// <see cref="Formats.PercentError"/> (2 decimals) so a small but real difference stays
-        /// visible rather than rounding to "0".
-        /// </summary>
-        public static string FormatWithPercentError(double value, double target, string valueFormat)
-        {
-            string valueText = value.ToString(valueFormat);
-            if (target == 0)
-                return valueText;
-            double pct = 100.0 * (value - target) / target;
-            return string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
-                valueText, pct.ToString(Formats.PercentError));
-        }
     }
 }

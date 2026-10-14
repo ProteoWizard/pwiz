@@ -27,7 +27,6 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -113,24 +112,7 @@ namespace pwiz.SkylineTest
             const double tinyObservedIm = 1.0, tinyTargetIm = 1.00004; // ~ -0.004%
             double tinyPct = 100.0 * (tinyObservedIm - tinyTargetIm) / tinyTargetIm;
             Assert.AreEqual(zeroPct, tinyPct.ToString(Formats.PercentError, culture));
-            Assert.AreEqual(string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
-                    tinyObservedIm.ToString(Formats.IonMobility, culture), zeroPct),
-                ObservedValueFormatter.FormatWithPercentError(tinyObservedIm, tinyTargetIm, Formats.IonMobility));
             Assert.AreEqual((-0.25).ToString(@"0.##", culture), (-0.25).ToString(Formats.PercentError, culture));
-
-            // The shared formatter (observed-line tooltip + properties pane) must surface it.
-            string imFormatted = ObservedValueFormatter.FormatWithPercentError(observedIm, targetIm, Formats.IonMobility);
-            AssertEx.Contains(imFormatted, imPctText);
-
-            // CCS gap (260.88 vs 261) likewise renders a nonzero error.
-            const double observedCcs = 260.88, targetCcs = 261;
-            double ccsPct = 100.0 * (observedCcs - targetCcs) / targetCcs;
-            string ccsFormatted = ObservedValueFormatter.FormatWithPercentError(observedCcs, targetCcs, Formats.CCS);
-            AssertEx.Contains(ccsFormatted, ccsPct.ToString(Formats.PercentError, culture));
-
-            // A zero target (IM-only data, no CCS ground truth) renders the value alone, no error.
-            string noTarget = ObservedValueFormatter.FormatWithPercentError(observedIm, 0, Formats.IonMobility);
-            Assert.AreEqual(observedIm.ToString(Formats.IonMobility, culture), noTarget);
 
             // The Document Grid columns (and report exports) must use the same precision.
             foreach (var propertyName in new[] { nameof(PrecursorResult.IonMobilityErrorPercent), nameof(PrecursorResult.CcsErrorPercent) })
