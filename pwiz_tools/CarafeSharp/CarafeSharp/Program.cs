@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp
 {
@@ -31,9 +32,25 @@ namespace pwiz.CarafeSharp
     /// <see cref="CarafeCommandLine"/>): the stage-1 modes <c>-build_entrapment_fasta</c> and
     /// <c>-reconcile_manifest</c>, and library prediction from <c>-db</c>
     /// (<see cref="LibraryGenerator"/>), and training on Osprey's training exports (<see cref="ModelTrainer"/>).
+    /// <para>
+    /// Output goes through the shared <see cref="CommandStatusWriter"/>, as Osprey's and
+    /// SkylineCmd's does: progress on standard output, errors and warnings on standard error (as
+    /// Carafe), each line stamped by <c>-timestamp</c> / <c>-memstamp</c>, and both streams
+    /// redirected to one file by <c>-log_file</c>. An error line starts with
+    /// <see cref="CommandStatusWriter.ERROR_MESSAGE_HINT"/>, which is how a log reader (the
+    /// workflow scripts, a regression gate) recognizes one, and the exit code is made to agree
+    /// with the log (<see cref="ReconcileExitCode"/>).
+    /// </para>
     /// </summary>
     internal static class Program
     {
+        // Exit codes, as Skyline's and Osprey's command lines define them.
+        internal const int EXIT_CODE_SUCCESS = 0;
+        internal const int EXIT_CODE_FAILURE_TO_START = 1;
+        internal const int EXIT_CODE_RAN_WITH_ERRORS = 2;
+
+        private static readonly string ERROR_PREFIX = CommandStatusWriter.ERROR_MESSAGE_HINT + @" ";
+
         private static int Main(string[] args)
         {
             return Run(args, Console.Out, Console.Error);
@@ -42,6 +59,8 @@ namespace pwiz.CarafeSharp
         /// <summary>The command line's work, with progress to <paramref name="output"/> and errors to <paramref name="error"/>; the exit code.</summary>
         internal static int Run(string[] args, TextWriter output, TextWriter error)
         {
+            var consoleOut = output as CommandStatusWriter ?? new CommandStatusWriter(output);
+            var consoleError = error as CommandStatusWriter ?? new CommandStatusWriter(error);
             CarafeCommandLine commandLine;
             try
             {
@@ -49,10 +68,49 @@ namespace pwiz.CarafeSharp
             }
             catch (Exception e) when (e is ArgumentException || e is NotSupportedException)
             {
-                error.WriteLine(e.Message);
-                error.WriteLine(CarafeCommandLine.Usage);
-                return 1;
+                // A usage error: the message is the diagnosis, followed by the usage, as Carafe.
+                consoleError.WriteLine(ERROR_PREFIX + e.Message);
+                consoleError.WriteLine(CarafeCommandLine.Usage);
+                return ReconcileExitCode(EXIT_CODE_FAILURE_TO_START, consoleError.IsErrorReported);
             }
+
+            // Stamps and the log file apply once the command line has parsed, so a usage error
+            // stays on the console and creates no file. With a log file, every line goes to it.
+            consoleOut.IsTimeStamped = consoleError.IsTimeStamped = commandLine.TimeStamp;
+            consoleOut.IsMemStamped = consoleError.IsMemStamped = commandLine.MemStamp;
+            var log = consoleOut;
+            var errorLog = consoleError;
+            CommandStatusWriter logFile = null;
+            if (commandLine.LogFile != null)
+            {
+                try
+                {
+                    logFile = new CommandStatusWriter(new StreamWriter(commandLine.LogFile))
+                    {
+                        IsTimeStamped = commandLine.TimeStamp,
+                        IsMemStamped = commandLine.MemStamp
+                    };
+                }
+                catch (Exception e)
+                {
+                    consoleError.WriteLine(ERROR_PREFIX + string.Format(@"Failed to open log file {0}: {1}", commandLine.LogFile, e.Message));
+                    return ReconcileExitCode(EXIT_CODE_FAILURE_TO_START, consoleError.IsErrorReported);
+                }
+                log = errorLog = logFile;
+            }
+
+            try
+            {
+                return ReconcileExitCode(RunMode(commandLine, log, errorLog), errorLog.IsErrorReported || log.IsErrorReported);
+            }
+            finally
+            {
+                logFile?.Dispose();
+            }
+        }
+
+        private static int RunMode(CarafeCommandLine commandLine, TextWriter output, TextWriter error)
+        {
             foreach (string warning in commandLine.Warnings)
                 error.WriteLine(warning);
 
@@ -64,36 +122,71 @@ namespace pwiz.CarafeSharp
                     case CarafeCommandMode.build_entrapment_fasta:
                         new EntrapmentFastaBuilder(commandLine.BuildSettings, output).Run();
                         output.WriteLine(@"Entrapment FASTA build finished in " + Seconds(stopwatch) + @" s.");
-                        return 0;
+                        return EXIT_CODE_SUCCESS;
                     case CarafeCommandMode.reconcile_manifest:
                         PairingManifestReconciler.Run(commandLine.ReconcileManifestIn, commandLine.ReconcileLibrary,
                             commandLine.ReconcileManifestOut, output);
                         output.WriteLine(@"Manifest reconciliation finished in " + Seconds(stopwatch) + @" s.");
-                        return 0;
+                        return EXIT_CODE_SUCCESS;
                     case CarafeCommandMode.train:
                         new ModelTrainer(commandLine.TrainingSettings, output).Run();
                         output.WriteLine(@"Time used for training and spectral library generation: " + Seconds(stopwatch) + @" s.");
-                        return 0;
+                        return EXIT_CODE_SUCCESS;
                     case CarafeCommandMode.model_info:
                         output.Write(CarafeModelFile.Open(commandLine.ModelInfoPath).FormatInfo());
-                        return 0;
+                        return EXIT_CODE_SUCCESS;
                     case CarafeCommandMode.predict_library:
                         new LibraryGenerator(commandLine.LibrarySettings, output).Run();
                         output.WriteLine(@"Time used for spectral library generation: " + Seconds(stopwatch) + @" s.");
-                        return 0;
+                        return EXIT_CODE_SUCCESS;
                     default:
                         output.WriteLine(CarafeCommandLine.Usage);
-                        return 0;
+                        return EXIT_CODE_SUCCESS;
                 }
             }
             catch (Exception e)
             {
-                error.WriteLine(@"ERROR: " + e.Message);
-                var cause = e.GetBaseException();
-                if (!ReferenceEquals(cause, e))
-                    error.WriteLine(@"Caused by: " + cause.Message);
-                return 1;
+                error.WriteLine(ERROR_PREFIX + DescribeFailure(e));
+                return EXIT_CODE_FAILURE_TO_START;
             }
+        }
+
+        /// <summary>
+        /// The text for an exception that reached the top-level sink, following Skyline and
+        /// Osprey: an exception whose message is written for the user is reported as that
+        /// message, with its root cause on a second line when it has one; a programming defect
+        /// is reported whole, type and stack included, so it can be fixed. Besides
+        /// <see cref="CommonExceptionUtil.IsProgrammingDefect"/>'s user-actionable types,
+        /// CarafeSharp's settings validation reports bad input as <see cref="ArgumentException"/>
+        /// and an unported Carafe option as <see cref="NotSupportedException"/>, as Carafe's Java
+        /// did, so those two are messages too.
+        /// </summary>
+        internal static string DescribeFailure(Exception e)
+        {
+            var reported = CommonExceptionUtil.UnwrapUserException(e);
+            bool userError = !CommonExceptionUtil.IsProgrammingDefect(reported) ||
+                             reported is ArgumentException || reported is NotSupportedException;
+            if (userError && !string.IsNullOrEmpty(reported.Message))
+            {
+                var cause = reported.GetBaseException();
+                if (ReferenceEquals(cause, reported))
+                    return reported.Message;
+                return reported.Message + Environment.NewLine + @"Caused by: " + cause.Message;
+            }
+            return @"Fatal error: " + e;
+        }
+
+        /// <summary>
+        /// Make the exit code and the log agree, as Skyline's and Osprey's command lines do: an
+        /// error line under a success code becomes <see cref="EXIT_CODE_RAN_WITH_ERRORS"/>. (A
+        /// failure code is always written with its error line above, so the other direction
+        /// needs no repair.)
+        /// </summary>
+        internal static int ReconcileExitCode(int exitCode, bool errorReported)
+        {
+            if (exitCode == EXIT_CODE_SUCCESS && errorReported)
+                return EXIT_CODE_RAN_WITH_ERRORS;
+            return exitCode;
         }
 
         private static string Seconds(Stopwatch stopwatch)

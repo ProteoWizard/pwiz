@@ -152,6 +152,15 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>Warnings Carafe prints for audit switches.</summary>
         public IList<string> Warnings { get; } = new List<string>();
 
+        /// <summary>The file every line of output and error goes to (<c>-log_file</c>), or null for the console.</summary>
+        public string LogFile { get; private set; }
+
+        /// <summary>Prefix each line with the time (<c>-timestamp</c>).</summary>
+        public bool TimeStamp { get; private set; }
+
+        /// <summary>Prefix each line with the managed and private memory in use (<c>-memstamp</c>).</summary>
+        public bool MemStamp { get; private set; }
+
         /// <summary>A usage summary of the options these modes read.</summary>
         public static string Usage
         {
@@ -193,7 +202,9 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -rt_align kde|none (default kde: each run's minutes mapped onto Chronologer's hydrophobic index first, by a KDE",
                     @"  ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their",
                     @"  aligned minutes, runs on different gradients a Chronologer of the hydrophobic index; none: Carafe's one rt_max),",
-                    @"  -rt_select best|median (aligned: a form's best run, or the runs' median)");
+                    @"  -rt_select best|median (aligned: a form's best run, or the runs' median)",
+                    @"Output (CarafeSharp only, any mode): -log_file <path> (every line to the file instead of the console),",
+                    @"  -timestamp (prefix each line with the time), -memstamp (prefix each line with the memory in use)");
             }
         }
 
@@ -206,6 +217,11 @@ namespace pwiz.CarafeSharp.Proteome
             }
             if (Has(@"printPTM"))
                 throw new ArgumentException(@"-printPTM is not supported by CarafeSharp");
+            // Output options, read in every mode (CarafeSharp's, as Osprey's --log-file / --timestamp / --memstamp).
+            if (TryGet(@"log_file", out string logFile))
+                LogFile = logFile;
+            TimeStamp = Has(@"timestamp");
+            MemStamp = Has(@"memstamp");
 
             var digest = new DigestSettings { ClipNTermMethionine = Has(@"clip_n_m") };
             var modifications = new ModificationSettings();
@@ -804,10 +820,10 @@ namespace pwiz.CarafeSharp.Proteome
                                      @"build_koina_library koina_url koina_ms2_model koina_rt_model nce_ms n_ion_min " +
                                      @"c_ion_min nce ms_instrument device se mode tf seed python mod2mass user_var_mods " +
                                      @"model_dir ms2_model verbose ai_version pretrained model model_info activation analyzer rt_model rt_align " +
-                                     @"rt_select rt_reference";
+                                     @"rt_select rt_reference log_file";
             const string flagsOnly = @"printPTM nm cs ez skyline valid use_all_peaks I2L clip_n_m rf xic export_mgf " +
                                      @"no_masking no_similarity_gate ignore_pairing_errors entrapment no_decoys mz_filter " +
-                                     @"y1 fast ccs torch_compile h";
+                                     @"y1 fast ccs torch_compile h timestamp memstamp";
             var table = new Dictionary<string, bool>();
             foreach (string name in withValue.Split(' '))
                 table.Add(name, true);

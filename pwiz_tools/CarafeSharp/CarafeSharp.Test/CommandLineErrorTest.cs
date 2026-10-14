@@ -241,6 +241,48 @@ namespace pwiz.CarafeSharp.Test
         }
 
         [TestMethod]
+        public void TestOutputAndErrors()
+        {
+            // -log_file takes every line, stamped by -timestamp, and the console streams stay empty.
+            string log = Path.Combine(_folder, @"run.log");
+            string missingModel = Path.Combine(_folder, @"missing.carafemodel");
+            var (code, output, error) = Run(@"-model_info", missingModel, @"-log_file", log, @"-timestamp");
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
+            Assert.AreEqual(string.Empty, output);
+            Assert.AreEqual(string.Empty, error);
+            var logLines = Lines(File.ReadAllText(log));
+            Assert.AreEqual(1, logLines.Length, string.Join(Environment.NewLine, logLines));
+            Assert.IsTrue(logLines[0].StartsWith(@"[", StringComparison.Ordinal), logLines[0]);
+            Assert.IsTrue(CommandStatusWriter.IsErrorLine(logLines[0]), logLines[0]);
+            StringAssert.Contains(logLines[0], missingModel);
+            // A log file that cannot be opened is itself reported, on the console.
+            (code, _, error) = Run(@"-model_info", missingModel, @"-log_file", _folder);
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
+            Assert.IsTrue(CommandStatusWriter.IsErrorLine(Lines(error)[0]), error);
+            // A usage error is an error line too, before the usage.
+            (code, _, error) = Run(@"-bogus");
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
+            Assert.IsTrue(CommandStatusWriter.IsErrorLine(Lines(error)[0]), error);
+
+            // What a failure reports: a user-actionable exception is its message (and its root
+            // cause, when it has one); a programming defect is the whole exception, type and stack.
+            Assert.AreEqual(@"gone", Program.DescribeFailure(new FileNotFoundException(@"gone")));
+            Assert.AreEqual(@"bad value", Program.DescribeFailure(new ArgumentException(@"bad value")));
+            string withCause = Program.DescribeFailure(new InvalidDataException(@"outer", new FormatException(@"inner")));
+            Assert.IsTrue(withCause.StartsWith(@"outer", StringComparison.Ordinal), withCause);
+            StringAssert.Contains(withCause, @"inner");
+            Assert.AreEqual(@"on a worker", Program.DescribeFailure(new AggregateException(new IOException(@"on a worker"))));
+            string defect = Program.DescribeFailure(new InvalidOperationException(@"defect"));
+            StringAssert.Contains(defect, nameof(InvalidOperationException));
+            StringAssert.Contains(defect, @"defect");
+
+            // The exit code and the log agree: an error line under a success code is "ran with errors".
+            Assert.AreEqual(Program.EXIT_CODE_RAN_WITH_ERRORS, Program.ReconcileExitCode(Program.EXIT_CODE_SUCCESS, true));
+            Assert.AreEqual(Program.EXIT_CODE_SUCCESS, Program.ReconcileExitCode(Program.EXIT_CODE_SUCCESS, false));
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, Program.ReconcileExitCode(Program.EXIT_CODE_FAILURE_TO_START, true));
+        }
+
+        [TestMethod]
         public void TestFailedBuildLeavesNoOutput()
         {
             string proteins = WriteText(@"proteins.fasta", PROTEINS);
