@@ -72,6 +72,12 @@ namespace pwiz.SkylineTestFunctional
         }
 
         [TestMethod]
+        public void TestDiannGlobalValuesSurviveMinimize()
+        {
+            RunGlobalQValueTest(TestDiannMinimize);
+        }
+
+        [TestMethod]
         public void TestPdResultGlobalValues()
         {
             // One peptide in this result has ambiguous matches, which the build reports
@@ -105,6 +111,49 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.Undo);
             AddAllAndVerify(viewLibUI, entries, GlobalQValueLevel.protein, CUTOFF, true, true);
             OkDialog(viewLibUI, viewLibUI.CancelDialog);
+        }
+
+        /// <summary>
+        /// Sharing the document as minimal rewrites its library, which must keep each remaining
+        /// entry's global values and library protein groups.
+        /// </summary>
+        private void TestDiannMinimize()
+        {
+            var library = BuildLibrary(DIANN_SPECLIB, DIANN_BUILD_THRESHOLD, false);
+            AddModifications(OxidationVariable());
+            var entries = ReadLibraryEntries();
+            var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            AddAllAndVerify(viewLibUI, entries, GlobalQValueLevel.protein, CUTOFF, true, true);
+            OkDialog(viewLibUI, viewLibUI.CancelDialog);
+
+            var minimizedZip = TestFilesDir.GetTestPath(@"Minimized.sky.zip");
+            RunUI(() =>
+            {
+                Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"BeforeMinimize.sky")));
+                Assert.IsTrue(SkylineWindow.ShareDocument(minimizedZip, ShareType.MINIMAL));
+                Assert.IsTrue(SkylineWindow.OpenSharedFile(minimizedZip));
+            });
+            var document = WaitForDocumentLoaded();
+            var minimized = document.Settings.PeptideSettings.Libraries.Libraries.Single();
+            CollectionAssert.AreEqual(library.GlobalQValueLevels.ToArray(), minimized.GlobalQValueLevels.ToArray());
+
+            var entriesByPrecursor = entries.ToDictionary(entry => entry.PrecursorKey);
+            int precursorCount = 0;
+            foreach (var nodePep in document.Peptides)
+            {
+                foreach (var nodeGroup in nodePep.TransitionGroups)
+                {
+                    var entry = entriesByPrecursor[LibraryEntry.MakePrecursorKey(nodePep.ModifiedTarget.Sequence,
+                        nodeGroup.PrecursorCharge)];
+                    var scores = minimized.GetGlobalScores(new LibKey(entry.ModifiedSequence, entry.Charge));
+                    Assert.AreEqual(entry.PrecursorQValue, scores.PrecursorQValue, entry.ToString());
+                    CollectionAssert.AreEquivalent(entry.ProteinGroups.ToList(),
+                        scores.ProteinGroups.Select(group => new KeyValuePair<string, double>(group.Name, group.QValue ?? -1)).ToList(),
+                        entry.ToString());
+                    precursorCount++;
+                }
+            }
+            Assert.AreNotEqual(0, precursorCount);
         }
 
         private void TestPdResult(string pdResult, string qValueColumn, string pepColumn, bool hasAmbiguousMatches,

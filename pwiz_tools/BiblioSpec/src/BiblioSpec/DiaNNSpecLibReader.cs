@@ -496,7 +496,10 @@ public sealed class DiaNNSpecLibReader : BuildParser
                 ProteinGroup: cols[colProteinGroup],
                 PrecursorId: cols[colPrecursorId],
                 GlobalQValue: ParseFloat(cols[colGlobalQValue]),
-                GlobalPgQValue: colGlobalPgQValue >= 0 ? ParseFloat(cols[colGlobalPgQValue]) : null,
+                // An empty cell is a missing value, which ParseFloat would read as 0
+                GlobalPgQValue: colGlobalPgQValue >= 0 && !string.IsNullOrEmpty(cols[colGlobalPgQValue])
+                    ? ParseFloat(cols[colGlobalPgQValue])
+                    : null,
                 QValue: ParseFloat(cols[colQValue]),
                 Rt: ParseFloat(cols[colRt]),
                 RtStart: ParseFloat(cols[colRtStart]),
@@ -549,7 +552,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
             float[] globalQValue = await ReadFloatColumn(rgReader, globalQValueField).ConfigureAwait(false);
             float[]? globalPgQValue = globalPgQValueField is null
                 ? null
-                : await ReadFloatColumn(rgReader, globalPgQValueField).ConfigureAwait(false);
+                : await ReadFloatColumn(rgReader, globalPgQValueField, float.NaN).ConfigureAwait(false);
             float[] qValue = await ReadFloatColumn(rgReader, qValueField).ConfigureAwait(false);
             float[] rt = await ReadFloatColumn(rgReader, rtField).ConfigureAwait(false);
             float[] rtStart = await ReadFloatColumn(rgReader, rtStartField).ConfigureAwait(false);
@@ -652,7 +655,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
         return boxed;
     }
 
-    private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
+    /// <summary>
+    /// Reads a numeric parquet column as floats, with <paramref name="nullValue"/> for a null.
+    /// </summary>
+    private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field,
+        float nullValue = 0f)
     {
         var arr = await ReadBoxedColumn(rgReader, field).ConfigureAwait(false);
         var result = new float[arr.Length];
@@ -665,7 +672,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
                 double d => (float)d,
                 int n => n,
                 long n => n,
-                null => 0f,
+                null => nullValue,
                 _ => Convert.ToSingle(v, CultureInfo.InvariantCulture),
             };
         }

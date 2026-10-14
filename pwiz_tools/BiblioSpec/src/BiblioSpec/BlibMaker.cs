@@ -779,6 +779,18 @@ public class BlibMaker : IDisposable
     }
 
     /// <summary>
+    /// Drops every <see cref="OptionalColumn"/> the library being built has.
+    /// </summary>
+    public void RemoveOptionalColumns()
+    {
+        foreach (var column in BlibSchema.OptionalRefSpectraColumns.Concat(BlibSchema.OptionalProteinsColumns))
+        {
+            if (TableColumnExists("main", column.Table, column.Name))
+                SqlStmt($"ALTER TABLE {column.Table} DROP COLUMN {column.Name}");
+        }
+    }
+
+    /// <summary>
     /// cpp <c>getFileId</c>. Looks up an existing SpectrumSourceFiles row by fileName,
     /// caching the (id, cutoff) pair. If the cached cutoff disagrees, the row's cutoff is
     /// reset to -1 (cpp parity at BlibMaker.cpp:1037-1041).

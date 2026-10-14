@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -143,7 +144,7 @@ namespace pwiz.Skyline.Model.Lib
         /// Removes the precursors whose entry in a library reporting <see cref="Level"/> fails the
         /// cutoff, and the peptides left with no precursors. A node that loses children stops
         /// auto-managing them, so a later settings change does not add them back. A precursor that
-        /// no such library contains is kept. Only <paramref name="peptideGroups"/> are filtered.
+        /// no such library contains follows its peptide. Only <paramref name="peptideGroups"/> are filtered.
         /// </summary>
         public SrmDocument FilterDocument(SrmDocument document, IEnumerable<PeptideGroupDocNode> peptideGroups)
         {
@@ -168,9 +169,7 @@ namespace pwiz.Skyline.Model.Lib
                 var newPeptides = new List<DocNode>();
                 foreach (var nodePep in nodePepGroup.Molecules)
                 {
-                    var keptGroups = nodePep.TransitionGroups
-                        .Where(nodeGroup => Accepts(libraries, nodeGroup.GetLibKey(settings, nodePep)))
-                        .Cast<DocNode>().ToList();
+                    var keptGroups = GetKeptTransitionGroups(libraries, settings, nodePep);
                     if (keptGroups.Count == nodePep.Children.Count)
                     {
                         newPeptides.Add(nodePep);
@@ -200,10 +199,27 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// True unless a library that reports <see cref="Level"/> contains the key and none of
-        /// those libraries' entries pass.
+        /// The precursors of <paramref name="nodePep"/> to keep. A precursor no library contains,
+        /// such as a heavy-labeled one, follows its peptide: it is kept when one of the peptide's
+        /// library precursors passes, or when none of them is in a library.
         /// </summary>
-        private bool Accepts(IList<Library> libraries, LibKey key)
+        private List<DocNode> GetKeptTransitionGroups(IList<Library> libraries, SrmSettings settings,
+            PeptideDocNode nodePep)
+        {
+            var verdicts = nodePep.TransitionGroups
+                .Select(nodeGroup => Tuple.Create(nodeGroup, Accepts(libraries, nodeGroup.GetLibKey(settings, nodePep))))
+                .ToList();
+            bool keepUnlisted = verdicts.All(verdict => !verdict.Item2.HasValue) ||
+                                verdicts.Any(verdict => verdict.Item2 == true);
+            return verdicts.Where(verdict => verdict.Item2 ?? keepUnlisted)
+                .Select(verdict => (DocNode) verdict.Item1).ToList();
+        }
+
+        /// <summary>
+        /// Whether a library that reports <see cref="Level"/> has an entry for the key that passes,
+        /// or null when none of those libraries contains the key.
+        /// </summary>
+        private bool? Accepts(IList<Library> libraries, LibKey key)
         {
             bool inLibrary = false;
             foreach (var library in libraries)
@@ -214,7 +230,7 @@ namespace pwiz.Skyline.Model.Lib
                     return true;
                 inLibrary = true;
             }
-            return !inLibrary;
+            return inLibrary ? false : (bool?) null;
         }
     }
 }

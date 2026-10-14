@@ -260,10 +260,13 @@ public abstract class BuildParser : IDisposable
     /// <summary>
     /// Adds an <see cref="OptionalColumn"/> to the library so the values this reader sets on
     /// <see cref="PSM"/> or <see cref="Protein"/> are written. Call it only when the input has
-    /// values for the column, before the spectra are inserted.
+    /// values for the column, before the spectra are inserted. Does nothing when the library
+    /// cannot hold experiment-wide values (see <see cref="BlibBuilder.AllowsOptionalColumns"/>).
     /// </summary>
     protected internal void EnableOptionalColumn(OptionalColumn column)
     {
+        if (!BlibMaker.AllowsOptionalColumns)
+            return;
         BlibMaker.AddOptionalColumn(column);
         PrepareInsertSpectrumStatement();
     }
