@@ -152,10 +152,11 @@ namespace pwiz.Osprey.Tasks
         /// required; the caller's null check is what decides whether this leg releases at all,
         /// so a null reaching here is a wiring fault and throws.
         ///
-        /// <para><paramref name="gapFillByFile"/> is optional, and NOT because "planning was
-        /// skipped" - skipping planning leaves the non-null empty initializer. It is optional
-        /// because the bundle-adopt path sources it from the reconciliation envelope, which can
-        /// carry nothing.</para>
+        /// <para><paramref name="gapFillByFile"/> is optional, and no production caller passes it:
+        /// the planner no longer keeps an all-runs gap-fill map (issue #4664), and by the
+        /// argument above every target it would add is already in
+        /// <paramref name="firstPassBaseIds"/>. The union is kept, and unit-tested, so that
+        /// argument stays checkable rather than assumed.</para>
         /// </summary>
         public static HashSet<uint> BuildRetainedBaseIds(
             HashSet<uint> firstPassBaseIds,
