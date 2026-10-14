@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Devices xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Devices.xsd">
+	<Version>1</Version>
+	<Device DeviceID="1">
+		<Name>QTOF</Name>
+		<ModelNumber>G19XX</ModelNumber>
+		<OrdinalNumber>1</OrdinalNumber>
+		<SerialNumber>String</SerialNumber>
+		<Type>6</Type>
+		<StoredDataType>8</StoredDataType>
+		<Delay>0</Delay>
+	</Device>
+</Devices>

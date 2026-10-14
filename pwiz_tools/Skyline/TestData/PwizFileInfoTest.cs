@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestData
 
             // Sciex .wiff2 file
             string wiff2Ext = ExtensionTestContext.CanImportAbWiff2 ? ".wiff2" : "-sample-centroid.mzML";
-            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api" + wiff2Ext),
+            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "swath.api" + wiff2Ext),
                 "X500R QTOF", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
 
             // MzWiff generated mzXML files
@@ -92,18 +92,19 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        // PressureTrace1.wiff is read out of the shared vendor data directory through the
-        // SAME Sciex reader TestInstrumentInfo above is excluded for - the legacy .wiff path
-        // rather than .wiff2, which is why a sweep looking for "wiff2" missed it. The other
-        // vendors here are not the problem: Thermo shared data survives six concurrent
-        // containers at 100 runs each. Excluded on the .NET 8 line for the same reason.
+        // PressureTrace1.wiff, below, is read out of the shared vendor data directory through the
+        // SAME Sciex reader the two tests above are excluded for - the legacy .wiff path rather than
+        // .wiff2, which is why a sweep looking for "wiff2" missed it and why this test killed a
+        // worker within the hour of that sweep reporting nothing else exposed.
+        // The other vendors here are not the problem: Thermo shared data survives six concurrent
+        // containers at 100 runs each.
         [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void TestTicChromatogram()
         {
             if (Skyline.Program.NoVendorReaders)
                 return;
 
-            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "PressureTrace1.wiff"), 0, 0);
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "PressureTrace1.wiff"), 0, 0);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "ImsSynthAllIons.d"), 49, 369032);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "GFb_4Scan_TimeSegs_1530_100ng.d"), 63, 56163792);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Bruker, "Hela_QC_PASEF_Slot1-first-6-frames.d"), 1, 23340182);
@@ -327,13 +328,13 @@ namespace pwiz.SkylineTestData
         }
 
         // Reads swath.api.wiff2 out of the shared vendor data directory, the same file
-        // TestInstrumentInfo above is excluded for. A second process opening it while another
-        // holds it does not fail cleanly - it takes the worker down, with no managed exception
-        // and no result ever produced. Observed here on 2026-08-28: a worker stopped responding
-        // running this test and was given up on, costing the run a worker for its remainder.
-        // Only across the Docker volume mount, so nothing a Skyline user does is affected.
-        // The .NET 8 line excluded this test for the same reason after losing five workers to
-        // it across two nightly runs.
+        // TestInstrumentInfo above is excluded for. On net8 that goes through the Sciex SDK
+        // shimmed into a side-by-side load context, and a second process opening the file while
+        // another holds it does not fail - it takes the process down, with no managed exception
+        // and a container exit code of -1. Five workers were lost to this test in two nightly
+        // runs, on four different languages, while the run reported no failures.
+        // Only across the Docker volume mount: four processes on local NTFS share the file
+        // 40 times each without trouble, so nothing a Skyline user does is affected.
         [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void TestInstrumentSerialNumbers()
         {
@@ -350,7 +351,7 @@ namespace pwiz.SkylineTestData
             var testFilesDir = TestFilesDirs[0];
 
             if (ExtensionTestContext.CanImportAbWiff2)
-                VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
+                VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Sciex, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
 
             if (ExtensionTestContext.CanImportAbWiff)
                 VerifySerialNumber(testFilesDir.GetTestPath("051309_digestion.wiff"), "U016050603");

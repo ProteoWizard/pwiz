@@ -1813,15 +1813,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error copying external tools from previous installation.
-        /// </summary>
-        public static string Program_CopyOldTools_Error_copying_external_tools_from_previous_installation {
-            get {
-                return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Copying external tools from a previous installation.
         /// </summary>
         public static string Program_Main_Copying_external_tools_from_a_previous_installation {
@@ -1839,6 +1830,15 @@ namespace pwiz.Skyline {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The Parquet.dll at {0} is not the version {1} requires. Reinstall {1}..
+        /// </summary>
+        public static string Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__ {
+            get {
+                return ResourceManager.GetString("Program_Main_The_Parquet_dll_at__0__is_not_the_version__1__requires__Reinstall__1__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to You are attempting to run a 64-bit version of {0} on a 32-bit OS. Please install the 32-bit version..
         /// </summary>
@@ -3692,23 +3692,14 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Upgrading to {0} (downloading {1} of {2}).
+        ///   Looks up a localized string similar to The update information at {0} could not be read..
         /// </summary>
-        public static string UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__ {
+        public static string UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_ {
             get {
-                return ResourceManager.GetString("UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__", resourceCulture);
+                return ResourceManager.GetString("UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Upgrading {0}.
-        /// </summary>
-        public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
-            get {
-                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}..
         /// </summary>

@@ -1422,9 +1422,6 @@ Supported values include:
   <data name="ImportFastaControl_ImportFasta_Please_enter_a_valid_number_of_decoys_per_target_greater_than_0_" xml:space="preserve">
     <value>Please enter a valid number of decoys per target greater than 0.</value>
   </data>
-  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
-    <value>Failed attempting to upgrade.</value>
-  </data>
   <data name="IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range" xml:space="preserve">
     <value>Isolation window margins cover the entire isolation window at the extremes of the instrument range.</value>
   </data>

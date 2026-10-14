@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2020 University of Washington - Seattle, WA
  * 
@@ -38,6 +39,8 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -92,11 +95,19 @@ namespace pwiz.SkylineTestFunctional
             public Dictionary<string, string> AdditionalSettings { get; set; }
             public ExpectedResults ExpectedResults { get; set; }
             public ExpectedResults ExpectedResultsFinal { get; set; }
+            /// <summary>
+            /// Target plus decoy hits the search engine reports scoring for each file of the final search,
+            /// in file order. When set, a failed search is repeated, and so is a final search reporting
+            /// other counts.
+            /// </summary>
+            public int[] ExpectedScoredHits { get; set; }
             public Action BeforeSettingsAction { get; set; }
             public Action ExpectedErrorAction { get; set; }
             public bool HasMissingDependencies { get; private set; }
             public bool TestDependencyErrors { get; set; }
         }
+
+        private const int MAX_SEARCH_ATTEMPTS = 3;
 
         DdaTestSettings TestSettings;
 
@@ -118,11 +129,51 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(133, 334, 396, 1188, 164)
+                // Counts for the standalone MS Amanda (3.0.22.864) + Percolator; only percolator-validated
+                // PSMs enter the library, so these are lower than the retired in-process integration's.
+                ExpectedResultsFinal = new ExpectedResults(79, 192, 241, 723, 93),
+                // TODO: Remove ExpectedScoredHits, and with it the search retry, once an MS Amanda release fixes
+                // the race in its lazy static Peptide._aminoAcids initialization
+                // (https://github.com/hgb-bin-proteomics/MSAmanda/issues/9). Threads scoring during MS Amanda's
+                // startup can silently lose candidates: on a 32-thread machine about 1 in 6 searches came up
+                // short, which shows in the hits MS Amanda reports scoring ("Scored 158 peptide hits and 46
+                // decoy peptide hits" for the first file), so a short search is repeated.
+                ExpectedScoredHits = new[] { 158 + 46, 121 + 34 }
             };
 
             RunFunctionalTest();
             Assert.IsFalse(IsRecordMode);
+        }
+
+        /// <summary>
+        /// The search settings page collects a maximum number of variable modifications per peptide and
+        /// hands it to every search engine through SetModifications. MS Amanda takes it as MaxNoDynModifs
+        /// in the settings XML the wrapper generates, and nothing else in the pipeline reads that value
+        /// back, so a settings XML built without it would look correct everywhere but the search.
+        /// </summary>
+        [TestMethod]
+        public void TestMaxVariableModsReachesSettingsXml()
+        {
+            var mods = new[]
+            {
+                new StaticMod(@"Carbamidomethyl (C)", @"C", null, @"C2H3ON"),
+                new StaticMod(@"Oxidation (M)", @"M", null, @"O").ChangeVariable(true)
+            };
+
+            using (var searchEngine = new MSAmandaSearchWrapper())
+            {
+                // One parameter, one control: MaxNoDynModifs is driven by the max variable mods
+                // setting, so it must not also appear in the additional settings grid.
+                Assert.IsFalse(searchEngine.AdditionalSettings.ContainsKey(@"MaxNoDynModifs"),
+                    "MaxNoDynModifs should not be an additional setting");
+
+                foreach (int maxVariableMods in new[] { 0, 2, 9 })
+                {
+                    searchEngine.SetModifications(mods, maxVariableMods);
+                    AssertEx.Contains(searchEngine.BuildSettingsXml(), string.Format(CultureInfo.InvariantCulture,
+                        @"<MaxNoDynModifs>{0}</MaxNoDynModifs>", maxVariableMods));
+                }
+            }
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -161,7 +212,7 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_Low_resolution,
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(145, 338, 392, 1176, 165)
+                ExpectedResultsFinal = new ExpectedResults(106, 249, 301, 903, 121) // net8 Comet: FixPercolatorPepXml now excludes Percolator-unmatched PSMs (was 145, 338, 392, 1176, 165)
             };
 
             RunFunctionalTest();
@@ -828,7 +879,7 @@ namespace pwiz.SkylineTestFunctional
             const string MSFRAGGER_PRESET_NAME = "Imported MSFragger";
 
             // Create a temp Comet .params file
-            var cometParamsPath = Path.Combine(TestContext.TestDir, "test_comet.params");
+            var cometParamsPath = Path.Combine(TestContext.TestRunDirectory, "test_comet.params");
             File.WriteAllText(cometParamsPath, string.Join("\r\n",
                 @"peptide_mass_tolerance = 20.0",
                 @"peptide_mass_units = 2",
@@ -849,7 +900,7 @@ namespace pwiz.SkylineTestFunctional
                 @"1.  Trypsin                1      KR          P"));
 
             // Create a temp MSFragger .params file
-            var msFraggerParamsPath = Path.Combine(TestContext.TestDir, "test_fragger.params");
+            var msFraggerParamsPath = Path.Combine(TestContext.TestRunDirectory, "test_fragger.params");
             File.WriteAllText(msFraggerParamsPath, string.Join("\r\n",
                 @"precursor_true_tolerance = 20",
                 @"precursor_true_units = 1",
@@ -934,7 +985,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestEditListImportShare()
         {
-            var sharePath = Path.Combine(TestContext.TestDir, "shared_presets.skysp");
+            var sharePath = Path.Combine(TestContext.TestRunDirectory, "shared_presets.skysp");
 
             // Open Edit List dialog from the preset combo's "Edit list..." option
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<SearchSettingsPreset>, SearchSettingsPreset>>(
@@ -1197,7 +1248,7 @@ namespace pwiz.SkylineTestFunctional
                 //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
@@ -1221,7 +1272,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (TestSettings.SearchEngine != SearchEngine.MSAmanda)
+                // Every engine reaching this point may still need the generic download-
+                // confirmation dialog handled. MSFragger's binary is downloaded by
+                // MsFraggerDownloadDlg above, but its Java and Crux dependencies still come
+                // through here; MSAmanda and the other engines download their tool here too
+                // (all on-demand on net8). Excluding any engine leaves its dialog unhandled.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
@@ -1265,8 +1320,21 @@ namespace pwiz.SkylineTestFunctional
 
             // Let the first search complete successfully
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+            searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value, null);
             Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText);
             searchSucceeded = null;
+
+            // The diagnosis for a search Percolator scored nothing in, now that percolator is installed.
+            // It runs percolator, which writes its help to stderr, and this used to deadlock. A hang is
+            // killed after 30 seconds with the same message, so the time taken is what tells them apart.
+            if (TestSettings.SearchEngine == SearchEngine.MSAmanda)
+            {
+                var diagnosisTime = Stopwatch.StartNew();
+                AssertEx.AreEqual(string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing,
+                    MSAmandaSearchWrapper.PercolatorDirectory), MSAmandaSearchWrapper.DiagnosePercolator());
+                AssertEx.IsTrue(diagnosisTime.Elapsed < TimeSpan.FromSeconds(15),
+                    $@"Percolator diagnosis took {diagnosisTime.Elapsed.TotalSeconds:F1} seconds");
+            }
 
             // Verify original data source filenames are preserved when going back after a successful search
             var expectedDataSources = SearchFiles.Take(1).Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
@@ -1286,11 +1354,11 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Start a second search, test cannot-close-during-search, then cancel
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
 
-            SkylineWindow.BeginInvoke(new Action(importPeptideSearchDlg.Close)); // try to close (don't wait for return)
+            SkylineWindow.BeginInvoke(importPeptideSearchDlg.Close); // try to close (don't wait for return)
             var cannotCloseDuringSearchDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_,
                 cannotCloseDuringSearchDlg.Message);
@@ -1359,6 +1427,8 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                searchSucceeded = RetrySearchWhileScoredHitsDiffer(importPeptideSearchDlg, searchSucceeded.Value,
+                    TestSettings.ExpectedScoredHits);
 
                 RunUI(() =>
                 {
@@ -1444,6 +1514,63 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify the preset can be loaded in a new wizard with all settings restored
             VerifyPresetInNewWizard(SEARCH_PRESET_NAME);
+        }
+
+        /// <summary>
+        /// Repeats a search, from the search settings page, while it fails or the search engine reports
+        /// scoring other than <paramref name="expectedScoredHits"/>. Applies only to tests that set
+        /// <see cref="DdaTestSettings.ExpectedScoredHits"/>. A search too short of hits can fail outright,
+        /// when Percolator has too few to score. After the last attempt the test goes on, so a search that
+        /// keeps failing or coming up short still fails.
+        /// </summary>
+        /// <param name="importPeptideSearchDlg">The wizard, showing the search that just finished</param>
+        /// <param name="succeeded">Whether that search succeeded</param>
+        /// <param name="expectedScoredHits">Scored hits per file, or null to repeat only a failed search</param>
+        /// <returns>Whether the last search attempted succeeded</returns>
+        private bool RetrySearchWhileScoredHitsDiffer(ImportPeptideSearchDlg importPeptideSearchDlg, bool succeeded,
+            int[] expectedScoredHits)
+        {
+            if (TestSettings.ExpectedScoredHits == null)
+                return succeeded;
+
+            for (int attempt = 1; attempt < MAX_SEARCH_ATTEMPTS; attempt++)
+            {
+                string searchLog = null;
+                RunUI(() => searchLog = importPeptideSearchDlg.SearchControl.LogText);
+                var scoredHits = GetScoredHits(searchLog);
+                if (IsRecordMode && expectedScoredHits != null)
+                {
+                    Console.WriteLine($@"ExpectedScoredHits = new[] {{ {string.Join(@", ", scoredHits)} }}");
+                    return succeeded;
+                }
+                if (succeeded && (expectedScoredHits == null || scoredHits.SequenceEqual(expectedScoredHits)))
+                    return true;
+
+                // Report the repeat, and the log of a failed attempt, so neither is lost to the retry.
+                if (!succeeded)
+                    Console.WriteLine(searchLog);
+                Console.WriteLine($@"Search succeeded={succeeded}, scored {string.Join(@", ", scoredHits)} hits, expected {string.Join(@", ", expectedScoredHits ?? Array.Empty<int>())} - repeating search");
+                bool? searchSucceeded = null;
+                void OnSearchFinished(bool success) => searchSucceeded = success;
+                RunUI(() =>
+                {
+                    importPeptideSearchDlg.SearchControl.SearchFinished += OnSearchFinished;
+                    AssertEx.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                    AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                });
+                SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
+                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished -= OnSearchFinished);
+                succeeded = searchSucceeded.Value;
+            }
+            return succeeded;
+        }
+
+        private static List<int> GetScoredHits(string searchLog)
+        {
+            // MS Amanda's own log line, e.g. "Scored 158 peptide hits and 46 decoy peptide hits in 0.12 sec"
+            return Regex.Matches(searchLog, @"Scored (\d+) peptide hits and (\d+) decoy peptide hits")
+                .Select(match => int.Parse(match.Groups[1].Value) + int.Parse(match.Groups[2].Value)).ToList();
         }
 
         private void VerifyPresetInNewWizard(string presetName)
@@ -1550,7 +1677,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Rerun search
             searchSucceeded = null;
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)

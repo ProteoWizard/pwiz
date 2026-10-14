@@ -43,6 +43,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
@@ -74,7 +75,9 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public MzTolerance PrecursorTolerance;
-            public MzTolerance FragmentTolerance;
+            // No fragment tolerance here: Comet derives its fragment binning from the MS2 analyzer
+            // resolution (see the search settings page below), so there is nothing per-instrument
+            // to set. Both instruments here are high-resolution MS2.
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
 
             // This may be necessary in the future if the default settings change but we don't want the tutorial results to change.
@@ -94,6 +97,9 @@ namespace TestPerf
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
             public PointF ChromatogramClickPoint;
+            // Peptide to select for the manual-review chromatogram click and screenshots.
+            // Instrument-specific because the search results differ between instruments.
+            public string ExemplarPeptide;
 
             public string FastaPathForSearch => "DDA_search\\nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta";
             public string FastaPath =>
@@ -145,6 +151,7 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
+                ExemplarPeptide = "TDINQALNR",
             };
 
             TestTtofData();
@@ -164,6 +171,7 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
+                ExemplarPeptide = "TDINQALNR",
             };
 
             if (!IsCoverShotMode)
@@ -189,7 +197,6 @@ namespace TestPerf
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
                 PrecursorTolerance = new MzTolerance(30, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(40, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF
             });
 
@@ -204,7 +211,9 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
-                ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
+                // AIDLIDEAASSIR (CLPB_ECOLI); TDINQALNR is no longer a net8 target here.
+                ChromatogramClickPoint = new PointF(48.14f, 2.0e6f),
+                ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
             if (!IsCoverShotMode)
@@ -224,7 +233,8 @@ namespace TestPerf
                 IrtFilterText = "iRT",
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
-                ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
+                ChromatogramClickPoint = new PointF(48.14f, 2.0e6f),
+                ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
             if (!IsCoverShotMode)
@@ -250,7 +260,6 @@ namespace TestPerf
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                 PrecursorTolerance = new MzTolerance(10, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(20, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.QExactive
             });
 
@@ -321,6 +330,22 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         protected override void DoTest()
+        {
+            try
+            {
+                DoTutorialSteps();
+            }
+            finally
+            {
+                // Cleanup output files in persistent dir, even when the test fails: the DIA-SWATH tutorial
+                // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
+                // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+                if (!IsRecordMode)
+                    CleanUpPersistentDir(GetTestPath("DIA\\"));
+            }
+        }
+
+        private void DoTutorialSteps()
         {
             Assert.IsNotNull(_expectedValues);
 
@@ -541,9 +566,19 @@ namespace TestPerf
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                // Search with Comet instead of MSAmanda. Comet's output is thread/machine-
+                // deterministic (deterministic I/L tiebreak + fixed pin ordering), so the library
+                // count is stable across machines, unlike MSAmanda whose parallel ordering drives
+                // a +/-2 per-machine drift. Comet takes no fragment tolerance: the MS2 tolerance
+                // box is disabled for Comet and CometSearchEngine.SetFragmentIonMassTolerance is a
+                // no-op, because fragment binning comes from the MS2 analyzer resolution set below.
+                importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.Comet;
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b,y";
+                importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_High_resolution;
+                // Report only the top PSM per pseudo-spectrum: keeps the Percolator pin small (much
+                // faster FDR) and is sufficient for building the library from best matches.
+                importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(@"num_output_lines", @"1");
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
@@ -569,12 +604,23 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
+
+            // Run the search. Click asynchronously so the test thread stays free to dismiss the
+            // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
+            // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
+            // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+
+            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+            if (downloaderDlg != null)
+            {
+                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                WaitForClosedForm(waitDlg);
+            }
 
             try
             {
@@ -678,7 +724,6 @@ namespace TestPerf
                         { "collinsb_I180316_002", 41 }
                     }))
             {
-                CleanUpPersistentDir(diaDir);
                 return;
             }
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
@@ -754,14 +799,29 @@ namespace TestPerf
             RunUIForScreenShot(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode);
             PauseForScreenShot("Manual review window layout with protein selected");
 
-            FindNode("TDINQALNR");
+            FindNode(_analysisValues.ExemplarPeptide);
             WaitForGraphs();
             PauseForScreenShot("Manual review window layout with peptide selected");
 
             FindNode("_HUMAN");
             WaitForGraphs();
-            FindNode("TDINQALNR");
-            RunUI(SkylineWindow.AutoZoomBestPeak);
+            FindNode(_analysisValues.ExemplarPeptide);
+            // Select a single precursor and show individual transitions. With a multi-precursor peptide
+            // selected the chromatogram graph shows only one per-precursor total curve (even in "all"
+            // mode); totals carry no full-scan info, so the tracking dot the click below needs never
+            // appears. Drilling into one precursor shows its individual transition curves - each tied to a
+            // scan - which enables the tracking dot. (A single-precursor peptide already shows these, so
+            // this is a no-op there.) The transition-display mode is also a persisted setting that can
+            // otherwise leak in as "total" from an earlier test, so force it to "all".
+            RunUI(() =>
+            {
+                var pepPath = SkylineWindow.SelectedPath;
+                var nodePep = SkylineWindow.Document.FindNode(pepPath) as PeptideDocNode;
+                if (nodePep != null && nodePep.TransitionGroupCount > 0)
+                    SkylineWindow.SelectedPath = new IdentityPath(pepPath, nodePep.TransitionGroups.First().Id);
+                SkylineWindow.ShowAllTransitions();
+                SkylineWindow.AutoZoomBestPeak();
+            });
             WaitForGraphs();
             PauseForChromGraphScreenShot("Snip just one chromatogram pane", "1_SW-A");
 
@@ -848,13 +908,6 @@ namespace TestPerf
                 TakeCoverShot();
             }
 
-            // Cleanup output files in persistent dir
-            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
-            if (!IsRecordMode)
-            {
-                CleanUpPersistentDir(diaDir);
-            }
-
             if (IsRecordMode)
             {
                 Assert.IsNotNull(_expectedValues);
@@ -870,8 +923,14 @@ namespace TestPerf
 
         private static void CleanUpPersistentDir(string diaDir)
         {
-            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
-                FileEx.SafeDelete(file);
+            // Remove every search-generated file so the persistent dir returns to its downloaded
+            // state (the framework fails the test if the persistent dir is left modified).
+            // "*-diaumpire*" catches the pseudo-spectra plus all per-file search outputs
+            // (.mzid.gz for MSAmanda; -percolator.pepXML and _pin.tsv for Comet); the remaining
+            // globs catch Comet/crux's fixed-name intermediates (comet.*, make-pin.pin, percolator.*).
+            foreach (var pattern in new[] { "*-diaumpire*", "comet.*", "make-pin.pin", "percolator.*", "crux.*" })
+                foreach (var file in Directory.GetFiles(diaDir, pattern))
+                    FileEx.SafeDelete(file);
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)

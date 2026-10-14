@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="26121afb-0477-4322-b90c-9977aa73ff06" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core subset source tarball</name>
+  <description />
+  <settings ref="ProteoWizard_GitHubReportingConfig">
+    <options>
+      <option name="allowExternalStatus" value="true" />
+      <option name="artifactRules" value="build-linux-x86_64/*-src-*.tar.bz2&#xA;build-linux-x86_64/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <build-runners>
+      <runner id="RUNNER_simpleRunner_129" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.sh" />
+          <param name="command.parameters" value="pwiz-src.tar.bz2 pwiz-src-without-l.tar.bz2 pwiz-src-without-lt.tar.bz2 pwiz-src-without-ltv.tar.bz2 pwiz-src-without-lv.tar.bz2 pwiz-src-without-t.tar.bz2 pwiz-src-without-tv.tar.bz2 pwiz-src-without-v.tar.bz2 -j%env.NUMBER_OF_CORES% address-model=64 toolset=gcc-5" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_82" name="" type="ProteoWizard_UploadArtifactMetadataToSourceForge">
+        <parameters>
+          <param name="WINDOWS_CHECKOUT_DIR" value="Z:\pwiz" />
+          <param name="WINDOWS_SKYLINE_RELEASE_CHECKOUT_DIR" value="C:\skyline_release" />
+          <param name="env.NUMBER_OF_CORES" value="%teamcity.agent.hardware.cpuCount%" />
+          <param name="env.PYTHON_HOME" value="C:\Python38" />
+          <param name="system.artifact.paths" value="build-linux-x86_64/*-src-*.tar.bz2,build-linux-x86_64/VERSION" />
+          <param name="teamcity.activeBuildBranch.age.hours" value="0" />
+          <param name="teamcity.activeVcsBranch.age.days" value="3" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_138" name="teamcity.agent.jvm.os.name" value="Linux" />
+      <equals id="RQ_139" name="teamcity.agent.jvm.os.arch" value="amd64" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="retryBuildTrigger" type="retryBuildTrigger">
+        <parameters>
+          <param name="branchFilter" value="+:*" />
+          <param name="enqueueTimeout" value="120" />
+          <param name="reRunBuildWithTheSameRevisions" value="true" />
+          <param name="retryAttempts" value="3" />
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+    <cleanup>
+      <policy type="builds" cleanup-level="ARTIFACTS">
+        <parameters>
+          <param name="artifactPatterns" value="+:**/*" />
+          <param name="keepBuilds.count" value="3" />
+        </parameters>
+      </policy>
+    </cleanup>
+  </settings>
+</build-type>
+

@@ -332,14 +332,21 @@ namespace pwiz.Skyline
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
                         using var fileStream = File.OpenRead(path);
-                        using var progressStream = new ProgressStream(fileStream);
+                        // The hash is computed under the read-ahead stream, so it happens on the reading
+                        // thread as each block comes off the disk instead of on the thread parsing the XML
+                        using var hashingStream = new HashingStream(fileStream, true);
+                        // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+                        using var sequentialReadStream = new SequentialReadStream(hashingStream, true);
+                        using var progressStream = new ProgressStream(sequentialReadStream);
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
-                        using var hashingStream = new HashingStream(progressStream, true);
                         // Wrap stream in XmlReader so that BaseUri is known
-                        var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8),
+                        var reader = XmlReader.Create(new StreamReader(progressStream, Encoding.UTF8),
                             new XmlReaderSettings { IgnoreWhitespace = true }, path);
                         XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                         document = (SrmDocument) ser.Deserialize(reader);
+                        // The parser can stop before the end of the file, and the reading thread may still be hashing.
+                        // Reading to the end waits for that thread to hash the last block.
+                        sequentialReadStream.CopyTo(Stream.Null);
                         var skylineDocumentHash = hashingStream.Done();
 
                         try
@@ -1683,7 +1690,7 @@ namespace pwiz.Skyline
 
         private DocumentFormat? GetFileFormatOnDisk()
         {
-            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
+            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : null;
         }
 
         public bool ShareDocument(string fileDest, ShareType shareType, bool useFileSaver = true, int zipFileMaxSegmentSize = 0)
@@ -4172,7 +4179,12 @@ namespace pwiz.Skyline
             }
 
             // Validate folder path matches
+            // EscapeDataString is NOT the replacement here: folderPath is a URI AbsolutePath, so its
+            // '/' separators have to survive escaping or the Contains match can never succeed.
+            // Retiring this properly means building the comparison from Uri parts.
+#pragma warning disable SYSLIB0013
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
+#pragma warning restore SYSLIB0013
                 return null; // Folder path mismatch
 
             // Validate upload permissions

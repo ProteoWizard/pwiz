@@ -112,16 +112,7 @@ namespace pwiz.Osprey.Chromatography
         /// <returns>A fitted RTCalibration for predicting measured RT from library RT.</returns>
         public RTCalibration Fit(double[] libraryRts, double[] measuredRts)
         {
-            if (libraryRts == null || measuredRts == null)
-                throw new ArgumentNullException(libraryRts == null ? "libraryRts" : "measuredRts");
-            if (libraryRts.Length != measuredRts.Length)
-                throw new ArgumentException(string.Format(
-                    "RT arrays must have same length: {0} vs {1}",
-                    libraryRts.Length, measuredRts.Length));
-            if (libraryRts.Length < _config.MinPoints)
-                throw new ArgumentException(string.Format(
-                    "Need at least {0} calibration points, got {1}",
-                    _config.MinPoints, libraryRts.Length));
+            RTCalibration.ValidateRtPairs(libraryRts, measuredRts, nameof(measuredRts), _config.MinPoints);
 
             // Sort by library RT (stable). Rust's slice::sort_by is stable; C#
             // Array.Sort with a Comparison<T> is introsort, which is UNSTABLE
@@ -537,12 +528,7 @@ namespace pwiz.Osprey.Chromatography
         public static RTCalibration FromModelParams(double[] libraryRts, double[] fittedRts,
             double[] absResiduals, double residualSD)
         {
-            if (libraryRts == null || fittedRts == null)
-                throw new ArgumentNullException(libraryRts == null ? "libraryRts" : "fittedRts");
-            if (libraryRts.Length != fittedRts.Length)
-                throw new ArgumentException("libraryRts and fittedRts must have same length");
-            if (libraryRts.Length == 0)
-                throw new ArgumentException("Model params have no calibration points");
+            ValidateRtPairs(libraryRts, fittedRts, nameof(fittedRts), 1);
 
             // Handle backwards compatibility: if absResiduals not present, use uniform residualSD
             double[] residuals = absResiduals != null && absResiduals.Length == libraryRts.Length
@@ -596,6 +582,30 @@ namespace pwiz.Osprey.Chromatography
             for (int i = 0; i < length; i++)
                 arr[i] = value;
             return arr;
+        }
+
+        /// <summary>
+        /// Argument checks shared by <see cref="RTCalibrator.Fit"/> and
+        /// <see cref="FromModelParams"/>: both arrays present, paired one to one, and at least
+        /// <paramref name="minPoints"/> long.
+        /// </summary>
+        internal static void ValidateRtPairs(double[] libraryRts, double[] pairedRts, string pairedName,
+            int minPoints)
+        {
+            if (libraryRts == null)
+                throw new ArgumentNullException(nameof(libraryRts));
+            if (pairedRts == null)
+                throw new ArgumentNullException(pairedName);
+            if (libraryRts.Length != pairedRts.Length)
+            {
+                throw new ArgumentException(string.Format(@"{0} and {1} must have the same length: {2} vs {3}",
+                    nameof(libraryRts), pairedName, libraryRts.Length, pairedRts.Length));
+            }
+            if (libraryRts.Length < minPoints)
+            {
+                throw new ArgumentException(string.Format(@"Need at least {0} calibration points, got {1}",
+                    minPoints, libraryRts.Length));
+            }
         }
     }
 

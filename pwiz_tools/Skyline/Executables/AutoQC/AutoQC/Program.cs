@@ -19,19 +19,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using log4net;
-using log4net.Appender;
 using log4net.Config;
-using log4net.Repository.Hierarchy;
 using pwiz.Common;
 using SharedBatch;
 using Resources = AutoQC.Properties.Resources;
@@ -104,8 +99,6 @@ namespace AutoQC
                         MessageBoxIcon.Error);
                     return;
                 }
-
-                InitializeSecurityProtocol();
 
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
@@ -311,15 +304,16 @@ namespace AutoQC
             return true;
         }
 
+        // ClickOnce (System.Deployment) is net472-only; on net8 the app is never network-deployed.
+        private static bool IsNetworkDeployed =>
+            false;
+
         private static string GetFirstArg(string[] args)
         {
             string arg;
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
-                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-                arg = activationData != null && activationData.Length > 0
-                    ? activationData[0]
-                    : string.Empty;
+                arg = string.Empty;
             }
             else
             {
@@ -351,7 +345,7 @@ namespace AutoQC
                 var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 var configFileIconPath = Path.Combine(baseDirectory, "AutoQC_configs.ico");
 
-                if (ApplicationDeployment.IsNetworkDeployed)
+                if (IsNetworkDeployed)
                 {
                     FileUtil.AddFileTypeClickOnce(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
                         Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
@@ -370,7 +364,7 @@ namespace AutoQC
         {
             if (!Settings.Default.KeepAutoQcRunning) return;
 
-            if (ApplicationDeployment.IsNetworkDeployed)
+            if (IsNetworkDeployed)
             {
                 if (!string.IsNullOrEmpty(_install.Version) && !_install.BareVersion.Equals(_lastInstalledVersion))
                 {
@@ -387,19 +381,6 @@ namespace AutoQC
             }
         }
 
-        public static string GetProgramLogFilePath()
-        {
-            var repository = ((Hierarchy) LogManager.GetRepository());
-            FileAppender rootAppender = null;
-            if (repository != null)
-            {
-                rootAppender = repository.Root.Appenders.OfType<FileAppender>()
-                    .FirstOrDefault();
-            }
-
-            return rootAppender != null ? rootAppender.File : string.Empty;
-        }
-
         public static string Version()
         {
             return $"{AppName} {_install.BareVersion}";
@@ -412,12 +393,6 @@ namespace AutoQC
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var iconPath = Path.Combine(baseDirectory, "AutoQC_release.ico");
             return  System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
-        }
-
-        private static void InitializeSecurityProtocol()
-        {
-            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
         }
 
         public static void AddTestException(Exception exception)
@@ -487,11 +462,6 @@ namespace AutoQC
         public static Install FromAssembly()
         {
             string productVersion = null;
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                productVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            }
-            else
             {
                 try
                 {

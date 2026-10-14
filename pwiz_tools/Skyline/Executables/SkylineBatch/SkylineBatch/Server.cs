@@ -2,7 +2,6 @@ using SharedBatch;
 using System;
 using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -44,7 +43,7 @@ namespace SkylineBatch
 
                 try
                 {
-                    httpClient.DownloadFile(remoteUri, downloadPath, expectedSize > 0 ? expectedSize : (long?)null);
+                    httpClient.DownloadFile(remoteUri, downloadPath, expectedSize > 0 ? expectedSize : null);
                 }
                 catch (Exception e)
                 {

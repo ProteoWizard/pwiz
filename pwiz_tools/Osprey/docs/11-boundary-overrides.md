@@ -49,8 +49,8 @@ override boundaries into the rescore:
 `MultiChargeConsensus.SelectRescoreTargets(entries, config.RunFdr)` per file. When
 a peptide has FDR-passing detections at several charge states, the best
 SVM-scoring charge defines the consensus `(apex, start, end)`; the other charge
-states are re-scored there. These land in
-`PerFileConsensusTargets` keyed by file name.
+states are re-scored there. These are written to that file's own
+`reconciliation.json` as it is planned.
 
 ### 2. UseCwtPeak (stored CWT candidate)
 
@@ -102,13 +102,14 @@ together, so spectra are loaded only once per file.
 
 `PerFileRescoreTask.Run` (`Osprey.Tasks/PerFileRescoreTask.cs:185`) pulls the
 planning byproducts through the typed pipeline registry
-(`ctx.Get<CompactedEntries>()`, `ctx.Get<ReconciliationActions>()`,
-`ctx.Get<PerFileConsensusTargets>()`, `ctx.Get<PerFileGapFillForRescore>()`, etc.)
-and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
+(`ctx.Get<CompactedEntries>()`, `ctx.Get<PlannedActionCount>()`, etc.) - no
+all-runs map of actions, consensus targets or gap-fill exists; each run's are read
+from its own `reconciliation.json` inside its own iteration - and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
 `RescoreOneFile` (`PerFileRescoreTask.cs:644`) does:
 
 1. **Resume probe** — `TryResumeRescoredFile` skips a file whose
-   `.scores-reconciled.parquet` + resume sidecar are already valid, overlaying the
+   `.scores-reconciled.parquet` (and, where the pass-2 worker runs, both 2nd-pass
+   binaries) already carry a current embedded validity stamp, overlaying the
    reconciled boundaries in place (`PerFileRescoreTask.cs:827`).
 2. **Assemble targets** — `TryAssembleRescoreTargets` (consensus + reconciliation
    dedup + gap-fill); bails on no-work files.
@@ -136,7 +137,7 @@ and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
    second-pass Percolator recomputes them.
 9. **Gap-fill two-pass** — `RunGapFillTwoPass` (see below).
 10. **Write-back** — `WriteReconciledAndStamp` (`PerFileRescoreTask.cs:944`) writes
-    the reconciled parquet and stamps the resume sidecar only on success.
+    the reconciled parquet, its validity stamp embedded in the same commit.
 
 ## How overrides work inside the scorer (step by step)
 
@@ -257,31 +258,30 @@ stamps `osprey.reconciled = "true"` and `osprey.reconciliation_hash` alongside
 (`ReconciledParquetWriter.cs:200-204`), which the downstream `--task
 SecondPassFDR` node validates.
 
-Note: six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
+Note: the six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
 `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are
-currently written null/zero — a tracked follow-up noted in
-`RescoreWorker.cs:64-71`, not a boundary-override algorithm difference.
+populated on the reconciled write path since PR #4188 (`ParquetScoreCache.BuildFdrEntryColumns`);
+an older note here that they were written null/zero stood on a stale class summary in
+the since-removed `RescoreWorker.cs`. See DIVERGENCES.md U6 (resolved).
 
 ## Worker mode, hydration, and compaction
 
-`RescoreWorker.Run` (`Osprey/RescoreWorker.cs:80`) is now a thin alias for
-`new AnalysisPipeline().Run(config)` (Phase C): the `--task PerFileRescoring`
-worker reuses the canonical pipeline, and the upstream boundary state is
-rehydrated lazily rather than hand-assembled.
+The `--task PerFileRescoring` worker IS the canonical pipeline (Phase C): `Program.Main`
+selects the task and runs `AnalysisPipeline.Run` like every other invocation, and the
+upstream boundary state is rehydrated lazily rather than hand-assembled. (The
+`RescoreWorker.Run` alias that survived the collapse with no callers was removed.)
 
-- `RescoreHydration.HydrateForRescore` (`Osprey.Tasks/RescoreHydration.cs:166`)
-  loads pre-compaction `FdrEntry` stubs from each `.scores.parquet`, overlays the
-  `.1st-pass.fdr_scores.bin` v3 sidecar (SVM scores + 4 q-values + PEP +
-  `RunProteinQvalue`), and parses each `reconciliation.json` envelope into the
-  action map + refined calibration + gap-fill targets + join-wide
-  `first_pass_base_ids` (v3).
-- `RescoreCompaction.Apply` (`Osprey.Tasks/RescoreCompaction.cs:113`) reproduces
-  the in-process first-pass compaction: it keeps exactly the join-wide
-  `GlobalFirstPassBaseIds` set (hard-fails if absent), **unioned** with the
-  base_ids of every reconciliation-action target so cross-file-rescued entries
-  survive. Compaction is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and
-  its paired decoy stay together, and the action map is re-keyed to
-  post-compaction indices.
+- `RescoreHydration.HydrateOneRun` (`Osprey.Tasks/RescoreHydration.cs`) hydrates ONE
+  run: it loads the run's pre-compaction `FdrEntry` stubs from its `.scores.parquet`,
+  overlays its `.1st-pass.fdr_scores.bin` sidecar (SVM scores + q-values + PEP), parses
+  its `reconciliation.json` envelope into the action map + refined calibration +
+  gap-fill targets, and compacts the stubs against the analysis-wide retained base_id
+  summary (`RetainedBaseIdSidecar`): the join-wide first-pass base_ids **unioned** with
+  the base_ids of every reconciliation-action target, so cross-file-rescued entries
+  survive. Compaction is keyed by `base_id` (`0x7FFFFFFF` mask) so a target and its
+  paired decoy stay together, and the actions are mapped to post-compaction indices.
+  The all-runs equivalent (`HydrateCompactedStreaming` + `RescoreCompaction.Apply`) was
+  removed on 2026-10-12: no route that could finish still reached it.
 
 ## Flags and switches
 
@@ -290,23 +290,26 @@ computed by Stage 6 planning. The flags that affect this stage:
 
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
-| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` runs this stage as a standalone worker (internal `HpcTask.PerFileRescore`). `SecondPassFDR` (`HpcTask.SecondPassFdr`) rehydrates reconciled parquets instead of re-scoring. |
-| `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`PerFileRescoreTask.IsIncluded`). |
+| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` (`PerFileRescoreTask`) runs this stage as a standalone worker. `SecondPassFDR` (`SecondPassFdrTask`) rehydrates reconciled parquets instead of re-scoring. |
+| `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`OspreyConfig.Includes`: the selected stage runs by itself). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstPassFDR; determines which entries survive into the rescore set. |
 | `ReconciliationConfig.Enabled` | true | Gates reconciliation planning + `reconciliation.json` inputs (`PerFileRescoreTask.cs:158`). Disabling leaves only multi-charge consensus rescore. |
 | `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection, calibration refit, and reconciliation planning (`Stage6Planner.cs`). Not a CLI flag; config field. |
 | `ReconciliationConfig.TopNPeaks` | 5 (`ReconciliationConfig.cs:36`) | CWT candidates stored per precursor at first-pass; the pool `UseCwtPeak` overrides are drawn from. |
 | `--no-prefilter` (`PrefilterEnabled`) | true | Only affects non-override entries; override entries always skip the pre-filter (`PeakDataExtractor.cs:117`). The gap-fill CWT pass forces prefilter off regardless (`PerFileRescoreTask.cs:1375`). |
-| `--parallel-files [N]` | off (sequential) | Runs per-file rescores concurrently under `EffectiveFileParallelism` (`PerFileRescoreTask.cs:547`); output is byte-identical to sequential (gated by regression.ps1). |
+| `--parallel-files-rescoring [N]`, else `--parallel-files [N]` | off (sequential) | Runs per-file rescores concurrently under `RunPlan.RescoringFileParallelism`, which `PerFileRescoreTask` resolves for itself; output is byte-identical to sequential (gated by SubsetPipelineTest). |
 | `--threads <count>` | all cores | Inner window parallelism per file; divided across concurrent files under `--parallel-files` (`PerFileRescoreTask.cs:684`). |
 | `--protein-fdr <v>` | optional (`EffectiveProteinFdr`) | Feeds the protein-rescue gate into consensus RT computation (`Stage6Planner.cs:176`), affecting which entries become reconciliation targets. |
 
 Diagnostic env vars that dump this stage (each with a `*_ONLY=1` early-exit
-variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
-`OSPREY_DUMP_INV_PREDICT`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT`,
-`OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_RESCORED`, plus the per-entry
+variant): `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_INV_PREDICT`,
+`OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT`, plus the per-entry
 `OSPREY_DIAG_SEARCH_ENTRY_IDS` search-XIC dump and `OSPREY_DUMP_CWT_PATH`
-(`Stage6Planner.cs`, `PerFileRescoreTask.cs:297`, `PeakDataExtractor.cs:154`).
+(`Stage6Planner.cs`, `PeakDataExtractor.cs:154`). The multicharge,
+reconciliation, and rescored dumps (`OSPREY_DUMP_MULTICHARGE`,
+`OSPREY_DUMP_RECONCILIATION`, `OSPREY_DUMP_RESCORED`) were removed from C# on
+2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic) and are
+Rust-only.
 `OSPREY_TRACE_PEPTIDE` per-peptide tracing is documented in 18-peptide-trace.md.
 
 ## Divergences from the Rust documentation
@@ -325,10 +328,10 @@ variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
   reconciliation re-scoring as strictly sequential across files (`iter_mut`, one
   ~3 GB spectra load at a time), relying only on window-level parallelism inside
   `run_search`. C# keeps that window-level parallelism but additionally runs whole
-  files concurrently under `--parallel-files` / `EffectiveFileParallelism`, with
+  files concurrently under `--parallel-files-rescoring` / `RescoringFileParallelism`, with
   a per-file GC drop skipped in the parallel case. Output is byte-identical
-  (regression.ps1-gated); this is an added performance option, not an algorithm
-  change. Evidence: `Osprey.Tasks/PerFileRescoreTask.cs:547-584`, `:809-810`.
+  (SubsetPipelineTest-gated); this is an added performance option, not an algorithm
+  change. Evidence: `ExecuteRescore` and `ResolveRescoringLanes` in `Osprey.Tasks/PerFileRescoreTask.cs`.
   Severity: minor.
 
 - **[STALE-RUST-DOC] Gap-fill two-pass not covered by the boundary-override
@@ -355,15 +358,14 @@ variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
   Evidence: `Osprey.Tasks/ReconciledParquetWriter.cs:54`, `:200-204`,
   `Osprey.Tasks/PerFileRescoreTask.cs:145-151`. Severity: minor.
 
-- **[UNVERIFIED] Six per-row blob columns written null/zero in the reconciled
-  parquet** - `RescoreWorker`'s summary states `fragment_mzs`,
+- **[RESOLVED] Six per-row blob columns written null/zero in the reconciled
+  parquet** - the summary of the since-removed `RescoreWorker.cs` stated `fragment_mzs`,
   `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`,
-  `bounds_area`, and `bounds_snr` are currently written null/zero, tracked as a
-  follow-up. This is a serialization gap in the reconciled parquet, not in the
-  boundary-override scoring itself (features and RT boundaries are computed and
-  written). A human should confirm whether any downstream consumer reads those
-  six columns off the reconciled parquet. Evidence: `Osprey/RescoreWorker.cs:64-71`.
-  Severity: minor.
+  `bounds_area`, and `bounds_snr` were written null/zero. That predated PR #4188,
+  which populates all six on the reconciled write path
+  (`Osprey.IO/ParquetScoreCache.cs`, `BuildFdrEntryColumns`; asserted by
+  `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay`). Kept as a row so
+  DIVERGENCES.md U6 keeps its number. Severity: info.
 
 Verified to match the Rust doc step for step: the single shared scoring path for
 first-pass and re-scoring; override detection by entry id; the

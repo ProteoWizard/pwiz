@@ -60,6 +60,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using ReplicateValue = pwiz.Skyline.Model.Results.ReplicateValue;
 
 namespace pwiz.Skyline
 {
@@ -260,8 +261,7 @@ namespace pwiz.Skyline
                 {
                     // Only turn off old ion types, if new settings are not MS1-only full-scan
                     var fullScan = settingsNew.TransitionSettings.FullScan;
-                    ViewMenu.EnableProteomicIons(DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules);
-                    ViewMenu.EnableSmallMoleculeIons(DocumentUI.HasSmallMolecules);
+                    ViewMenu.UpdateIonTypeMenu();
                     if (!fullScan.IsEnabled || fullScan.IsEnabledMsMs)
                     {
                         CheckIonTypes(filterOld.PeptideIonTypes, false);

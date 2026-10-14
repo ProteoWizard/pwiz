@@ -74,11 +74,11 @@ precursor's XCorr is an individual sparse gather, not a matrix multiply:
   candidate's ~10-30 fragment bins (`MzToBin` lookup), summing `preprocessed[bin]` with a
   de-dup guard (`visitedBins`). This is an O(n_fragments) sparse dot product, **not** an
   O(n_bins) dense one and not a matmul -- exactly the Rust main-search design.
-- The `xcorr` feature calculator (XcorrCalc, Osprey.Scoring/XcorrCalculators.cs:53) and the
-  Savitzky-Golay apex+/-2 sweep (SgWeightedSweep, XcorrCalculators.cs:104) both route
+- The `xcorr` feature calculator (XcorrCalc, Osprey.Scoring/XcorrCalculators.cs:52) and the
+  Savitzky-Golay apex+/-2 sweep (SgWeightedSweep, XcorrCalculators.cs:103) both route
   through `IResolutionStrategy.ScoreXcorr`, which selects the f64 (Unit) or f32 (HRAM)
   cache. The accumulation is a strict scalar left-to-right sum -- the doc-comment at
-  XcorrCalculators.cs:95-97 explicitly says "Do not vectorize or reorder" to preserve the
+  XcorrCalculators.cs:94-96 explicitly says "Do not vectorize or reorder" to preserve the
   golden. See 02-xcorr-scoring.md.
 
 No SIMD is applied to XCorr; the gather is data-dependent and sparse, so vectorizing it
@@ -162,7 +162,7 @@ with fixed accumulation order for parity:
 - `ScoringMath.PearsonOverRange` / `PearsonCorrelationInRange`
   (Osprey.Scoring/ScoringMath.cs:60,89) -- range-windowed scalar Pearson (two independent
   ports with different no-variance guards, deliberately not merged; ScoringMath.cs:38-51).
-- `SgWeightedSweep.ComputeCosineAtScan` (XcorrCalculators.cs:177) and
+- `SgWeightedSweep.ComputeCosineAtScan` (XcorrCalculators.cs:178) and
   `SpectralScorer.CosineAngle` (SpectralScorer.cs:731) -- scalar sqrt-intensity L2 cosine.
 
 None are vectorized; the intent is exact reproduction of the Rust scalar reduction order.
@@ -177,7 +177,7 @@ indirectly affect this stage:
 | --- | --- | --- |
 | `--threads <count>` | all cores | INNER parallelism (per-window scoring, FDR). Vectorization is per-thread; more threads multiply the SIMD hot paths but do not change per-call arithmetic. |
 | `--parallel-files [N]` | off (sequential; no value = auto) | OUTER parallelism across files. Independent of vectorization. |
-| `--resolution {unit\|hram\|auto}` | auto | Selects the XCorr cache dtype: Unit reads the f64 `Doubles` cache, HRAM reads the f32-narrowed `SparseXcorrSpectrum` value (XcorrCalculators.cs:43-46). Determines whether step 2/3 run in f64 or f32, mirroring the Rust f32 batch choice. |
+| `--resolution {unit\|hram\|auto}` | auto | Selects the XCorr cache dtype: Unit reads the f64 `Doubles` cache, HRAM reads the f32-narrowed `SparseXcorrSpectrum` value (XcorrCalculators.cs:42-45). Determines whether step 2/3 run in f64 or f32, mirroring the Rust f32 batch choice. |
 | `--fragment-tolerance` / `--fragment-unit` | ppm (unit-resolution forces mz 0.5) | Governs bin/match tolerance in the scalar kernels above; not a vectorization control. |
 
 Environment variables: none specific to vectorization. (`OSPREY_DUMP_*` diagnostics touch

@@ -272,11 +272,11 @@ namespace pwiz.SkylineTestFunctional
                 if (data == null)
                     continue;
                 int levels = node.Level - shallowestLevel;
-                string providerHtml = (string)data.GetData(DataFormats.Html);
+                data.TryGetData(DataFormats.Html, out string providerHtml);
                 if (providerHtml != null)
                     AppendText(htmlSb, new HtmlFragment(providerHtml).Fragment,
                         HTML_LINE_BREAK, HTML_INDENT, levels, lineBreaks);
-                string providerText = (string)data.GetData("Text");
+                data.TryGetData("Text", out string providerText);
                 if (providerText != null)
                     AppendText(textSb, providerText, TEXT_LINE_BREAK, TEXT_INDENT, levels, lineBreaks);
 
@@ -293,7 +293,7 @@ namespace pwiz.SkylineTestFunctional
         {
             try
             {
-                return (string)ClipboardEx.GetData(DataFormats.Html);
+                return ClipboardEx.GetData<string>(DataFormats.Html);
             }
             catch (ExternalException)
             {

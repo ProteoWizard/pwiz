@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Koina.Communication
         /// <param name="channel">Channel that the client should use. Caller is responsible for shutting down the channel.</param>
         /// <param name="server">Name of the server</param>
         /// <returns>A client for making predictions with the given server</returns>
-        public static KoinaPredictionClient CreateClient(Channel channel, string server)
+        public static KoinaPredictionClient CreateClient(ChannelBase channel, string server)
         {
             if (FakeClient != null)
             {
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Koina.Communication
         /// <summary>
         /// Constructs a new client. Caller is responsible for shutting down the Channel.
         /// </summary>
-        public KoinaPredictionClient(Channel channel, string server) : base(channel)
+        public KoinaPredictionClient(ChannelBase channel, string server) : base(channel)
         {
             Server = server;
         }

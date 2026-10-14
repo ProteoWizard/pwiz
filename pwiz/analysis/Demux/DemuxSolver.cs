@@ -1,0 +1,116 @@
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
+
+namespace Pwiz.Analysis.Demux;
+
+/// <summary>
+/// Demultiplexing solver — given a design matrix <c>A</c> (precursor masks) and a signal
+/// matrix <c>B</c> (per-multiplexed-spectrum binned intensities), returns the matrix <c>X</c>
+/// such that <c>A X ≈ B</c> (column-by-column least-squares solve). Port of cpp's
+/// <c>DemuxSolver</c> interface.
+/// </summary>
+public interface IDemuxSolver
+{
+    /// <summary>Solves <c>A X = B</c> column-wise for <paramref name="X"/>. Each column of
+    /// <paramref name="B"/> is one transition's intensities across the multiplexed spectra; the
+    /// matching column of <paramref name="X"/> is the deconvolved per-window intensity.</summary>
+    void Solve(Matrix<double> A, Matrix<double> B, Matrix<double> X);
+}
+
+/// <summary>
+/// <see cref="IDemuxSolver"/> implementation that solves each column of B independently as a
+/// non-negative least-squares problem via <see cref="Nnls"/>. Port of cpp's <c>NNLSSolver</c>.
+/// </summary>
+public sealed class NnlsSolver : IDemuxSolver
+{
+    /// <summary>Lower bound on the expected intensity in Poisson row weights, so a row predicted
+    /// near zero gets a finite weight. Measured on Orbitrap data (centroids &gt;= ~1350), results
+    /// do not change between 50 and 5000.</summary>
+    public const double PoissonWeightFloor = 100;
+
+    private readonly int _maxIter;
+    private readonly double _epsilon;
+    private readonly bool _parallelColumns;
+    private readonly bool _poissonWeights;
+
+    /// <summary>Constructs an NNLS solver.</summary>
+    /// <param name="maxIter">Maximum NNLS iterations per column (cpp default 50).</param>
+    /// <param name="epsilon">Optimality tolerance (cpp default 1e-10).</param>
+    /// <param name="parallelColumns">Solve the columns of B on the thread pool (default). False
+    /// solves them on the calling thread, for a caller already solving blocks in parallel.</param>
+    /// <param name="poissonWeights">Refit each column with Poisson row weights
+    /// <c>1 / max(A x, <see cref="PoissonWeightFloor"/>)</c> from its unweighted solution, the
+    /// inverse of the Poisson variance (not in cpp).</param>
+    public NnlsSolver(int maxIter = 50, double epsilon = 1e-10, bool parallelColumns = true,
+        bool poissonWeights = false)
+    {
+        _maxIter = maxIter;
+        _epsilon = epsilon;
+        _parallelColumns = parallelColumns;
+        _poissonWeights = poissonWeights;
+    }
+
+    /// <inheritdoc/>
+    public void Solve(Matrix<double> A, Matrix<double> B, Matrix<double> X)
+    {
+        ArgumentNullException.ThrowIfNull(A);
+        ArgumentNullException.ThrowIfNull(B);
+        ArgumentNullException.ThrowIfNull(X);
+        if (A.RowCount != B.RowCount)
+            throw new ArgumentException("A and B must have the same row count");
+        if (A.ColumnCount != X.RowCount)
+            throw new ArgumentException("X must have row count = A.ColumnCount");
+        if (B.ColumnCount != X.ColumnCount)
+            throw new ArgumentException("X must have column count = B.ColumnCount");
+
+        // Pre-compute A^T B once. Each per-column NNLS reuses the corresponding column of AtB
+        // instead of recomputing A^T b_j. For ~200 transitions/spectrum × 80k spectra × 7 mux
+        // rows × 7 cols this saves ~80M scalar mults per spectrum and amortizes much better
+        // through MathNet's BLAS path than the per-column hot loop did.
+        var AtB = A.TransposeThisAndMultiply(B);
+
+        // One Nnls instance per thread — A^T A is cached at construction, so paying the
+        // O(m·n²) construction cost once per thread (instead of once per column) eliminates the
+        // dominant redundant work in the demux pipeline. Equivalent to OpenMP firstprivate.
+        var localNnls = new System.Threading.ThreadLocal<Nnls>(
+            () => new Nnls(A, _maxIter, _epsilon),
+            trackAllValues: false);
+
+        try
+        {
+            int numCols = B.ColumnCount;
+            int numRows = A.ColumnCount;
+            void SolveColumn(int fragIndex)
+            {
+                var solver = localNnls.Value!;
+                // Like cpp, keep the last feasible x even when Solve fails (e.g. at the iteration limit).
+                solver.Solve(AtB, fragIndex);
+                if (_poissonWeights)
+                    solver.SolvePoissonWeighted(B, fragIndex, PoissonWeightFloor);
+                var sol = solver.X;
+                for (int i = 0; i < numRows; i++) X[i, fragIndex] = sol[i];
+            }
+            if (_parallelColumns)
+            {
+                Parallel.For(0, numCols, SolveColumn);
+            }
+            else
+            {
+                for (int fragIndex = 0; fragIndex < numCols; fragIndex++)
+                    SolveColumn(fragIndex);
+            }
+        }
+        finally
+        {
+            localNnls.Dispose();
+        }
+    }
+
+    /// <summary>Convenience helper: allocates the solution matrix and runs the column-wise NNLS solve.</summary>
+    public Matrix<double> Solve(Matrix<double> A, Matrix<double> B)
+    {
+        var X = DenseMatrix.Create(A.ColumnCount, B.ColumnCount, 0);
+        Solve(A, B, X);
+        return X;
+    }
+}

@@ -159,11 +159,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             Settings.Default.ImportResultsSimultaneousFiles = comboSimultaneousFiles.SelectedIndex;
             Settings.Default.ImportResultsDoAutoRetry = cbAutoRetry.Checked;
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         public void OkDialog()
@@ -450,7 +450,8 @@ namespace pwiz.Skyline.FileUI
             if (dlgState != null && Equals(dlgState.DocumentPath, _documentSavedPath))
                 initialDir = dlgState.InitialDirectory;
 
-            using (FolderBrowserDialog dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (FolderBrowserDialog dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = FileUIResources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory;
                 dlg.ShowNewFolderButton = false;

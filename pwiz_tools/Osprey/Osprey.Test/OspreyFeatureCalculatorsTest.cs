@@ -23,6 +23,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -122,9 +124,9 @@ namespace pwiz.Osprey.Test
             // The three log-conditioned features carry "(log10)" in their display label, so
             // the feature-contribution report cannot present a per-decade weight as though
             // it were per intensity unit.
-            Assert.AreEqual("Peak apex intensity (log10)", OspreyFeatureCalculators.Get(3).DisplayName);
-            Assert.AreEqual("Peak area (log10)", OspreyFeatureCalculators.Get(4).DisplayName);
-            Assert.AreEqual("Peak sharpness (log10)", OspreyFeatureCalculators.Get(5).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakApexCalc_DisplayName_Peak_apex_intensity__log10_, OspreyFeatureCalculators.Get(3).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakAreaCalc_DisplayName_Peak_area__log10_, OspreyFeatureCalculators.Get(4).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_, OspreyFeatureCalculators.Get(5).DisplayName);
         }
 
         /// <summary>
@@ -465,6 +467,19 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(calc.IsReversedScore, infos[i].IsReversedScore,
                     string.Format("IsReversedScore[{0}] should be calculator {1}'s direction", i, calc.Name));
             }
+
+            // The model-diagnostics report label is the invariant (English) one in every UI language,
+            // while the console label follows the language.
+            OspreyFeatureInfo[] invariant;
+            using (new CultureScope(CultureInfo.InvariantCulture))
+                invariant = OspreyFeatureCalculators.BuildFeatureInfos(names);
+            OspreyFeatureInfo[] japanese;
+            using (new CultureScope(CultureInfo.GetCultureInfo(@"ja")))
+                japanese = OspreyFeatureCalculators.BuildFeatureInfos(names);
+            for (int i = 0; i < japanese.Length; i++)
+                Assert.AreEqual(invariant[i].Label, japanese[i].ReportLabel, names[i]);
+            Assert.IsTrue(Enumerable.Range(0, japanese.Length).Any(i => japanese[i].Label != japanese[i].ReportLabel),
+                "the ja display labels should be translated");
         }
 
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)

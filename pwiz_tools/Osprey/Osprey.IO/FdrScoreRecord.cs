@@ -30,7 +30,7 @@ namespace pwiz.Osprey.IO
     /// <c>FdrProjection</c> does not carry the q-value outputs, so the sidecar writers assemble
     /// records
     /// of this shape and hand them to
-    /// <see cref="FdrScoresSidecar.Write(string, System.Collections.Generic.IReadOnlyList{FdrScoreRecord}, FdrScoresSidecar.Pass)"/>.
+    /// <see cref="FdrScoresSidecar.Write(string, System.Collections.Generic.IReadOnlyList{FdrScoreRecord}, FdrScoresSidecar.Pass, pwiz.Osprey.Core.ArtifactStamp)"/>.
     /// The 36-byte layout stays single-sourced through <c>FdrScoresSidecar.WriteRecord</c>.
     ///
     /// <para>The four EXPERIMENT-scope columns this struct used to carry -

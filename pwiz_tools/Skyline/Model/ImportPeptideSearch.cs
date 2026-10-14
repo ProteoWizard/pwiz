@@ -424,7 +424,7 @@ namespace pwiz.Skyline.Model
                     if (longWaitBroker != null && longWaitBroker.IsCanceled)
                         return;
 
-                    if (entry != null && DataSourceUtil.IsDataSource(entry))
+                    if (DataSourceUtil.IsDataSource(entry))
                         TryMatch(entry, overwrite);
                 }
             }

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="ba945394-4912-48a5-b8a0-c9a74ade5647" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Windows x86 (MSConvert GUI Tests)</name>
+  <description />
+  <settings>
+    <options>
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="pwiz" />
+      <option name="checkoutMode" value="ON_AGENT" />
+    </options>
+    <parameters>
+      <param name="env.VS90COMNTOOLS" value="C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\Tools\" />
+      <param name="env.address_model_property" value="" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.toolset_property" value="toolset=msvc-9.0" />
+      <param name="env.variant_property" value="release" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_VS.Solution_153" name="" type="VS.Solution">
+        <parameters>
+          <param name="build-file-path" value="pwiz_tools/MSConvertGUI/MSConvertGUI.sln" />
+          <param name="msbuild.prop.Configuration" value="Release" />
+          <param name="msbuild.prop.Platform" value="x86" />
+          <param name="msbuild_version" value="3.5" />
+          <param name="nunit_environment" value="v2.0" />
+          <param name="nunit_platform" value="MSIL" />
+          <param name="nunit_version" value="NUnit-2.2.10" />
+          <param name="run-platform" value="x86" />
+          <param name="targets" value="Build" />
+          <param name="toolsVersion" value="3.5" />
+          <param name="vs.version" value="vs2008" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_VS.Solution_153_m1" name="" type="VisualStudioTest">
+        <parameters>
+          <param name="dotNetTestRunner.Type" value="GenericProcess" />
+          <param name="mstest_enable" value="true" />
+          <param name="vstest_engine" value="MSTest" />
+          <param name="vstest_include" value="pwiz_tools/MSConvertGUI/build-nt-x86/msvc-release/Test.dll" />
+          <param name="vstest_runner_path" value="%teamcity.dotnet.mstest.9.0%" />
+          <param name="vstest_runsettings" value="pwiz_tools/MSConvertGUI/LocalTestRun.testrunconfig" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizardAtSourceForge" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1116" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <exists id="RQ_1117" name="VS2008" />
+    </requirements>
+    <dependencies>
+      <depend-on sourceBuildTypeId="bt19">
+        <options>
+          <option name="take-started-build-with-same-revisions" value="true" />
+          <option name="take-successful-builds-only" value="true" />
+        </options>
+      </depend-on>
+    </dependencies>
+  </settings>
+</build-type>
+

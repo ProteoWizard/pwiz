@@ -127,10 +127,10 @@ namespace pwiz.Skyline.ToolsUI
             // as its scale. The rectangle returned is read back off the pane, so it shows what a direction
             // the graph refused to move actually did.
             Control.ZoomPaneToScale(pane,
-                wantsX ? Math.Min(bounds.Left, bounds.Right) : (double?) null,
-                wantsX ? Math.Max(bounds.Left, bounds.Right) : (double?) null,
-                wantsY ? Math.Min(bounds.Top, bounds.Bottom) : (double?) null,
-                wantsY ? Math.Max(bounds.Top, bounds.Bottom) : (double?) null);
+                wantsX ? Math.Min(bounds.Left, bounds.Right) : null,
+                wantsX ? Math.Max(bounds.Left, bounds.Right) : null,
+                wantsY ? Math.Min(bounds.Top, bounds.Bottom) : null,
+                wantsY ? Math.Max(bounds.Top, bounds.Bottom) : null);
             return PaneRectangle(pane);
         }
 

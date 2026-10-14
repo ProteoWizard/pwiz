@@ -1203,7 +1203,7 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.Zn, 2}, // Metal adducts are useful in PFAS analysis
                 {BioMassCalc.Ag, 1}, // Metal adducts are useful in PFAS analysis
                 {@"CH3COO", -1}, // Deprotonated Hac
-                {@"CH­3CO2", -1}, // Deprotonated Hac
+                {@"CH3CO2", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
                 {@"COOH", -1}, // Formate (deprotonated FA)  
                 {@"HCO2", -1}, // Formate (deprotonated FA)  

@@ -250,7 +250,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         ChargeChange(this, EventArgs.Empty);
                     }
-                    if (!Equals(textFormula.Text ?? string.Empty, DisplayFormula??string.Empty))
+                    if (!Equals(textFormula.Text, DisplayFormula??string.Empty))
                     {
                         SetFormulaText(DisplayFormula);
                     }
@@ -452,7 +452,7 @@ namespace pwiz.Skyline.SettingsUI
             var insertAt = textFormula.SelectionStart;
             textFormula.Text = text;
             textFormula.SelectionLength = 0;
-            textFormula.SelectionStart = Math.Min(insertAt, text?.Length ?? 0);
+            textFormula.SelectionStart = Math.Min(insertAt, textFormula.Text.Length);
         }
 
         private void hToolStripMenuItem_Click(object sender, EventArgs e)

@@ -15,4 +15,17 @@
     <ProjectReference Include="..\Osprey.Chromatography\Osprey.Chromatography.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="OspreyFDRResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>OspreyFDRResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="OspreyFDRResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>OspreyFDRResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

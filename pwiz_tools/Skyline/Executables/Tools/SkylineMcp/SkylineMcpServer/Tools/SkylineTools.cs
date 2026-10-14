@@ -183,6 +183,7 @@ public static class SkylineTools
         "When include_max_length=true, the response includes max_observed_length on text columns (type 'string' or 'other' -- the latter includes entity wrappers like Peptide/Replicate that serialize to text) so you can decide a safe count for the next call. On large datasets this is a sampled estimate over the first 200 rows; max_length_sampled=true on a column tells you that column's value is a lower bound. " +
         "Optional filter follows the same syntax skyline_get_report_from_definition accepts. Optional columns projects to a subset of the report's columns; column names match either the localized display name in the report header or the invariant column id returned by skyline_get_report_doc_topic. " +
         "No snapshot isolation across paginated calls: if the document changes between calls, the window shifts; for read-immediately-after-write under a single agent this is fine.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetReportRows))]
     public static string GetReportRows(
         [Description("The name of a Skyline report to run (e.g., 'Peak Area', 'Transition Results').")] string reportName,
         [Description("Number of rows to return. REQUIRED. Pass 0 for shape-only introspection (returns total_rows and columns with no row data).")] int count,
@@ -211,6 +212,7 @@ public static class SkylineTools
         "IDIOM: pass count=0 to get the shape only (total_rows, columns with types, empty rows array). This is the canonical way to verify shape and plan windowing before pulling data. count must be explicit (no default). " +
         "When include_max_length=true, the response includes max_observed_length on text columns (type 'string' or 'other'); on large datasets this is a sampled estimate over the first 200 rows with max_length_sampled=true on the sampled columns. " +
         "No snapshot isolation across paginated calls: if the document changes between calls, the window shifts.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetReportFromDefinitionRows))]
     public static string GetReportFromDefinitionRows(
         [Description("JSON report definition with a 'select' array of column names. Example: {\"select\": [\"ProteinName\", \"PrecursorMz\", \"Area\"]}. Same shape as skyline_get_report_from_definition accepts; use its column-discovery tools (skyline_get_report_doc_topics / skyline_get_report_doc_topic) to find column names.")] string reportDefinitionJson,
         [Description("Number of rows to return. REQUIRED. Pass 0 for shape-only introspection (returns total_rows and columns with no row data).")] int count,
@@ -550,6 +552,7 @@ public static class SkylineTools
         "control's current value and 'get_actions' for the actions it supports. Address a control by its " +
         "Label (e.g. set_form_value with \"Ion match tolerance\"); a control with no Label is addressed by " +
         "its Type (e.g. \"TreeView\"). Get the formId from skyline_get_open_forms.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetControls))]
     public static string GetControls(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
     {
@@ -576,25 +579,31 @@ public static class SkylineTools
         "(lists child elements as JSON UiElementPaths -- each already parented onto the element you listed, " +
         "so pass one straight back as 'path'); 'click'; 'set_value' (uses 'value'); 'get_value' " +
         "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
-        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
+        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path, " +
+        "which may start at any node showing in the tree, e.g. a peptide under its expanded protein); " +
         "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
-        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'select_tab' (a TabControl, value the tab text); " +
+        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'click_cell_image' (a grid: clicks an image " +
+        "drawn in the current cell, e.g. the Audit Log's undo arrow or magnifying glass; value the zero-based index among the " +
+        "images the cell shows, from the left); 'select_tab' (a TabControl, value the tab text); " +
         "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
         "its index, e.g. [\"Peptides\", 0]); 'paste' (value the text to paste into a text box, a grid, the " +
         "Targets tree, or the main Skyline window -- without using the clipboard); 'select_all' (selects all " +
-        "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
-        "tree, value the new name for the selected node). " +
+        "of a paste-capable element's content, e.g. before paste to replace it); 'show_tooltip' (a tree, list or grid: shows " +
+        "the tooltip of the selected node / selected item / current cell, as resting the mouse on it does -- " +
+        "select it first; Skyline comes to the front, and the tip comes up about half a second later as a window of its own in " +
+        "skyline_get_open_forms, where skyline_get_form_image captures it whole). " +
         "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
         "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
         "path is given it is used as-is and label/type are ignored. Discover controls with " +
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.PerformAction))]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node")] string action,
+        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, click_cell_image, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, show_tooltip")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
-        [Description("Value for set_value/set_grid_text, the text for send_text/paste/rename_node, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("Value for set_value/set_grid_text, the text for send_text/paste, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
         [Description("A full UiElementPath as JSON (e.g. one straight from get_children, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
     {
         return Invoke(connection =>
@@ -617,6 +626,7 @@ public static class SkylineTools
         "opens a dialog returns immediately; call skyline_get_open_forms to find the resulting form. " +
         "For a menu on any OTHER window -- a form's toolbar, or a control's right-click menu -- use " +
         "skyline_click_control_menu_item.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ClickMainMenuItem))]
     public static string ClickMainMenuItem(
         [Description("Menu path with '>'-separated segments, e.g. 'File > Import > Peptide Search'")] string menuPath)
     {
@@ -636,6 +646,7 @@ public static class SkylineTools
         "dropdown is opened first so items built on demand -- which skyline_click_form_button cannot reach -- are " +
         "present before matching. Segments are '>'-separated and matched by item name or visible text. Use for " +
         "the Document Grid 'Reports' dropdown, a graph's right-click menu, etc.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ClickControlMenuItem))]
     public static string ClickControlMenuItem(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control that owns the menu, from skyline_get_controls. Empty for the form's own menu.")] string control,
@@ -649,15 +660,17 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_click_form_button"),
-     Description("Click a control on an open form, matching it by control name or visible text: a " +
+     Description("Click a control on an open form, matching it by its visible text (or, for a caption-less " +
+        "control, its type as skyline_get_controls reports it -- not its internal Name): a " +
         "button, a checkbox or radio button, a toolbar/menu item, an item in a checked-list box (its " +
         "check is toggled), or any other control. To dismiss a dialog instead, use " +
         "skyline_dismiss_with_accept_button / skyline_dismiss_with_cancel_button / skyline_dismiss_with_button, " +
         "which wait for it to close. The click is posted asynchronously, so a button that opens another " +
         "dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ClickFormButton))]
     public static string ClickFormButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name or visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
+        [Description("Visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
     {
         return Invoke(connection =>
         {
@@ -672,6 +685,7 @@ public static class SkylineTools
         "commit a native file dialog (Type 'Dialog', IsNative=True -- it has no caption-addressable button) or to " +
         "click a WinForms dialog's default button. If accepting opens another dialog it reports not-completed and " +
         "names it (drive that one next).")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.DismissWithAcceptButton))]
     public static string DismissWithAcceptButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
     {
@@ -686,6 +700,7 @@ public static class SkylineTools
      Description("Cancel (dismiss) an open dialog by pressing its cancel button, or closing it when it has none, " +
         "then wait until it has closed. A message box with only affirmative choices (e.g. Yes/No) has no cancel " +
         "affordance -- dismiss such a box with skyline_dismiss_with_button instead.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.DismissWithCancelButton))]
     public static string DismissWithCancelButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
     {
@@ -696,11 +711,32 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_resize_window"),
+     Description("Resize a window, as a user does by dragging its edge: the main Skyline window " +
+        "('SkylineWindow:Skyline') or a dialog whose border can be dragged. The window keeps its position; a " +
+        "maximized or minimized window is restored first. Use it where a tutorial sizes a window. A docked or " +
+        "floating pane is sized by the window layout instead: arrange those with 'File > Import > Window " +
+        "Layout' (skyline_click_main_menu_item, then the file dialog). Returns the size the window ended up at, " +
+        "which differs from the one asked for when the window has a minimum or maximum size.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ResizeWindow))]
+    public static string ResizeWindow(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Outer width in pixels, border included")] int width,
+        [Description("Outer height in pixels, border and title bar included")] int height)
+    {
+        return Invoke(connection =>
+        {
+            var size = connection.ResizeWindow(formId, width, height);
+            return $"Resized {formId} to {size.Width} x {size.Height}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_dismiss_with_button"),
      Description("Dismiss an open dialog by clicking the button with the given caption, then wait until it has " +
         "closed -- e.g. 'No' on a 'replace it?' message box, when neither the default (accept) nor the cancel " +
         "button is wanted. A native file dialog has no caption-addressable button, so commit one with " +
         "skyline_dismiss_with_accept_button.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.DismissWithButton))]
     public static string DismissWithButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("The visible caption of the button to click, e.g. 'No' or 'Yes'")] string button)
@@ -719,9 +755,10 @@ public static class SkylineTools
         "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
         "item of the control named by controlId; a matched label sets the field it labels. controlId " +
         "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.SetFormValue))]
     public static string SetFormValue(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
+        [Description("The control's visible label (not its internal Name), a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
         [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
             "or space-separated quoted file paths for a native file dialog")] string value)
     {
@@ -737,6 +774,7 @@ public static class SkylineTools
         "box's text, a combo box's selected item, a check/radio's checked state ('True'/'False'), or a " +
         "CheckedListBox's checked items (their text, one per line). Pass null for controlId when the form " +
         "has a single valued control.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetFormValue))]
     public static string GetFormValue(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("The control's visible label, or null when the form has a single valued control")] string controlId)
@@ -751,6 +789,7 @@ public static class SkylineTools
         "grid. The text may be a multi-cell block: separate cell values with tabs and rows with " +
         "newlines (it fills down and to the right). Works for DataboundGridControl grids and plain " +
         "DataGridView grids.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.SetGridText))]
     public static string SetGridText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
@@ -768,6 +807,7 @@ public static class SkylineTools
         "there, or a context menu (a path with Type 'ContextMenu' on the grid) opens for that " +
         "cell. column and row are zero-based indices into the grid's visible columns and its rows -- " +
         "the same indices skyline_get_grid_text reports.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.SetCurrentCellAddress))]
     public static string SetCurrentCellAddress(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
@@ -785,6 +825,7 @@ public static class SkylineTools
      Description("Get all the data in a grid on a form as tab-separated text: the column headers " +
         "followed by every row, columns separated by tabs and rows by newlines. Use for the Document " +
         "Grid and other data grids. Works for DataboundGridControl grids and plain DataGridView grids.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetGridText))]
     public static string GetGridText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Grid control name on the form, or null when the form has a single grid")] string gridId)
@@ -841,6 +882,7 @@ public static class SkylineTools
         "take, so they show what is valid to pass those tools: in particular the Bottom edge is the X-axis " +
         "line, so a click below it drags a chromatogram peak boundary. Pair with skyline_get_graph_data for " +
         "the data points themselves. Use skyline_get_open_forms to discover graph IDs.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetGraphZoom))]
     public static string GetGraphZoom(
         [Description("Form identifier from skyline_get_open_forms (e.g., 'GraphSummary:Peak Areas - Replicate Comparison')")] string formId)
     {
@@ -868,6 +910,7 @@ public static class SkylineTools
         "that lets the user neither zoom nor pan a direction ignores that direction here too; the returned " +
         "zoom shows what actually changed. Read the " +
         "current zoom first with skyline_get_graph_zoom.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ZoomGraphTo))]
     public static string ZoomGraphTo(
         [Description("Form identifier from skyline_get_open_forms")] string formId,
         [Description("Left edge: minimum X-axis (data) value")] double left,
@@ -896,6 +939,7 @@ public static class SkylineTools
         "user's drag does on that pane - on most graphs, zooming to the rectangle. Get coordinates from " +
         "skyline_get_graph_data (point values) and skyline_get_graph_zoom (visible range). Operates on the " +
         "first pane. Use skyline_get_open_forms to discover graph IDs.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.ClickGraph))]
     public static string ClickGraph(
         [Description("Form identifier from skyline_get_open_forms")] string formId,
         [Description("Mouse-down X (data) coordinate")] double left,
@@ -917,10 +961,14 @@ public static class SkylineTools
         "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
         "LITERAL - no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
         "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
-        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: it forwards " +
-        "each character through the FOCUSED window, so the characters land in whatever application is in " +
-        "front and arrive out of order - use skyline_perform_action with action='rename_node' to set a " +
-        "node's text. Discover control names with skyline_get_controls.")]
+        "text and so needs neither the clipboard nor Ctrl+V. Typing into the Targets tree edits the selected " +
+        "node's label, as it does for a user: select the node first (the blank one at the end to add a " +
+        "target). With a background proteome the matches appear in a completion pop-up, a form of its own " +
+        "in skyline_get_open_forms - select_item in its list accepts one, or press 'Down'/'Up' then 'Enter' " +
+        "on the tree; 'Enter' alone accepts the text as typed and 'Esc' cancels. The matches are looked up in the " +
+        "background, so the pop-up opens a moment after this returns: read its list before choosing. " +
+        "Discover control names with skyline_get_controls.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.SendText))]
     public static string SendText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
@@ -934,20 +982,28 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_send_key_stroke"),
-     Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
-        "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
-        "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
-        "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
-        "NOT take effect. Discover control names with skyline_get_controls.")]
+     Description("Press one key on a control, whether or not it has the focus, as the keyboard does - e.g. to " +
+        "accept or step through a popup, to paste with 'Ctrl+V', or to move through a list or tree with the " +
+        "arrows, Home and End. The key goes through everything a real press does: keyboard shortcuts and dialog " +
+        "keys first, then a form that previews keys (e.g. Escape on a graph returns to the Targets view), the " +
+        "control's own handlers and behavior (an arrow moving a list's selection, Backspace editing text), then " +
+        "the character the key types. In the Targets tree while a label is being edited, keys go to the edit " +
+        "box. Discover control names with skyline_get_controls.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.SendKeyStroke))]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control to press the key on, as skyline_get_controls reports it")] string controlId,
+        [Description("Control to press the key on, as skyline_get_controls reports it; empty to press it as the " +
+            "keyboard does while the window is active - on the control that has the focus in the form, or the " +
+            "form itself - so its keyboard shortcuts (e.g. F11 on the main window), dialog keys (Enter, Esc) and " +
+            "the focused control's keys all work")] string controlId,
         [Description("The key with any modifiers, '+'-separated and in any order: e.g. 'Down', 'Enter', 'Ctrl+V', 'Ctrl+Shift+Home', 'Alt+F4'. Key names are A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space.")] string keyStroke)
     {
         return Invoke(connection =>
         {
             var result = connection.SendKeyStroke(formId, controlId, keyStroke);
-            return DescribeAction(result, $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
+            return DescribeAction(result, string.IsNullOrEmpty(controlId)
+                ? $"Pressed '{keyStroke}' on {formId}."
+                : $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
         });
     }
 
@@ -958,8 +1014,12 @@ public static class SkylineTools
     // do not drift out of sync.
     [McpServerTool(Name = "skyline_get_form_image"),
      Description("Export a PNG screenshot of any open Skyline form, dialog, or dockable panel. " +
-        "By default returns the PNG inline as an MCP ImageContentBlock. The screenshot is captured " +
-        "from the screen with non-Skyline content automatically redacted. Set returnFormat='file' to " +
+        "By default returns the PNG inline as an MCP ImageContentBlock. The screenshot is copied from " +
+        "the screen when the screen shows the whole form. When it does not - another application's " +
+        "window covers it, it is off the monitors, or there is no desktop (e.g. a disconnected Remote " +
+        "Desktop session) - the form is drawn off-screen instead: that image has a plain window frame " +
+        "and leaves out other windows on top of the form, such as a completion pop-up, which you can " +
+        "capture by its own form id. Set returnFormat='file' to " +
         "force file-on-disk, or 'inline' to require inline (errors if too big or Skyline too old). " +
         "Use skyline_get_open_forms to discover form IDs. For graphs, prefer skyline_get_graph_image " +
         "which renders directly without screen capture. " +
@@ -1292,6 +1352,7 @@ public static class SkylineTools
      Description("Get the current Skyline UI mode: 'proteomic', 'small_molecules', or 'mixed'. " +
         "The UI mode controls which interface elements are shown and how labels like " +
         "'Peptides' vs 'Molecules' are displayed.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetUiMode))]
     public static string GetUiMode()
     {
         return Invoke(connection => connection.GetUiMode());
@@ -1299,6 +1360,7 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_set_ui_mode"),
      Description("Set the Skyline UI mode. Controls which interface elements are shown.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.SetUiMode))]
     public static string SetUiMode(
         [Description("UI mode: 'proteomic', 'small_molecules', or 'mixed'.")] string mode)
     {
@@ -1314,6 +1376,7 @@ public static class SkylineTools
         "Index -1 = most recent undoable change, -2 = next oldest, etc. " +
         "Index +1 = most recent redoable change, +2 = next, etc. " +
         "An empty result means no undo or redo steps are available.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.GetUndoRedo))]
     public static string GetUndoRedo()
     {
         return Invoke(connection =>
@@ -1337,6 +1400,7 @@ public static class SkylineTools
         "Use negative indices to undo (e.g. -1 undoes the last change, -3 undoes the last 3). " +
         "Use positive indices to redo (e.g. +1 redoes one step). " +
         "Get available indices from skyline_get_undo_redo.")]
+    [RequiresJsonToolServiceMethod(nameof(IJsonToolService.SetUndoRedoPosition))]
     public static string SetUndoRedoPosition(
         [Description("Target index: negative to undo, positive to redo.")] int index)
     {

@@ -111,9 +111,9 @@ namespace SkylineTester
             }
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
-            base.OnClosed(e);
+            base.OnFormClosed(e);
 
             lock (_graphPane)
             {

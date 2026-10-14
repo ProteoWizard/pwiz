@@ -34,17 +34,21 @@ namespace pwiz.Osprey.Chromatography
     /// </summary>
     public static class CalibrationIO
     {
+        public const string EXT = @".calibration.json";
+
         /// <summary>
         /// Save calibration parameters to a JSON file.
         /// </summary>
         /// <param name="calibration">Calibration parameters to save.</param>
         /// <param name="path">Path to output JSON file.</param>
-        public static void SaveCalibration(CalibrationParams calibration, string path)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static void SaveCalibration(CalibrationParams calibration, string path, ArtifactStamp stamp)
         {
             if (calibration == null)
                 throw new ArgumentNullException(nameof(calibration));
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", nameof(path));
+                throw new ArgumentException(@"path must not be null or empty", nameof(path));
+            calibration.OspreyValidity = stamp?.ToString() ?? throw new ArgumentNullException(nameof(stamp));
 
             string json = JsonConvert.SerializeObject(calibration, Formatting.Indented);
             using (var saver = new FileSaver(path))
@@ -62,9 +66,9 @@ namespace pwiz.Osprey.Chromatography
         public static CalibrationParams LoadCalibration(string path)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", nameof(path));
+                throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (!File.Exists(path))
-                throw new FileNotFoundException("Calibration file not found: " + path, path);
+                throw new FileNotFoundException(string.Format(OspreyChromatographyResources.CalibrationIO_LoadCalibration_Calibration_file_not_found___0_, path), path);
 
             string json = File.ReadAllText(path);
             return JsonConvert.DeserializeObject<CalibrationParams>(json);
@@ -76,7 +80,7 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public static string CalibrationFilename(string baseName)
         {
-            return baseName + ".calibration.json";
+            return baseName + EXT;
         }
 
         /// <summary>
@@ -87,8 +91,8 @@ namespace pwiz.Osprey.Chromatography
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath);
             if (string.IsNullOrEmpty(stem))
-                stem = "unknown";
-            return stem + ".calibration.json";
+                stem = @"unknown";
+            return stem + EXT;
         }
 
         /// <summary>

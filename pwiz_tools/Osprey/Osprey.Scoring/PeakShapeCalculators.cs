@@ -156,12 +156,12 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class PeakApexCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "peak_apex"; } }
+        public override string Name { get { return @"peak_apex"; } }
 
         // The value is log10-conditioned, so a model weight on it reads per DECADE of
         // intensity, not per intensity unit. The label says so, because the feature-
         // contribution report shows these weights side by side with linear features.
-        public override string DisplayName { get { return "Peak apex intensity (log10)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.PeakApexCalc_DisplayName_Peak_apex_intensity__log10_; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -184,11 +184,11 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class PeakAreaCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "peak_area"; } }
+        public override string Name { get { return @"peak_area"; } }
 
         // Log10-conditioned; see PeakApexCalc.DisplayName. Deliberately NOT the same
         // quantity as the raw "Peak area" used for quantification (bounds_area).
-        public override string DisplayName { get { return "Peak area (log10)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.PeakAreaCalc_DisplayName_Peak_area__log10_; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -243,10 +243,10 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class PeakSharpnessCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "peak_sharpness"; } }
+        public override string Name { get { return @"peak_sharpness"; } }
 
         // Log10-conditioned; see PeakApexCalc.DisplayName.
-        public override string DisplayName { get { return "Peak sharpness (log10)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 

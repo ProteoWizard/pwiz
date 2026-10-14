@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Results;
@@ -34,16 +33,16 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestChromPeakOffsets()
         {
-            Assert.AreEqual((IntPtr) 0, Marshal.OffsetOf<ChromPeak>("_retentionTime"));
-            Assert.AreEqual((IntPtr) 4, Marshal.OffsetOf<ChromPeak>("_startTime"));
-            Assert.AreEqual((IntPtr) 8, Marshal.OffsetOf<ChromPeak>("_endTime"));
-            Assert.AreEqual((IntPtr)12, Marshal.OffsetOf<ChromPeak>("_area"));
-            Assert.AreEqual((IntPtr)16, Marshal.OffsetOf<ChromPeak>("_backgroundArea"));
-            Assert.AreEqual((IntPtr)20, Marshal.OffsetOf<ChromPeak>("_height"));
-            Assert.AreEqual((IntPtr)24, Marshal.OffsetOf<ChromPeak>("_fwhm"));
-            Assert.AreEqual((IntPtr)28, Marshal.OffsetOf<ChromPeak>("_flagValues"));
-            Assert.AreEqual((IntPtr)30, Marshal.OffsetOf<ChromPeak>("_massError"));
-            Assert.AreEqual((IntPtr)32, Marshal.OffsetOf<ChromPeak>("_pointsAcross"));
+            Assert.AreEqual( 0, Marshal.OffsetOf<ChromPeak>("_retentionTime"));
+            Assert.AreEqual( 4, Marshal.OffsetOf<ChromPeak>("_startTime"));
+            Assert.AreEqual( 8, Marshal.OffsetOf<ChromPeak>("_endTime"));
+            Assert.AreEqual(12, Marshal.OffsetOf<ChromPeak>("_area"));
+            Assert.AreEqual(16, Marshal.OffsetOf<ChromPeak>("_backgroundArea"));
+            Assert.AreEqual(20, Marshal.OffsetOf<ChromPeak>("_height"));
+            Assert.AreEqual(24, Marshal.OffsetOf<ChromPeak>("_fwhm"));
+            Assert.AreEqual(28, Marshal.OffsetOf<ChromPeak>("_flagValues"));
+            Assert.AreEqual(30, Marshal.OffsetOf<ChromPeak>("_massError"));
+            Assert.AreEqual(32, Marshal.OffsetOf<ChromPeak>("_pointsAcross"));
             Assert.AreEqual(32, ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
             Assert.AreEqual(36, ChromPeak.GetStructSize(CacheFormatVersion.Twelve));
             Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));

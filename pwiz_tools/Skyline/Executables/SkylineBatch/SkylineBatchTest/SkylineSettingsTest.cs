@@ -7,11 +7,14 @@ namespace SkylineBatchTest
 
 
     [TestClass]
-    public class SkylineSettingsTest
+    public class SkylineSettingsTest : AbstractSkylineBatchUnitTest
     {
         [TestMethod]
         public async Task TestSkylineVersionComparison()
         {
+            // NB: the base AbstractSkylineBatchUnitTest.ClearLeakedSynchronizationContext [TestInitialize]
+            // clears a leaked WinForms SynchronizationContext before this runs - without it this async
+            // test deadlocks when it runs after a functional test (see that method for details).
             var skylineSettings = TestUtils.GetTestSkylineSettings();
 
             Assert.IsTrue(await skylineSettings.HigherVersion("0.100000.100.10000"),

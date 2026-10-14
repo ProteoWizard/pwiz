@@ -106,9 +106,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>fragment_coelution_sum: sum of all valid pairwise fragment correlations.</summary>
     internal sealed class FragmentCoelutionSumCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "fragment_coelution_sum"; } }
+        public override string Name { get { return @"fragment_coelution_sum"; } }
 
-        public override string DisplayName { get { return "Fragment co-elution (sum)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.FragmentCoelutionSumCalc_DisplayName_Fragment_co_elution__sum_; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -121,9 +121,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>fragment_coelution_max: maximum pairwise fragment correlation (0 if none valid).</summary>
     internal sealed class FragmentCoelutionMaxCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "fragment_coelution_max"; } }
+        public override string Name { get { return @"fragment_coelution_max"; } }
 
-        public override string DisplayName { get { return "Fragment co-elution (max)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.FragmentCoelutionMaxCalc_DisplayName_Fragment_co_elution__max_; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -136,9 +136,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>n_coeluting_fragments: count of fragments whose mean pairwise correlation is &gt; 0.</summary>
     internal sealed class NCoelutingFragmentsCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "n_coeluting_fragments"; } }
+        public override string Name { get { return @"n_coeluting_fragments"; } }
 
-        public override string DisplayName { get { return "Co-eluting fragment count"; } }
+        public override string DisplayName { get { return OspreyScoringResources.NCoelutingFragmentsCalc_DisplayName_Co_eluting_fragment_count; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 

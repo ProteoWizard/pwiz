@@ -94,12 +94,12 @@ namespace pwiz.Skyline.Model.Results
 
         public static float? GetRatio(RatioValue ratioValue)
         {
-            return ratioValue == null ? (float?) null : ratioValue.Ratio;
+            return ratioValue == null ? null : ratioValue.Ratio;
         }
 
         public static float? GetDotProduct(RatioValue ratioValue)
         {
-            return ratioValue == null ? (float?) null : ratioValue.DotProduct;
+            return ratioValue == null ? null : ratioValue.DotProduct;
         }
 
         #region Equality Members

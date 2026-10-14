@@ -29,8 +29,9 @@ namespace pwiz.Osprey.FDR
     /// <summary>
     /// The best-of-runs floors experiment-scope q-values are raised to: for each entry_id, and
     /// for each <c>(ModifiedSequence, IsDecoy)</c> peptide identity, the minimum over runs of the
-    /// combined run q-value. Folded over every run, applied per row - the two halves of
-    /// <see cref="PercolatorEngine.ClampExperimentQToBestRun"/>, held together as one object so a
+    /// combined run q-value. Folded over every run, applied per row - the two halves of the
+    /// experiment-q clamp (<see cref="PercolatorEngine.AccumulateExperimentQFloors"/> and
+    /// <see cref="PercolatorEngine.ApplyExperimentQFloors"/>), held together as one object so a
     /// caller that folds in one place and applies in another does not carry two loose maps
     /// between them.
     ///
