@@ -65,8 +65,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
     /// models run in process through CarafeSharp's TorchSharp port of peptdeep, on an NVIDIA GPU when
     /// the CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on the CPU. The predictions are written as the predict.speclib.tsv
     /// that peptdeep 1.5.0's "cmd-flow --task_workflow library" wrote when Skyline ran it in Python,
-    /// using that workflow's defaults, and are then imported through BlibBuild as before. CCS is not
-    /// predicted: CarafeSharp has no port of the CCS model.
+    /// using that workflow's defaults, and are then imported through BlibBuild as before. The library
+    /// keeps the predicted CCS, which Skyline converts to ion mobility with each data file's calibration.
     /// </summary>
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
@@ -106,14 +106,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         // Column names for BlibBuild
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
         private const string NORMALIZED_RT = "RT";
-        private const string ION_MOBILITY = "IonMobility";
         private const string CCS = "CCS";
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
 
-        // Columns of the predict.speclib.tsv peptdeep wrote, without its IonMobility and CCS
+        // Columns of the predict.speclib.tsv peptdeep wrote, without its IonMobility, the timsTOF 1/K0 of the
+        // CCS, which the library did not keep
         private static readonly string[] SpectralLibraryColumnNames =
         {
-            MODIFIED_PEPTIDE, @"PrecursorCharge", NORMALIZED_RT, @"StrippedPeptide", @"PrecursorMz", @"Decoy",
+            MODIFIED_PEPTIDE, @"PrecursorCharge", NORMALIZED_RT, CCS, @"StrippedPeptide", @"PrecursorMz", @"Decoy",
             @"FragmentType", @"FragmentMz", @"RelativeIntensity", @"FragmentCharge", @"FragmentNumber",
             @"FragmentLossType"
         };
@@ -191,8 +191,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 { @"FragmentMz", @"ProductMz" },
                 { @"RelativeIntensity", @"LibraryIntensity" },
                 { @"FragmentNumber", @"FragmentSeriesNumber" },
-                { CCS, COLLISIONAL_CROSS_SECTION},
-                { ION_MOBILITY, null}
+                { CCS, COLLISIONAL_CROSS_SECTION}
             };
 
         /// <summary>
@@ -283,6 +282,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     RtMax = settings.RtMax,
                     ChronologerDirectory = Path.Combine(BundledFilesDirectory, ChronologerFiles.BUNDLED_RELATIVE_DIRECTORY),
                 }.Load();
+                // A .carafemodel holds no CCS model, as CarafeSharp does not fine-tune it
+                using var ccs = CcsModel.FromPretrained(pretrained, device);
                 // A model of a fraction of the gradient gives minutes on the training runs' gradient, as CarafeSharp
                 // writes them; the pretrained models' predictions, and a Chronologer's hydrophobic index, give iRT
                 double libraryRtMax = rt.PredictsNormalizedRt ? settings.RtMax : 0;
@@ -298,10 +299,12 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var spectra = ms2.Predict(chunk.Select(p =>
                         new Ms2Request(p, settings.Nce, settings.Instrument, settings.Activation, settings.Analyzer)).ToList());
                     var rtPredictions = rt.Predict(chunk.Select(p => p.Peptide).ToList());
+                    var ccsPredictions = ccs.Predict(chunk);
                     for (int i = 0; i < chunk.Count; i++)
                     {
                         WriteSpectrum(writer, spectra[i],
-                            LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[i], libraryRtMax, irt.Slope, irt.Intercept));
+                            LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[i], libraryRtMax, irt.Slope, irt.Intercept),
+                            ccsPredictions[i]);
                     }
 
                     progress.UpdateProgress(progressStatus = progressStatus
@@ -360,7 +363,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// most intense of them, at least <see cref="MIN_RELATIVE_INTENSITY"/>, the
         /// <see cref="MAX_FRAGMENTS"/> most intense, in decreasing intensity.
         /// </summary>
-        private static void WriteSpectrum(TextWriter writer, Ms2Prediction spectrum, double irt)
+        private static void WriteSpectrum(TextWriter writer, Ms2Prediction spectrum, double irt, double ccs)
         {
             var precursor = spectrum.Precursor;
             var peptide = precursor.Peptide;
@@ -388,6 +391,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 GetModifiedPeptide(peptide),
                 precursor.Charge.ToString(CultureInfo.InvariantCulture),
                 irt.ToString(CultureInfo.InvariantCulture),
+                ccs.ToString(CultureInfo.InvariantCulture),
                 peptide.Sequence,
                 GetPrecursorMz(precursor).ToString(CultureInfo.InvariantCulture),
                 @"0");
@@ -457,20 +461,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             // Transform table header
             var colNames = reader.FieldNames;
-            var newColNames = new List<string>();
-            foreach (var colName in colNames)
-            {
-                string newColName;
-                if (!OpenSwathAssayLikeColName.TryGetValue(colName, out newColName))
-                {
-                    newColName = colName;
-                }
-                if (newColName != null)
-                {
-                    newColNames.Add(newColName);
-                }
-            }
-            var header = string.Join(TextUtil.SEPARATOR_TSV_STR, newColNames);
+            var header = string.Join(TextUtil.SEPARATOR_TSV_STR,
+                colNames.Select(colName => OpenSwathAssayLikeColName.TryGetValue(colName, out var newColName) ? newColName : colName));
             result.Add(header);
 
             // Transform table body line by line
@@ -504,7 +496,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         AddDoubleCell(line, cell,
                             !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyRtSupportedMod(peptideWithMods));
                     }
-                    else if (colName != ION_MOBILITY)
+                    else
                     {
                         line.Add(cell);
                     }

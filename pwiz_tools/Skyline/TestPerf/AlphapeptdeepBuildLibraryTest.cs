@@ -227,16 +227,16 @@ namespace TestPerf
             {
                 (0, true),   // ModifiedPeptideSequence
                 (1, true),   // PrecursorCharge
-                (6, true),   // FragmentType
-                (9, true),   // FragmentCharge
+                (7, true),   // FragmentType
+                (10, true),  // FragmentCharge
                 // Fragments are written in predicted-intensity order, and the predicted intensities
                 // differ at the ~7th significant figure across machines and between the CPU and the
                 // GPU, which flips the order of near-tied fragments. Sort by the fragment's identity
                 // (series number + loss type) so the row order is deterministic and the field
                 // comparison aligns the same fragment in both files; the tiny per-value drift is then
                 // absorbed by the comparison tolerance.
-                (10, true),  // FragmentSeriesNumber
-                (11, true)   // FragmentLossType
+                (11, true),  // FragmentSeriesNumber
+                (12, true)   // FragmentLossType
             };
             var product_sorted = product + ".sorted";
             var answer_sorted = answer + ".sorted";
@@ -258,7 +258,7 @@ namespace TestPerf
             using (var answerReader = new StreamReader(answer_sorted))
             using (var productReader = new StreamReader(product_sorted))
             {
-                AssertEx.FieldsEqual(answerReader, productReader, 12, null, true, 0, 1);
+                AssertEx.FieldsEqual(answerReader, productReader, 13, null, true, 0, 1);
             }
         }
     }
