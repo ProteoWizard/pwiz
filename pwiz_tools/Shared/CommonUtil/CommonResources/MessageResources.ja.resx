@@ -193,4 +193,12 @@
   <data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_" xml:space="preserve">
     <value>ファイル「{0}」は {1}によりロックされています</value>
   </data>
+  <data name="SimpleFileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_" xml:space="preserve">
+    <value>アクセスが拒否されました。フォルダ「{0}」にはファイルを作成できません。フォルダの書き込み権限を変更するか、ファイルを別のフォルダに移動するかコピーした後、操作を再試行してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SimpleFileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_" xml:space="preserve">
+    <value>{1}回試行しましたが、フォルダ「{0}」に一時ファイルを割り当てられませんでした。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

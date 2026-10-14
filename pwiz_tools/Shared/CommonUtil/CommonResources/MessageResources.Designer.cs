@@ -390,6 +390,24 @@ namespace pwiz.Common.CommonResources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Access denied: unable to create a file in the folder &apos;{0}&apos;. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder..
+        /// </summary>
+        public static string SimpleFileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_ {
+            get {
+                return ResourceManager.GetString("SimpleFileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to allocate a temporary file in the folder &apos;{0}&apos; after {1} attempts..
+        /// </summary>
+        public static string SimpleFileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_ {
+            get {
+                return ResourceManager.GetString("SimpleFileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading {0} bytes. Source may be corrupted..
         /// </summary>
         public static string StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_ {

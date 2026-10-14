@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -503,9 +504,9 @@ namespace pwiz.Osprey.IO
         /// Shared header + atomic-write scaffold for both <c>Write</c>
         /// overloads. The caller supplies the body writer, which emits exactly
         /// <paramref name="entryCount"/> <see cref="RecordLength"/>-byte records via
-        /// <see cref="WriteRecord"/>. Atomic write via FileSaver: write to a unique
+        /// <see cref="WriteRecord"/>. Atomic write via SimpleFileSaver: write to a unique
         /// sibling temp file and promote it to the destination on Commit; on
-        /// exception the FileSaver disposes and deletes the temp without touching
+        /// exception the SimpleFileSaver disposes and deletes the temp without touching
         /// the destination. The FileStream is disposed before Commit so the file is
         /// unlocked when File.Move runs. <paramref name="stamp"/> is written after the body,
         /// inside the same commit, so the file and its validity record land together.
@@ -519,7 +520,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 // 1 MB buffer: the body is millions of small records, and the default 4 KB buffer
                 // made a WriteFile call per 4 KB that left first-pass lanes blocked ~19 s per file.

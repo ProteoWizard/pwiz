@@ -811,7 +811,7 @@ namespace pwiz.Osprey.IO
             Dictionary<string, string> metadata, int totalRows,
             Func<int, int, List<ColumnWriter>> buildChunkColumns)
         {
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var progress = new ProgressReporter(
@@ -1824,7 +1824,7 @@ namespace pwiz.Osprey.IO
 
             using (var readStream = BlockReadStream.OpenRead(originalPath))
             using (var reader = OpenReader(readStream))
-            using (var saver = new FileSaver(reconciledPath))
+            using (var saver = new SimpleFileSaver(reconciledPath))
             {
                 var fieldsByName = BuildFieldLookup(reader);
                 int sourceRowCount = checked((int)(reader.Metadata?.NumRows ?? 0L));

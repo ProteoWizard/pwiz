@@ -554,13 +554,13 @@ namespace pwiz.Osprey.Tasks
 
             // NOT a blanket wipe of every declared output's marker on entry. That was written
             // against a partially-written output, and there is no such state: every one of these
-            // artifacts is committed through FileSaver, an atomic rename, so a file is absent or
+            // artifacts is committed through SimpleFileSaver, an atomic rename, so a file is absent or
             // complete. What the wipe actually did was destroy the record of which files this
             // task had already finished - the only thing a per-file resume can read - so a run
             // interrupted at file 300 of 446 came back and re-scored all 446.
             //
             // Staleness is handled where it can be handled correctly: each writer embeds its
-            // stamp in the same FileSaver commit as its content (FlushPartialSidecar,
+            // stamp in the same SimpleFileSaver commit as its content (FlushPartialSidecar,
             // WriteExperimentSidecar, WriteReconciliationFile). A stamp
             // therefore never outlives the content it vouches for, and a stale file is simply
             // overwritten.
@@ -1900,7 +1900,7 @@ namespace pwiz.Osprey.Tasks
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
                 // The sidecar carries its own validity stamp - WHICH task, build and key produced
-                // it - in the same atomic FileSaver commit as its records, so it is absent or
+                // it - in the same atomic SimpleFileSaver commit as its records, so it is absent or
                 // complete-and-identified, never one without the other.
                 //
                 // Per file, at write time, on purpose: this score pass takes 137 minutes over 446
@@ -1945,7 +1945,7 @@ namespace pwiz.Osprey.Tasks
             // machine lost partway (a Windows Update, a blue screen) has to resume proportional
             // to what it finished, not to what the phase was.
             //
-            // Presence alone is not the test. FdrScoresSidecar.Write commits through FileSaver,
+            // Presence alone is not the test. FdrScoresSidecar.Write commits through SimpleFileSaver,
             // so a sidecar that exists is complete - but completeness is not identity, and
             // IsCurrent also demands the validity key, which carries the search and library
             // hashes, the pick arm, the pass-2 mode AND the cohort (the reconciliation hash is
@@ -2537,7 +2537,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in perFileParquetPaths)
             {
                 string path = FirstPassModelIO.PathFor(kvp.Value, kvp.Key);
-                // WriteText commits through FileSaver and the JSON carries its own validity stamp
+                // WriteText commits through SimpleFileSaver and the JSON carries its own validity stamp
                 // (which task, build and key made it), so the artifact is absent or complete and
                 // identified. A model left by an earlier run is current only if this build wrote
                 // it with this key, so a declined model here cannot be mistaken for it.

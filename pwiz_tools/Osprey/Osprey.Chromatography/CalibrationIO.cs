@@ -24,6 +24,7 @@
 using System;
 using System.IO;
 using Newtonsoft.Json;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Chromatography
@@ -51,7 +52,7 @@ namespace pwiz.Osprey.Chromatography
             calibration.OspreyValidity = stamp?.ToString() ?? throw new ArgumentNullException(nameof(stamp));
 
             string json = JsonConvert.SerializeObject(calibration, Formatting.Indented);
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();

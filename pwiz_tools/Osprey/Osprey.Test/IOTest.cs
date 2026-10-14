@@ -33,6 +33,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
 using Parquet.Schema;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -2476,12 +2477,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParquetScoreCacheRoundTrip()
         {
-            // FileSaver owns the scratch file's lifecycle: write + read back through
+            // SimpleFileSaver owns the scratch file's lifecycle: write + read back through
             // its sibling temp and never Commit() -- Dispose discards it (no leaked
             // GetTempFileName file, cleaned up even if an assertion throws).
             string dest = Path.Combine(Path.GetTempPath(),
                 @"osprey_roundtrip_" + Path.GetRandomFileName() + @".parquet");
-            using (var saver = new FileSaver(dest))
+            using (var saver = new SimpleFileSaver(dest))
             {
                 // Create test entries
                 var entries = new List<CoelutionScoredEntry>();
@@ -2600,12 +2601,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestHasPinFeatureColumnsRejectsFeaturelessParquet()
         {
-            // FileSaver owns the scratch file's lifecycle: write the fixture to its
+            // SimpleFileSaver owns the scratch file's lifecycle: write the fixture to its
             // sibling temp, probe that, and never Commit() -- Dispose discards the temp
             // (no leaked temp file, cleaned up even if an assertion throws).
             string dest = Path.Combine(Path.GetTempPath(),
                 @"osprey_haspin_" + Path.GetRandomFileName() + @".parquet");
-            using (var saver = new FileSaver(dest))
+            using (var saver = new SimpleFileSaver(dest))
             {
                 var entryIdField = new DataField<uint>("entry_id");
                 var schema = new ParquetSchema(entryIdField);

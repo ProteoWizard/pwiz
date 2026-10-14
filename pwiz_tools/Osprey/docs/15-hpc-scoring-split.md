@@ -198,7 +198,7 @@ The parquet cache and `reconciliation.json` boundary file are shared with Rust O
 
 ## Safe concurrent writes
 
-Every cache writer stages through a `FileSaver` temp file that is a **sibling in the same
+Every cache writer stages through a `SimpleFileSaver` temp file that is a **sibling in the same
 directory** as its destination, then promotes it with an in-volume rename - not a local temp
 plus a cross-volume copy-and-verify, which is the Rust pattern this port replaced. A mid-write
 process kill on a NAS/CIFS mount therefore leaves either the previous content or no file, never

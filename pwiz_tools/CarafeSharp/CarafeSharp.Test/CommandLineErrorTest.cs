@@ -29,6 +29,7 @@ using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.SystemUtil;
 using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
@@ -244,17 +245,16 @@ namespace pwiz.CarafeSharp.Test
         {
             string proteins = WriteText(@"proteins.fasta", PROTEINS);
             string built = Path.Combine(_folder, @"built.fasta");
-            // A manifest path that is a folder, or that shares the FASTA's file or temporary file, is
-            // refused before anything is written.
+            // A manifest path that is a folder, or that is the FASTA's own file, is refused before
+            // anything is written.
             string manifest = Path.Combine(_folder, @"manifest.tsv");
             Directory.CreateDirectory(manifest);
-            foreach (string badManifest in new[] { manifest, built, built + PartialFile.SUFFIX })
+            foreach (string badManifest in new[] { manifest, built })
             {
                 var (badCode, _, badError) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", badManifest);
                 Assert.AreEqual(1, badCode, badError);
                 Assert.IsFalse(File.Exists(built), @"The failed build left " + built);
-                Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
-                Assert.IsFalse(File.Exists(badManifest + PartialFile.SUFFIX));
+                AssertNoTempFiles();
             }
 
             string goodManifest = Path.Combine(_folder, @"good-manifest.tsv");
@@ -278,8 +278,7 @@ namespace pwiz.CarafeSharp.Test
                 }
                 CollectionAssert.AreEqual(fastaBefore, File.ReadAllBytes(built));
                 CollectionAssert.AreEqual(manifestBefore, File.ReadAllBytes(goodManifest));
-                Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
-                Assert.IsFalse(File.Exists(goodManifest + PartialFile.SUFFIX));
+                AssertNoTempFiles();
             }
 
             // A reconciliation whose output cannot take its name leaves no partial manifest either.
@@ -288,7 +287,13 @@ namespace pwiz.CarafeSharp.Test
             Directory.CreateDirectory(reconciled);
             (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", goodManifest, @"-predicted_library", library);
             Assert.AreEqual(1, code, error);
-            Assert.IsFalse(File.Exists(reconciled + PartialFile.SUFFIX));
+            AssertNoTempFiles();
+        }
+
+        /// <summary>No temporary file of a failed or finished write is left in the test folder.</summary>
+        private void AssertNoTempFiles()
+        {
+            Assert.AreEqual(0, Directory.GetFiles(_folder, SimpleFileSaver.TEMP_PREFIX + @"*").Length);
         }
 
         /// <summary>

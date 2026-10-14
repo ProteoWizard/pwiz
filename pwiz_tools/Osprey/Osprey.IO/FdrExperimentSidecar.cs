@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -184,7 +185,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write the experiment-wide sidecar, one record per distinct entry_id, in ascending
-        /// entry_id order. Atomic via <see cref="FileSaver"/>: the temp file is promoted on
+        /// entry_id order. Atomic via <see cref="SimpleFileSaver"/>: the temp file is promoted on
         /// Commit, so a failure leaves any existing destination untouched.
         /// </summary>
         public static void Write(string path,
@@ -208,7 +209,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 // 1 MB buffer for the same reason as FdrScoresSidecar: millions of small records.
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 20))

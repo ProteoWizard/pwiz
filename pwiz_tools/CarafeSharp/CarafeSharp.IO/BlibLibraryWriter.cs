@@ -30,6 +30,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using pwiz.CarafeSharp.Core;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.IO
 {
@@ -104,7 +105,7 @@ namespace pwiz.CarafeSharp.IO
         /// <summary>The IonMobilityTypes id of timsTOF 1/K0, which <c>-ccs</c> writes.</summary>
         public const int ION_MOBILITY_TYPE_INVERSE_K0 = 2;
 
-        private readonly PartialFile _file;
+        private readonly SimpleFileSaver _file;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         // The INSERT of n annotation rows at index n, prepared when first needed.
         private readonly AnnotationInsert[] _insertAnnotations = new AnnotationInsert[MAX_PEAKS_PER_INSERT + 1];
@@ -120,15 +121,15 @@ namespace pwiz.CarafeSharp.IO
         /// <summary>
         /// Starts the library that <see cref="Complete"/> writes to <paramref name="path"/>, with
         /// one source file named <paramref name="sourceFileName"/> (Carafe uses the library file
-        /// name without its extension). It is written to a <see cref="PartialFile"/>, so until
+        /// name without its extension). It is written to a <see cref="SimpleFileSaver"/> temp, so until
         /// then any library already at <paramref name="path"/> is left as it is.
         /// </summary>
         public BlibLibraryWriter(string path, string sourceFileName)
         {
-            _file = new PartialFile(path);
+            _file = new SimpleFileSaver(path);
             try
             {
-                var connectionString = new SQLiteConnectionStringBuilder { DataSource = _file.PartialPath, Version = 3 };
+                var connectionString = new SQLiteConnectionStringBuilder { DataSource = _file.SafeName, Version = 3 };
                 _connection = new SQLiteConnection(connectionString.ToString());
                 _connection.Open();
                 Execute(@"PRAGMA synchronous=OFF");
@@ -280,7 +281,7 @@ namespace pwiz.CarafeSharp.IO
         public void Dispose()
         {
             CloseConnection();
-            _file.Discard();
+            _file.Dispose();
         }
 
         private void CloseConnection()
@@ -386,7 +387,7 @@ namespace pwiz.CarafeSharp.IO
             {
                 using (var info = new SQLiteCommand(@"INSERT INTO LibInfo VALUES (@lsid, @time, 0, @major, @minor)", _connection))
                 {
-                    info.Parameters.AddWithValue(@"@lsid", @"urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:" + Path.GetFileName(_file.FinalPath));
+                    info.Parameters.AddWithValue(@"@lsid", @"urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:" + Path.GetFileName(_file.RealName));
                     // ctime() format, as BiblioSpec and Carafe write it.
                     info.Parameters.AddWithValue(@"@time", DateTime.Now.ToString(@"ddd MMM dd HH:mm:ss yyyy", CultureInfo.InvariantCulture));
                     info.Parameters.AddWithValue(@"@major", MAJOR_VERSION);

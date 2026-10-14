@@ -193,4 +193,12 @@
   <data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_" xml:space="preserve">
     <value>文件“{0}”被 {1} 锁定</value>
   </data>
+  <data name="SimpleFileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_" xml:space="preserve">
+    <value>访问被拒绝：无法在文件夹“{0}”中创建文件。请调整文件夹写入权限，或将文件移动或复制到其他文件夹后重试该操作。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SimpleFileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_" xml:space="preserve">
+    <value>在文件夹“{0}”中尝试 {1} 次后仍无法分配临时文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

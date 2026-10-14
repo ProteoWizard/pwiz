@@ -68,7 +68,7 @@ namespace SkylineBatch
                     percent => _percent = Math.Max(0, Math.Min(percent, 99)), _source.Token);
 
                 using (var httpClient = new HttpClientWithProgress(progressMonitor))
-                using (var fs = new FileSaver(realName))
+                using (var fs = new SimpleFileSaver(realName))
                 {
                     try
                     {

@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -61,7 +62,7 @@ namespace pwiz.Osprey.FDR
             var means = standardizer.Means;
             var stds = standardizer.Stds;
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -97,7 +98,7 @@ namespace pwiz.Osprey.FDR
             const string path = @"cs_stage5_perc_input.tsv";
             var inv = CultureInfo.InvariantCulture;
             int nFeatures = entries.Count > 0 ? entries[0].Features.Length : 0;
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -190,7 +191,7 @@ namespace pwiz.Osprey.FDR
                 return c != 0 ? c : a.CompareTo(b);
             });
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -234,7 +235,7 @@ namespace pwiz.Osprey.FDR
             const string path = @"cs_stage5_svm_weights.tsv";
             var inv = CultureInfo.InvariantCulture;
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {

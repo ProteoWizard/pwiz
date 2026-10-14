@@ -28,6 +28,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using pwiz.CarafeSharp.Core;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -142,17 +143,20 @@ namespace pwiz.CarafeSharp.Proteome
                 Entries = sources.ToDictionary(s => s.Entry, s => Sha256(File.ReadAllBytes(s.Path)), StringComparer.Ordinal),
             };
 
-            string temp = path + @".tmp";
-            if (File.Exists(temp))
-                File.Delete(temp);
-            using (var zip = ZipFile.Open(temp, ZipArchiveMode.Create))
+            // Written to a sibling temp and moved over the final name once complete, so a run that
+            // stops part way leaves any earlier model file as it was.
+            using (var saver = new SimpleFileSaver(path))
             {
-                using (var stream = zip.CreateEntry(MANIFEST_ENTRY).Open())
-                    model.WriteManifest(stream);
-                foreach (var source in sources)
-                    zip.CreateEntryFromFile(source.Path, source.Entry, CompressionLevel.Optimal);
+                using (var file = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var zip = new ZipArchive(file, ZipArchiveMode.Create))
+                {
+                    using (var stream = zip.CreateEntry(MANIFEST_ENTRY).Open())
+                        model.WriteManifest(stream);
+                    foreach (var source in sources)
+                        zip.CreateEntryFromFile(source.Path, source.Entry, CompressionLevel.Optimal);
+                }
+                saver.Commit();
             }
-            File.Move(temp, path, true);
             model.FileSha256 = Sha256(File.ReadAllBytes(path));
             return model;
         }

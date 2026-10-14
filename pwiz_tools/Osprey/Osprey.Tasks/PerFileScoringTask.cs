@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -2399,7 +2400,7 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(e => e.ScanNumber)
                 .ToList();
 
-            using (var saver = new FileSaver(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
                 using (var writer = new StreamWriter(saver.SafeName))
                 {

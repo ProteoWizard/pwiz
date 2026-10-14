@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -182,7 +183,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write one file's competition decoys, one record per base_id, in ascending entry_id
-        /// order. Atomic via <see cref="FileSaver"/>: the temp file is promoted on Commit, so a
+        /// order. Atomic via <see cref="SimpleFileSaver"/>: the temp file is promoted on Commit, so a
         /// failure leaves any existing destination untouched.
         ///
         /// <para><paramref name="bestDecoy"/> is
@@ -241,7 +242,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var bw = new BinaryWriter(fs))

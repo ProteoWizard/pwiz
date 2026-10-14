@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -448,7 +449,7 @@ namespace pwiz.Osprey
                 }.ToDsvLine(TextUtil.SEPARATOR_TSV));
             }
             tuples.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            using (var saver = new FileSaver(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -478,7 +479,7 @@ namespace pwiz.Osprey
             int nOccupied, int perCell, ulong seed,
             List<int>[,] grid)
         {
-            using (var saver = new FileSaver(@"cs_cal_scalars.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_scalars.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -499,7 +500,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            using (var saver = new FileSaver(@"cs_cal_grid.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_grid.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -584,7 +585,7 @@ namespace pwiz.Osprey
                 return;
             var rows = new List<string>(s_calWindowRows);
             rows.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            using (var saver = new FileSaver(@"cs_cal_windows.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_windows.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -622,7 +623,7 @@ namespace pwiz.Osprey
 
             int nMatched = 0, nUnmatched = 0;
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -717,7 +718,7 @@ namespace pwiz.Osprey
             var inv = CultureInfo.InvariantCulture;
             int nRows = 0;
             int nMatches = 0;
-            using (var saver = new FileSaver(@"cs_ms2_cal_errors.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_ms2_cal_errors.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -756,7 +757,7 @@ namespace pwiz.Osprey
         {
             var sortedByEntry = matchArray.OrderBy(m => m.EntryId).ToArray();
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_lda_scores.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_lda_scores.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -799,7 +800,7 @@ namespace pwiz.Osprey
                 return a.Value.CompareTo(b.Value);
             });
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_loess_input.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_loess_input.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -838,7 +839,7 @@ namespace pwiz.Osprey
             MzCalibrationResult ms2Cal)
         {
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_cal_summary.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_summary.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -905,11 +906,11 @@ namespace pwiz.Osprey
             string diagXicPath = @"cs_xic_entry_" + entry.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
             // Two file-threads can both match ShouldDumpCalXicFor for the same entry before
-            // either reaches Environment.Exit below; the lock keeps their FileSaver commits
+            // either reaches Environment.Exit below; the lock keeps their SimpleFileSaver commits
             // from racing (see WriteSearchXicDump for the same reasoning at higher volume).
             lock (DiagnosticFileLock.For(diagXicPath))
             {
-            using (var saver = new FileSaver(diagXicPath))
+            using (var saver = new SimpleFileSaver(diagXicPath))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
                 {
@@ -1033,12 +1034,12 @@ namespace pwiz.Osprey
             string dumpPath = @"cs_search_xic_entry_" + candidate.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
             // Shares DiagnosticFileLock.For(dumpPath) with PeakDataExtractor's own append to
-            // this SAME path later in one candidate's scoring - two independent FileSaver
+            // this SAME path later in one candidate's scoring - two independent SimpleFileSaver
             // commits to one file, uncoordinated, would otherwise let whichever Commit lands
             // last silently win (or interleave foreign content on a read-existing rewrite).
             lock (DiagnosticFileLock.For(dumpPath))
             {
-            using (var saver = new FileSaver(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
                 {
@@ -1145,7 +1146,7 @@ namespace pwiz.Osprey
             IReadOnlyList<KeyValuePair<int, double[]>> peakXics)
         {
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_mp_diag.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_mp_diag.txt"))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
                 {
@@ -1202,7 +1203,7 @@ namespace pwiz.Osprey
         // writer open across calls amortizes the OS-level append cost
         // over millions of rows (peak_xics fires once per scoring call,
         // each row is small -- per-call open/close would dominate).
-        // Written directly at its final path, not through FileSaver: this
+        // Written directly at its final path, not through SimpleFileSaver: this
         // is a log, and seeing however far the rescore loop got before a
         // throw is more useful than an all-or-nothing file.
         private StreamWriter _mpInputsWriter;
@@ -1289,7 +1290,7 @@ namespace pwiz.Osprey
         // workflow handles the duplicates the predict-call site can
         // produce (same entry_id scored across multiple windows) with
         // post-hoc `sort -u`.
-        // Written directly at its final path, not through FileSaver: this is a
+        // Written directly at its final path, not through SimpleFileSaver: this is a
         // log, and seeing however far the rescore loop got before a throw is
         // more useful than an all-or-nothing file.
         private StreamWriter _predictRtWriter;
@@ -1373,7 +1374,7 @@ namespace pwiz.Osprey
         // Lazy-opened on first WriteCwtPathRow call. Threaded scoring
         // serializes only on the file write itself; the row-build
         // happens lock-free.
-        // Written directly at its final path, not through FileSaver: this is a
+        // Written directly at its final path, not through SimpleFileSaver: this is a
         // log, and seeing however far scoring got before a throw is more
         // useful than an all-or-nothing file.
         private StreamWriter _cwtPathWriter;
@@ -1563,7 +1564,7 @@ namespace pwiz.Osprey
         {
             const string path = @"cs_stage6_consensus.tsv";
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1602,7 +1603,7 @@ namespace pwiz.Osprey
             var fileNames = new List<string>(refinedCalibrations.Keys);
             fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1631,7 +1632,7 @@ namespace pwiz.Osprey
         // production scale this task type runs at, not bounded to a small bisection run.
         // Flushed in CloseStage6CalibrationDump, which CloseAll (below) calls, so a
         // normal Environment.Exit still flushes its buffered tail. Written directly
-        // at its final path, not through FileSaver: this is a log, and seeing however
+        // at its final path, not through SimpleFileSaver: this is a log, and seeing however
         // far the rescore loop got before a throw is more useful than an
         // all-or-nothing file.
         private StreamWriter _stage6CalibrationWriter;
@@ -1744,7 +1745,7 @@ namespace pwiz.Osprey
                 return a.LibraryRt.CompareTo(b.LibraryRt);
             });
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1803,7 +1804,7 @@ namespace pwiz.Osprey
                 return string.CompareOrdinal(a.Key, b.Key);
             });
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1904,7 +1905,7 @@ namespace pwiz.Osprey
                 return string.CompareOrdinal(a.Accessions, b.Accessions);
             });
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1955,7 +1956,7 @@ namespace pwiz.Osprey
             fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
             int totalRows = 0;
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1999,7 +2000,7 @@ namespace pwiz.Osprey
             sorted.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
             // Force LF (not File.WriteAllLines' OS newline) so this cross-impl
             // bisection artifact stays byte-stable across platforms.
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {

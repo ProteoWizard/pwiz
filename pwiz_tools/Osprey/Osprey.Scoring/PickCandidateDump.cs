@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
@@ -113,7 +114,7 @@ namespace pwiz.Osprey.Scoring
             // One small StringBuilder reused per row (cleared each iteration), so the largest
             // live allocation is a single line -- never the whole file.
             var line = new StringBuilder(96);
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {

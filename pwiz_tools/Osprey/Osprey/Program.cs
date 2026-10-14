@@ -361,6 +361,9 @@ namespace pwiz.Osprey
                 // reads PerfStats here.
                 OspreyOutput.PerfStats = config.PerfStats;
                 OspreyOutput.Verbose = config.Verbose;
+                // The shared atomic writer reads no OSPREY_* variable itself; the host hands it the
+                // forensic switch here, before the first durable write.
+                SimpleFileSaver.KeepFailedWrites = OspreyEnvironment.KeepFailedWrites;
                 OspreyOutput.Out = _out;
 
                 // Create the configured directories only after args validate, so

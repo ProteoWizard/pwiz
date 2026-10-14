@@ -22,6 +22,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -32,7 +33,7 @@ namespace pwiz.Osprey.Core
     /// <see cref="IsCurrent">is current</see> for the task and key that run would write.
     ///
     /// <para>The stamp lives in the artifact, not beside it, because every artifact commits
-    /// through <see cref="FileSaver"/> (presence proves completeness) and is written once: a
+    /// through <see cref="SimpleFileSaver"/> (presence proves completeness) and is written once: a
     /// stamp written into the same atomic commit cannot drift from the content it describes,
     /// cannot outlive it, and cannot be re-certified onto a stale file by a later process.
     /// Each format stores the same one-line text (<see cref="ToString"/>) in its own slot -
