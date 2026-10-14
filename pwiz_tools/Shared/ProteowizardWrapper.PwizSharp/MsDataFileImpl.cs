@@ -2607,7 +2607,7 @@ namespace pwiz.ProteowizardWrapper
             var functionValue = tokens[field].Substring(tokens[field].IndexOf('=') + 1);
             return int.TryParse(functionValue, out var function)
                 ? function
-                : (int?) null;
+                : null;
         }
 
         public override string ToString() // For debugging convenience, not user-facing
