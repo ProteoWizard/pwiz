@@ -1283,8 +1283,8 @@ namespace pwiz.Osprey.IO
                                 EndRt = endCol != null ? endCol[row] : 0.0,
                                 CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
                                 BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
-                                ModifiedSequence = Canonicalize(modseqCol != null ? modseqCol[row] : string.Empty,
-                                    sequencePool),
+                                ModifiedSequence = LibraryStringInterner.Canonicalize(sequencePool,
+                                    modseqCol != null ? modseqCol[row] : string.Empty),
                             });
                         }
                     }
@@ -1295,18 +1295,6 @@ namespace pwiz.Osprey.IO
                 _chargesChecked.TryAdd(path, true);
 
             return stubs;
-        }
-
-        /// <summary>
-        /// The pool's shared instance for <paramref name="value"/>, or the value unchanged when
-        /// no pool was supplied. Empty is returned as-is: it carries no peptide identity, so
-        /// pooling it would only add a lookup and skew the pool's collapse summary.
-        /// </summary>
-        private static string Canonicalize(string value, LibraryStringInterner pool)
-        {
-            if (pool == null || string.IsNullOrEmpty(value))
-                return value;
-            return pool.Intern(value);
         }
 
         /// <summary>
