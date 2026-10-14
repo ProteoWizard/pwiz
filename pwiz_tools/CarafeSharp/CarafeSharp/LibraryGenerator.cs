@@ -33,6 +33,7 @@ using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using static TorchSharp.torch;
 
@@ -78,6 +79,9 @@ namespace pwiz.CarafeSharp
             _log = log ?? TextWriter.Null;
             _pretrained = pretrained;
         }
+
+        /// <summary>The validity stamp the .blib records, or null for none (a library predicted outside a task).</summary>
+        public ArtifactStamp Stamp { get; set; }
 
         /// <summary>The .blib written, or null.</summary>
         public string BlibPath { get; private set; }
@@ -185,7 +189,7 @@ namespace pwiz.CarafeSharp
                 : null;
             _pairGate = CreatePairGate(forms);
             using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath, ccs != null) : null)
-            using (var blib = BlibPath != null ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath)) : null)
+            using (var blib = BlibPath != null ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath), Stamp) : null)
             {
                 // Disposed before tsv and blib, so a failure stops the writer thread before their partial files are discarded.
                 using (var writer = new LibraryChunkWriter(tsv, blib, pairingPrecursors, BeforeWriteChunk, BeforeQueueWait))

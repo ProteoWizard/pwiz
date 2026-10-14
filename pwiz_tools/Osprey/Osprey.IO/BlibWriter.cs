@@ -27,6 +27,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO

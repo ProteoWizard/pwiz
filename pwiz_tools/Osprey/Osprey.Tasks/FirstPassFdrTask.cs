@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -1774,7 +1775,7 @@ namespace pwiz.Osprey.Tasks
             // Sorted and serialized ONCE. The copies are byte-identical, and at 446 files a
             // ~0.9 M-id stratum re-rendered per file is several GB of writes for nothing.
             string stratumJson = FirstPassModelIO.SerializeStratum(_proteinCompactStratum,
-                ArtifactStamp.ForCurrentBuild(Name, validityKey));
+                OspreyVersion.Stamp(Name, validityKey));
             if (stratumJson == null)
                 return;
             int stratumWrites = 0;
@@ -1888,7 +1889,7 @@ namespace pwiz.Osprey.Tasks
             // Hoisted: the sidecar stamp below is written once per file inside the score pass, and
             // recomputing the key per file would hash the search + library identity 446 times.
             string sidecarValidityKey = ValidityKey(ctx);
-            var sidecarStamp = ArtifactStamp.ForCurrentBuild(Name, sidecarValidityKey);
+            var sidecarStamp = OspreyVersion.Stamp(Name, sidecarValidityKey);
 
             int FlushPartialSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
             {
@@ -2526,7 +2527,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 modelJson = FirstPassModelIO.Serialize(results, OspreyEnvironment.ExperimentAgg,
-                    ArtifactStamp.ForCurrentBuild(Name, validityKey));
+                    OspreyVersion.Stamp(Name, validityKey));
             }
             catch (Exception ex)
             {

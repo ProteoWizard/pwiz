@@ -30,6 +30,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using pwiz.CarafeSharp.Core;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.IO
@@ -69,6 +70,14 @@ namespace pwiz.CarafeSharp.IO
         /// </summary>
         public const int MAX_PEAKS_PER_INSERT = 100;
 
+        /// <summary>
+        /// The key/value table a validity stamp is recorded in, the one Osprey's blib writer uses
+        /// (<c>OspreyMetadata</c>, with the stamp under <see cref="ArtifactStamp.PARQUET_KEY"/>),
+        /// so one reader finds the stamp in a library whichever tool wrote it. Created only when
+        /// a stamp is given; Skyline ignores the table.
+        /// </summary>
+        public const string METADATA_TABLE = @"OspreyMetadata";
+
         private const int SOURCE_FILE_ID = 1;
 
         /// <summary>BiblioSpec's ScoreTypes rows, as Osprey writes them.</summary>
@@ -106,6 +115,7 @@ namespace pwiz.CarafeSharp.IO
         public const int ION_MOBILITY_TYPE_INVERSE_K0 = 2;
 
         private readonly SimpleFileSaver _file;
+        private readonly ArtifactStamp _stamp;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         // The INSERT of n annotation rows at index n, prepared when first needed.
         private readonly AnnotationInsert[] _insertAnnotations = new AnnotationInsert[MAX_PEAKS_PER_INSERT + 1];
@@ -122,11 +132,14 @@ namespace pwiz.CarafeSharp.IO
         /// Starts the library that <see cref="Complete"/> writes to <paramref name="path"/>, with
         /// one source file named <paramref name="sourceFileName"/> (Carafe uses the library file
         /// name without its extension). It is written to a <see cref="SimpleFileSaver"/> temp, so until
-        /// then any library already at <paramref name="path"/> is left as it is.
+        /// then any library already at <paramref name="path"/> is left as it is. With
+        /// <paramref name="stamp"/>, the library records it (<see cref="METADATA_TABLE"/>) in the
+        /// same commit as its content, so a resume check can tell whether to reuse it.
         /// </summary>
-        public BlibLibraryWriter(string path, string sourceFileName)
+        public BlibLibraryWriter(string path, string sourceFileName, ArtifactStamp stamp = null)
         {
             _file = new SimpleFileSaver(path);
+            _stamp = stamp;
             try
             {
                 var connectionString = new SQLiteConnectionStringBuilder { DataSource = _file.SafeName, Version = 3 };
@@ -382,6 +395,16 @@ namespace pwiz.CarafeSharp.IO
                     @"SpectrumSourceID INTEGER, ionMobility REAL, collisionalCrossSectionSqA REAL, " +
                     @"ionMobilityHighEnergyOffset REAL, ionMobilityType TINYINT, retentionTime REAL, startTime REAL, " +
                     @"endTime REAL, score REAL, bestSpectrum INTEGER)");
+            if (_stamp != null)
+            {
+                Execute(@"CREATE TABLE " + METADATA_TABLE + @" (Key TEXT PRIMARY KEY, Value TEXT)");
+                using (var insert = new SQLiteCommand(@"INSERT INTO " + METADATA_TABLE + @" (Key, Value) VALUES (@key, @value)", _connection))
+                {
+                    insert.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
+                    insert.Parameters.AddWithValue(@"@value", _stamp.ToString());
+                    insert.ExecuteNonQuery();
+                }
+            }
 
             using (var transaction = _connection.BeginTransaction())
             {

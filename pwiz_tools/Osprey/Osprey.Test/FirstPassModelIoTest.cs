@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -436,7 +437,7 @@ namespace pwiz.Osprey.Test
             // A stratum written by another run (another key) is not this model's, so it is not
             // paired with it.
             Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(parquetPaths[@"run2"], @"run2"), stratum,
-                ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, @"another-run")));
+                OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"another-run")));
             var unpaired = FirstPassModelIO.LoadFromAny(parquetPaths);
             Assert.IsNotNull(unpaired);
             Assert.IsNull(unpaired.StratumBaseIds, @"a stratum stamped by another run must not be paired");
@@ -483,15 +484,15 @@ namespace pwiz.Osprey.Test
             var task = FirstPassTask();
             string experimentPath = Path.Combine(dir, @"output.1st-pass.fdr_experiment.bin");
             FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
-                FdrScoresSidecar.Pass.FirstPass, ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, key));
+                FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
             // A model and stratum left by a run under ANOTHER key are not this run's first pass.
-            var otherRun = ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, @"other-key");
+            var otherRun = OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key");
             SaveModelAndStratum(parquetPaths, otherRun);
             var refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
                 new OspreyConfig(), out _);
             Assert.AreEqual(1, refusals.Count, @"a model stamped with another key must not enter at the gate");
 
-            SaveModelAndStratum(parquetPaths, ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, key));
+            SaveModelAndStratum(parquetPaths, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
             refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
                 new OspreyConfig(), out var sidecar);
             Assert.AreEqual(0, refusals.Count, string.Join(@"; ", refusals));

@@ -32,6 +32,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Parquet;
 using Parquet.Schema;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 

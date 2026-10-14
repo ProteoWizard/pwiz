@@ -33,6 +33,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
 using Parquet.Schema;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -4862,7 +4863,7 @@ namespace pwiz.Osprey.Test
                 // A key carrying every character that could confuse the serialized form or a
                 // JSON / HTML slot: the field separators, quotes, backslashes, control characters.
                 const string key = "search=abc;library=def;path=C:\\proj\\ai;q=\"x\";ctrl=\b\f\n\r\t\u0001";
-                var stamp = ArtifactStamp.ForCurrentBuild(PerFileScoringTask.TASK_NAME, key);
+                var stamp = OspreyVersion.Stamp(PerFileScoringTask.TASK_NAME, key);
                 AssertStampSerialization(stamp, key);
                 AssertStampCurrency(stamp, key);
                 AssertBinaryStamps(dir, stamp);

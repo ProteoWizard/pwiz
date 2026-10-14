@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -274,7 +275,7 @@ namespace pwiz.Osprey.Tasks
             // behavior, which always writes the parquet sidecar regardless
             // of --task PerFileScoring.
             string validityKey = ValidityKey(ctx);
-            _outputStamp = ArtifactStamp.ForCurrentBuild(Name, validityKey);
+            _outputStamp = OspreyVersion.Stamp(Name, validityKey);
             var parquetFooterMetadata = ParquetScoreCache.WithStamp(new Dictionary<string, string>
             {
                 { @"osprey.version", OspreyVersion.Current },

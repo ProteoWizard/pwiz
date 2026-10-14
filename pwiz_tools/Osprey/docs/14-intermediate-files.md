@@ -613,7 +613,7 @@ folds library identity into the parquet metadata check.)
 
 ## 8. Embedded validity stamp - C# addition
 
-**C# source**: `Osprey.Core/ArtifactStamp.cs` (the stamp), `Osprey.Core/BinarySidecarStamp.cs`
+**C# source**: `Shared/CommonUtil/Pipeline/ArtifactStamp.cs` (the stamp), `Osprey.Core/BinarySidecarStamp.cs`
 (its place in the binary sidecars), `Osprey.IO/ArtifactValidity.cs` (`ReadStamp(path)`, the
 one reader, which dispatches on the file-name ending). This has **no Rust doc counterpart**;
 it is the resume-on-restart mechanism the C# port adds.
@@ -868,7 +868,7 @@ deliberate way to reuse artifacts across builds.
   from parquet footer hashes. The stamp adds fields Rust does not write - the `osprey.validity`
   parquet footer entry, the `osprey_validity` first property of `.calibration.json` and
   `.reconciliation.json`, and the blib `OspreyMetadata` row `osprey.validity` - which
-  cross-impl comparisons must ignore. Evidence: `Osprey.Core/ArtifactStamp.cs`;
+  cross-impl comparisons must ignore. Evidence: `Shared/CommonUtil/Pipeline/ArtifactStamp.cs`;
   `Osprey.IO/ArtifactValidity.cs`. Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Reconciled parquet is a separate `.scores-reconciled.parquet`,

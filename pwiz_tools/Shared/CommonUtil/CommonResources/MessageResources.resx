@@ -226,4 +226,16 @@
   <data name="ProgressReporter_Report__0____1_____2___3____4__elapsed_" xml:space="preserve">
     <value>{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)</value>
   </data>
+  <data name="PipelineDriver_OnSkipped__0___skipping__its_outputs_are_current_" xml:space="preserve">
+    <value>{0}: skipping, its outputs are current</value>
+  </data>
+  <data name="PipelineDriver_OnStarting__0___starting" xml:space="preserve">
+    <value>{0}: starting</value>
+  </data>
+  <data name="PipelineDriver_OnDone__0___done___1_F1_s_" xml:space="preserve">
+    <value>{0}: done ({1:F1}s)</value>
+  </data>
+  <data name="RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___" xml:space="preserve">
+    <value>The {0} step could not reload its results from the intermediate files (exit code {1}).</value>
+  </data>
 </root>

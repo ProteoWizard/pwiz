@@ -19,10 +19,9 @@
  */
 
 using System;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp
@@ -30,8 +29,9 @@ namespace pwiz.CarafeSharp
     /// <summary>
     /// CarafeSharp command-line entry point. It takes Carafe's own command lines (see
     /// <see cref="CarafeCommandLine"/>): the stage-1 modes <c>-build_entrapment_fasta</c> and
-    /// <c>-reconcile_manifest</c>, and library prediction from <c>-db</c>
-    /// (<see cref="LibraryGenerator"/>), and training on Osprey's training exports (<see cref="ModelTrainer"/>).
+    /// <c>-reconcile_manifest</c>, library prediction from <c>-db</c> and training on Osprey's
+    /// training exports, each a <see cref="CarafeTask"/> run through the shared
+    /// <see cref="PipelineDriver"/>, which skips a task whose stamped outputs are current.
     /// <para>
     /// Output goes through the shared <see cref="CommandStatusWriter"/>, as Osprey's and
     /// SkylineCmd's does: progress on standard output, errors and warnings on standard error (as
@@ -119,34 +119,22 @@ namespace pwiz.CarafeSharp
             foreach (string warning in commandLine.Warnings)
                 error.WriteLine(warning);
 
-            var stopwatch = Stopwatch.StartNew();
             try
             {
                 switch (commandLine.Mode)
                 {
-                    case CarafeCommandMode.build_entrapment_fasta:
-                        new EntrapmentFastaBuilder(commandLine.BuildSettings, output).Run();
-                        output.WriteLine(@"Entrapment FASTA build finished in " + Seconds(stopwatch) + @" s.");
-                        return EXIT_CODE_SUCCESS;
-                    case CarafeCommandMode.reconcile_manifest:
-                        PairingManifestReconciler.Run(commandLine.ReconcileManifestIn, commandLine.ReconcileLibrary,
-                            commandLine.ReconcileManifestOut, output);
-                        output.WriteLine(@"Manifest reconciliation finished in " + Seconds(stopwatch) + @" s.");
-                        return EXIT_CODE_SUCCESS;
-                    case CarafeCommandMode.train:
-                        new ModelTrainer(commandLine.TrainingSettings, output).Run();
-                        output.WriteLine(@"Time used for training and spectral library generation: " + Seconds(stopwatch) + @" s.");
-                        return EXIT_CODE_SUCCESS;
                     case CarafeCommandMode.model_info:
                         output.Write(CarafeModelFile.Open(commandLine.ModelInfoPath).FormatInfo());
                         return EXIT_CODE_SUCCESS;
-                    case CarafeCommandMode.predict_library:
-                        new LibraryGenerator(commandLine.LibrarySettings, output).Run();
-                        output.WriteLine(@"Time used for spectral library generation: " + Seconds(stopwatch) + @" s.");
-                        return EXIT_CODE_SUCCESS;
-                    default:
+                    case CarafeCommandMode.help:
                         output.WriteLine(CarafeCommandLine.Usage);
                         return EXIT_CODE_SUCCESS;
+                    default:
+                        // One task per mode, run through the shared driver: a task whose outputs
+                        // carry a current stamp is skipped, and the rest run as Carafe would.
+                        var pipeline = new PipelineTask[] { CarafeTask.Create(commandLine) };
+                        var ctx = new CarafeContext(commandLine, pipeline, output, error);
+                        return new CarafeDriver().Run(pipeline, ctx);
                 }
             }
             catch (Exception e)
@@ -192,11 +180,6 @@ namespace pwiz.CarafeSharp
             if (exitCode == EXIT_CODE_SUCCESS && errorReported)
                 return EXIT_CODE_RAN_WITH_ERRORS;
             return exitCode;
-        }
-
-        private static string Seconds(Stopwatch stopwatch)
-        {
-            return stopwatch.Elapsed.TotalSeconds.ToString(@"F1", CultureInfo.InvariantCulture);
         }
     }
 }

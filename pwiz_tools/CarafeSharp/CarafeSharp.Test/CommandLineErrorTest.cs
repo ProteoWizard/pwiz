@@ -183,14 +183,7 @@ namespace pwiz.CarafeSharp.Test
             // another program since the run began is the same), the run fails and the library is
             // saved beside it as "name (2)", the .blib and the TSV with one number, which the error
             // names; no partial file is left, and what was there before is unchanged.
-            string models = Path.Combine(_folder, @"models");
-            Directory.CreateDirectory(models);
-            manual_seed(3);
-            using (var ms2 = new ModelMs2Bert())
-                StateDict.WriteSafetensors(ms2, Path.Combine(models, ModelFiles.MS2_SAFETENSORS));
-            using (var rt = new ModelRtLstmCnn())
-                StateDict.WriteSafetensors(rt, Path.Combine(models, ModelFiles.RT_SAFETENSORS));
-            File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), "{\"ms2\":{\"use_finetuned_for_prediction\":true}}");
+            string models = WriteRandomModels();
             string libraryFolder = Path.Combine(_folder, @"library");
             string blocker = Path.Combine(libraryFolder, BlibLibraryWriter.FILE_NAME);
             Directory.CreateDirectory(blocker);
@@ -214,8 +207,9 @@ namespace pwiz.CarafeSharp.Test
             if (OperatingSystem.IsWindows())
             {
                 // A library open in another program fails the run before any work, leaving the folder as it was.
+                // (With a changed setting: the same command would be skipped, its stamped library being current.)
                 using (new FileStream(blocker, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    (code, _, error) = Run(predict);
+                    (code, _, error) = Run(predict.Concat(new[] { @"-nce", @"29" }).ToArray());
                 Assert.AreEqual(1, code, error);
                 StringAssert.Contains(error, blocker + @" cannot be replaced");
                 CollectionAssert.AreEquivalent(written, Directory.GetFileSystemEntries(libraryFolder));
@@ -283,6 +277,53 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(Program.EXIT_CODE_RAN_WITH_ERRORS, Program.ReconcileExitCode(Program.EXIT_CODE_SUCCESS, true));
             Assert.AreEqual(Program.EXIT_CODE_SUCCESS, Program.ReconcileExitCode(Program.EXIT_CODE_SUCCESS, false));
             Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, Program.ReconcileExitCode(Program.EXIT_CODE_FAILURE_TO_START, true));
+        }
+
+        /// <summary>
+        /// A task whose stamped outputs are current is skipped, as Osprey's are: a second
+        /// prediction of the same library says so and leaves the .blib untouched, and a changed
+        /// setting predicts again.
+        /// </summary>
+        [TestMethod]
+        public void TestResumeSkipsCurrentOutputs()
+        {
+            string proteins = WriteText(@"proteins.fasta", PROTEINS);
+            string models = WriteRandomModels();
+            string libraryFolder = Path.Combine(_folder, @"library");
+            var predict = new[] { @"-db", proteins, @"-o", libraryFolder, @"-model_dir", models, @"-lf_type", @"blib",
+                @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
+            var (code, output, error) = Run(predict);
+            Assert.AreEqual(0, code, error);
+            string blib = Path.Combine(libraryFolder, BlibLibraryWriter.FILE_NAME);
+            var stamp = CarafeStamps.Read(blib);
+            Assert.IsNotNull(stamp, @"the predicted library carries no stamp");
+            Assert.AreEqual(PredictLibraryTask.TASK_NAME, stamp.Task);
+            Assert.AreEqual(CarafeContext.BuildVersion, stamp.Version);
+            string skipped = string.Format(MessageResources.PipelineDriver_OnSkipped__0___skipping__its_outputs_are_current_, PredictLibraryTask.TASK_NAME);
+            Assert.IsFalse(output.Contains(skipped), output);
+            var written = File.GetLastWriteTimeUtc(blib);
+
+            // The same command again: skipped, the library untouched.
+            (code, output, error) = Run(predict);
+            Assert.AreEqual(0, code, error);
+            StringAssert.Contains(output, skipped);
+            Assert.AreEqual(written, File.GetLastWriteTimeUtc(blib));
+
+            // A setting the library depends on changed: predicted again.
+            (code, output, error) = Run(predict.Concat(new[] { @"-nce", @"28" }).ToArray());
+            Assert.AreEqual(0, code, error);
+            Assert.IsFalse(output.Contains(skipped), output);
+            Assert.AreNotEqual(stamp.Key, CarafeStamps.Read(blib).Key);
+
+            // A TSV-only prediction declares no output, so it always runs.
+            string tsvFolder = Path.Combine(_folder, @"tsv");
+            var predictTsv = new[] { @"-db", proteins, @"-o", tsvFolder, @"-model_dir", models, @"-lf_type", @"DIA-NN",
+                @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
+            (code, _, error) = Run(predictTsv);
+            Assert.AreEqual(0, code, error);
+            (code, output, error) = Run(predictTsv);
+            Assert.AreEqual(0, code, error);
+            Assert.IsFalse(output.Contains(string.Format(MessageResources.PipelineDriver_OnSkipped__0___skipping__its_outputs_are_current_, PredictLibraryTask.TASK_NAME)), output);
         }
 
         [TestMethod]
@@ -461,6 +502,20 @@ namespace pwiz.CarafeSharp.Test
         private static string[] Lines(string text)
         {
             return text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Where(l => l.Trim().Length > 0).ToArray();
+        }
+
+        /// <summary>A folder of random MS2 and RT models in Carafe's layout, for a prediction that needs no real model.</summary>
+        private string WriteRandomModels()
+        {
+            string models = Path.Combine(_folder, @"models");
+            Directory.CreateDirectory(models);
+            manual_seed(3);
+            using (var ms2 = new ModelMs2Bert())
+                StateDict.WriteSafetensors(ms2, Path.Combine(models, ModelFiles.MS2_SAFETENSORS));
+            using (var rt = new ModelRtLstmCnn())
+                StateDict.WriteSafetensors(rt, Path.Combine(models, ModelFiles.RT_SAFETENSORS));
+            File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), "{\"ms2\":{\"use_finetuned_for_prediction\":true}}");
+            return models;
         }
 
         private string WriteText(string name, string text)

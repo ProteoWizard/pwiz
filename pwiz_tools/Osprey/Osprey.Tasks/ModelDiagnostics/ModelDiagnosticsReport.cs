@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -559,7 +560,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         private static ArtifactStamp ProductStamp(string taskName, string validityKey)
         {
-            return string.IsNullOrEmpty(validityKey) ? null : ArtifactStamp.ForCurrentBuild(taskName, validityKey);
+            return string.IsNullOrEmpty(validityKey) ? null : OspreyVersion.Stamp(taskName, validityKey);
         }
 
         /// <summary>
