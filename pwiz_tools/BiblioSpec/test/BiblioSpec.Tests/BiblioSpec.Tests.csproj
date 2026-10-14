@@ -26,9 +26,10 @@
   <!-- The MascotShim smoke tests reference internal types from BiblioSpec
        (MascotShimInterop, MascotResult) that are themselves gated on
        <MascotSupport>. Mirror the gate here so the test file doesn't fail
-       to compile when MascotSupport=false. -->
+       to compile when MascotSupport=false; the default matches BiblioSpec.csproj's. -->
   <PropertyGroup>
-    <MascotSupport Condition="'$(MascotSupport)' == ''">true</MascotSupport>
+    <MascotSupport Condition="'$(MascotSupport)' == '' AND ('$(IAgreeToVendorLicenses)' == 'true' OR '$(PwizPrebuiltNativeShimDir)' != '')">true</MascotSupport>
+    <MascotSupport Condition="'$(MascotSupport)' == ''">false</MascotSupport>
   </PropertyGroup>
   <ItemGroup Condition="'$(MascotSupport)' != 'true'">
     <Compile Remove="MascotShimSmokeTests.cs" />
