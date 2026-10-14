@@ -62,10 +62,9 @@ namespace pwiz.Osprey.Tasks
     /// ctx.ExitCode flow for the early-exit paths the original block
     /// had as <c>return 0</c> / <c>return 1</c>.
     ///
-    /// Outputs (PerFileConsensusTargets, ReconciliationActions,
-    /// RefinedCalibrations, PerFileGapFillForRescore) are exposed as
-    /// instance properties for the next task (PerFileRescoreTask) to
-    /// consume after this one completes successfully. The
+    /// Each file's planning output goes into its own <c>.reconciliation.json</c>, which
+    /// the next task (PerFileRescoreTask) reads one run at a time; only the planned-action
+    /// count is published. The
     /// <c>PlanningPerformed</c> byproduct is the gate for that next task —
     /// it is <c>true</c> only when the Stage 6 planning block actually ran.
     /// </summary>
@@ -159,8 +158,7 @@ namespace pwiz.Osprey.Tasks
         // without caring which path filled it.
         public override IEnumerable<Type> Publishes => new[]
         {
-            typeof(PerFileConsensusTargets), typeof(ReconciliationActions),
-            typeof(RefinedCalibrations), typeof(PerFileGapFillForRescore),
+            typeof(PlannedActionCount),
             typeof(CompactedEntries), typeof(PlanningPerformed),
             typeof(ProteinCompactStratum), typeof(FirstPassSurvivorSource)
         };
@@ -203,14 +201,9 @@ namespace pwiz.Osprey.Tasks
         private FirstPassSurvivorLoader _survivorLoader;
         // Built once, on first use, when OSPREY_STUB_IDENTITY asks for it. See StubIdentity.
         private LibraryIdentity _stubIdentity;
-        private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
-            = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
-        private IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> _reconciliationActions
-            = new Dictionary<(string, int), ReconcileAction>();
-        private IReadOnlyDictionary<string, RTCalibration> _refinedCalibrations
-            = new Dictionary<string, RTCalibration>();
-        private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
-            = new Dictionary<string, List<GapFillTarget>>();
+        // Non-Keep actions Stage 6 planning produced, for the rescore summary; 0 when planning
+        // did not run. The actions themselves are in each run's reconciliation.json.
+        private int _plannedActionCount;
 
         // Phase B resume surface. Reads each file's .scores.parquet,
         // writes the .1st-pass.fdr_scores.bin sidecars and the
@@ -339,6 +332,11 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
+            // The analysis-wide experiment records, read ONCE for both the fold and the panel. Both
+            // only read them, and each read is the whole sidecar - ~400 MB at 446 runs - which
+            // this used to do twice back to back (issue #4664).
+            var experimentRecords = LoadFirstPassExperimentRecords(config, ctx);
+
             // The co-assignment panel is built from the per-file FDR sidecars and the
             // experiment-scope sidecar, NOT from the fold - so the fold can be skipped without
             // taking the panel with it. That separation is what
@@ -358,11 +356,10 @@ namespace pwiz.Osprey.Tasks
             {
                 RescoreHydration.FoldPreCompactionPerRun(
                     parquetPaths,
-                    (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
-                        ctx.Get<SequencePool>().Value),
-                    (fileIdx, fileName, stubs) =>
-                        ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, stubs),
-                    LoadFirstPassExperimentRecords(config, ctx),
+                    ctx.Get<SequencePool>().Value,
+                    (fileIdx, fileName, rows) =>
+                        ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, rows),
+                    experimentRecords,
                     retainedBaseIds,
                     ctx);
             }
@@ -372,7 +369,7 @@ namespace pwiz.Osprey.Tasks
             // harness path too.
             var coAssignment = PeakCoAssignmentSource.Build(
                 fileNames, perFileParquetPaths, config, accumulator.ClassByBaseId, libraryById,
-                LoadFirstPassExperimentRecords(config, ctx), ctx);
+                experimentRecords, ctx);
             // No validity key on the harness path. The stamp is what lets a later render trust a
             // product, and this one describes a single panel over an accumulator that was never
             // fed; stamping it would let a ten-minute measurement stand in for the hour-long
@@ -713,30 +710,13 @@ namespace pwiz.Osprey.Tasks
                         perFileEntries.Count));
             }
 
-            // Publish the Stage 6 planning byproducts (computed values, or the
-            // empty defaults when PlanStage6 was skipped / stopped after Stage
-            // 5), plus the CompactedEntries milestone of the shared buffer that
-            // CompactFirstPass produced above. Getters still serve existing
-            // consumers in this commit.
-            ctx.Publish(new PerFileConsensusTargets(_perFileConsensusTargets));
-            ctx.Publish(new ReconciliationActions(_reconciliationActions));
-            ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
-            ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
-
-            // Hand these over rather than keeping a copy. The byproducts now hold them, and this
-            // task has no further use for them - every field below is read only by Rehydrate,
-            // which is mutually exclusive with the Run that just executed.
-            //
-            // Nulling matters because a byproduct release alone frees NOTHING while the task
-            // object still points at the same objects: the task instance lives in the pipeline
-            // array for the life of the process, so these survive every consumer. That is how
-            // FirstPassFDR came to hold its whole-experiment planning products - the
-            // reconciliation action map alone is 30.8 M entries at 446 runs, order 13 GB with
-            // the rest - from the end of planning through the entire rescore, with no reader.
-            _perFileConsensusTargets = null;
-            _reconciliationActions = null;
-            _refinedCalibrations = null;
-            _perFileGapFillForRescore = null;
+            // Publish the planned-action count (0 when PlanStage6 was skipped / stopped after
+            // Stage 5), plus the CompactedEntries milestone of the shared buffer. The
+            // whole-experiment planning maps - the action map alone 30.8 M entries at 446 runs,
+            // order 13 GB with the consensus targets, refined calibrations and gap-fill - are
+            // no longer built: each run's slice is in its own reconciliation.json, which is
+            // all the per-run rescore reads (issue #4664).
+            ctx.Publish(new PlannedActionCount(_plannedActionCount));
             ReleaseUnscorableLibraryFragments(fullLibrary, ctx);
             ctx.Publish(new CompactedEntries(perFileEntries));
             // Set by the compaction gate on every Run that reaches here; a consumer that
@@ -838,10 +818,8 @@ namespace pwiz.Osprey.Tasks
             _firstPassBaseIds = retainedBaseIds;
 
             // No cross-run gap-fill or refined-calibration map is built here: the per-run hydrate
-            // reads each run's own out of its reconciliation.json inside its own iteration, and
-            // the Stage 7 overlay that needed the all-runs form was removed. The release below
-            // needs none either - see the note at its call site.
-            _perFileGapFillForRescore = null;
+            // reads each run's own out of its reconciliation.json inside its own iteration. The
+            // release below needs none either - see the note at its call site.
 
             // Release on this path too, for the reason Rehydrate's own release block gives: this
             // is a RESUME, which is what an operator runs after the OOM the release exists to
@@ -857,10 +835,9 @@ namespace pwiz.Osprey.Tasks
             // this is not the place to economise on correctness grounds.
             ReleaseUnscorableLibraryFragments(ctx.Get<FullLibrary>().Value, ctx);
 
-            // Every planning slot is published EMPTY on purpose. They are not absent - a
-            // consumer's ctx.Get still succeeds - but they carry nothing, because the per-run
-            // hydrate reads each run's actions, gap-fill and refined calibration out of that
-            // run's own reconciliation.json inside its own iteration. Publishing them empty
+            // The planned-action count is published as ZERO on purpose: planning did not run in
+            // this process, and the per-run hydrate reads each run's actions, gap-fill and
+            // refined calibration out of that run's own reconciliation.json. Publishing it
             // rather than skipping the publish keeps the byproduct contract intact: an
             // unpublished slot throws UnknownByproductException at the reader, turning a
             // deliberate design into a crash at an unrelated call site.
@@ -870,37 +847,11 @@ namespace pwiz.Osprey.Tasks
             // rescore loop refills and drains one run at a time, so identity matters and
             // contents do not. No compaction runs here: the lists are empty, and each run is
             // compacted against the retained set as it is hydrated.
-            ctx.Publish(new ReconciliationActions(new Dictionary<(string, int), ReconcileAction>()));
-            ctx.Publish(new RefinedCalibrations(new Dictionary<string, RTCalibration>()));
-            ctx.Publish(new PerFileGapFillForRescore(new Dictionary<string, List<GapFillTarget>>()));
-            ctx.Publish(new PerFileConsensusTargets(
-                new Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>()));
+            ctx.Publish(new PlannedActionCount(0));
             ctx.Publish(new CompactedEntries(perFileEntries));
             ctx.Publish(new FirstPassSurvivorSource(_survivorLoader));
             ctx.Publish(new PlanningPerformed(false));
             return true;
-        }
-
-        /// <summary>
-        /// One file's stub load for <see cref="FoldDiagnosticsOnly"/>, with any parquet fault
-        /// wrapped as <see cref="InvalidDataException"/>, so a truncated or locked
-        /// <c>.scores.parquet</c> reaches the caller as an operator-facing error naming the file
-        /// rather than as an <c>IOException</c> with no exit code. Mirrors both upstream resume
-        /// loaders, which wrap for the same reason.
-        /// </summary>
-        private static List<FdrEntry> LoadResumeStubs(string fileName, string parquetPath,
-            LibraryStringInterner sequencePool)
-        {
-            try
-            {
-                return ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_,
-                    fileName, parquetPath, ex.Message), ex);
-            }
         }
 
         /// <summary>
@@ -1182,7 +1133,6 @@ namespace pwiz.Osprey.Tasks
             // file and the library scan is O(library).
             BuildGapFillLibraryLookups(fullLibrary, out var libLookup, out var libPrecursorMz);
             var writerState = PrepareReconciliationWrite(perFileEntries, config);
-            var gapFillByFile = new Dictionary<string, List<GapFillTarget>>(StringComparer.Ordinal);
             int reconWriteFailures = 0;
 
             // The analysis-wide retained base_id set, accumulated as each run is planned: the
@@ -1207,18 +1157,10 @@ namespace pwiz.Osprey.Tasks
             // the moment that file's planning finishes, rather than after every file's. Same
             // artifact, one phase earlier, and it is what lets the planner release the file's
             // entries immediately - the whole point of not holding the all-files survivor
-            // buffer. Pairs with the --task PerFileRescoring Stage 6 worker mode.
-            //
-            // Gap-fill targets are collected here too, for the in-process Stage 6 rescore below.
+            // buffer. Pairs with the --task PerFileRescoring Stage 6 worker mode, and the
+            // in-process rescore reads the same envelopes.
             Stage6FilePlanned onFilePlanned = filePlan =>
             {
-                if (filePlan.GapFill != null && filePlan.GapFill.Count > 0)
-                {
-                    var copy = new List<GapFillTarget>(filePlan.GapFill.Count);
-                    foreach (var target in filePlan.GapFill)
-                        copy.Add(target);
-                    gapFillByFile[filePlan.FileName] = copy;
-                }
                 if (!retainedSeeded && filePlan.GlobalBaseIds != null)
                 {
                     retainedBaseIds.UnionWith(filePlan.GlobalBaseIds);
@@ -1294,11 +1236,7 @@ namespace pwiz.Osprey.Tasks
 
             // Surface outputs for the next task.
             _didPlan = true;
-            _perFileConsensusTargets = plan.PerFileConsensusTargets;
-            _reconciliationActions = plan.ReconciliationActions
-                ?? new Dictionary<(string, int), ReconcileAction>();
-            _refinedCalibrations = plan.RefinedCalibrations;
-            _perFileGapFillForRescore = gapFillByFile;
+            _plannedActionCount = plan.ActionCount ?? 0;
             return true;
         }
 
@@ -1717,14 +1655,15 @@ namespace pwiz.Osprey.Tasks
         /// safety argument.
         ///
         /// <para>The retained set is the post-compaction survivors (<c>_firstPassBaseIds</c>,
-        /// already pair-symmetric so a target's decoy rides along) PLUS the gap-fill candidates.
-        /// The gap-fill term is a belt rather than a necessity, and the reason this doc used to
-        /// give for it was wrong - see
+        /// already pair-symmetric so a target's decoy rides along), and nothing else: no
+        /// gap-fill term is passed, on either path. None is needed - see
         /// <see cref="LibraryFragmentRelease.BuildRetainedBaseIds(HashSet{uint}, IReadOnlyDictionary{string, List{GapFillTarget}})"/>,
-        /// which carries the corrected argument (issue #4650). In short: a gap-fill target is a
-        /// precursor that PASSED in a sibling replicate and is absent from THIS file's rows, so
-        /// its base_id is already in the join-wide first-pass set. "Did not survive compaction"
-        /// is true of the file's ROW, never of the base_id.</para>
+        /// which carries the argument (issue #4650). In short: a gap-fill target is a precursor
+        /// that PASSED in a sibling replicate and is absent from THIS file's rows, so its base_id
+        /// is already in the join-wide first-pass set. "Did not survive compaction" is true of
+        /// the file's ROW, never of the base_id. The in-process path passed a null term before
+        /// the all-runs gap-fill map was removed too: that map was released one line ahead of
+        /// this call (issue #4664).</para>
         ///
         /// <para>Called from BOTH <see cref="Run"/> (projection path) and
         /// <see cref="Rehydrate"/> (resume / bundle-adopt), which set
@@ -1752,8 +1691,9 @@ namespace pwiz.Osprey.Tasks
             if (!LibraryFragmentRelease.RunsOnThisLeg(ctx) || _firstPassBaseIds == null)
                 return;
 
-            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
-                _firstPassBaseIds, _perFileGapFillForRescore);
+            // No gap-fill term: every gap-fill target's base_id is already in the join-wide set
+            // (see BuildRetainedBaseIds), and no all-runs gap-fill map is held any more.
+            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(_firstPassBaseIds, null);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
             ctx.LogInfo(LogTag.Mem(@"library-fragments"), @"Released library fragments for {0} of {1} library precursors ({2} base_ids retained for rescore + gap-fill)",
                 released, fullLibrary.Count, retained.Count);

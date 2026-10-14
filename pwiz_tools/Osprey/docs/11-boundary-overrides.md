@@ -49,8 +49,8 @@ override boundaries into the rescore:
 `MultiChargeConsensus.SelectRescoreTargets(entries, config.RunFdr)` per file. When
 a peptide has FDR-passing detections at several charge states, the best
 SVM-scoring charge defines the consensus `(apex, start, end)`; the other charge
-states are re-scored there. These land in
-`PerFileConsensusTargets` keyed by file name.
+states are re-scored there. These are written to that file's own
+`reconciliation.json` as it is planned.
 
 ### 2. UseCwtPeak (stored CWT candidate)
 
@@ -102,9 +102,9 @@ together, so spectra are loaded only once per file.
 
 `PerFileRescoreTask.Run` (`Osprey.Tasks/PerFileRescoreTask.cs:185`) pulls the
 planning byproducts through the typed pipeline registry
-(`ctx.Get<CompactedEntries>()`, `ctx.Get<ReconciliationActions>()`,
-`ctx.Get<PerFileConsensusTargets>()`, `ctx.Get<PerFileGapFillForRescore>()`, etc.)
-and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
+(`ctx.Get<CompactedEntries>()`, `ctx.Get<PlannedActionCount>()`, etc.) - no
+all-runs map of actions, consensus targets or gap-fill exists; each run's are read
+from its own `reconciliation.json` inside its own iteration - and dispatches into `ExecuteRescore` (`PerFileRescoreTask.cs:491`). Per file,
 `RescoreOneFile` (`PerFileRescoreTask.cs:644`) does:
 
 1. **Resume probe** — `TryResumeRescoredFile` skips a file whose
