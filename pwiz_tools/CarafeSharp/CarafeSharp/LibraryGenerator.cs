@@ -130,6 +130,7 @@ namespace pwiz.CarafeSharp
         {
             _clock.Restart();
             Directory.CreateDirectory(_settings.OutputDirectory);
+            CheckOutputsReplaceable(_settings, _settings.OutputDirectory);
             var modelDirectory = OpenModelDirectory();
             var outputs = LibraryOutputs.FromFormat(_settings.LibraryFormat, _settings.Fast);
             if (outputs.Warning != null)
@@ -212,19 +213,106 @@ namespace pwiz.CarafeSharp
                         @"Writing finished {0:F1} s after prediction: {1} precursors, writing {2:F1} s, prediction waiting on writer {3:F1} s",
                         finishClock.Elapsed.TotalSeconds, SpectrumCount, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds));
                 }
+                // A finished library that cannot replace the one at its name (open in another program
+                // since CheckOutputsReplaceable) is saved beside it as "name (N)", the .blib and TSV with
+                // one N, and the run fails, so a script does not go on with the old library.
+                string requestedBlib = BlibPath, requestedTsv = TsvPath;
+                Exception renameFailure = null;
+                int suffix = 0;
                 if (blib != null)
                 {
                     if (pairingPrecursors != null)
                         WriteDecoyPairs(blib, pairingPrecursors);
-                    blib.Complete();
+                    try
+                    {
+                        blib.Complete();
+                    }
+                    catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                    {
+                        renameFailure = e;
+                        suffix = FindFreeSuffix(requestedBlib, requestedTsv);
+                        BlibPath = AlternatePath(requestedBlib, suffix);
+                        blib.CommitAs(BlibPath);
+                    }
                     Log(@"The spectral library is saved to " + BlibPath);
                 }
                 if (tsv != null)
                 {
-                    tsv.Complete();
+                    if (suffix > 0)
+                    {
+                        TsvPath = AlternatePath(requestedTsv, suffix);
+                        tsv.CompleteAs(TsvPath);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            tsv.Complete();
+                        }
+                        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                        {
+                            renameFailure = e;
+                            suffix = FindFreeSuffix(requestedBlib, requestedTsv);
+                            TsvPath = AlternatePath(requestedTsv, suffix);
+                            tsv.CompleteAs(TsvPath);
+                        }
+                    }
                     Log(@"The spectral library is saved to " + TsvPath);
                 }
+                if (renameFailure != null)
+                {
+                    var saved = new[] { (requestedBlib, BlibPath), (requestedTsv, TsvPath) }.Where(p => p.Item1 != null && p.Item1 != p.Item2).ToList();
+                    throw new IOException(string.Format(CultureInfo.InvariantCulture,
+                        @"The new library could not replace {0} ({1}), so it is saved as {2}; {0} is unchanged.",
+                        string.Join(@" and ", saved.Select(p => p.Item1)), renameFailure.Message, string.Join(@" and ", saved.Select(p => p.Item2))),
+                        renameFailure);
+                }
             }
+        }
+
+        /// <summary>
+        /// Fails, before any work, when a library the run would replace in <paramref name="outputDirectory"/> cannot be
+        /// replaced: open in another program (Skyline, on Windows) or read-only. Prediction, and training before it, can
+        /// take hours.
+        /// </summary>
+        public static void CheckOutputsReplaceable(LibrarySettings settings, string outputDirectory)
+        {
+            var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
+            var paths = new[]
+            {
+                outputs.WritesBlib ? Path.Combine(outputDirectory, BlibLibraryWriter.FILE_NAME) : null,
+                outputs.WritesTsv ? Path.Combine(outputDirectory, CarafeLibraryTsvWriter.FILE_NAME) : null,
+            };
+            foreach (string path in paths.Where(p => p != null && File.Exists(p)))
+            {
+                try
+                {
+                    using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                    {
+                    }
+                }
+                catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                {
+                    throw new IOException(string.Format(CultureInfo.InvariantCulture,
+                        @"{0} cannot be replaced ({1}). Close it in the program that has it open, or choose another -o folder.", path, e.Message), e);
+                }
+            }
+        }
+
+        /// <summary>The first N from 2 for which "name (N)" is free for every output path given.</summary>
+        private static int FindFreeSuffix(params string[] paths)
+        {
+            for (int n = 2; ; n++)
+            {
+                if (paths.Where(p => p != null).All(p => !File.Exists(AlternatePath(p, n)) && !Directory.Exists(AlternatePath(p, n))))
+                    return n;
+            }
+        }
+
+        private static string AlternatePath(string path, int n)
+        {
+            return Path.Combine(Path.GetDirectoryName(path) ?? string.Empty,
+                string.Format(CultureInfo.InvariantCulture, @"{0} ({1}){2}", Path.GetFileNameWithoutExtension(path), n, Path.GetExtension(path)));
         }
 
         /// <summary>
