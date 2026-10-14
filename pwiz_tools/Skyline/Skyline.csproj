@@ -35,6 +35,9 @@
          downgrades that net8's runtime supersedes safely. -->
     <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The <gcServer> element in app.config only applies to .NET Framework. Without this the
+         .NET 10 build runs the workstation collector, which stalls every thread whenever one of
+         the parallel workers allocates; a report export measured 80% slower on it. -->
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <!-- Parquet.Net, as pwiz's patched build: see ..\Shared\Lib\Parquet\ParquetNet.targets -->
     <ReferenceParquetNet>true</ReferenceParquetNet>

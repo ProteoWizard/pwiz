@@ -54,9 +54,10 @@ Stage 7 (second pass, authoritative):
   9. Second-pass protein FDR (authoritative) + blib output.
 ```
 
-The two passes call the **same** `PercolatorEngine.RunPercolatorFdr` core (with
-`passLabel` `"First-pass"` vs `"Second-pass"`), so training, calibration, and q-value
-math are shared source (`PercolatorEngine.cs:59`, `Pass2FdrSidecar.cs:521`).
+The first pass trains Percolator through `PercolatorEngine.RunFirstPassStreaming`. The second
+pass trains nothing: each run is re-scored with the frozen first-pass model
+(`FrozenModelScorer`, applied per run by `Pass2PerFileWorker` on the PerFileRescoring
+worker), and SecondPassFDR folds the per-run answers.
 
 ---
 
@@ -78,17 +79,18 @@ Every score pass walks its rows in nested `(file, row)` order and hands each row
 and q-values to the pass's output sink **by position** - no psm_id-keyed re-join. Before
 scoring, each file's projection rows are sorted by `(EntryId, Charge, ParquetIndex)`, which
 on a parquet written in `(entry_id, charge, scan_number)` order is the canonical SVM
-working-set order across Rust and C# (`PercolatorEngine.RunPercolatorFdr`). The
-`FdrEntry`-list builder and positional write-back that served the resident first pass were
-removed with `OSPREY_FDR_PROJECTION` (2026-10-10).
+working-set order across Rust and C#; the streaming first pass reads its rows in exactly that
+order from the parquet. The `FdrEntry`-list builder and positional write-back that served the
+resident first pass were removed with `OSPREY_FDR_PROJECTION` (2026-10-10), and the resident
+projection scorer (`PercolatorEngine.RunPercolatorFdr`) is an internal test oracle since
+2026-10-12.
 
 ---
 
 ## Step 2 — Classifier selection (`OSPREY_FDR_MODEL`)
 
 There is no dispatch on an FDR method: every run goes through the one Percolator framework
-(`PercolatorEngine.RunFirstPassStreaming` on the lean first pass,
-`PercolatorEngine.RunPercolatorFdr` on the projection buffer), and
+(`PercolatorEngine.RunFirstPassStreaming`), and
 `config.FdrClassifier` only selects the classifier trained inside it:
 
 - `FdrClassifier.LinearSvm` (default) - the linear SVM
@@ -893,7 +895,7 @@ calibration LDA, not Percolator.
   Rust doc notes the direct (non-streaming) path was removed in v26.7.0 and Percolator
   "always streams". C# matches: every production score pass streams, and the in-code
   comments state the former sub-threshold direct branch was removed for parity
-  (`PercolatorEngine.RunPercolatorFdr`). This is agreement, recorded for
+  (`PercolatorEngine.RunFirstPassStreaming`). This is agreement, recorded for
   completeness. Evidence: `Osprey.FDR/PercolatorEngine.cs`. Severity: info.
 
 - **[RESOLVED] First-pass C selection keeps the most regularized C within 1% of the best**

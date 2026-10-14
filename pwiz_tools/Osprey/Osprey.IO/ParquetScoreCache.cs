@@ -1283,8 +1283,8 @@ namespace pwiz.Osprey.IO
                                 EndRt = endCol != null ? endCol[row] : 0.0,
                                 CoelutionSum = coelutionCol != null ? coelutionCol[row] : 0.0,
                                 BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
-                                ModifiedSequence = Canonicalize(modseqCol != null ? modseqCol[row] : string.Empty,
-                                    sequencePool),
+                                ModifiedSequence = LibraryStringInterner.Canonicalize(sequencePool,
+                                    modseqCol != null ? modseqCol[row] : string.Empty),
                             });
                         }
                     }
@@ -1295,18 +1295,6 @@ namespace pwiz.Osprey.IO
                 _chargesChecked.TryAdd(path, true);
 
             return stubs;
-        }
-
-        /// <summary>
-        /// The pool's shared instance for <paramref name="value"/>, or the value unchanged when
-        /// no pool was supplied. Empty is returned as-is: it carries no peptide identity, so
-        /// pooling it would only add a lookup and skew the pool's collapse summary.
-        /// </summary>
-        private static string Canonicalize(string value, LibraryStringInterner pool)
-        {
-            if (pool == null || string.IsNullOrEmpty(value))
-                return value;
-            return pool.Intern(value);
         }
 
         /// <summary>
@@ -1352,33 +1340,6 @@ namespace pwiz.Osprey.IO
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// One file's <c>apex_rt</c> column, indexed by <c>FdrProjection.ParquetIndex</c> - the
-        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars(string, Action{uint, byte, bool, double, string, double}, StubColumns, LibraryIdentity)"/> rather
-        /// than opening the column directly, so the ordinal this array is keyed by and the
-        /// ordinal the projection rows carry are produced by the same walk and the same
-        /// row-group skip rule. A second reader with its own copy of that rule is how a join
-        /// like this drifts.
-        ///
-        /// <para>ONE production caller: the RESIDENT-projection arm of the FIRST pass, the
-        /// <c>else</c> of <c>projections.IsCountsOnly</c>. Its sink assembles the per-file FDR
-        /// sidecar from projection rows, and those carry no retention time, while the sidecar
-        /// has a column for one (format v7, issue #4522). Not the 2nd pass, which this used to
-        /// claim, and NOT a cost the ordinary pipeline pays: a default run takes the lean arm
-        /// (<c>PerFileScoringTask.CanUseLeanProjection</c>), so reaching this read means the run
-        /// carries reconciled input. The STREAMING first pass needs none
-        /// of it: it already has each row's apex RT in hand from the same stream that produced
-        /// its score, which is the point of putting the column in the sidecar at all.</para>
-        /// </summary>
-        public static double[] ReadApexRtsByParquetIndex(string path)
-        {
-            var apexRts = new List<double>();
-            ReadFdrStubScalars(path,
-                (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => apexRts.Add(apexRt),
-                StubColumns.ApexRt);
-            return apexRts.ToArray();
         }
 
         /// <summary>
