@@ -114,8 +114,9 @@ public sealed class ReaderConfig
     public bool GlobalChromatogramsAreMs1Only { get; set; }
 
     /// <summary>
-    /// When true, vendor-flagged calibration scans (e.g. Waters lockmass function) are
-    /// excluded from the spectrum list. Port of
+    /// When true, scans with only calibration data are excluded from the spectrum list: the
+    /// Waters lockmass function, UIMF calibration frames, and spectra labeled "calibration
+    /// spectrum" (MS:1000928) whose fileContent declares them. Port of
     /// <c>pwiz::msdata::Reader::Config::ignoreCalibrationScans</c>.
     /// </summary>
     public bool IgnoreCalibrationScans { get; set; }
