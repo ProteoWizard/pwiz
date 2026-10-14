@@ -137,15 +137,18 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// The pinned AlphaPeptDeep pretrained models, which the build places beside the Skyline assembly.
         /// </summary>
         public static string PretrainedModelsPath =>
-            Path.Combine(Path.GetDirectoryName(typeof(AlphapeptdeepLibraryBuilder).Assembly.Location) ?? string.Empty,
-                PretrainedModels.BUNDLED_RELATIVE_PATH);
+            Path.Combine(BundledFilesDirectory, PretrainedModels.BUNDLED_RELATIVE_PATH);
+
+        private static string BundledFilesDirectory =>
+            Path.GetDirectoryName(typeof(AlphapeptdeepLibraryBuilder).Assembly.Location) ?? string.Empty;
 
         public LibrarySpec LibrarySpec { get; private set; }
 
         /// <summary>
         /// A model CarafeSharp fine-tuned on a set of runs and saved as a .carafemodel file, to predict
         /// with in place of the pretrained models, or null for the pretrained models. It predicts for
-        /// the collision energy and instrument it was trained on.
+        /// the collision energy, instrument, activation and analyzer it was trained on, with the kind of
+        /// RT model it names.
         /// </summary>
         public string CarafeModelPath { get; set; }
 
@@ -265,19 +268,25 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     : ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU);
                 var pretrained = PretrainedModels.Open(PretrainedModelsPath);
                 Directory.CreateDirectory(OutputSpectralLibsDir);
-                var fineTuned = OpenCarafeModel();
-                using var ms2 = fineTuned?.Ms2Path != null
-                    ? Ms2Model.FromSafetensors(fineTuned.Ms2Path, device)
-                    : Ms2Model.FromPretrained(pretrained, device);
-                using var rt = fineTuned?.RtPath != null
-                    ? RtModel.FromSafetensors(fineTuned.RtPath, device)
-                    : RtModel.FromPretrained(pretrained, device);
-                double nce = fineTuned?.Nce ?? NCE;
-                string instrument = fineTuned?.Instrument ?? INSTRUMENT;
-                // A fine-tuned RT model predicts on its training run's gradient, so its library RT is
-                // minutes on that gradient, as CarafeSharp writes it; the pretrained model's is iRT
-                double rtMax = fineTuned?.RtPath != null ? fineTuned.RtMax : 0;
-                var rtScale = rtMax > 0 ? (Slope: rtMax, Intercept: 0.0) : rt.FitIrtCalibration();
+                var settings = new LibrarySettings { Nce = NCE, Instrument = INSTRUMENT };
+                var modelDirectory = OpenCarafeModel(settings);
+                if (modelDirectory == null)
+                    settings.RtModelType = RtModelType.alphapeptdeep;
+                string ms2Path = modelDirectory?.GetMs2ModelPath(settings.TrainingType);
+                using var ms2 = ms2Path != null ? Ms2Model.FromFile(ms2Path, device) : Ms2Model.FromPretrained(pretrained, device);
+                using var rt = new RtPredictorLoader(() => pretrained, device)
+                {
+                    FineTunedPath = modelDirectory?.GetRtModelPath(settings.TrainingType),
+                    RtModelType = settings.RtModelType,
+                    DefaultRtModelType = LibrarySettings.DEFAULT_RT_MODEL,
+                    ModelDirectory = modelDirectory?.DirectoryPath,
+                    RtMax = settings.RtMax,
+                    ChronologerDirectory = Path.Combine(BundledFilesDirectory, ChronologerFiles.BUNDLED_RELATIVE_DIRECTORY),
+                }.Load();
+                // A model of a fraction of the gradient gives minutes on the training runs' gradient, as CarafeSharp
+                // writes them; the pretrained models' predictions, and a Chronologer's hydrophobic index, give iRT
+                double libraryRtMax = rt.PredictsNormalizedRt ? settings.RtMax : 0;
+                var irt = libraryRtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
                 using var writer = new StreamWriter(OutputSpectraLibFilepath, false, new UTF8Encoding(false));
                 writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV_STR, SpectralLibraryColumnNames));
                 for (int start = 0; start < precursors.Count; start += PRECURSORS_PER_CHUNK)
@@ -286,10 +295,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         throw new OperationCanceledException();
 
                     var chunk = precursors.Skip(start).Take(PRECURSORS_PER_CHUNK).ToList();
-                    var spectra = ms2.Predict(chunk.Select(p => new Ms2Request(p, nce, instrument)).ToList());
-                    var normalizedRts = rt.Predict(chunk.Select(p => p.Peptide).ToList());
+                    var spectra = ms2.Predict(chunk.Select(p =>
+                        new Ms2Request(p, settings.Nce, settings.Instrument, settings.Activation, settings.Analyzer)).ToList());
+                    var rtPredictions = rt.Predict(chunk.Select(p => p.Peptide).ToList());
                     for (int i = 0; i < chunk.Count; i++)
-                        WriteSpectrum(writer, spectra[i], rtScale.Slope * normalizedRts[i] + rtScale.Intercept);
+                    {
+                        WriteSpectrum(writer, spectra[i],
+                            LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[i], libraryRtMax, irt.Slope, irt.Intercept));
+                    }
 
                     progress.UpdateProgress(progressStatus = progressStatus
                         .ChangePercentComplete((start + chunk.Count) * 100 / precursors.Count));
@@ -309,44 +322,22 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         /// <summary>
-        /// Opens <see cref="CarafeModelPath"/>, checking every entry, and unpacks its models into the
-        /// work folder; null when no model file is given.
+        /// Opens <see cref="CarafeModelPath"/>, checking every entry, unpacks its models into the work
+        /// folder, and takes into <paramref name="settings"/> what CarafeSharp takes from the file when it
+        /// predicts a library with it: the training run's NCE, instrument, activation, analyzer and rt_max,
+        /// and the kind of RT model. Null when no model file is given.
         /// </summary>
-        private FineTunedModels OpenCarafeModel()
+        private CarafeModelDirectory OpenCarafeModel(LibrarySettings settings)
         {
             if (string.IsNullOrEmpty(CarafeModelPath))
                 return null;
             var modelFile = CarafeModelFile.Open(CarafeModelPath);
-            string folder = Path.Combine(WorkDir, CARAFE_MODEL_DIR);
-            modelFile.Extract(folder);
+            var modelDirectory = modelFile.Extract(Path.Combine(WorkDir, CARAFE_MODEL_DIR));
+            modelFile.ApplyPredictionDefaults(settings);
             Messages.WriteAsyncUserMessage(string.Format(
                 ModelResources.AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_,
                 CarafeModelPath, modelFile.Describe()));
-            return new FineTunedModels(modelFile, folder);
-        }
-
-        /// <summary>
-        /// The models a .carafemodel file holds, unpacked: each is null where the file keeps the
-        /// pretrained model, as it does for an MS2 model whose fine-tuning did not beat it.
-        /// </summary>
-        private class FineTunedModels
-        {
-            public FineTunedModels(CarafeModelFile modelFile, string folder)
-            {
-                // The MS2 entry is ms2_base.safetensors when the file keeps the model it was fine-tuned further from
-                Ms2Path = modelFile.Ms2Used ? Path.Combine(folder, modelFile.Ms2Entry) : null;
-                RtPath = modelFile.RtUsed ? Path.Combine(folder, ModelFiles.RT_SAFETENSORS) : null;
-                Nce = modelFile.Nce;
-                RtMax = modelFile.RtMax;
-                Instrument = string.IsNullOrEmpty(modelFile.Instrument) ? null : modelFile.Instrument;
-            }
-
-            public string Ms2Path { get; }
-            public string RtPath { get; }
-            public double Nce { get; }
-            /// <summary>The training run's gradient length in minutes, which scales the fine-tuned RT model's predictions.</summary>
-            public double RtMax { get; }
-            public string Instrument { get; }
+            return modelDirectory;
         }
 
         private List<PrecursorForm> ReadPrecursorInputFile()

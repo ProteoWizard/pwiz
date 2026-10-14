@@ -22,6 +22,8 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.SettingsUI;
@@ -33,8 +35,9 @@ namespace TestPerf
 {
     /// <summary>
     /// Builds an AlphaPeptDeep library with a model CarafeSharp fine-tuned on one Orbitrap Astral run
-    /// (EXP25162_2025us0285X1_A, a 24 minute gradient). A fine-tuned RT model predicts on its training
-    /// run's gradient, so the library holds that run's retention times in minutes, not iRT.
+    /// (EXP25162_2025us0285X1_A, a 24 minute gradient), whose RT model is a fine-tuned Chronologer,
+    /// CarafeSharp's default. A fine-tuned RT model predicts on its training run's gradient, so the
+    /// library holds that run's retention times in minutes, not iRT.
     /// </summary>
     [TestClass]
     public class CarafeModelBuildLibraryTest : AbstractFunctionalTestEx
@@ -76,6 +79,7 @@ namespace TestPerf
             const string libraryName = "CarafeModelLibrary";
             string libraryPath = TestFilesDir.GetTestPath(libraryName + BiblioSpecLiteSpec.EXT);
             string modelPath = TestFilesDir.GetTestPath("AstralFineTuned.carafemodel");
+            Assert.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(modelPath).RtModel);
 
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);

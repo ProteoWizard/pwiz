@@ -348,6 +348,12 @@
       <Link>models\alphapeptdeep-v1\LICENSE.txt</Link>
       <Visible>false</Visible>
     </Content>
+    <!-- The pinned Chronologer RT model, which a .carafemodel file's RT model can be. -->
+    <Content Include="..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.pt;..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json;..\CarafeSharp\models\chronologer-20220601193755\LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\chronologer-20220601193755\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
 
   <!-- msconvert (managed pwiz-sharp port). Skyline shells out to msconvert for DIA-Umpire and

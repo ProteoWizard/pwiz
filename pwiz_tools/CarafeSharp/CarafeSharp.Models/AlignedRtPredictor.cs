@@ -22,9 +22,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.Models;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Models
 {
     /// <summary>
     /// An RT model whose predictions an aligned training's maps take to minutes on one of its gradients: a Chronologer's
@@ -32,7 +31,7 @@ namespace pwiz.CarafeSharp
     /// (<see cref="RtAlignment.ToRunMinutes"/>), or a model's median minutes to one run's. They are clipped at 0 and
     /// divided by the library's rt_max, which the library multiplies back. Owns the model it wraps.
     /// </summary>
-    internal sealed class AlignedRtPredictor : IRtPredictor
+    public sealed class AlignedRtPredictor : IRtPredictor
     {
         private readonly Func<double, double> _toMinutes;
         private readonly double _rtMax;
