@@ -12,6 +12,10 @@
     <options>
       <option name="artifactRules" value="scripts/installer/build/ProteoWizard-*.exe&#xA;scripts/installer/build/installer-version.txt&#xA;**/*.blib.observed" />
     </options>
+    <parameters>
+      <param name="env.GITHUB_STATUS_TOKEN" value="%GitHubAuthToken%" />
+      <param name="env.INSPECTION_TARGET_URL" value="https://teamcity.labkey.org/buildConfiguration/%system.teamcity.buildType.id%/%teamcity.build.id%?guest=1" />
+    </parameters>
     <build-runners order="Set_PYTHON_HOME_if_unset_by_agent, RUNNER_simpleRunner_139, Set_PWIZ_VERSION_variable, RUNNER_73, RUNNER_85">
       <runner id="RUNNER_simpleRunner_139" name="" type="simpleRunner">
         <parameters>
