@@ -72,19 +72,13 @@ namespace pwiz.Osprey
         bool SubsampleOnly { get; }
         bool DumpSvmWeights { get; }
         bool SvmWeightsOnly { get; }
-        bool DumpRescored { get; }
-        bool RescoredOnly { get; }
         bool DumpMpInputs { get; }
         bool DumpPredictRt { get; }
         bool DumpCwtPath { get; }
         bool DumpConsensus { get; }
         bool ConsensusOnly { get; }
-        bool DumpMulticharge { get; }
-        bool MultichargeOnly { get; }
         bool DumpRefit { get; }
         bool RefitOnly { get; }
-        bool DumpReconciliation { get; }
-        bool ReconciliationOnly { get; }
         bool DumpCalibration { get; }
         bool CalibrationOnly { get; }
         bool DumpInvPredict { get; }
@@ -194,20 +188,10 @@ namespace pwiz.Osprey
 
         // ----- Stages 5-7: join, rescore, reconciliation, protein FDR dumps -----
 
-        void WriteStage6RescoredDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries);
-
         void WriteStage6ConsensusDump(IReadOnlyList<PeptideConsensusRT> consensus);
-
-        void WriteStage6MultichargeDump(
-            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileTargets);
 
         void WriteStage6RefitDump(
             IReadOnlyDictionary<string, RTCalibration> refinedCalibrations);
-
-        void WriteStage6ReconciliationDump(
-            IReadOnlyDictionary<(string File, int Index), ReconcileAction> actions,
-            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries);
 
         void WriteStage6CalibrationDump(
             string fileName, double[] libraryRts, double[] fittedValues);

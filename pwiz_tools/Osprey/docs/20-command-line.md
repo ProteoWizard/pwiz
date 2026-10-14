@@ -110,6 +110,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--fragment-tolerance` | `<value>` | `10` | Fragment m/z tolerance (ignored at unit resolution). |
 | `--fragment-unit` | `ppm \| mz` | `ppm` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
+| `--demux` | `off \| auto` | `off` | Demultiplex overlapping-window (staggered) or MSX DIA with ProteoWizard's demultiplexer while the source is read, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` reads a run that is not multiplexed as acquired. With `off`, a multiplexed run is searched as acquired, with a warning suggesting `--demux auto`. Give every task of an HPC chain the same value. Osprey-only. |
 
 ### FDR & Protein Inference
 
@@ -260,7 +261,7 @@ the user's culture, as Skyline's does:
   only through `-d` or an `OSPREY_*` setting.
 - `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
   instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
-  choice from `OSPREY_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
+  choice from `OSPREYDEV_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
   tr-TR are test cultures for number formatting, not translation targets.
 
 ## Distributed execution (HPC)

@@ -717,7 +717,7 @@ public class BlibBuilder : BlibMaker
     /// was built from. Mirrors cpp: skip UNKNOWN rows, and fall back to a single UNKNOWN when the library
     /// records none (or predates the ScoreTypes table), so the probe always yields a valid, non-erroring row.
     /// </summary>
-    private IList<PsmScoreType> GetBlibScoreTypes(int iLib)
+    private List<PsmScoreType> GetBlibScoreTypes(int iLib)
     {
         var path = _inputFiles[iLib];
         VerifyFileExists(path);

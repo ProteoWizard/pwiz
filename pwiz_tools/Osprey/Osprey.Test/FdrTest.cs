@@ -1937,8 +1937,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// One file's apex RTs indexed by <c>ParquetIndex</c>, off a resident
         /// <see cref="FdrEntry"/> fixture - the unit-test stand-in for
-        /// <c>ParquetScoreCache.ReadApexRtsByParquetIndex</c>, which reads the same thing out of
-        /// the file's <c>.scores.parquet</c>. Supplied to the RESIDENT score path, whose
+        /// the production reader that read the same thing out of the file's
+        /// <c>.scores.parquet</c> until the resident first pass left production. Supplied to
+        /// the RESIDENT score path, whose
         /// projection rows carry no retention time (issue #4355) while the per-file FDR sidecar
         /// they feed has a column for one (format v7, issue #4522).
         /// </summary>
