@@ -152,6 +152,10 @@ function Complete-Inspection([string] $state, [string] $summary) {
 }
 
 try {
+    # The warning gate shared with the pwiz-sharp tcinspect.ps1. Inside the try, so a module that
+    # fails to load still ends in a verdict rather than a failed step.
+    Import-Module (Join-Path $PSScriptRoot '..\..\scripts\BuildWarnings.psm1') -Force
+
     $Solution = [System.IO.Path]::GetFullPath($Solution)
     $ReportPath = [System.IO.Path]::GetFullPath($ReportPath)
     $BuildWarningsPath = [System.IO.Path]::GetFullPath($BuildWarningsPath)
@@ -190,9 +194,7 @@ try {
             }
             if ($AutomatedBuild) { $buildProperties.AutomatedBuild = 'true' }
 
-            # A second, warnings-only file logger next to the console one. 'append' because every
-            # project's build writes to the same log.
-            $warningsLogger = @('-fl9', "-flp9:warningsonly;logfile=$BuildWarningsPath;append;verbosity=minimal")
+            $warningsLogger = Get-BuildWarningsLoggerArgs $BuildWarningsPath
             foreach ($project in @($PreBuild | Where-Object { -not [string]::IsNullOrEmpty($_) })) {
                 $projectName = Split-Path -Leaf $project
                 Write-Host "##teamcity[progressMessage 'Building $projectName for the inspection']"
@@ -287,33 +289,10 @@ try {
         if ($total -gt 100) { Write-Host "  ... and $($total - 100) more; see the Inspections tab" }
     }
 
-    # Restore warnings are logged twice - by the restore and again when the build replays them -
-    # and a source file shared between projects warns once per project, so compare each line
-    # without the trailing ' [project]' a compiler warning carries.
-    $buildWarnings = @()
-    if (Test-Path $BuildWarningsPath) {
-        $buildWarnings = @(Get-Content -LiteralPath $BuildWarningsPath |
-                           Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-                           ForEach-Object { ($_ -replace '\s+\[[^\]]+\]\s*$', '').Trim() } |
-                           Sort-Object -Unique)
-        Write-Host ("##teamcity[publishArtifacts '{0} =>.teamcity/skyline-inspectcode']" -f (Format-TcValue $BuildWarningsPath))
-    } elseif (-not $UseExistingReport) {
-        # The logger creates the file on the first build, warnings or not, so a missing log
-        # means the pre-build never ran: no evidence the build is warning-free.
-        Write-Host "##teamcity[message text='No build warnings log at $(Format-TcValue $BuildWarningsPath); build warnings were not checked' status='WARNING']"
-    }
-    if ($buildWarnings.Count -gt 0) {
-        Write-Host ''
-        Write-Host "$($buildWarnings.Count) build warning(s); fix them, or demote one with NoWarn and a comment saying why:"
-        foreach ($warning in $buildWarnings) { Write-Host "  $warning" }
-        # Fails the build without stopping it. The fixed identity lets TeamCity tell a new
-        # problem from one the previous build also had.
-        Write-Host ("##teamcity[buildProblem identity='skyline-build-warnings' description='{0}']" -f
-                    (Format-TcValue "$($buildWarnings.Count) build warning(s), first: $($buildWarnings[0])"))
-    }
+    $buildWarningCount = Write-BuildWarnings -LogPath $BuildWarningsPath -ProblemIdentity 'skyline-build-warnings' -ArtifactDir '.teamcity/skyline-inspectcode'
 
     $verdict = @()
-    if ($buildWarnings.Count -gt 0) { $verdict += "$($buildWarnings.Count) build warnings" }
+    if ($buildWarningCount -gt 0) { $verdict += "$buildWarningCount build warnings" }
     if ($total -gt 0) {
         $counts = ($bySeverity.GetEnumerator() | Sort-Object -Property Key |
                    ForEach-Object { "$($_.Value) $($_.Key.ToLowerInvariant())" }) -join ', '
