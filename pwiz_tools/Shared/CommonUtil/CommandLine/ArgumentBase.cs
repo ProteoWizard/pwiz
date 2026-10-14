@@ -79,6 +79,12 @@ namespace pwiz.Common.CommandLine
         /// follow as the next token.
         /// </summary>
         public bool Variadic { get; set; }
+        /// <summary>
+        /// The missing-value error for this argument, given the argument as typed, when the
+        /// provider's general text is not enough: Osprey's <c>--task</c> lists the task names,
+        /// because that error is the user's only guide to them. Null uses the provider's.
+        /// </summary>
+        public Func<string, string> MissingValueMessage { get; set; }
         public bool InternalUse { get; set; }
         public bool HasValueChecking { get; set; }  // Set to avoid default checking against values listed for documentation
         /// <summary>

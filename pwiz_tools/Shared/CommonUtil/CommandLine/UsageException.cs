@@ -61,9 +61,13 @@ namespace pwiz.Common.CommandLine
         {
         }
 
-        /// <summary>With <paramref name="argText"/> the argument as the user typed it (<c>-o</c> or <c>--output</c>).</summary>
+        /// <summary>
+        /// With <paramref name="argText"/> the argument as the user typed it (<c>-o</c> or
+        /// <c>--output</c>). An argument with its own <see cref="ArgumentBase.MissingValueMessage"/>
+        /// supplies the text; the rest get the provider's.
+        /// </summary>
         public ValueMissingException(ArgumentBase arg, string argText)
-            : base(arg, ArgUsage.Provider.ValueMissingMessage(argText))
+            : base(arg, arg.MissingValueMessage?.Invoke(argText) ?? ArgUsage.Provider.ValueMissingMessage(argText))
         {
         }
     }
@@ -85,7 +89,13 @@ namespace pwiz.Common.CommandLine
     public class ValueInvalidException : UsageException
     {
         public ValueInvalidException(ArgumentBase arg, string value, string[] argValues)
-            : base(arg, ArgUsage.Provider.ValueInvalidMessage(arg.ArgumentText, value, argValues))
+            : this(arg, value, argValues, arg.ArgumentText)
+        {
+        }
+
+        /// <summary>With <paramref name="argText"/> the argument as the user typed it.</summary>
+        public ValueInvalidException(ArgumentBase arg, string value, string[] argValues, string argText)
+            : base(arg, ArgUsage.Provider.ValueInvalidMessage(argText, value, argValues))
         {
         }
     }

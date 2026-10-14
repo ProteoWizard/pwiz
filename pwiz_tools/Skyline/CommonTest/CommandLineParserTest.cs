@@ -138,6 +138,10 @@ namespace CommonTest
             AssertEx.AreEqual(@"unknown --bogus=1", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--bogus=1")).Message);
             AssertEx.AreEqual(@"unknown --", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--")).Message);
             AssertEx.AreEqual(@"invalid bad --mode fast, slow", Assert.ThrowsException<ValueInvalidException>(() => Parse(@"--mode=bad")).Message);
+            // A variadic argument takes no following token under a grammar whose values never follow.
+            var strictInput = Parse(@"--input=a", @"b");
+            CollectionAssert.AreEqual(new[] { @"a" }, strictInput.Inputs);
+            CollectionAssert.AreEqual(new[] { @"b" }, strictInput.Positional);
             // A handler returning false stops the parse there.
             var parser = new CommandLineParser<Context>(ARGUMENTS);
             context = new Context();
@@ -179,6 +183,28 @@ namespace CommonTest
             Assert.ThrowsException<ValueMissingException>(() => Parse(@"-i="));
             AssertEx.AreEqual(@"unexpected --flag", Assert.ThrowsException<ValueUnexpectedException>(() => Parse(@"--flag=1")).Message);
             AssertEx.AreEqual(@"unknown -x", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"-x")).Message);
+            // A listed value refused under an alias names the alias, and an argument may own
+            // its missing-value text.
+            ArgUsage.Grammar = new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true };
+            ARG_MODE.ShortName = @"m";
+            try
+            {
+                AssertEx.AreEqual(@"invalid bad -m fast, slow", Assert.ThrowsException<ValueInvalidException>(() => Parse(@"-m", @"bad")).Message);
+            }
+            finally
+            {
+                ARG_MODE.ShortName = null;
+            }
+            ARG_OUTPUT.MissingValueMessage = argText => @"own " + argText;
+            try
+            {
+                AssertEx.AreEqual(@"own -o", Assert.ThrowsException<ValueMissingException>(() => Parse(@"-o")).Message);
+            }
+            finally
+            {
+                ARG_OUTPUT.MissingValueMessage = null;
+            }
+            ArgUsage.Grammar = new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, ValidatesListedValues = false };
             AssertEx.AreEqual(@"unknown --bogus", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--bogus", @"1")).Message);
             // An optional count takes only a token its filter accepts; the rest is positional.
             context = Parse(@"--count", @"3", @"--count", @"a.mzML", @"--count");

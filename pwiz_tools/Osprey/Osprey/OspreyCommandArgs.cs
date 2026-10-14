@@ -258,8 +258,15 @@ namespace pwiz.Osprey
         // Declared so it appears in help.
         // The value list IS the task list, in its --help order, so the help and the
         // resolution cannot disagree; six trivial constructions, once, at type init.
+        // A missing task name lists the tasks: Program reads this argument first, so that error is
+        // the user's only guide to the names.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(OspreyArgNames.TASK,
-            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true) { DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText } };
+            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true)
+            {
+                DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText },
+                MissingValueMessage = argText => string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
+                    ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values))
+            };
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
         // --task plus each artifact's embedded validity stamp, and two seams answering one question is
@@ -927,20 +934,7 @@ namespace pwiz.Osprey
 
             // ValueInvalidMessage is the text every "Invalid value" error in this file shows;
             // ValueUnexpected / ValueInvalid are what the token builder throws.
-            /// <summary>
-            /// The missing-value error, naming the argument as typed; a missing
-            /// <see cref="ARG_TASK"/> value lists the tasks instead, because Program reads
-            /// that argument first and its message is the user's only guide to the names.
-            /// </summary>
-            public string ValueMissingMessage(string argText)
-            {
-                if (argText == ARG_TASK.ArgumentText)
-                {
-                    return string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
-                        ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values));
-                }
-                return string.Format(OspreyResources.OspreyArgUsageProvider_ValueMissingMessage__0__requires_a_value_, argText);
-            }
+            public string ValueMissingMessage(string argText) { return string.Format(OspreyResources.OspreyArgUsageProvider_ValueMissingMessage__0__requires_a_value_, argText); }
             public string UnknownArgumentMessage(string argText)
             {
                 return string.Format(OspreyResources.OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0___Run_with__1__to_see_valid_options_,

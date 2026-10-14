@@ -171,12 +171,13 @@ namespace pwiz.Common.CommandLine
         /// <summary>
         /// Binds this pair to the argument the parser matched it to, so the typed coercions can
         /// name it, refusing a value outside the argument's declared list when
-        /// <paramref name="validateListedValues"/> asks.
+        /// <paramref name="validateListedValues"/> asks, with the argument spelled as
+        /// <paramref name="argText"/> (as typed) in that error, or its own text when null.
         /// </summary>
-        public void Bind(ArgumentBase arg, bool validateListedValues)
+        public void Bind(ArgumentBase arg, bool validateListedValues, string argText = null)
         {
             if (validateListedValues && !IsNameOnly && !arg.IsValidValue(Value))
-                throw new ValueInvalidException(arg, Value, arg.ValuesForError);
+                throw new ValueInvalidException(arg, Value, arg.ValuesForError, argText ?? arg.ArgumentText);
             Match = arg;
         }
 

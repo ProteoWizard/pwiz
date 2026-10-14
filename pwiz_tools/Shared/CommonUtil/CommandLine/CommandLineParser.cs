@@ -35,19 +35,27 @@ namespace pwiz.Common.CommandLine
     /// </summary>
     public class CommandLineParser<TContext>
     {
-        private readonly CommandLineGrammar _grammar;
         private readonly IList<Argument<TContext>> _arguments;
 
         /// <summary>
-        /// A parser over <paramref name="arguments"/> under the process-wide grammar, read here
-        /// once: a host installs its grammar on <see cref="ArgUsage.Grammar"/> before it
-        /// declares or parses anything, the way it installs its <see cref="ArgUsage.Provider"/>.
+        /// A parser over <paramref name="arguments"/> under the process-wide grammar: a host
+        /// installs its grammar on <see cref="ArgUsage.Grammar"/> before it declares or parses
+        /// anything, the way it installs its <see cref="ArgUsage.Provider"/>.
         /// </summary>
         public CommandLineParser(IEnumerable<Argument<TContext>> arguments)
         {
-            _grammar = ArgUsage.Grammar;
             _arguments = arguments.ToList();
             SeenArguments = new List<Argument<TContext>>();
+        }
+
+        /// <summary>
+        /// The grammar in force, read live on every use, the same way
+        /// <see cref="ArgumentBase.ArgumentText"/> reads it, so the tokens this parser accepts
+        /// and the text its errors spell can never come from two grammars.
+        /// </summary>
+        private static CommandLineGrammar Grammar
+        {
+            get { return ArgUsage.Grammar; }
         }
 
         /// <summary>
@@ -79,11 +87,11 @@ namespace pwiz.Common.CommandLine
                 if (arg == null)
                 {
                     // Reported whole, as typed (--retired=2), so the user sees what was refused.
-                    if (_grammar.IsOptionToken(token))
+                    if (Grammar.IsOptionToken(token))
                         throw new UnknownArgumentException(token);
                     if (PositionalHandler != null && PositionalHandler(context, token))
                         continue;
-                    if (_grammar.StrayTokens == StrayTokenPolicy.error)
+                    if (Grammar.StrayTokens == StrayTokenPolicy.error)
                         throw new UnknownArgumentException(token);
                     continue;
                 }
@@ -94,21 +102,24 @@ namespace pwiz.Common.CommandLine
                 if (arg.Variadic)
                 {
                     // Every value up to the next option, each dispatched as its own pair, so the
-                    // handler is the same one line a single value takes.
+                    // handler is the same one line a single value takes. An inline value is read
+                    // by the one rule every value follows (ReadValue never looks past the token
+                    // when it has one), and the following tokens are values only under a grammar
+                    // whose values may follow at all.
                     var values = new List<string>();
                     if (inlineValue != null)
-                        values.Add(RequireValue(arg, argText, inlineValue));
-                    while (i + 1 < args.Count && IsValueToken(args[i + 1]))
+                        values.Add(ReadValue(args, ref i, arg, argText, inlineValue));
+                    while (Grammar.ValueMayFollow && i + 1 < args.Count && IsValueToken(args[i + 1]))
                         values.Add(args[++i]);
                     foreach (string value in values)
                     {
-                        if (!Dispatch(context, arg, value, repeated))
+                        if (!Dispatch(context, arg, argText, value, repeated))
                             return false;
                     }
                     continue;
                 }
 
-                if (!Dispatch(context, arg, ReadValue(args, ref i, arg, argText, inlineValue), repeated))
+                if (!Dispatch(context, arg, argText, ReadValue(args, ref i, arg, argText, inlineValue), repeated))
                     return false;
             }
             return true;
@@ -142,7 +153,7 @@ namespace pwiz.Common.CommandLine
         {
             argText = token;
             inlineValue = null;
-            foreach (string prefix in _grammar.LongPrefixes)
+            foreach (string prefix in Grammar.LongPrefixes)
             {
                 if (!token.StartsWith(prefix, StringComparison.Ordinal))
                     continue;
@@ -152,7 +163,7 @@ namespace pwiz.Common.CommandLine
                 if (arg != null)
                     return arg;
             }
-            string shortPrefix = _grammar.ShortPrefix;
+            string shortPrefix = Grammar.ShortPrefix;
             if (shortPrefix != null && token.StartsWith(shortPrefix, StringComparison.Ordinal))
             {
                 string name = SplitInline(token.Substring(shortPrefix.Length), out inlineValue);
@@ -183,9 +194,9 @@ namespace pwiz.Common.CommandLine
         /// </summary>
         private bool IsValueToken(string token)
         {
-            if (!_grammar.IsOptionToken(token))
+            if (!Grammar.IsOptionToken(token))
                 return true;
-            return !_grammar.PrefixedTokenEndsValue && MatchOption(token, out _, out _) == null;
+            return !Grammar.PrefixedTokenEndsValue && MatchOption(token, out _, out _) == null;
         }
 
         /// <summary>
@@ -208,7 +219,7 @@ namespace pwiz.Common.CommandLine
                 // An empty inline value (--name=) is a name without a value.
                 value = inlineValue.Length > 0 ? inlineValue : null;
             }
-            else if (_grammar.ValueMayFollow && i + 1 < args.Count && IsValueToken(args[i + 1]) &&
+            else if (Grammar.ValueMayFollow && i + 1 < args.Count && IsValueToken(args[i + 1]) &&
                      (!arg.OptionalValue || arg.OptionalValueFilter == null || arg.OptionalValueFilter(args[i + 1])))
             {
                 value = args[++i];
@@ -218,18 +229,11 @@ namespace pwiz.Common.CommandLine
             return value;
         }
 
-        private static string RequireValue(ArgumentBase arg, string argText, string inlineValue)
-        {
-            if (inlineValue.Length == 0)
-                throw new ValueMissingException(arg, argText);
-            return inlineValue;
-        }
-
-        private bool Dispatch(TContext context, Argument<TContext> arg, string value, bool repeated)
+        private bool Dispatch(TContext context, Argument<TContext> arg, string argText, string value, bool repeated)
         {
             var pair = new NameValuePair(arg.Name, value);
-            pair.Bind(arg, _grammar.ValidatesListedValues && !arg.HasValueChecking);
-            if (repeated && _grammar.FirstValueWins)
+            pair.Bind(arg, Grammar.ValidatesListedValues && !arg.HasValueChecking, argText);
+            if (repeated && Grammar.FirstValueWins)
                 return true;
             if (arg.ProcessValue == null)
                 throw new InvalidOperationException(@"The argument " + arg.ArgumentText + @" declares no way to process its value.");

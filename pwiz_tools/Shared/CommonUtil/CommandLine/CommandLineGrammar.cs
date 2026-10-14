@@ -112,16 +112,25 @@ namespace pwiz.Common.CommandLine
         /// </summary>
         public StrayTokenPolicy StrayTokens { get; init; } = StrayTokenPolicy.ignore;
 
-        /// <summary>The prefixes a long name is recognized under, longest first.</summary>
-        public IEnumerable<string> LongPrefixes
+        private IReadOnlyList<string> _longPrefixes;
+
+        /// <summary>
+        /// The prefixes a long name is recognized under, longest first. Built once: the
+        /// properties it derives from are init-only, and the parser reads it per token.
+        /// </summary>
+        public IReadOnlyList<string> LongPrefixes
         {
             get
             {
-                var prefixes = new List<string>(AcceptedPrefixes ?? new[] { Prefix });
-                if (!prefixes.Contains(Prefix))
-                    prefixes.Insert(0, Prefix);
-                prefixes.Sort((a, b) => b.Length.CompareTo(a.Length));
-                return prefixes;
+                if (_longPrefixes == null)
+                {
+                    var prefixes = new List<string>(AcceptedPrefixes ?? new[] { Prefix });
+                    if (!prefixes.Contains(Prefix))
+                        prefixes.Insert(0, Prefix);
+                    prefixes.Sort((a, b) => b.Length.CompareTo(a.Length));
+                    _longPrefixes = prefixes;
+                }
+                return _longPrefixes;
             }
         }
 
