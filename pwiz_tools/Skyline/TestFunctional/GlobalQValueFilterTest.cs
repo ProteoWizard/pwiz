@@ -29,12 +29,14 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec;
 using pwiz.Common.Database;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -75,6 +77,12 @@ namespace pwiz.SkylineTestFunctional
         public void TestDiannGlobalValuesSurviveMinimize()
         {
             RunGlobalQValueTest(TestDiannMinimize);
+        }
+
+        [TestMethod]
+        public void TestDiannGlobalQValueFilterDocument()
+        {
+            RunGlobalQValueTest(TestDiannFilterDocument);
         }
 
         [TestMethod]
@@ -154,6 +162,89 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             Assert.AreNotEqual(0, precursorCount);
+        }
+
+        /// <summary>
+        /// The filter the Import FASTA page applies: a peptide is kept when one of its library
+        /// precursors passes the cutoff, with its passing library precursors and every precursor no
+        /// library contains, such as the heavy-labeled ones.
+        /// </summary>
+        private void TestDiannFilterDocument()
+        {
+            BuildLibrary(DIANN_SPECLIB, DIANN_BUILD_THRESHOLD, false);
+            var entries = ReadLibraryEntries();
+            RunUI(() => SkylineWindow.ModifyDocument("Pick library peptides with heavy labels", doc =>
+                doc.ChangeSettings(doc.Settings
+                    .ChangePeptideLibraries(libraries => libraries.ChangePick(PeptidePick.library))
+                    .ChangePeptideModifications(mods => mods
+                        .ChangeStaticModifications(mods.StaticModifications.Append(OxidationVariable()).ToList())
+                        .ChangeModifications(IsotopeLabelType.heavy, new[]
+                        {
+                            UniMod.GetModification("Label:13C(6)15N(2) (C-term K)", false),
+                            UniMod.GetModification("Label:13C(6)15N(4) (C-term R)", false)
+                        })))));
+            var fasta = MakeFasta(entries);
+            var docBefore = SkylineWindow.Document;
+            // Some made-up proteins digest to no library peptide; drop them without asking
+            RunUI(() => SkylineWindow.ImportFasta(new StringReader(fasta), fasta.Split('\n').Length, false,
+                Resources.SkylineWindow_ImportFastaFile_Import_FASTA, new SkylineWindow.ImportFastaInfo(false, fasta), false));
+            var document = WaitForDocumentChangeLoaded(docBefore);
+
+            var filter = new GlobalQValueFilter(GlobalQValueLevel.precursor, CUTOFF);
+            var filtered = filter.FilterDocument(document, document.PeptideGroups);
+
+            var entriesByPrecursor = entries.ToDictionary(entry => entry.PrecursorKey);
+            var keptPeptides = filtered.Peptides.ToDictionary(nodePep => nodePep.Id.GlobalIndex);
+            int removedWithHeavy = 0, keptWithHeavy = 0;
+            foreach (var nodePep in document.Peptides)
+            {
+                // Heavy precursors are never in the library
+                var listed = nodePep.TransitionGroups.Where(nodeGroup => nodeGroup.LabelType.IsLight &&
+                    entriesByPrecursor.ContainsKey(LibraryEntry.MakePrecursorKey(nodePep.ModifiedTarget.Sequence, nodeGroup.PrecursorCharge)))
+                    .ToList();
+                var passing = listed.Where(nodeGroup => entriesByPrecursor[LibraryEntry.MakePrecursorKey(
+                    nodePep.ModifiedTarget.Sequence, nodeGroup.PrecursorCharge)].PassesCutoff(GlobalQValueLevel.precursor, CUTOFF)).ToList();
+                bool hasHeavy = nodePep.TransitionGroups.Any(nodeGroup => !nodeGroup.LabelType.IsLight);
+                var expected = listed.Count == 0
+                    ? nodePep.TransitionGroups.ToList()
+                    : passing.Count == 0
+                        ? new List<TransitionGroupDocNode>()
+                        : nodePep.TransitionGroups.Where(nodeGroup => passing.Contains(nodeGroup) || !listed.Contains(nodeGroup)).ToList();
+                keptPeptides.TryGetValue(nodePep.Id.GlobalIndex, out var keptPep);
+                var kept = keptPep?.TransitionGroups.ToList() ?? new List<TransitionGroupDocNode>();
+                CollectionAssert.AreEquivalent(expected.Select(nodeGroup => nodeGroup.Id.GlobalIndex).ToList(),
+                    kept.Select(nodeGroup => nodeGroup.Id.GlobalIndex).ToList(), nodePep.ModifiedSequenceDisplay);
+                if (hasHeavy && listed.Count > 0)
+                {
+                    if (passing.Count == 0)
+                        removedWithHeavy++;
+                    else
+                        keptWithHeavy++;
+                }
+            }
+            Assert.AreNotEqual(0, removedWithHeavy, "No failing peptide had a heavy precursor to remove.");
+            Assert.AreNotEqual(0, keptWithHeavy, "No passing peptide had a heavy precursor to keep.");
+        }
+
+        /// <summary>
+        /// A FASTA with one protein per library protein group, made of the group's peptides end to end,
+        /// so a tryptic digest gives back the library's peptides.
+        /// </summary>
+        private static string MakeFasta(IEnumerable<LibraryEntry> entries)
+        {
+            var peptidesByProtein = new Dictionary<string, SortedSet<string>>();
+            foreach (var entry in entries)
+            {
+                // A peptide that starts with P would not be cleaved from the one before it
+                var protein = entry.ProteinGroups.Keys.FirstOrDefault();
+                if (protein == null || entry.Sequence.StartsWith(@"P"))
+                    continue;
+                if (!peptidesByProtein.TryGetValue(protein, out var peptides))
+                    peptidesByProtein.Add(protein, peptides = new SortedSet<string>());
+                peptides.Add(entry.Sequence);
+            }
+            return string.Concat(peptidesByProtein.Select(kvp =>
+                @">" + kvp.Key + Environment.NewLine + string.Concat(kvp.Value) + Environment.NewLine));
         }
 
         private void TestPdResult(string pdResult, string qValueColumn, string pepColumn, bool hasAmbiguousMatches,
