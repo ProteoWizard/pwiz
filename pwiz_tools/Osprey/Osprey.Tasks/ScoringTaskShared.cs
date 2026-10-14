@@ -471,36 +471,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Reduce off one file's PRE-compaction stub pool everything a rehydrate used to
-        /// read off the resident all-files pool. Only the run-level FDR passing-target count
-        /// is needed: FirstPassFDR's Stage 5 result line reports it per file, and the streaming
-        /// hydrate has already dropped the non-survivors by the time that line is written.
-        /// Identical predicate to <c>FirstPassFdrTask.LogFirstPassResults</c>.
-        ///
-        /// <para>Shared by both callers of
-        /// <see cref="RescoreHydration.HydrateCompactedStreaming"/> -- the
-        /// <c>--task PerFileRescoring</c> worker load in <see cref="PerFileScoringTask"/>
-        /// and the straight-through resume in <see cref="FirstPassFdrTask"/> - so the two
-        /// cannot drift into reporting per-file counts under different predicates. The
-        /// <c>--task SecondPassFDR</c> merge takes that SAME streaming hydrate since #4486
-        /// (it no longer routes to the resident batch twin), but it skips this tally: the
-        /// only reader of <c>PassingTargets</c> is FirstPassFDR's per-file Stage 5 result
-        /// line, and that task is excluded on the merge node, so filling the field there
-        /// would walk every stub to produce a number nothing reads.</para>
-        /// </summary>
-        internal static void TallyPreCompaction(
-            OspreyConfig config, List<FdrEntry> stubs, PreCompactionTally tally)
-        {
-            int passing = 0;
-            foreach (var entry in stubs)
-            {
-                if (!entry.IsDecoy && entry.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
-                    passing++;
-            }
-            tally.PassingTargets = passing;
-        }
-
-        /// <summary>
         /// A path from this analysis that resolves to the directory its per-file artifacts go
         /// to, for naming the analysis-wide experiment-scope FDR sidecar
         /// (<see cref="FdrExperimentSidecar.PathFor"/>).
@@ -542,27 +512,12 @@ namespace pwiz.Osprey.Tasks
         /// consumes the whole-run pool. Everything else rescores per run - including the
         /// straight-through pipeline.</para>
         ///
-        /// <para><b>The <c>--input-scores</c> term is a KNOWN WART, and it is here for a measured
-        /// reason rather than a good one.</b> Keying a memory shape on how the run was invoked is
-        /// wrong in principle - the per-run artifacts exist either way, and straight-through
-        /// consequently still holds the planner's whole-experiment products (the reconciliation
-        /// action map, 30.8 M entries at 446 runs; gap-fill targets, 8.85 M; per-run consensus
-        /// targets and refined calibrations - order 13 GB) across the entire rescore.</para>
-        ///
-        /// <para>Removing the term was TRIED and reverted. Straight-through output stayed
-        /// byte-identical (mode 1 green), but the Stage-5 rehydrate leg lost 77 of 27,321
-        /// precursors a run apiece - <c>RefSpectra.copies</c> and <c>NRunsDetected</c> both
-        /// 3 -> 2, 94 <c>RetentionTimes</c> keys missing. Cause: mode 5 SKIPS PerFileRescoring,
-        /// so <c>PerFileRescoreTask.Rehydrate</c> runs and rebuilds the whole-run pool for
-        /// Stage 7 via <c>OverlayReconciledIntoFiles(..., ctx.Get&lt;PerFileGapFillForRescore&gt;())</c>.
-        /// That path needs gap-fill across ALL runs by design, and a per-run FirstPassFDR
-        /// rehydrate has none to give it.</para>
-        ///
-        /// <para>So extending this to straight-through is NOT independent of Stage 7's own
-        /// O(runs) pool - it is blocked behind the same lean-row work (#4486). The right signal
-        /// remains the SUMMARY'S EXISTENCE rather than an argument, since it is written when
-        /// planning ends and so answers "has the producing phase finished?" the way an artifact
-        /// should; the flag term is what has to go when Stage 7 stops needing the pool.</para>
+        /// <para>The signal is the SUMMARY'S EXISTENCE rather than how the run was invoked: it is
+        /// written when planning ends, so it answers "has the producing phase finished?" the way
+        /// an artifact should, and the straight-through pipeline rescores per run like every other
+        /// route. An <c>--input-scores</c> term once kept straight-through off this route, because
+        /// Stage 7 rebuilt the whole-run pool with cross-run gap-fill; that rebuild is gone, and
+        /// the term went with it.</para>
         ///
         /// <para>The summary is probed by header rather than read, so this stays cheap enough to
         /// call from either site. Its ABSENCE returns false rather than failing here: the run is
@@ -630,8 +585,8 @@ namespace pwiz.Osprey.Tasks
         /// it are about the ROUTE - which task this is, what it consumes - and a false there
         /// means the run declined a bounded alternative that exists. This term is about DISK
         /// state, and a false here means there was nothing to decline. Only the first is a
-        /// defect; see <see cref="AllRunsBundleGuardError"/>, which refuses one and not the
-        /// other.</para>
+        /// defect, which is why FirstPassFDR's rehydrate refuses the two with different errors:
+        /// a routing defect for the first, the missing-summary remedy for the second.</para>
         /// </summary>
         internal static bool PerRunSurvivorLoaderAvailable(OspreyConfig config)
         {
@@ -953,68 +908,6 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Refuse the ALL-RUNS reconciliation bundle, which retains every run's POST-compaction
-        /// survivors at once and so grows O(files x entries) - 0.10 GB/file measured on a
-        /// 446-run cohort, past a 63.7 GB box by file ~310.
-        ///
-        /// <para>This is the guard's invariant reaching PAST THE COMPACTION LINE.
-        /// The retired first-pass resident-pool guard enforced "no unnamed
-        /// PRE-compaction pool" and stopped there, which is why the resident post-compaction
-        /// handoff (the retired <c>compacted-entries-buffer</c> token) had to be named rather
-        /// than refused - no token could reach it. The bundle guarded here is on the same far side of
-        /// that line, and it was reachable with no token and no disclosure at all: a run took an
-        /// O(files x entries) route without declaring it, which is the one shape the named-token
-        /// ratchet exists to make impossible.</para>
-        ///
-        /// <para>It takes NO token, deliberately. <see cref="ResidentPaths"/> may only shrink,
-        /// and where this fires the bounded alternative is already on disk - the per-run
-        /// survivor loader built from the analysis-wide retained base_id summary. A path that
-        /// CAN stream and does not is a defect to fix, not a path to name, which is the
-        /// disposition the hpc-merge and resume-survivor-handoff notes already record.</para>
-        ///
-        /// <para><b>Null where the bounded alternative does not exist</b>, which is the whole
-        /// content of this guard. It first read <c>!CanHydratePerRun</c> as "an operator chose a
-        /// resident route", and that predicate's false branch is half DISK STATE: no <c>-o</c>
-        /// blib to name the summary after, or a summary this build cannot read. This guard has
-        /// nothing to add there, on either load. Under a resident token master completes those
-        /// runs through the overlay, which needs no summary, so refusing them is a regression;
-        /// on the default lean load the streamed bundle needs the same summary and fails one
-        /// call later with its own error naming the producer, so refusing first only puts a
-        /// second, contradictory remedy above the real one - and this one named a remedy built
-        /// FROM the very file whose absence triggered it. <c>WarnPreCompactionPool</c> records
-        /// the disposition for the first shape: warn, because "every configuration that reaches
-        /// here worked before the bounded hydrate existed, so failing them would be a
-        /// regression, not a guard". What is left after the split is the route case - the
-        /// loader is on disk and this run declined it - which is the
-        /// <c>--task ModelDiagnostics</c> defect this branch fixes and is unreachable once it
-        /// is fixed. That is the point: it fires only if a later edit re-opens the arm, which
-        /// is the one thing no gate at 3 files can see.</para>
-        /// </summary>
-        internal static string AllRunsBundleGuardError(OspreyConfig config, string allowUnfixedResident)
-        {
-            // Disk state, not a choice: nothing to decline, so nothing to refuse. The caller
-            // discloses the cost instead - it is about to take the O(files x entries) route
-            // because this analysis has no bounded one, and that is worth saying out loud.
-            if (!PerRunSurvivorLoaderAvailable(config))
-                return null;
-            // Named the same way the sibling guards name theirs, so a stale or misspelled token
-            // cannot read as an unset one - even though no token can admit this path, an
-            // operator who set one is owed the answer that it was not the problem.
-            // For the developer who hits this: the run was about to build the ALL-RUNS
-            // reconciliation bundle, O(files x entries) at 0.10 GB/file (past a 63.7 GB box by
-            // file ~310 of 446), although the per-run survivor loader built from the
-            // analysis-wide retained base_id summary was available. Something that was streamed
-            // is resident again - fix that rather than allowing it.
-            string supplied = string.IsNullOrWhiteSpace(allowUnfixedResident)
-                ? string.Empty
-                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is set to '{0}', but no setting " +
-                                @"allows this.", allowUnfixedResident);
-            return string.Format(
-                OspreyTasksResources.ScoringTaskShared_AllRunsBundleGuardError_Stopped_before_holding_the_first_pass_precursor_candidates_of_every_run_in_memory_at_once_,
-                supplied);
-        }
-
-        /// <summary>
         /// The retained base_id set for the streamed second-pass join, or a hard failure.
         ///
         /// <para>Separate from <see cref="ReadRetainedBaseIds"/>'s null-returning form because
@@ -1105,10 +998,6 @@ namespace pwiz.Osprey.Tasks
         /// arrive here in the same nested (file, row) order the batch build walks (input-file
         /// order, parquet row order within a file), which is what makes the streamed
         /// reductions reproduce the resident ones element for element.
-        ///
-        /// <para>Shared by the same two hydrate callers as
-        /// <see cref="TallyPreCompaction"/>: the report must be identical whether the
-        /// pre-compaction rows passed through the worker load or a resume's.</para>
         /// </summary>
         internal static void FeedModelDiagnostics(
             ModelDiagnosticsData.Accumulator accumulator, int fileIdx, List<FdrEntry> stubs)
@@ -1119,6 +1008,25 @@ namespace pwiz.Osprey.Tasks
                     entry.IsDecoy, entry.Score,
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
                         entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
+            }
+        }
+
+        /// <summary>
+        /// <see cref="FeedModelDiagnostics(ModelDiagnosticsData.Accumulator, int, List{FdrEntry})"/>
+        /// for one run's joined <see cref="FirstPassFoldRows"/>, in row order. PEP is 1.0 on every
+        /// row, as it was on the stubs these rows replace: the first-pass sidecar carries no PEP
+        /// column (see <see cref="FdrScoreRecord"/>), so a stub kept its default.
+        /// </summary>
+        internal static void FeedModelDiagnostics(
+            ModelDiagnosticsData.Accumulator accumulator, int fileIdx, FirstPassFoldRows rows)
+        {
+            for (int i = 0; i < rows.Count; i++)
+            {
+                ref readonly var row = ref rows[i];
+                accumulator.Add(fileIdx, row.ModifiedSequence, row.Charge, row.EntryId,
+                    row.IsDecoy, row.Score,
+                    new FdrQValues(row.RunPrecursorQvalue, row.RunPeptideQvalue,
+                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0));
             }
         }
 

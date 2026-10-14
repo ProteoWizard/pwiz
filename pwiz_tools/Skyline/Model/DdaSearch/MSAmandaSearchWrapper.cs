@@ -1,6 +1,7 @@
 /*
  * Original author: Viktoria Dorfer <viktoria.dorfer .at. fh-hagenberg.at>,
  *                  Bioinformatics Research Group, University of Applied Sciences Upper Austria
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2020 University of Applied Sciences Upper Austria
  *
@@ -321,7 +322,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
 
         /// <summary>MS Amanda's bundled Percolator, which it runs itself (see BuildSettingsXml).</summary>
-        private static string PercolatorDirectory => Path.Combine(MSAmandaDirectory, @"percolator");
+        internal static string PercolatorDirectory => Path.Combine(MSAmandaDirectory, @"percolator");
 
         // MS Amanda's percolator folder is missing two links of its own dependency chain. Reading the
         // import tables: percolator.exe needs vcruntime140_1.dll (so does the msvcp140.dll beside it),
@@ -366,7 +367,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         /// like 0xC0000135 and writes nothing at all, which is otherwise indistinguishable from a search
         /// that simply found no matches. Returns a sentence for the error the user sees.
         /// </summary>
-        private static string DiagnosePercolator()
+        internal static string DiagnosePercolator()
         {
             string percolatorExe = Path.Combine(PercolatorDirectory, @"percolator.exe");
             if (!File.Exists(percolatorExe))
@@ -388,14 +389,20 @@ namespace pwiz.Skyline.Model.DdaSearch
                     return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_could_not_run,
                         percolatorExe, DdaSearchResources.MSAmandaSearchWrapper_Percolator_not_found);
 
-                process.StandardOutput.ReadToEnd();
-                string error = process.StandardError.ReadToEnd();
+                // Drain both streams at once: percolator writes its ~25 KB of help to stderr, and reading
+                // stdout to the end first deadlocked once that filled the stderr pipe.
+                var reader = new ProcessStreamReader(process, true);
                 if (!process.WaitForExit(30 * 1000))
                 {
                     process.Kill();
                     return string.Format(DdaSearchResources.MSAmandaSearchWrapper_Percolator_ran_but_scored_nothing,
                         PercolatorDirectory);
                 }
+                while (reader.ReadLine() != null)
+                {
+                    // Read to the end, so the error lines are complete
+                }
+                string error = reader.GetErrorLines();
 
                 // A negative exit code here is an NTSTATUS from the loader, not something percolator chose
                 // to return, so report it in the hex form those statuses are documented under.

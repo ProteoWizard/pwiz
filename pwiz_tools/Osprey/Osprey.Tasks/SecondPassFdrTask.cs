@@ -354,13 +354,9 @@ namespace pwiz.Osprey.Tasks
             // reconciled-input compaction when the driver skipped it), which is what
             // produces the post-rescore version this stage reads.
             //
-            // Reading .Value on that milestone is also what BUILDS the global survivor pool
-            // after a streamed rescore (issue #4597): PerFileRescore leaves it deferred,
-            // because re-reading every file's artifacts is whole-run join work and that task
-            // is a per-file HPC exit point. Stage 7 is the stage that needs a global pool -
-            // the protein-compact competition is over a global stratum - so Stage 7 is where
-            // the work lands, and a worker that never reaches this line never pays it.
-            // Taken as a TOKEN first, so the probes below can bracket that build.
+            // Its runs are rebuilt one at a time, by the folds below, through the milestone's
+            // per-run source (issue #4597): PerFileRescore re-reads nothing at its own exit, so a
+            // worker that never reaches this line never pays for it. Reading .Value is refused.
             var rescored = ctx.Get<RescoredEntries>();
             RequireStreamedJoin(rescored);
 
@@ -370,12 +366,8 @@ namespace pwiz.Osprey.Tasks
             // tell a live survivor pool from Server-GC committed-but-free gray - which is
             // precisely the question.
             //
-            // BEFORE the .Value read, deliberately. #4597 moved the pool build onto that
-            // read, and this probe exists to separate what Stage 7 inherits from what it
-            // allocates - so taking it after the build would fold the build's own transients
-            // (each file's pre-filter stub superset, the overlay's loaded list and maps) into
-            // the "inherited" number and break comparability with the whole #4486 series.
-            // The stage7-pool probe below is the one that measures the build.
+            // BEFORE the first fold, deliberately: this probe separates what Stage 7 inherits
+            // from what it allocates, which keeps it comparable with the whole #4486 series.
             int nFiles = ctx.Config.InputFiles?.Count ?? 0;
             string memDetail = string.Format(@"(files={0})", nFiles);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"stage7 start (pre-GC)");
