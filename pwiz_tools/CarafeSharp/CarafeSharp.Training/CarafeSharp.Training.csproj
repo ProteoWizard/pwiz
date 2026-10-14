@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.Training</RootNamespace>
+    <AssemblyName>CarafeSharp.Training</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <ProjectReference Include="..\CarafeSharp.IO\CarafeSharp.IO.csproj" />
+  </ItemGroup>
+
+</Project>
