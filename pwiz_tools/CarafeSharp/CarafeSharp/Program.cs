@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -49,8 +49,9 @@ namespace pwiz.CarafeSharp
             }
             catch (Exception e) when (e is ArgumentException || e is NotSupportedException)
             {
+                // A usage error: the message is the diagnosis, then where the options are.
                 error.WriteLine(e.Message);
-                error.WriteLine(CarafeCommandLine.Usage);
+                error.WriteLine(CarafeCommandLine.UsageHint);
                 return 1;
             }
             foreach (string warning in commandLine.Warnings)
@@ -82,7 +83,7 @@ namespace pwiz.CarafeSharp
                         output.WriteLine(@"Time used for spectral library generation: " + Seconds(stopwatch) + @" s.");
                         return 0;
                     default:
-                        output.WriteLine(CarafeCommandLine.Usage);
+                        CarafeCommandLine.PrintUsage(commandLine.HelpFormat, output);
                         return 0;
                 }
             }

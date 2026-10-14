@@ -95,10 +95,10 @@ a { color: #1565c0; }
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>Write developer diagnostic dump files, for comparison with the Rust implementation</td></tr>
 <tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model, FDR calibration, and <nobr>single-peak</nobr> <nobr>multiple-ID</nobr> <nobr>co-assignment</nobr></td></tr>
-<tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>Show version</td></tr>
 </table>
-<p>EXAMPLES:</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC SPLIT (one node = one --task): see --task above.</p><div class="RowType">Distributed execution (HPC)</div>
+<p>EXAMPLES:</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC SPLIT (one node = one --task): see --task above.</p><p>OTHER FORMS ACCEPTED: a value may also be joined to its option (--output=results.blib), and a file that exists may be given without -i.</p><div class="RowType">Distributed execution (HPC)</div>
 <p>Run with no <code>--task</code> for the whole pipeline in one process. For distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out boundaries into four single-task workers - one node = one <code>--task</code>: <code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; <code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search options to every task; the parquet integrity check rejects inputs whose search/library hash does not match.</p>
 <pre>
 # split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)
