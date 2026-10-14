@@ -43,6 +43,20 @@ namespace pwiz.Common.DataBinding
         public PivotKey PivotKey { get; private set; }
 
         public DisplayColumn DisplayColumn { get; private set; }
+
+        /// <summary>
+        /// True if <see cref="GetValue"/> looks only at <see cref="RowItem.Value"/>, so that rows which
+        /// share the same Value object have the same value in this column.
+        /// See <see cref="ColumnDescriptor.DependsOnlyOnRowValue"/>.
+        /// </summary>
+        public bool DependsOnlyOnRowValue
+        {
+            get
+            {
+                return PivotKey == null &&
+                       (DisplayColumn.ColumnDescriptor == null || DisplayColumn.ColumnDescriptor.DependsOnlyOnRowValue);
+            }
+        }
         public override bool CanResetValue(object component)
         {
             return false;
