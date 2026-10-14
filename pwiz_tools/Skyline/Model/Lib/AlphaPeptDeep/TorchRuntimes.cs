@@ -25,13 +25,14 @@ using System.Linq;
 using pwiz.CarafeSharp.Models;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Tools;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
     /// <summary>
     /// The libtorch runtimes AlphaPeptDeep prediction runs on: the CPU runtime Skyline ships in
-    /// torch\cpu, and the CUDA runtime it downloads from nuget.org, into a folder every Skyline
-    /// installation of the user shares, the first time it predicts on a computer whose GPU can use it.
+    /// torch\cpu, and the CUDA runtime it downloads from nuget.org the first time it predicts on a
+    /// computer whose GPU can use it, into the Tools folder, like the search engines Skyline downloads.
     /// </summary>
     public class TorchRuntimes
     {
@@ -46,8 +47,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public TorchRuntimes()
         {
             ApplicationDirectory = Path.GetDirectoryName(typeof(TorchRuntimes).Assembly.Location);
-            RuntimesDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                @"Skyline", @"libtorch");
+            RuntimesDirectory = ToolDescriptionHelpers.GetToolsDirectory();
             PackageSource = LibTorchPackageSet.NUGET_PACKAGE_SOURCE;
             // Tests predict on the CPU, so their results do not depend on the computer, unless one sets CudaDriver
             if (Program.UnitTest)
