@@ -581,7 +581,7 @@ namespace pwiz.Skyline.Model.Results
                     // Window alone is enough: IMSDB or explicit IM is present.
                     message = ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow;
                 }
-                else if (hasWindow && !hasSpectralLib && WouldWith(WithSpectralLib(settings)))
+                else if (hasWindow && WouldWith(WithSpectralLib(settings)))
                 {
                     // Enabling spectral-lib IM alone is enough: window is already configured. Requires
                     // a usable window, since a zero resolving power widens to an unbounded filter and
