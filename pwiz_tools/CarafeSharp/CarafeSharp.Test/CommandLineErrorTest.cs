@@ -150,7 +150,7 @@ namespace pwiz.CarafeSharp.Test
             AssertRunError(built, @"-build_entrapment_fasta", built, @"-db", missingFasta);
 
             // A failure with a cause reports both: a .blib library that is not a database.
-            string manifest = WriteText(@"manifest.tsv", EntrapmentFastaBuilder.MANIFEST_HEADER + "\nPEPTIDEK\tNo\tP1\ttarget\t0\n");
+            string manifest = WriteText(@"manifest.tsv", PairingManifest.HEADER + "\nPEPTIDEK\tNo\tP1\ttarget\t0\n");
             string notBlib = WriteText(@"library.blib", @"not a database");
             string reconciled = Path.Combine(_folder, @"reconciled.tsv");
             var (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", manifest, @"-predicted_library", notBlib);

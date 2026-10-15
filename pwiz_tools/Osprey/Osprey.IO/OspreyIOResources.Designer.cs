@@ -147,25 +147,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The decoy pairing manifest is empty..
-        /// </summary>
-        public static string DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_ {
-            get {
-                return ResourceManager.GetString("DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The decoy pairing manifest is missing required columns (it needs {1}, {2} and {3}). Found: {0}.
-        /// </summary>
-        public static string DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_ {
-            get {
-                return ResourceManager.GetString("DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_colum" +
-                        "ns__it_needs_sequence__peptide_type_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to (line {0}, column {1}) Invalid {2} &apos;{3}&apos;.
         /// </summary>
         public static string DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__ {

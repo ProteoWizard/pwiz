@@ -124,12 +124,6 @@
   <data name="ColumnIndices_RequireColumn_Missing_required_column___0_" xml:space="preserve">
     <value>Missing required column: {0}</value>
   </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_" xml:space="preserve">
-    <value>The decoy pairing manifest is empty.</value>
-  </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
-    <value>The decoy pairing manifest is missing required columns (it needs {1}, {2} and {3}). Found: {0}</value>
-  </data>
   <data name="DiannTsvLoader_LineReader___line__0___column__1___Missing__2_" xml:space="preserve">
     <value>(line {0}, column {1}) Missing {2}</value>
   </data>

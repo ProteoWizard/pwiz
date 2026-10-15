@@ -61,6 +61,45 @@ namespace pwiz.CarafeSharp.Contracts {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The decoy pairing manifest {0} is malformed at line {1}: it has {2} columns where at least {3} are needed..
+        /// </summary>
+        public static string PairingManifest_Read_The_decoy_pairing_manifest__0__is_malformed_at_line__1___it_has__2__columns_where_at_least__3__are_needed_ {
+            get {
+                return ResourceManager.GetString("PairingManifest_Read_The_decoy_pairing_manifest__0__is_malformed_at_line__1___it_" +
+                        "has__2__columns_where_at_least__3__are_needed_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The decoy pairing manifest {0} is malformed at line {1}: the peptide_pair_index &apos;{2}&apos; is not an integer..
+        /// </summary>
+        public static string PairingManifest_Read_The_decoy_pairing_manifest__0__is_malformed_at_line__1___the_peptide_pair_index___2___is_not_an_integer_ {
+            get {
+                return ResourceManager.GetString("PairingManifest_Read_The_decoy_pairing_manifest__0__is_malformed_at_line__1___the" +
+                        "_peptide_pair_index___2___is_not_an_integer_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The decoy pairing manifest is empty..
+        /// </summary>
+        public static string PairingManifest_Read_The_decoy_pairing_manifest_is_empty_ {
+            get {
+                return ResourceManager.GetString("PairingManifest_Read_The_decoy_pairing_manifest_is_empty_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The decoy pairing manifest is missing required columns (it needs {1}, {2} and {3}). Found: {0}.
+        /// </summary>
+        public static string PairingManifest_Read_The_decoy_pairing_manifest_is_missing_required_columns__it_needs__1____2__and__3____Found___0_ {
+            get {
+                return ResourceManager.GetString("PairingManifest_Read_The_decoy_pairing_manifest_is_missing_required_columns__it_n" +
+                        "eeds__1____2__and__3____Found___0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
         /// </summary>
         public static string ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {

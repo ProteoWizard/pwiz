@@ -480,24 +480,8 @@ namespace pwiz.Osprey.Tasks
         {
             record.FileName = stem;
             var kind = EntrapmentLibraryClassifier.Classify(entry.ProteinIds);
-            record.IsEntrapment = kind == PeptideKind.PTarget || kind == PeptideKind.PDecoy;
-            record.PeptideKind = PeptideKindName(kind);
-        }
-
-        /// <summary>The FDRBench manifest spelling of a peptide kind.</summary>
-        private static string PeptideKindName(PeptideKind kind)
-        {
-            switch (kind)
-            {
-                case PeptideKind.PTarget:
-                    return @"p_target";
-                case PeptideKind.Decoy:
-                    return @"decoy";
-                case PeptideKind.PDecoy:
-                    return @"p_decoy";
-                default:
-                    return @"target";
-            }
+            record.IsEntrapment = PeptideKinds.IsEntrapment(kind);
+            record.PeptideKind = PeptideKinds.Name(kind);
         }
 
         private static Dictionary<string, string> BuildMetadata(OspreyConfig config, string stem,

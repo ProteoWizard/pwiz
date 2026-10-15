@@ -151,7 +151,7 @@ namespace pwiz.Osprey.Test
                 EntryId = entryId,
                 IsDecoy = false,
                 IsEntrapment = entryId % 2 == 1,
-                PeptideKind = entryId % 2 == 1 ? @"p_target" : @"target",
+                PeptideKind = entryId % 2 == 1 ? PairingManifest.KIND_P_TARGET : PairingManifest.KIND_TARGET,
                 Sequence = new string('A', length - 1) + @"K",
                 ModifiedSequence = new string('A', length - 1) + @"K",
                 ModPositions = entryId % 2 == 1 ? new[] { 2 } : Array.Empty<int>(),

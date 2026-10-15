@@ -192,7 +192,7 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(records.Any(r => !r.IsEntrapment), @"no target precursor was exported");
             foreach (var record in records)
             {
-                Assert.AreEqual(record.IsEntrapment ? @"p_target" : @"target", record.PeptideKind,
+                Assert.AreEqual(record.IsEntrapment ? PairingManifest.KIND_P_TARGET : PairingManifest.KIND_TARGET, record.PeptideKind,
                     record.ModifiedSequence + @" is marked with the wrong kind");
             }
         }

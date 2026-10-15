@@ -117,14 +117,6 @@
     <value>缺少必需列：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_" xml:space="preserve">
-    <value>诱饵配对清单为空。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
-    <value>诱饵配对清单缺少必需列（需要 {1}、{2} 和 {3}）。找到：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
     <value>正在解析 {0}</value>
     <comment>Needs Review:New resource</comment>

@@ -117,14 +117,6 @@
     <value>必須列がありません：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_" xml:space="preserve">
-    <value>デコイペアリングマニフェストが空です。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
-    <value>デコイペアリングマニフェストに必須列がありません（{1}、{2}、{3}が必要です）。検出された列：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
     <value>{0}を解析中</value>
     <comment>Needs Review:New resource</comment>
