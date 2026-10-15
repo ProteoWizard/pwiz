@@ -211,6 +211,25 @@ public class BlibBuilder : BlibMaker
     /// </summary>
     public IReadOnlyList<string> InputFiles => _inputFiles;
 
+    /// <summary>
+    /// True when readers may add the optional columns of experiment-wide values: the library is
+    /// new and built from a single input. Values from different inputs or an appended library
+    /// would come from different experiments, which mean nothing next to each other.
+    /// </summary>
+    public bool AllowsOptionalColumns => Overwrite && _inputFiles.Count <= 1;
+
+    /// <summary>
+    /// Opens the library, and drops the optional columns an appended library already has when
+    /// <see cref="AllowsOptionalColumns"/> is false, so its global values do not sit next to
+    /// spectra from another experiment.
+    /// </summary>
+    public override void Init()
+    {
+        base.Init();
+        if (!IsScoreLookupMode && !AllowsOptionalColumns)
+            RemoveOptionalColumns();
+    }
+
     /// <summary>Append an input file with no per-file score threshold override.</summary>
     public void AddInputFile(string file)
     {

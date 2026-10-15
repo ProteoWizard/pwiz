@@ -2572,6 +2572,157 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryPickedProteinFdr()
+        {
+            // Decoys as a library supplies them: reversed sequences with their own accessions,
+            // paired with their targets only by base id.
+            var library = new List<LibraryEntry>
+            {
+                MakeLibEntry(1, "PEPTIDEA", new[] { "P1" }, false),
+                MakeLibEntry(2, "PEPTIDEB", new[] { "P2" }, false),
+                MakeLibEntry(3, "PEPTIDEC", new[] { "P3" }, false),
+                MakeLibEntry(1 | LibraryEntry.DECOY_ID_BIT, "AEDITPEP", new[] { "rev_P1" }, true),
+                MakeLibEntry(2 | LibraryEntry.DECOY_ID_BIT, "BEDITPEP", new[] { "rev_P2" }, true),
+                MakeLibEntry(3 | LibraryEntry.DECOY_ID_BIT, "CEDITPEP", new[] { "rev_P3" }, true)
+            };
+            // Nothing was detected from P3, so it is in no parsimony group.
+            var parsimony = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.All,
+                new HashSet<string> { "PEPTIDEA", "PEPTIDEB" });
+
+            var scores = new LibraryProteinScores(library);
+            scores.Add(1, 5.0);
+            scores.Add(1 | LibraryEntry.DECOY_ID_BIT, 1.0);
+            scores.Add(2, 2.0);
+            scores.Add(2 | LibraryEntry.DECOY_ID_BIT, 1.0);
+            scores.Add(3, 0.5);
+            scores.Add(3 | LibraryEntry.DECOY_ID_BIT, 4.0);
+
+            var fdrResult = ProteinFdr.ComputeLibraryPickedProteinFdr(parsimony, scores.ByProtein());
+
+            // Winners by score: P1 target (5), P3 decoy (4), P2 target (2). P2 is the second
+            // target behind one decoy, so q = 1/2; competing only the detected groups would have
+            // given it 0.
+            var p1Group = parsimony.Groups.First(g => g.Accessions.Contains("P1"));
+            var p2Group = parsimony.Groups.First(g => g.Accessions.Contains("P2"));
+            Assert.AreEqual(2, parsimony.Groups.Count);
+            Assert.AreEqual(0.0, fdrResult.GroupQvalues[p1Group.Id], 1e-12);
+            Assert.AreEqual(0.5, fdrResult.GroupQvalues[p2Group.Id], 1e-12);
+            Assert.AreEqual(2.0, fdrResult.GroupScores[p2Group.Id], 1e-12);
+            Assert.AreEqual(0.5, fdrResult.PeptideQvalues["PEPTIDEB"], 1e-12);
+        }
+
+        /// <summary>
+        /// The protein-group PEP of the library picked competition: every target-winning group
+        /// gets one in [0, 1], a better-scoring group never gets a worse one, and only target
+        /// winners appear - the same population as the group q-values.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryProteinGroupPeps()
+        {
+            var library = new List<LibraryEntry>();
+            var detected = new HashSet<string>();
+            for (uint g = 1; g <= 40; g++)
+            {
+                string peptide = "PEPTIDE" + g;
+                library.Add(MakeLibEntry(g, peptide, new[] { "P" + g }, false));
+                library.Add(MakeLibEntry(g | LibraryEntry.DECOY_ID_BIT, "REV" + g, new[] { "rev_P" + g }, true));
+                detected.Add(peptide);
+            }
+            var parsimony = ProteinFdr.BuildProteinParsimony(library, SharedPeptideMode.All, detected);
+            var scores = new LibraryProteinScores(library);
+            for (uint g = 1; g <= 40; g++)
+            {
+                // The first 10 decoys outscore their targets, so the fit has both classes.
+                scores.Add(g, (g <= 10 ? 1.0 : 3.0) + g * 0.1);
+                scores.Add(g | LibraryEntry.DECOY_ID_BIT, (g <= 10 ? 2.5 : 0.5) + (g % 7) * 0.2);
+            }
+
+            var result = ProteinFdr.ComputeLibraryPickedProteinFdr(parsimony, scores.ByProtein());
+
+            CollectionAssert.AreEquivalent(result.GroupQvalues.Keys.ToList(), result.GroupPeps.Keys.ToList());
+            var byScore = result.GroupScores.OrderBy(kvp => kvp.Value).Select(kvp => result.GroupPeps[kvp.Key]).ToList();
+            for (int i = 0; i < byScore.Count; i++)
+            {
+                Assert.IsTrue(byScore[i] >= 0.0 && byScore[i] <= 1.0, "PEP out of range: " + byScore[i]);
+                if (i > 0)
+                    Assert.IsTrue(byScore[i] <= byScore[i - 1], "a better-scoring group got a worse PEP");
+            }
+            Assert.IsTrue(byScore.Any(pep => pep < 1.0), "a degenerate fit reports 1.0 everywhere and proves nothing");
+        }
+
+        /// <summary>
+        /// The second pass's peptide competition is the first pass's computation over the second
+        /// pass's per-entry bests: one q-value and PEP per peptide and side, the same on every
+        /// charge state, and bit-identical to <see cref="PercolatorQValues.ComputeExperimentPeptideQMap"/>
+        /// over those bests. Before this, the second pass copied each precursor's q into the
+        /// peptide field, so charge states of one peptide disagreed.
+        /// </summary>
+        [TestMethod]
+        public void TestSecondPassPeptideCompetition()
+        {
+            // 30 peptides with two charge states each (base_ids 2k+1, 2k+2), in two files. The
+            // first 8 peptides' decoys outscore their targets, so the PEP fit has both classes.
+            const int nPeptides = 30;
+            var ids = new List<uint>();
+            var scoresA = new List<double>();
+            var scoresB = new List<double>();
+            for (int k = 0; k < nPeptides; k++)
+            {
+                for (uint c = 1; c <= 2; c++)
+                {
+                    uint b = (uint)(2 * k) + c;
+                    bool decoyWins = k < 8;
+                    ids.Add(b);
+                    scoresA.Add((decoyWins ? 0.5 : 3.0) + k * 0.1 + c * 0.013);
+                    scoresB.Add((decoyWins ? 0.4 : 2.5) + k * 0.1 + c * 0.017);
+                    ids.Add(b | 0x80000000u);
+                    scoresA.Add((decoyWins ? 2.0 : 0.3) + k * 0.07 + c * 0.011);
+                    scoresB.Add((decoyWins ? 2.2 : 0.2) + k * 0.07 + c * 0.019);
+                }
+            }
+            var idArr = ids.ToArray();
+            var survivorIds = new HashSet<uint>(idArr.Where(id => (id & 0x80000000u) == 0));
+            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov, HashSet<uint> own) Read(string key)
+                => ((uint[])idArr.Clone(), (key == "a" ? scoresA : scoresB).ToArray(),
+                    new Dictionary<uint, double>(), survivorIds);
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                new[] { "a", "b" }, Read, survivorIds, (_, c) => { });
+            string PeptideOf(uint baseId) => "P" + ((baseId - 1) / 2);
+            var peptides = competition.CompetePeptides(PeptideOf);
+
+            // The oracle: one row per entry at its best score across the files, decoys under a
+            // distinct sequence as the first pass sees them.
+            var bestByEntry = new Dictionary<uint, double>();
+            for (int i = 0; i < idArr.Length; i++)
+                bestByEntry[idArr[i]] = Math.Max(scoresA[i], scoresB[i]);
+            var oIds = bestByEntry.Keys.ToArray();
+            var oScores = oIds.Select(id => bestByEntry[id]).ToArray();
+            var oLabels = oIds.Select(id => (id & 0x80000000u) != 0).ToArray();
+            var oPeptides = oIds.Select(id => ((id & 0x80000000u) != 0 ? "DECOY_" : string.Empty) +
+                PeptideOf(id & 0x7FFFFFFFu)).ToArray();
+            var expectedQ = PercolatorQValues.ComputeExperimentPeptideQMap(
+                oScores, oLabels, oIds, oPeptides, out var expectedPep, applyExperimentAgg: false);
+
+            int realPeps = 0;
+            foreach (uint id in idArr)
+            {
+                uint baseId = id & 0x7FFFFFFFu;
+                string key = ((id & 0x80000000u) != 0 ? "DECOY_" : string.Empty) + PeptideOf(baseId);
+                double q = expectedQ.TryGetValue(key, out double eq) ? eq : 1.0;
+                double pep = expectedPep.TryGetValue(key, out double ep) ? ep : 1.0;
+                Assert.AreEqual(q, peptides.QValue(id), 0.0, "peptide q of entry " + id);
+                Assert.AreEqual(pep, peptides.Pep(id), 0.0, "peptide PEP of entry " + id);
+                if (pep < 1.0)
+                    realPeps++;
+                // Both charge states of a peptide carry the same values.
+                uint sibling = (baseId % 2 == 1 ? baseId + 1 : baseId - 1) | (id & 0x80000000u);
+                Assert.AreEqual(peptides.QValue(id), peptides.QValue(sibling), 0.0);
+                Assert.AreEqual(peptides.Pep(id), peptides.Pep(sibling), 0.0);
+            }
+            Assert.IsTrue(realPeps > 0, "a degenerate fit reports 1.0 everywhere and proves nothing");
+        }
+
+        [TestMethod]
         public void TestDecoyEntriesExcludedFromParsimony()
         {
             var library = new List<LibraryEntry>
@@ -2696,10 +2847,14 @@ namespace pwiz.Osprey.Test
                 PercolatorQValues.ComputeExperimentPrecursorQMap(
                     scoreArr, labelArr, entryIdArr, applyExperimentAgg: false),
                 streaming.BuildExperimentPrecursorQMap(), "exp-precursor");
-            AssertMapsEqual(
-                PercolatorQValues.ComputeExperimentPeptideQMap(
-                    scoreArr, labelArr, entryIdArr, peptideArr, applyExperimentAgg: false),
-                streaming.BuildExperimentPeptideQMap(), "exp-peptide");
+            var flatPeptideQ = PercolatorQValues.ComputeExperimentPeptideQMap(
+                scoreArr, labelArr, entryIdArr, peptideArr, out var flatPeptidePep, applyExperimentAgg: false);
+            var streamedPeptideQ = streaming.BuildExperimentPeptideQMap(out var streamedPeptidePep);
+            AssertMapsEqual(flatPeptideQ, streamedPeptideQ, "exp-peptide");
+            // The peptide PEP is fitted over the same winners on both paths.
+            AssertMapsEqual(flatPeptidePep, streamedPeptidePep, "exp-peptide-pep");
+            CollectionAssert.AreEquivalent(flatPeptideQ.Keys.ToList(), flatPeptidePep.Keys.ToList(),
+                "every peptide that won has a PEP, and only those");
             AssertMapsEqual(
                 PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildPepWinnerMap(), "pep-winner");
@@ -2810,7 +2965,7 @@ namespace pwiz.Osprey.Test
                 streaming.BuildExperimentPrecursorQMap(), "mbN exp-precursor");
             AssertMapsEqual(
                 ResidentMeanBestNPeptideQMap(scoreArr, labelArr, entryIdArr, peptideArr, n),
-                streaming.BuildExperimentPeptideQMap(), "mbN exp-peptide");
+                streaming.BuildExperimentPeptideQMap(out _), "mbN exp-peptide");
 
             // The persisted aggregate (sidecar v4, issue #4522) must follow the aggregation
             // too - under mean(best-N) it is the group's mean-best-N score, NOT the raw max.
@@ -3061,7 +3216,7 @@ namespace pwiz.Osprey.Test
                 string.Format("mbN floor-path exp-precursor (N={0})", n));
             AssertMapsEqual(
                 ResidentMeanBestNPeptideQMap(scores, labels, entryIds, peptides, n),
-                streaming.BuildExperimentPeptideQMap(),
+                streaming.BuildExperimentPeptideQMap(out _),
                 string.Format("mbN floor-path exp-peptide (N={0})", n));
         }
 

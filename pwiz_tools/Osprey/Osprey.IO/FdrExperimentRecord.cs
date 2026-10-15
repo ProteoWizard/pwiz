@@ -101,11 +101,21 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public readonly double Pep;
 
+        /// <summary>
+        /// Posterior error probability for this entry's PEPTIDE: <c>PepEstimator.PosteriorError</c>
+        /// of the score its peptide won the experiment-wide peptide-level target/decoy
+        /// competition on, fitted over that competition's winners. The same on every charge
+        /// state of the peptide, and 1.0 on the side that lost - the peptide-level counterpart
+        /// of <see cref="Pep"/>, from the competition that also gives
+        /// <see cref="ExperimentPeptideQvalue"/>.
+        /// </summary>
+        public readonly double PeptidePep;
+
         public FdrExperimentRecord(
             uint entryId,
             double experimentPrecursorQvalue, double experimentPeptideQvalue,
             double experimentProteinQvalue, double experimentAggregateScore,
-            double pep)
+            double pep, double peptidePep)
         {
             EntryId = entryId;
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
@@ -113,6 +123,21 @@ namespace pwiz.Osprey.IO
             ExperimentProteinQvalue = experimentProteinQvalue;
             ExperimentAggregateScore = experimentAggregateScore;
             Pep = pep;
+            PeptidePep = peptidePep;
+        }
+
+        /// <summary>This record with its protein q-value replaced and every other field kept.</summary>
+        public FdrExperimentRecord WithProteinQvalue(double experimentProteinQvalue)
+        {
+            return new FdrExperimentRecord(EntryId, ExperimentPrecursorQvalue, ExperimentPeptideQvalue,
+                experimentProteinQvalue, ExperimentAggregateScore, Pep, PeptidePep);
+        }
+
+        /// <summary>This record with its two experiment q-values replaced and every other field kept.</summary>
+        public FdrExperimentRecord WithQvalues(double experimentPrecursorQvalue, double experimentPeptideQvalue)
+        {
+            return new FdrExperimentRecord(EntryId, experimentPrecursorQvalue, experimentPeptideQvalue,
+                ExperimentProteinQvalue, ExperimentAggregateScore, Pep, PeptidePep);
         }
     }
 }

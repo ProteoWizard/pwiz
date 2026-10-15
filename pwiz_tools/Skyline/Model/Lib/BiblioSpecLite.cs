@@ -31,6 +31,7 @@ using Dapper;
 using JetBrains.Annotations;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -131,6 +132,7 @@ namespace pwiz.Skyline.Model.Lib
         private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
         private bool _anyRedundantSpectra;
+        private ImmutableList<GlobalQValueLevel> _globalQValueLevels = ImmutableList<GlobalQValueLevel>.EMPTY;
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
@@ -451,7 +453,12 @@ namespace pwiz.Skyline.Model.Lib
             public double? score { get; set; }
             public int? scoreType { get; set; }
             public string SpecIDinFile { get; set; }
-            public int? fileId { get; set; } 
+            public int? fileId { get; set; }
+            // Optional global statistics, absent from most libraries
+            public double? PrecursorQValue { get; set; }
+            public double? PrecursorPep { get; set; }
+            public double? PeptideQValue { get; set; }
+            public double? PeptidePep { get; set; }
         }
 
         private enum RefSpectra
@@ -603,7 +610,8 @@ namespace pwiz.Skyline.Model.Lib
             string lsid;
             int dataRev, schemaVer;
             var scoreTypesById = new Dictionary<int, string>();
-            var proteinsBySpectraID = ProteinsBySpectraID();
+            var proteinGroupsBySpectraID = ProteinGroupsBySpectraID();
+            _globalQValueLevels = ImmutableList.ValueOf(ReadGlobalQValueLevels());
             var librarySourceFiles = new List<BiblioLiteSourceInfo>();
             bool hasRetentionTimesTable = SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes");
             int segmentCount = hasRetentionTimesTable ? 2 : 1;
@@ -727,7 +735,9 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
 
-                    proteinsBySpectraID.TryGetValue(row.id, out var protein);
+                    proteinGroupsBySpectraID.TryGetValue(row.id, out var proteinGroups);
+                    // Used to name molecule lists for small molecules, so the first group is enough
+                    string protein = proteinGroups?[0].Name;
                     int? fileIndex = null;
                     if (row.fileId.HasValue && fileIdToIndex.TryGetValue(row.fileId.Value, out int iFile))
                     {
@@ -821,7 +831,7 @@ namespace pwiz.Skyline.Model.Lib
                             }
 
                             libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, row.id, fileIndex, protein,
-                                scoreName == null ? null : score, scoreName));
+                                scoreName == null ? null : score, scoreName, GetGlobalScores(row, proteinGroups)));
                         }
                     }
                 }
@@ -886,32 +896,79 @@ namespace pwiz.Skyline.Model.Lib
             return true;
         }
 
-        private Dictionary<int, string> ProteinsBySpectraID()
+        /// <summary>
+        /// Reads every protein group each spectrum is mapped to (RefSpectraProteins is many-to-many),
+        /// with the group's global statistics when the Proteins table has those columns.
+        /// </summary>
+        private Dictionary<int, ImmutableList<LibraryProteinGroup>> ProteinGroupsBySpectraID()
         {
-            var proteinsBySpectraID = new Dictionary<int, string>();
-            if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RefSpectraProteins"))
+            var proteinGroupsBySpectraID = new Dictionary<int, List<LibraryProteinGroup>>();
+            var connection = _sqliteConnection.Connection;
+            if (SqliteOperations.TableExists(connection, @"RefSpectraProteins"))
             {
-                using (var cmd = _sqliteConnection.Connection.CreateCommand())
+                bool hasQValue = SqliteOperations.ColumnExists(connection, @"Proteins", @"QValue");
+                bool hasPep = SqliteOperations.ColumnExists(connection, @"Proteins", @"Pep");
+                var proteinGroupsById = new Dictionary<int, LibraryProteinGroup>();
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText =
+                    @"SELECT RefSpectraId, ProteinId, accession" +
+                    (hasQValue ? @", QValue" : @", NULL") +
+                    (hasPep ? @", Pep" : @", NULL") +
+                    @" FROM [Proteins] as t INNER JOIN [RefSpectraProteins] as s ON t.[id] = s.[ProteinId]";
+                using var dataReader = cmd.ExecuteReader();
+                while (dataReader.Read())
                 {
-                    cmd.CommandText =
-                        @"SELECT RefSpectraId, accession FROM [Proteins] as t INNER JOIN [RefSpectraProteins] as s ON t.[id] = s.[ProteinId]";
-                    using (var dataReader = cmd.ExecuteReader())
+                    var accession = dataReader.GetString(2);
+                    if (string.IsNullOrEmpty(accession))
+                        continue;
+                    var refSpectraId = dataReader.GetInt32(0);
+                    var proteinId = dataReader.GetInt32(1);
+                    if (!proteinGroupsById.TryGetValue(proteinId, out var proteinGroup))
                     {
-                        while (dataReader.Read())
-                        {
-                            var refSpectraId = dataReader.GetInt32(0);
-                            var accession = dataReader.GetString(1);
-                            // RefSpectraProteins is a many-to-many table, just use first seen for group naming purposes
-                            if (!string.IsNullOrEmpty(accession) && !proteinsBySpectraID.ContainsKey(refSpectraId))
-                            {
-                                proteinsBySpectraID.Add(refSpectraId, accession);
-                            }
-                        }
+                        proteinGroup = new LibraryProteinGroup(accession, GetNullableDouble(dataReader, 3),
+                            GetNullableDouble(dataReader, 4));
+                        proteinGroupsById.Add(proteinId, proteinGroup);
                     }
+                    if (!proteinGroupsBySpectraID.TryGetValue(refSpectraId, out var proteinGroups))
+                    {
+                        proteinGroups = new List<LibraryProteinGroup>();
+                        proteinGroupsBySpectraID.Add(refSpectraId, proteinGroups);
+                    }
+                    proteinGroups.Add(proteinGroup);
                 }
             }
 
-            return proteinsBySpectraID;
+            return proteinGroupsBySpectraID.ToDictionary(kvp => kvp.Key, kvp => ImmutableList.ValueOf(kvp.Value));
+        }
+
+        /// <summary>
+        /// The levels with global q-values, decided by which optional columns the library has.
+        /// </summary>
+        private IEnumerable<GlobalQValueLevel> ReadGlobalQValueLevels()
+        {
+            var connection = _sqliteConnection.Connection;
+            if (SqliteOperations.ColumnExists(connection, @"Proteins", @"QValue"))
+                yield return GlobalQValueLevel.protein;
+            if (SqliteOperations.ColumnExists(connection, @"RefSpectra", @"PeptideQValue"))
+                yield return GlobalQValueLevel.peptide;
+            if (SqliteOperations.ColumnExists(connection, @"RefSpectra", @"PrecursorQValue"))
+                yield return GlobalQValueLevel.precursor;
+        }
+
+        private static LibraryGlobalScores GetGlobalScores(RefSpectraRow row, ImmutableList<LibraryProteinGroup> proteinGroups)
+        {
+            if (proteinGroups == null && !row.PrecursorQValue.HasValue && !row.PrecursorPep.HasValue &&
+                !row.PeptideQValue.HasValue && !row.PeptidePep.HasValue)
+            {
+                return LibraryGlobalScores.EMPTY;
+            }
+            return new LibraryGlobalScores(row.PrecursorQValue, row.PrecursorPep, row.PeptideQValue,
+                row.PeptidePep, proteinGroups ?? ImmutableList<LibraryProteinGroup>.EMPTY);
+        }
+
+        private static double? GetNullableDouble(IDataRecord record, int ordinal)
+        {
+            return record.IsDBNull(ordinal) ? (double?)null : record.GetDouble(ordinal);
         }
 
         private bool Load(ILoadMonitor loader)
@@ -1243,6 +1300,17 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return _anyExplicitPeakBounds;
             }
+        }
+
+        public override ImmutableList<GlobalQValueLevel> GlobalQValueLevels
+        {
+            get { return _globalQValueLevels; }
+        }
+
+        public override LibraryGlobalScores GetGlobalScores(LibKey key)
+        {
+            int i = FindEntry(key);
+            return i == -1 ? LibraryGlobalScores.EMPTY : _libraryEntries[i].GlobalScores;
         }
 
         public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
@@ -2521,7 +2589,7 @@ namespace pwiz.Skyline.Model.Lib
     public class BiblioLiteSpectrumInfo : Immutable, ICachedSpectrumInfo
     {
         public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceIndex, string protein,
-            double? score = null, string scoreType = null)
+            double? score = null, string scoreType = null, LibraryGlobalScores globalScores = null)
         {
             Key = key;
             Copies = copies;
@@ -2534,6 +2602,7 @@ namespace pwiz.Skyline.Model.Lib
             PeakBoundariesByFileIndex = ExplicitPeakBoundsList.EMPTY;
             Score = score;
             ScoreType = scoreType;
+            GlobalScores = globalScores ?? LibraryGlobalScores.EMPTY;
         }
 
         public LibKey Key { get; }
@@ -2552,6 +2621,7 @@ namespace pwiz.Skyline.Model.Lib
         public ExplicitPeakBoundsList PeakBoundariesByFileIndex { get; private set; }
         public double? Score { get; }
         public string ScoreType { get; }
+        public LibraryGlobalScores GlobalScores { get; }
 
         public BiblioLiteSpectrumInfo ChangeRetentionTimes(IndexedMultiArray<float> retentionTimes)
         {

@@ -227,25 +227,70 @@ public abstract class BuildParser : IDisposable
         if (!BlibMaker.IsDbOpen)
             return;
 
+        // Optional columns already in the library (appending) or enabled by the reader.
+        _refSpectraOptionalColumns = BlibMaker.GetOptionalColumns("main", BlibSchema.OptionalRefSpectraColumns);
+        _proteinsOptionalColumns = BlibMaker.GetOptionalColumns("main", BlibSchema.OptionalProteinsColumns);
+
         // cpp parity: BuildParser.cpp:69-76. Column list matches the cpp string verbatim;
-        // the trailing 25 placeholders cover the 20 explicit cols + 5 SmallMolMetadata cols.
+        // the 25 fixed placeholders cover the 20 explicit cols + 5 SmallMolMetadata cols.
+        var paramCount = FixedSpectrumParamCount + _refSpectraOptionalColumns.Count;
         var stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
                  + "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
                  + "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, totalIonCurrent, fileID, "
                  + "specIDinFile, score, scoreType"
                  + SmallMolMetadata.SqlColumnNamesCsv()
-                 + ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+                 + string.Concat(_refSpectraOptionalColumns.Select(c => ", " + c.Name))
+                 + ") VALUES(" + string.Join(", ", Enumerable.Repeat("?", paramCount)) + ") ";
 
         _insertSpectrumStmt?.Dispose();
         _insertSpectrumStmt = BlibMaker.Db.CreateCommand();
         _insertSpectrumStmt.CommandText = stmt;
-        // 25 unnamed bind slots, matching the 25 question marks above.
-        for (var i = 0; i < 25; i++)
+        for (var i = 0; i < paramCount; i++)
         {
             var p = _insertSpectrumStmt.CreateParameter();
             _insertSpectrumStmt.Parameters.Add(p);
         }
         _insertSpectrumStmt.Prepare();
+    }
+
+    private const int FixedSpectrumParamCount = 25;
+    private List<OptionalColumn> _refSpectraOptionalColumns = new();
+    private List<OptionalColumn> _proteinsOptionalColumns = new();
+
+    /// <summary>
+    /// Adds an <see cref="OptionalColumn"/> to the library so the values this reader sets on
+    /// <see cref="PSM"/> or <see cref="Protein"/> are written. Call it only when the input has
+    /// values for the column, before the spectra are inserted. Does nothing when the library
+    /// cannot hold experiment-wide values (see <see cref="BlibBuilder.AllowsOptionalColumns"/>).
+    /// </summary>
+    protected internal void EnableOptionalColumn(OptionalColumn column)
+    {
+        if (!BlibMaker.AllowsOptionalColumns)
+            return;
+        BlibMaker.AddOptionalColumn(column);
+        PrepareInsertSpectrumStatement();
+    }
+
+    private static double? GetOptionalValue(PSM psm, OptionalColumn column)
+    {
+        if (column == BlibSchema.PrecursorQValue)
+            return psm.PrecursorQValue;
+        if (column == BlibSchema.PrecursorPep)
+            return psm.PrecursorPep;
+        if (column == BlibSchema.PeptideQValue)
+            return psm.PeptideQValue;
+        if (column == BlibSchema.PeptidePep)
+            return psm.PeptidePep;
+        throw new ArgumentOutOfRangeException(nameof(column), column.Name, null);
+    }
+
+    private static double? GetOptionalValue(Protein protein, OptionalColumn column)
+    {
+        if (column == BlibSchema.ProteinQValue)
+            return protein.QValue;
+        if (column == BlibSchema.ProteinPep)
+            return protein.Pep;
+        throw new ArgumentOutOfRangeException(nameof(column), column.Name, null);
     }
 
     // --- progress wiring ------------------------------------------------------------
@@ -665,9 +710,22 @@ public abstract class BuildParser : IDisposable
         }
 
         // cpp parity: INSERT then return last_insert_rowid().
-        var insertSql = "INSERT INTO Proteins (accession) VALUES('" +
-            SqliteRoutine.EscapeApostrophes(protein.Accession) + "')";
-        BlibMaker.SqlStmt(insertSql);
+        if (_proteinsOptionalColumns.Count == 0)
+        {
+            var insertSql = "INSERT INTO Proteins (accession) VALUES('" +
+                SqliteRoutine.EscapeApostrophes(protein.Accession) + "')";
+            BlibMaker.SqlStmt(insertSql);
+            return BlibMaker.Db.LastInsertRowId;
+        }
+
+        using var insertCmd = BlibMaker.Db.CreateCommand();
+        insertCmd.CommandText = "INSERT INTO Proteins (accession" +
+            string.Concat(_proteinsOptionalColumns.Select(c => ", " + c.Name)) + ") VALUES (?" +
+            string.Concat(_proteinsOptionalColumns.Select(_ => ", ?")) + ")";
+        insertCmd.Parameters.Add(new SQLiteParameter { Value = protein.Accession });
+        foreach (var column in _proteinsOptionalColumns)
+            insertCmd.Parameters.Add(new SQLiteParameter { Value = (object?)GetOptionalValue(protein, column) ?? DBNull.Value });
+        insertCmd.ExecuteNonQuery();
         return BlibMaker.Db.LastInsertRowId;
     }
 
@@ -1124,6 +1182,9 @@ public abstract class BuildParser : IDisposable
         p[22].Value = psm.SmallMolMetadata.PrecursorAdduct;
         p[23].Value = psm.SmallMolMetadata.InchiKey;
         p[24].Value = psm.SmallMolMetadata.OtherKeys;
+
+        for (var i = 0; i < _refSpectraOptionalColumns.Count; i++)
+            p[FixedSpectrumParamCount + i].Value = (object?)GetOptionalValue(psm, _refSpectraOptionalColumns[i]) ?? DBNull.Value;
 
         try
         {

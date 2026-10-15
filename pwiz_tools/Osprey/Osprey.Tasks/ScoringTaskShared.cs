@@ -1007,15 +1007,16 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
                     entry.IsDecoy, entry.Score,
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
-                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep,
+                        entry.ExperimentPeptidePep));
             }
         }
 
         /// <summary>
         /// <see cref="FeedModelDiagnostics(ModelDiagnosticsData.Accumulator, int, List{FdrEntry})"/>
-        /// for one run's joined <see cref="FirstPassFoldRows"/>, in row order. PEP is 1.0 on every
-        /// row, as it was on the stubs these rows replace: the first-pass sidecar carries no PEP
-        /// column (see <see cref="FdrScoreRecord"/>), so a stub kept its default.
+        /// for one run's joined <see cref="FirstPassFoldRows"/>, in row order. Both PEPs are 1.0 on
+        /// every row, as they were on the stubs these rows replace: the first-pass sidecar carries
+        /// no PEP column (see <see cref="FdrScoreRecord"/>), so a stub kept its defaults.
         /// </summary>
         internal static void FeedModelDiagnostics(
             ModelDiagnosticsData.Accumulator accumulator, int fileIdx, FirstPassFoldRows rows)
@@ -1026,7 +1027,7 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, row.ModifiedSequence, row.Charge, row.EntryId,
                     row.IsDecoy, row.Score,
                     new FdrQValues(row.RunPrecursorQvalue, row.RunPeptideQvalue,
-                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0));
+                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0, 1.0));
             }
         }
 

@@ -1847,4 +1847,16 @@
   <data name="ImputationSettings_AlignmentTarget" xml:space="preserve">
     <value>Alignment Target</value>
   </data>
+  <data name="GlobalQValueFilter_Level" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="GlobalQValueFilter_Cutoff" xml:space="preserve">
+    <value>Cutoff</value>
+  </data>
+  <data name="ImportFastaSettings_QValueFilter" xml:space="preserve">
+    <value>Global cutoff</value>
+  </data>
+  <data name="ViewLibrarySettings_QValueFilter" xml:space="preserve">
+    <value>Global cutoff</value>
+  </data>
 </root>

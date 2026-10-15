@@ -26,6 +26,9 @@ namespace Pwiz.Tools.BiblioSpec;
 /// </remarks>
 public static class BlibSchema
 {
+    // Optional columns (see OptionalColumn) are not versioned: adding one does not change
+    // CurrentMinorVersion, and readers test for the column instead of the version.
+
     /// <summary>cpp <c>MAJOR_VERSION_CURRENT</c> (BlibMaker.h:52).</summary>
     public const int CurrentMajorVersion = 0;
 
@@ -242,6 +245,42 @@ public static class BlibSchema
         "idxInChiKey",
     };
 
+    // --- optional columns -------------------------------------------------------------------
+
+    /// <summary>Global (experiment-wide) precursor q-value. Written only when the source value is known to be one.</summary>
+    public static readonly OptionalColumn PrecursorQValue = new("RefSpectra", "PrecursorQValue", "REAL");
+
+    /// <summary>Global precursor posterior error probability.</summary>
+    public static readonly OptionalColumn PrecursorPep = new("RefSpectra", "PrecursorPep", "REAL");
+
+    /// <summary>Global peptide q-value, from a peptide-level competition (one value per modified sequence).</summary>
+    public static readonly OptionalColumn PeptideQValue = new("RefSpectra", "PeptideQValue", "REAL");
+
+    /// <summary>Global peptide posterior error probability.</summary>
+    public static readonly OptionalColumn PeptidePep = new("RefSpectra", "PeptidePep", "REAL");
+
+    /// <summary>Global protein-group q-value. A <c>Proteins</c> row is a protein group.</summary>
+    public static readonly OptionalColumn ProteinQValue = new("Proteins", "QValue", "REAL");
+
+    /// <summary>Global protein-group posterior error probability.</summary>
+    public static readonly OptionalColumn ProteinPep = new("Proteins", "Pep", "REAL");
+
+    /// <summary>Optional <c>RefSpectra</c> columns, in the order they are written.</summary>
+    public static IReadOnlyList<OptionalColumn> OptionalRefSpectraColumns { get; } = new[]
+    {
+        PrecursorQValue,
+        PrecursorPep,
+        PeptideQValue,
+        PeptidePep,
+    };
+
+    /// <summary>Optional <c>Proteins</c> columns, in the order they are written.</summary>
+    public static IReadOnlyList<OptionalColumn> OptionalProteinsColumns { get; } = new[]
+    {
+        ProteinQValue,
+        ProteinPep,
+    };
+
     // --- builders for tables that splice in runtime / shared schema --------------------------
 
     private static string BuildRefSpectraCreate()
@@ -278,3 +317,12 @@ public static class BlibSchema
         return sb.ToString();
     }
 }
+
+/// <summary>
+/// A column that a library has only when its source supplied values for it, so a library without
+/// the values pays no size or read cost. It is added with <c>ALTER TABLE ... ADD COLUMN</c> when a
+/// reader enables it, and BlibFilter carries it from the redundant library to the non-redundant one.
+/// BlibBuild merges do not copy these columns, because a global value from one experiment means
+/// nothing next to one from another.
+/// </summary>
+public sealed record OptionalColumn(string Table, string Name, string Type);

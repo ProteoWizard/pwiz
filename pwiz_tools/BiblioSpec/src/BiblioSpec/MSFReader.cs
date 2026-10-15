@@ -50,6 +50,9 @@ public sealed class MSFReader : BuildParser
     private readonly Dictionary<int, string> _fileNameMap = new();
     // uniqueSpecId -> SpecData.
     private readonly Dictionary<string, SpecData> _spectra = new(StringComparer.Ordinal);
+    // Experiment-wide statistics, keyed by a TargetPsms row's (WorkflowID, PeptideID).
+    private readonly Dictionary<(int WorkflowId, int PeptideId), PeptideGroupValues> _peptideGroupValues = new();
+    private readonly Dictionary<(int WorkflowId, int PeptideId), List<Protein>> _masterProteins = new();
 
     /// <summary>True if the file path ends with <c>.msf</c> or <c>.pdResult</c> (case-insensitive).</summary>
     public static bool AcceptsExtension(string path) =>
@@ -142,6 +145,18 @@ public sealed class MSFReader : BuildParser
                 "This file seems to have been exported without the appropriate "
                 + "\"Spectra to store\" option. Export it again with the \"All\" setting.\r\n"
                 + e.Message);
+        }
+
+        if (_filtered || !VersionLess(2, 2))
+        {
+            CollectPeptideGroupValues();
+            CollectMasterProteins();
+            if (_peptideGroupValues.Values.Any(v => v.QValue.HasValue))
+                EnableOptionalColumn(BlibSchema.PeptideQValue);
+            if (_peptideGroupValues.Values.Any(v => v.Pep.HasValue))
+                EnableOptionalColumn(BlibSchema.PeptidePep);
+            if (_masterProteins.Values.Any(proteins => proteins.Any(p => p.QValue.HasValue)))
+                EnableOptionalColumn(BlibSchema.ProteinQValue);
         }
 
         CollectPsms();
@@ -521,6 +536,16 @@ public sealed class MSFReader : BuildParser
             psm.SpecIndex = sd.Id;
             psm.SpecName = specId;
             psm.Score = qvalue;
+            if (_peptideGroupValues.TryGetValue((workflowId, peptideId), out var groupValues))
+            {
+                psm.PeptideQValue = groupValues.QValue;
+                psm.PeptidePep = groupValues.Pep;
+            }
+            if (_masterProteins.TryGetValue((workflowId, peptideId), out var masterProteins))
+            {
+                foreach (var protein in masterProteins)
+                    psm.Proteins.Add(protein);
+            }
 
             string psmFileName;
             if (!_filtered && VersionLess(2, 2))
@@ -554,6 +579,113 @@ public sealed class MSFReader : BuildParser
             }
             bucket.Add(psm);
         }
+    }
+
+    // --- experiment-wide statistics ------------------------------------------------------
+
+    private readonly record struct PeptideGroupValues(double? QValue, double? Pep);
+
+    // PD's master protein, the protein that represents its protein group (EnumDataTypeValues 12).
+    private const int MasterProteinValue = 0;
+
+    /// <summary>
+    /// Reads the q-value and PEP of each PSM's peptide group. A peptide group is a modified
+    /// sequence, and PD validates peptide groups across the whole study.
+    /// </summary>
+    private void CollectPeptideGroupValues()
+    {
+        string? qValueColumn = null, pepColumn = null;
+        if (ColumnExists(_db!, "TargetPeptideGroups", "qValue"))
+        {
+            qValueColumn = "qValue";
+            pepColumn = ColumnExists(_db!, "TargetPeptideGroups", "PEP") ? "PEP" : null;
+        }
+        else if (ColumnExists(_db!, "TargetPeptideGroups", "Qvalityqvalue"))
+        {
+            qValueColumn = "Qvalityqvalue";
+            pepColumn = ColumnExists(_db!, "TargetPeptideGroups", "QvalityPEP") ? "QvalityPEP" : null;
+        }
+        var linkTable = FirstExistingTable("TargetPsmsTargetPeptideGroups", "TargetPeptideGroupsTargetPsms");
+        if (qValueColumn is null || linkTable is null)
+            return;
+
+        using var cmd = _db!.CreateCommand();
+        cmd.CommandText =
+            "SELECT link.TargetPsmsWorkflowID, link.TargetPsmsPeptideID, peps." + qValueColumn
+            + ", " + (pepColumn is null ? "NULL" : "peps." + pepColumn)
+            + " FROM " + linkTable + " link"
+            + " JOIN TargetPeptideGroups peps ON link.TargetPeptideGroupsPeptideGroupID = peps.PeptideGroupID";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var key = (reader.GetInt32(0), reader.GetInt32(1));
+            _peptideGroupValues.TryAdd(key, new PeptideGroupValues(ReadNullableDouble(reader, 2), ReadNullableDouble(reader, 3)));
+        }
+    }
+
+    /// <summary>
+    /// Reads the master proteins each PSM maps to, with their experiment-wide q-values
+    /// (<c>Expqvalue</c>, "Exp. q-value"). A master protein stands for its protein group, so it
+    /// becomes a <c>Proteins</c> row under its own accession.
+    /// </summary>
+    private void CollectMasterProteins()
+    {
+        var linkTable = FirstExistingTable("TargetPsmsTargetProteins", "TargetProteinsTargetPsms");
+        if (linkTable is null
+            || !ColumnExists(_db!, "TargetProteins", "Expqvalue")
+            || !ColumnExists(_db!, "TargetProteins", "IsMasterProtein"))
+        {
+            return;
+        }
+
+        var proteinsById = new Dictionary<long, Protein>();
+        using var cmd = _db!.CreateCommand();
+        cmd.CommandText =
+            "SELECT link.TargetPsmsWorkflowID, link.TargetPsmsPeptideID, prots.UniqueSequenceID, prots.Accession, prots.Expqvalue"
+            + " FROM " + linkTable + " link"
+            + " JOIN TargetProteins prots ON link.TargetProteinsUniqueSequenceID = prots.UniqueSequenceID"
+            + " WHERE prots.IsMasterProtein = " + MasterProteinValue.ToString(CultureInfo.InvariantCulture)
+            + " ORDER BY link.TargetPsmsWorkflowID, link.TargetPsmsPeptideID, prots.Accession";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            var proteinId = reader.GetInt64(2);
+            if (!proteinsById.TryGetValue(proteinId, out var protein))
+            {
+                protein = new Protein(reader.GetString(3)) { QValue = ReadNullableDouble(reader, 4) };
+                proteinsById.Add(proteinId, protein);
+            }
+            var key = (reader.GetInt32(0), reader.GetInt32(1));
+            if (!_masterProteins.TryGetValue(key, out var proteins))
+            {
+                proteins = new List<Protein>();
+                _masterProteins.Add(key, proteins);
+            }
+            proteins.Add(protein);
+        }
+    }
+
+    private string? FirstExistingTable(params string[] tables) =>
+        tables.FirstOrDefault(table => TableExists(_db!, table));
+
+    /// <summary>
+    /// Reads a PD nullable double, which is either a REAL or a 9-byte blob holding a
+    /// little-endian double followed by a has-value flag.
+    /// </summary>
+    private static double? ReadNullableDouble(SQLiteDataReader reader, int ordinal)
+    {
+        if (reader.IsDBNull(ordinal))
+            return null;
+        var value = reader.GetValue(ordinal);
+        if (value is byte[] blob)
+        {
+            if (blob.Length != sizeof(double) + 1)
+                throw new BlibException(false, $"Expected a {sizeof(double) + 1}-byte value but found {blob.Length} bytes.");
+            return blob[sizeof(double)] != 0
+                ? System.Buffers.Binary.BinaryPrimitives.ReadDoubleLittleEndian(blob)
+                : null;
+        }
+        return Convert.ToDouble(value, CultureInfo.InvariantCulture);
     }
 
     // --- score / query selection --------------------------------------------------------

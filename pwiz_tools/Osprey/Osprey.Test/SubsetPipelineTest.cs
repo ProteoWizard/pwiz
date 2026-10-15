@@ -965,6 +965,30 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(precursors, BlibComparer.CountRows(blib, @"OspreyExperimentScores"));
             Assert.IsTrue(BlibComparer.CountRows(blib, @"OspreyPeakBoundaries") >= precursors);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"Proteins") > 0);
+            // The experiment-level q-values: one per spectrum and one per protein group, and a
+            // peptide's value is the same on every charge state.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorQValue IS NULL"));
+            // The precursor q-value is the one in score.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorQValue <> score"));
+            // The precursor PEP is a probability, and the reported precursors are not all at the
+            // default of 1.0 a PEP that never reached the entry would leave.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 0 OR PrecursorPep > 1"));
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 1") > 0);
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptideQValue IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptidePep IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptidePep < 0 OR PeptidePep > 1"));
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptidePep < 1") > 0);
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"QValue IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"Pep IS NULL OR Pep < 0 OR Pep > 1"));
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"Proteins", @"Pep < 1") > 0);
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"peptideModSeq IN (" +
+                @"SELECT peptideModSeq FROM RefSpectra GROUP BY peptideModSeq HAVING COUNT(DISTINCT PeptideQValue) > 1)"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"peptideModSeq IN (" +
+                @"SELECT peptideModSeq FROM RefSpectra GROUP BY peptideModSeq HAVING COUNT(DISTINCT PeptidePep) > 1)"));
+            // Every protein group row is linked to a spectrum.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins",
+                @"id NOT IN (SELECT ProteinID FROM RefSpectraProteins)"));
 
             AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib, MIN_RECOVERED_FRACTION);
         }
