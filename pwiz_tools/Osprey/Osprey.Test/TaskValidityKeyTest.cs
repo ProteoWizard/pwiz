@@ -215,7 +215,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass));
                 // The worker's answer is the pair carrying the stamp of the reconciled parquet
                 // beside it. A pair from a run under another key is not this run's answer.
-                var workerStamp = ArtifactStamp.ForCurrentBuild(PerFileRescoreTask.TASK_NAME, @"key");
+                var workerStamp = OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, @"key");
                 // One row: an empty entry list writes no parquet at all. Written as Stage 6
                 // writes it - its producer over a Stage 4 parquet - because a reconciled parquet
                 // without the survivor shape reads as unstamped, whatever its footer says.
@@ -237,7 +237,7 @@ namespace pwiz.Osprey.Test
                 current = RunKey(runA);
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(),
-                    ArtifactStamp.ForCurrentBuild(PerFileRescoreTask.TASK_NAME, @"another-key"));
+                    OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, @"another-key"));
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
                     @"decoys stamped by a run under another key are not this run's worker answer");
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
@@ -275,7 +275,7 @@ namespace pwiz.Osprey.Test
             FdrScoresSidecar.BeginRun();
             FdrScoresSidecar.Write(path,
                 Enumerable.Range(1, records).Select(i => new FdrScoreRecord((uint)i, 0.5, 0.01, 0.01, 10.0)).ToList(),
-                FdrScoresSidecar.Pass.SecondPass, ArtifactStamp.ForCurrentBuild(producerTask, @"key"));
+                FdrScoresSidecar.Pass.SecondPass, OspreyVersion.Stamp(producerTask, @"key"));
         }
 
         /// <summary>

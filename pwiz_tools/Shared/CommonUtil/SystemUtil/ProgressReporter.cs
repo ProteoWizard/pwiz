@@ -1,10 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
- *
- * Based on osprey (https://github.com/MacCossLab/osprey)
- *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -23,15 +20,17 @@
 
 using System;
 using System.Diagnostics;
+using pwiz.Common.CommonResources;
 
-namespace pwiz.Osprey.Core
+namespace pwiz.Common.SystemUtil
 {
     /// <summary>
-    /// Cheap, self-contained progress reporter for Osprey's determinate loops -- a
+    /// Cheap, self-contained progress reporter for a command-line tool's determinate loops - a
     /// stopwatch-throttled percent printer modeled on Skyline's CommandProgressMonitor, but
-    /// with none of the IProgressMonitor / ProgressStatus / UI machinery. Deliberately a
-    /// stopgap: it lets us get timer-style percent output now and learn whether the full
-    /// Skyline ProgressStatus/ProgressMonitor (CLI + UI) is worth porting into PortableUtil.
+    /// with none of the IProgressMonitor / ProgressStatus / UI machinery. Written for Osprey
+    /// and moved here as the one progress reporter the command-line tools share (Osprey,
+    /// CarafeSharp): where no GUI tracks the work in memory, this simplification has proved
+    /// enough, and the full ProgressStatus machinery too complicated for general use.
     ///
     /// Prints a "&lt;activity&gt;..." heading on construction, then a throttled "&lt;pct&gt;%"
     /// line only when the percent advances AND at least the report interval has elapsed, and
@@ -39,11 +38,11 @@ namespace pwiz.Osprey.Core
     /// <see cref="MIN_PERCENT_SECONDS"/> without showing a percent. So a fast step shows just
     /// its heading, while a multi-second op shows a handful of intermediate percents. The timer
     /// throttle is the whole point: progress just needs to say "still working" without an
-    /// arbitrary per-N-units cadence cluttering the important output -- so it behaves the same
-    /// regardless of --verbose (implementer detail belongs in the surrounding log lines, not
-    /// in finer-grained progress).
+    /// arbitrary per-N-units cadence cluttering the important output - so it behaves the same
+    /// regardless of a verbose switch (implementer detail belongs in the surrounding log lines,
+    /// not in finer-grained progress).
     ///
-    /// Writes to the process-wide <see cref="OspreyOutput.Out"/> seam. Thread-safe: callers in
+    /// Writes to the process-wide <see cref="CommandOutput.Out"/> seam. Thread-safe: callers in
     /// parallel loops may call <see cref="Report"/> concurrently. Use with <c>using</c> so the
     /// step is closed on scope exit:
     /// <code>
@@ -61,15 +60,14 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public const double IO_INTERVAL_SECONDS = 5.0;
 
-
         /// <summary>
         /// Idle threshold for the frozen-percent heartbeat. When a determinate phase
         /// progresses slower than 1% per this many seconds, the integer percent does not
         /// advance, so the advance-gated <see cref="Report"/> would print nothing for as
-        /// long as it takes to cross the next whole percent -- the console looks hung
+        /// long as it takes to cross the next whole percent - the console looks hung
         /// exactly when progress is slowest and a watching user most needs reassurance
-        /// (an 82-file Stage-6 rescore went ~1 h silent this way). After this long with no
-        /// line, Report reprints the current percent with elapsed time. Fast phases advance
+        /// (an 82-file Osprey Stage-6 rescore went ~1 h silent this way). After this long with
+        /// no line, Report reprints the current percent with elapsed time. Fast phases advance
         /// the percent within the report interval and never reach the idle window, so no
         /// extra lines appear on them. Wider than <see cref="IO_INTERVAL_SECONDS"/> so it
         /// only trips on genuinely stalled-looking phases.
@@ -93,9 +91,9 @@ namespace pwiz.Osprey.Core
         /// than "Reading..." plus a 100% that only says it was fast.
         ///
         /// <para>Deliberately NOT Skyline's LongWaitDlg rule, which hides the dialog entirely
-        /// for a fast operation. #4582 applied that rule here, hiding the heading too; headings
-        /// then came and went between runs of the same data, and a route check keyed on one could
-        /// not fire at test scale (Brendan, 2026-09-25).</para>
+        /// for a fast operation. Osprey #4582 applied that rule here, hiding the heading too;
+        /// headings then came and went between runs of the same data, and a route check keyed
+        /// on one could not fire at test scale (Brendan, 2026-09-25).</para>
         /// </summary>
         public const double MIN_PERCENT_SECONDS = 1.0;
 
@@ -106,11 +104,11 @@ namespace pwiz.Osprey.Core
         private readonly double _minPercentSeconds;
         private readonly Stopwatch _stopwatch;
         private readonly object _lock = new object();
-        // Non-null only inside a MultiProgressReporter per-file scope (--parallel-files):
-        // captured at construction so this reporter feeds the file's active segment
+        // Non-null only inside a MultiProgressReporter per-file scope (files processed in
+        // parallel): captured at construction so this reporter feeds the file's active segment
         // instead of printing "<pct>%" lines. The aggregate "[i] p%" line shows the
         // motion; the heading still buffers into the file's narrative block. Null on
-        // the common sequential / single-file paths -- inline percent printing then.
+        // the common sequential / single-file paths - inline percent printing then.
         private readonly IProgressSink _sink;
         private int _lastPercent = -1;
         private double _lastReportSeconds;
@@ -155,7 +153,7 @@ namespace pwiz.Osprey.Core
             // Inside a MultiProgressReporter scope the heading buffers into the file's narrative
             // block rather than racing other files to the console.
             // The trailing ellipsis is a resource: Chinese writes it as one full-width character.
-            OspreyOutput.Out.WriteLine(_indent + string.Format(OspreyCoreResources.ProgressReporter_ProgressReporter__0____, activity));
+            CommandOutput.Out.WriteLine(_indent + string.Format(MessageResources.ProgressReporter_ProgressReporter__0____, activity));
         }
 
         /// <summary>
@@ -185,15 +183,15 @@ namespace pwiz.Osprey.Core
                 // The first percent waits one interval (_lastReportSeconds starts at 0).
                 if (percent > _lastPercent && now - _lastReportSeconds >= _intervalSeconds)
                 {
-                    OspreyOutput.Out.WriteLine(@"{0}  {1}%", _indent, percent);
+                    CommandOutput.Out.WriteLine(@"{0}  {1}%", _indent, percent);
                     _lastPercent = percent;
                     _lastReportSeconds = now;
                 }
                 else if (percent < 100 && now - _lastReportSeconds >= _heartbeatSeconds)
                 {
                     // Slow-phase heartbeat: when progress is under 1% per _heartbeatSeconds
-                    // the integer percent freezes, so switch to FINER granularity -- a
-                    // fractional percent plus the running item count -- so a genuinely
+                    // the integer percent freezes, so switch to FINER granularity - a
+                    // fractional percent plus the running item count - so a genuinely
                     // moving job shows a moving number (real progress), not just a ticking
                     // clock. Elapsed still surfaces pathological slowness. Fast phases
                     // advance the whole percent within the report interval and never reach
@@ -201,8 +199,8 @@ namespace pwiz.Osprey.Core
                     // when the phase calls Report; a phase that blocks inside one bulk
                     // operation (no Report calls) needs to be wrapped in a reporter first.
                     double pctExact = _total > 0 ? 100.0 * current / _total : 100.0;
-                    OspreyOutput.Out.WriteLine(
-                        OspreyCoreResources.ProgressReporter_Report__0____1_____2___3____4__elapsed_,
+                    CommandOutput.Out.WriteLine(
+                        MessageResources.ProgressReporter_Report__0____1_____2___3____4__elapsed_,
                         _indent, pctExact, current, _total, FormatElapsed(_stopwatch.Elapsed));
                     _lastPercent = percent;
                     _lastReportSeconds = now;
@@ -233,7 +231,7 @@ namespace pwiz.Osprey.Core
                 // whether that step also gets a 100%.
                 if (_lastPercent < 100 && _stopwatch.Elapsed.TotalSeconds >= _minPercentSeconds)
                 {
-                    OspreyOutput.Out.WriteLine(@"{0}  100%", _indent);
+                    CommandOutput.Out.WriteLine(@"{0}  100%", _indent);
                 }
             }
         }
@@ -244,10 +242,10 @@ namespace pwiz.Osprey.Core
         private static string FormatElapsed(TimeSpan elapsed)
         {
             if (elapsed.TotalHours >= 1)
-                return string.Format(OspreyCoreResources.ProgressReporter_FormatElapsed__0_h_1_00_m, (int)elapsed.TotalHours, elapsed.Minutes);
+                return string.Format(MessageResources.ProgressReporter_FormatElapsed__0_h_1_00_m, (int)elapsed.TotalHours, elapsed.Minutes);
             if (elapsed.TotalMinutes >= 1)
-                return string.Format(OspreyCoreResources.ProgressReporter_FormatElapsed__0_m_1_00_s, (int)elapsed.TotalMinutes, elapsed.Seconds);
-            return string.Format(OspreyCoreResources.ProgressReporter_FormatElapsed__0_s, (int)elapsed.TotalSeconds);
+                return string.Format(MessageResources.ProgressReporter_FormatElapsed__0_m_1_00_s, (int)elapsed.TotalMinutes, elapsed.Seconds);
+            return string.Format(MessageResources.ProgressReporter_FormatElapsed__0_s, (int)elapsed.TotalSeconds);
         }
     }
 }

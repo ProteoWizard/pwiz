@@ -31,6 +31,7 @@ using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
+using pwiz.Common.Pipeline;
 
 namespace pwiz.CarafeSharp
 {
@@ -60,6 +61,9 @@ namespace pwiz.CarafeSharp
         }
 
         public FineTuneResult Result { get; private set; }
+
+        /// <summary>The validity stamp the model file and the library record, or null for none (a run outside a task).</summary>
+        public ArtifactStamp Stamp { get; set; }
 
         /// <summary>Changes the fine-tuning options before the run; for tests.</summary>
         internal Action<FineTuneOptions> ConfigureFineTune { get; set; }
@@ -194,7 +198,7 @@ namespace pwiz.CarafeSharp
             bool ms2Held = ms2File != null && ModelFiles.IsSafetensors(ms2File);
             var saved = CarafeModelFile.Write(modelFile, trained, _settings.TrainingType, pretrained?.Sha256, _settings.Ms2Model,
                 BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition, baseModel,
-                BuildMs2Origin(fineTune, baseModel, ms2Held), BuildRtOrigin(fineTune, baseModel, rtModel));
+                BuildMs2Origin(fineTune, baseModel, ms2Held), BuildRtOrigin(fineTune, baseModel, rtModel), Stamp);
             Log(@"Saved the fine-tuned model " + modelFile + @": " + saved.Describe());
 
             if (_settings.Library != null)
@@ -202,7 +206,7 @@ namespace pwiz.CarafeSharp
                 // The models this run wrote, not checkpoints an earlier Carafe run left in -o.
                 _settings.Library.OutputDirectory = _settings.OutputDirectory;
                 _settings.Library.PreferSafetensors = true;
-                new LibraryGenerator(_settings.Library, _log, pretrained).Run();
+                new LibraryGenerator(_settings.Library, _log, pretrained) { Stamp = Stamp }.Run();
             }
         }
 

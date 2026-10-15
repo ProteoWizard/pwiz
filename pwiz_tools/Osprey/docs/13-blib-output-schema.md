@@ -38,7 +38,7 @@ Stage 7 blib emission runs entirely inside `BlibOutputWriter.Write(...)` (BlibOu
 
 ### Step 1 — Create the file with WAL journaling
 
-`new BlibWriter(path)` deletes any existing file, opens a fresh SQLite connection, and sets `PRAGMA journal_mode=WAL` + `PRAGMA synchronous=NORMAL` (BlibWriter.cs:88-106). The write happens to a `FileSaver` sibling temp; `saver.Commit()` atomically renames it into `config.OutputBlib` only after `FinalizeDatabase()` has checkpointed and torn down the WAL (BlibOutputWriter.cs:73-96). This is why `FinalizeDatabase()` must be the last writer call.
+`new BlibWriter(path)` deletes any existing file, opens a fresh SQLite connection, and sets `PRAGMA journal_mode=WAL` + `PRAGMA synchronous=NORMAL` (BlibWriter.cs:88-106). The write happens to a `SimpleFileSaver` sibling temp; `saver.Commit()` atomically renames it into `config.OutputBlib` only after `FinalizeDatabase()` has checkpointed and torn down the WAL (BlibOutputWriter.cs:73-96). This is why `FinalizeDatabase()` must be the last writer call.
 
 ### Step 2 — Schema + seed rows
 

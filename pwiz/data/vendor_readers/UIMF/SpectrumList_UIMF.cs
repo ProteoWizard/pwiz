@@ -44,6 +44,7 @@ public sealed class SpectrumList_UIMF : SpectrumListBase, IIonMobilitySpectrumLi
     private readonly UimfData _data;
     private readonly InstrumentConfiguration? _defaultIc;
     private readonly bool _ignoreZeroIntensityPoints;
+    private readonly bool _ignoreCalibrationScans;
     private readonly List<IndexEntry> _index = new();
 
     /// <summary>DataProcessing emitted as the document's <c>defaultDataProcessingRef</c>.</summary>
@@ -55,18 +56,29 @@ public sealed class SpectrumList_UIMF : SpectrumListBase, IIonMobilitySpectrumLi
     /// <summary>Wraps <paramref name="data"/>. <paramref name="ignoreZeroIntensityPoints"/>
     /// matches cpp <c>config.ignoreZeroIntensityPoints</c> — when true, the SDK arrays go
     /// through unchanged; when false, the gap-padding zero-intensity boundaries from cpp
-    /// UIMFReader.cpp:252-284 get inserted.</summary>
+    /// UIMFReader.cpp:252-284 get inserted. <paramref name="ignoreCalibrationScans"/> matches cpp
+    /// <c>config.ignoreCalibrationScans</c> and leaves calibration frames out of the index.</summary>
     public SpectrumList_UIMF(
         UimfData data,
         InstrumentConfiguration? defaultInstrumentConfiguration,
-        bool ignoreZeroIntensityPoints)
+        bool ignoreZeroIntensityPoints,
+        bool ignoreCalibrationScans = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _defaultIc = defaultInstrumentConfiguration;
         _ignoreZeroIntensityPoints = ignoreZeroIntensityPoints;
+        _ignoreCalibrationScans = ignoreCalibrationScans;
         BuildIndex();
     }
+
+    /// <summary>
+    /// True when calibration frames were left out of the index. Frame types are resolved when the
+    /// file is opened, so this is a plain read and safe from any thread. Mirrors cpp
+    /// <c>SpectrumList_UIMF::calibrationSpectraAreOmitted</c>.
+    /// </summary>
+    public override bool CalibrationSpectraAreOmitted =>
+        _ignoreCalibrationScans && _data.FrameTypes.Contains(UimfFrameType.Calibration);
 
     private sealed class IndexEntry : SpectrumIdentity
     {
@@ -161,9 +173,17 @@ public sealed class SpectrumList_UIMF : SpectrumListBase, IIonMobilitySpectrumLi
         for (int i = 0; i < raw.Count; i++)
         {
             var r = raw[i];
+
+            // Calibration frames are not acquired from the injected sample, so leave them out of
+            // the list entirely when asked to - the same thing SpectrumList_Waters does with the
+            // lockmass function. Each entry carries its own frame and scan, so the gap this leaves
+            // needs no separate raw index.
+            if (_ignoreCalibrationScans && r.FrameType == UimfFrameType.Calibration)
+                continue;
+
             _index.Add(new IndexEntry
             {
-                Index = i,
+                Index = _index.Count,
                 Frame = r.Frame,
                 Scan = r.Scan,
                 FrameType = r.FrameType,

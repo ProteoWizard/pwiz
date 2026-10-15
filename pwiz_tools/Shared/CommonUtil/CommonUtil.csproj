@@ -38,6 +38,7 @@
     <!-- Both targets need System.Resources.Extensions for the preserialized-resource
          path (see GenerateResourceUsePreserializedResources above). -->
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <InternalsVisibleTo Include="CommonTest" />
   </ItemGroup>
 
   <ItemGroup>

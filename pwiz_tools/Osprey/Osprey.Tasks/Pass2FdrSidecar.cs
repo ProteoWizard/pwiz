@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -40,7 +42,7 @@ namespace pwiz.Osprey.Tasks
     /// those sidecars onto the post-compaction stubs so run-wide protein FDR
     /// sees the 2nd-pass q-values rather than the stale 1st-pass values.
     ///
-    /// Extracted verbatim from <see cref="SecondPassFdrTask.Run"/> as pure code
+    /// Extracted verbatim from <see cref="SecondPassFdrTask.Run(PipelineContext)"/> as pure code
     /// motion so that method reads as a sequencer; behavior (and therefore the
     /// 2nd-pass sidecars and downstream protein-FDR / blib output) is unchanged.
     /// The parity-locked 2nd-pass scoring core (<c>FirstPassFdrTask.RunPercolatorFdr</c>)
@@ -2577,7 +2579,7 @@ namespace pwiz.Osprey.Tasks
 
             public Pass2SidecarWriter(OspreyConfig config, string taskName, string taskValidityKey)
             {
-                _stamp = ArtifactStamp.ForCurrentBuild(taskName, taskValidityKey);
+                _stamp = OspreyVersion.Stamp(taskName, taskValidityKey);
                 if (config.InputFiles == null)
                     return;
                 foreach (string inputFile in config.InputFiles)
