@@ -143,7 +143,7 @@ A run with nothing to export still gets a valid zero-row file with its footer (P
 
 ## File format
 
-Apache Parquet, ZSTD, written through `FileSaver` (`Osprey.IO/TrainingExportParquet.cs`), in row
+Apache Parquet, ZSTD, written through `SimpleFileSaver` (`Osprey.IO/TrainingExportParquet.cs`), in row
 groups of 20,000 rows. Scalar columns are plain parquet columns. Every per-ion array is a
 `byte[]` column holding a **little-endian typed blob with no length prefix**, exactly the scores
 parquet's convention (`ParquetBlobCodec`): the element count is `bytes / sizeof(element)`, and

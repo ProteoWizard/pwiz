@@ -141,7 +141,7 @@ namespace pwiz.Osprey
             _out = _consoleOut = consoleOut;
             // Before parsing, so a warning OspreyCommandArgs raises while parsing reaches the
             // caller's writer too; the --log-file swap later re-points it.
-            OspreyOutput.Out = _out;
+            CommandOutput.Out = _out;
             // One command line is one run, however many a test runs in this process: nothing
             // keyed by library entry id may carry over, since the next run's library reuses them.
             FdrScoresSidecar.BeginRun();
@@ -361,7 +361,10 @@ namespace pwiz.Osprey
                 // reads PerfStats here.
                 OspreyOutput.PerfStats = config.PerfStats;
                 OspreyOutput.Verbose = config.Verbose;
-                OspreyOutput.Out = _out;
+                // The shared atomic writer reads no OSPREY_* variable itself; the host hands it the
+                // forensic switch here, before the first durable write.
+                SimpleFileSaver.KeepFailedWrites = OspreyEnvironment.KeepFailedWrites;
+                CommandOutput.Out = _out;
 
                 // Create the configured directories only after args validate, so
                 // an invalid command line surfaces the validation message instead
@@ -1018,7 +1021,7 @@ namespace pwiz.Osprey
 
         internal static void LogInfo(string message)
         {
-            OspreyOutput.Out.WriteLine(message);
+            CommandOutput.Out.WriteLine(message);
         }
 
         internal static void LogInfo(LogTag tag, string text)
@@ -1034,18 +1037,18 @@ namespace pwiz.Osprey
 
         internal static void LogWarning(string message)
         {
-            // Through OspreyOutput.Out (not _out directly) so a warning emitted
+            // Through CommandOutput.Out (not _out directly) so a warning emitted
             // while a file runs in a MultiProgressReporter per-file scope
             // (--parallel-files) lands in that file's buffered block, in context,
             // instead of interleaving with the live "[i] p%" aggregate line. Off
-            // the parallel path OspreyOutput.Out is the same CommandStatusWriter,
+            // the parallel path CommandOutput.Out is the same CommandStatusWriter,
             // so the output is unchanged.
             //
             // "Warning:" / "Error:" rather than a [TAG]: these lines are written for the
             // user, not for a tool, and follow Skyline's command-line convention (translated
             // with the rest of the text; CommandStatusWriter recognizes "Error:" in every
             // language Skyline ships).
-            OspreyOutput.Out.WriteLine(WarningPrefix + @" " + message);
+            CommandOutput.Out.WriteLine(WarningPrefix + @" " + message);
         }
 
         internal static void LogError(string message)

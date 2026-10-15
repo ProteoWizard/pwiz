@@ -26,7 +26,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using pwiz.CarafeSharp.Core;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -71,15 +71,15 @@ namespace pwiz.CarafeSharp.Proteome
             }
 
             // Written under a temporary name, so a failed run leaves no manifest that looks complete.
-            var output = new PartialFile(manifestOut);
+            var output = new SimpleFileSaver(manifestOut);
             try
             {
-                WriteReconciled(groups, librarySequences, output.PartialPath, result);
+                WriteReconciled(groups, librarySequences, output.SafeName, result);
                 output.Commit();
             }
             finally
             {
-                output.Discard();
+                output.Dispose();
             }
 
             log?.WriteLine(string.Format(CultureInfo.InvariantCulture,

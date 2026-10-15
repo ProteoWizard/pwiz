@@ -27,7 +27,7 @@ namespace pwiz.Osprey.Tasks
     /// output already on disk, written by this task, by this build, with this validity key?
     ///
     /// <para>The answer is read from the output itself. Every pipeline artifact embeds its
-    /// <see cref="pwiz.Osprey.Core.ArtifactStamp"/> in the same atomic commit as its content, so
+    /// <see cref="pwiz.Common.Pipeline.ArtifactStamp"/> in the same atomic commit as its content, so
     /// there is nothing to clear before a recompute and nothing to stamp after it: a stale
     /// output is simply overwritten, and an interrupted write leaves the previous file or none.</para>
     /// </summary>

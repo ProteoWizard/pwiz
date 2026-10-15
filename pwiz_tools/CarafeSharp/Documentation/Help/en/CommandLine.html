@@ -1,0 +1,152 @@
+<html><head>
+<meta charset="utf-8">
+<title>CarafeSharp command-line usage</title>
+<meta name="description" content="Command-line usage for CarafeSharp, the C# port of Carafe that predicts and fine-tunes spectral libraries for Osprey: the entrapment FASTA build, manifest reconciliation, library prediction and training, with every Carafe 2.2.0 option.">
+<style>
+body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; max-width: 70em; }
+h1 { font-size: 1.6em; font-weight: 600; color: #000; margin: 0 0 .3em; }
+.RowType { font-size: 1.769em; line-height: 1.3em; font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; color: #000; }
+table { border: 1px solid #bbb; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }
+th { background-color: #ededed; color: #636363; text-align: left; padding: 10px 8px; font-weight: bold; border: 1px solid #bbb; }
+td { color: #2a2a2a; vertical-align: top; padding: 10px 8px; border: 1px solid #bbb; }
+code { font-family: Consolas,'Courier New',monospace; }
+</style>
+</head><body>
+<h1>CarafeSharp command-line usage</h1>
+<p>CarafeSharp - spectral library prediction and fine-tuning for Osprey (C# port of Carafe)</p><p>USAGE: CarafeSharp --build_entrapment_fasta &lt;out.fasta&gt; --db &lt;proteins.fasta&gt; [options]</p><p>       CarafeSharp --reconcile_manifest &lt;out.tsv&gt; --manifest &lt;in.tsv&gt; --predicted_library &lt;library.tsv|.blib&gt;</p><p>       CarafeSharp --db &lt;peptides.fasta|proteins.fasta&gt; -o &lt;folder&gt; [options]   (library prediction)</p><p>       CarafeSharp -i &lt;osprey.blib&gt; --ms &lt;runs&gt; -o &lt;folder&gt; [--db &lt;fasta&gt;] [options]   (training)</p><p>       CarafeSharp -i &lt;run.training.parquet|folder&gt; [--ms &lt;runs&gt;] -o &lt;folder&gt; [--db &lt;fasta&gt;] [options]</p><p>       CarafeSharp --model_info &lt;file.carafemodel&gt;</p><div class="RowType">Modes and files</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--build_entrapment_fasta</nobr>&nbsp;&lt;out.fasta&gt;</td><td>Build the peptide FASTA a library is predicted from: the digest of the proteins of <nobr>--db</nobr>, with decoys and, with <nobr>--entrapment</nobr>, entrapment peptides; the pairing manifest goes to <nobr>--manifest</nobr>.</td></tr>
+<tr><td><nobr>--reconcile_manifest</nobr>&nbsp;&lt;out.tsv&gt;</td><td>Write the pairing manifest of <nobr>--manifest</nobr> reconciled against the predicted library of <nobr>--predicted_library</nobr>, dropping the pairs the library did not keep whole.</td></tr>
+<tr><td><nobr>--manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>The pairing manifest: written by <nobr>--build_entrapment_fasta</nobr>, read by <nobr>--reconcile_manifest</nobr>.</td></tr>
+<tr><td><nobr>--predicted_library</nobr> &lt;library.tsv|.blib&gt;</td><td>The predicted library (a TSV, or a .blib) a manifest is reconciled against.</td></tr>
+<tr><td><nobr>--model_info</nobr>&nbsp;&lt;file.carafemodel&gt;</td><td>Describe a saved model (.carafemodel): what it was trained on, and how.</td></tr>
+<tr><td><nobr>--db</nobr> &lt;proteins.fasta|peptides.fasta&gt;</td><td>The FASTA to predict a library from (peptides, as <nobr>--build_entrapment_fasta</nobr> writes them, or proteins), or the proteins <nobr>--build_entrapment_fasta</nobr> digests. With training (<nobr>--i</nobr>), the library predicted with the <nobr>fine-tuned</nobr> models afterwards.</td></tr>
+<tr><td><nobr>--i</nobr> &lt;osprey.blib|run.training.parquet|folder&gt;</td><td>Osprey&#39;s results to train on: its .blib with <nobr>--ms</nobr>, or its training exports (one run&#39;s .training.parquet, a <nobr>comma-separated</nobr> list of them, or a folder of them) with or without <nobr>--ms</nobr>. With a .blib and no <nobr>--ms</nobr> a library is predicted instead, as in Carafe.</td></tr>
+<tr><td><nobr>--ms</nobr>&nbsp;&lt;run1,run2,...&gt;</td><td>The runs trained on, <nobr>comma-separated</nobr>. CarafeSharp reads no spectra: the fragment matches, XICs and peak boundaries come from Osprey&#39;s training export, so <nobr>--ms</nobr> only names the runs.</td></tr>
+<tr><td><nobr>--o</nobr>&nbsp;&lt;folder&gt;</td><td>The output folder: the library, and for training the <nobr>fine-tuned</nobr> model folder and the saved .carafemodel.</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>Print this usage and exit. An optional value picks the form: ascii or unicode (the default) tables, sections (the section names only), html, or a section name for that section alone.</td></tr>
+</table>
+<div class="RowType">Digest and modifications</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--enzyme</nobr> &lt;index|NoCut&gt;</td><td>The enzyme, by Carafe&#39;s index (default 1, trypsin), or NoCut for the <nobr>non-specific</nobr> digest, which forces 100 missed cleavages.</td></tr>
+<tr><td><nobr>--miss_c</nobr>&nbsp;&lt;n&gt;</td><td>Maximum missed cleavages (default 2).</td></tr>
+<tr><td><nobr>--minLength</nobr>&nbsp;&lt;n&gt;</td><td>Minimum peptide length (default 7).</td></tr>
+<tr><td><nobr>--maxLength</nobr>&nbsp;&lt;n&gt;</td><td>Maximum peptide length (default 35).</td></tr>
+<tr><td><nobr>--clip_n_m</nobr></td><td>Also digest each protein with its <nobr>N-terminal</nobr> methionine removed.</td></tr>
+<tr><td><nobr>--fixMod</nobr>&nbsp;&lt;ids&gt;</td><td>Fixed modifications, Carafe&#39;s ids <nobr>comma-separated</nobr> (default 1, carbamidomethyl C).</td></tr>
+<tr><td><nobr>--varMod</nobr>&nbsp;&lt;ids&gt;</td><td>Variable modifications, Carafe&#39;s ids <nobr>comma-separated</nobr> (default 2, oxidation M).</td></tr>
+<tr><td><nobr>--maxVar</nobr>&nbsp;&lt;n&gt;</td><td>Maximum variable modifications per peptide (default 1).</td></tr>
+<tr><td><nobr>--min_pep_mz</nobr>&nbsp;&lt;mz&gt;</td><td>Minimum precursor m/z (default 300).</td></tr>
+<tr><td><nobr>--max_pep_mz</nobr>&nbsp;&lt;mz&gt;</td><td>Maximum precursor m/z (default 2000).</td></tr>
+<tr><td><nobr>--min_pep_charge</nobr>&nbsp;&lt;z&gt;</td><td>Minimum precursor charge (default 2).</td></tr>
+<tr><td><nobr>--max_pep_charge</nobr>&nbsp;&lt;z&gt;</td><td>Maximum precursor charge (default 3 for the FASTA build, 4 for library prediction).</td></tr>
+<tr><td><nobr>--I2L</nobr></td><td>Convert isoleucine to leucine in every sequence.</td></tr>
+</table>
+<div class="RowType">Entrapment FASTA build</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--entrapment</nobr></td><td>Add entrapment peptides, shuffled from the targets, or taken from the proteins of <nobr>--entrapment_db</nobr>.</td></tr>
+<tr><td><nobr>--no_decoys</nobr></td><td>Write no decoy peptides.</td></tr>
+<tr><td><nobr>--decoy_prefix</nobr>&nbsp;&lt;prefix&gt;</td><td>The prefix of decoy protein names (default decoy_ for the FASTA build, rev_ for a library).</td></tr>
+<tr><td><nobr>--mz_filter</nobr></td><td>Keep only the peptides with a precursor m/z inside <nobr>--min_pep_mz</nobr> to <nobr>--max_pep_mz</nobr> at some charge of <nobr>--min_pep_charge</nobr> to <nobr>--max_pep_charge</nobr>, modifications counted.</td></tr>
+<tr><td><nobr>--entrapment_seed</nobr>&nbsp;&lt;n&gt;</td><td>The seed of the entrapment shuffle (default 42).</td></tr>
+<tr><td><nobr>--decoy_seed</nobr>&nbsp;&lt;n&gt;</td><td>The seed of the decoy generation (default 24).</td></tr>
+<tr><td><nobr>--entrapment_db</nobr>&nbsp;&lt;proteins.fasta&gt;</td><td>A FASTA of a foreign species whose peptides are the entrapment, in place of shuffled targets.</td></tr>
+<tr><td><nobr>--entrapment_ratio</nobr>&nbsp;&lt;ratio&gt;</td><td>Entrapment peptides per target, 0.1 to 1.0 (default 1.0).</td></tr>
+<tr><td><nobr>--no_similarity_gate</nobr></td><td>Keep the entrapment peptides that are <nobr>near-copies</nobr> of their own targets. For audit comparison only: the resulting library should not be searched.</td></tr>
+<tr><td><nobr>--ignore_pairing_errors</nobr></td><td>Write the pairing manifest even when it fails its integrity checks.</td></tr>
+</table>
+<div class="RowType">Library prediction</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--lf_type</nobr> &lt;<nobr>DIA-NN</nobr>|EncyclopeDIA|Skyline|blib&gt;</td><td>The library format, <nobr>comma-separated</nobr> for more than one: <nobr>DIA-NN</nobr> (default), EncyclopeDIA or Skyline, a TSV in that notation, or blib, a BiblioSpec library. Skyline with <nobr>--fast</nobr> writes a .blib too.</td></tr>
+<tr><td><nobr>--fast</nobr></td><td>With <nobr>--lf_type</nobr> Skyline, write the library as a .blib; without <nobr>--fast</nobr> Carafe writes a generic TSV.</td></tr>
+<tr><td><nobr>--lf_frag_mz_min</nobr>&nbsp;&lt;mz&gt;</td><td>Minimum fragment m/z (default 200).</td></tr>
+<tr><td><nobr>--lf_frag_mz_max</nobr>&nbsp;&lt;mz&gt;</td><td>Maximum fragment m/z (default 1800).</td></tr>
+<tr><td><nobr>--lf_top_n_frag</nobr>&nbsp;&lt;n&gt;</td><td>Fragments kept per precursor, the most intense first (default 20).</td></tr>
+<tr><td><nobr>--lf_min_n_frag</nobr>&nbsp;&lt;n&gt;</td><td>Minimum fragments for a precursor to be written (default 2).</td></tr>
+<tr><td><nobr>--lf_frag_n_min</nobr>&nbsp;&lt;n&gt;</td><td>Lowest fragment ordinal kept, b and y alike (default 2).</td></tr>
+<tr><td><nobr>--nce</nobr>&nbsp;&lt;nce&gt;</td><td>The normalized collision energy the MS2 model predicts at (default 27, or a model folder&#39;s).</td></tr>
+<tr><td><nobr>--ms_instrument</nobr>&nbsp;&lt;name&gt;</td><td>The instrument the MS2 model predicts for, by AlphaPeptDeep&#39;s name (default Eclipse, or a model folder&#39;s).</td></tr>
+<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. CarafeSharp only.</td></tr>
+<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. CarafeSharp only.</td></tr>
+<tr><td><nobr>--rt_max</nobr>&nbsp;&lt;minutes&gt;</td><td>The gradient length the library&#39;s retention times are scaled to, in minutes; absent, iRT.</td></tr>
+<tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
+<tr><td><nobr>--pairing_manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>The pairing manifest of <nobr>--build_entrapment_fasta</nobr>: the library then carries Carafe&#39;s DecoyPairs table, every pair written whole or not at all.</td></tr>
+<tr><td><nobr>--rt_reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt_align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. CarafeSharp only.</td></tr>
+</table>
+<div class="RowType">Models</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--model_dir</nobr>&nbsp;&lt;folder&gt;</td><td>A Carafe <nobr>fine-tuned</nobr> model folder to predict with: its MS2 and RT models, metrics and <nobr>training-run</nobr> summary.</td></tr>
+<tr><td><nobr>--model</nobr>&nbsp;&lt;file.carafemodel&gt;</td><td>A saved model (.carafemodel), which every training run writes into <nobr>--o</nobr>: predict a library with it, or with <nobr>--i</nobr> <nobr>fine-tune</nobr> it further. CarafeSharp only.</td></tr>
+<tr><td><nobr>--pretrained</nobr>&nbsp;&lt;pretrained_models.zip&gt;</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). CarafeSharp only.</td></tr>
+<tr><td><nobr>--tf</nobr> &lt;all | ms2 | rt&gt;</td><td>The models to train, or to predict with from <nobr>--model_dir</nobr>: all (default), ms2 or rt.</td></tr>
+<tr><td><nobr>--rt_model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: the one of <nobr>--model</nobr> or <nobr>--model_dir</nobr>, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. CarafeSharp only.</td></tr>
+<tr><td><nobr>--device</nobr> &lt;cpu | gpu | cuda&gt;</td><td>Where the models run: cpu, or gpu / cuda (default; the CPU when there is no CUDA device).</td></tr>
+<tr><td><nobr>--ms2_model</nobr>&nbsp;&lt;model&gt;</td><td>The MS2 model (a PyTorch checkpoint) <nobr>fine-tuning</nobr> starts from, in place of the pretrained one.</td></tr>
+</table>
+<div class="RowType">Training</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--se</nobr>&nbsp;&lt;Osprey&gt;</td><td>The search engine of <nobr>--i</nobr>: only Osprey, whose training export CarafeSharp trains on.</td></tr>
+<tr><td><nobr>--fdr</nobr>&nbsp;&lt;q&gt;</td><td>The <nobr>q-value</nobr> cutoff of the precursors trained on (default 0.01).</td></tr>
+<tr><td><nobr>--cor</nobr>&nbsp;&lt;r&gt;</td><td>The minimum fragment correlation of a precursor trained on (default 0.75).</td></tr>
+<tr><td><nobr>--n_ion_min</nobr>&nbsp;&lt;n&gt;</td><td>The lowest <nobr>b-ion</nobr> ordinal trained on (default 0, every ordinal).</td></tr>
+<tr><td><nobr>--c_ion_min</nobr>&nbsp;&lt;n&gt;</td><td>The lowest <nobr>y-ion</nobr> ordinal trained on (default 0, every ordinal).</td></tr>
+<tr><td><nobr>--nf</nobr>&nbsp;&lt;n&gt;</td><td>The minimum matched fragments of a precursor trained on (default 4).</td></tr>
+<tr><td><nobr>--min_n</nobr>&nbsp;&lt;n&gt;</td><td>The minimum valid fragments of a precursor trained on (default 4).</td></tr>
+<tr><td><nobr>--valid</nobr></td><td>Require a precursor&#39;s most intense fragment to be valid.</td></tr>
+<tr><td><nobr>--no_masking</nobr></td><td>Train on every ion of the kept spectra, masking none.</td></tr>
+<tr><td><nobr>--seed</nobr>&nbsp;&lt;n&gt;</td><td>The random seed of training (default 2024; not negative).</td></tr>
+<tr><td><nobr>--rt_align</nobr> &lt;none | kde&gt;</td><td>How the training runs&#39; retention times are aligned before the RT model is <nobr>fine-tuned</nobr>: kde (default; each run&#39;s minutes mapped onto Chronologer&#39;s hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe&#39;s one rt_max). CarafeSharp only.</td></tr>
+<tr><td><nobr>--rt_select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median. CarafeSharp only.</td></tr>
+</table>
+<div class="RowType">Output</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--log_file</nobr>&nbsp;&lt;path&gt;</td><td>Write every line of output and error to this file instead of the console. CarafeSharp only, any mode.</td></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>Prefix each line with the time. CarafeSharp only.</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>Prefix each line with the managed and private memory in use. CarafeSharp only.</td></tr>
+</table>
+<div class="RowType">Carafe options accepted for compatibility</div>
+<p>Carafe 2.2.0 options these modes do not read. Each is accepted so a Carafe command line runs unchanged; one that CarafeSharp cannot honor is refused, and the rest are ignored, as Carafe ignores them.</p>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--itol</nobr>&nbsp;&lt;tolerance&gt;</td><td>Carafe&#39;s XIC extraction settings (<nobr>--itol</nobr>, <nobr>--itolu</nobr>, <nobr>--sg</nobr>, <nobr>--min_mz</nobr>, <nobr>--rf</nobr>, <nobr>--rf_rt_win</nobr>, <nobr>--rt_win_offset</nobr>) are Osprey&#39;s to decide: the matches, XICs and peak boundaries come from its training export, so each is reported and ignored.</td></tr>
+<tr><td><nobr>--itolu</nobr>&nbsp;&lt;unit&gt;</td><td>See <nobr>--itol</nobr>.</td></tr>
+<tr><td><nobr>--sg</nobr>&nbsp;&lt;n&gt;</td><td>See <nobr>--itol</nobr>.</td></tr>
+<tr><td><nobr>--na</nobr>&nbsp;&lt;n&gt;</td><td>Flanking spectra; only 0 is supported.</td></tr>
+<tr><td><nobr>--ptm_site_prob</nobr>&nbsp;&lt;p&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--ptm_site_qvalue</nobr>&nbsp;&lt;q&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--min_mz</nobr>&nbsp;&lt;mz&gt;</td><td>See <nobr>--itol</nobr>.</td></tr>
+<tr><td><nobr>--lf_format</nobr>&nbsp;&lt;format&gt;</td><td>Carafe&#39;s library file format; parquet is not supported.</td></tr>
+<tr><td><nobr>--rf_rt_win</nobr>&nbsp;&lt;window&gt;</td><td>See <nobr>--itol</nobr>.</td></tr>
+<tr><td><nobr>--rt_win_offset</nobr>&nbsp;&lt;minutes&gt;</td><td>See <nobr>--itol</nobr>.</td></tr>
+<tr><td><nobr>--data_type</nobr>&nbsp;&lt;type&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--build_koina_library</nobr>&nbsp;&lt;out&gt;</td><td>Not supported by CarafeSharp, which has no Koina client.</td></tr>
+<tr><td><nobr>--koina_url</nobr>&nbsp;&lt;url&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--koina_ms2_model</nobr>&nbsp;&lt;name&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--koina_rt_model</nobr>&nbsp;&lt;name&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--nce_ms</nobr>&nbsp;&lt;nce&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--mode</nobr>&nbsp;&lt;mode&gt;</td><td>Carafe&#39;s mode; only general is supported.</td></tr>
+<tr><td><nobr>--python</nobr>&nbsp;&lt;path&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--mod2mass</nobr>&nbsp;&lt;mapping&gt;</td><td>Not supported by CarafeSharp.</td></tr>
+<tr><td><nobr>--user_var_mods</nobr>&nbsp;&lt;mods&gt;</td><td>Not supported by CarafeSharp.</td></tr>
+<tr><td><nobr>--verbose</nobr>&nbsp;&lt;level&gt;</td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--ai_version</nobr>&nbsp;&lt;version&gt;</td><td>Carafe&#39;s Python version; only v2 is ported.</td></tr>
+<tr><td><nobr>--printPTM</nobr></td><td>Not supported by CarafeSharp.</td></tr>
+<tr><td><nobr>--nm</nobr></td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+<tr><td><nobr>--cs</nobr></td><td>Not supported by CarafeSharp training.</td></tr>
+<tr><td><nobr>--ez</nobr></td><td>A Carafe diagnostic file (<nobr>--ez</nobr>, <nobr>--xic</nobr>, <nobr>--export_mgf</nobr>, <nobr>--skyline</nobr>) CarafeSharp does not write; reported and ignored.</td></tr>
+<tr><td><nobr>--skyline</nobr></td><td>See <nobr>--ez</nobr>.</td></tr>
+<tr><td><nobr>--use_all_peaks</nobr></td><td>Not supported by CarafeSharp training.</td></tr>
+<tr><td><nobr>--rf</nobr></td><td>See <nobr>--itol</nobr>.</td></tr>
+<tr><td><nobr>--xic</nobr></td><td>See <nobr>--ez</nobr>.</td></tr>
+<tr><td><nobr>--export_mgf</nobr></td><td>See <nobr>--ez</nobr>.</td></tr>
+<tr><td><nobr>--y1</nobr></td><td>Not supported by CarafeSharp training.</td></tr>
+<tr><td><nobr>--torch_compile</nobr></td><td>Accepted for Carafe compatibility; not used by CarafeSharp.</td></tr>
+</table>
+<p>OTHER FORMS ACCEPTED: a value may follow its option (--db x.fasta) or be joined to it (--db=x.fasta), and every option is also accepted with Carafe's single dash (-db x.fasta, -db=x.fasta), so a Carafe 2.2.0 command line runs unchanged. A repeated option keeps its first value, as in Carafe.</p></body></html>

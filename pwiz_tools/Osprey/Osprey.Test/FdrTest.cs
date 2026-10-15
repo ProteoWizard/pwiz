@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -2003,28 +2004,28 @@ namespace pwiz.Osprey.Test
             string report;
             string defaultReport;
             PercolatorResults results;
-            var savedOut = OspreyOutput.Out;
+            var savedOut = CommandOutput.Out;
             bool savedVerbose = OspreyOutput.Verbose;
             try
             {
                 // Default console (verbose off): the model sanity-check table must NOT
                 // appear -- it is gated behind --verbose (issue #4364).
                 var defaultCapture = new StringWriter();
-                OspreyOutput.Out = defaultCapture;
+                CommandOutput.Out = defaultCapture;
                 OspreyOutput.Verbose = false;
                 PercolatorTrainer.RunPercolator(entries, config);
                 defaultReport = defaultCapture.ToString();
 
                 // Verbose console: the table is emitted.
                 var capture = new StringWriter();
-                OspreyOutput.Out = capture;
+                CommandOutput.Out = capture;
                 OspreyOutput.Verbose = true;
                 results = PercolatorTrainer.RunPercolator(entries, config);
                 report = capture.ToString();
             }
             finally
             {
-                OspreyOutput.Out = savedOut;
+                CommandOutput.Out = savedOut;
                 OspreyOutput.Verbose = savedVerbose;
             }
 

@@ -30,6 +30,7 @@ using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using PwizSpectra = Pwiz.Data.MsData.Spectra;
 using Pwiz.Data.MsData.Readers;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.ProteowizardWrapper;
 
@@ -449,7 +450,7 @@ namespace pwiz.Osprey.IO
             if (Interlocked.Exchange(ref _vendorFailuresReported, 1) != 0)
                 return;
             foreach (string failure in VendorReaderRegistration.Failures)
-                OspreyOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
+                CommandOutput.Out.WriteLine($@"[warn] vendor reader {failure}");
         }
     }
 

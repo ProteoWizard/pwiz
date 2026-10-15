@@ -1301,10 +1301,6 @@
     <value>已为 {0} 写入 {1:N0} 个母离子候选峰：基于 {4:N0} 个第一轮峰，重新评分 {2:N0} 个，添加 {3:N0} 个缺失峰</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___" xml:space="preserve">
-    <value>{0} 步骤无法从中间文件重新加载其结果（退出代码 {1}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_" xml:space="preserve">
     <value>无法根据名称判断得分文件 {0} 属于哪个输入文件。</value>
     <comment>Needs Review:New resource</comment>

@@ -94,7 +94,7 @@ namespace pwiz.Osprey
             {
                 // Guarantees CloseAll runs on a normal Environment.Exit, not just a return
                 // from Main - the held-open dump writers (cs_stage6_mp_inputs.tsv and
-                // siblings) commit through FileSaver, so without this an early *_ONLY exit
+                // siblings) commit through SimpleFileSaver, so without this an early *_ONLY exit
                 // (there are two dozen call sites) would leave their content sitting in an
                 // uncommitted temp forever rather than at the real path a developer expects.
                 // Does not run on a hard crash (AccessViolationException, a killed process) -

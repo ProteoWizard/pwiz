@@ -32,6 +32,7 @@ namespace pwiz.Common.CommandLine
     /// </summary>
     public abstract class ArgumentBase
     {
+        /// <summary>The standard long-name prefix, the one <see cref="CommandLineGrammar.STRICT"/> uses.</summary>
         public const string ARG_PREFIX = "--";
 
         protected ArgumentBase(string name, Func<string> valueExample, string[] fixedValues, Func<string[]> dynamicValues)
@@ -64,6 +65,26 @@ namespace pwiz.Common.CommandLine
         }
         public bool WrapValue { get; set; }
         public bool OptionalValue { get; set; }
+        /// <summary>
+        /// With <see cref="OptionalValue"/> under a grammar whose values may follow as the next
+        /// token: decides whether that token is this argument's value or the next thing on the
+        /// command line. Null takes any token that is not an option. Osprey's
+        /// <c>--parallel-files [N]</c> takes only a non-negative integer, so a file name after
+        /// it stays a file name.
+        /// </summary>
+        public Func<string, bool> OptionalValueFilter { get; set; }
+        /// <summary>
+        /// Consumes every value up to the next option (<c>-i a.mzML b.mzML</c>), each handed to
+        /// the processor as its own value. Only meaningful under a grammar whose values may
+        /// follow as the next token.
+        /// </summary>
+        public bool Variadic { get; set; }
+        /// <summary>
+        /// The missing-value error for this argument, given the argument as typed, when the
+        /// provider's general text is not enough: Osprey's <c>--task</c> lists the task names,
+        /// because that error is the user's only guide to them. Null uses the provider's.
+        /// </summary>
+        public Func<string, string> MissingValueMessage { get; set; }
         public bool InternalUse { get; set; }
         public bool HasValueChecking { get; set; }  // Set to avoid default checking against values listed for documentation
         /// <summary>
@@ -72,17 +93,37 @@ namespace pwiz.Common.CommandLine
         /// </summary>
         public Func<string[]> AcceptedValues { get; set; }
 
+        /// <summary>
+        /// The argument as typed and as help shows it: the installed grammar's
+        /// <see cref="CommandLineGrammar.Prefix"/> and the name (<c>--input</c>; <c>-db</c> for
+        /// CarafeSharp).
+        /// </summary>
         public string ArgumentText
         {
-            get { return ARG_PREFIX + Name; }
+            get { return ArgUsage.Grammar.Prefix + Name; }
         }
 
         /// <summary>The short spelling (<c>-i</c> for <c>--input</c>), or null when the
-        /// argument has no <see cref="ShortName"/>. The one place that spelling is built, so
-        /// the usage text, a host's tokenizer and a test all agree on it.</summary>
+        /// argument has no <see cref="ShortName"/> or the grammar no short prefix. The one place
+        /// that spelling is built, so the usage text, the parser and a test all agree on it.</summary>
         public string ShortArgumentText
         {
-            get { return ShortName != null ? @"-" + ShortName : null; }
+            get
+            {
+                string shortPrefix = ArgUsage.Grammar.ShortPrefix;
+                return ShortName != null && shortPrefix != null ? shortPrefix + ShortName : null;
+            }
+        }
+
+        /// <summary>
+        /// True when the parser reads a value for this argument: it declares one
+        /// (<see cref="ValueExample"/>). An argument that declares none is a flag and never
+        /// takes a value, <see cref="OptionalValue"/> or not: Skyline declares several such
+        /// flags with OptionalValue set, and its tests pin that a value given to one is refused.
+        /// </summary>
+        public bool TakesValue
+        {
+            get { return ValueExample != null; }
         }
 
         /// <summary>
@@ -163,12 +204,18 @@ namespace pwiz.Common.CommandLine
                 // Hosts that set a ShortName (e.g. Osprey's -i) get it shown alongside the
                 // long form: "-i, --input ...". Skyline leaves ShortName null, so this prefix is
                 // empty and the rendered text is unchanged.
-                var retValue = (ShortName != null ? ShortArgumentText + @", " : string.Empty) + ArgumentText;
+                var retValue = (ShortArgumentText != null ? ShortArgumentText + @", " : string.Empty) + ArgumentText;
                 if (ValueExample != null)
                 {
-                    var valueText = ArgUsage.ArgumentValueSeparator + (WrapValue ? Environment.NewLine : string.Empty) + ValueExample();
-                    if (OptionalValue)
-                        valueText = '[' + valueText + ']';
+                    string separator = ArgUsage.ArgumentValueSeparator;
+                    string example = (WrapValue ? Environment.NewLine : string.Empty) + ValueExample();
+                    string valueText;
+                    if (!OptionalValue)
+                        valueText = separator + example;
+                    else if (string.IsNullOrWhiteSpace(separator))
+                        valueText = separator + '[' + example + ']';   // --name [<value>]
+                    else
+                        valueText = '[' + separator + example + ']';   // --name[=value]
                     retValue += valueText;
                 }
                 return retValue;
@@ -199,15 +246,22 @@ namespace pwiz.Common.CommandLine
             return ValuesToExample((IEnumerable<string>) options);
         }
 
+        /// <summary>
+        /// One token in the strict form, <c>--name</c> or <c>--name=value</c>, as a pair, or
+        /// <see cref="NameValuePair.EMPTY"/> for a token without the prefix. The parser does
+        /// its own matching (<see cref="CommandLineParser{TContext}"/>); this is for a test that
+        /// builds one token and checks it against one argument.
+        /// </summary>
         public static NameValuePair Parse(string arg)
         {
-            if (!arg.StartsWith(ARG_PREFIX))
+            string prefix = ArgUsage.Grammar.Prefix;
+            if (!arg.StartsWith(prefix, StringComparison.Ordinal))
                 return NameValuePair.EMPTY;
 
             // Split on the same separator GetArgumentTextWithValue joins with, so the framework
             // round-trips its own tokens whatever the host's grammar. Skyline's is "=".
             string name, value = null;
-            arg = arg.Substring(2);
+            arg = arg.Substring(prefix.Length);
             string separator = ArgUsage.ArgumentValueSeparator;
             int indexSeparator = arg.IndexOf(separator, StringComparison.Ordinal);
             if (indexSeparator >= 0)

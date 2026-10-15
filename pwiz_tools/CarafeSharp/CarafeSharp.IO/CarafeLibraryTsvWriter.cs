@@ -26,6 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using pwiz.CarafeSharp.Core;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.IO
 {
@@ -37,7 +38,7 @@ namespace pwiz.CarafeSharp.IO
     /// <c>Float.toString</c> of the float32 m/z), RelativeIntensity (<c>%.4f</c>),
     /// FragmentType, FragmentNumber, FragmentCharge and FragmentLossType. Lines end in LF and
     /// the file is UTF-8 without a byte-order mark, as Carafe writes it. The rows go to a
-    /// <see cref="PartialFile"/> that <see cref="Complete"/> moves over the final name.
+    /// <see cref="SimpleFileSaver"/> temp that <see cref="Complete"/> moves over the final name.
     /// </summary>
     public sealed class CarafeLibraryTsvWriter : IDisposable
     {
@@ -52,7 +53,7 @@ namespace pwiz.CarafeSharp.IO
         /// <summary>Carafe's header with <c>-ccs</c>: IonMobility after Tr_recalibrated.</summary>
         public const string HEADER_WITH_ION_MOBILITY = PRECURSOR_COLUMNS + "IonMobility\t" + FRAGMENT_COLUMNS;
 
-        private readonly PartialFile _file;
+        private readonly SimpleFileSaver _file;
         private readonly StreamWriter _writer;
 
         /// <summary>
@@ -64,8 +65,8 @@ namespace pwiz.CarafeSharp.IO
         public CarafeLibraryTsvWriter(string path, bool ionMobility = false)
         {
             WritesIonMobility = ionMobility;
-            _file = new PartialFile(path);
-            _writer = new StreamWriter(_file.PartialPath, false, new UTF8Encoding(false), 1 << 20) { NewLine = "\n" };
+            _file = new SimpleFileSaver(path);
+            _writer = new StreamWriter(_file.SafeName, false, new UTF8Encoding(false), 1 << 20) { NewLine = "\n" };
             _writer.Write((ionMobility ? HEADER_WITH_ION_MOBILITY : HEADER) + "\n");
         }
 
@@ -144,7 +145,7 @@ namespace pwiz.CarafeSharp.IO
         public void Dispose()
         {
             _writer.Dispose();
-            _file.Discard();
+            _file.Dispose();
         }
     }
 }

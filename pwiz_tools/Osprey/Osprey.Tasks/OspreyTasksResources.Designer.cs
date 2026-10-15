@@ -3107,16 +3107,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The {0} step could not reload its results from the intermediate files (exit code {1})..
-        /// </summary>
-        public static string RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___ {
-            get {
-                return ResourceManager.GetString("RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_inter" +
-                        "mediate_files__exit_code__1___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {1} ({0:N0} files).
         /// </summary>
         public static string RescoredEntries_StreamFiles__1____0__files_ {

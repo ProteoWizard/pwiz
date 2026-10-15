@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 // pwiz.CLI.msdata, pwiz.Common.Collections types (MSData, MSDataFile, ReaderList, ReaderConfig,
 // Map<,>, ...) are provided by Compat.cs in this namespace — no using needed.
+using Pwiz.Data.MsData;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
@@ -42,6 +43,8 @@ namespace MSConvertGUI
     public partial class MainForm : BaseForm
     {
         IList<string> cmdline_args;
+        private string _loadedPreset; // the preset whose settings the controls currently hold
+        private bool _revertingPresetSelection;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
         string AboutButtonHelpText = "Version: " + Application.ProductVersion + "\r\n\r\n" +
             "Each control has a \"tooltip\": let your cursor rest atop a control for a moment to see a help message for that control.\r\n\r\n" +
@@ -91,24 +94,25 @@ namespace MSConvertGUI
             if (presetName == String.Empty)
                 presetName = "Generic";
             presetName += " Defaults";
+            const string genericDefaults = "Generic Defaults";
 
-            try
+            if (presetComboBox.Items.Contains(presetName))
             {
                 SelectPreset(presetName);
+                // Done unless the preset was refused and Generic Defaults is still untried.
+                if (_loadedPreset == presetName || presetName == genericDefaults)
+                    return;
             }
-            catch (FileNotFoundException)
+
+            if (presetComboBox.Items.Contains(genericDefaults))
             {
-                try
-                {
-                    SelectPreset("Generic Defaults");
-                }
-                catch
-                {
-                    // generic defaults not found, so create it
-                    setCfgFromGUI(MakePresetFilename("Generic Defaults"));
-                    SelectPreset("Generic Defaults");
-                }
+                SelectPreset(genericDefaults);
+                return;
             }
+
+            // generic defaults not found, so create it
+            setCfgFromGUI(MakePresetFilename(genericDefaults));
+            SelectPreset(genericDefaults);
         }
 
         public MainForm(IList<string> args)
@@ -645,14 +649,8 @@ namespace MSConvertGUI
                 case "mzMLb":
                     commandLine.Append("--mzMLb|");
                     break;
-                case "mz5":
-                    commandLine.Append("--mz5|");
-                    break;
                 case "mgf":
                     commandLine.Append("--mgf|");
-                    break;
-                case "text":
-                    commandLine.Append("--text|");
                     break;
                 case "ms1":
                     commandLine.Append("--ms1|");
@@ -747,9 +745,7 @@ namespace MSConvertGUI
                         break;
                     case "--mzXML":
                     case "--mzMLb":
-                    case "--mz5":
                     case "--mgf":
-                    case "--text":
                     case "--ms1":
                     case "--cms1":
                     case "--ms2":
@@ -820,6 +816,12 @@ namespace MSConvertGUI
         private void presetSaveButton_Click(object sender, EventArgs e)
         {
             string presetName = presetComboBox.SelectedItem as string;
+            if (presetName == null)
+            {
+                // No preset is loaded (one was refused), so ask for a name rather than guess one.
+                presetSaveAsButton_Click(sender, e);
+                return;
+            }
             setCfgFromGUI(MakePresetFilename(presetName));
             SelectPreset(presetName);
         }
@@ -860,15 +862,25 @@ namespace MSConvertGUI
             LoadPresets();
         }
 
-        private void SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
+        private bool SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
         {
             if (!File.Exists(cfgFileName))
             {
                 MessageBox.Show("Can't find config file \"" + cfgFileName + "\"");
-                return;
+                return false;
             }
             string cmdline = File.ReadAllText(cfgFileName);
+            foreach (var token in cmdline.Split('|'))
+            {
+                if (UnsupportedWriteFormats.TryGetReason(token, out var reason))
+                {
+                    MessageBox.Show("Preset \"" + Path.GetFileNameWithoutExtension(cfgFileName) + "\" uses " + token + ": " + reason + Environment.NewLine + Environment.NewLine +
+                                    "The preset was not loaded. To replace it, set the options you want and use Save As with the same name.");
+                    return false;
+                }
+            }
             SetControlsFromCommandline(cmdline);
+            return true;
         }
 
         private void StartButton_Click(object sender, EventArgs e)
@@ -1197,7 +1209,26 @@ namespace MSConvertGUI
 
         private void presetComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SetGUIfromCfg(Path.Combine(PresetFolder, (presetComboBox.SelectedItem as string) + ".cmdline"));
+            var presetName = presetComboBox.SelectedItem as string;
+            if (_revertingPresetSelection || presetName == null)
+                return;
+            if (SetGUIfromCfg(Path.Combine(PresetFolder, presetName + ".cmdline")))
+            {
+                _loadedPreset = presetName;
+                return;
+            }
+
+            // The preset was rejected, so show the preset the controls still hold. Otherwise
+            // Save would write those settings into the rejected preset.
+            _revertingPresetSelection = true;
+            try
+            {
+                presetComboBox.SelectedIndex = _loadedPreset == null ? -1 : presetComboBox.Items.IndexOf(_loadedPreset);
+            }
+            finally
+            {
+                _revertingPresetSelection = false;
+            }
         }
 
         private void presetSetDefaultButton_Click(object sender, EventArgs e)

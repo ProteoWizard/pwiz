@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -209,14 +210,14 @@ namespace pwiz.Osprey.Core
         public static readonly int StubIdentity = ParseIntOrNull(@"OSPREY_STUB_IDENTITY") ?? 1;
 
         /// <summary>
-        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
-        /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
+        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="SimpleFileSaver"/>. Every
+        /// durable write, diagnostic dumps included, goes through <c>SimpleFileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before
         /// <c>Commit()</c> - the real path then holds the previous content or nothing,
-        /// never a partial write (see <c>FileSaver</c>'s own doc comment). Set this to
+        /// never a partial write (see <c>SimpleFileSaver</c>'s own doc comment). Set this to
         /// inspect what a write got through before it was abandoned: on an uncommitted
         /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,
-        /// its normal <c>~OS</c>-prefixed name) instead of deleted. It never touches the
+        /// its normal <c>~SK</c>-prefixed name) instead of deleted. It never touches the
         /// real path, so presence-proves-completeness still holds for every consumer;
         /// only a developer who knows to look for the temp sees the partial content.
         /// </summary>

@@ -29,6 +29,9 @@ internal static class ArgParser
             string a = args[i];
             if (!s_optionsByName.TryGetValue(a, out var option))
             {
+                if (UnsupportedWriteFormats.TryGetReason(a, out string? unsupportedReason))
+                    throw new ArgumentException($"{a}: {unsupportedReason}");
+
                 if (a.StartsWith('-'))
                     throw new ArgumentException($"Unknown option: {a}");
                 config.InputFiles.Add(a);
@@ -145,7 +148,7 @@ internal static class ArgParser
             (c, v) => LoadConfigFile(v, c)),
         Arg("outfile", "Override the name of output file.",
             (c, v) => c.OutFile = v),
-        Arg("ext,e", "set extension for output files [mzML|mzXML|mgf|txt|mz5|mzMLb]",
+        Arg("ext,e", "set extension for output files [mzML|mzXML|mgf|mzMLb]",
             (c, v) => c.OutputExtension = v),
 
         // -------- output format --------
@@ -153,8 +156,6 @@ internal static class ArgParser
             c => c.WriteConfig.Format = WriteFormat.Mzml) with { Aliases = new[] { "--mzml" } },
         Flag("mzXML", "write mzXML format",
             c => c.WriteConfig.Format = WriteFormat.MzXml),
-        Flag("mz5", "write mz5 format",
-            c => c.WriteConfig.Format = WriteFormat.Mz5),
         Flag("mzMLb", "write mzMLb format",
             c => c.WriteConfig.Format = WriteFormat.MzMLb),
         Arg("mzMLbChunkSize", "mzMLb dataset chunk size in bytes",
@@ -165,8 +166,6 @@ internal static class ArgParser
             defaultValue: Invariant(s_defaults.WriteConfig.MzMLbCompressionLevel)),
         Flag("mgf", "write Mascot generic format",
             c => c.WriteConfig.Format = WriteFormat.Mgf) with { Aliases = new[] { "--MGF" } },
-        Flag("text", "write ProteoWizard internal text format",
-            c => c.WriteConfig.Format = WriteFormat.Text),
         Flag("ms1", "write MS1 format",
             c => c.WriteConfig.Format = WriteFormat.Ms1),
         Flag("bms1", "write BMS1 format",
@@ -381,6 +380,9 @@ internal static class ArgParser
             if (eq < 0) { replay.Add("--" + line); continue; }
             string key = "--" + line[..eq].Trim();
             string val = line[(eq + 1)..].Trim();
+            // "mz5=false" asks for nothing this msconvert lacks, so it is dropped rather than refused.
+            if (UnsupportedWriteFormats.TryGetReason(key, out _) && IsFalse(val))
+                continue;
             // A switch takes no value on the command line, so "mzXML=true" turns it on and
             // "mzXML=false" leaves it off, as in a C++ msconvert config file.
             if (s_optionsByName.TryGetValue(key, out var option) && option.Value == OptionValue.None)
