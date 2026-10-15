@@ -42,6 +42,11 @@ namespace pwiz.Skyline.Util
     
     public class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
     {
+        // A download that fails in a way that may not happen again (see NetworkRequestException.IsTransient)
+        // is retried this many times
+        public const int MAX_DOWNLOAD_RETRIES = 3;
+        private const int DOWNLOAD_RETRY_DELAY_MILLISECONDS = 1000;
+
         private readonly IProgressMonitor _progressMonitor;
         private IProgressStatus _progressStatus;
 
@@ -66,8 +71,21 @@ namespace pwiz.Skyline.Util
             _progressStatus = _progressStatus.ChangeMessage(string.Format(UtilResources.MultiFileAsynchronousDownloadClient_DownloadFileAsync_Downloading__0_, file));
             _progressMonitor.UpdateProgress(_progressStatus);
 
-            using var httpClient = new HttpClientWithProgress(_progressMonitor, _progressStatus);
-            httpClient.DownloadFile(address, path);
+            // Each attempt overwrites the file from the start
+            for (int retry = 0; ; retry++)
+            {
+                try
+                {
+                    using var httpClient = new HttpClientWithProgress(_progressMonitor, _progressStatus);
+                    httpClient.DownloadFile(address, path);
+                    return;
+                }
+                catch (NetworkRequestException x) when (retry < MAX_DOWNLOAD_RETRIES && x.IsTransient() && !_progressMonitor.IsCanceled)
+                {
+                    DetailedTrace.WriteLine($@"Download of {address} failed, retry {retry + 1} of {MAX_DOWNLOAD_RETRIES}: {x.Message}");
+                    Thread.Sleep(DOWNLOAD_RETRY_DELAY_MILLISECONDS);
+                }
+            }
         }
  
         #region IDisposable Members
@@ -190,10 +208,6 @@ namespace pwiz.Skyline.Util
     {
         private static readonly string SKYLINE_TOOL_TESTING_MIRROR_URL = @"https://ci.skyline.ms/skyline_tool_testing_mirror";
 
-        // A network failure that may be transient (e.g. a dropped TLS handshake) is retried this many times
-        private const int MAX_DOWNLOAD_RETRIES = 3;
-        private const int DOWNLOAD_RETRY_DELAY_MILLISECONDS = 1000;
-
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
             string requiredFilePath;
@@ -307,7 +321,11 @@ namespace pwiz.Skyline.Util
                             downloadTimer.Start();
                         }
 
-                        DownloadFileWithRetries(client, downloadUrl, downloadFilename);
+                        using (var fileSaver = new FileSaver(downloadFilename))
+                        {
+                            client.DownloadFileAsyncOrThrow(downloadUrl, fileSaver.SafeName);
+                            fileSaver.Commit();
+                        }
 
                         if (downloadTimer != null)
                         {
@@ -378,37 +396,6 @@ namespace pwiz.Skyline.Util
         public static string GetCachedDownloadsDirectory()
         {
             return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
-        }
-
-        /// <summary>
-        /// Downloads a file, retrying a network failure that may be transient. An HTTP client error
-        /// (4xx, e.g. a file missing from the server) and a cancellation are not retried.
-        /// </summary>
-        private static void DownloadFileWithRetries(IAsynchronousDownloadClient client, Uri downloadUrl, string downloadFilename)
-        {
-            for (int retry = 0; ; retry++)
-            {
-                try
-                {
-                    using (var fileSaver = new FileSaver(downloadFilename))
-                    {
-                        client.DownloadFileAsyncOrThrow(downloadUrl, fileSaver.SafeName);
-                        fileSaver.Commit();
-                    }
-                    return;
-                }
-                catch (NetworkRequestException x) when (retry < MAX_DOWNLOAD_RETRIES && IsRetryableDownloadFailure(x))
-                {
-                    if (Program.UnitTest)
-                        LogToConsole($@"Download of {downloadUrl} failed, retry {retry + 1} of {MAX_DOWNLOAD_RETRIES}: {x.Message}");
-                    Thread.Sleep(DOWNLOAD_RETRY_DELAY_MILLISECONDS);
-                }
-            }
-        }
-
-        private static bool IsRetryableDownloadFailure(NetworkRequestException x)
-        {
-            return x.FailureType != NetworkFailureType.HttpError || (int?) x.StatusCode >= 500;
         }
 
         /// <summary>
