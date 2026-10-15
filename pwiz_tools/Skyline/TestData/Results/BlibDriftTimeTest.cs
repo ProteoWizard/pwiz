@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
@@ -93,6 +94,104 @@ namespace pwiz.SkylineTestData.Results
                     maxHeight = Math.Max(maxHeight, tranInfo.MaxIntensity);
                 }
                 Assert.AreEqual(278, maxHeight, 1);  // Without DT filtering, this will be much greater - about 996
+            }
+        }
+
+        /// <summary>
+        /// Issue 4150: the spectral library carries ion mobility values, but "use spectral library
+        /// ion mobility values" is disabled, so importing results produces no ion mobility filter.
+        /// The import should emit a non-blocking diagnostic naming the specific settings change
+        /// that would restore filtering, which depends on whether a filter window is configured.
+        /// </summary>
+        [TestMethod]
+        public void TestBlibDriftTimeFilteringDisabledWarning()
+        {
+            // Both cases import the same replicate, so each needs its own extraction directory.
+            // Sharing one would let the second import reuse the first one's chromatogram cache -
+            // ion mobility settings changes do not invalidate a cache, which is why the diagnostic
+            // tells the user to re-import - and no extraction means no diagnostic to assert on.
+            TestFilesDirs = new[]
+            {
+                new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip", null, @"WindowOnly"),
+                new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip", null, @"NoWindow"),
+                new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip", null, @"ZeroResolvingPower")
+            };
+
+            // A usable filter window is configured, so enabling the spectral library option is the
+            // only change needed. This exercises the spectral-library probe path, which harvesting
+            // ion mobility values with the option left off would silently defeat.
+            AssertFilteringDisabledWarning(TestFilesDirs[0], new IonMobilityWindowWidthCalculator(20),
+                ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary);
+
+            // No filter window either, so the user needs both changes.
+            AssertFilteringDisabledWarning(TestFilesDirs[1], IonMobilityWindowWidthCalculator.EMPTY,
+                ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary);
+
+            // Resolving power 0 is accepted as "no filtering", but widens to an unbounded window
+            // rather than an empty one. It must still count as no window, so the user is told to set
+            // one as well, not only to enable the spectral library option.
+            AssertFilteringDisabledWarning(TestFilesDirs[2], new IonMobilityWindowWidthCalculator(0),
+                ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary);
+        }
+
+        /// <summary>
+        /// Imports a replicate with the spectral library's ion mobility values disabled and the
+        /// given filter window, then asserts that the expected "filtering is disabled" diagnostic
+        /// was written - and that neither of the other two variants was.
+        /// </summary>
+        private void AssertFilteringDisabledWarning(TestFilesDir testFilesDir,
+            IonMobilityWindowWidthCalculator windowWidthCalculator, string expectedMessageFormat)
+        {
+            var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
+            SrmDocument docOriginal = ResultsUtil.DeserializeDocument(docPath);
+            using (var docContainer = new ResultsTestDocumentContainer(docOriginal, docPath))
+            {
+                var doc = docContainer.Document;
+
+                // Spectral library has drift times, but the option to use those library values is
+                // left OFF - so no filter is produced.
+                var librarySpec = new BiblioSpecLiteSpec("drift test",
+                    testFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
+                var ionMobility = doc.Settings.TransitionSettings.IonMobilityFiltering
+                    .ChangeFilterWindowWidthCalculator(windowWidthCalculator)
+                    .ChangeUseSpectralLibraryIonMobilityValues(false);
+                doc = doc.ChangeSettings(
+                    doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec })).
+                        ChangeTransitionSettings(t => t.ChangeIonMobilityFiltering(ionMobility)));
+
+                const string replicateName = "ID12692_01_UCA168_3727_040714";
+                var fileName = replicateName + ExtensionTestContext.ExtMz5;
+                var chromSets = new[]
+                {
+                    new ChromatogramSet(replicateName, new[]
+                        { new MsDataFilePath(testFilesDir.GetTestPath(fileName)) }),
+                };
+
+                List<string> capturedMessages;
+                using (var capture = new UserMessageCapture())
+                {
+                    var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+                    AssertEx.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
+                    docContainer.AssertComplete();
+                    capturedMessages = capture.CapturedMessages;
+                }
+
+                // The diagnostic has to name the one settings change that would restore filtering,
+                // so the variants describing the other changes must not appear.
+                CollectionAssert.Contains(capturedMessages, string.Format(expectedMessageFormat, fileName),
+                    string.Join(Environment.NewLine, capturedMessages));
+                foreach (var messageFormat in new[]
+                         {
+                             ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindow,
+                             ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary,
+                             ResultsResources.SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary
+                         })
+                {
+                    if (!Equals(messageFormat, expectedMessageFormat))
+                    {
+                        CollectionAssert.DoesNotContain(capturedMessages, string.Format(messageFormat, fileName));
+                    }
+                }
             }
         }
     }
