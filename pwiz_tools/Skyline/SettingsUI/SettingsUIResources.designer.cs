@@ -370,7 +370,7 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk, shared by all of your Skyline installations..
+        ///   Looks up a localized string similar to Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk..
         /// </summary>
         public static string BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime {
             get {
