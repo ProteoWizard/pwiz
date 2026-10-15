@@ -31,6 +31,8 @@ targets['All'] = merge(targets['Skyline'])
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
+    (".*/nightly_trigger_and_paths_config.py", {}),
+    (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
     ("libraries/.*", targets['All']),
     ("pwiz/.*", targets['All']),
@@ -41,5 +43,7 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNetPerfRegressionTests']),
+    # CarafeSharp's regression runs in Osprey's (tctest.bat); see vcs_trigger_and_paths_config.py.
+    ("pwiz_tools/CarafeSharp/.*", targets['OspreyWindowsNetPerfRegressionTests']),
     ("pwiz_tools/.*", targets['All'])
 ]

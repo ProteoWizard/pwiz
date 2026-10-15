@@ -684,58 +684,93 @@ namespace pwiz.Osprey.IO
             for (int i = 0; i < entries.Count; i++)
                 byEntryId[entries[i].EntryId] = i;
 
+            return TryJoinRows(path, expectedPass, byEntryId, expectedAbsent, experimentRecords,
+                (row, record, experiment) =>
+                {
+                    var e = entries[row];
+                    e.Score              = record.Score;
+                    e.RunPrecursorQvalue = record.RunPrecursorQvalue;
+                    e.RunPeptideQvalue   = record.RunPeptideQvalue;
+                    // apex_rt (format v7) is deliberately NOT overlaid. Every caller of this
+                    // overload builds its entries from a parquet that already carries the column,
+                    // so the sidecar's copy is the same number arriving by a second route; writing
+                    // it would only create a way for the two to disagree silently. The consumer
+                    // that has no parquet row to start from reads records through
+                    // <see cref="ReadRecords"/>, which does decode it.
+                    //
+                    // Unlike TryReadOverlay's 2nd-pass use, the protein q IS applied: this is the
+                    // 1st-pass overlay, first-pass protein FDR has already run, and the pre-split
+                    // record carried that column here.
+                    if (experiment.HasValue)
+                    {
+                        var exp = experiment.Value;
+                        e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
+                        e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
+                        e.ExperimentProteinQvalue   = exp.ExperimentProteinQvalue;
+                        e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Join a per-file sidecar's records onto a caller's rows by entry_id: for each record,
+        /// <paramref name="onJoin"/> gets the row <paramref name="rowByEntryId"/> names, the
+        /// record, and the record's experiment record when <paramref name="experimentRecords"/>
+        /// has one. The single implementation of the join rules, shared by
+        /// <see cref="TryRead(string, IList{FdrEntry}, Pass, Func{uint, bool}, IReadOnlyDictionary{uint, FdrExperimentRecord})"/>
+        /// and any caller holding its rows in another shape, so the two cannot drift.
+        ///
+        /// <para>The rules: a record lands on the row its entry_id maps to (for a caller with
+        /// duplicate entry_ids, whichever row the map names - <c>TryRead</c> maps the last); a
+        /// row no record maps to is never handed over; a record with no row fails the read unless
+        /// <paramref name="expectedAbsent"/> says it was dropped on purpose, and the walk stops
+        /// there. A failure after records were handed over throws rather than returning false -
+        /// see <see cref="TryWalkRecords"/>.</para>
+        ///
+        /// <para>The experiment record is passed ONLY with a record that landed, so it reaches
+        /// exactly the rows this sidecar has a record for and no others (format v5, issue
+        /// #4486). Scoping is the whole point, and it is why this cannot be a separate loop over
+        /// the caller's rows: a gap-fill stub has no record here and keeps its Score = 0 / q = 1
+        /// defaults. Those columns are keyed by entry_id for the whole analysis, so a by-entry_id
+        /// loop hands a gap-fill stub the value its precursor earned in some other run - a value
+        /// this file's first pass never gave it. Measured cost of getting that wrong: 8,791
+        /// Astral rows moved off their 1.0 default at Stage 6, nine of which flipped a pass-2
+        /// co-assignment comparison.</para>
+        /// </summary>
+        public static bool TryJoinRows(string path, Pass expectedPass,
+            IReadOnlyDictionary<uint, int> rowByEntryId, Func<uint, bool> expectedAbsent,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            Action<int, FdrScoreRecord, FdrExperimentRecord?> onJoin)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (rowByEntryId == null) throw new ArgumentNullException(nameof(rowByEntryId));
+            if (onJoin == null) throw new ArgumentNullException(nameof(onJoin));
+
             return TryWalkRecords(path, expectedPass, (chunk, off) =>
             {
-                uint recordEntryId = BitConverter.ToUInt32(chunk, off + 0);
-                if (!byEntryId.TryGetValue(recordEntryId, out int entryIdx))
+                var record = DecodeRecord(chunk, off);
+                if (!rowByEntryId.TryGetValue(record.EntryId, out int row))
                 {
-                    // A caller that filtered its stub list says so by supplying the
-                    // predicate that did the filtering; a record it dropped on purpose
-                    // is expected to have no entry here.
+                    // A caller that filtered its rows says so by supplying the predicate that
+                    // did the filtering; a record it dropped on purpose is expected to have no
+                    // row here.
                     //
-                    // Otherwise the sidecar carries an entry the caller's stub list
-                    // doesn't contain. The caller is expected to pass a SUPERSET of the
-                    // sidecar's entries (the post-rescore parquet for the 1st-pass
-                    // sidecar, for example) - a record that fails to find its entry_id
-                    // signals the sidecar was written from a different parquet (or from a
-                    // different binary version with different entry_id assignment). That
-                    // is corruption, not the gap-fill or post-compaction case we tolerate,
-                    // and must be rejected.
-                    return expectedAbsent != null && expectedAbsent(recordEntryId);
+                    // Otherwise the sidecar carries an entry the caller's rows don't contain.
+                    // The caller is expected to pass a SUPERSET of the sidecar's entries (the
+                    // post-rescore parquet for the 1st-pass sidecar, for example) - a record that
+                    // fails to find its entry_id signals the sidecar was written from a different
+                    // parquet (or from a different binary version with different entry_id
+                    // assignment). That is corruption, not the gap-fill or post-compaction case
+                    // we tolerate, and must be rejected.
+                    return expectedAbsent != null && expectedAbsent(record.EntryId);
                 }
-                var e = entries[entryIdx];
-                e.Score                       = BitConverter.ToDouble(chunk, off + 4);
-                e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
-                e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
-                // apex_rt (format v7) is deliberately NOT overlaid. Every caller of this
-                // overload builds its entries from a parquet that already carries the column,
-                // so the sidecar's copy is the same number arriving by a second route; writing
-                // it would only create a way for the two to disagree silently. The consumer
-                // that has no parquet row to start from reads records through
-                // <see cref="ReadRecords"/>, which does decode it.
-                // The EXPERIMENT-scope half, applied HERE so it reaches exactly the entries this
-                // sidecar has a record for and no others (format v5, issue #4486).
-                //
-                // Scoping is the whole point, and it is why this cannot be a separate loop over
-                // the caller's stub list. The remarks above spell out who is deliberately left
-                // untouched: a gap-fill stub has no record here and keeps its Score = 0 / q = 1
-                // defaults. Those columns are keyed by entry_id for the whole analysis, so a
-                // by-entry_id loop hands a gap-fill stub the value its precursor earned in some
-                // other run - a value this file's first pass never gave it. Measured cost of
-                // getting that wrong: 8,791 Astral rows moved off their 1.0 default at Stage 6,
-                // nine of which flipped a pass-2 co-assignment comparison.
-                //
-                // Unlike TryReadOverlay's 2nd-pass use, the protein q IS applied: this is the
-                // 1st-pass overlay, first-pass protein FDR has already run, and the pre-split
-                // record carried that column here.
+                FdrExperimentRecord? experiment = null;
                 if (experimentRecords != null &&
-                    experimentRecords.TryGetValue(recordEntryId, out var exp))
+                    experimentRecords.TryGetValue(record.EntryId, out var exp))
                 {
-                    e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
-                    e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
-                    e.ExperimentProteinQvalue   = exp.ExperimentProteinQvalue;
-                    e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    experiment = exp;
                 }
+                onJoin(row, record, experiment);
                 return true;
             });
         }

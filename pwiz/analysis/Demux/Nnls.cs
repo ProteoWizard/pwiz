@@ -39,6 +39,7 @@ public sealed class Nnls
 {
     private readonly Matrix<double> _A;
     private readonly double[] _AtAFlat; // n*n row-major copy of A^T A for fast indexing
+    private double[] _gram; // Gram matrix of the current solve: _AtAFlat, or _AtWAFlat when weighted
     private readonly int _n;
     private readonly int _m;
     private readonly int _maxIter;
@@ -53,15 +54,21 @@ public sealed class Nnls
     private readonly int[] _perm;
     private int _Np;
     private int _numLs;
+    private bool _converged;
 
     // Cholesky scratch buffers reused across SolveLsInP calls. Sized to n×n flat + n.
     private readonly double[] _LFlat; // n*n lower-triangular Cholesky factor
     private readonly double[] _zScratch; // n forward/back-sub scratch
 
+    // Weighted-refit buffers, allocated on first use.
+    private double[]? _AFlat; // m*n row-major copy of A
+    private double[]? _AtWAFlat; // n*n A^T W A
+    private double[]? _rowWeights; // m
+
     /// <summary>Number of LS sub-problems solved during the most recent solve.</summary>
     public int IterationCount => _numLs;
 
-    /// <summary>The solution vector after a successful solve.</summary>
+    /// <summary>The solution vector; after a failed solve, the last feasible iterate.</summary>
     public double[] X => _x;
 
     /// <summary>Constructs an NNLS solver for the system matrix <paramref name="A"/>.</summary>
@@ -82,6 +89,7 @@ public sealed class Nnls
         for (int i = 0; i < _n; i++)
             for (int j = 0; j < _n; j++)
                 _AtAFlat[i * _n + j] = ata[i, j];
+        _gram = _AtAFlat;
 
         _x = new double[_n];
         _w = new double[_n];
@@ -113,7 +121,8 @@ public sealed class Nnls
             for (int j = 0; j < _m; j++) s += _A[j, i] * b[j];
             _Atb[i] = s;
         }
-        return SolveCore();
+        _gram = _AtAFlat;
+        return SolveCore(warmStart: false);
     }
 
     /// <summary>Solves <c>min ‖A x - B[:, col]‖² s.t. x ≥ 0</c> reusing pre-computed
@@ -125,27 +134,124 @@ public sealed class Nnls
         if (AtB.RowCount != _n)
             throw new ArgumentException($"AtB has {AtB.RowCount} rows but A has {_n} cols");
         for (int i = 0; i < _n; i++) _Atb[i] = AtB[i, col];
-        return SolveCore();
+        _gram = _AtAFlat;
+        return SolveCore(warmStart: false);
     }
 
-    private bool SolveCore()
+    /// <summary>Refits the current <see cref="X"/> with Poisson row weights
+    /// <c>w_r = 1 / max(mu_r, floor)</c>, <c>mu = A X</c>: solves <c>min sum_r w_r (A x - B[:, col])_r^2
+    /// s.t. x &gt;= 0</c>, starting from X. Call after a solve of the same column.</summary>
+    /// <param name="B">Signal matrix whose column <paramref name="col"/> was just solved.</param>
+    /// <param name="col">The column of <paramref name="B"/>.</param>
+    /// <param name="floor">Lower bound on mu, so rows predicted near zero get a finite weight.</param>
+    /// <returns>True on convergence. When every mu is at or below the floor the weights are
+    /// uniform, X is already the weighted optimum, and X is left as it is.</returns>
+    public bool SolvePoissonWeighted(Matrix<double> B, int col, double floor)
     {
-        Array.Clear(_x);
-        for (int i = 0; i < _n; i++) _perm[i] = i;
+        ArgumentNullException.ThrowIfNull(B);
+        if (B.RowCount != _m)
+            throw new ArgumentException($"B has {B.RowCount} rows but A has {_m}");
+        if (!(floor > 0))
+            throw new ArgumentOutOfRangeException(nameof(floor), floor, "floor must be > 0");
+
+        int m = _m, n = _n;
+        var a = _AFlat ??= _A.ToRowMajorArray();
+        var g = _AtWAFlat ??= new double[n * n];
+        var weights = _rowWeights ??= new double[m];
+
+        // Weights are scaled by the floor (largest weight 1), which does not move the optimum.
+        bool anyAboveFloor = false;
+        for (int r = 0; r < m; r++)
+        {
+            double mu = 0;
+            int rowOff = r * n;
+            for (int i = 0; i < n; i++) mu += a[rowOff + i] * _x[i];
+            anyAboveFloor |= mu > floor;
+            weights[r] = floor / System.Math.Max(mu, floor);
+        }
+        if (!anyAboveFloor)
+            return _converged;
+
+        // A^T W A (upper triangle, then mirrored) and A^T W b.
+        Array.Clear(g);
+        Array.Clear(_Atb);
+        for (int r = 0; r < m; r++)
+        {
+            int rowOff = r * n;
+            double w = weights[r];
+            double wb = w * B[r, col];
+            for (int i = 0; i < n; i++)
+            {
+                double ai = a[rowOff + i];
+                if (ai == 0)
+                    continue;
+                _Atb[i] += ai * wb;
+                double wai = w * ai;
+                int gRow = i * n;
+                for (int j = i; j < n; j++) g[gRow + j] += wai * a[rowOff + j];
+            }
+        }
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < i; j++)
+                g[i * n + j] = g[j * n + i];
+
+        _gram = g;
+        return SolveCore(warmStart: true);
+    }
+
+    /// <summary>Runs <see cref="SolveActiveSet"/> and records whether it converged.</summary>
+    private bool SolveCore(bool warmStart)
+    {
+        _converged = SolveActiveSet(warmStart);
+        return _converged;
+    }
+
+    /// <summary>Lawson-Hanson active-set loop on <see cref="_gram"/> and <see cref="_Atb"/>.
+    /// A warm start keeps the current x: its positive entries start in P.</summary>
+    private bool SolveActiveSet(bool warmStart)
+    {
         _Np = 0;
         _numLs = 0;
+        if (warmStart)
+        {
+            // P first, then Z, each in index order; Z entries must be exactly 0.
+            for (int i = 0; i < _n; i++)
+            {
+                if (_x[i] > 0)
+                    _perm[_Np++] = i;
+                else
+                    _x[i] = 0;
+            }
+            int z = _Np;
+            for (int i = 0; i < _n; i++)
+            {
+                if (_x[i] == 0)
+                    _perm[z++] = i;
+            }
+        }
+        else
+        {
+            Array.Clear(_x);
+            for (int i = 0; i < _n; i++) _perm[i] = i;
+        }
+        // A warm start solves the LS problem in its P before looking for an index to add.
+        bool resume = _Np > 0;
 
         // Outer loop: pick next index to bring into P, then re-solve.
         while (true)
         {
-            UpdateGradient();
+            if (!resume)
+            {
+                UpdateGradient();
 
-            // Converged if every index is in P, or the largest gradient in Z is below tolerance.
-            if (_Np == _n || MaxInZ(_w) - _epsilon < 0)
-                return true;
+                // Converged if every index is in P, or the largest gradient in Z is below tolerance.
+                if (_Np == _n || MaxInZ(_w) - _epsilon < 0)
+                    return true;
 
-            int swapAt = ArgMaxInZ(_w);
-            AddToP(swapAt);
+                int swapAt = ArgMaxInZ(_w);
+                AddToP(swapAt);
+            }
+            resume = false;
 
             // Inner loop: solve LS in P only; if any partial solution component is non-positive,
             // interpolate to feasibility and drop that index from P.
@@ -198,7 +304,7 @@ public sealed class Nnls
         {
             double s = 0;
             int rowOff = i * n;
-            for (int j = 0; j < n; j++) s += _AtAFlat[rowOff + j] * _x[j];
+            for (int j = 0; j < n; j++) s += _gram[rowOff + j] * _x[j];
             _w[i] = _Atb[i] - s;
         }
     }
@@ -259,7 +365,7 @@ public sealed class Nnls
         {
             int rowOff = i * P;
             int srcRow = _perm[i] * n;
-            for (int j = 0; j < P; j++) _LFlat[rowOff + j] = _AtAFlat[srcRow + _perm[j]];
+            for (int j = 0; j < P; j++) _LFlat[rowOff + j] = _gram[srcRow + _perm[j]];
         }
 
         // In-place Cholesky over the lower triangle: L * L^T = (A^T A)_PP.

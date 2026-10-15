@@ -48,9 +48,17 @@ namespace pwiz.Osprey.Test
         // The startup-checked variables the cases below set.
         private static readonly string[] STARTUP_VARIABLES =
         {
-            @"OSPREY_PASS2_QVALUE", @"OSPREY_STAGE7_STREAM", @"OSPREY_STAGE6_STREAM_SURVIVORS",
-            @"OSPREY_FDR_PROJECTION", @"OSPREY_DUMP_PERCOLATOR", @"OSPREY_PERCOLATOR_ONLY",
-            @"OSPREY_ALLOW_UNFIXED_RESIDENT"
+            @"OSPREY_PASS2_QVALUE"
+        };
+
+        // OSPREY_* names this build does not read: switches retired by name, a Rust-only dump and
+        // a misspelling. Each must be refused by name, the same as an unknown argument.
+        private static readonly string[] UNRECOGNIZED_VARIABLES =
+        {
+            @"OSPREY_STAGE7_STREAM", @"OSPREY_STAGE6_STREAM_SURVIVORS", @"OSPREY_FDR_PROJECTION",
+            @"OSPREY_ALLOW_UNFIXED_RESIDENT",
+            @"OSPREY_DUMP_PERCOLATOR", @"OSPREY_PERCOLATOR_ONLY", @"OSPREY_DUMP_RESCORED",
+            @"OSPREY_PASS2_QVALUES"
         };
 
         private string _testDir;
@@ -143,26 +151,15 @@ namespace pwiz.Osprey.Test
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_PASS2_QVALUE");
             StringAssert.Contains(output, @"bogus");
-            output = RunCommandAndValidateError(Variable(@"OSPREY_STAGE7_STREAM", @"1"),
-                InputLibraryOutput(input, library));
-            StringAssert.Contains(output, @"OSPREY_STAGE7_STREAM");
-            output = RunCommandAndValidateError(Variable(@"OSPREY_STAGE6_STREAM_SURVIVORS", @"0"),
-                InputLibraryOutput(input, library));
-            StringAssert.Contains(output, @"OSPREY_STAGE6_STREAM_SURVIVORS");
-            output = RunCommandAndValidateError(Variable(@"OSPREY_FDR_PROJECTION", @"0"),
-                InputLibraryOutput(input, library));
-            StringAssert.Contains(output, @"OSPREY_FDR_PROJECTION");
-            output = RunCommandAndValidateError(Variable(@"OSPREY_DUMP_PERCOLATOR", @"1"),
-                InputLibraryOutput(input, library));
-            StringAssert.Contains(output, @"OSPREY_DUMP_PERCOLATOR");
-            output = RunCommandAndValidateError(Variable(@"OSPREY_PERCOLATOR_ONLY", @"1"),
-                InputLibraryOutput(input, library));
-            StringAssert.Contains(output, @"OSPREY_PERCOLATOR_ONLY");
-            // A retired allowance token is a warning, not an error: the run goes on, here to
-            // the ModelDiagnostics error above, which stays the only error line.
-            output = RunCommandAndValidateError(Variable(@"OSPREY_ALLOW_UNFIXED_RESIDENT", @"hpc-merge"),
-                modelDiagnostics);
-            StringAssert.Contains(output, @"hpc-merge");
+            foreach (string name in UNRECOGNIZED_VARIABLES)
+            {
+                Assert.IsFalse(OspreyEnvironment.KnownVariables.Contains(name), name);
+                output = RunCommandAndValidateError(Variable(name, @"1"), InputLibraryOutput(input, library));
+                StringAssert.Contains(output, name);
+            }
+            // Empty is unset, for an unknown name as for a known one: the run goes on, here to the
+            // ModelDiagnostics error above, which stays the only error line.
+            output = RunCommandAndValidateError(Variable(UNRECOGNIZED_VARIABLES[0], string.Empty), modelDiagnostics);
             AssertErrorMessage(output, noFirstPass);
 
             // --culture: a name .NET does not know stops the run with .NET's own message (which
