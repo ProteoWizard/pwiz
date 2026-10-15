@@ -142,12 +142,6 @@
   <data name="FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_" xml:space="preserve">
     <value>File parallelism: {0} (explicit {2}, {1} files)</value>
   </data>
-  <data name="FileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_" xml:space="preserve">
-    <value>Access denied: unable to create a file in the folder '{0}'. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder.</value>
-  </data>
-  <data name="FileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_" xml:space="preserve">
-    <value>Failed to allocate a temporary file in the folder '{0}' after {1} attempts.</value>
-  </data>
   <data name="LibraryFormatExtension_LOCALIZED_VALUES_BiblioSpec" xml:space="preserve">
     <value>BiblioSpec</value>
   </data>
@@ -171,21 +165,6 @@
   </data>
   <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
     <value>Experiment aggregation: {0} (default - best observation per unit)</value>
-  </data>
-  <data name="ProgressReporter_FormatElapsed__0_h_1_00_m" xml:space="preserve">
-    <value>{0}h{1:00}m</value>
-  </data>
-  <data name="ProgressReporter_FormatElapsed__0_m_1_00_s" xml:space="preserve">
-    <value>{0}m{1:00}s</value>
-  </data>
-  <data name="ProgressReporter_FormatElapsed__0_s" xml:space="preserve">
-    <value>{0}s</value>
-  </data>
-  <data name="ProgressReporter_ProgressReporter__0____" xml:space="preserve">
-    <value>{0}...</value>
-  </data>
-  <data name="ProgressReporter_Report__0____1_____2___3____4__elapsed_" xml:space="preserve">
-    <value>{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)</value>
   </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">
     <value>HRAM</value>

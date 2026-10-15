@@ -75,9 +75,7 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public MzTolerance PrecursorTolerance;
-            // No fragment tolerance here: Comet derives its fragment binning from the MS2 analyzer
-            // resolution (see the search settings page below), so there is nothing per-instrument
-            // to set. Both instruments here are high-resolution MS2.
+            public MzTolerance FragmentTolerance;
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
 
             // This may be necessary in the future if the default settings change but we don't want the tutorial results to change.
@@ -197,6 +195,7 @@ namespace TestPerf
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
                 PrecursorTolerance = new MzTolerance(30, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(40, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF
             });
 
@@ -260,6 +259,7 @@ namespace TestPerf
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                 PrecursorTolerance = new MzTolerance(10, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(20, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.QExactive
             });
 
@@ -341,7 +341,7 @@ namespace TestPerf
                 // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
                 // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
                 if (!IsRecordMode)
-                    CleanUpPersistentDir(GetTestPath("DIA\\"));
+                    CleanUpPersistentDir(GetTestPath("DIA\\"), GetTestPath("DDA_search\\"));
             }
         }
 
@@ -566,19 +566,17 @@ namespace TestPerf
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                // Search with Comet instead of MSAmanda. Comet's output is thread/machine-
-                // deterministic (deterministic I/L tiebreak + fixed pin ordering), so the library
-                // count is stable across machines, unlike MSAmanda whose parallel ordering drives
-                // a +/-2 per-machine drift. Comet takes no fragment tolerance: the MS2 tolerance
-                // box is disabled for Comet and CometSearchEngine.SetFragmentIonMassTolerance is a
-                // no-op, because fragment binning comes from the MS2 analyzer resolution set below.
-                importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.Comet;
+                // Search with MSFragger instead of the tutorial's MSAmanda, whose parallel ordering
+                // drives a +/-2 per-machine drift in the library count. Not Comet either: crux.exe
+                // writes Comet's Percolator features with the OS C runtime's printf, which rounds
+                // exact ties differently before Windows 10 2004 (build 19041), so the count differed
+                // on Windows Server 2019. MSFragger (Java) and Skyline's pin rewrite (.NET) format
+                // those features the same on every OS.
+                importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.MSFragger;
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b,y";
-                importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = DdaSearchResources.CometSearchEngine_Ms2Analyzer_High_resolution;
-                // Report only the top PSM per pseudo-spectrum: keeps the Percolator pin small (much
-                // faster FDR) and is sufficient for building the library from best matches.
-                importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(@"num_output_lines", @"1");
+                importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
@@ -608,18 +606,27 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
 
-            // Run the search. Click asynchronously so the test thread stays free to dismiss the
-            // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
-            // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
-            // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
+            // Run the search. Click asynchronously so the test thread stays free to accept the
+            // MSFragger license and the Java/Crux download prompt when the tools are not yet installed.
+            bool hasMissingDependencies = !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine.MSFragger);
             SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
-            var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
-            if (downloaderDlg != null)
+            if (hasMissingDependencies)
             {
-                OkDialog(downloaderDlg, downloaderDlg.ClickYes);
-                var waitDlg = WaitForOpenForm<LongWaitDlg>();
-                WaitForClosedForm(waitDlg);
+                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                if (msfraggerDownloaderDlg != null)
+                {
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
+                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                }
+
+                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                if (downloaderDlg != null)
+                {
+                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                    WaitForClosedForm(waitDlg);
+                }
             }
 
             try
@@ -921,16 +928,21 @@ namespace TestPerf
             }
         }
 
-        private static void CleanUpPersistentDir(string diaDir)
+        private static void CleanUpPersistentDir(string diaDir, string ddaSearchDir)
         {
             // Remove every search-generated file so the persistent dir returns to its downloaded
             // state (the framework fails the test if the persistent dir is left modified).
-            // "*-diaumpire*" catches the pseudo-spectra plus all per-file search outputs
-            // (.mzid.gz for MSAmanda; -percolator.pepXML and _pin.tsv for Comet); the remaining
-            // globs catch Comet/crux's fixed-name intermediates (comet.*, make-pin.pin, percolator.*).
-            foreach (var pattern in new[] { "*-diaumpire*", "comet.*", "make-pin.pin", "percolator.*", "crux.*" })
+            // "*-diaumpire*" catches the pseudo-spectra plus all per-file MSFragger and Percolator
+            // outputs (.pepXML, .pin, fixed.pin); the remaining globs catch the fixed-name
+            // intermediates left when the search keeps or fails to delete them.
+            foreach (var pattern in new[] { "*-diaumpire*", "msfragger.params", "crux.*" })
                 foreach (var file in Directory.GetFiles(diaDir, pattern))
                     FileEx.SafeDelete(file);
+            DirectoryEx.SafeDelete(Path.Combine(diaDir, "crux-output"));
+            // MSFragger writes a decoy database and its .pepindex files next to the search FASTA,
+            // which has no decoys of its own
+            foreach (var file in Directory.GetFiles(ddaSearchDir, "decoy_*"))
+                FileEx.SafeDelete(file);
         }
 
         private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)

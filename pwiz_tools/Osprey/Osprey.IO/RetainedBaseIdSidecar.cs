@@ -24,6 +24,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -166,7 +168,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write the retained base_id summary in ascending base_id order. Atomic via
-        /// <see cref="FileSaver"/>: the temp file is promoted on Commit, so a failure leaves any
+        /// <see cref="SimpleFileSaver"/>: the temp file is promoted on Commit, so a failure leaves any
         /// existing destination untouched.
         /// </summary>
         public static void Write(string path, IReadOnlyCollection<uint> baseIds, ArtifactStamp stamp)
@@ -188,7 +190,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var bw = new BinaryWriter(fs))

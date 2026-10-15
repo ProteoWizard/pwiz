@@ -388,7 +388,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 TrainingExportWriter.ExportRun(input, output, library, ctx, maxThreads,
-                    ArtifactStamp.ForCurrentBuild(Name, runKey), spectra, ms2Cal);
+                    OspreyVersion.Stamp(Name, runKey), spectra, ms2Cal);
             }
             catch (Exception ex) when (!IsOutOfMemory(ex))
             {
@@ -1123,7 +1123,7 @@ namespace pwiz.Osprey.Tasks
                 // leaves a file that is re-scored on resume rather than one Stage 7 folds against
                 // a missing or stale decoy artifact. The decoys are written only where there was
                 // a competition to produce them - the transfer passes none.
-                var stamp = ArtifactStamp.ForCurrentBuild(taskName, taskValidityKey);
+                var stamp = OspreyVersion.Stamp(taskName, taskValidityKey);
                 if (bestDecoy != null)
                     Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(inputFile), bestDecoy, stamp);
                 FdrScoresSidecar.Write(FdrScoresSidecar.Pass2Path(inputFile), records,
@@ -1878,7 +1878,7 @@ namespace pwiz.Osprey.Tasks
             // The parquet embeds this task's stamp in its footer, in the same commit as its rows.
             bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
                 inputs.LibraryById, config, inputs.JoinFileStems,
-                ArtifactStamp.ForCurrentBuild(Name, inputs.TaskValidityKey), ctx.LogInfo, ctx.LogWarning);
+                OspreyVersion.Stamp(Name, inputs.TaskValidityKey), ctx.LogInfo, ctx.LogWarning);
             if (wrote)
                 return true;
 
@@ -2348,7 +2348,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Everything the deferred pool build will do, DECIDED by <see cref="Run"/> and
+        /// Everything the deferred pool build will do, DECIDED by <see cref="Run(PipelineContext)"/> and
         /// executed later, when a consumer pulls the <see cref="RescoredEntries"/> milestone.
         ///
         /// <para>The work is deferred; the decisions are not. <see cref="ReconciledPaths"/> is

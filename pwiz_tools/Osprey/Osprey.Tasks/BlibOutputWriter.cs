@@ -29,6 +29,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 
@@ -65,7 +67,7 @@ namespace pwiz.Osprey.Tasks
             ArtifactStamp stamp)
         {
             double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
-            // Write the blib to a FileSaver sibling temp, then atomically rename it into
+            // Write the blib to a SimpleFileSaver sibling temp, then atomically rename it into
             // place. This is safe with BlibWriter's WAL journaling ONLY because
             // FinalizeDatabase() runs PRAGMA wal_checkpoint(TRUNCATE) + journal_mode=DELETE
             // (BlibWriter.cs:577-578): by the time the inner using disposes BlibWriter -- which
@@ -75,7 +77,7 @@ namespace pwiz.Osprey.Tasks
             // sharing-violation on the still-open handle). Keep FinalizeDatabase() as the last
             // BlibWriter call before the connection closes; reordering or dropping it would
             // leave sidecar files that the rename would not carry.
-            using (var saver = new FileSaver(config.OutputBlib))
+            using (var saver = new SimpleFileSaver(config.OutputBlib))
             {
                 using (var writer = OpenBlibWriter(saver.SafeName, config.OutputBlib))
                 {

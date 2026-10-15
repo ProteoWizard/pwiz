@@ -20,6 +20,7 @@
 
 using System.Collections.Concurrent;
 using System.IO;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -29,8 +30,8 @@ namespace pwiz.Osprey.Core
     /// different call sites (e.g. a per-entry search-XIC dump written once early
     /// in scoring and appended to later in the same method), and under
     /// <c>--parallel-files</c> the same library entry can be scored on more than
-    /// one file-thread at once. <see cref="FileSaver"/> gives atomic commits, not
-    /// mutual exclusion between independent <c>FileSaver</c> instances aimed at
+    /// one file-thread at once. <see cref="SimpleFileSaver"/> gives atomic commits, not
+    /// mutual exclusion between independent <c>SimpleFileSaver</c> instances aimed at
     /// the same path -- this closes that gap for writers in this process.
     ///
     /// Deliberately process-local only. True multi-node HPC fan-out sharing one

@@ -51,9 +51,9 @@ redirection applies uniformly to every artifact.
 
 **Moved.** Where artifacts are written (`--work-dir` / `--output-dir` / `--cache-dir` and the
 `ArtifactPaths` resolution behind them) and why every writer commits atomically through
-`FileSaver` are architecture, not format, and are now stated once in
+`SimpleFileSaver` are architecture, not format, and are now stated once in
 [00-pipeline-architecture.md](00-pipeline-architecture.md) - see "Directory resolution" and
-principle P8. The one-line summary: a `FileSaver` stages into a sibling temp file in the same
+principle P8. The one-line summary: a `SimpleFileSaver` stages into a sibling temp file in the same
 directory and promotes it with an in-volume rename, so a crash leaves either the previous
 content or no file, and **presence proves completeness** for every artifact in this document.
 
@@ -61,7 +61,7 @@ The C# realization is Rust's "safe NAS file writes / `copy_and_verify`" pattern.
 temp is a sibling, the promote is an in-volume rename rather than a local-temp -> NAS
 cross-volume copy, which sidesteps the truncation risk `copy_and_verify` guards against.
 
-### `FileSaver` call sites
+### `SimpleFileSaver` call sites
 
 P8 is only as good as this list being complete, so it lives here, with the formats. Every
 durable artifact writer in the tree, as of this document's last verification:
@@ -98,23 +98,23 @@ path instead:
 | Writer | Artifact(s) |
 |---|---|
 | `OspreyFileDiagnostics` (18 one-shot methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage6_consensus.tsv`, `cs_stage6_refit.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage6_loess_fit.tsv`, `cs_stage7_detected_peptides.txt`, and the held-open streams below |
-| `OspreyFileDiagnostics` held-open streams (4, **log-shaped**: written directly at their final path, no `FileSaver`; `CloseXDump` flushes the writer's buffered tail, not a commit; `CloseAll` runs every one of them on process exit for the same reason) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv` (unreachable today, no live caller), `cs_stage6_cwt_path.tsv`, `cs_stage6_calibration.tsv` |
-| `FdrDiagnostics.CoAssignRowDump` (rows: **log-shaped**, written directly via `FileMode.CreateNew`, no `FileSaver`; cutoffs: ordinary artifact) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
+| `OspreyFileDiagnostics` held-open streams (4, **log-shaped**: written directly at their final path, no `SimpleFileSaver`; `CloseXDump` flushes the writer's buffered tail, not a commit; `CloseAll` runs every one of them on process exit for the same reason) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv` (unreachable today, no live caller), `cs_stage6_cwt_path.tsv`, `cs_stage6_calibration.tsv` |
+| `FdrDiagnostics.CoAssignRowDump` (rows: **log-shaped**, written directly via `FileMode.CreateNew`, no `SimpleFileSaver`; cutoffs: ordinary artifact) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
 | `FdrDiagnostics` (2 more) | `cs_stage7_winners.tsv`, `cs_best_peptide_scores.tsv` |
 | `PercolatorDiagnosticsDump` (4 sites) | `cs_stage5_standardizer.tsv`, `cs_stage5_perc_input.tsv`, `cs_stage5_subsample.tsv`, `cs_stage5_svm_weights.tsv` |
 | `PickCandidateDump.Flush` | `OSPREY_PICK_DUMP_CANDIDATES`'s caller-named path |
-| `PeakDataExtractor` (search-XIC append, read-existing + rewrite through a fresh `FileSaver` per call - a concurrent-writer hazard, not a partial-progress one, so this one stays an artifact; see P8) | `cs_search_xic_entry_<id>.txt` |
+| `PeakDataExtractor` (search-XIC append, read-existing + rewrite through a fresh `SimpleFileSaver` per call - a concurrent-writer hazard, not a partial-progress one, so this one stays an artifact; see P8) | `cs_search_xic_entry_<id>.txt` |
 
 `cs_search_xic_entry_<id>.txt` and `cs_xic_entry_<id>.txt` have two independent writers each
 (`OspreyFileDiagnostics.WriteSearchXicDump`/`WriteCalXicEntryDumpAndExit` write the file once;
 `PeakDataExtractor`'s search-XIC dump appends to the first one later in the same candidate's
 scoring), and under `--parallel-files` the same library entry can be scored on more than one
 file-thread. `DiagnosticFileLock.For(path)` (`Osprey.Core`) is the shared, per-path lock every
-writer of these two files takes, so independent `FileSaver` commits to one path never race -
+writer of these two files takes, so independent `SimpleFileSaver` commits to one path never race -
 process-local only; it does not protect a real multi-node HPC fan-out sharing one output
 directory, which is not a concern for dumps that are opt-in for a single interactive session.
 
-**A new durable artifact that does not commit through `FileSaver` is a defect**, because
+**A new durable artifact that does not commit through `SimpleFileSaver` is a defect**, because
 every reader - a pipeline task or a developer doing bisection - treats presence as proof
 of completeness. **Exempt**: the streaming CLI log (`--log-file`, written for the life of
 the run so it can be tailed while still running - see P8), the five log-shaped dumps
@@ -122,10 +122,10 @@ marked above (`CoAssignRowDump`'s rows and the four `OspreyFileDiagnostics` held
 streams - a partial file is the useful outcome for these, not a hazard to guard against),
 and test fixtures. Forensic inspection of an abandoned ARTIFACT-shaped write (any writer
 above not marked log-shaped, on an exception) is `OspreyEnvironment.KeepFailedWrites`
-(`OSPREY_KEEP_FAILED_WRITES`), not a bypass of `FileSaver` - it leaves the temp in place
+(`OSPREY_KEEP_FAILED_WRITES`), not a bypass of `SimpleFileSaver` - it leaves the temp in place
 instead of deleting it, under its own name, so presence at the real path still proves
 completeness for every ordinary reader. It has no effect on the log-shaped dumps, which
-never wrap the write in `FileSaver` to begin with.
+never wrap the write in `SimpleFileSaver` to begin with.
 
 ---
 
@@ -613,13 +613,13 @@ folds library identity into the parquet metadata check.)
 
 ## 8. Embedded validity stamp - C# addition
 
-**C# source**: `Osprey.Core/ArtifactStamp.cs` (the stamp), `Osprey.Core/BinarySidecarStamp.cs`
+**C# source**: `Shared/CommonUtil/Pipeline/ArtifactStamp.cs` (the stamp), `Osprey.Core/BinarySidecarStamp.cs`
 (its place in the binary sidecars), `Osprey.IO/ArtifactValidity.cs` (`ReadStamp(path)`, the
 one reader, which dispatches on the file-name ending). This has **no Rust doc counterpart**;
 it is the resume-on-restart mechanism the C# port adds.
 
 Every durable pipeline artifact carries its own validity stamp, written in the **same
-`FileSaver` commit** as its content. The stamp is three fields - the producing task, the
+`SimpleFileSaver` commit** as its content. The stamp is three fields - the producing task, the
 Osprey version (`OspreyVersion.Current`) and the validity key - serialized as one line:
 
 ```
@@ -847,10 +847,10 @@ deliberate way to reuse artifacts across builds.
 
 ## Divergences from the Rust documentation
 
-- **[INTENTIONAL-CSHARP-DESIGN] Safe writes use `FileSaver` sibling-temp rename, not
+- **[INTENTIONAL-CSHARP-DESIGN] Safe writes use `SimpleFileSaver` sibling-temp rename, not
   `copy_and_verify`** - Rust doc says all cache writers write to a local temp then
   `copy_and_verify` to the final (NAS) destination; C# stages through a *same-directory* sibling
-  temp and `File.Move`s it into place. Evidence: `Osprey.Core/FileSaver.cs:68,92`; callers e.g.
+  temp and `File.Move`s it into place. Evidence: `Shared/CommonUtil/SystemUtil/SimpleFileSaver.cs`; callers e.g.
   `ParquetScoreCache.cs:265`, `SpectraCache.cs:85`. Same crash-safety guarantee; in-volume
   rename rather than cross-volume copy. Severity: info.
 
@@ -868,7 +868,7 @@ deliberate way to reuse artifacts across builds.
   from parquet footer hashes. The stamp adds fields Rust does not write - the `osprey.validity`
   parquet footer entry, the `osprey_validity` first property of `.calibration.json` and
   `.reconciliation.json`, and the blib `OspreyMetadata` row `osprey.validity` - which
-  cross-impl comparisons must ignore. Evidence: `Osprey.Core/ArtifactStamp.cs`;
+  cross-impl comparisons must ignore. Evidence: `Shared/CommonUtil/Pipeline/ArtifactStamp.cs`;
   `Osprey.IO/ArtifactValidity.cs`. Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Reconciled parquet is a separate `.scores-reconciled.parquet`,

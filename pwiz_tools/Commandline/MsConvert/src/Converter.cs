@@ -468,8 +468,9 @@ public sealed class Converter
         // --simAsSpectra and --srmAsSpectra are honored for Thermo (Reader_Thermo passes them
         // through to ChromatogramList_Thermo + SpectrumList_Thermo).
         // --combineIonMobilitySpectra is honored for Bruker; silently ignored for Thermo (no IMS).
-        // --ddaProcessing and --ignoreCalibrationScans are honored for Waters (Reader_Waters
-        // plumbs them into SpectrumList_Waters).
+        // --ddaProcessing is honored for Waters (Reader_Waters plumbs it into SpectrumList_Waters).
+        // --ignoreCalibrationScans is honored for the Waters lockmass function, UIMF calibration
+        // frames, and mzML/mzMLb/mz5 spectra labeled "calibration spectrum" (MS:1000928).
         // --runIndexSet is honored: each index in the set drives one read with
         // ReaderConfig.RunIndex = i, with outputs suffixed when the set has more than one index.
         if (_config.SingleThreaded > 0) _log.WriteLine("note: --singleThreaded is a no-op (msconvert-sharp is single-threaded today)");

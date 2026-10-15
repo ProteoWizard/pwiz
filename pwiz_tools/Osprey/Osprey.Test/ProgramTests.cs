@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommandLine;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -726,7 +727,7 @@ namespace pwiz.Osprey.Test
             // The retired HPC mode flags are now unknown options. ParseArgs
             // must throw rather than silently dropping them (which would run
             // the full pipeline in the wrong mode). Replaced by --task <Name>.
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Parse("--no-join", OspreyCommandArgs.ARG_INPUT + @"a.mzML"));
             StringAssert.Contains(ex.Message, "--no-join");
         }
@@ -734,7 +735,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParseArgsRejectsRetiredJoinOnly()
         {
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--join-only" }));
             StringAssert.Contains(ex.Message, "--join-only");
         }
@@ -742,12 +743,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParseArgsRejectsRetiredJoinAtPass()
         {
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--join-at-pass=2" }));
             StringAssert.Contains(ex.Message, "--join-at-pass=2");
 
             // Space-separated form too.
-            Assert.ThrowsException<ArgumentException>(
+            Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--join-at-pass", "1" }));
         }
 
@@ -756,7 +757,7 @@ namespace pwiz.Osprey.Test
         {
             // Any unrecognized option fails fast (e.g. a typo), not just the
             // retired flags.
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<UnknownArgumentException>(
                 () => Program.ParseArgs(new[] { "--bogus-flag" }));
             StringAssert.Contains(ex.Message, "--bogus-flag");
         }
@@ -776,10 +777,10 @@ namespace pwiz.Osprey.Test
             // A bare --task (or --task followed by another flag) must throw,
             // like the other required-value flags, so it can't be silently
             // ignored when ParseArgs runs outside Main's pre-scan.
-            var ex = Assert.ThrowsException<ArgumentException>(
+            var ex = Assert.ThrowsException<ValueMissingException>(
                 () => Parse(OspreyCommandArgs.ARG_TASK));
             StringAssert.Contains(ex.Message, OspreyCommandArgs.ARG_TASK.ArgumentText);
-            Assert.ThrowsException<ArgumentException>(
+            Assert.ThrowsException<ValueMissingException>(
                 () => Parse(OspreyCommandArgs.ARG_TASK, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib"));
         }
 
@@ -806,7 +807,7 @@ namespace pwiz.Osprey.Test
             };
             foreach (var args in missingOrFlagFollowed)
             {
-                Assert.ThrowsException<ArgumentException>(
+                Assert.ThrowsException<ValueMissingException>(
                     () => Program.ParseArgs(args));
             }
         }
