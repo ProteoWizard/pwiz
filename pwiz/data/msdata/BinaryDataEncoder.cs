@@ -97,6 +97,13 @@ public sealed class BinaryEncoderConfig
     /// </summary>
     public double NumpressSlofErrorTolerance { get; set; } = 2e-4;
 
+    /// <summary>
+    /// Absolute m/z accuracy for numpress Linear (e.g. 1e-4 for 0.2 ppm at 500 m/z); 0 or less
+    /// (default -1) means none. When set, the fixed-point multiplier is chosen to meet it, and an
+    /// array for which it cannot be met is not numpressed.
+    /// </summary>
+    public double NumpressLinearAbsMassAcc { get; set; } = -1;
+
     /// <summary>Per-CVID overrides for <see cref="Compression"/>. Lets callers use zlib for m/z but none for intensity, etc.</summary>
     public Dictionary<CVID, BinaryCompression> CompressionOverrides { get; } = new();
 
@@ -124,6 +131,7 @@ public sealed class BinaryEncoderConfig
             NumpressFixedPoint = NumpressFixedPoint,
             NumpressLinearErrorTolerance = NumpressLinearErrorTolerance,
             NumpressSlofErrorTolerance = NumpressSlofErrorTolerance,
+            NumpressLinearAbsMassAcc = NumpressLinearAbsMassAcc,
             Truncation = Truncation,
             Prediction = Prediction,
         };
@@ -216,7 +224,16 @@ public sealed class BinaryDataEncoder
                     : WriteDoubles32(data, _config.ByteOrder);
                 break;
             case BinaryNumpress.Linear:
-                bytes = MsNumpress.EncodeLinear(data.ToArray(), _config.NumpressFixedPoint);
+                double fixedPoint = _config.NumpressFixedPoint;
+                if (_config.NumpressLinearAbsMassAcc > 0)
+                    fixedPoint = MsNumpress.OptimalLinearFixedPointMass(data, _config.NumpressLinearAbsMassAcc);
+                if (fixedPoint < 0) // the absolute accuracy cannot be met
+                {
+                    actualNumpress = BinaryNumpress.None;
+                    bytes = EncodeRaw(data);
+                    break;
+                }
+                bytes = MsNumpress.EncodeLinear(data.ToArray(), fixedPoint);
                 if (_config.NumpressLinearErrorTolerance > 0
                     && !WithinTolerance(data, MsNumpress.DecodeLinear(bytes), _config.NumpressLinearErrorTolerance))
                 {

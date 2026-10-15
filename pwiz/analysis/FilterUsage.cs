@@ -55,15 +55,15 @@ internal static class FilterUsageFormatter
     }
 
     /// <summary>
-    /// Detailed help for the one filter named <paramref name="filterName"/> (exact case, as cpp
-    /// matched it), or, for an unknown name, the list of names that are known.
+    /// Detailed help for the one filter named <paramref name="filterName"/>, ignoring case as
+    /// <c>--filter</c> does, or, for an unknown name, the list of names that are known.
     /// </summary>
     internal static string FormatSingle(IEnumerable<FilterUsage> filters, string filterName)
     {
         var sb = new StringBuilder();
         foreach (var filter in filters)
         {
-            if (filter.Name == filterName)
+            if (string.Equals(filter.Name, filterName, StringComparison.OrdinalIgnoreCase))
                 return sb.Append(filter.Name).Append(' ').Append(filter.Arguments).Append('\n')
                          .Append(filter.Details).Append('\n').ToString();
         }
