@@ -112,6 +112,29 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// The <c>IsDecoy</c> of every row of the library's <c>DecoyPairs</c> table (CarafeSharp's
+        /// pairing table) by <c>RefSpectraID</c>, or null when the library has no such table.
+        /// </summary>
+        public static Dictionary<uint, bool> ReadDecoyPairs(string path)
+        {
+            string connStr = string.Format(@"Data Source={0};Read Only=True;", path);
+            using (var conn = new SQLiteConnection(connStr))
+            {
+                conn.Open();
+                if (!TableExists(conn, @"DecoyPairs"))
+                    return null;
+                var marks = new Dictionary<uint, bool>();
+                using (var cmd = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy FROM DecoyPairs", conn))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                        marks[(uint)reader.GetInt64(0)] = reader.GetInt64(1) != 0;
+                }
+                return marks;
+            }
+        }
+
         #region Private helpers
 
         private static bool TableExists(SQLiteConnection conn, string tableName)

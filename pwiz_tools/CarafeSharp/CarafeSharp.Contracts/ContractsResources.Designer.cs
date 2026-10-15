@@ -61,6 +61,24 @@ namespace pwiz.CarafeSharp.Contracts {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to No pairing manifest was given, so the rows&apos; kinds, accessions and pairs were not checked against one..
+        /// </summary>
+        public static string LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds__accessions_and_pairs_were_not_checked_against_one_ {
+            get {
+                return ResourceManager.GetString("LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds__accessions_and_pairs_were_not_checked_against_one_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The library violates the Osprey library contract in {0} way(s):.
+        /// </summary>
+        public static string LibraryContractReport_Describe_The_library_violates_the_Osprey_library_contract_in__0__way_s__ {
+            get {
+                return ResourceManager.GetString("LibraryContractReport_Describe_The_library_violates_the_Osprey_library_contract_in__0__way_s__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The decoy pairing manifest {0} is malformed at line {1}: it has {2} columns where at least {3} are needed..
         /// </summary>
         public static string PairingManifest_Read_The_decoy_pairing_manifest__0__is_malformed_at_line__1___it_has__2__columns_where_at_least__3__are_needed_ {

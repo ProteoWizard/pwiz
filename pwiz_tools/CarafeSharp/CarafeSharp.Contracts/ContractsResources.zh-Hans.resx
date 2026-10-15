@@ -109,4 +109,12 @@
     <value>文件已损坏：存储的值列表长度为 {0:N0} 字节，不是 {1} 的倍数。</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds__accessions_and_pairs_were_not_checked_against_one_" xml:space="preserve">
+    <value>未提供配对清单，因此未根据清单检查各行的类型、蛋白质登录号和配对。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryContractReport_Describe_The_library_violates_the_Osprey_library_contract_in__0__way_s__" xml:space="preserve">
+    <value>该库在 {0} 个方面违反了 Osprey 库契约：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

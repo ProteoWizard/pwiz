@@ -27,6 +27,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.Threading.Tasks;
 using pwiz.BiblioSpec.IO;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.Common.Pipeline;
 
@@ -71,11 +72,15 @@ namespace pwiz.CarafeSharp.IO
         /// so until then any library already there is left as it is. With
         /// <paramref name="stamp"/>, the library records it (<see cref="ArtifactStamp.BLIB_TABLE_DDL"/>,
         /// the slot Osprey's blib writer uses, which Skyline ignores) in the same commit as its
-        /// content, so a resume check can tell whether to reuse it.
+        /// content, so a resume check can tell whether to reuse it. With
+        /// <paramref name="libraryContract"/>, the library claims the Osprey library contract in
+        /// the same table (<see cref="LibraryContract.METADATA_KEY"/>); the caller has checked, or
+        /// will check and discard the library, that it meets it.
         /// </summary>
-        public BlibLibraryWriter(string path, string sourceFileName, ArtifactStamp stamp = null)
+        public BlibLibraryWriter(string path, string sourceFileName, ArtifactStamp stamp = null, bool libraryContract = false)
         {
-            _writer = new BlibWriter(path, null, stamp != null ? new StampTable(stamp) : null);
+            var metadata = stamp != null || libraryContract ? new MetadataTable(stamp, libraryContract) : null;
+            _writer = new BlibWriter(path, null, metadata);
             try
             {
                 _sourceFileId = _writer.AddSourceFile(sourceFileName, null, null, BlibWriter.WORKFLOW_TYPE_DIA);
@@ -263,25 +268,36 @@ namespace pwiz.CarafeSharp.IO
         }
 
         /// <summary>
-        /// The validity stamp, in the <c>OspreyMetadata</c> table Osprey's own libraries carry it in,
-        /// created with the library's tables so it commits with the content. No indexes, no statements.
+        /// The validity stamp and the library contract claim, in the <c>OspreyMetadata</c> table
+        /// Osprey's own libraries carry them in, created with the library's tables so they commit
+        /// with the content. No indexes, no statements.
         /// </summary>
-        private sealed class StampTable : IBlibExtensionTables
+        private sealed class MetadataTable : IBlibExtensionTables
         {
             private readonly ArtifactStamp _stamp;
+            private readonly bool _libraryContract;
 
-            public StampTable(ArtifactStamp stamp)
+            public MetadataTable(ArtifactStamp stamp, bool libraryContract)
             {
                 _stamp = stamp;
+                _libraryContract = libraryContract;
             }
 
             public void CreateTables(SQLiteConnection connection)
             {
                 Execute(connection, ArtifactStamp.BLIB_TABLE_DDL);
+                if (_stamp != null)
+                    Insert(connection, ArtifactStamp.PARQUET_KEY, _stamp.ToString());
+                if (_libraryContract)
+                    Insert(connection, LibraryContract.METADATA_KEY, LibraryContract.METADATA_VALUE);
+            }
+
+            private static void Insert(SQLiteConnection connection, string key, string value)
+            {
                 using (var insert = new SQLiteCommand(ArtifactStamp.BLIB_INSERT_SQL, connection))
                 {
-                    insert.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
-                    insert.Parameters.AddWithValue(@"@value", _stamp.ToString());
+                    insert.Parameters.AddWithValue(@"@key", key);
+                    insert.Parameters.AddWithValue(@"@value", value);
                     insert.ExecuteNonQuery();
                 }
             }

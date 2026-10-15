@@ -29,6 +29,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
@@ -156,6 +157,8 @@ namespace pwiz.CarafeSharp
                 Log(string.Format(CultureInfo.InvariantCulture, @"Generating peptide forms: {0}", forms.Count));
                 var peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
                 Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
+                if (_settings.LibraryContract)
+                    CheckContractBeforePrediction(peptides, peptideToProteins);
 
                 _libraryRtMax = rt.PredictsNormalizedRt ? _settings.RtMax : 0;
                 if (_libraryRtMax <= 0 && _settings.RtMax > 0)
@@ -189,7 +192,9 @@ namespace pwiz.CarafeSharp
                 : null;
             _pairGate = CreatePairGate(forms);
             using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath, ccs != null) : null)
-            using (var blib = BlibPath != null ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath), Stamp) : null)
+            using (var blib = BlibPath != null
+                       ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath), Stamp, _settings.LibraryContract)
+                       : null)
             {
                 // Disposed before tsv and blib, so a failure stops the writer thread before their partial files are discarded.
                 using (var writer = new LibraryChunkWriter(tsv, blib, pairingPrecursors, BeforeWriteChunk, BeforeQueueWait))
@@ -218,6 +223,10 @@ namespace pwiz.CarafeSharp
                         @"Writing finished {0:F1} s after prediction: {1} precursors, writing {2:F1} s, prediction waiting on writer {3:F1} s",
                         finishClock.Elapsed.TotalSeconds, SpectrumCount, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds));
                 }
+                // Over what was written: a library whose pairs are not whole is discarded (the writers'
+                // temps go with their disposal), not kept with a claim it cannot meet.
+                if (_settings.LibraryContract)
+                    CheckContractAfterWriting(pairingPrecursors);
                 // A finished library that cannot replace the one at its name (open in another program
                 // since CheckOutputsReplaceable) is saved beside it as "name (N)", the .blib and TSV with
                 // one N, and the run fails, so a script does not go on with the old library.
@@ -465,6 +474,51 @@ namespace pwiz.CarafeSharp
             }
             _buildClock.Stop();
             return built;
+        }
+
+        /// <summary>
+        /// Rules 1 to 5 of the Osprey library contract over the digested peptides and their
+        /// proteins, before any prediction: refuses the run with the full report on a violation,
+        /// so hours of prediction are not spent on a library Osprey would refuse. The FASTA must
+        /// be built without Carafe's per-peptide accession suffix for this to pass.
+        /// </summary>
+        private void CheckContractBeforePrediction(HashSet<string> peptides, IReadOnlyDictionary<string, string> peptideToProteins)
+        {
+            var rows = new List<LibraryContractRow>(peptides.Count);
+            foreach (string peptide in peptides.OrderBy(p => p, StringComparer.Ordinal))
+            {
+                var accessions = peptideToProteins.TryGetValue(peptide, out string proteins) && proteins != LibrarySpectrum.NO_PROTEIN
+                    ? proteins.Split(';').Where(a => a.Length > 0).ToArray()
+                    : Array.Empty<string>();
+                rows.Add(new LibraryContractRow(peptide, null, 0, accessions));
+            }
+            var report = LibraryContract.Validate(rows, ReadContractManifest(), new[] { _settings.DecoyPrefix }, LibraryContractChecks.Rows);
+            if (!report.IsValid)
+                throw new InvalidOperationException(report.Describe());
+            Log(string.Format(CultureInfo.InvariantCulture, @"Library contract: {0} peptides meet rules 1 to 5 against {1}",
+                rows.Count, _settings.PairingManifest));
+        }
+
+        /// <summary>
+        /// Rules 1 and 6 over the written precursors: one row per precursor, every pair whole at
+        /// each charge. A violation discards the library rather than keep one that claims the
+        /// contract and does not meet it.
+        /// </summary>
+        private void CheckContractAfterWriting(List<DecoyPairPlanner.Precursor> precursors)
+        {
+            var rows = new List<LibraryContractRow>(precursors.Count);
+            foreach (var precursor in precursors)
+                rows.Add(new LibraryContractRow(precursor.StrippedSequence, precursor.ModifiedSequence, precursor.Charge, null));
+            var report = LibraryContract.Validate(rows, ReadContractManifest(), new[] { _settings.DecoyPrefix }, LibraryContractChecks.Pairs);
+            if (!report.IsValid)
+                throw new InvalidOperationException(report.Describe());
+            Log(string.Format(CultureInfo.InvariantCulture,
+                @"Library contract: {0} precursors meet rules 1 and 6; the library claims the contract", rows.Count));
+        }
+
+        private List<PairingManifestRow> ReadContractManifest()
+        {
+            return PairingManifest.Read(_settings.PairingManifest, true, out _);
         }
 
         private void WriteDecoyPairs(BlibLibraryWriter blib, List<DecoyPairPlanner.Precursor> precursors)

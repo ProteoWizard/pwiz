@@ -182,11 +182,13 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_RT_MAX = Value(@"rt_max", @"<minutes>");
         public static readonly CarafeArgument ARG_CCS = Flag(@"ccs");
         public static readonly CarafeArgument ARG_PAIRING_MANIFEST = Value(@"pairing_manifest", @"<manifest.tsv>");
+        public static readonly CarafeArgument ARG_LIBRARY_CONTRACT = Flag(@"library_contract");
         public static readonly CarafeArgument ARG_RT_REFERENCE = Value(@"rt_reference", @"<run>");
 
         private static readonly CarafeArgumentGroup GROUP_LIBRARY = new CarafeArgumentGroup(() => @"Library prediction", true,
             ARG_LF_TYPE, ARG_FAST, ARG_LF_FRAG_MZ_MIN, ARG_LF_FRAG_MZ_MAX, ARG_LF_TOP_N_FRAG, ARG_LF_MIN_N_FRAG, ARG_LF_FRAG_N_MIN,
-            ARG_NCE, ARG_MS_INSTRUMENT, ARG_ACTIVATION, ARG_ANALYZER, ARG_RT_MAX, ARG_CCS, ARG_PAIRING_MANIFEST, ARG_RT_REFERENCE);
+            ARG_NCE, ARG_MS_INSTRUMENT, ARG_ACTIVATION, ARG_ANALYZER, ARG_RT_MAX, ARG_CCS, ARG_PAIRING_MANIFEST, ARG_LIBRARY_CONTRACT,
+            ARG_RT_REFERENCE);
 
         // --- Models ------------------------------------------------------------------------
         public static readonly CarafeArgument ARG_MODEL_DIR = Value(@"model_dir", @"<folder>");
@@ -725,6 +727,16 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.Device = ParseDevice(device);
             if (TryGet(@"pairing_manifest", out string manifest))
                 settings.PairingManifest = manifest;
+            settings.LibraryContract = Has(@"library_contract");
+            if (settings.LibraryContract)
+            {
+                // The contract is written into the .blib and checked against the manifest, so a
+                // run without either has nothing to mark or nothing to check against.
+                if (!LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast).WritesBlib)
+                    throw new ArgumentException(@"-library_contract marks a .blib as meeting the Osprey library contract, so it needs -lf_type blib");
+                if (string.IsNullOrEmpty(settings.PairingManifest))
+                    throw new ArgumentException(@"-library_contract checks the library against its pairing manifest, so it needs -pairing_manifest");
+            }
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
             if (TryGet(@"rt_model", out string rtModel))

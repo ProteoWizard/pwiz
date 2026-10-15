@@ -403,4 +403,11 @@
   <data name="LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys" xml:space="preserve">
     <value>{0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library's decoys, or remove them from the library.</value>
   </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library__0__claims_the_Osprey_library_contract_but_violates_it___1_" xml:space="preserve">
+    <value>The library {0} claims the Osprey library contract but violates it:
+{1}</value>
+  </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_" xml:space="preserve">
+    <value>The library claims the Osprey library contract; checking it before any repair.</value>
+  </data>
 </root>

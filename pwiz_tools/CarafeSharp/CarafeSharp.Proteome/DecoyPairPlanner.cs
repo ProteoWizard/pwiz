@@ -187,12 +187,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>A written RefSpectra row that may join a pair.</summary>
         public sealed class Precursor
         {
-            public Precursor(int refSpectraId, string strippedSequence, int charge, string modKey)
+            public Precursor(int refSpectraId, string strippedSequence, int charge, string modKey, string modifiedSequence = null)
             {
                 RefSpectraId = refSpectraId;
                 StrippedSequence = strippedSequence;
                 Charge = charge;
                 ModificationKey = modKey;
+                ModifiedSequence = modifiedSequence ?? strippedSequence;
             }
 
             public int RefSpectraId { get; }
@@ -200,6 +201,8 @@ namespace pwiz.CarafeSharp.Proteome
             public int Charge { get; }
             /// <summary>The precursor's <see cref="DecoyPairPlanner.ModKey"/>.</summary>
             public string ModificationKey { get; }
+            /// <summary>The written <c>peptideModSeq</c>, which with the charge identifies the precursor.</summary>
+            public string ModifiedSequence { get; }
         }
 
         /// <summary>One row of the pairing manifest.</summary>

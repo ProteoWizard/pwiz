@@ -445,4 +445,13 @@
     <value>正在读取 {0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library__0__claims_the_Osprey_library_contract_but_violates_it___1_" xml:space="preserve">
+    <value>库 {0} 声明符合 Osprey 库契约，但违反了它：
+{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_" xml:space="preserve">
+    <value>该库声明符合 Osprey 库契约；在任何修复之前先进行检查。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

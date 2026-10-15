@@ -93,6 +93,15 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static ArtifactStamp ReadStamp(string path)
         {
+            return ArtifactStamp.Parse(ReadMetadata(path, ArtifactStamp.PARQUET_KEY));
+        }
+
+        /// <summary>
+        /// The value of <paramref name="key"/> in a blib's <c>OspreyMetadata</c> table, or null
+        /// when the file is missing, unreadable, has no such table or no such key. Never throws.
+        /// </summary>
+        public static string ReadMetadata(string path, string key)
+        {
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return null;
             try
@@ -103,8 +112,8 @@ namespace pwiz.Osprey.IO
                     connection.Open();
                     using (var command = new SQLiteCommand(ArtifactStamp.BLIB_SELECT_SQL, connection))
                     {
-                        command.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
-                        return ArtifactStamp.Parse(command.ExecuteScalar() as string);
+                        command.Parameters.AddWithValue(@"@key", key);
+                        return command.ExecuteScalar() as string;
                     }
                 }
             }

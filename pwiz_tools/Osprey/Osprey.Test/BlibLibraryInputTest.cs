@@ -23,6 +23,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
@@ -157,6 +158,27 @@ namespace pwiz.Osprey.Test
                 var refusal = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(config, null, null));
                 StringAssert.Contains(refusal.Message, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                 StringAssert.Contains(refusal.Message, @"KEDITCPEP");
+
+                // A library claiming the Osprey library contract is checked before any repair and
+                // refused with every class of violation: a duplicate precursor, Carafe's per-peptide
+                // accession suffix, and a decoy with one unmarked accession. A clean one loads.
+                string violating = Path.Combine(dir, @"contract-violating.blib");
+                WriteBlib(violating, peaks, true, new[]
+                {
+                    (@"PEPCTIDEK", @"P1_pep00001"), (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1;P1"),
+                });
+                var violation = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(ContractConfig(violating), null, null));
+                foreach (var violationClass in new[]
+                         {
+                             LibraryContractViolationClass.DuplicatePrecursor, LibraryContractViolationClass.AccessionSuffix,
+                             LibraryContractViolationClass.DecoyUnmarked,
+                         })
+                {
+                    StringAssert.Contains(violation.Message, violationClass.ToString());
+                }
+                string clean = Path.Combine(dir, @"contract-clean.blib");
+                WriteBlib(clean, peaks, true, new[] { (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1") });
+                Assert.AreEqual(2, LibraryLoader.Load(ContractConfig(clean), null, null).Count);
             }
             finally
             {
@@ -330,6 +352,16 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void WriteBlib(string path, double[] peaks, params (string ModSeq, string Protein)[] spectra)
         {
+            WriteBlib(path, peaks, false, spectra);
+        }
+
+        /// <summary>
+        /// A blib at <paramref name="path"/> with one spectrum of <paramref name="peaks"/> per
+        /// modified sequence, each mapped to its <c>;</c>-separated proteins, claiming the Osprey
+        /// library contract when <paramref name="libraryContract"/>.
+        /// </summary>
+        private static void WriteBlib(string path, double[] peaks, bool libraryContract, (string ModSeq, string Protein)[] spectra)
+        {
             using (var writer = new OspreyBlibWriter(path))
             {
                 long fileId = writer.AddSourceFile(@"test.mzML", @"library.blib", 0.01);
@@ -338,11 +370,24 @@ namespace pwiz.Osprey.Test
                     string sequence = new string(StripBrackets(modSeq).Where(char.IsLetter).ToArray());
                     writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
                         peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0,
-                        proteins: new[] { protein });
+                        proteins: protein.Split(';'));
                 }
+                if (libraryContract)
+                    writer.AddMetadata(LibraryContract.METADATA_KEY, LibraryContract.METADATA_VALUE);
                 writer.Complete();
             }
             SQLiteConnection.ClearAllPools();
+        }
+
+        /// <summary>A search of <paramref name="library"/> with the decoys it supplies and no manifest.</summary>
+        private static OspreyConfig ContractConfig(string library)
+        {
+            return new OspreyConfig
+            {
+                LibrarySource = new LibrarySource(LibraryFormat.Blib, library),
+                FragmentTolerance = TOLERANCE,
+                DecoysInLibrary = true,
+            };
         }
 
         private static string StripBrackets(string modSeq)

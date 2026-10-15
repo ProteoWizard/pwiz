@@ -109,4 +109,12 @@
     <value>ファイルが破損しています：保存された値リストの長さが{0:N0}バイトで、{1}の倍数ではありません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds__accessions_and_pairs_were_not_checked_against_one_" xml:space="preserve">
+    <value>ペアリングマニフェストが指定されなかったため、行の種類、アクセッション、ペアはマニフェストと照合されていません。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryContractReport_Describe_The_library_violates_the_Osprey_library_contract_in__0__way_s__" xml:space="preserve">
+    <value>このライブラリはOspreyライブラリ契約に{0}種類の点で違反しています：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>

@@ -445,4 +445,13 @@
     <value>{0}を読み取り中</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library__0__claims_the_Osprey_library_contract_but_violates_it___1_" xml:space="preserve">
+    <value>ライブラリ{0}はOspreyライブラリ契約を宣言していますが、それに違反しています：
+{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_" xml:space="preserve">
+    <value>ライブラリはOspreyライブラリ契約を宣言しています。修復の前に検査します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
 </root>
