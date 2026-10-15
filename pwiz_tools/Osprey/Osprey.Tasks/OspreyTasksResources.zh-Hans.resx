@@ -537,18 +537,6 @@
     <value>正在为 {0:N0} 个文件计算第一轮蛋白质 FDR</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_" xml:space="preserve">
-    <value>无法确定 {0} 的第一轮蛋白质 q 值：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file" xml:space="preserve">
-    <value>正在为 1 个文件确定第一轮蛋白质 q 值</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files" xml:space="preserve">
-    <value>正在为 {0:N0} 个文件确定第一轮蛋白质 q 值</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>模型诊断：第一轮已完成，因此根据第一轮中间文件构建其报告。不会重新运行任何内容。</value>
     <comment>Needs Review:New resource</comment>
