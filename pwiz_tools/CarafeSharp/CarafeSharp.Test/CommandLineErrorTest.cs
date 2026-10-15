@@ -453,7 +453,7 @@ namespace pwiz.CarafeSharp.Test
         {
             var (code, output, error) = Run(args);
             Assert.AreEqual(0, code);
-            Assert.AreEqual(CarafeCommandLine.Usage + Environment.NewLine, output);
+            Assert.AreEqual(CarafeCommandLine.BuildUsage(null), output);
             Assert.AreEqual(string.Empty, error);
         }
 
@@ -473,9 +473,10 @@ namespace pwiz.CarafeSharp.Test
             var (code, output, error) = Run(args);
             Assert.AreEqual(1, code, commandLine);
             Assert.AreEqual(string.Empty, output, commandLine);
-            Assert.IsTrue(error.EndsWith(CarafeCommandLine.Usage + Environment.NewLine, StringComparison.Ordinal), commandLine);
-            // The message comes first, on its own line.
-            Assert.IsTrue(Lines(error).Length > Lines(CarafeCommandLine.Usage).Length, commandLine);
+            // The message comes first, on its own line, then where the options are.
+            var errorLines = Lines(error);
+            Assert.AreEqual(2, errorLines.Length, error);
+            Assert.AreEqual(CarafeCommandLine.UsageHint, errorLines[1], commandLine);
         }
 
         /// <summary>A run that parses, fails during its work with exit 1 and one error line, and leaves nothing at <paramref name="mustNotExist"/>.</summary>

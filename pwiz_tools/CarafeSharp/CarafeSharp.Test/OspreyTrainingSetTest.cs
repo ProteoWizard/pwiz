@@ -345,7 +345,6 @@ namespace pwiz.CarafeSharp.Test
 
             // Carafe's code defaults when the options are absent; training exports named directly
             // train without -ms, which Carafe could never have read.
-            Assert.AreEqual(OspreyTrainingExport.FILE_SUFFIX, CarafeCommandLine.TRAINING_EXPORT_SUFFIX);
             settings = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-tf", @"ms2" }).TrainingSettings;
             Assert.AreEqual(TrainingSettings.DEFAULT_CORRELATION, settings.MinCorrelation);
             Assert.AreEqual(0, settings.LowOrdinalB);

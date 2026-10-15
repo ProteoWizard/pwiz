@@ -68,9 +68,9 @@ namespace pwiz.CarafeSharp
             }
             catch (Exception e) when (e is ArgumentException || e is NotSupportedException)
             {
-                // A usage error: the message is the diagnosis, followed by the usage, as Carafe.
+                // A usage error: the message is the diagnosis, then where the options are.
                 consoleError.WriteLine(ERROR_PREFIX + e.Message);
-                consoleError.WriteLine(CarafeCommandLine.Usage);
+                consoleError.WriteLine(CarafeCommandLine.UsageHint);
                 return ReconcileExitCode(EXIT_CODE_FAILURE_TO_START, consoleError.IsErrorReported);
             }
 
@@ -127,7 +127,7 @@ namespace pwiz.CarafeSharp
                         output.Write(CarafeModelFile.Open(commandLine.ModelInfoPath).FormatInfo());
                         return EXIT_CODE_SUCCESS;
                     case CarafeCommandMode.help:
-                        output.WriteLine(CarafeCommandLine.Usage);
+                        CarafeCommandLine.PrintUsage(commandLine.HelpFormat, output);
                         return EXIT_CODE_SUCCESS;
                     default:
                         // One task per mode, run through the shared driver: a task whose outputs
