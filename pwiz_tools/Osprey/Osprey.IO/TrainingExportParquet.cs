@@ -26,6 +26,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Parquet;
 using Parquet.Schema;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -34,7 +35,7 @@ namespace pwiz.Osprey.IO
     /// <c>&lt;stem&gt;.training.parquet</c>: one row per exported precursor
     /// (<see cref="TrainingRecord"/>), scalar columns for the precursor and little-endian typed
     /// blobs (<see cref="ParquetBlobCodec"/>, the scores parquet's convention) for the per-ion
-    /// arrays, ZSTD, written through <see cref="FileSaver"/>. A run with nothing to export
+    /// arrays, ZSTD, written through <see cref="SimpleFileSaver"/>. A run with nothing to export
     /// still gets the file - schema and footer, zero rows - so absence always means the task
     /// did not run (P13). The column list below IS the schema; docs/22-training-export.md
     /// documents every column and must change with it.
@@ -86,7 +87,7 @@ namespace pwiz.Osprey.IO
             {
                 [KEY_FORMAT_VERSION] = FORMAT_VERSION.ToString(System.Globalization.CultureInfo.InvariantCulture),
             };
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 {

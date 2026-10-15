@@ -1301,10 +1301,6 @@
     <value>{0}の{1:N0}個のプリカーサー候補ピークを書き込みました：{4:N0}個の第1パスピークから、{2:N0}個を再スコアリングし、{3:N0}個の欠損ピークを追加</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___" xml:space="preserve">
-    <value>{0}ステップで中間ファイルから結果を再読み込みできませんでした（終了コード{1}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_" xml:space="preserve">
     <value>スコアファイル{0}の名前から、どの入力ファイルのものかを判別できません。</value>
     <comment>Needs Review:New resource</comment>

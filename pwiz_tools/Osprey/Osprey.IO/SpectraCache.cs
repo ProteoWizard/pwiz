@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -186,7 +187,7 @@ namespace pwiz.Osprey.IO
             // in acquisition order into the index block.
             var recordOffsets = new long[nMs2];
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var w = new BinaryWriter(fs))

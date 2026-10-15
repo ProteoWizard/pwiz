@@ -31,12 +31,43 @@ namespace pwiz.Common.CommandLine
         protected UsageException(string message) : base(message)
         {
         }
+
+        protected UsageException(ArgumentBase arg, string message) : base(message)
+        {
+            Argument = arg;
+        }
+
+        /// <summary>The argument the error is about, or null when it names none (an unknown argument).</summary>
+        public ArgumentBase Argument { get; }
+    }
+
+    /// <summary>A token spelled like an option that names no declared argument.</summary>
+    public class UnknownArgumentException : UsageException
+    {
+        public UnknownArgumentException(string argText)
+            : base(ArgUsage.Provider.UnknownArgumentMessage(argText))
+        {
+            ArgumentText = argText;
+        }
+
+        /// <summary>The token as typed, inline value included.</summary>
+        public string ArgumentText { get; }
     }
 
     public class ValueMissingException : UsageException
     {
         public ValueMissingException(ArgumentBase arg)
-            : base(ArgUsage.Provider.ValueMissingMessage(arg.ArgumentText))
+            : this(arg, arg.ArgumentText)
+        {
+        }
+
+        /// <summary>
+        /// With <paramref name="argText"/> the argument as the user typed it (<c>-o</c> or
+        /// <c>--output</c>). An argument with its own <see cref="ArgumentBase.MissingValueMessage"/>
+        /// supplies the text; the rest get the provider's.
+        /// </summary>
+        public ValueMissingException(ArgumentBase arg, string argText)
+            : base(arg, arg.MissingValueMessage?.Invoke(argText) ?? ArgUsage.Provider.ValueMissingMessage(argText))
         {
         }
     }
@@ -44,7 +75,13 @@ namespace pwiz.Common.CommandLine
     public class ValueUnexpectedException : UsageException
     {
         public ValueUnexpectedException(ArgumentBase arg)
-            : base(ArgUsage.Provider.ValueUnexpectedMessage(arg.ArgumentText))
+            : this(arg, arg.ArgumentText)
+        {
+        }
+
+        /// <summary>With <paramref name="argText"/> the argument as the user typed it.</summary>
+        public ValueUnexpectedException(ArgumentBase arg, string argText)
+            : base(arg, ArgUsage.Provider.ValueUnexpectedMessage(argText))
         {
         }
     }
@@ -52,7 +89,13 @@ namespace pwiz.Common.CommandLine
     public class ValueInvalidException : UsageException
     {
         public ValueInvalidException(ArgumentBase arg, string value, string[] argValues)
-            : base(ArgUsage.Provider.ValueInvalidMessage(arg.ArgumentText, value, argValues))
+            : this(arg, value, argValues, arg.ArgumentText)
+        {
+        }
+
+        /// <summary>With <paramref name="argText"/> the argument as the user typed it.</summary>
+        public ValueInvalidException(ArgumentBase arg, string value, string[] argValues, string argText)
+            : base(arg, ArgUsage.Provider.ValueInvalidMessage(argText, value, argValues))
         {
         }
     }

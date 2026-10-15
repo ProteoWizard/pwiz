@@ -308,11 +308,11 @@ namespace pwiz.Osprey.Test
             // exception type, same message but for the name, whatever value follows.
             const string removedArg = @"--fdr-method";
             const string neverArg = @"--no-such-argument";
-            string neverMessage = Assert.ThrowsException<ArgumentException>(
+            string neverMessage = Assert.ThrowsException<UnknownArgumentException>(
                 () => OspreyCommandArgs.ParseArgs(new[] { neverArg })).Message;
             foreach (var removedValue in new[] { @"gbdt", @"percolator", @"simple" })
             {
-                var removed = Assert.ThrowsException<ArgumentException>(
+                var removed = Assert.ThrowsException<UnknownArgumentException>(
                     () => OspreyCommandArgs.ParseArgs(new[] { removedArg, removedValue }), removedValue);
                 Assert.AreEqual(neverMessage.Replace(neverArg, removedArg), removed.Message);
             }
@@ -438,10 +438,10 @@ namespace pwiz.Osprey.Test
 
             // An empty value is a missing value, reported as it is for the spaced form.
             var argOutput = OspreyCommandArgs.ARG_OUTPUT;
-            var missing = Assert.ThrowsException<ArgumentException>(() => ParseInline(argOutput, string.Empty));
+            var missing = Assert.ThrowsException<ValueMissingException>(() => ParseInline(argOutput, string.Empty));
             Assert.AreEqual(ArgUsage.Provider.ValueMissingMessage(argOutput.ArgumentText), missing.Message);
             // A flag takes no value in either form.
-            Assert.ThrowsException<ArgumentException>(() => ParseInline(OspreyCommandArgs.ARG_VERBOSE, 1));
+            Assert.ThrowsException<ValueUnexpectedException>(() => ParseInline(OspreyCommandArgs.ARG_VERBOSE, 1));
 
             // --task: the tokenizer consumes both forms, and FindValue reads both the same way.
             var argTask = OspreyCommandArgs.ARG_TASK;
@@ -453,11 +453,11 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(OspreyCommandArgs.FindValue(ArgTokens.Split(argThreads + 8), argTask));
             string noTaskName = string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
                 argTask.ArgumentText, string.Join(@", ", argTask.Values));
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => OspreyCommandArgs.FindValue(new[] { InlineToken(argTask, string.Empty) }, argTask)).Message);
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => OspreyCommandArgs.FindValue(new[] { argTask.ArgumentText }, argTask)).Message);
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => Parse(argTask)).Message);
         }
 

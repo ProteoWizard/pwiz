@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 
@@ -232,7 +233,7 @@ namespace pwiz.Osprey.Tasks
         /// parquet-row order, which is what keeps their output byte-identical.</para>
         ///
         /// <para>Disposing without <see cref="Commit"/> discards the partial file (the
-        /// <see cref="FileSaver"/> cleans up its temporary), so an exception in the producer
+        /// <see cref="SimpleFileSaver"/> cleans up its temporary), so an exception in the producer
         /// leaves no half-written TSV behind.</para>
         /// </summary>
         public sealed class PeptideInputSink : IDisposable
@@ -244,7 +245,7 @@ namespace pwiz.Osprey.Tasks
             private readonly IReadOnlyDictionary<uint, LibraryEntry> _libraryById;
             private readonly bool _perRun;
             private readonly ICollection<string> _skipEntrapmentSeqs;
-            private readonly FileSaver _saver;
+            private readonly SimpleFileSaver _saver;
             private readonly StreamWriter _writer;
             // Per-precursor mode only: the best (min experiment q, then max score) row per
             // dedup key. The row carries both keys of that comparison, so nothing is cached
@@ -276,11 +277,11 @@ namespace pwiz.Osprey.Tasks
                 string dir = Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(dir))
                     Directory.CreateDirectory(dir);
-                // The FileSaver has created its temp file by the time the writer is opened, so a
+                // The SimpleFileSaver has created its temp file by the time the writer is opened, so a
                 // failure opening the writer (a scanner holding the fresh temp, a full disk on
                 // the header) must release the saver here: no instance reaches the caller's
                 // using for Dispose to do it.
-                _saver = new FileSaver(path);
+                _saver = new SimpleFileSaver(path);
                 try
                 {
                     _writer = new StreamWriter(_saver.SafeName, false);
@@ -441,7 +442,7 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
             int written = 0;
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {

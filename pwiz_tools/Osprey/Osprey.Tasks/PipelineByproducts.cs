@@ -23,11 +23,11 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
-using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -210,20 +210,6 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// Stage 6 multi-charge consensus rescore targets per file (post-compaction
-    /// apex/start/end by stub index), produced by FirstPassFDR's planning step.
-    /// </summary>
-    internal sealed class PerFileConsensusTargets
-    {
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> Value { get; }
-        public PerFileConsensusTargets(
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> value)
-        {
-            Value = value;
-        }
-    }
-
-    /// <summary>
     /// Whether FirstPassFDR's Stage 6 planning block actually ran (<c>true</c>) vs
     /// was skipped (single-file / reconciliation off) or rehydrated from disk
     /// (<c>false</c>). This is the gate PerFileRescore's self-gate checks to tell
@@ -239,25 +225,18 @@ namespace pwiz.Osprey.Tasks
         public PlanningPerformed(bool value) { Value = value; }
     }
 
-    /// <summary>Stage 6 reconciliation actions keyed by (file, post-compaction index).</summary>
-    internal sealed class ReconciliationActions
+    /// <summary>
+    /// How many peak re-picks and boundary imputations FirstPassFDR's Stage 6 planning
+    /// produced across the run - a COUNT, for the rescore summary. The actions themselves
+    /// travel in each run's own <c>.reconciliation.json</c>, which is where the per-run
+    /// rescore reads them; the whole-experiment action map that used to be published here
+    /// (30.8 M entries at 446 runs) had no other reader. Zero when planning did not run in
+    /// this process.
+    /// </summary>
+    internal sealed class PlannedActionCount
     {
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> Value { get; }
-        public ReconciliationActions(IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> value) { Value = value; }
-    }
-
-    /// <summary>Per-file refined RT calibrations from the Stage 6 calibration refit.</summary>
-    internal sealed class RefinedCalibrations
-    {
-        public IReadOnlyDictionary<string, RTCalibration> Value { get; }
-        public RefinedCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
-    }
-
-    /// <summary>Per-file gap-fill targets for the Stage 6 rescore.</summary>
-    internal sealed class PerFileGapFillForRescore
-    {
-        public IReadOnlyDictionary<string, List<GapFillTarget>> Value { get; }
-        public PerFileGapFillForRescore(IReadOnlyDictionary<string, List<GapFillTarget>> value) { Value = value; }
+        public int Value { get; }
+        public PlannedActionCount(int value) { Value = value; }
     }
 
     /// <summary>

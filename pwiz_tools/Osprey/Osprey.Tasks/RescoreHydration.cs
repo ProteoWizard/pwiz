@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.Reconciliation;
@@ -110,9 +111,9 @@ namespace pwiz.Osprey.Tasks
     public static class RescoreHydration
     {
         /// <summary>
-        /// Fold each run's PRE-compaction rows and DISCARD them: load the run's stubs, overlay
-        /// its first-pass sidecar, hand them to <paramref name="onStubsHydrated"/>, drop them,
-        /// next run. Retains nothing across runs.
+        /// Fold each run's PRE-compaction rows and DISCARD them: load the run's rows, join its
+        /// first-pass sidecar, hand them to <paramref name="onRowsJoined"/>, next run. Retains
+        /// nothing across runs but the reused buffers of one <see cref="FirstPassFoldRows"/>.
         ///
         /// <para>This exists because <c>--task ModelDiagnostics</c> was reaching its rows through
         /// the all-runs bundle hydrate (since removed), whose product was Stage 6's bundle: that loop
@@ -126,24 +127,28 @@ namespace pwiz.Osprey.Tasks
         /// <para>No envelope, no planning, no compaction, no calibration capture - a diagnostics
         /// fold needs none of them, and reading a run's <c>reconciliation.json</c> here would
         /// reintroduce a per-run cost for state nobody consumes.</para>
+        ///
+        /// <para>Nor a stub list (issue #4664). The fold reads four parquet columns and five
+        /// sidecar values per row, and a <see cref="FdrEntry"/> per row decoded eleven columns
+        /// into a fresh object list for every run. <see cref="FirstPassFoldRows"/> reads only
+        /// what is folded, into buffers reused from run to run.</para>
         /// </summary>
         public static void FoldPreCompactionPerRun(
             IList<string> parquetPaths,
-            Func<int, string, string, List<FdrEntry>> loadStubs,
-            Action<int, string, List<FdrEntry>> onStubsHydrated,
+            LibraryStringInterner sequencePool,
+            Action<int, string, FirstPassFoldRows> onRowsJoined,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
             IOspreyLog log = null)
         {
             if (parquetPaths == null)
                 throw new ArgumentNullException(nameof(parquetPaths));
-            if (loadStubs == null)
-                throw new ArgumentNullException(nameof(loadStubs));
-            if (onStubsHydrated == null)
-                throw new ArgumentNullException(nameof(onStubsHydrated));
+            if (onRowsJoined == null)
+                throw new ArgumentNullException(nameof(onRowsJoined));
             if (retainedBaseIds == null)
                 throw new ArgumentNullException(nameof(retainedBaseIds));
 
+            var rows = new FirstPassFoldRows();
             using (var progress = new ProgressReporter(
                        OspreyTasksResources.RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report, parquetPaths.Count))
             {
@@ -159,27 +164,22 @@ namespace pwiz.Osprey.Tasks
                             parquetPaths[i]));
                     }
 
-                    var stubs = loadStubs(i, fileName, parquetPaths[i]);
-                    if (stubs == null)
+                    LoadFoldRows(rows, fileName, parquetPaths[i], sequencePool);
+
+                    // Same drift predicate as the stub overlay this replaced: the sidecar was
+                    // written over the whole pre-compaction row set, so a record whose base_id
+                    // did not survive legitimately has no row to land on while any OTHER miss is
+                    // real parquet drift.
+                    string sidecarPath = FdrScoresSidecar.Pass1Path(syntheticInput);
+                    if (!rows.TryJoinFirstPassSidecar(sidecarPath, experimentRecords,
+                            id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK)))
                     {
-                        throw new InvalidOperationException(string.Format(
-                            @"FoldPreCompactionPerRun: no stubs loaded for {0}", fileName));
+                        throw new InvalidDataException(string.Format(
+                            OspreyTasksResources.RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___,
+                            fileName, sidecarPath));
                     }
 
-                    // Same overlay, same drift predicate as the bundle-building twin: the
-                    // sidecar was written over the whole pre-compaction row set, so a record
-                    // whose base_id did not survive legitimately has no entry to land on while
-                    // any OTHER miss is real parquet drift.
-                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
-                        id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
-
-                    onStubsHydrated(i, fileName, stubs);
-
-                    // The run's rows end here. Nothing references them afterwards, which is the
-                    // whole difference from the bundle path - stated as code rather than left
-                    // to the reader to infer from an absence.
-                    stubs.Clear();
-                    stubs.TrimExcess();
+                    onRowsJoined(i, fileName, rows);
 
                     // Post-GC live set per run, under OSPREY_LOG_MEMORY only. The claim this
                     // method makes is that the floor does NOT rise with runs folded, and working
@@ -357,6 +357,27 @@ namespace pwiz.Osprey.Tasks
             survivors.Clear();
             survivors.AddRange(stubs);
             survivors.TrimExcess();
+        }
+
+        /// <summary>
+        /// One run's row load for <see cref="FoldPreCompactionPerRun"/>, with any parquet fault
+        /// wrapped as <see cref="InvalidDataException"/>, so a truncated or locked
+        /// <c>.scores.parquet</c> reaches the caller as an operator-facing error naming the file
+        /// rather than as an <c>IOException</c> with no exit code.
+        /// </summary>
+        private static void LoadFoldRows(FirstPassFoldRows rows, string fileName, string parquetPath,
+            LibraryStringInterner sequencePool)
+        {
+            try
+            {
+                rows.Load(parquetPath, sequencePool);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_,
+                    fileName, parquetPath, ex.Message), ex);
+            }
         }
 
         /// <summary>

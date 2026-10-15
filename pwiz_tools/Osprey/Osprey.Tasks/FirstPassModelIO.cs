@@ -25,7 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using pwiz.Osprey.Core;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
@@ -358,13 +359,13 @@ namespace pwiz.Osprey.Tasks
             });
         }
 
-        /// <summary>Write an already-serialized artifact through <see cref="FileSaver"/>.</summary>
+        /// <summary>Write an already-serialized artifact through <see cref="SimpleFileSaver"/>.</summary>
         public static void WriteText(string path, string json)
         {
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();

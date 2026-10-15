@@ -331,7 +331,7 @@ After discovery, `PerFileScoringTask.RunCalibrationForFile`
 (`PerFileScoringTask.cs:1700-1738`) serializes a `CalibrationParams` (metadata +
 MS1/MS2 `MzCalibrationJson` + `RTCalibrationJson` with the full LOESS `model_params`)
 to `{inputStem}.calibration.json` next to the input (or in the resolved output dir).
-`CalibrationIO.SaveCalibration` writes atomically via `FileSaver`
+`CalibrationIO.SaveCalibration` writes atomically via `SimpleFileSaver`
 (`CalibrationIO.cs:42`). On resume, `PerFileScoringTask` reloads the JSON and
 reconstructs the model with `RTCalibration.FromModelParams`
 (`PerFileScoringTask.cs:1055, 1303`, `RTCalibration.cs:359`), skipping discovery. The

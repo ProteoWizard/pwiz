@@ -172,8 +172,8 @@
   <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
     <value>Error: The specified working directory {0} does not exist.</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
-    <value>Error: Unexpected argument --{0}</value>
+  <data name="CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_" xml:space="preserve">
+    <value>Unexpected argument {0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
     <value>No isolation list will be exported.</value>

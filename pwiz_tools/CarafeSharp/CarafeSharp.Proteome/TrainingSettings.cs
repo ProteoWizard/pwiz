@@ -1,0 +1,164 @@
+/*
+ * Original author: Michael MacCoss <maccoss .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using pwiz.CarafeSharp.Core;
+
+namespace pwiz.CarafeSharp.Proteome
+{
+    /// <summary>
+    /// A fine-tuning run (Carafe's <c>-ms</c> mode), read from Osprey's training exports
+    /// instead of the raw data: which exports, the training-data rules, and the library to
+    /// predict afterwards. Defaults are Carafe's code defaults; its Osprey workflow passes
+    /// <c>-cor 0.8 -n_ion_min 2 -c_ion_min 2 -valid</c>.
+    /// </summary>
+    public sealed class TrainingSettings
+    {
+        public const double DEFAULT_FDR = 0.01;
+        public const double DEFAULT_CORRELATION = 0.75;
+        public const int DEFAULT_MIN_MATCHED_IONS = 4;
+        public const int DEFAULT_MIN_VALID_IONS = 4;
+        public const uint DEFAULT_SEED = 2024;
+
+        /// <summary>
+        /// CarafeSharp's <c>-rt_align</c> unless given: each run's minutes mapped onto the pretrained Chronologer's
+        /// hydrophobic index, which takes out the runs' drift and lets runs on different gradients train together, as
+        /// firmly as each run's peptides allow (<see cref="RtMapFit"/>). Carafe's is <see cref="RtAlignmentType.none"/>.
+        /// </summary>
+        public const RtAlignmentType DEFAULT_RT_ALIGNMENT = RtAlignmentType.kde;
+
+        /// <summary><c>-i</c>: Osprey's result blib, a <c>.training.parquet</c> export, or a folder of exports (comma-separated).</summary>
+        public string Identifications { get; set; }
+
+        /// <summary><c>-ms</c>: the runs to train on (files or folders, comma-separated); their exports are found by file stem.</summary>
+        public IReadOnlyList<string> MsFiles { get; set; } = Array.Empty<string>();
+
+        /// <summary><c>-o</c>: where the models, their metrics and the library go.</summary>
+        public string OutputDirectory { get; set; } = LibrarySettings.DEFAULT_OUTPUT_DIRECTORY;
+
+        /// <summary><c>-fdr</c>: the run precursor q-value a training precursor needs.</summary>
+        public double Fdr { get; set; } = DEFAULT_FDR;
+
+        /// <summary><c>-cor</c>: the elution-profile correlation a matched ion needs.</summary>
+        public double MinCorrelation { get; set; } = DEFAULT_CORRELATION;
+
+        /// <summary><c>-n_ion_min</c>: b ions up to this ordinal must be clean when intense (0 = off).</summary>
+        public int LowOrdinalB { get; set; }
+
+        /// <summary><c>-c_ion_min</c>: the same for y ions.</summary>
+        public int LowOrdinalY { get; set; }
+
+        /// <summary><c>-lf_frag_n_min</c>: ions below this ordinal are always masked.</summary>
+        public int MinFragmentOrdinal { get; set; } = LibrarySettings.DEFAULT_MIN_FRAGMENT_NUMBER;
+
+        /// <summary><c>-nf</c>: matched ions a spectrum needs.</summary>
+        public int MinMatchedIons { get; set; } = DEFAULT_MIN_MATCHED_IONS;
+
+        /// <summary><c>-min_n</c>: valid ions a spectrum needs.</summary>
+        public int MinValidIons { get; set; } = DEFAULT_MIN_VALID_IONS;
+
+        /// <summary><c>-valid</c>: a spectrum's top ion must be valid.</summary>
+        public bool RequireTopIonValid { get; set; }
+
+        /// <summary><c>-no_masking</c>: train on every ion of the kept spectra.</summary>
+        public bool NoMasking { get; set; }
+
+        /// <summary><c>-tf</c>: all, ms2 or rt.</summary>
+        public string TrainingType { get; set; } = LibrarySettings.DEFAULT_TRAINING_TYPE;
+
+        /// <summary><c>-activation</c>: every run's activation, else each run's own (OspreyTrainingSet.GetActivation).</summary>
+        public string Activation { get; set; }
+
+        /// <summary><c>-analyzer</c>: every run's MS2 analyzer, else each run's own (OspreyTrainingSet.GetAnalyzer).</summary>
+        public string Analyzer { get; set; }
+
+        /// <summary><c>-seed</c>.</summary>
+        public uint Seed { get; set; } = DEFAULT_SEED;
+
+        /// <summary><c>-device</c>: cpu or gpu (falls back to the CPU).</summary>
+        public string Device { get; set; } = LibrarySettings.DEFAULT_DEVICE;
+
+        /// <summary>
+        /// <c>-nce</c>: the collision energy of a run whose export records none, as Carafe uses
+        /// it (a Thermo run's own NCE comes first), and the NCE of a run whose energy is in eV
+        /// instead of calibrating one on its spectra; null for those defaults.
+        /// </summary>
+        public double? Nce { get; set; }
+
+        /// <summary><c>-ms_instrument</c>, or null to take each run's instrument model by Carafe's name for it.</summary>
+        public string Instrument { get; set; }
+
+        /// <summary><c>-rt_max</c>, a floor on the RT normalizer (0 = none).</summary>
+        public double RtMax { get; set; }
+
+        /// <summary>
+        /// <c>-ms2_model</c>: the MS2 model (a Carafe checkpoint or CarafeSharp safetensors) to
+        /// fine-tune instead of the pretrained one, and the baseline the fine-tuned model must
+        /// beat; null for the pretrained model.
+        /// </summary>
+        public string Ms2Model { get; set; }
+
+        /// <summary>
+        /// <c>-model</c> with training: a saved model (.carafemodel) whose MS2 and RT models the
+        /// run fine-tunes further instead of the pretrained ones, and whose MS2 model prediction
+        /// keeps when the fine-tuned one does not beat it; null for none.
+        /// </summary>
+        public string BaseModel { get; set; }
+
+        /// <summary>CarafeSharp's <c>-pretrained</c> models zip, or null for the default.</summary>
+        public string PretrainedModels { get; set; }
+
+        /// <summary>
+        /// CarafeSharp's <c>-rt_model</c>: the RT model to fine-tune, and with <c>-tf ms2</c> the pretrained one the
+        /// saved model predicts with; null when it is not given: then the <c>-model</c>'s RT model, else
+        /// <see cref="LibrarySettings.DEFAULT_RT_MODEL"/>.
+        /// </summary>
+        public RtModelType? RtModelType { get; set; }
+
+        /// <summary>
+        /// CarafeSharp's <c>-rt_align</c>: <see cref="RtAlignmentType.kde"/> maps each run's minutes onto the pretrained
+        /// Chronologer's hydrophobic index before the RT rows are chosen (<see cref="RtAlignment"/>); <see cref="RtAlignmentType.none"/>
+        /// divides every run by one rt_max, as Carafe does.
+        /// </summary>
+        public RtAlignmentType RtAlignment { get; set; } = DEFAULT_RT_ALIGNMENT;
+
+        /// <summary>CarafeSharp's <c>-rt_select</c>: with aligned runs, the best-scoring observation of a form or the runs' median.</summary>
+        public RtSelectionType RtSelection { get; set; }
+
+        /// <summary>The library to predict with the fine-tuned models (<c>-db</c>), or null.</summary>
+        public LibrarySettings Library { get; set; }
+
+        public bool TrainMs2
+        {
+            get { return IsType(@"all") || IsType(@"ms2"); }
+        }
+
+        public bool TrainRt
+        {
+            get { return IsType(@"all") || IsType(@"rt"); }
+        }
+
+        private bool IsType(string type)
+        {
+            return string.Equals(TrainingType, type, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+}
