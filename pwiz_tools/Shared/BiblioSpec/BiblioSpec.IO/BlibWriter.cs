@@ -120,7 +120,7 @@ namespace pwiz.BiblioSpec.IO
         };
 
         private readonly SimpleFileSaver _file;
-        private readonly IBlibExtensionTables _extensions;
+        private IBlibExtensionTables _extensions;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         // The INSERT of n annotation rows at index n, prepared when first needed.
         private readonly AnnotationInsert[] _insertAnnotations = new AnnotationInsert[MAX_ANNOTATIONS_PER_INSERT + 1];
@@ -493,6 +493,7 @@ namespace pwiz.BiblioSpec.IO
             // The tool's prepared statements are on this connection: they go before it does, or
             // System.Data.SQLite keeps the file open until they are finalized.
             _extensions?.Dispose();
+            _extensions = null;
             _connection?.Dispose();
             _connection = null;
         }

@@ -67,6 +67,7 @@ namespace pwiz.CarafeSharp
         private PretrainedModels _pretrained;
         private string _modelFileFolder;
         private DecoyPairGate _pairGate;
+        private List<PairingManifestRow> _contractManifest;
         // The rt_max this run's library RT is scaled by; 0 (iRT) for the pretrained Chronologer, whose
         // hydrophobic index is not a fraction of the gradient.
         private double _libraryRtMax;
@@ -141,6 +142,10 @@ namespace pwiz.CarafeSharp
             var outputs = LibraryOutputs.FromFormat(_settings.LibraryFormat, _settings.Fast);
             if (outputs.Warning != null)
                 Log(outputs.Warning);
+            // The command line refuses this too; a caller setting the settings directly gets the
+            // same answer here, before the models load, rather than a null list after prediction.
+            if (_settings.LibraryContract && (!outputs.WritesBlib || string.IsNullOrEmpty(_settings.PairingManifest)))
+                throw new ArgumentException(@"The library contract needs a .blib output and the pairing manifest to check it against");
 
             // The models first: a missing or wrong pretrained archive fails before the digest.
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
@@ -516,9 +521,10 @@ namespace pwiz.CarafeSharp
                 @"Library contract: {0} precursors meet rules 1 and 6; the library claims the contract", rows.Count));
         }
 
+        /// <summary>The manifest's rows, read once for the check before prediction and the one after writing.</summary>
         private List<PairingManifestRow> ReadContractManifest()
         {
-            return PairingManifest.Read(_settings.PairingManifest, true, out _);
+            return _contractManifest ?? (_contractManifest = PairingManifest.Read(_settings.PairingManifest, true, out _));
         }
 
         private void WriteDecoyPairs(BlibLibraryWriter blib, List<DecoyPairPlanner.Precursor> precursors)
@@ -537,9 +543,10 @@ namespace pwiz.CarafeSharp
                         @"where Carafe stops on a primary-key error", skipped));
                 }
             }
-            catch (Exception e)
+            catch (Exception e) when (!_settings.LibraryContract)
             {
-                // Carafe catches any DecoyPairs failure, logs it and keeps the library.
+                // Carafe catches any DecoyPairs failure, logs it and keeps the library. A contract
+                // library's DecoyPairs is part of what it claims, so there the failure is the run's.
                 Log(@"Failed to write DecoyPairs table: " + e.Message);
             }
         }

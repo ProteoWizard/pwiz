@@ -118,8 +118,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static Dictionary<uint, bool> ReadDecoyPairs(string path)
         {
-            string connStr = string.Format(@"Data Source={0};Read Only=True;", path);
-            using (var conn = new SQLiteConnection(connStr))
+            // A ';' in the path must not end the connection string early: the builder quotes it.
+            var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3, ReadOnly = true };
+            using (var conn = new SQLiteConnection(connectionString.ToString()))
             {
                 conn.Open();
                 if (!TableExists(conn, @"DecoyPairs"))

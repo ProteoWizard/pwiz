@@ -341,6 +341,11 @@ namespace pwiz.Osprey.IO
             if (OspreyBlibTables.ReadMetadata(path, LibraryContract.METADATA_KEY) != LibraryContract.METADATA_VALUE)
                 return true;
             log.LogInfo(OspreyIOResources.LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_);
+            // Said first, so a library built with another prefix reads as a prefix mismatch rather
+            // than as a library full of unmarked decoys.
+            log.LogInfo(string.Format(
+                OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_,
+                FormatPrefixList(config.DecoyPrefixes)));
             var decoyMarks = BlibLoader.ReadDecoyPairs(path);
             var rows = new List<LibraryContractRow>(entries.Count);
             foreach (var entry in entries)
