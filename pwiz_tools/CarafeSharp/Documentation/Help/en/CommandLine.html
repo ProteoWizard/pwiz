@@ -75,6 +75,7 @@ code { font-family: Consolas,'Courier New',monospace; }
 <tr><td><nobr>--rt_max</nobr>&nbsp;&lt;minutes&gt;</td><td>The gradient length the library&#39;s retention times are scaled to, in minutes; absent, iRT.</td></tr>
 <tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
 <tr><td><nobr>--pairing_manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>The pairing manifest of <nobr>--build_entrapment_fasta</nobr>: the library then carries Carafe&#39;s DecoyPairs table, every pair written whole or not at all.</td></tr>
+<tr><td><nobr>--library_contract</nobr></td><td>Check the library against the Osprey library contract (one row per precursor, clean accessions, decoys and entrapment marked, the manifest authoritative, pairs whole) before predicting and after writing, refuse or discard it on a violation, and mark the .blib as meeting the contract so Osprey checks it at load instead of repairing it. Needs <nobr>--lf_type</nobr> blib and <nobr>--pairing_manifest</nobr>, and a FASTA built without Carafe&#39;s <nobr>per-peptide</nobr> accession suffix.</td></tr>
 <tr><td><nobr>--rt_reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt_align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. CarafeSharp only.</td></tr>
 </table>
 <div class="RowType">Models</div>

@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -27,9 +28,8 @@ using System.Threading.Tasks;
 using Parquet;
 using Parquet.Schema;
 using pwiz.Common.SystemUtil;
-using pwiz.Osprey.Core;
 
-namespace pwiz.Osprey.IO
+namespace pwiz.CarafeSharp.Contracts
 {
     /// <summary>
     /// <c>&lt;stem&gt;.training.parquet</c>: one row per exported precursor
@@ -37,30 +37,36 @@ namespace pwiz.Osprey.IO
     /// blobs (<see cref="ParquetBlobCodec"/>, the scores parquet's convention) for the per-ion
     /// arrays, ZSTD, written through <see cref="SimpleFileSaver"/>. A run with nothing to export
     /// still gets the file - schema and footer, zero rows - so absence always means the task
-    /// did not run (P13). The column list below IS the schema; docs/22-training-export.md
-    /// documents every column and must change with it.
+    /// did not run. The column list below IS the schema; Osprey's docs/22-training-export.md
+    /// documents every column and must change with it. Osprey writes through
+    /// <see cref="Write"/> and CarafeSharp reads through <see cref="Read"/>, so the two tools
+    /// cannot disagree on a column's name, type or slot layout.
     /// </summary>
     public static class TrainingExportParquet
     {
         /// <summary>The file extension of a run's training export: <c>&lt;stem&gt;.training.parquet</c>.</summary>
         public const string EXT = @".training.parquet";
 
-        /// <summary>Written to the footer as <see cref="KEY_FORMAT_VERSION"/>.</summary>
+        /// <summary>Written to the footer as <see cref="TrainingExportKeys.FORMAT_VERSION"/>.</summary>
         public const int FORMAT_VERSION = 2;
 
-        public const string KEY_FORMAT_VERSION = @"osprey.training_export.format_version";
-
-        /// <summary>Rows per parquet row group; the per-ion blobs make rows wide.</summary>
-        private const int ROWS_PER_GROUP = 20_000;
+        /// <summary><see cref="FORMAT_VERSION"/> as the footer carries it.</summary>
+        public static readonly string FORMAT_VERSION_TEXT = FORMAT_VERSION.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>
-        /// <c>&lt;stem&gt;.training.parquet</c> in the run's output directory
-        /// (<see cref="ArtifactPaths.ResolveOutputDir"/>), beside its other products.
+        /// The formats <see cref="Read"/> accepts. Format 1 also carried each precursor's
+        /// experiment q-value and PEP, which Osprey dropped in format 2 because a per-run file
+        /// cannot know them; CarafeSharp never trained on either, so both formats read the same.
         /// </summary>
-        public static string PathFor(string inputFile)
+        private static readonly int[] READABLE_FORMAT_VERSIONS = { 1, FORMAT_VERSION };
+
+        /// <summary>Rows per parquet row group by default; the per-ion blobs make rows wide.</summary>
+        public const int ROWS_PER_GROUP = 20_000;
+
+        /// <summary>True when <paramref name="path"/> names a training export by its extension.</summary>
+        public static bool IsExport(string path)
         {
-            string fileName = Path.GetFileNameWithoutExtension(inputFile) + EXT;
-            return Path.Combine(ArtifactPaths.ResolveOutputDir(inputFile), fileName);
+            return path.EndsWith(EXT, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -74,19 +80,20 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write <paramref name="records"/> (already in their final order) with
-        /// <paramref name="metadata"/> in the footer. Zero records write a valid zero-row file.
+        /// <paramref name="metadata"/> in the footer, which gets the format version. Zero
+        /// records write a valid zero-row file.
         /// </summary>
         public static void Write(string path, IReadOnlyList<TrainingRecord> records,
-            Dictionary<string, string> metadata, bool withXics)
+            IReadOnlyDictionary<string, string> metadata, bool withXics, int rowsPerGroup = ROWS_PER_GROUP)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
             var columns = Columns(withXics).ToArray();
             var schema = new ParquetSchema(columns.Select(c => (Field)c.Field).ToArray());
-            var footer = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
-            {
-                [KEY_FORMAT_VERSION] = FORMAT_VERSION.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            };
+            var footer = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var pair in metadata ?? new Dictionary<string, string>())
+                footer[pair.Key] = pair.Value;
+            footer[TrainingExportKeys.FORMAT_VERSION] = FORMAT_VERSION_TEXT;
             using (var saver = new SimpleFileSaver(path))
             {
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
@@ -99,9 +106,9 @@ namespace pwiz.Osprey.IO
                     };
                     var writer = RunSync(ParquetWriter.CreateAsync(schema, stream, options));
                     writer.CustomMetadata = footer;
-                    for (int start = 0; start < records.Count; start += ROWS_PER_GROUP)
+                    for (int start = 0; start < records.Count; start += rowsPerGroup)
                     {
-                        int count = Math.Min(ROWS_PER_GROUP, records.Count - start);
+                        int count = Math.Min(rowsPerGroup, records.Count - start);
                         var chunk = new TrainingRecord[count];
                         for (int i = 0; i < count; i++)
                             chunk[i] = records[start + i];
@@ -119,8 +126,10 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Read a training parquet back into records, with its footer. For tests and tools:
-        /// a column absent from the file (the XIC matrix, say) leaves its field null.
+        /// Read a training export back into records, with its footer. Refused: a format
+        /// version this build does not read, a missing column of the schema, and a record whose
+        /// per-ion arrays do not hold <c>4 * (L - 1)</c> slots. The optional XIC matrix is left
+        /// null when the file does not carry it.
         /// </summary>
         public static List<TrainingRecord> Read(string path, out Dictionary<string, string> metadata)
         {
@@ -131,9 +140,19 @@ namespace pwiz.Osprey.IO
                 try
                 {
                     // Parquet.Net's CustomMetadata is non-null (empty when the file has none).
-                    metadata = new Dictionary<string, string>(reader.CustomMetadata);
-                    var fieldsByName = reader.Schema.GetDataFields().ToDictionary(f => f.Name);
-                    var specs = Columns(true).ToArray();
+                    metadata = new Dictionary<string, string>(reader.CustomMetadata, StringComparer.Ordinal);
+                    RequireReadableFormat(path, metadata);
+                    var fieldsByName = reader.Schema.GetDataFields().ToDictionary(f => f.Name, StringComparer.Ordinal);
+                    var required = MainColumns();
+                    foreach (var spec in required)
+                    {
+                        if (!fieldsByName.ContainsKey(spec.Field.Name))
+                        {
+                            throw new InvalidDataException(string.Format(
+                                ContractsResources.TrainingExportParquet_Read__0__has_no__1__column_, path, spec.Field.Name));
+                        }
+                    }
+                    var specs = required.Concat(XicColumns()).ToArray();
                     for (int g = 0; g < reader.RowGroupCount; g++)
                     {
                         using (var group = reader.OpenRowGroupReader(g))
@@ -147,6 +166,8 @@ namespace pwiz.Osprey.IO
                                     continue;
                                 spec.Read(group, field, chunk);
                             }
+                            foreach (var record in chunk)
+                                RequireLadder(path, record);
                             records.AddRange(chunk);
                         }
                     }
@@ -157,6 +178,48 @@ namespace pwiz.Osprey.IO
                 }
             }
             return records;
+        }
+
+        /// <summary>An export's key-value footer, read without its rows.</summary>
+        public static Dictionary<string, string> ReadFooter(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var reader = RunSync(ParquetReader.CreateAsync(stream));
+                try
+                {
+                    return new Dictionary<string, string>(reader.CustomMetadata, StringComparer.Ordinal);
+                }
+                finally
+                {
+                    RunSync(reader.DisposeAsync());
+                }
+            }
+        }
+
+        private static void RequireReadableFormat(string path, IReadOnlyDictionary<string, string> metadata)
+        {
+            metadata.TryGetValue(TrainingExportKeys.FORMAT_VERSION, out string text);
+            if (text == null || !int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int version) ||
+                Array.IndexOf(READABLE_FORMAT_VERSIONS, version) < 0)
+            {
+                throw new InvalidDataException(string.Format(
+                    ContractsResources.TrainingExportParquet_Read__0__is_training_export_format__1___this_build_reads_formats__2__,
+                    path, text ?? ContractsResources.TrainingExportParquet_Read_none,
+                    string.Join(@", ", READABLE_FORMAT_VERSIONS.Select(v => v.ToString(CultureInfo.InvariantCulture)))));
+            }
+        }
+
+        /// <summary>Every per-ion array holds one value per slot of the ladder, <c>4 * (L - 1)</c>.</summary>
+        private static void RequireLadder(string path, TrainingRecord record)
+        {
+            int expected = record.Sequence == null ? 0 : 4 * Math.Max(0, record.Sequence.Length - 1);
+            if (record.NSlots != expected || record.IonFlags.Length != expected || record.ApexIntensity.Length != expected)
+            {
+                throw new InvalidDataException(string.Format(
+                    ContractsResources.TrainingExportParquet_Read__0____1__has__2__ion_slots__expected__3__,
+                    path, record.ModifiedSequence, record.IonFlags.Length, expected));
+            }
         }
 
         private static IEnumerable<ColumnSpec> Columns(bool withXics)
@@ -304,9 +367,9 @@ namespace pwiz.Osprey.IO
             return Blob(name, r => ParquetBlobCodec.EncodeF32Blob(get(r)), (r, b) => set(r, ParquetBlobCodec.DecodeF32Blob(b)));
         }
 
-        // Synchronously bridge an async Parquet.Net call, as ParquetScoreCache does: these run
-        // with no captured SynchronizationContext, so GetResult cannot deadlock, and it rethrows
-        // the original exception rather than an AggregateException.
+        // Synchronously bridge an async Parquet.Net call, as Osprey's ParquetScoreCache does:
+        // these run with no captured SynchronizationContext, so GetResult cannot deadlock, and
+        // it rethrows the original exception rather than an AggregateException.
         private static T RunSync<T>(Task<T> task)
         {
             return task.GetAwaiter().GetResult();

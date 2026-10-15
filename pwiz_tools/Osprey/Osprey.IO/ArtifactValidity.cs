@@ -68,7 +68,7 @@ namespace pwiz.Osprey.IO
             // other SQLite file is read the same way rather than reading as unstamped, which
             // would re-run the whole of SecondPassFDR on every invocation.
             if (EndsWith(path, BLIB_EXT) || HasSqliteHeader(path))
-                return BlibWriter.ReadStamp(path);
+                return OspreyBlibTables.ReadStamp(path);
             return null;
         }
 

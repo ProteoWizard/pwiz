@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
@@ -42,12 +43,6 @@ namespace pwiz.CarafeSharp.Proteome
     /// </summary>
     public sealed class EntrapmentFastaBuilder
     {
-        public const string MANIFEST_HEADER = "sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index";
-        public const string PEPTIDE_TYPE_TARGET = @"target";
-        public const string PEPTIDE_TYPE_P_TARGET = @"p_target";
-        public const string PEPTIDE_TYPE_DECOY = @"decoy";
-        public const string PEPTIDE_TYPE_P_DECOY = @"p_decoy";
-
         private static readonly UTF8Encoding UTF8_NO_BOM = new UTF8Encoding(false);
 
         private readonly EntrapmentFastaSettings _settings;
@@ -479,17 +474,17 @@ namespace pwiz.CarafeSharp.Proteome
             Log(@"Writing manifest: " + _settings.Manifest);
             using (var writer = CreateWriter(path))
             {
-                writer.Write(MANIFEST_HEADER + "\n");
+                PairingManifest.WriteHeader(writer);
                 int pairIndex = 0;
                 foreach (var quartet in kept)
                 {
-                    WriteManifestRow(writer, quartet.Target, false, JoinedLabel(quartet, null, false, false), PEPTIDE_TYPE_TARGET, pairIndex);
+                    PairingManifest.WriteRow(writer, quartet.Target, false, JoinedLabel(quartet, null, false, false), PeptideKind.Target, pairIndex);
                     if (quartet.PTarget != null)
-                        WriteManifestRow(writer, quartet.PTarget, false, JoinedLabel(quartet, null, true, false), PEPTIDE_TYPE_P_TARGET, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.PTarget, false, JoinedLabel(quartet, null, true, false), PeptideKind.PTarget, pairIndex);
                     if (quartet.Decoy != null)
-                        WriteManifestRow(writer, quartet.Decoy, true, JoinedLabel(quartet, null, false, true), PEPTIDE_TYPE_DECOY, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.Decoy, true, JoinedLabel(quartet, null, false, true), PeptideKind.Decoy, pairIndex);
                     if (quartet.PDecoy != null)
-                        WriteManifestRow(writer, quartet.PDecoy, true, JoinedLabel(quartet, null, true, true), PEPTIDE_TYPE_P_DECOY, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.PDecoy, true, JoinedLabel(quartet, null, true, true), PeptideKind.PDecoy, pairIndex);
                     pairIndex++;
                 }
             }
@@ -522,26 +517,13 @@ namespace pwiz.CarafeSharp.Proteome
             writer.Write('\n');
         }
 
-        private static void WriteManifestRow(TextWriter writer, string sequence, bool decoy, string proteins,
-            string peptideType, int pairIndex)
-        {
-            writer.Write(sequence);
-            writer.Write(decoy ? "\tYes\t" : "\tNo\t");
-            writer.Write(proteins);
-            writer.Write('\t');
-            writer.Write(peptideType);
-            writer.Write('\t');
-            writer.Write(pairIndex.ToString(CultureInfo.InvariantCulture));
-            writer.Write('\n');
-        }
-
         /// <summary>A UTF-8 (no BOM) writer, creating the parent folder as Carafe does. Lines end in LF.</summary>
         internal static StreamWriter CreateWriter(string path)
         {
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
-            return new StreamWriter(path, false, UTF8_NO_BOM, 1 << 16);
+            return new StreamWriter(path, false, UTF8_NO_BOM, 1 << 16) { NewLine = "\n" };
         }
 
         private void Log(string message)

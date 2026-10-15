@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 

@@ -2,12 +2,13 @@
 
 > Pipeline stage: Output (Stage 7). C# port of Rust docs/08-blib-output-schema.md. Corresponds to Rust osprey BiblioSpec (.blib) output.
 
-Osprey emits its final results as a **BiblioSpec (`.blib`)** SQLite database — the spectral-library format Skyline consumes for chromatogram extraction, ID lines, and quantification. The C# port writes this file with a hand-rolled managed SQLite writer (`System.Data.SQLite`), not by shelling out to ProteoWizard's C++ BiblioSpec. It mirrors the schema and byte conventions of Skyline's own `BlibData`/`BlibDb` writer closely enough to be byte-identical to the Rust output on the reference datasets.
+Osprey emits its final results as a **BiblioSpec (`.blib`)** SQLite database — the spectral-library format Skyline consumes for chromatogram extraction, ID lines, and quantification. The `.blib` format is the lab's own file type, and no project of ours writes it from scratch: Osprey writes it through the one managed writer in `pwiz_tools/Shared/BiblioSpec/BiblioSpec.IO` (`pwiz.BiblioSpec.IO.BlibWriter`, `System.Data.SQLite`), which CarafeSharp's predicted libraries go through as well, so a library either tool writes is the same database for every reader. The writer follows the schema (`BlibSchema`, one definition with its version history) and the byte conventions of Skyline's own `BlibData`/`BlibDb` writer closely enough to be byte-identical to the Rust output on the reference datasets.
 
-Two layers are involved:
+Three layers are involved:
 
-- **`Osprey.IO/BlibWriter.cs`** — the low-level SQLite layer: schema creation, prepared-statement inserts, zlib compression, sequence cleanup, finalize. One instance == one `.blib` file.
-- **`Osprey.Tasks/BlibOutputWriter.cs`** — the Stage 7 sequencer that composes rows from the passing-precursor lookup tables and drives `BlibWriter`. It is invoked once from `Osprey.Tasks/SecondPassFdrTask.cs:365` (the `SecondPassFDR` HPC worker — see 15-hpc-scoring-split.md).
+- **`Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs`** — the SQLite layer: schema creation, prepared-statement inserts, zlib compression, the atomic temp-then-move, finalize. One instance == one `.blib` file. It writes one `BlibSpectrumRecord` per `RefSpectra` row and lets the writing tool add its own tables (`IBlibExtensionTables`).
+- **`Osprey.IO/OspreyBlibWriter.cs`** — Osprey's adapter over it: `OspreyBlibTables` (the five `Osprey*` tables below) and the column values Osprey has always written (score type 19, the spectrum ordinal as `SpecIDinFile`, zero rather than NULL for the ion mobility columns, the peptide text through `BlibPeptideText`).
+- **`Osprey.Tasks/BlibOutputWriter.cs`** — the Stage 7 sequencer that composes rows from the passing-precursor lookup tables and drives `OspreyBlibWriter`. It is invoked once from `Osprey.Tasks/SecondPassFdrTask.cs` (the `SecondPassFDR` HPC worker — see 15-hpc-scoring-split.md).
 
 Reading back (for library input, and for round-trip tests) is `Osprey.IO/BlibLoader.cs`.
 
@@ -18,46 +19,46 @@ Reading back (for library input, and for round-trip tests) is `Osprey.IO/BlibLoa
 The blib contains standard BiblioSpec tables (Skyline-compatible) plus five Osprey extension tables:
 
 ```text
-Standard BiblioSpec tables (BlibWriter.CreateSchema, BlibWriter.cs:723-886)
+Standard BiblioSpec tables (BlibSchema, created by BlibWriter.CreateSchema)
   LibInfo, ScoreTypes, IonMobilityTypes, SpectrumSourceFiles,
   RefSpectra, RefSpectraPeaks, RefSpectraPeakAnnotations,
   Modifications, Proteins, RefSpectraProteins, RetentionTimes
 
-Osprey extension tables (same CreateSchema block)
+Osprey extension tables (OspreyBlibTables.CreateTables, in the same database before any row)
   OspreyMetadata, OspreyPeakBoundaries, OspreyRunScores,
   OspreyExperimentScores, OspreyCoefficients
 ```
 
-The C# schema declares two columns the Rust doc's table listings omit: `SpectrumSourceFiles.workflowType TINYINT` and `ScoreTypes.probabilityType VARCHAR(128)` (BlibWriter.cs:750, 737). Both exist for BiblioSpecLite compatibility with Skyline.
+The schema declares two columns the Rust doc's table listings omit: `SpectrumSourceFiles.workflowType TINYINT` and `ScoreTypes.probabilityType VARCHAR(128)`. Both exist for BiblioSpecLite compatibility with Skyline.
 
 ---
 
 ## Pipeline-order walkthrough
 
-Stage 7 blib emission runs entirely inside `BlibOutputWriter.Write(...)` (BlibOutputWriter.cs:53-97). The gating (which precursors pass, and which run is "best" per precursor) is done by the caller and handed in as pre-built lookup tables; this stage only composes rows.
+Stage 7 blib emission runs entirely inside `BlibOutputWriter.Write(...)`. The gating (which precursors pass, and which run is "best" per precursor) is done by the caller and handed in as pre-built lookup tables; this stage only composes rows.
 
-### Step 1 — Create the file with WAL journaling
+### Step 1 — Create the file beside its final name
 
-`new BlibWriter(path)` deletes any existing file, opens a fresh SQLite connection, and sets `PRAGMA journal_mode=WAL` + `PRAGMA synchronous=NORMAL` (BlibWriter.cs:88-106). The write happens to a `SimpleFileSaver` sibling temp; `saver.Commit()` atomically renames it into `config.OutputBlib` only after `FinalizeDatabase()` has checkpointed and torn down the WAL (BlibOutputWriter.cs:73-96). This is why `FinalizeDatabase()` must be the last writer call.
+`new OspreyBlibWriter(path)` opens a `BlibWriter` on a `SimpleFileSaver` sibling temp of `config.OutputBlib`, with `PRAGMA journal_mode=MEMORY` and `PRAGMA synchronous=OFF` (the temp is not durable until it is moved, so there is nothing to journal). `Complete()` closes the connection and moves the temp over the final name, replacing any library there; a writer disposed without `Complete()` deletes the temp and leaves the final name as it was. A failure to put the library in place is reported as a `BlibOutputException` naming the output (BlibOutputWriter.CompleteBlib), as a failure to open it is.
 
 ### Step 2 — Schema + seed rows
 
-`CreateSchema()` (BlibWriter.cs:723) creates all 16 tables in one batch, then seeds:
+`BlibWriter.CreateSchema` creates the standard tables from `BlibSchema`, then `OspreyBlibTables.CreateTables` adds the five Osprey tables, then the seed rows:
 
-- **`LibInfo`**: one row, `libLSID = urn:lsid:osprey:blib:<guid>`, `createTime = datetime('now')`, `numSpecs = 0` (updated at finalize), `majorVersion = 1`, `minorVersion = 11` (constants `BLIB_MAJOR_VERSION`/`BLIB_MINOR_VERSION`, BlibWriter.cs:39-40).
-- **`ScoreTypes`**: the full ProteoWizard BiblioSpec score-type enumeration, IDs 0-20 (BlibWriter.cs:899-922). ID 1 = `PERCOLATOR QVALUE`, ID 14 = `MORPHEUS SCORE`, **ID 19 = `GENERIC Q-VALUE`** with `probabilityType = PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT`. Osprey stamps every spectrum with score type **19** (`SCORE_TYPE_GENERIC_QVALUE`, BlibWriter.cs:41).
-- **`IonMobilityTypes`**: 0=none, 1=driftTime(msec), 2=inverseK0(Vsec/cm^2), 3=compensation(V) (BlibWriter.cs:936-951).
+- **`LibInfo`**: one row, `libLSID = urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:<file name>` (the BiblioSpec LSID), `createTime` in ctime format, `numSpecs = 0` (updated at finalize), `majorVersion = 1`, `minorVersion` = `BlibSchema.CurrentMinorVersion` (11).
+- **`ScoreTypes`**: the full ProteoWizard BiblioSpec score-type enumeration, IDs 0-20. ID 1 = `PERCOLATOR QVALUE`, ID 14 = `MORPHEUS SCORE`, **ID 19 = `GENERIC Q-VALUE`** with `probabilityType = PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT`. Osprey stamps every spectrum with score type **19** (`BlibWriter.SCORE_TYPE_GENERIC_QVALUE`).
+- **`IonMobilityTypes`**: 0=none, 1=driftTime(msec), 2=inverseK0(Vsec/cm^2), 3=compensation(V).
 
-`PrepareStatements()` (BlibWriter.cs:114) then compiles one reusable `SQLiteCommand` per insert kind so the tight per-spectrum loops avoid re-parsing SQL.
+Both the writer and `OspreyBlibTables` then compile one reusable prepared INSERT per row kind (`BlibWriter.PreparedInsert`) so the tight per-spectrum loops avoid re-parsing SQL.
 
 ### Step 3 — Source files
 
-`CreateSourceFiles` (BlibOutputWriter.cs:103-115) adds one `SpectrumSourceFiles` row per input file via `AddSourceFile` (BlibWriter.cs:263). Column semantics:
+`CreateSourceFiles` (BlibOutputWriter.cs) adds one `SpectrumSourceFiles` row per input file via `OspreyBlibWriter.AddSourceFile`. Column semantics:
 
 - `fileName = <fileStem>.mzML` (the spectrum source; `kvp.Key` is the file stem).
 - `idFileName = Path.GetFileName(config.LibrarySource.Path)` — the **library** basename, i.e. the "ID source". Skyline expects the ID source to be the library file, not a copy of the spectrum path.
-- `cutoffScore = fdrThreshold = config.RunFdr` (default 0.01, BlibOutputWriter.cs:62,112).
-- `workflowType = 1` (hard-coded, BlibWriter.cs:267).
+- `cutoffScore = fdrThreshold = config.RunFdr` (default 0.01).
+- `workflowType = 1` (`BlibWriter.WORKFLOW_TYPE_DIA`, the one value Osprey's adapter writes).
 
 The path stored is a bare `<stem>.mzML` filename, not a computed relative path with `../` segments.
 
@@ -72,18 +73,18 @@ The path stored is a bare `<stem>.mzML` filename, not a computed relative path w
 
 The prepared spectra are held per-index so the sequential emit loop stays deterministic.
 
-Compression detail (BlibWriter.cs:980-1008): Osprey uses **DotNetZip `Ionic.Zlib` at level 6** — the same library and level as Skyline's `pwiz.Skyline.Util.Extensions.UtilDB.Compress` — rather than `System.IO.Compression.DeflateStream`, which emits a subtly different byte stream on small inputs and would break byte parity with both Rust (`flate2` stock-zlib backend) and Skyline's `BlibData`. If the compressed output is not smaller than the raw bytes, the raw bytes are stored (BlibWriter.cs:1005-1007); the reader detects this by comparing blob length to the expected uncompressed size.
+Compression detail (`BlibWriter.CompressMzs` / `CompressIntensities`): the shared writer uses **DotNetZip `Ionic.Zlib` at level 6** — the same library and level as Skyline's `pwiz.Skyline.Util.Extensions.UtilDB.Compress` — rather than `System.IO.Compression.DeflateStream`, which emits a subtly different byte stream on small inputs and would break byte parity with both Rust (`flate2` stock-zlib backend) and Skyline's `BlibData`. If the compressed output is not smaller than the raw bytes, the raw bytes are stored; the reader detects this by comparing blob length to the expected uncompressed size.
 
 ### Step 5 — RefSpectra + child rows (sequential, one per passing precursor)
 
-`EmitSpectrumRows` (BlibOutputWriter.cs:159-260) iterates the best-per-precursor entries in order. For each:
+`EmitSpectrumRows` (BlibOutputWriter.cs) iterates the best-per-precursor entries in order. For each:
 
-- **`AddSpectrum(BlibSpectrum, ...)`** (BlibWriter.cs) inserts the `RefSpectra` row and its `RefSpectraPeaks` blob row through `AddSpectrumPrecompressed`, then the spectrum's `Modifications` and protein rows. Fixed column values: `prevAA`/`nextAA = '-'`, `ionMobility`/`ccs`/`highEnergyOffset = 0.0`, `ionMobilityType = 0`, `moleculeName`/`chemicalFormula`/`precursorAdduct`/`inchiKey`/`otherKeys = ''` (empty strings, BlibWriter.cs:127-131).
+- **`OspreyBlibWriter.AddSpectrum(BlibSpectrum, ...)`** fills one `BlibSpectrumRecord` (the `RefSpectra` row with its peak blobs, `Modifications` and proteins) and the shared writer inserts it. Fixed column values: `prevAA`/`nextAA = '-'`, `ionMobility`/`ccs`/`highEnergyOffset = 0.0` (not NULL, as Rust osprey writes them), `ionMobilityType = 0`, `totalIonCurrent = 0.0`, `SpecIDinFile` = the spectrum's ordinal from 0 as text, `moleculeName`/`chemicalFormula`/`precursorAdduct`/`inchiKey`/`otherKeys = ''` (empty strings). `peptideSeq` goes through `BlibPeptideText.StripFlankingChars` and `peptideModSeq` through `ConvertUnimodToMass` as well.
   - `retentionTime`/`startTime`/`endTime` = the cross-charge **shared** apex/start/end if the peptide was detected at multiple charges in this file (`sharedBounds`, BlibOutputWriter.cs:208-218), else the entry's own boundaries.
   - `copies = nRunsDetected` (count of runs this precursor was detected in, BlibOutputWriter.cs:198-204).
   - `score = scoreQvalue`, the **experiment-precursor q-value** (min across observations, `bestExpPrecursorQ`, BlibOutputWriter.cs:190-193). This is a raw q-value (lower = better), consistent with score type 19 being a "probability the ID is incorrect". `scoreType = 19`.
-- **`AddModifications`** (BlibWriter.cs): one `Modifications` row per modified residue, `position` converted from internal **0-based to 1-based** (`mod.Position + 1`), `mass` the summed mass at that residue. Verified by `Osprey.Test/IOTest.cs` (`TestBlibModifications1Based`).
-- **`AddProteinMapping`** (BlibWriter.cs:414): de-duplicates accessions via `_proteinCache`, inserting `Proteins` + `RefSpectraProteins` rows.
+- **Modifications**: one `Modifications` row per modified residue, `position` converted from internal **0-based to 1-based** (`OspreyBlibWriter.ToBlibModifications`), `mass` the summed mass at that residue. Verified by `Osprey.Test/IOTest.cs` (`TestBlibModifications1Based`).
+- **Proteins**: the shared writer de-duplicates accessions through its accession cache, inserting `Proteins` + `RefSpectraProteins` rows.
 - **`WriteRetentionTimes`** (see Step 6).
 - **Osprey extension rows** (BlibOutputWriter.cs:247-258): `AddPeakBoundaries` (best-run start/end/apex + `IntegratedArea = entry.BoundsArea`, `ApexIntensity = 0.0` placeholder), `AddRunScores` (`RunQValue = EffectiveRunQvalue(Both)`, `DiscriminantScore`/`PosteriorErrorProb = 0.0` placeholders), `AddExperimentScores` (`ExperimentQValue = scoreQvalue`, `NRunsDetected`, `NRunsSearched = perFileEntries.Count`).
 
@@ -92,21 +93,21 @@ Compression detail (BlibWriter.cs:980-1008): Osprey uses **DotNetZip `Ionic.Zlib
 `WriteRetentionTimes` (BlibOutputWriter.cs:279-339) emits one `RetentionTimes` row for **every run where this precursor was detected** (`entriesByPrecursor[key]` observations). The `retentionTime` column drives whether Skyline draws an ID line:
 
 - If the run's `EffectiveRunQvalue(Both) <= fdrThreshold` → `retentionTime = apex RT` (ID line shown).
-- Otherwise → `retentionTime = NULL` (`DBNull.Value` in `AddRetentionTime`, BlibWriter.cs:446-447): Skyline uses `startTime`/`endTime` for quantification boundaries but shows no ID line ("integrate here, but not an independent identification").
+- Otherwise → `retentionTime = NULL` (a null `retentionTime` to `AddRetentionTime`): Skyline uses `startTime`/`endTime` for quantification boundaries but shows no ID line ("integrate here, but not an independent identification").
 
 The C# adds a **fallback the Rust doc does not describe**: if *no* run passes run-level FDR, the run with the lowest `run_qvalue` still gets `retentionTime` populated (`bestRunFile`, BlibOutputWriter.cs:288-313), so every `RefSpectra` has at least one ID line. `bestSpectrum = 1` for the observation whose file equals the best-precursor file, else 0. `score = runQ`. Cross-charge shared boundaries are applied here too.
 
 ### Step 7 — Metadata
 
-`WriteMetadata` (BlibOutputWriter.cs:264-272) writes four `OspreyMetadata` key/value rows (via `INSERT OR REPLACE`): `osprey_version`, `search_mode = coelution`, `run_fdr`, `experiment_fdr`. A fifth row, Key `osprey.validity`, holds the blib's embedded validity stamp (`BlibWriter.AddStamp` / `ReadStamp`; see [14](14-intermediate-files.md) section 8). It is C#-only and provenance, not content: the blib comparisons (`BlibComparer` in Osprey.Test, `Regression/BlibGolden.ps1`) exclude it, and so must any cross-impl comparison.
+`WriteMetadata` (BlibOutputWriter.cs) writes four `OspreyMetadata` key/value rows (via `INSERT OR REPLACE`): `osprey_version`, `search_mode = coelution`, `run_fdr`, `experiment_fdr`. A fifth row, Key `osprey.validity`, holds the blib's embedded validity stamp (`OspreyBlibWriter.AddStamp` / `OspreyBlibTables.ReadStamp`; see [14](14-intermediate-files.md) section 8). It is C#-only and provenance, not content: the blib comparisons (`BlibComparer` in Osprey.Test, `Regression/BlibGolden.ps1`) exclude it, and so must any cross-impl comparison.
 
-### Step 8 — Finalize
+### Step 8 — Complete
 
-`FinalizeDatabase()` (BlibWriter.cs:561-579): updates `LibInfo.numSpecs` to the `RefSpectra` count, creates 10 indices (the 7 the Rust doc lists plus `idx_expscores_refid`, `idx_coefficients_refid`, `idx_rettimes_refid`), then `PRAGMA wal_checkpoint(TRUNCATE)` + `PRAGMA journal_mode=DELETE` to merge and remove the WAL sidecars so the atomic rename in Step 1 moves a single self-contained file.
+`Complete()`: updates `LibInfo.numSpecs` to the `RefSpectra` count, creates the indexes - BiblioSpec's own (`BlibSchema.AllIndexStatements`), the shared writer's three per-spectrum ones on `RefSpectraProteins`, `Modifications` and `RetentionTimes`, and `OspreyBlibTables.CreateIndexes` (`idx_boundaries_refid`, `idx_runscores_refid`, `idx_expscores_refid`, `idx_coefficients_refid`) - then closes the connection and moves the temp over the final name (Step 1). The extension tables' prepared statements are disposed before the connection: System.Data.SQLite keeps the file open until every statement on a connection is finalized, so a statement outliving the close would make the move fail.
 
 ### OspreyCoefficients (reserved, zero rows)
 
-`AddCoefficient` exists (BlibWriter.cs:547) but is never called from the pipeline (only `SecondPassFdrTask`/`BlibOutputWriter` drive the writer, and neither calls it). The `OspreyCoefficients` table is created and indexed but written with zero rows — the per-scan XIC time series is not plumbed through Stage 7. This matches the Rust doc's "(optional)" label.
+`AddCoefficient` exists (`OspreyBlibTables`) but is never called from the pipeline (only `SecondPassFdrTask`/`BlibOutputWriter` drive the writer, and neither calls it). The `OspreyCoefficients` table is created and indexed but written with zero rows — the per-scan XIC time series is not plumbed through Stage 7. This matches the Rust doc's "(optional)" label.
 
 ---
 

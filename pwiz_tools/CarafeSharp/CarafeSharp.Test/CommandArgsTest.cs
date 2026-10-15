@@ -62,7 +62,7 @@ namespace pwiz.CarafeSharp.Test
             @"build_koina_library koina_url koina_ms2_model koina_rt_model nce_ms n_ion_min " +
             @"c_ion_min nce ms_instrument device se mode tf seed python mod2mass user_var_mods " +
             @"model_dir ms2_model verbose ai_version pretrained model model_info activation analyzer rt_model rt_align " +
-            @"rt_select rt_reference " +
+            @"rt_select rt_reference library_contract " +
             @"printPTM nm cs ez skyline valid use_all_peaks I2L clip_n_m rf xic export_mgf " +
             @"no_masking no_similarity_gate ignore_pairing_errors entrapment no_decoys mz_filter " +
             @"y1 fast ccs torch_compile help " +

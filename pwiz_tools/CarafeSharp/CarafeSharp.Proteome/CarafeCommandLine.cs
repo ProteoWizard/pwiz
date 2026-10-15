@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.Common.CommandLine;
 using CarafeArgument = pwiz.Common.CommandLine.Argument<pwiz.CarafeSharp.Proteome.CarafeCommandLine>;
@@ -119,7 +120,7 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_PREDICTED_LIBRARY = Value(@"predicted_library", @"<library.tsv|.blib>");
         public static readonly CarafeArgument ARG_MODEL_INFO = Value(@"model_info", @"<file" + CarafeModelFile.EXTENSION + @">");
         public static readonly CarafeArgument ARG_DB = Value(@"db", @"<proteins.fasta|peptides.fasta>");
-        public static readonly CarafeArgument ARG_I = Value(@"i", @"<osprey.blib|run" + OspreyTrainingExportFile.SUFFIX + @"|folder>");
+        public static readonly CarafeArgument ARG_I = Value(@"i", @"<osprey.blib|run" + TrainingExportParquet.EXT + @"|folder>");
         public static readonly CarafeArgument ARG_MS = Value(@"ms", @"<run1,run2,...>");
         public static readonly CarafeArgument ARG_O = Value(@"o", @"<folder>");
         // -h is Carafe's and Osprey's; -help and --help are the same declaration. The optional
@@ -181,11 +182,13 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_RT_MAX = Value(@"rt_max", @"<minutes>");
         public static readonly CarafeArgument ARG_CCS = Flag(@"ccs");
         public static readonly CarafeArgument ARG_PAIRING_MANIFEST = Value(@"pairing_manifest", @"<manifest.tsv>");
+        public static readonly CarafeArgument ARG_LIBRARY_CONTRACT = Flag(@"library_contract");
         public static readonly CarafeArgument ARG_RT_REFERENCE = Value(@"rt_reference", @"<run>");
 
         private static readonly CarafeArgumentGroup GROUP_LIBRARY = new CarafeArgumentGroup(() => @"Library prediction", true,
             ARG_LF_TYPE, ARG_FAST, ARG_LF_FRAG_MZ_MIN, ARG_LF_FRAG_MZ_MAX, ARG_LF_TOP_N_FRAG, ARG_LF_MIN_N_FRAG, ARG_LF_FRAG_N_MIN,
-            ARG_NCE, ARG_MS_INSTRUMENT, ARG_ACTIVATION, ARG_ANALYZER, ARG_RT_MAX, ARG_CCS, ARG_PAIRING_MANIFEST, ARG_RT_REFERENCE);
+            ARG_NCE, ARG_MS_INSTRUMENT, ARG_ACTIVATION, ARG_ANALYZER, ARG_RT_MAX, ARG_CCS, ARG_PAIRING_MANIFEST, ARG_LIBRARY_CONTRACT,
+            ARG_RT_REFERENCE);
 
         // --- Models ------------------------------------------------------------------------
         public static readonly CarafeArgument ARG_MODEL_DIR = Value(@"model_dir", @"<folder>");
@@ -288,7 +291,7 @@ namespace pwiz.CarafeSharp.Proteome
                     new ParaUsageBlock(@"       CarafeSharp --reconcile_manifest <out.tsv> --manifest <in.tsv> --predicted_library <library.tsv|.blib>"),
                     new ParaUsageBlock(@"       CarafeSharp --db <peptides.fasta|proteins.fasta> -o <folder> [options]   (library prediction)"),
                     new ParaUsageBlock(@"       CarafeSharp -i <osprey.blib> --ms <runs> -o <folder> [--db <fasta>] [options]   (training)"),
-                    new ParaUsageBlock(@"       CarafeSharp -i <run" + OspreyTrainingExportFile.SUFFIX + @"|folder> [--ms <runs>] -o <folder> [--db <fasta>] [options]"),
+                    new ParaUsageBlock(@"       CarafeSharp -i <run" + TrainingExportParquet.EXT + @"|folder> [--ms <runs>] -o <folder> [--db <fasta>] [options]"),
                     new ParaUsageBlock(@"       CarafeSharp --model_info <file" + CarafeModelFile.EXTENSION + @">"),
                     GROUP_MODES,
                     GROUP_DIGEST,
@@ -724,6 +727,16 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.Device = ParseDevice(device);
             if (TryGet(@"pairing_manifest", out string manifest))
                 settings.PairingManifest = manifest;
+            settings.LibraryContract = Has(@"library_contract");
+            if (settings.LibraryContract)
+            {
+                // The contract is written into the .blib and checked against the manifest, so a
+                // run without either has nothing to mark or nothing to check against.
+                if (!LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast).WritesBlib)
+                    throw new ArgumentException(@"-library_contract marks a .blib as meeting the Osprey library contract, so it needs -lf_type blib");
+                if (string.IsNullOrEmpty(settings.PairingManifest))
+                    throw new ArgumentException(@"-library_contract checks the library against its pairing manifest, so it needs -pairing_manifest");
+            }
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
             if (TryGet(@"rt_model", out string rtModel))
@@ -768,7 +781,7 @@ namespace pwiz.CarafeSharp.Proteome
         {
             return TryGet(@"i", out string identifications) &&
                    identifications.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Any(input =>
-                       OspreyTrainingExportFile.IsExport(input) || Directory.Exists(input));
+                       TrainingExportParquet.IsExport(input) || Directory.Exists(input));
         }
 
         private EntrapmentFastaSettings InterpretBuild(DigestSettings digest, ModificationSettings modifications,

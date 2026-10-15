@@ -28,6 +28,7 @@ using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -231,6 +232,9 @@ namespace pwiz.Osprey.IO
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader(config.FragmentTolerance);
                     entries = blibLoader.Load(path, log.LogInfo);
+                    // Before any repair below: a library that claims the contract must need none.
+                    if (!CheckLibraryContract(path, entries, config, log, out error))
+                        return null;
                     break;
 
                 default:
@@ -321,6 +325,63 @@ namespace pwiz.Osprey.IO
             // and the two paths converge on the state every later reader sees.
 
             return entries;
+        }
+
+        /// <summary>
+        /// A library that claims the Osprey library contract (the <see cref="LibraryContract.METADATA_KEY"/>
+        /// row of its <c>OspreyMetadata</c> table) is checked against it here, before any repair,
+        /// and fails the load with the full report on a violation; its own <c>DecoyPairs</c>
+        /// marking and the pairing manifest the run names take part in the check. A library
+        /// without the claim takes the tolerant route unchanged.
+        /// </summary>
+        private static bool CheckLibraryContract(string path, List<LibraryEntry> entries, OspreyConfig config,
+            IOspreyLog log, out string error)
+        {
+            error = null;
+            if (OspreyBlibTables.ReadMetadata(path, LibraryContract.METADATA_KEY) != LibraryContract.METADATA_VALUE)
+                return true;
+            log.LogInfo(OspreyIOResources.LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_);
+            // Said first, so a library built with another prefix reads as a prefix mismatch rather
+            // than as a library full of unmarked decoys.
+            log.LogInfo(string.Format(
+                OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_,
+                FormatPrefixList(config.DecoyPrefixes)));
+            var decoyMarks = BlibLoader.ReadDecoyPairs(path);
+            var rows = new List<LibraryContractRow>(entries.Count);
+            foreach (var entry in entries)
+            {
+                bool? markedDecoy = null;
+                if (decoyMarks != null && decoyMarks.TryGetValue(entry.Id, out bool isDecoy))
+                    markedDecoy = isDecoy;
+                rows.Add(new LibraryContractRow(entry.Sequence, entry.ModifiedSequence, entry.Charge, entry.ProteinIds, markedDecoy));
+            }
+            List<PairingManifestRow> manifest = null;
+            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                try
+                {
+                    manifest = PairingManifest.Read(config.DecoyPairingManifestPath, false, out _);
+                }
+                catch (Exception ex)
+                {
+                    error = string.Format(
+                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_,
+                        config.DecoyPairingManifestPath, ex.Message);
+                    return false;
+                }
+            }
+            var report = LibraryContract.Validate(rows, manifest, config.DecoyPrefixes);
+            if (report.IsValid)
+            {
+                // A contract library is paired by construction, so a check without the manifest says so.
+                if (!report.ManifestChecked)
+                    log.LogInfo(report.Describe());
+                return true;
+            }
+            error = string.Format(
+                OspreyIOResources.LibraryLoader_CheckLibraryContract_The_library__0__claims_the_Osprey_library_contract_but_violates_it___1_,
+                path, report.Describe());
+            return false;
         }
 
         /// <summary>

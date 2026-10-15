@@ -70,44 +70,40 @@ namespace pwiz.Osprey.IO
             // No prefixes given: the ones a search recognizes by default.
             var prefixes = decoyPrefixes ?? new OspreyConfig().DecoyPrefixes;
             string decoyPrefix = prefixes.FirstOrDefault(p => !string.IsNullOrEmpty(p)) ?? DEFAULT_DECOY_PREFIX;
-            using (var saver = new SimpleFileSaver(path))
+            using (var writer = new OspreyBlibWriter(path))
             {
-                using (var writer = new BlibWriter(saver.SafeName))
+                writer.BeginBatch();
+                string sourceName = Path.GetFileName(librarySource);
+                long fileId = writer.AddSourceFile(Path.GetFullPath(librarySource), sourceName, 0.0);
+                var block = new BlibSpectrum[BLOCK_SIZE];
+                using (var progress = new ProgressReporter(
+                           string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
+                               entries.Count, path),
+                           entries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                 {
-                    writer.BeginBatch();
-                    string sourceName = Path.GetFileName(librarySource);
-                    long fileId = writer.AddSourceFile(Path.GetFullPath(librarySource), sourceName, 0.0);
-                    var block = new BlibSpectrum[BLOCK_SIZE];
-                    using (var progress = new ProgressReporter(
-                               string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
-                                   entries.Count, path),
-                               entries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                    for (int start = 0; start < entries.Count; start += BLOCK_SIZE)
                     {
-                        for (int start = 0; start < entries.Count; start += BLOCK_SIZE)
+                        int count = Math.Min(BLOCK_SIZE, entries.Count - start);
+                        int blockStart = start;
+                        Parallel.For(0, count, parallelOptions, i =>
                         {
-                            int count = Math.Min(BLOCK_SIZE, entries.Count - start);
-                            int blockStart = start;
-                            Parallel.For(0, count, parallelOptions, i =>
-                            {
-                                var entry = entries[blockStart + i];
-                                block[i] = BlibSpectrum.FromLibraryEntry(entry,
-                                    DecoyAccessions(entry, prefixes, decoyPrefix));
-                            });
-                            for (int i = 0; i < count; i++)
-                            {
-                                double rt = entries[start + i].RetentionTime;
-                                long refId = writer.AddSpectrum(block[i], rt, rt, rt, 0.0, fileId, 1);
-                                writer.AddRetentionTime(refId, fileId, rt, null, null, 0.0, true);
-                            }
-                            progress.Report(start + count);
+                            var entry = entries[blockStart + i];
+                            block[i] = BlibSpectrum.FromLibraryEntry(entry,
+                                DecoyAccessions(entry, prefixes, decoyPrefix));
+                        });
+                        for (int i = 0; i < count; i++)
+                        {
+                            double rt = entries[start + i].RetentionTime;
+                            long refId = writer.AddSpectrum(block[i], rt, rt, rt, 0.0, fileId, 1);
+                            writer.AddRetentionTime(refId, fileId, rt, null, null, 0.0, true);
                         }
+                        progress.Report(start + count);
                     }
-                    writer.Commit();
-                    writer.AddMetadata(@"osprey_version", OspreyVersion.Current);
-                    writer.AddMetadata(@"library_source", sourceName);
-                    writer.FinalizeDatabase();
                 }
-                saver.Commit();
+                writer.CommitBatch();
+                writer.AddMetadata(@"osprey_version", OspreyVersion.Current);
+                writer.AddMetadata(@"library_source", sourceName);
+                writer.Complete();
             }
             return entries.Count;
         }
