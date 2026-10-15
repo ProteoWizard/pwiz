@@ -39,7 +39,7 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 | `<stem>.1st-pass.stratum.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides. Absent under every mode but protein-compact. A SECOND file rather than a member of the model sidecar because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadFromAny` merges the two on read, and still falls back to a pre-split model sidecar's embedded copy |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
-| `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `Osprey.IO/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
+| `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
 
 All artifact paths resolve their directory through `ArtifactPaths`
 (`Osprey.IO/ArtifactPaths.cs`), so `--output-dir` / `--cache-dir` / `--work-dir`
@@ -79,7 +79,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `ReconciliationFile` | `<stem>.reconciliation.json` |
 | `FirstPassModelIO` (2 sites) | `<stem>.1st-pass.model.json`, `<stem>.1st-pass.stratum.json` |
 | `BlibOutputWriter` | `<output>.blib` |
-| `TrainingExportParquet` | `<stem>.training.parquet` |
+| `TrainingExportWriter` | `<stem>.training.parquet` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
@@ -776,15 +776,17 @@ HPC relay lists - see 00.
 
 ## 9. Training export parquet (`<stem>.training.parquet`)
 
-**C# source**: `Osprey.IO/TrainingExportParquet.cs`; written by `PerFileRescoreTask` through
-`TrainingExportWriter`. Path: `TrainingExportParquet.PathFor` = `<stem>.training.parquet` in
-`ArtifactPaths.ResolveOutputDir(inputFile)`. Written only under `--training-export`, and never
+**C# source**: `pwiz_tools/CarafeSharp/CarafeSharp.Contracts/TrainingExportParquet.cs`, the
+assembly Osprey and CarafeSharp share (the record `TrainingRecord`, the footer keys
+`TrainingExportKeys`, one writer and one reader); written by `PerFileRescoreTask` through
+`Osprey.Tasks/TrainingExportWriter`. Path: `TrainingExportWriter.PathFor` = `<stem>.training.parquet`
+in `ArtifactPaths.ResolveOutputDir(inputFile)`. Written only under `--training-export`, and never
 by a diagnostics-only render.
 
 ZSTD parquet, row groups of 20,000 rows, per-ion arrays as little-endian typed `byte[]` blobs
 with no length prefix and a NULL cell for an empty array - the same convention as the scores
-parquet's blobs, and the same encoders (`ParquetBlobCodec`, moved out of `ParquetScoreCache`
-unchanged). A run with nothing to export gets a zero-row file with its footer. The schema, the
+parquet's blobs, and the same encoders (`ParquetBlobCodec`, in the same shared assembly, which
+`ParquetScoreCache` also uses). A run with nothing to export gets a zero-row file with its footer. The schema, the
 slot order and every footer key are [22-training-export](22-training-export.md), which is the
 contract; `TrainingExportParquetTest` fails when the writer emits a column that document does not
 name (it checks names only - not types, and not a documented column the writer lacks). Footer

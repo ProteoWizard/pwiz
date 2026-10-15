@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.Common.CommandLine;
 using CarafeArgument = pwiz.Common.CommandLine.Argument<pwiz.CarafeSharp.Proteome.CarafeCommandLine>;
@@ -119,7 +120,7 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_PREDICTED_LIBRARY = Value(@"predicted_library", @"<library.tsv|.blib>");
         public static readonly CarafeArgument ARG_MODEL_INFO = Value(@"model_info", @"<file" + CarafeModelFile.EXTENSION + @">");
         public static readonly CarafeArgument ARG_DB = Value(@"db", @"<proteins.fasta|peptides.fasta>");
-        public static readonly CarafeArgument ARG_I = Value(@"i", @"<osprey.blib|run" + OspreyTrainingExportFile.SUFFIX + @"|folder>");
+        public static readonly CarafeArgument ARG_I = Value(@"i", @"<osprey.blib|run" + TrainingExportParquet.EXT + @"|folder>");
         public static readonly CarafeArgument ARG_MS = Value(@"ms", @"<run1,run2,...>");
         public static readonly CarafeArgument ARG_O = Value(@"o", @"<folder>");
         // -h is Carafe's and Osprey's; -help and --help are the same declaration. The optional
@@ -288,7 +289,7 @@ namespace pwiz.CarafeSharp.Proteome
                     new ParaUsageBlock(@"       CarafeSharp --reconcile_manifest <out.tsv> --manifest <in.tsv> --predicted_library <library.tsv|.blib>"),
                     new ParaUsageBlock(@"       CarafeSharp --db <peptides.fasta|proteins.fasta> -o <folder> [options]   (library prediction)"),
                     new ParaUsageBlock(@"       CarafeSharp -i <osprey.blib> --ms <runs> -o <folder> [--db <fasta>] [options]   (training)"),
-                    new ParaUsageBlock(@"       CarafeSharp -i <run" + OspreyTrainingExportFile.SUFFIX + @"|folder> [--ms <runs>] -o <folder> [--db <fasta>] [options]"),
+                    new ParaUsageBlock(@"       CarafeSharp -i <run" + TrainingExportParquet.EXT + @"|folder> [--ms <runs>] -o <folder> [--db <fasta>] [options]"),
                     new ParaUsageBlock(@"       CarafeSharp --model_info <file" + CarafeModelFile.EXTENSION + @">"),
                     GROUP_MODES,
                     GROUP_DIGEST,
@@ -768,7 +769,7 @@ namespace pwiz.CarafeSharp.Proteome
         {
             return TryGet(@"i", out string identifications) &&
                    identifications.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Any(input =>
-                       OspreyTrainingExportFile.IsExport(input) || Directory.Exists(input));
+                       TrainingExportParquet.IsExport(input) || Directory.Exists(input));
         }
 
         private EntrapmentFastaSettings InterpretBuild(DigestSettings digest, ModificationSettings modifications,

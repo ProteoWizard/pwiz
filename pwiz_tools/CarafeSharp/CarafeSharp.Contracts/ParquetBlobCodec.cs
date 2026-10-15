@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -25,17 +25,17 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 
-namespace pwiz.Osprey.IO
+namespace pwiz.CarafeSharp.Contracts
 {
     /// <summary>
     /// The little-endian typed-array blobs Osprey's parquet files carry in <c>byte[]</c>
     /// columns: no length prefix (the element count is <c>bytes / sizeof(element)</c>), and a
-    /// NULL cell - never a zero-length blob - for an empty array. The f64/f32 pair moved here
-    /// unchanged from <see cref="ParquetScoreCache"/> so the training export
-    /// (<see cref="TrainingExportParquet"/>) writes its arrays exactly as the scores parquet
-    /// does; the integer forms follow the same two rules.
+    /// NULL cell - never a zero-length blob - for an empty array. The scores parquet
+    /// (Osprey.IO's ParquetScoreCache) and the training export
+    /// (<see cref="TrainingExportParquet"/>) write their arrays through the same encoders,
+    /// so a consumer decodes both the same way.
     /// </summary>
-    internal static class ParquetBlobCodec
+    public static class ParquetBlobCodec
     {
         /// <summary>
         /// Encode an array of f64 values as a little-endian byte blob with
@@ -44,17 +44,16 @@ namespace pwiz.Osprey.IO
         /// byte-for-byte for a non-empty input. A null or empty input encodes
         /// as a NULL cell (the column is declared nullable). A zero-length blob
         /// would instead leave a whole row group's column zero-length whenever
-        /// every row in that group is empty -- reachable once the file is
+        /// every row in that group is empty - reachable once the file is
         /// written in bounded row groups (e.g. a group that falls entirely in
-        /// the contiguous decoy region, where reference XICs can be absent) --
+        /// the contiguous decoy region, where reference XICs can be absent) -
         /// which the Parquet reader cannot decode (an all-zero-length page
         /// overruns on the length prefix). A null cell reads back as an empty
         /// array (DecodeF64Blob(null) == empty), so the decoded value is
         /// unchanged and no gate is affected (the regression + cross-impl gates
-        /// compare the blib + protein-FDR, never parquet bytes). This is the
-        /// "more parquet-idiomatic" form the cwt_candidates TODO in ParquetScoreCache anticipates.
+        /// compare the blib + protein-FDR, never parquet bytes).
         /// </summary>
-        internal static byte[] EncodeF64Blob(double[] values)
+        public static byte[] EncodeF64Blob(double[] values)
         {
             if (values == null || values.Length == 0)
                 return null;
@@ -76,12 +75,11 @@ namespace pwiz.Osprey.IO
         /// <see cref="Buffer.BlockCopy"/> over the underlying float[] storage
         /// (allocation-free per element); the IEEE-754 little-endian byte
         /// layout matches the Rust blob exactly on LE hosts (x64/x86 - both
-        /// pwiz target archs are LE), avoiding net472's missing
-        /// <c>BitConverter.SingleToInt32Bits</c>. A null or empty input encodes
+        /// pwiz target archs are LE). A null or empty input encodes
         /// as a NULL cell (not a zero-length blob) for the same reason as
-        /// <see cref="EncodeF64Blob"/> -- see that method for the rationale.
+        /// <see cref="EncodeF64Blob"/> - see that method for the rationale.
         /// </summary>
-        internal static byte[] EncodeF32Blob(float[] values)
+        public static byte[] EncodeF32Blob(float[] values)
         {
             if (values == null || values.Length == 0)
                 return null;
@@ -95,14 +93,12 @@ namespace pwiz.Osprey.IO
         /// for null or empty input (preserves <see cref="EncodeF64Blob"/>'s
         /// invariant). Throws if the byte length is not a multiple of 8.
         /// </summary>
-        internal static double[] DecodeF64Blob(byte[] blob)
+        public static double[] DecodeF64Blob(byte[] blob)
         {
             if (blob == null || blob.Length == 0)
                 return Array.Empty<double>();
             if (blob.Length % 8 != 0)
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
-                    blob.Length, 8));
+                throw Damaged(blob.Length, 8);
             int n = blob.Length / 8;
             var values = new double[n];
             for (int i = 0; i < n; i++)
@@ -119,14 +115,12 @@ namespace pwiz.Osprey.IO
         /// for null or empty input. Throws if the byte length is not a
         /// multiple of 4.
         /// </summary>
-        internal static float[] DecodeF32Blob(byte[] blob)
+        public static float[] DecodeF32Blob(byte[] blob)
         {
             if (blob == null || blob.Length == 0)
                 return Array.Empty<float>();
             if (blob.Length % 4 != 0)
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
-                    blob.Length, 4));
+                throw Damaged(blob.Length, 4);
             int n = blob.Length / 4;
             var values = new float[n];
             Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
@@ -134,7 +128,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>Little-endian i32 blob; NULL for an empty or null array.</summary>
-        internal static byte[] EncodeI32Blob(int[] values)
+        public static byte[] EncodeI32Blob(int[] values)
         {
             if (values == null || values.Length == 0)
                 return null;
@@ -145,16 +139,12 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>Inverse of <see cref="EncodeI32Blob"/>; empty for null.</summary>
-        internal static int[] DecodeI32Blob(byte[] blob)
+        public static int[] DecodeI32Blob(byte[] blob)
         {
             if (blob == null || blob.Length == 0)
                 return Array.Empty<int>();
             if (blob.Length % 4 != 0)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
-                    blob.Length, 4));
-            }
+                throw Damaged(blob.Length, 4);
             var values = new int[blob.Length / 4];
             for (int i = 0; i < values.Length; i++)
                 values[i] = BinaryPrimitives.ReadInt32LittleEndian(new ReadOnlySpan<byte>(blob, i * 4, 4));
@@ -162,7 +152,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>Little-endian u16 blob; NULL for an empty or null array.</summary>
-        internal static byte[] EncodeU16Blob(ushort[] values)
+        public static byte[] EncodeU16Blob(ushort[] values)
         {
             if (values == null || values.Length == 0)
                 return null;
@@ -173,16 +163,12 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>Inverse of <see cref="EncodeU16Blob"/>; empty for null.</summary>
-        internal static ushort[] DecodeU16Blob(byte[] blob)
+        public static ushort[] DecodeU16Blob(byte[] blob)
         {
             if (blob == null || blob.Length == 0)
                 return Array.Empty<ushort>();
             if (blob.Length % 2 != 0)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
-                    blob.Length, 2));
-            }
+                throw Damaged(blob.Length, 2);
             var values = new ushort[blob.Length / 2];
             for (int i = 0; i < values.Length; i++)
                 values[i] = BinaryPrimitives.ReadUInt16LittleEndian(new ReadOnlySpan<byte>(blob, i * 2, 2));
@@ -190,15 +176,22 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>A u8 array is its own blob; NULL for an empty or null array.</summary>
-        internal static byte[] EncodeU8Blob(byte[] values)
+        public static byte[] EncodeU8Blob(byte[] values)
         {
             return values == null || values.Length == 0 ? null : (byte[])values.Clone();
         }
 
         /// <summary>Inverse of <see cref="EncodeU8Blob"/>; empty for null.</summary>
-        internal static byte[] DecodeU8Blob(byte[] blob)
+        public static byte[] DecodeU8Blob(byte[] blob)
         {
             return blob == null || blob.Length == 0 ? Array.Empty<byte>() : (byte[])blob.Clone();
+        }
+
+        private static InvalidDataException Damaged(int length, int elementSize)
+        {
+            return new InvalidDataException(string.Format(
+                ContractsResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                length, elementSize));
         }
     }
 }

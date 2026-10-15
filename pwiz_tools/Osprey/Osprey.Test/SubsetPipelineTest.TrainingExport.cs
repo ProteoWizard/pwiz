@@ -26,6 +26,7 @@ using System.IO.Compression;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -351,7 +352,7 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(records.Count > 0, run + @" exported no precursors");
                 Assert.AreEqual(records.Count.ToString(CultureInfo.InvariantCulture), footer[@"osprey.training_export.rows"]);
                 Assert.AreEqual(run, footer[@"osprey.file_name"]);
-                Assert.AreEqual(runQPass, footer[TrainingExportWriter.KEY_RUN_Q_PASS], run);
+                Assert.AreEqual(runQPass, footer[TrainingExportKeys.RUN_Q_PASS], run);
                 Assert.IsTrue(records.All(r => !r.IsDecoy && r.RunPrecursorQ <= maxQ && r.FileName == run),
                     run + @" exported a decoy, another run's row or a row above the threshold");
                 int fitted = records.Count(r => r.MpFitted);

@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -21,7 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 
@@ -31,28 +31,30 @@ namespace pwiz.CarafeSharp.Test
     /// Hand-built Osprey training records: every ladder ion applicable and in the scan window
     /// (charge 2 ions of a 1+ precursor are not applicable), nothing matched until
     /// <see cref="Match"/>, and the slot of any b or y ion by its ordinal; and the records
-    /// written as an Osprey training export, column by column with Osprey's types.
+    /// written as a training export through the shared writer, or rewritten column by column
+    /// to make a file the writer would not produce.
     /// </summary>
     internal static class OspreyTestRecords
     {
-        public static OspreyTrainingRecord NewRecord(string sequence, int charge)
+        public static TrainingRecord NewRecord(string sequence, int charge)
         {
             int slots = AlphabaseFragmentMz.COLUMN_COUNT * Math.Max(0, sequence.Length - 1);
-            var record = new OspreyTrainingRecord
+            var record = new TrainingRecord
             {
                 FileName = @"run",
                 Sequence = sequence,
                 ModifiedSequence = sequence,
-                Charge = charge,
+                Charge = (byte)charge,
                 ModPositions = Array.Empty<int>(),
                 ModMasses = Array.Empty<double>(),
                 ModUnimodIds = Array.Empty<int>(),
+                NSlots = slots,
                 IonMz = Enumerable.Range(0, slots).Select(s => 300.0 + s).ToArray(),
                 IonFlags = new byte[slots],
                 ApexIntensity = new float[slots],
                 ApexMzError = new float[slots],
                 LibraryRelIntensity = new float[slots],
-                FiniteScanCount = new ushort[slots],
+                NFiniteScans = new ushort[slots],
                 XicStart = new float[slots],
                 XicEnd = new float[slots],
                 XicMax = new float[slots],
@@ -60,30 +62,30 @@ namespace pwiz.CarafeSharp.Test
                 CorrReference = Enumerable.Repeat(float.NaN, slots).ToArray(),
                 PolishRowEffect = new float[slots],
                 PolishR2 = new float[slots],
-                PolishPositiveResidualMax = new float[slots],
+                PolishPosResidMax = new float[slots],
                 PolishApexResidual = new float[slots],
                 PolishOutlierZ = new float[slots],
                 PolishApexRatio = new float[slots],
                 PolishRelIntensity = new float[slots],
-                SharedApexCount = new byte[slots],
-                SharedCoeluteCount = new byte[slots],
+                SharedApexN = new byte[slots],
+                SharedCoeluteN = new byte[slots],
                 MinClaimantQ = Enumerable.Repeat(float.NaN, slots).ToArray(),
-                MedianPolishResidualMad = double.NaN,
+                MpResidualMad = double.NaN,
             };
             for (int slot = 0; slot < slots; slot++)
             {
                 if (IsChargeTwo(slot) && charge < 2)
                     record.IonMz[slot] = double.NaN;
                 else
-                    record.IonFlags[slot] = OspreyIonFlags.APPLICABLE | OspreyIonFlags.IN_SCAN_RANGE;
+                    record.IonFlags[slot] = TrainingIonFlags.APPLICABLE | TrainingIonFlags.IN_SCAN_RANGE;
             }
             return record;
         }
 
         /// <summary>Marks an ion matched at the apex, with the same correlation to both profiles.</summary>
-        public static void Match(OspreyTrainingRecord record, int slot, float intensity, float correlation)
+        public static void Match(TrainingRecord record, int slot, float intensity, float correlation)
         {
-            record.IonFlags[slot] |= OspreyIonFlags.MATCHED_AT_APEX;
+            record.IonFlags[slot] |= TrainingIonFlags.MATCHED_AT_APEX;
             record.ApexIntensity[slot] = intensity;
             record.XicMax[slot] = intensity;
             record.CorrPolish[slot] = correlation;
@@ -91,10 +93,10 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>Matches every charge 1 ion of the ladder with a clean profile, intensity rising with the slot.</summary>
-        public static OspreyTrainingRecord CleanRecord(string sequence, int charge)
+        public static TrainingRecord CleanRecord(string sequence, int charge)
         {
             var record = NewRecord(sequence, charge);
-            for (int slot = 0; slot < record.SlotCount; slot++)
+            for (int slot = 0; slot < record.NSlots; slot++)
             {
                 if (!IsChargeTwo(slot))
                     Match(record, slot, 100 + slot, 0.95f);
@@ -115,73 +117,30 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>Writes the records as a training export at <paramref name="path"/>, <paramref name="rowsPerGroup"/> to a row group.</summary>
-        public static void WriteExport(string path, IReadOnlyList<OspreyTrainingRecord> records,
+        public static void WriteExport(string path, IReadOnlyList<TrainingRecord> records,
             IReadOnlyDictionary<string, string> footer, int rowsPerGroup)
         {
-            ParquetColumns.Write(path, Columns(records), footer, rowsPerGroup);
+            TrainingExportParquet.Write(path, records, footer, false, rowsPerGroup);
         }
 
         /// <summary>
-        /// The export's columns with the types Osprey writes: scalars as their own types, per-ion
-        /// and per-modification arrays as little-endian blobs, an empty array as NULL.
+        /// Rewrites the export at <paramref name="source"/> to <paramref name="path"/> column by
+        /// column, with <paramref name="footer"/> as written (no format version is added) and
+        /// <paramref name="edit"/> applied to the columns: a file the shared writer would never
+        /// produce, for the reader's refusals and its tolerance of an older format.
         /// </summary>
-        public static List<KeyValuePair<string, Array>> Columns(IReadOnlyList<OspreyTrainingRecord> r)
+        public static void Rewrite(string source, string path, IReadOnlyDictionary<string, string> footer,
+            Func<List<KeyValuePair<string, Array>>, List<KeyValuePair<string, Array>>> edit)
         {
-            return new List<KeyValuePair<string, Array>>
-            {
-                Column(@"entry_id", r.Select(x => x.EntryId).ToArray()),
-                Column(@"is_entrapment", r.Select(x => x.IsEntrapment).ToArray()),
-                Column(@"sequence", r.Select(x => x.Sequence).ToArray()),
-                Column(@"modified_sequence", r.Select(x => x.ModifiedSequence).ToArray()),
-                Column(@"mod_positions", r.Select(x => Blob(x.ModPositions)).ToArray()),
-                Column(@"mod_masses", r.Select(x => Blob(x.ModMasses)).ToArray()),
-                Column(@"mod_unimod_ids", r.Select(x => Blob(x.ModUnimodIds)).ToArray()),
-                Column(@"charge", r.Select(x => (byte)x.Charge).ToArray()),
-                Column(@"precursor_mz", r.Select(x => x.PrecursorMz).ToArray()),
-                Column(@"protein_ids", r.Select(x => x.ProteinIds).ToArray()),
-                Column(@"file_name", r.Select(x => x.FileName).ToArray()),
-                Column(@"apex_rt", r.Select(x => x.ApexRt).ToArray()),
-                Column(@"start_rt", r.Select(x => x.StartRt).ToArray()),
-                Column(@"end_rt", r.Select(x => x.EndRt).ToArray()),
-                Column(@"n_peak_scans", r.Select(x => x.PeakScanCount).ToArray()),
-                Column(@"score", r.Select(x => x.Score).ToArray()),
-                Column(@"run_precursor_q", r.Select(x => x.RunPrecursorQ).ToArray()),
-                Column(@"mp_fitted", r.Select(x => x.MedianPolishFitted).ToArray()),
-                Column(@"mp_residual_mad", r.Select(x => x.MedianPolishResidualMad).ToArray()),
-                Column(@"n_same_apex_claimants", r.Select(x => x.SameApexClaimantCount).ToArray()),
-                Column(@"n_coeluting_claimants", r.Select(x => x.CoelutingClaimantCount).ToArray()),
-                Column(@"ion_mz", r.Select(x => Blob(x.IonMz)).ToArray()),
-                Column(@"ion_flags", r.Select(x => Blob(x.IonFlags)).ToArray()),
-                Column(@"apex_intensity", r.Select(x => Blob(x.ApexIntensity)).ToArray()),
-                Column(@"apex_mz_error", r.Select(x => Blob(x.ApexMzError)).ToArray()),
-                Column(@"library_rel_intensity", r.Select(x => Blob(x.LibraryRelIntensity)).ToArray()),
-                Column(@"n_finite_scans", r.Select(x => Blob(x.FiniteScanCount)).ToArray()),
-                Column(@"xic_start", r.Select(x => Blob(x.XicStart)).ToArray()),
-                Column(@"xic_end", r.Select(x => Blob(x.XicEnd)).ToArray()),
-                Column(@"xic_max", r.Select(x => Blob(x.XicMax)).ToArray()),
-                Column(@"corr_polish", r.Select(x => Blob(x.CorrPolish)).ToArray()),
-                Column(@"corr_reference", r.Select(x => Blob(x.CorrReference)).ToArray()),
-                Column(@"polish_row_effect", r.Select(x => Blob(x.PolishRowEffect)).ToArray()),
-                Column(@"polish_r2", r.Select(x => Blob(x.PolishR2)).ToArray()),
-                Column(@"polish_pos_resid_max", r.Select(x => Blob(x.PolishPositiveResidualMax)).ToArray()),
-                Column(@"polish_apex_residual", r.Select(x => Blob(x.PolishApexResidual)).ToArray()),
-                Column(@"polish_outlier_z", r.Select(x => Blob(x.PolishOutlierZ)).ToArray()),
-                Column(@"polish_apex_ratio", r.Select(x => Blob(x.PolishApexRatio)).ToArray()),
-                Column(@"polish_rel_intensity", r.Select(x => Blob(x.PolishRelIntensity)).ToArray()),
-                Column(@"shared_apex_n", r.Select(x => Blob(x.SharedApexCount)).ToArray()),
-                Column(@"shared_coelute_n", r.Select(x => Blob(x.SharedCoeluteCount)).ToArray()),
-                Column(@"min_claimant_q", r.Select(x => Blob(x.MinClaimantQ)).ToArray()),
-            };
+            var names = TrainingExportParquet.ColumnNames(false).ToArray();
+            var read = ParquetColumns.Read(source, names);
+            var columns = names.Select(name => Column(name, read.GetRaw(name))).ToList();
+            ParquetColumns.Write(path, edit(columns), footer, 2);
         }
 
         public static KeyValuePair<string, Array> Column(string name, Array values)
         {
             return new KeyValuePair<string, Array>(name, values);
-        }
-
-        private static byte[] Blob<T>(T[] values) where T : struct
-        {
-            return values.Length == 0 ? null : MemoryMarshal.AsBytes(values.AsSpan()).ToArray();
         }
 
         private static bool IsChargeTwo(int slot)

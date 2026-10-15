@@ -24,6 +24,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.CommonResources;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
@@ -137,7 +138,7 @@ namespace pwiz.CarafeSharp.Test
             string missingZip = Path.Combine(_folder, @"missing.zip");
             // Training checks the library FASTA, the start model and the pretrained models before
             // it creates the output folder or reads an export.
-            string export = Path.Combine(_folder, @"run" + OspreyTrainingExport.FILE_SUFFIX);
+            string export = Path.Combine(_folder, @"run" + TrainingExportParquet.EXT);
             AssertRunError(output, @"-i", export, @"-o", output, @"-db", missingFasta);
             AssertRunError(output, @"-i", export, @"-o", output, @"-ms2_model", Path.Combine(_folder, @"missing.pt"));
             AssertRunError(output, @"-i", export, @"-o", output, @"-pretrained", missingZip);
