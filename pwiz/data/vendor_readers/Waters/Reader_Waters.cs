@@ -153,7 +153,8 @@ public sealed class Reader_Waters : IReader
         // implemented that; the flag was simply never passed, so the SRM data came out twice.
         var chromatogramList = new ChromatogramList_Waters(data, preferOnlyMsLevel,
             srmAsSpectra: srmAsSpectra,
-            globalChromatogramsAreMs1Only: globalChromatogramsAreMs1Only)
+            globalChromatogramsAreMs1Only: globalChromatogramsAreMs1Only,
+            ignoreCalibrationScans: ignoreCalibrationScans)
         { Dp = dpReader };
         result.Run.ChromatogramList = chromatogramList;
     }
