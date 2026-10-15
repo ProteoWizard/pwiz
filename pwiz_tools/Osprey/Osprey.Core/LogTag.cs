@@ -20,6 +20,7 @@
 
 using System;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -191,10 +192,10 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// A sink that writes to <see cref="OspreyOutput.Out"/>, resolved on each line so a
+        /// A sink that writes to <see cref="CommandOutput.Out"/>, resolved on each line so a
         /// per-file scope entered after this was taken still captures the output.
         /// </summary>
-        public static IOspreyLog Out { get; } = new DelegateLog(line => OspreyOutput.Out.WriteLine(line));
+        public static IOspreyLog Out { get; } = new DelegateLog(line => CommandOutput.Out.WriteLine(line));
 
         /// <summary>A sink that discards everything, for an optional log left unset.</summary>
         public static IOspreyLog None { get; } = new DelegateLog(_ => { });

@@ -1,10 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
- *
- * Based on osprey (https://github.com/MacCossLab/osprey)
- *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -27,22 +24,31 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Osprey.Core;
+using pwiz.Common.CommonResources;
+using pwiz.Common.SystemUtil;
+using pwiz.SkylineTestUtil;
 
-namespace pwiz.Osprey.Test
+namespace CommonTest
 {
     /// <summary>
-    /// Unit tests for <see cref="ProgressReporter"/>'s frozen-percent heartbeat: a phase
-    /// advancing slower than 1% per <see cref="ProgressReporter.HEARTBEAT_SECONDS"/> must
-    /// still emit a line so it never looks hung, while a normally-advancing phase must not
-    /// gain heartbeat clutter. The heartbeat interval is injected small/large so the
-    /// timer-driven behavior is deterministic without a real heartbeat-length wait.
+    /// Tests for <see cref="ProgressReporter"/>'s display rules: the frozen-percent heartbeat
+    /// (a phase advancing slower than 1% per <see cref="ProgressReporter.HEARTBEAT_SECONDS"/>
+    /// must still emit a line so it never looks hung, while a normally advancing phase gains no
+    /// heartbeat clutter), and the heading and closing rules of a CLI log. The intervals are
+    /// injected small or large so the timer-driven behavior is deterministic without a real
+    /// heartbeat-length wait.
     /// </summary>
     [TestClass]
-    public class ProgressReporterTest
+    public class ProgressReporterTest : AbstractUnitTest
     {
         [TestMethod]
-        public void TestProgressReporterHeartbeat()
+        public void TestProgressReporter()
+        {
+            TestHeartbeat();
+            TestHeadingAlwaysPrints();
+        }
+
+        private static void TestHeartbeat()
         {
             // Frozen integer percent (1 of 1,000,000 == 0%): after the idle threshold the
             // reporter reprints the current percent with an elapsed parenthetical so the
@@ -50,17 +56,17 @@ namespace pwiz.Osprey.Test
             var frozen = CaptureLines(total: 1000000, intervalSeconds: 0.0, heartbeatSeconds: 0.05,
                 act: p =>
                 {
-                    p.Report(1);            // prints "0%"
-                    Thread.Sleep(150);      // idle past the 0.05 s heartbeat threshold
-                    p.Report(1);            // still 0% -> heartbeat line
+                    p.Report(1);            // Prints "0%"
+                    Thread.Sleep(150);      // Idle past the 0.05 s heartbeat threshold
+                    p.Report(1);            // Still 0% -> heartbeat line
                 });
             // Only the heartbeat line carries the "(... elapsed)" parenthetical; the plain
             // "N%" advance lines and the heading do not. The parenthesis is read from the
             // resource, because Japanese and Chinese write it full-width.
-            StringAssert.Contains(string.Join("\n", frozen), HeartbeatMarker);
+            AssertEx.Contains(string.Join("\n", frozen), HeartbeatMarker);
 
             // A phase that advances on every report but never idles past a (wide) heartbeat
-            // threshold emits only advance lines -- no heartbeat clutter on healthy phases.
+            // threshold emits only advance lines - no heartbeat clutter on healthy phases.
             var fast = CaptureLines(total: 100, intervalSeconds: 0.0, heartbeatSeconds: 999.0,
                 act: p =>
                 {
@@ -68,7 +74,7 @@ namespace pwiz.Osprey.Test
                     p.Report(50);
                     p.Report(75);
                 });
-            Assert.IsFalse(string.Join("\n", fast).Contains(HeartbeatMarker),
+            AssertEx.IsFalse(string.Join("\n", fast).Contains(HeartbeatMarker),
                 "a fast, always-advancing phase should emit no heartbeat line");
         }
 
@@ -79,30 +85,29 @@ namespace pwiz.Osprey.Test
         /// heading plus a 100% that only says it was fast; and a step that showed a percent always
         /// closes with 100%, which the constructor's clamp to the report interval guarantees.
         /// </summary>
-        [TestMethod]
-        public void TestProgressReporterHeadingAlwaysPrints()
+        private static void TestHeadingAlwaysPrints()
         {
             // Inside MinPercentTime, no percent shown: the heading and nothing else. Reported at
             // 50% so this proves the thresholds held back the percent, not an absent Report call.
             var fast = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 60.0);
-            Assert.AreEqual(1, fast.Count, @"a fast step prints only its heading");
-            StringAssert.Contains(fast[0], Heading(@"phase"));
+            AssertEx.AreEqual(1, fast.Count, "a fast step prints only its heading");
+            AssertEx.Contains(fast[0], Heading("phase"));
 
             // Past MinPercentTime but no percent shown (the interval has not elapsed): the
             // heading, then the closing 100%.
             var announced = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 0.0);
-            Assert.AreEqual(2, announced.Count, @"expected the heading and its completion line");
-            StringAssert.Contains(announced[0], Heading(@"phase"));
-            StringAssert.Contains(announced[1], @"100%");
+            AssertEx.AreEqual(2, announced.Count, "expected the heading and its completion line");
+            AssertEx.Contains(announced[0], Heading("phase"));
+            AssertEx.Contains(announced[1], "100%");
 
             // MinPercentTime is clamped to the interval, so a step that showed 50% always closes.
             var partial = CaptureLines(total: 100, intervalSeconds: 0.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 60.0);
-            StringAssert.Contains(partial[0], Heading(@"phase"));
-            StringAssert.Contains(string.Join("\n", partial), @"50%");
-            StringAssert.Contains(partial[partial.Count - 1], @"100%");
+            AssertEx.Contains(partial[0], Heading("phase"));
+            AssertEx.Contains(string.Join("\n", partial), "50%");
+            AssertEx.Contains(partial[partial.Count - 1], "100%");
         }
 
         /// <summary>
@@ -115,18 +120,17 @@ namespace pwiz.Osprey.Test
             double minPercentSeconds = 0.0)
         {
             var writer = new StringWriter();
-            using (OspreyOutput.PushScopedOut(writer))
+            using (CommandOutput.PushScopedOut(writer))
             // minPercent defaults to 0 here so the display tests keep exercising the format at
             // millisecond durations, the same reason they already inject a 0.05 s heartbeat. The
             // suppression behaviour it governs has its own test above.
-            using (var reporter = new ProgressReporter(@"phase", total, string.Empty,
+            using (var reporter = new ProgressReporter("phase", total, string.Empty,
                 intervalSeconds, heartbeatSeconds, minPercentSeconds))
             {
                 act(reporter);
             }
             return writer.ToString()
-                .ReadLines()
-                .Where(line => line.Length > 0)
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
                 .ToList();
         }
 
@@ -139,7 +143,7 @@ namespace pwiz.Osprey.Test
         {
             get
             {
-                string format = OspreyCoreResources.ProgressReporter_Report__0____1_____2___3____4__elapsed_;
+                string format = MessageResources.ProgressReporter_Report__0____1_____2___3____4__elapsed_;
                 int start = format.IndexOf("{1", StringComparison.Ordinal);
                 start = format.IndexOf('}', start) + 1;
                 return format.Substring(start, format.IndexOf("{2", start, StringComparison.Ordinal) - start).Trim();
@@ -152,7 +156,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static string Heading(string activity)
         {
-            return string.Format(OspreyCoreResources.ProgressReporter_ProgressReporter__0____, activity);
+            return string.Format(MessageResources.ProgressReporter_ProgressReporter__0____, activity);
         }
     }
 }

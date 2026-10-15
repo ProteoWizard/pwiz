@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -950,7 +951,7 @@ namespace pwiz.Osprey.FDR
             // above, reading as a second Percolator pass. The score heading below marks the step.
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
-            // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
+            // Progress is log-only (CommandOutput.Out), so the FDR output stays byte-identical.
             using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n))
             {
                 // On a lane: everything about one file that no other file can see.
