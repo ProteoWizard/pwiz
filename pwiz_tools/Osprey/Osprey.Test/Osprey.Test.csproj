@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />
     <ProjectReference Include="..\Osprey.IO\Osprey.IO.csproj" />

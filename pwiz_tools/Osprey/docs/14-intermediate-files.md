@@ -38,7 +38,7 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 | `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB). Serialized once and written identically beside every run whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row |
 | `<stem>.1st-pass.stratum.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides. Absent under every mode but protein-compact. A SECOND file rather than a member of the model sidecar because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadFromAny` merges the two on read, and still falls back to a pre-split model sidecar's embedded copy |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
-| `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
+| `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
 | `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
 
 All artifact paths resolve their directory through `ArtifactPaths`
@@ -592,8 +592,9 @@ For the full HPC orchestration story see 15-hpc-scoring-split.md.
 
 ## 6. BiblioSpec output (`<output>.blib`)
 
-Final SQLite output; see 13-blib-output-schema.md. The C# port reuses ProteoWizard BiblioSpec
-infrastructure where possible (`Osprey.IO/BlibWriter.cs`).
+Final SQLite output; see 13-blib-output-schema.md. Written through the one .blib writer every
+tool of ours shares (`Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs`), with Osprey's tables and
+column values added by `Osprey.IO/OspreyBlibWriter.cs`.
 
 ---
 

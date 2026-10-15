@@ -14,13 +14,14 @@
   <ItemGroup>
     <!-- 1.0.119 to match Osprey and pwiz-sharp. -->
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
-    <!-- Ionic.Zlib for stock-zlib-identical blib peak blobs, as Osprey and Skyline write them. -->
-    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
     <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <!-- The one .blib writer every tool of ours writes the format through; the library writer
+         here is a thin adapter over it, adding Carafe's DecoyPairs table. -->
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
   </ItemGroup>
 
 </Project>

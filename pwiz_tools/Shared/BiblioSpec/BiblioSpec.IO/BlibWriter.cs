@@ -42,7 +42,7 @@ namespace pwiz.BiblioSpec.IO
     /// library either tool writes is the same database for every reader.
     ///
     /// <para>The file is written to a <see cref="SimpleFileSaver"/> temp beside
-    /// <paramref name="path"/> and moved over the final name by <see cref="Complete"/>, so
+    /// <c>path</c> and moved over the final name by <see cref="Complete"/>, so
     /// until then any library already there is left as it is, and a run that stops short
     /// leaves no half-written library. Peak blobs are little-endian float64 m/z and float32
     /// intensity, zlib-compressed (Ionic.Zlib level 6, stock zlib's bytes, as Skyline's own
@@ -216,7 +216,7 @@ namespace pwiz.BiblioSpec.IO
             {
                 command.Parameters.AddWithValue(@"@file", fileName);
                 command.Parameters.AddWithValue(@"@idFile", (object)idFileName ?? DBNull.Value);
-                command.Parameters.AddWithValue(@"@cutoff", cutoffScore.HasValue ? (object)cutoffScore.Value : DBNull.Value);
+                command.Parameters.AddWithValue(@"@cutoff", cutoffScore.HasValue ? cutoffScore.Value : DBNull.Value);
                 command.Parameters.AddWithValue(@"@workflow", workflowType);
                 command.ExecuteNonQuery();
             }
@@ -490,13 +490,16 @@ namespace pwiz.BiblioSpec.IO
                 _insertAnnotations[i]?.Dispose();
                 _insertAnnotations[i] = null;
             }
+            // The tool's prepared statements are on this connection: they go before it does, or
+            // System.Data.SQLite keeps the file open until they are finalized.
+            _extensions?.Dispose();
             _connection?.Dispose();
             _connection = null;
         }
 
         private static object Nullable(double? value)
         {
-            return value.HasValue ? (object)value.Value : DBNull.Value;
+            return value.HasValue ? value.Value : DBNull.Value;
         }
 
         /// <summary>
@@ -522,7 +525,7 @@ namespace pwiz.BiblioSpec.IO
         /// A prepared single-row INSERT whose parameters are set by position, without the name
         /// lookup of <see cref="SQLiteParameterCollection"/>.
         /// </summary>
-        private sealed class PreparedInsert : IDisposable
+        public sealed class PreparedInsert : IDisposable
         {
             private readonly SQLiteCommand _command;
             private readonly SQLiteParameter[] _parameters;

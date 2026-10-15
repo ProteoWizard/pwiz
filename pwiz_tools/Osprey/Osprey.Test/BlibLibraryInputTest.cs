@@ -330,17 +330,17 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void WriteBlib(string path, double[] peaks, params (string ModSeq, string Protein)[] spectra)
         {
-            using (var writer = new BlibWriter(path))
+            using (var writer = new OspreyBlibWriter(path))
             {
                 long fileId = writer.AddSourceFile(@"test.mzML", @"library.blib", 0.01);
                 foreach (var (modSeq, protein) in spectra)
                 {
                     string sequence = new string(StripBrackets(modSeq).Where(char.IsLetter).ToArray());
-                    long refId = writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
-                        peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0);
-                    writer.AddProteinMapping(refId, new[] { protein });
+                    writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
+                        peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0,
+                        proteins: new[] { protein });
                 }
-                writer.FinalizeDatabase();
+                writer.Complete();
             }
             SQLiteConnection.ClearAllPools();
         }
@@ -369,12 +369,12 @@ namespace pwiz.Osprey.Test
             (int PeakIndex, string Name, int Charge)[] annotations)
         {
             long refId;
-            using (var writer = new BlibWriter(path))
+            using (var writer = new OspreyBlibWriter(path))
             {
                 long fileId = writer.AddSourceFile(@"test.mzML", @"library.tsv", 0.01);
                 refId = writer.AddSpectrum(SEQUENCE, modSequence, 525.25, 2, 10.0, 9.0, 11.0,
                     peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0);
-                writer.FinalizeDatabase();
+                writer.Complete();
             }
             using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;"))
             {

@@ -125,9 +125,10 @@ namespace pwiz.BiblioSpec.IO
     /// Tables a tool keeps in its libraries beside BiblioSpec's: Osprey's score and boundary
     /// tables, CarafeSharp's decoy pairs. Created in the same database, before any row is
     /// written, and indexed when the library is completed; their rows go through
-    /// <see cref="BlibWriter.Connection"/> inside the writer's batches.
+    /// <see cref="BlibWriter.Connection"/> inside the writer's batches. The writer disposes it when
+    /// it closes the connection, since prepared statements on that connection must go before it.
     /// </summary>
-    public interface IBlibExtensionTables
+    public interface IBlibExtensionTables : IDisposable
     {
         /// <summary>Creates the tool's tables; the standard tables already exist.</summary>
         void CreateTables(System.Data.SQLite.SQLiteConnection connection);
