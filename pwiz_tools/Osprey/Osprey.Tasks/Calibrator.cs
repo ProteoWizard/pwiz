@@ -25,9 +25,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.ModelDiagnostics;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Tasks
@@ -53,6 +57,9 @@ namespace pwiz.Osprey.Tasks
         private const double MIN_SNR_FOR_RT_CAL = 5.0;
         private const double MIN_COELUTION_CORR_SCORE = 0.5;
         private const int MIN_COELUTION_SPECTRA = 3;
+        // Calibration entries of a window whose candidate spectra are found scan-major at once,
+        // bounding the candidate lists alive per concurrently scored window.
+        private const int CAL_PREFILTER_BLOCK_SIZE = 512;
         private const double CAL_FDR_THRESHOLD = 0.01;
         // Hard floor for LOESS refit in the two-pass calibration
         // refinement. Matches Rust's ABSOLUTE_MIN_CALIBRATION_POINTS
@@ -108,6 +115,33 @@ namespace pwiz.Osprey.Tasks
             // the calibration actually used" semantics.
             public double[] LibRts;
             public double[] MeasuredRts;
+            // The scored calibration match set (all classes: target / decoy /
+            // p_target / p_decoy) and the trained LDA report for THIS pass,
+            // carried forward only when --model-diagnostics is on so
+            // RunCalibration can build the CAL-view per-file diagnostics from
+            // the ACCEPTED pass. Null on a normal run (the model-diagnostics
+            // gate below leaves them unset, so a default run pays nothing).
+            public CalibrationMatch[] DiagnosticMatches;
+            public CalibrationTrainingReport DiagnosticReport;
+        }
+
+        /// <summary>
+        /// Per-thread state of the calibration window loop: its scorer, and the block buffer
+        /// that <see cref="SpectraWindowIndex.LoadWindowSerialRead(int, ref byte[])"/> reuses
+        /// from one window to the next. Both become garbage when the loop ends, so the read
+        /// blocks are not held through the main search the way a shared pool's would be.
+        /// </summary>
+        private class CalibrationWorker
+        {
+            // A field, not a property: the loop passes it by ref to LoadWindowSerialRead.
+            public byte[] ReadBuffer;
+
+            public CalibrationWorker(SpectralScorer scorer)
+            {
+                Scorer = scorer;
+            }
+
+            public SpectralScorer Scorer { get; }
         }
 
         /// <summary>
@@ -161,10 +195,31 @@ namespace pwiz.Osprey.Tasks
 
         private readonly PipelineContext _ctx;
 
+        // Full-library entrapment composition for the --verbose anchor-purity
+        // (entrapment-FDP) diagnostic. Computed once per file in RunCalibration, only
+        // when Verbose. _libTargetSideCount is all IsDecoy==false entries (real Target +
+        // entrapment PTarget); _libEntrapmentCount is the PTarget subset. The FDRBench
+        // ratio is r = entrapment / (target-side - entrapment). Zero on a plain library.
+        private long _libTargetSideCount;
+        private long _libEntrapmentCount;
+
         internal Calibrator(PipelineContext ctx)
         {
             _ctx = ctx;
         }
+
+        /// <summary>
+        /// One calibration scoring pass over the sampled entries, abstracted so the retry
+        /// ladder and the refinement pass are decoupled from the scoring implementation
+        /// (<see cref="ScoreCalibrationMatchesStreaming"/>, which streams each window's
+        /// spectra per pass). ms1Spectra + context are captured by the closure; this carries
+        /// only the per-pass inputs.
+        /// </summary>
+        private delegate (ConcurrentBag<CalibrationMatch> Matches,
+            ConcurrentDictionary<uint, double> SnrByEntryId,
+            ConcurrentDictionary<uint, KeyValuePair<double, double>> MatchRts) ScoreCalibrationPass(
+                int passNumber, List<LibraryEntry> sampledEntries,
+                double rtSlope, double rtIntercept, double tolerance, RTCalibration calibrationModel);
 
         /// <summary>
         /// Run RT calibration using calibration discovery scoring.
@@ -179,18 +234,24 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public RTCalibration RunCalibration(
             List<LibraryEntry> library,
-            List<Spectrum> spectra,
+            SpectraWindowIndex windowIndex,
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             out MzCalibrationResult ms1Calibration,
             out MzCalibrationResult ms2Calibration,
             out int numSampledPrecursors,
-            out double initialRtTolerance)
+            out double initialRtTolerance,
+            out ModelDiagnosticsData.CalFileRow calDiagnostics)
         {
             var config = context.Config;
             // Default to 0 so early returns / exception paths leave the
             // metadata caller in a known state. Overwritten on success.
             numSampledPrecursors = 0;
+            // The CAL-view per-file diagnostics row, built from the ACCEPTED pass
+            // only when --model-diagnostics is on. Null on every failure/fallback
+            // path and on a normal run; the caller only consumes it under
+            // config.ModelDiagnostics.
+            calDiagnostics = null;
             // The wide pre-calibration RT tolerance (the "before" number in the
             // console summary's before-vs-after RT window). Defaults to 0 to keep the
             // out-parameter assigned on any early exit before the initial tolerance is
@@ -199,7 +260,7 @@ namespace pwiz.Osprey.Tasks
             // caller ignores it then since RunCalibration returns null and emits no
             // summary).
             initialRtTolerance = 0.0;
-            _ctx.LogInfo("Running RT calibration...");
+            _ctx.LogInfo(OspreyTasksResources.Calibrator_RunCalibration_Running_RT_calibration___);
 
             // Calculate library and mzML RT ranges
             double libMinRt = double.MaxValue, libMaxRt = double.MinValue;
@@ -208,31 +269,54 @@ namespace pwiz.Osprey.Tasks
             // Target count drives the retry ladder's max_attempts derivation below
             // (Rust pipeline.rs:708-714).
             int nTotalTargets = 0;
+            // --verbose anchor-purity diagnostic: tally the full-library entrapment
+            // composition once, so RunLdaAndCollectPoints can report the entrapment-FDP of
+            // the selected anchors against the FDRBench ratio r. Also computed under
+            // --model-diagnostics, which needs the same ratio r for the CAL-view FDP curve.
+            // Gated so a normal run pays nothing for the per-entry accession scan.
+            bool tallyEntrapment = OspreyOutput.Verbose || config.ModelDiagnostics;
+            _libTargetSideCount = 0;
+            _libEntrapmentCount = 0;
             foreach (var entry in library)
             {
                 if (!entry.IsDecoy)
                 {
                     nTotalTargets++;
+                    if (tallyEntrapment)
+                    {
+                        _libTargetSideCount++;
+                        if (EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                            _libEntrapmentCount++;
+                    }
                     if (entry.RetentionTime < libMinRt)
                         libMinRt = entry.RetentionTime;
                     if (entry.RetentionTime > libMaxRt)
                         libMaxRt = entry.RetentionTime;
                 }
             }
-
-            foreach (var spectrum in spectra)
+            if (tallyEntrapment && _libEntrapmentCount > 0)
             {
-                if (spectrum.RetentionTime < mzmlMinRt)
-                    mzmlMinRt = spectrum.RetentionTime;
-                if (spectrum.RetentionTime > mzmlMaxRt)
-                    mzmlMaxRt = spectrum.RetentionTime;
+                long realTargets = _libTargetSideCount - _libEntrapmentCount;
+                double rLib = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
+                _ctx.LogVerbose(string.Format(
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration_entrapment_library___0__target_side_precursors____1__real_targets____2__,
+                    _libTargetSideCount, realTargets, _libEntrapmentCount, rLib));
+            }
+
+            // MS2 RT range, from the streaming index (every MS2 record's RT in file order).
+            foreach (double rt in windowIndex.AllMs2Rts)
+            {
+                if (rt < mzmlMinRt)
+                    mzmlMinRt = rt;
+                if (rt > mzmlMaxRt)
+                    mzmlMaxRt = rt;
             }
 
             double libRtRange = libMaxRt - libMinRt;
             double mzmlRtRange = mzmlMaxRt - mzmlMinRt;
 
             _ctx.LogVerbose(string.Format(
-                "Library RT range: {0:F1}-{1:F1}, mzML RT range: {2:F1}-{3:F1} min",
+                OspreyTasksResources.Calibrator_RunCalibration_Library_RT_range___0___1___mzML_RT_range___2___3__min,
                 libMinRt, libMaxRt, mzmlMinRt, mzmlMaxRt));
 
             // Linear RT mapping when library and mzML scales differ significantly.
@@ -246,7 +330,7 @@ namespace pwiz.Osprey.Tasks
             {
                 rtSlope = mzmlRtRange / libRtRange;
                 rtIntercept = mzmlMinRt - rtSlope * libMinRt;
-                _ctx.LogInfo(string.Format("RT mapping: slope={0:F4}, intercept={1:F4}",
+                _ctx.LogInfo(string.Format(OspreyTasksResources.Calibrator_RunCalibration_RT_mapping__slope__0___intercept__1_,
                     rtSlope, rtIntercept));
             }
 
@@ -254,7 +338,7 @@ namespace pwiz.Osprey.Tasks
             double initialTolerance = mzmlRtRange * toleranceFraction;
             initialRtTolerance = initialTolerance;
 
-            _ctx.LogVerbose(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
+            _ctx.LogVerbose(string.Format(OspreyTasksResources.Calibrator_RunCalibration_Initial_RT_tolerance___0__min, initialTolerance));
 
             // Available to the caller on every failure path below, so a file that ends
             // up uncalibrated still centres its search window on the library/mzML range
@@ -263,32 +347,13 @@ namespace pwiz.Osprey.Tasks
             context.FallbackRtMap = RTCalibration.FromLinearMapping(
                 libMinRt, libMaxRt, rtSlope, rtIntercept);
 
-            // Group spectra by isolation window center for O(1) window lookup per candidate.
-            var spectraByWindowKey = new Dictionary<int, List<Spectrum>>();
-            foreach (var spectrum in spectra)
-            {
-                int key = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
-                List<Spectrum> list;
-                if (!spectraByWindowKey.TryGetValue(key, out list))
-                {
-                    list = new List<Spectrum>();
-                    spectraByWindowKey[key] = list;
-                }
-                list.Add(spectrum);
-            }
-            // Sort each window's spectra by RT for deterministic XIC extraction.
-            // Array.Sort OK: RT tie hazard, conversion deferred (not a #4362 approved
-            // U-site; the dict lists are re-sorted in place and reused across both
-            // calibration passes, so an in-loop OrderBy reassignment is awkward). Two
-            // spectra within one window sharing an identical RT would be rare; RT values
-            // are per-cycle sampling times. Mirror of the CoelutionScorer RT sort.
-            foreach (var list in spectraByWindowKey.Values)
-                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: (see above) RT tie hazard, conversion deferred; not a #4362 approved U-site
-
-            // Pre-preprocess every window's spectra for XCorr once. The result is a
-            // pure function of the spectra, so it is hoisted out of the attempt and
-            // pass loops (it used to be rebuilt inside every scoring pass).
-            var preprocessedByWindowKey = PreprocessWindowsForXcorr(spectraByWindowKey);
+            // Score each pass by streaming each isolation window's spectra from the on-disk
+            // cache -- load, RT-sort, preprocess, score, release -- so the full ~6 GB MS2 is
+            // never held during calibration (the per-file memory apex).
+            ScoreCalibrationPass scorePass = (passNumber, sampled, slope, intercept, tolerance, model) =>
+                ScoreCalibrationMatchesStreaming(
+                    passNumber, sampled, windowIndex, ms1Spectra, context,
+                    slope, intercept, tolerance, model);
 
             // === Calibration retry ladder (Rust pipeline.rs:700-1271) ===
             // Attempt 1 samples CalibrationSampleSize targets. On shortfall the sample
@@ -299,17 +364,35 @@ namespace pwiz.Osprey.Tasks
             // in [ABSOLUTE_MIN_CALIBRATION_POINTS, MinCalibrationPoints) silently fell
             // back to uncalibrated tolerances where Rust fitted a LOESS -- issue #4401.
             int sampleSize = config.RtCalibration.CalibrationSampleSize;
+            // OSPREY_CAL_SAMPLE_SIZE experimental override: the default ladder samples 100K
+            // and stops once >= MinCalibrationPoints (200) clear -- a MINIMAL sufficient
+            // calibration. On a rich file the true peptides are a small fraction of a large
+            // library (e.g. ~34K present in a 3.17M-entry library), so a 100K random sample
+            // holds only ~1K present peptides and yields only a few hundred anchors. This
+            // override lets us test whether a larger sample surfaces proportionally more
+            // near-zero-FDR anchors (0 = use the config default, no change).
+            if (OspreyEnvironment.CalSampleSizeOverride > 0)
+                sampleSize = OspreyEnvironment.CalSampleSizeOverride;
             double retryFactor = config.RtCalibration.CalibrationRetryFactor;
             int maxAttempts = ComputeMaxAttempts(sampleSize, retryFactor, nTotalTargets);
             int currentSampleSize = sampleSize;
 
-            _ctx.LogVerbose(string.Format(
-                "Calibration: library has {0} targets, requesting {1} per attempt ({2} attempt(s) max)",
-                nTotalTargets,
-                currentSampleSize == 0 || nTotalTargets <= currentSampleSize
-                    ? "all"
-                    : string.Format("{0}", currentSampleSize),
-                maxAttempts));
+            // "All" gets its own sentences rather than filling the number's slot: ja / zh follow
+            // the number with a counter word that does not fit a word.
+            if (currentSampleSize == 0 || nTotalTargets <= currentSampleSize)
+            {
+                _ctx.LogVerbose(CountText.Format(maxAttempts,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all__1_attempt_at_most_,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all_per_attempt__up_to__0__attempts_,
+                    nTotalTargets));
+            }
+            else
+            {
+                _ctx.LogVerbose(CountText.Format(maxAttempts,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2___1_attempt_at_most_,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2__per_attempt__up_to__0__attempts_,
+                    nTotalTargets, currentSampleSize));
+            }
 
             // Best match per library entry, accumulated across attempts. Mirrors
             // Rust's accumulated_matches (pipeline.rs:730).
@@ -334,7 +417,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     _ctx.Diagnostics?.WriteCalSampleDump(context.FileName, sampledEntries);
                     if (_ctx.Diagnostics?.CalSampleOnly ?? false)
-                        OspreyDiagnosticsLog.ExitAfterDump("OSPREY_CAL_SAMPLE_ONLY");
+                        OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CAL_SAMPLE_ONLY");
                 }
                 int nSampledTargets = 0;
                 int nSampledDecoys = 0;
@@ -344,13 +427,12 @@ namespace pwiz.Osprey.Tasks
                         nSampledDecoys++;
                     else nSampledTargets++;
                 }
-                _ctx.LogInfo(string.Format(
-                    "[TIMING] Calibration sampling (attempt {0}/{1}): {2:F2}s ({3} targets + {4} decoys)",
-                    attempt, maxAttempts, swSample.Elapsed.TotalSeconds, nSampledTargets, nSampledDecoys));
+                _ctx.LogInfo(LogTag.TIMING, @"Calibration sampling (attempt {0}/{1}): {2:F2}s ({3} targets + {4} decoys)",
+                    attempt, maxAttempts, swSample.Elapsed.TotalSeconds, nSampledTargets, nSampledDecoys);
 
                 if (nSampledTargets == 0)
                 {
-                    _ctx.LogWarning("No target entries available for calibration sampling.");
+                    _ctx.LogWarning(OspreyTasksResources.Calibrator_RunCalibration_No_target_precursors_are_available_for_calibration_sampling_);
                     ms1Calibration = MzCalibrationResult.Uncalibrated();
                     ms2Calibration = MzCalibrationResult.Uncalibrated();
                     return null;
@@ -358,9 +440,8 @@ namespace pwiz.Osprey.Tasks
 
                 // Score this attempt's sample with the linear pre-fit RT mapping and
                 // the wide initial tolerance (pass-1 semantics).
-                var (matches, snrByEntryId, matchRts) = ScoreCalibrationMatches(
-                    1, sampledEntries, spectraByWindowKey, preprocessedByWindowKey,
-                    ms1Spectra, context, rtSlope, rtIntercept, initialTolerance,
+                var (matches, snrByEntryId, matchRts) = scorePass(
+                    1, sampledEntries, rtSlope, rtIntercept, initialTolerance,
                     null /* calibrationModel: pass 1 uses linear mapping */);
 
                 EmitScoringDumps(1, sampledEntries, matches, matchRts, snrByEntryId);
@@ -373,10 +454,11 @@ namespace pwiz.Osprey.Tasks
                 CalibrationMatch[] matchArray = null;
                 List<double> libRtsDetected = null;
                 List<double> measuredRtsDetected = null;
+                CalibrationTrainingReport calReport = null;
 
                 if (accumulated.Count == 0)
                 {
-                    _ctx.LogWarning("No calibration matches could be scored in pass 1.");
+                    _ctx.LogWarning(OspreyTasksResources.Calibrator_RunCalibration_No_calibration_matches_could_be_scored_in_pass_1_);
                 }
                 else
                 {
@@ -385,7 +467,7 @@ namespace pwiz.Osprey.Tasks
                     matchArray = BuildSortedMatchArray(accumulated);
                     RunLdaAndCollectPoints(
                         1, matchArray, accumulated, context.FileName,
-                        out libRtsDetected, out measuredRtsDetected);
+                        out libRtsDetected, out measuredRtsDetected, out calReport);
                     nConfident = libRtsDetected.Count;
                 }
 
@@ -397,10 +479,10 @@ namespace pwiz.Osprey.Tasks
                 if (decision.Action == CalibrationLadderAction.Retry)
                 {
                     currentSampleSize = decision.NextSampleSize;
-                    _ctx.LogWarning(string.Format(
-                        "Calibration attempt {0} found only {1} confident peptides (need {2}). Retrying with {3} targets...",
-                        attempt, nConfident, config.RtCalibration.MinCalibrationPoints,
-                        currentSampleSize == 0 ? "ALL" : string.Format("{0}", currentSampleSize)));
+                    _ctx.LogWarning(string.Format(currentSampleSize == 0
+                            ? OspreyTasksResources.Calibrator_RunCalibration_Calibration_attempt__0__found_only__1__confident_peptides__need__2____Retrying_with_all_
+                            : OspreyTasksResources.Calibrator_RunCalibration_Calibration_attempt__0__found_only__1__confident_peptides__need__2____Retrying_with__3__,
+                        attempt, nConfident, config.RtCalibration.MinCalibrationPoints, currentSampleSize));
                     continue;
                 }
 
@@ -419,9 +501,9 @@ namespace pwiz.Osprey.Tasks
                     // .calibration.json (PerFileScoringTask derives it from a null
                     // return). See issue #4401 and osprey docs/02-calibration.md.
                     _ctx.LogWarning(string.Format(
-                        "Insufficient calibration points after {0} attempt(s): {1} < {2} minimum for a fit.",
+                        OspreyTasksResources.Calibrator_RunCalibration_Insufficient_calibration_points_for_a_fit___1__found__but_at_least__2__are_needed__,
                         attempt, nConfident, MIN_LINEAR_FIT_POINTS));
-                    _ctx.LogWarning("Calibration pass 1 failed. Using fallback tolerance.");
+                    _ctx.LogWarning(OspreyTasksResources.Calibrator_RunCalibration_Calibration_pass_1_failed__Using_fallback_tolerance_);
                     ms1Calibration = MzCalibrationResult.Uncalibrated();
                     ms2Calibration = MzCalibrationResult.Uncalibrated();
                     return null;
@@ -432,7 +514,7 @@ namespace pwiz.Osprey.Tasks
                     // Final attempt, at or above the fit floor: fit anyway
                     // (Rust pipeline.rs:1028-1036).
                     _ctx.LogWarning(string.Format(
-                        "Calibration: Using {0} peptides (below target of {1} but above minimum of {2})",
+                        OspreyTasksResources.Calibrator_RunCalibration_Calibration__Using__0__peptides__below_target_of__1__but_above_minimum_of__2__,
                         nConfident, config.RtCalibration.MinCalibrationPoints,
                         MIN_LINEAR_FIT_POINTS));
                 }
@@ -447,8 +529,7 @@ namespace pwiz.Osprey.Tasks
                     !HasSufficientRtSpan(libRtsDetected, libMinRt, libMaxRt))
                 {
                     _ctx.LogWarning(string.Format(
-                        "Calibration: {0} points span too little of the library RT range " +
-                        "to determine a slope. Using fallback tolerance.", nConfident));
+                        OspreyTasksResources.Calibrator_RunCalibration_Calibration___0__points_span_too_little_of_the_library_RT_range_to_determine_a_slope__, nConfident));
                     ms1Calibration = MzCalibrationResult.Uncalibrated();
                     ms2Calibration = MzCalibrationResult.Uncalibrated();
                     return null;
@@ -456,7 +537,8 @@ namespace pwiz.Osprey.Tasks
 
                 var pass1 = FitCalibrationPass(
                     1, matchArray, accumulated, libRtsDetected, measuredRtsDetected,
-                    config, decision.EffectiveMinPoints);
+                    config, decision.EffectiveMinPoints,
+                    config.ModelDiagnostics ? calReport : null);
 
                 // A thin fit that lands somewhere the range mapping cannot justify is
                 // worse than no fit: it would re-centre every search window on a wrong
@@ -466,14 +548,13 @@ namespace pwiz.Osprey.Tasks
                     !IsPlausibleLinearFit(pass1.Calibration, rtSlope, mzmlMinRt, mzmlMaxRt))
                 {
                     _ctx.LogWarning(
-                        "Calibration: the linear fit disagrees with the library/mzML RT " +
-                        "range mapping. Using fallback tolerance.");
+                        OspreyTasksResources.Calibrator_RunCalibration_Calibration__the_linear_fit_disagrees_with_the_library_mzML_RT_range_mapping__Using_);
                     pass1 = null;
                 }
 
                 if (pass1 == null)
                 {
-                    _ctx.LogWarning("Calibration pass 1 failed. Using fallback tolerance.");
+                    _ctx.LogWarning(OspreyTasksResources.Calibrator_RunCalibration_Calibration_pass_1_failed__Using_fallback_tolerance_);
                     ms1Calibration = MzCalibrationResult.Uncalibrated();
                     ms2Calibration = MzCalibrationResult.Uncalibrated();
                     return null;
@@ -488,7 +569,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     _ctx.Diagnostics?.WriteLoessInputDump(1, pass1.LibRts, pass1.MeasuredRts);
                     if (_ctx.Diagnostics?.LoessInputOnly ?? false)
-                        OspreyDiagnosticsLog.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
+                        OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_LOESS_INPUT_ONLY");
                 }
 
                 // Rust reports accumulated_matches.len() (pipeline.rs:1250): the
@@ -515,7 +596,7 @@ namespace pwiz.Osprey.Tasks
                     Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
 
                 _ctx.LogVerbose(string.Format(
-                    "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4}, min tolerance {6:F2})",
+                    OspreyTasksResources.Calibrator_RunCalibration_First_pass_RT_tolerance___0__min__MAD__1___robust_SD__2___residual_SD__3____4__points__R_,
                     pass1Tolerance,
                     pass1.Stats.MAD,
                     pass1.Stats.MAD * 1.4826,
@@ -532,19 +613,18 @@ namespace pwiz.Osprey.Tasks
                 if (pass1.Calibration.Method == RTCalibrationMethod.Linear)
                 {
                     _ctx.LogInfo(string.Format(
-                        "Refinement pass skipped: pass 1 used a linear fit ({0} points); " +
-                        "narrowing the window from it would be self-confirming.",
+                        OspreyTasksResources.Calibrator_RunCalibration_RT_calibration_refinement_skipped__the_first_pass_was_a_linear_fit_over__0__points__so_a_,
                         pass1.Stats.NPoints));
                 }
                 else if (pass1Tolerance < initialTolerance * 0.5)
                 {
                     _ctx.LogVerbose(string.Format(
-                        "Calibration refinement: re-scoring with {0:F2} min tolerance (was {1:F1} min)",
+                        OspreyTasksResources.Calibrator_RunCalibration_Calibration_refinement__re_scoring_with__0__min_tolerance__was__1__min_,
                         pass1Tolerance, initialTolerance));
 
                     var pass2 = RunRefinementPass(
-                        sampledEntries, spectraByWindowKey, preprocessedByWindowKey,
-                        ms1Spectra, context, rtSlope, rtIntercept, pass1Tolerance,
+                        scorePass, sampledEntries,
+                        context, rtSlope, rtIntercept, pass1Tolerance,
                         pass1.Calibration /* pass 2 predicts RT via the LOESS fit */);
 
                     if (pass2 != null)
@@ -559,7 +639,7 @@ namespace pwiz.Osprey.Tasks
                             Math.Min(config.RtCalibration.MaxRtTolerance, refinedMadTolerance));
 
                         _ctx.LogVerbose(string.Format(
-                            "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
+                            OspreyTasksResources.Calibrator_RunCalibration_Refined_RT_tolerance___0__min__MAD__1___robust_SD__2___residual_SD__3____4__points__R_2__,
                             refinedTolerance,
                             pass2.Stats.MAD,
                             pass2.Stats.MAD * 1.4826,
@@ -582,8 +662,7 @@ namespace pwiz.Osprey.Tasks
                         if (!refinedLinearOk)
                         {
                             _ctx.LogInfo(string.Format(
-                                "Refined calibration is a linear fit over {0} points that fails the " +
-                                "span/plausibility guards, keeping original calibration",
+                                OspreyTasksResources.Calibrator_RunCalibration_Refined_RT_calibration_rejected__its_linear_fit_over__0__points_covers_too_little_of_the_,
                                 pass2.Stats.NPoints));
                         }
 
@@ -602,29 +681,41 @@ namespace pwiz.Osprey.Tasks
                             }
                             ms1Calibration = pass2.Ms1Calibration;
                             ms2Calibration = pass2.Ms2Calibration;
+                            // CAL-view diagnostics from the ACCEPTED (pass 2) fit:
+                            // its narrowed RT half-window is the tolerance actually
+                            // used, the wide initial window is the "before" number.
+                            if (config.ModelDiagnostics)
+                                calDiagnostics = BuildCalDiagnostics(
+                                    context, pass2, refinedTolerance, initialTolerance);
                             return pass2.Calibration;
                         }
                         _ctx.LogInfo(string.Format(
-                            "Refined calibration not better (R^2 {0:F4} vs {1:F4}), keeping original",
+                            OspreyTasksResources.Calibrator_RunCalibration_Refined_calibration_not_better__R_2__0__vs__1____keeping_original,
                             pass2.Stats.RSquared, pass1.Stats.RSquared));
                     }
                     else
                     {
                         _ctx.LogInfo(string.Format(
-                            "Refinement pass: insufficient points (need {0}), keeping original calibration",
+                            OspreyTasksResources.Calibrator_RunCalibration_Refinement_pass__insufficient_points__need__0____keeping_original_calibration,
                             ABSOLUTE_MIN_CALIBRATION_POINTS));
                     }
                 }
 
                 ms1Calibration = pass1.Ms1Calibration;
                 ms2Calibration = pass1.Ms2Calibration;
+                // CAL-view diagnostics from the ACCEPTED (pass 1) fit: pass1Tolerance
+                // is the RT half-window that will search this file (pass 2 was skipped
+                // or rejected), initialTolerance is the pre-calibration "before" number.
+                if (config.ModelDiagnostics)
+                    calDiagnostics = BuildCalDiagnostics(
+                        context, pass1, pass1Tolerance, initialTolerance);
                 return pass1.Calibration;
             }
 
             // Unreachable: maxAttempts >= 1, and every path inside the loop either
             // returns or continues to a further attempt. Mirrors Rust's
             // unreachable!("Calibration retry loop exited without result").
-            _ctx.LogWarning("Calibration retry loop exited without a result. Using fallback tolerance.");
+            _ctx.LogWarning(OspreyTasksResources.Calibrator_RunCalibration_Calibration_retry_loop_exited_without_a_result__Using_fallback_tolerance_);
             ms1Calibration = MzCalibrationResult.Uncalibrated();
             ms2Calibration = MzCalibrationResult.Uncalibrated();
             return null;
@@ -838,23 +929,20 @@ namespace pwiz.Osprey.Tasks
         /// attempt's sample and does NOT accumulate across attempts.
         /// </summary>
         private CalibrationPassResult RunRefinementPass(
+            ScoreCalibrationPass scorePass,
             List<LibraryEntry> sampledEntries,
-            Dictionary<int, List<Spectrum>> spectraByWindowKey,
-            Dictionary<int, double[][]> preprocessedByWindowKey,
-            List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             double rtSlope, double rtIntercept, double tolerance,
             RTCalibration calibrationModel)
         {
-            var (matches, snrByEntryId, matchRts) = ScoreCalibrationMatches(
-                2, sampledEntries, spectraByWindowKey, preprocessedByWindowKey,
-                ms1Spectra, context, rtSlope, rtIntercept, tolerance, calibrationModel);
+            var (matches, snrByEntryId, matchRts) = scorePass(
+                2, sampledEntries, rtSlope, rtIntercept, tolerance, calibrationModel);
 
             EmitScoringDumps(2, sampledEntries, matches, matchRts, snrByEntryId);
 
             if (matches.Count == 0)
             {
-                _ctx.LogWarning("No calibration matches could be scored in pass 2.");
+                _ctx.LogWarning(OspreyTasksResources.Calibrator_RunRefinementPass_No_calibration_matches_could_be_scored_in_pass_2_);
                 return null;
             }
 
@@ -866,12 +954,12 @@ namespace pwiz.Osprey.Tasks
             var matchArray = BuildSortedMatchArray(refined);
             RunLdaAndCollectPoints(
                 2, matchArray, refined, context.FileName,
-                out var libRtsDetected, out var measuredRtsDetected);
+                out var libRtsDetected, out var measuredRtsDetected, out var calReport);
 
             if (libRtsDetected.Count < ABSOLUTE_MIN_CALIBRATION_POINTS)
             {
                 _ctx.LogWarning(string.Format(
-                    "Insufficient calibration points in pass 2 ({0} < {1}).",
+                    OspreyTasksResources.Calibrator_RunRefinementPass_Insufficient_calibration_points_in_pass_2___0_____1___,
                     libRtsDetected.Count, ABSOLUTE_MIN_CALIBRATION_POINTS));
                 return null;
             }
@@ -895,7 +983,8 @@ namespace pwiz.Osprey.Tasks
             return FitCalibrationPass(
                 2, matchArray, refined, libRtsDetected, measuredRtsDetected,
                 context.Config,
-                Math.Min(libRtsDetected.Count, context.Config.RtCalibration.MinCalibrationPoints));
+                Math.Min(libRtsDetected.Count, context.Config.RtCalibration.MinCalibrationPoints),
+                context.Config.ModelDiagnostics ? calReport : null);
         }
 
         /// <summary>
@@ -918,7 +1007,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx.Diagnostics?.WriteCalWindowsDump(passNumber);
                 if (_ctx.Diagnostics?.CalWindowsOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_CAL_WINDOWS_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CAL_WINDOWS_ONLY");
             }
 
             // Cross-implementation diagnostic: dump per-entry calibration match info
@@ -928,7 +1017,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx.Diagnostics?.WriteCalMatchDump(passNumber, matches, sampledEntries, matchRts, snrByEntryId);
                 if (_ctx.Diagnostics?.CalMatchOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_CAL_MATCH_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CAL_MATCH_ONLY");
             }
         }
 
@@ -1021,12 +1110,38 @@ namespace pwiz.Osprey.Tasks
             Dictionary<uint, AccumulatedMatch> accumulated,
             string fileName,
             out List<double> libRtsDetected,
-            out List<double> measuredRtsDetected)
+            out List<double> measuredRtsDetected,
+            out CalibrationTrainingReport calReport)
         {
             // Train LDA + 1% FDR target-decoy competition.
             var swLda = Stopwatch.StartNew();
-            int nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
+            // Only build the training report when it will actually be consumed: --verbose dumps it
+            // below, --model-diagnostics feeds it to the CAL view. On a normal run use the plain
+            // overload so the per-iteration confident-positive competition (CountPassingTargets) is
+            // not paid for a report nobody reads.
+            int nPassing;
+            if (OspreyOutput.Verbose || _ctx.Config.ModelDiagnostics)
+            {
+                nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false, out calReport);
+            }
+            else
+            {
+                nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
+                calReport = null;
+            }
             swLda.Stop();
+
+            // --verbose: dump the calibration LDA's seed, per-iteration refinement trace,
+            // per-feature contribution, and 1% / 0.1% q yield -- the calibration analog of
+            // the Percolator feature-contribution report.
+            if (OspreyOutput.Verbose && calReport != null)
+            {
+                foreach (string line in calReport.ToReportLines(
+                    string.Format(@"{0} pass {1}", fileName, passNumber)))
+                {
+                    _ctx.LogVerbose(line);
+                }
+            }
 
             int nTargetWins = 0;
             int nDecoyWins = 0;
@@ -1039,12 +1154,24 @@ namespace pwiz.Osprey.Tasks
                     else nTargetWins++;
                 }
             }
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
-                passNumber, swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
-                passNumber, fileName, nTargetWins, nDecoyWins));
+            _ctx.LogInfo(LogTag.TIMING, @"Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
+                passNumber, swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins);
+            _ctx.LogInfo(LogTag.COUNT, @"Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
+                passNumber, fileName, nTargetWins, nDecoyWins);
+
+            // --verbose anchor-purity (entrapment-FDP) diagnostic: of the target-side
+            // anchors that clear the calibration q-gate, how many are FDRBench entrapment
+            // (known-absent shuffles)? This is an INDEPENDENT check on whether the per-run
+            // q<=1% gate actually controls the true error rate -- entrapment are targets in
+            // the target-decoy competition, so they are invisible to the reported q. Only
+            // emitted when the library carries entrapment markers (_libEntrapmentCount>0).
+            if (OspreyOutput.Verbose && _libEntrapmentCount > 0)
+            {
+                long realTargets = _libTargetSideCount - _libEntrapmentCount;
+                double rLib = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
+                foreach (string line in BuildAnchorPurityReport(matchArray, rLib, fileName, passNumber))
+                    _ctx.LogVerbose(line);
+            }
 
             // Cross-implementation diagnostic: dump per-entry LDA discriminant + q-value
             // sorted by entry_id for stable diff with rust_lda_scores.txt. Gated by
@@ -1053,7 +1180,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx.Diagnostics?.WriteLdaScoresDump(passNumber, matchArray);
                 if (_ctx.Diagnostics?.LdaScoresOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_LDA_SCORES_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_LDA_SCORES_ONLY");
             }
 
             // Collect high-confidence target matches that also meet the S/N
@@ -1061,11 +1188,115 @@ namespace pwiz.Osprey.Tasks
             var (libRts, measuredRts) = CollectCalibrationPoints(
                 matchArray, accumulated, passNumber, fileName, nTargetWins);
             _ctx.LogInfo(string.Format(
-                "Calibration pass {0}: {1} RT calibration points (from {2} peptides at 1% FDR)",
+                OspreyTasksResources.Calibrator_RunLdaAndCollectPoints_Calibration_pass__0____1__RT_calibration_points__from__2__peptides_at_1__FDR_,
                 passNumber, libRts.Count, nPassing));
 
             libRtsDetected = libRts;
             measuredRtsDetected = measuredRts;
+        }
+
+        /// <summary>
+        /// Build the --verbose anchor-purity (entrapment-FDP) report for one calibration
+        /// pass: at each q threshold in a sweep (0.1/1/2/5/10%), among the target-side
+        /// anchors that clear that gate, how many are FDRBench entrapment (known-absent
+        /// shuffles)? Reports the raw entrapment fraction plus the ratio-corrected
+        /// lower-bound and combined FDP estimators (see docs/fractional-entrapment.md), so
+        /// the reader can read the yield-vs-true-FDP curve and compare it against the
+        /// claimed q. Purely informational; anchor selection is unaffected.
+        /// </summary>
+        private static IEnumerable<string> BuildAnchorPurityReport(
+            CalibrationMatch[] matchArray, double rLib, string fileName, int passNumber)
+        {
+            // The scored candidate pool (all target-side entries that produced a peak and
+            // entered the LDA) is the denominator context: it shows how many entrapment were
+            // in contention before the gate rejected them.
+            int poolT = 0, poolE = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.IsDecoy)
+                    continue;
+                if (m.IsEntrapment)
+                    poolE++;
+                else poolT++;
+            }
+            var lines = new List<string>
+            {
+                string.Format(
+                    OspreyTasksResources.Calibrator_BuildAnchorPurityReport_____Calibration_anchor_purity___0__pass__1____FDRBench_r__2______,
+                    fileName, passNumber, rLib),
+                TextUtil.GetIndentation(1) + string.Format(
+                    OspreyTasksResources.Calibrator_BuildAnchorPurityReport___scored_pool___0__target_side____1__target____2__entrapment__peaks_entered_LDA_,
+                    poolT + poolE, poolT, poolE),
+            };
+            // q-sweep: each threshold is a point on the yield-vs-entrapment-FDP curve, so a
+            // single run shows how far the gate could loosen before the true FDP degrades
+            // (informs any rank/floor or looser-q anchor-selection change).
+            foreach (double q in new[] { 0.001, 0.01, 0.02, 0.05, 0.10 })
+                lines.Add(AnchorPurityLine(matchArray, q, rLib,
+                    string.Format(@"q<={0,5:0.0%}", q)));
+            return lines;
+        }
+
+        /// <summary>
+        /// Target/entrapment anchor counts and the entrapment-FDP at one q threshold. Internal
+        /// so Osprey.Test can assert the FDP math (docs/fractional-entrapment.md) directly.
+        /// </summary>
+        internal readonly struct AnchorPurityStat
+        {
+            public AnchorPurityStat(int nTarget, int nEntrapment, double rawFraction,
+                double fdpLower, double fdpCombined)
+            {
+                NTarget = nTarget;
+                NEntrapment = nEntrapment;
+                RawFraction = rawFraction;
+                FdpLower = fdpLower;
+                FdpCombined = fdpCombined;
+            }
+            public int NTarget { get; }
+            public int NEntrapment { get; }
+            public int Total => NTarget + NEntrapment;
+            /// <summary>N_E / (N_T + N_E) -- also the lower-bound FDP at r = 1.</summary>
+            public double RawFraction { get; }
+            /// <summary>Ratio-corrected lower bound N_E / (r * (N_T + N_E)).</summary>
+            public double FdpLower { get; }
+            /// <summary>Combined upper bound (1 + 1/r) * N_E / (N_T + N_E).</summary>
+            public double FdpCombined { get; }
+        }
+
+        /// <summary>
+        /// Count the target vs entrapment anchors that clear <paramref name="qThreshold"/> and
+        /// compute the entrapment-FDP estimators (docs/fractional-entrapment.md): the raw
+        /// fraction, the ratio-corrected lower bound, and the combined upper bound. Decoys are
+        /// ignored (target-side anchors only). Internal for direct unit testing of the math.
+        /// </summary>
+        internal static AnchorPurityStat ComputeAnchorPurity(
+            CalibrationMatch[] matchArray, double qThreshold, double rLib)
+        {
+            int nT = 0, nE = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.IsDecoy || m.QValue > qThreshold)
+                    continue;
+                if (m.IsEntrapment)
+                    nE++;
+                else nT++;
+            }
+            int total = nT + nE;
+            double rawFrac = total > 0 ? (double)nE / total : 0.0;
+            double fdpLower = (total > 0 && rLib > 0) ? nE / (rLib * total) : 0.0;
+            double fdpCombined = (total > 0 && rLib > 0) ? (1.0 + 1.0 / rLib) * nE / total : 0.0;
+            return new AnchorPurityStat(nT, nE, rawFrac, fdpLower, fdpCombined);
+        }
+
+        /// <summary>One anchor-purity report line at a q threshold (formats
+        /// <see cref="ComputeAnchorPurity"/>).</summary>
+        private static string AnchorPurityLine(
+            CalibrationMatch[] matchArray, double qThreshold, double rLib, string label)
+        {
+            var s = ComputeAnchorPurity(matchArray, qThreshold, rLib);
+            return TextUtil.GetIndentation(1) + string.Format(
+                OspreyTasksResources.Calibrator_AnchorPurityLine____0____1__anchors____2__target____3__entrapment___entrapment_frac__4____FDP_lower__5__,
+                label, s.Total, s.NTarget, s.NEntrapment, s.RawFraction, s.FdpLower, s.FdpCombined);
         }
 
         /// <summary>
@@ -1079,7 +1310,8 @@ namespace pwiz.Osprey.Tasks
             List<double> libRtsDetected,
             List<double> measuredRtsDetected,
             OspreyConfig config,
-            int minLoessPoints)
+            int minLoessPoints,
+            CalibrationTrainingReport calReport = null)
         {
             // Aggregate MS1 + MS2 mass errors from passing targets only
             // (same LDA + competition + S/N survivors as the RT points;
@@ -1105,13 +1337,13 @@ namespace pwiz.Osprey.Tasks
                 if (plan.LinearFit)
                 {
                     _ctx.LogWarning(string.Format(
-                        "Calibration pass {0}: {1} points is below {2}; fitting a global linear calibration.",
+                        OspreyTasksResources.Calibrator_FitCalibrationPass_Calibration_pass__0____1__points_is_below__2___fitting_a_global_linear_calibration_,
                         passNumber, libRts.Length, LINEAR_FIT_MAX_POINTS));
                 }
                 else if (plan.Bandwidth > config.RtCalibration.LoessBandwidth)
                 {
                     _ctx.LogWarning(string.Format(
-                        "Calibration pass {0}: {1} points is below {2}; widening LOESS bandwidth {3:F2} -> {4:F2} to hold the local window near {5:F0} points.",
+                        OspreyTasksResources.Calibrator_FitCalibrationPass_Calibration_pass__0____1__points_is_below__2___widening_LOESS_bandwidth__3______4__to_,
                         passNumber, libRts.Length, config.RtCalibration.MinCalibrationPoints,
                         config.RtCalibration.LoessBandwidth, plan.Bandwidth,
                         config.RtCalibration.LoessBandwidth * config.RtCalibration.MinCalibrationPoints));
@@ -1140,10 +1372,10 @@ namespace pwiz.Osprey.Tasks
                 swLoess.Stop();
 
                 var stats = rtCal.Stats();
-                _ctx.LogInfo(string.Format("[TIMING] Calibration pass {0} LOESS fit: {1:F2}s",
-                    passNumber, swLoess.Elapsed.TotalSeconds));
+                _ctx.LogInfo(LogTag.TIMING, @"Calibration pass {0} LOESS fit: {1:F2}s",
+                    passNumber, swLoess.Elapsed.TotalSeconds);
                 _ctx.LogVerbose(string.Format(
-                    "RT calibration pass {0}: {1} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
+                    OspreyTasksResources.Calibrator_FitCalibrationPass_RT_calibration_pass__0____1__points__R2__2___residual_SD__3__min__MAD__4_,
                     passNumber, stats.NPoints, stats.RSquared, stats.ResidualSD, stats.MAD));
 
                 return new CalibrationPassResult
@@ -1154,63 +1386,170 @@ namespace pwiz.Osprey.Tasks
                     Ms2Calibration = ms2Cal,
                     LibRts = libRts,
                     MeasuredRts = measuredRts,
+                    // Carry the scored matches + trained report forward only when
+                    // --model-diagnostics is on (calReport non-null); RunCalibration
+                    // builds the CAL-view diagnostics from the accepted pass. On a
+                    // normal run calReport is null, so these stay null (no cost).
+                    DiagnosticMatches = calReport != null ? matchArray : null,
+                    DiagnosticReport = calReport,
                 };
             }
             catch (Exception ex)
             {
                 swLoess.Stop();
-                _ctx.LogWarning(string.Format("RT calibration pass {0} failed: {1}",
+                _ctx.LogWarning(string.Format(OspreyTasksResources.Calibrator_FitCalibrationPass_RT_calibration_pass__0__failed___1_,
                     passNumber, ex.Message));
                 return null;
             }
         }
 
         /// <summary>
-        /// Pre-preprocess all window spectra for XCorr using the calibration
-        /// unit-bin scorer (~2K bins per spectrum, ~16 KB per array).
-        /// Independent of resolution mode -- HRAM 100K-bin arrays would
-        /// consume ~160 GB of LOH for 204K Astral spectra, so we use the
-        /// small unit-bin form for calibration regardless. Main search
-        /// still uses the resolution-mode bins.
-        /// Calibration preprocess runs in pure f32 to match Rust upstream
-        /// maccoss/osprey's native f32 XCorr path (cross-impl parity at
-        /// F10 rounding noise, vs ~4e-6 drift under f64). f32 values are
-        /// widened to double[] here so the downstream XcorrFromPreprocessed
-        /// path is unchanged; the widening is lossless (f32 is a subset of
-        /// f64) and preserves the f32 bit pattern for the final sum.
+        /// Shape the accepted calibration pass into the CAL-view per-file diagnostics
+        /// row for the <c>--model-diagnostics</c> HTML report. Reads the trained LDA
+        /// report (feature names / weights / class means), the scored calibration
+        /// matches (score / q / class), the MS1 / MS2 mass corrections, and the RT-fit
+        /// scalars off <paramref name="accepted"/>, plus the entrapment ratio r from the
+        /// full-library composition tallied in <see cref="RunCalibration"/>. The heavy
+        /// per-match arrays are binned to small histograms / swept curves immediately by
+        /// <see cref="ModelDiagnosticsData.BuildCalFile"/>, so only the compact row is
+        /// retained. Called only under <c>config.ModelDiagnostics</c>; on a normal run
+        /// the accepted pass carries no diagnostic payload and this is never invoked.
         /// </summary>
-        private Dictionary<int, double[][]> PreprocessWindowsForXcorr(
-            Dictionary<int, List<Spectrum>> spectraByWindowKey)
+        private ModelDiagnosticsData.CalFileRow BuildCalDiagnostics(
+            ScoringContext context,
+            CalibrationPassResult accepted,
+            double rtToleranceMin,
+            double rtWindowBefore)
         {
-            var preprocessedByWindowKey = new Dictionary<int, double[][]>();
-            foreach (var kvp in spectraByWindowKey)
+            var report = accepted.DiagnosticReport;
+            var matches = accepted.DiagnosticMatches;
+            // The pass carries no diagnostic payload (calReport was null, or the accepted
+            // pass predates the model-diagnostics plumbing): nothing to shape.
+            if (report == null || matches == null)
+                return null;
+
+            // FDRBench entrapment ratio r = entrapment / (target-side - entrapment),
+            // from the full-library composition tallied at the top of RunCalibration
+            // (tallyEntrapment fires under --model-diagnostics). Zero on a plain library.
+            long realTargets = _libTargetSideCount - _libEntrapmentCount;
+            double r = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
+            bool hasEntrapment = _libEntrapmentCount > 0;
+
+            // Per-match (score, q, class) triples for the composite-score histogram and
+            // the entrapment-FDP / yield sweep. class 0=target, 1=decoy, 2=p_target,
+            // 3=p_decoy (BuildCalFile's contract).
+            int n = matches.Length;
+            var scores = new double[n];
+            var qs = new double[n];
+            var classes = new int[n];
+            for (int i = 0; i < n; i++)
             {
-                var pp = new double[kvp.Value.Count][];
-                for (int i = 0; i < kvp.Value.Count; i++)
-                {
-                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
-                    var widened = new double[f32pp.Length];
-                    for (int k = 0; k < f32pp.Length; k++)
-                        widened[k] = f32pp[k];
-                    pp[i] = widened;
-                }
-                preprocessedByWindowKey[kvp.Key] = pp;
+                var m = matches[i];
+                scores[i] = m.DiscriminantScore;
+                qs[i] = m.QValue;
+                classes[i] = m.IsDecoy
+                    ? (m.IsEntrapment ? 3 : 1)
+                    : (m.IsEntrapment ? 2 : 0);
             }
-            return preprocessedByWindowKey;
+
+            var ms1Cal = accepted.Ms1Calibration;
+            var ms2Cal = accepted.Ms2Calibration;
+            var stats = accepted.Stats;
+
+            // Mass-error unit token shared by both channels ("ppm" or "Th"); ms1 is authoritative,
+            // ms2 covers an uncalibrated ms1 that defaulted its unit.
+            string massUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
+
+            var input = new ModelDiagnosticsData.CalFileInput
+            {
+                File = context.FileName,
+                // A real fit was accepted here (both return sites run past a successful
+                // FitCalibrationPass); the fallback / no-fit paths return null earlier.
+                Calibrated = true,
+
+                FeatureNames = report.FeatureNames,
+                Weights = report.FinalWeights,
+                MeanTarget = report.FeatureMeanTarget,
+                MeanDecoy = report.FeatureMeanDecoy,
+                Degenerate = IsDegenerateCalibrationModel(report),
+
+                MatchScores = scores,
+                MatchQ = qs,
+                MatchClass = classes,
+
+                EntrapmentRatio = r,
+                HasEntrapment = hasEntrapment,
+                MassUnit = massUnit,
+
+                Ms1Mean = ms1Cal?.Mean ?? 0.0,
+                Ms1Sd = ms1Cal?.SD ?? 0.0,
+                Ms1Count = ms1Cal?.Count ?? 0,
+                Ms1Tol = ms1Cal?.AdjustedTolerance ?? 0.0,
+                Ms2Mean = ms2Cal?.Mean ?? 0.0,
+                Ms2Sd = ms2Cal?.SD ?? 0.0,
+                Ms2Count = ms2Cal?.Count ?? 0,
+                Ms2Tol = ms2Cal?.AdjustedTolerance ?? 0.0,
+
+                RtNPoints = stats.NPoints,
+                RtResidualSd = stats.ResidualSD,
+                RtRSquared = stats.RSquared,
+                RtMad = stats.MAD,
+                RtToleranceMin = rtToleranceMin,
+                RtWindowBefore = rtWindowBefore,
+            };
+
+            return ModelDiagnosticsData.BuildCalFile(input);
         }
 
         /// <summary>
-        /// Parallel-score each sampled calibration entry against its isolation
-        /// window, returning the successful matches plus the per-entry S/N and
-        /// (libRt, measuredRt) maps. Emits the pass timing + match-count logs.
+        /// Whether the trained calibration LDA collapsed to a degenerate model: the
+        /// refinement never iterated past the single-feature baseline, its last iteration
+        /// found every CV fold singular, or exactly one feature carries a non-zero weight.
+        /// Any of these leaves the composite discriminant driven by one feature, which the
+        /// Model card flags. Pure over the report; no side effects.
+        /// </summary>
+        private static bool IsDegenerateCalibrationModel(CalibrationTrainingReport report)
+        {
+            // Baseline single feature kept -- no multi-feature refinement ran.
+            if (report.Iterations.Count == 0)
+                return true;
+            // Every fold's LDA was singular on the final iteration.
+            var last = report.Iterations[report.Iterations.Count - 1];
+            if (last.AllFoldsFailed)
+                return true;
+            // Only one feature carries the discriminant.
+            var weights = report.FinalWeights;
+            if (weights == null)
+                return true;
+            int nonZero = 0;
+            foreach (double w in weights)
+            {
+                if (Math.Abs(w) > double.Epsilon)
+                    nonZero++;
+            }
+            return nonZero <= 1;
+        }
+
+        /// <summary>
+        /// Scores each sampled calibration entry by streaming its isolation window from the
+        /// on-disk cache: rather than scoring candidate-parallel against resident per-window
+        /// dictionaries, it resolves each sampled entry to its isolation window (using ONLY the
+        /// index's per-window isolation windows -- no peaks), groups entries by resolved window,
+        /// then scores WINDOW-parallel. Each window's spectra are loaded from the cache,
+        /// RT-sorted, and preprocessed, its assigned entries are scored through the shared
+        /// <see cref="ScoreResolvedCalibrationEntry"/>, and the window is released before the
+        /// next -- so only O(NThreads) windows' peaks are resident at once and the ~6 GB resident
+        /// MS2 never materialises during calibration. Each entry is scored exactly once against
+        /// its window spectra in RT-sorted order, and the downstream accumulator + (base_id,
+        /// entry_id) sort are order-independent, so the parallel-collection order does not change
+        /// the result.
         /// </summary>
         private (ConcurrentBag<CalibrationMatch> Matches,
             ConcurrentDictionary<uint, double> SnrByEntryId,
-            ConcurrentDictionary<uint, KeyValuePair<double, double>> MatchRts) ScoreCalibrationMatches(
+            ConcurrentDictionary<uint, KeyValuePair<double, double>> MatchRts) ScoreCalibrationMatchesStreaming(
                 int passNumber,
                 List<LibraryEntry> sampledEntries,
-                Dictionary<int, List<Spectrum>> spectraByWindowKey,
-                Dictionary<int, double[][]> preprocessedByWindowKey,
+                SpectraWindowIndex windowIndex,
                 List<MS1Spectrum> ms1Spectra,
                 ScoringContext context,
                 double rtSlope, double rtIntercept, double tolerance,
@@ -1220,49 +1559,159 @@ namespace pwiz.Osprey.Tasks
             var resolution = context.Resolution;
             var fileName = context.FileName;
 
-            // Activate per-entry window dump if requested. The rows are added by
-            // ScoreCalibrationEntry below and written by EmitScoringDumps.
+            // Activate per-entry window dump if requested (matches the resident scorer).
             _ctx.Diagnostics?.StartCalWindowCollection();
+
+            // Pre-pass: resolve each entry to a window key WITHOUT loading peaks, grouping
+            // entries by resolved key. Entries with < 2 fragments or no containing window
+            // resolve to nothing -- the same null-returns the resident scorer makes at its
+            // top and window-resolution step -- so they simply produce no match.
+            var entriesByWindow = new Dictionary<int, List<LibraryEntry>>();
+            foreach (var entry in sampledEntries)
+            {
+                if (entry.Fragments == null || entry.Fragments.Count < 2)
+                    continue;
+                if (!TryResolveCalibrationWindow(entry.PrecursorMz, windowIndex, out int resolvedWindowKey))
+                    continue;
+                if (!entriesByWindow.TryGetValue(resolvedWindowKey, out var windowEntries))
+                {
+                    windowEntries = new List<LibraryEntry>();
+                    entriesByWindow[resolvedWindowKey] = windowEntries;
+                }
+                windowEntries.Add(entry);
+            }
 
             var swScoring = Stopwatch.StartNew();
             var matches = new ConcurrentBag<CalibrationMatch>();
             var snrByEntryId = new ConcurrentDictionary<uint, double>();
             var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
 
-            Parallel.ForEach(sampledEntries, new ParallelOptions
+            // Calibration scoring is the one long determinate loop that still ran silent: the
+            // surrounding [TIMING]/[COUNT] lines are gated behind --perf-stats
+            // (LogTag), so a normal run showed nothing between
+            // "Running RT calibration..." and the pass summary -- ~40 s per file, ~50 min
+            // across an 82-file run.
+            int windowsDone = 0;
+            bool serialReads = OspreyEnvironment.SerialWindowReads;
+            using (var progress = new ProgressReporter(
+                       OspreyTasksResources.Calibrator_private_Scoring_calibration_windows, entriesByWindow.Count, @"  "))
             {
-                MaxDegreeOfParallelism = config.NThreads
-            },
-            () => resolution.CreateScorer(),
-            (entry, loopState, localScorer) =>
-            {
-                double entrySnr;
-                double entryLibRt;
-                double entryMeasuredRt;
-                var match = ScoreCalibrationEntry(
-                    entry, spectraByWindowKey, preprocessedByWindowKey, ms1Spectra, context,
-                    rtSlope, rtIntercept, tolerance,
-                    calibrationModel,
-                    localScorer,
-                    out entrySnr, out entryLibRt, out entryMeasuredRt);
-                if (match != null)
-                {
-                    matches.Add(match);
-                    snrByEntryId[entry.Id] = entrySnr;
-                    matchRts[entry.Id] = new KeyValuePair<double, double>(
-                        entryLibRt, entryMeasuredRt);
-                }
-                return localScorer;
-            },
-            localScorer => { });
+                Parallel.ForEach(entriesByWindow, new ParallelOptions
+                    {
+                        MaxDegreeOfParallelism = config.NThreads
+                    },
+                    () => new CalibrationWorker(resolution.CreateScorer()),
+                    (kvp, loopState, worker) =>
+                    {
+                        // Load, RT-sort, and preprocess this window's spectra so the XCorr cache
+                        // aligns with the RT-sorted spectra order used for scoring. One block read
+                        // at a time: the first calibration pass is often the first read of a cache
+                        // that already existed, which on a spinning disk parallel LoadWindow calls
+                        // make seek between threads. Later passes find it warm and pay ~0.5 s.
+                        var windowSpectra = serialReads
+                            ? windowIndex.LoadWindowSerialRead(kvp.Key, ref worker.ReadBuffer)
+                            : windowIndex.LoadWindow(kvp.Key);
+                        windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: calibration RT-only sort tie behaviour
+                        // s_calXcorrScorer is shared across the window-parallel bodies here, so
+                        // PreprocessSpectrumForXcorrF32 MUST remain stateless (a pure function of its
+                        // input spectrum) -- adding per-call scratch state on the scorer would race.
+                        var windowPreprocessed = new float[windowSpectra.Count][];
+                        for (int i = 0; i < windowSpectra.Count; i++)
+                            windowPreprocessed[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(windowSpectra[i]);
+
+                        var windowEntries = kvp.Value;
+                        var expectedRts = new double[windowEntries.Count];
+                        for (int e = 0; e < windowEntries.Count; e++)
+                            expectedRts[e] = ExpectedCalibrationRt(windowEntries[e], rtSlope, rtIntercept, calibrationModel);
+                        // Scan-major candidate spectra for one block of entries at a time, in
+                        // their original order, so only one block's lists are alive at once.
+                        int blockSize = OspreyEnvironment.ScanMajorCalPrefilter
+                            ? CAL_PREFILTER_BLOCK_SIZE
+                            : windowEntries.Count;
+                        for (int blockStart = 0; blockStart < windowEntries.Count; blockStart += blockSize)
+                        {
+                            int blockEnd = Math.Min(windowEntries.Count, blockStart + blockSize);
+                            var candidateIndices = OspreyEnvironment.ScanMajorCalPrefilter
+                                ? FindCalibrationCandidatesScanMajor(windowEntries, blockStart, blockEnd,
+                                    expectedRts, windowSpectra, tolerance, config.FragmentTolerance)
+                                : null;
+                            for (int e = blockStart; e < blockEnd; e++)
+                            {
+                                var entry = windowEntries[e];
+                                var match = ScoreResolvedCalibrationEntry(
+                                    entry, expectedRts[e], candidateIndices?[e - blockStart], windowSpectra,
+                                    windowPreprocessed, ms1Spectra, context, rtSlope, rtIntercept, tolerance,
+                                    calibrationModel, worker.Scorer,
+                                    out double entrySnr, out double entryLibRt, out double entryMeasuredRt);
+                                if (match != null)
+                                {
+                                    matches.Add(match);
+                                    snrByEntryId[entry.Id] = entrySnr;
+                                    matchRts[entry.Id] = new KeyValuePair<double, double>(
+                                        entryLibRt, entryMeasuredRt);
+                                }
+                            }
+                        }
+                        progress.Report(Interlocked.Increment(ref windowsDone));
+                        return worker;
+                    },
+                    worker => { });
+            }
             swScoring.Stop();
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
-                passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
-                passNumber, fileName, matches.Count));
+            _ctx.LogInfo(LogTag.TIMING, @"Calibration pass {0} scoring: {1:F2}s ({2} matches)",
+                passNumber, swScoring.Elapsed.TotalSeconds, matches.Count);
+            _ctx.LogInfo(LogTag.COUNT, @"Calibration pass {0} matches scored [{1}]: {2}",
+                passNumber, fileName, matches.Count);
             return (matches, snrByEntryId, matchRts);
+        }
+
+        /// <summary>
+        /// Resolve a precursor m/z to its calibration isolation-window key using the index's
+        /// per-window isolation windows -- reproducing the resident window resolution (direct
+        /// key + <c>Contains</c> collision guard, then the neighbour +/-1 keys taken without a
+        /// Contains check, then a linear scan in file-encounter order) WITHOUT loading peaks.
+        /// Returns false when no window resolves (the entry produces no match).
+        /// </summary>
+        internal static bool TryResolveCalibrationWindow(
+            double precursorMz, SpectraWindowIndex windowIndex, out int resolvedWindowKey)
+        {
+            int windowKey = (int)Math.Round(precursorMz * 10.0);
+            if (windowIndex.TryGetWindowIsolation(windowKey, out var iso))
+            {
+                // Direct hit: honour the key-collision guard (the window that rounds to this
+                // key does not actually contain the precursor -> no match).
+                if (!iso.Contains(precursorMz))
+                {
+                    resolvedWindowKey = 0;
+                    return false;
+                }
+                resolvedWindowKey = windowKey;
+                return true;
+            }
+            // Neighbour keys (off-by-one from rounding) are taken WITHOUT a Contains check,
+            // matching the resident TryGetValue(windowKey +/- 1) fallback.
+            if (windowIndex.TryGetWindowIsolation(windowKey - 1, out _))
+            {
+                resolvedWindowKey = windowKey - 1;
+                return true;
+            }
+            if (windowIndex.TryGetWindowIsolation(windowKey + 1, out _))
+            {
+                resolvedWindowKey = windowKey + 1;
+                return true;
+            }
+            // Linear scan across windows that contain this precursor, in file-encounter order
+            // (the resident dictionary's insertion/enumeration order).
+            foreach (int key in windowIndex.WindowKeysInFileOrder)
+            {
+                if (windowIndex.TryGetWindowIsolation(key, out var scanIso) && scanIso.Contains(precursorMz))
+                {
+                    resolvedWindowKey = key;
+                    return true;
+                }
+            }
+            resolvedWindowKey = 0;
+            return false;
         }
 
         /// <summary>
@@ -1302,14 +1751,13 @@ namespace pwiz.Osprey.Tasks
 
             if (nSnrFiltered > 0)
             {
-                _ctx.LogVerbose(string.Format(
-                    "  RT quality filter (pass {0}): {1} -> {2} peptides (removed {3} with S/N < {4:F1})",
+                _ctx.LogVerbose(TextUtil.GetIndentation(1) + string.Format(
+                    OspreyTasksResources.Calibrator_private___RT_quality_filter__pass__0_____1______2__peptides__removed__3__with_S_N____4__,
                     passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }
 
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
-                passNumber, fileName, libRtsDetected.Count));
+            _ctx.LogInfo(LogTag.COUNT, @"Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
+                passNumber, fileName, libRtsDetected.Count);
 
             return (libRtsDetected, measuredRtsDetected);
         }
@@ -1350,17 +1798,18 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx.Diagnostics?.WriteMs2CalErrorsDump(contributingMatches);
                 if (_ctx.Diagnostics?.Ms2CalErrorsOnly ?? false)
-                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_MS2_CAL_ERRORS_ONLY");
             }
-            string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
+            string unitStr = MzCalibration.GetUnitToken(config.FragmentTolerance.Unit);
+            string unitText = config.FragmentTolerance.Unit.GetLocalizedString();
             ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
             ms2Calibration = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
             _ctx.LogVerbose(string.Format(
-                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} precursor matches)",
-                passNumber, ms1Calibration.Mean, unitStr, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
+                OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS1_calibration__pass__0____mean__1___2___SD__3___2___3_SD__4___2___n__5__precursor_,
+                passNumber, ms1Calibration.Mean, unitText, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
             _ctx.LogVerbose(string.Format(
-                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} fragment matches)",
-                passNumber, ms2Calibration.Mean, unitStr, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
+                OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_calibration__pass__0____mean__1___2___SD__3___2___3_SD__4___2___n__5__fragment_,
+                passNumber, ms2Calibration.Mean, unitText, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
         }
 
         /// <summary>
@@ -1531,20 +1980,28 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Score a single library entry for calibration: extract fragment XICs across
-        /// spectra in the entry's isolation window that fall within the initial RT
-        /// tolerance, detect the best co-eluting peak, and compute the four LDA
-        /// features at the apex (correlation, LibCosine, top-6 matched, XCorr).
-        /// Returns null if the entry has no viable peak.
-        /// On pass 1 (calibrationModel == null), expectedRt is computed from the
-        /// linear (rtSlope * library_rt + rtIntercept) mapping. On pass 2, the
-        /// LOESS-fitted RTCalibration is used to predict expected_rt and the
-        /// (refined) tolerance is much tighter.
+        /// Score one calibration entry against its ALREADY-RESOLVED isolation window --
+        /// the window-confined tail that scores a single library entry for calibration:
+        /// extract fragment XICs across the window's spectra within the initial RT
+        /// tolerance, detect the best co-eluting peak, and compute the four LDA features at
+        /// the apex (correlation, LibCosine, top-6 matched, XCorr). Returns null if the entry
+        /// has no viable peak. <paramref name="expectedRt"/> is the caller's
+        /// <see cref="ExpectedCalibrationRt"/>, the same value its scan-major candidate search
+        /// used: on pass 1 (calibrationModel == null) the linear
+        /// (rtSlope * library_rt + rtIntercept) mapping; on pass 2 the LOESS-fitted
+        /// <see cref="RTCalibration"/> prediction, with a much tighter tolerance.
+        /// <paramref name="windowSpectra"/> is the resolved window's spectra in RT-sorted
+        /// order; <paramref name="windowPreprocessed"/> its matching XCorr cache (same
+        /// order, may be null). <paramref name="precomputedCandidateIndices"/>, when not null, is
+        /// the entry's <see cref="FindCalibrationCandidatesScanMajor"/> result, which replaces the
+        /// per-entry RT and top-6 fragment filter.
         /// </summary>
-        private CalibrationMatch ScoreCalibrationEntry(
+        private CalibrationMatch ScoreResolvedCalibrationEntry(
             LibraryEntry entry,
-            Dictionary<int, List<Spectrum>> spectraByWindowKey,
-            Dictionary<int, double[][]> preprocessedByWindowKey,
+            double expectedRt,
+            List<int> precomputedCandidateIndices,
+            List<Spectrum> windowSpectra,
+            float[][] windowPreprocessed,
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             double rtSlope, double rtIntercept, double initialTolerance,
@@ -1559,49 +2016,6 @@ namespace pwiz.Osprey.Tasks
             libraryRt = entry.RetentionTime;
             measuredRt = 0.0;
 
-            if (entry.Fragments == null || entry.Fragments.Count < 2)
-                return null;
-
-            // Find spectra in the entry's isolation window.
-            int windowKey = (int)Math.Round(entry.PrecursorMz * 10.0);
-            List<Spectrum> windowSpectra;
-            if (!spectraByWindowKey.TryGetValue(windowKey, out windowSpectra))
-            {
-                // Try neighbouring window keys (handles off-by-one due to rounding).
-                if (!spectraByWindowKey.TryGetValue(windowKey - 1, out windowSpectra) &&
-                    !spectraByWindowKey.TryGetValue(windowKey + 1, out windowSpectra))
-                {
-                    // Fall back to linear scan across windows that contain this precursor.
-                    windowSpectra = null;
-                    foreach (var kvp in spectraByWindowKey)
-                    {
-                        var first = kvp.Value[0];
-                        if (first.IsolationWindow.Contains(entry.PrecursorMz))
-                        {
-                            windowSpectra = kvp.Value;
-                            break;
-                        }
-                    }
-                    if (windowSpectra == null)
-                        return null;
-                }
-            }
-            else if (!windowSpectra[0].IsolationWindow.Contains(entry.PrecursorMz))
-            {
-                // Key collision where the actual isolation window doesn't contain this precursor.
-                return null;
-            }
-
-            // Compute expected RT for this library entry.
-            // Pass 1 (calibrationModel == null): use the linear pre-fit mapping
-            //     rtSlope * library_rt + rtIntercept
-            // Pass 2 (calibrationModel != null): use the LOESS-fitted prediction
-            //     rtCalibration.Predict(library_rt)
-            // Matches Rust's predict_fn pattern in pipeline.rs:740.
-            double expectedRt = calibrationModel != null
-                ? calibrationModel.Predict(entry.RetentionTime)
-                : entry.RetentionTime * rtSlope + rtIntercept;
-
             // Diagnostic: record per-entry m/z + RT window selection.
             // C# selects ONE window per entry (the first match in dictionary order),
             // unlike Rust which scores in ALL matching windows. Capturing this here
@@ -1615,45 +2029,13 @@ namespace pwiz.Osprey.Tasks
                     expectedRt + initialTolerance);
             }
 
-            // Resolve the actual window key that was used (may differ from primary
-            // due to neighbour-key or linear-scan fallback).
-            int resolvedWindowKey = windowKey;
-            if (!spectraByWindowKey.ContainsKey(windowKey))
-            {
-                if (spectraByWindowKey.ContainsKey(windowKey - 1))
-                    resolvedWindowKey = windowKey - 1;
-                else if (spectraByWindowKey.ContainsKey(windowKey + 1))
-                    resolvedWindowKey = windowKey + 1;
-                else
-                {
-                    // Linear scan fallback - find the key that matched
-                    foreach (var kvp in spectraByWindowKey)
-                    {
-                        if (kvp.Value == windowSpectra)
-                        {
-                            resolvedWindowKey = kvp.Key;
-                            break;
-                        }
-                    }
-                }
-            }
-
             // Filter by RT tolerance and top-6 fragment prefilter.
             // Track window indices for preprocessed XCorr lookup.
-            var candidateSpectra = new List<Spectrum>();
-            var candidateWindowIndices = new List<int>();
-            double[][] windowPreprocessed = null;
-            preprocessedByWindowKey.TryGetValue(resolvedWindowKey, out windowPreprocessed);
-            for (int si = 0; si < windowSpectra.Count; si++)
-            {
-                var spec = windowSpectra[si];
-                if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
-                    continue;
-                if (!FragmentMath.HasTopNFragmentMatch(entry, spec.Mzs, config.FragmentTolerance))
-                    continue;
-                candidateSpectra.Add(spec);
-                candidateWindowIndices.Add(si);
-            }
+            var candidateWindowIndices = precomputedCandidateIndices ??
+                FindCalibrationCandidates(entry, expectedRt, windowSpectra, initialTolerance, config.FragmentTolerance);
+            var candidateSpectra = new List<Spectrum>(candidateWindowIndices.Count);
+            foreach (int si in candidateWindowIndices)
+                candidateSpectra.Add(windowSpectra[si]);
 
             if (candidateSpectra.Count < MIN_COELUTION_SPECTRA)
                 return null;
@@ -1815,10 +2197,25 @@ namespace pwiz.Osprey.Tasks
             // MS1 precursor mass error at apex for MS1 mass calibration.
             double? ms1Error = ComputeMs1MassError(entry, ms1Spectra, apexRt, config);
 
+            // Median-polish library cosine (OSPREY_CAL_MEDIANPOLISH lever): the dominant
+            // full-search Percolator feature, computed over the same peak-cropped top-N
+            // XICs the calibrator already extracted -- the crop mirrors the full search's
+            // CoelutionScorer.ScoreCandidate. Off by default (no compute, no output change).
+            double medianPolishCosine = 0.0;
+            if (OspreyEnvironment.CalMedianPolishFeature)
+                medianPolishCosine = ComputeCalibrationMedianPolishCosine(entry, xics, bestPeak);
+
             return new CalibrationMatch
             {
                 EntryId = entry.Id,
                 IsDecoy = entry.IsDecoy,
+                // Entrapment class recovered from the library accessions (FDRBench _p_target
+                // marker). Pure diagnostic tag for the --verbose / --model-diagnostics anchor-purity
+                // report; unused by scoring/selection, so output is unchanged. Gated on those
+                // diagnostics so a normal run pays nothing for the per-entry accession scan (mirrors
+                // the library-composition tally gate). False when the tag is not being collected.
+                IsEntrapment = (OspreyOutput.Verbose || _ctx.Config.ModelDiagnostics) &&
+                               EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
                 Sequence = entry.Sequence,
                 ScanNumber = apexSpectrum.ScanNumber,
                 CorrelationScore = bestCorrSum,
@@ -1826,11 +2223,168 @@ namespace pwiz.Osprey.Tasks
                 Top6MatchedApex = top6Matched,
                 XcorrScore = xcorrApex,
                 IsotopeCosine = 0.0,
+                MedianPolishCosine = medianPolishCosine,
                 DiscriminantScore = bestCorrSum,
                 QValue = 1.0,
                 Ms2MassErrors = ms2Errors.ToArray(),
                 Ms1Error = ms1Error
             };
+        }
+
+        /// <summary>
+        /// The measured RT a calibration entry is expected at: the LOESS prediction on pass 2
+        /// (<paramref name="calibrationModel"/> not null), the linear pre-fit mapping on pass 1.
+        /// Matches Rust's predict_fn pattern in pipeline.rs:740.
+        /// </summary>
+        private static double ExpectedCalibrationRt(LibraryEntry entry,
+            double rtSlope, double rtIntercept, RTCalibration calibrationModel)
+        {
+            return calibrationModel != null
+                ? calibrationModel.Predict(entry.RetentionTime)
+                : entry.RetentionTime * rtSlope + rtIntercept;
+        }
+
+        /// <summary>
+        /// The window indices of the spectra a calibration entry is scored against, ascending:
+        /// those within <paramref name="initialTolerance"/> of <paramref name="expectedRt"/>
+        /// that hold at least 2 of the entry's top-6 fragments
+        /// (<see cref="FragmentMath.HasTopNFragmentMatch(LibraryEntry, Spectrum, FragmentToleranceConfig)"/>).
+        /// </summary>
+        internal static List<int> FindCalibrationCandidates(LibraryEntry entry, double expectedRt,
+            List<Spectrum> windowSpectra, double initialTolerance, FragmentToleranceConfig fragmentTolerance)
+        {
+            var candidateWindowIndices = new List<int>();
+            for (int si = 0; si < windowSpectra.Count; si++)
+            {
+                var spec = windowSpectra[si];
+                if (Math.Abs(spec.RetentionTime - expectedRt) > initialTolerance)
+                    continue;
+                if (!FragmentMath.HasTopNFragmentMatch(entry, spec, fragmentTolerance))
+                    continue;
+                candidateWindowIndices.Add(si);
+            }
+            return candidateWindowIndices;
+        }
+
+        /// <summary>
+        /// <see cref="FindCalibrationCandidates"/> for the entries of a window in
+        /// [<paramref name="blockStart"/>, <paramref name="blockEnd"/>) at once, scan-major:
+        /// the outer loop walks the RT-sorted window spectra, the inner loop the entries whose RT
+        /// range covers that spectrum, so each spectrum is probed for all of them while its arrays
+        /// are in cache, instead of once per entry. Each entry's top-6 fragment windows are
+        /// computed once. Returns one list per block entry (index e - blockStart), equal to what
+        /// <see cref="FindCalibrationCandidates"/> returns for entry e given
+        /// <paramref name="expectedRts"/>[e]: the same RT test and fragment test on each spectrum,
+        /// with indices appended in ascending order.
+        /// </summary>
+        internal static List<int>[] FindCalibrationCandidatesScanMajor(List<LibraryEntry> entries,
+            int blockStart, int blockEnd, double[] expectedRts, List<Spectrum> windowSpectra,
+            double initialTolerance, FragmentToleranceConfig fragmentTolerance)
+        {
+            int nEntries = blockEnd - blockStart;
+            int nScans = windowSpectra.Count;
+            var candidateIndices = new List<int>[nEntries];
+            // With finite RTs in ascending order, the spectra passing the RT test form one
+            // contiguous run, found by binary search. Otherwise (a NaN or infinite RT anywhere)
+            // every entry walks the whole window. The exact RT test is applied either way.
+            bool rtsSearchable = double.IsFinite(initialTolerance);
+            for (int s = 0; s < nScans && rtsSearchable; s++)
+            {
+                double rt = windowSpectra[s].RetentionTime;
+                if (!double.IsFinite(rt) || (s > 0 && rt < windowSpectra[s - 1].RetentionTime))
+                    rtsSearchable = false;
+            }
+
+            const int STRIDE = FragmentMath.TOP_N_WINDOW_VALUES;
+            var fragmentWindows = new double[nEntries * STRIDE];
+            var fragmentWindowCounts = new int[nEntries];
+            var endScans = new int[nEntries];
+            var startScans = new int[nEntries];
+            // Entries entering at each scan, as a counting sort on start scan.
+            var enterOffsets = new int[nScans + 1];
+            for (int e = 0; e < nEntries; e++)
+            {
+                candidateIndices[e] = new List<int>();
+                fragmentWindowCounts[e] = FragmentMath.GetTopNFragmentWindows(entries[blockStart + e],
+                    fragmentTolerance, new Span<double>(fragmentWindows, e * STRIDE, STRIDE));
+                int startScan = 0, endScan = nScans;
+                double expectedRt = expectedRts[blockStart + e];
+                if (rtsSearchable && double.IsFinite(expectedRt))
+                {
+                    startScan = FirstScanPastRtOffset(windowSpectra, expectedRt, -initialTolerance, true);
+                    endScan = FirstScanPastRtOffset(windowSpectra, expectedRt, initialTolerance, false);
+                }
+                startScans[e] = startScan;
+                endScans[e] = endScan;
+                if (startScan < endScan)
+                    enterOffsets[startScan + 1]++;
+            }
+            for (int s = 0; s < nScans; s++)
+                enterOffsets[s + 1] += enterOffsets[s];
+            var entering = new int[enterOffsets[nScans]];
+            var fillPos = (int[])enterOffsets.Clone();
+            for (int e = 0; e < nEntries; e++)
+            {
+                if (startScans[e] < endScans[e])
+                    entering[fillPos[startScans[e]]++] = e;
+            }
+
+            var active = new int[entering.Length];
+            int nActive = 0;
+            for (int s = 0; s < nScans; s++)
+            {
+                for (int i = enterOffsets[s]; i < enterOffsets[s + 1]; i++)
+                    active[nActive++] = entering[i];
+                if (nActive == 0)
+                    continue;
+
+                var spectrum = windowSpectra[s];
+                double rt = spectrum.RetentionTime;
+                int a = 0;
+                while (a < nActive)
+                {
+                    int e = active[a];
+                    if (s >= endScans[e])
+                    {
+                        // Out of range: swap the last active entry into this slot. Visiting
+                        // order within a scan does not affect any entry's list.
+                        active[a] = active[--nActive];
+                        continue;
+                    }
+                    if (!(Math.Abs(rt - expectedRts[blockStart + e]) > initialTolerance) &&
+                        FragmentMath.HasTopNFragmentMatch(
+                            new ReadOnlySpan<double>(fragmentWindows, e * STRIDE, fragmentWindowCounts[e]),
+                            spectrum))
+                    {
+                        candidateIndices[e].Add(s);
+                    }
+                    a++;
+                }
+            }
+            return candidateIndices;
+        }
+
+        /// <summary>
+        /// The first index whose RT minus <paramref name="expectedRt"/> exceeds
+        /// <paramref name="offset"/> (or equals it, with <paramref name="orEqual"/>), over spectra
+        /// with finite, ascending RTs. The rounded difference is monotone in the RT, so the
+        /// predicate flips once.
+        /// </summary>
+        private static int FirstScanPastRtOffset(List<Spectrum> spectra, double expectedRt,
+            double offset, bool orEqual)
+        {
+            int lo = 0, hi = spectra.Count;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                double diff = spectra[mid].RetentionTime - expectedRt;
+                bool past = orEqual ? diff >= offset : diff > offset;
+                if (past)
+                    hi = mid;
+                else
+                    lo = mid + 1;
+            }
+            return lo;
         }
 
         /// <summary>
@@ -1877,6 +2431,49 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Median-polish library cosine for a calibration candidate: crops the top-N
+        /// fragment XICs to the chosen peak and runs the same Tukey median-polish + library
+        /// cosine the full search uses (CoelutionScorer.ScoreCandidate, maxIter=10, tol=0.01).
+        /// XicData.FragmentIndex carries the raw entry.Fragments index, which LibCosine maps
+        /// back to library intensities. Returns 0.0 when the peak is too short (&lt; 3 scans)
+        /// or the fit is degenerate. Only called under the OSPREY_CAL_MEDIANPOLISH lever.
+        /// </summary>
+        private static double ComputeCalibrationMedianPolishCosine(
+            LibraryEntry entry, List<XicData> xics, XICPeakBounds bestPeak)
+        {
+            if (xics == null || xics.Count < 2 || bestPeak == null)
+                return 0.0;
+            int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
+            if (peakLen < 3)
+                return 0.0;
+
+            double[] fullRts = xics[0].RetentionTimes;
+            if (bestPeak.StartIndex < 0 || bestPeak.EndIndex >= fullRts.Length)
+                return 0.0;
+
+            var peakRts = new double[peakLen];
+            for (int s = 0; s < peakLen; s++)
+                peakRts[s] = fullRts[bestPeak.StartIndex + s];
+
+            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
+            foreach (var xic in xics)
+            {
+                double[] src = xic.Intensities;
+                if (src == null || bestPeak.EndIndex >= src.Length)
+                    continue;
+                var slice = new double[peakLen];
+                for (int s = 0; s < peakLen; s++)
+                    slice[s] = src[bestPeak.StartIndex + s];
+                peakXics.Add(new KeyValuePair<int, double[]>(xic.FragmentIndex, slice));
+            }
+            if (peakXics.Count < 2)
+                return 0.0;
+
+            var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+            return TukeyMedianPolish.LibCosine(polish, entry.Fragments);
+        }
+
+        /// <summary>
         /// Collect MS2 fragment mass errors at the apex spectrum for m/z
         /// calibration. Matches Rust topn_fragment_match_with_errors: uses the
         /// TOP-6 fragments by intensity (stable sort to match Rust's tie-break),
@@ -1898,7 +2495,7 @@ namespace pwiz.Osprey.Tasks
                 double upper = frag.Mz + tolDa;
 
                 int best = TopFragmentExtractor.FindClosestPeakInWindow(
-                    apexSpectrum.Mzs, frag.Mz, lower, upper);
+                    apexSpectrum, frag.Mz, lower, upper);
                 if (best >= 0)
                     ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, apexSpectrum.Mzs[best]));
             }

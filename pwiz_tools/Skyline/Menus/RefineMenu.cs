@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Menus
                     while (!broker.IsCanceled)
                     {
                         SrmDocument documentUi = null;
-                        SkylineWindow.Invoke(new Action(() => { documentUi = SkylineWindow.DocumentUI; }));
+                        SkylineWindow.Invoke(() => { documentUi = SkylineWindow.DocumentUI; });
                         if (true == documentUi?.IsLoaded)
                         {
                             break;
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Menus
                         {
                             using var longWaitDlg = new LongWaitDlg(SkylineWindow);
                             longWaitDlg.Message = MenusResources.SkylineWindow_ShowRefineDlg_Refining_document;
-                            longWaitDlg.PerformWork(refineDlg, 1000, progressMonitor =>
+                            longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
                             {
                                 var srmSettingsChangeMonitor =
                                     new SrmSettingsChangeMonitor(progressMonitor,

@@ -342,7 +342,7 @@ namespace pwiz.Skyline.EditUI
 
         public SettingsList<StaticMod> GetSettingsModsList(IsotopeLabelType labelType)
         {
-            return labelType.IsLight ? (SettingsList<StaticMod>) StaticList : HeavyList;
+            return labelType.IsLight ? StaticList : HeavyList;
         }
 
         private int UpdateComboItems(IsotopeLabelType labelType, int indexAA, bool select)

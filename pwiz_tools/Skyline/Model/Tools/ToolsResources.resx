@@ -160,6 +160,9 @@
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_" xml:space="preserve">
     <value>The selected zip file is not an installable tool.</value>
   </data>
+  <data name="ToolInstaller_UnpackZipTool_The_tool__0__was_installed_for_all_users_of_this_Skyline_installation__Only_the_owner_of_the_installation_folder_can_reinstall_or_update_it_" xml:space="preserve">
+    <value>The tool {0} was installed for all users of this Skyline installation. Only the owner of the installation folder can reinstall or update it.</value>
+  </data>
   <data name="ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_" xml:space="preserve">
     <value>Tool Uses R and specifies Packages without an {0} file in the tool-inf directory.</value>
   </data>
@@ -276,6 +279,9 @@ Output:
   </data>
   <data name="PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__" xml:space="preserve">
     <value>{0} This sometimes could take 3-5 minutes. Please be patient. {1} </value>
+  </data>
+  <data name="PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__" xml:space="preserve">
+    <value>Timed out after {0} minutes running: [{1}]</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package" xml:space="preserve">
     <value>Downloading Python embeddable package.</value>

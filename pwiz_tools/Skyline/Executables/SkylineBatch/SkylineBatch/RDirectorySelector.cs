@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace SkylineBatch
 {
@@ -48,7 +49,8 @@ namespace SkylineBatch
         {
             State = state;
             // TODO(Ali): handle R installation after dialog appears
-            var dialog = new FolderBrowserDialog();
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            var dialog = FormUtil.CreateFolderBrowserDialog();
             var initialPath = Settings.Default.RDirs.Count > 0 ? FileUtil.GetInitialDirectory(Settings.Default.RDirs[Settings.Default.RDirs.Count - 1]) : null;
             dialog.SelectedPath = initialPath;
             var directoryAdded = false;

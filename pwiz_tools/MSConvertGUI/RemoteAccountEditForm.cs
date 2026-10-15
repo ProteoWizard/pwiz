@@ -231,13 +231,16 @@ namespace MSConvertGUI
         }
 
         /// <summary>
-        /// Returns true if running from a development build directory (parent is "bin" or "msvc-release-*" or "msvc-debug-*").
+        /// Returns true if running from a development build's output directory, bin\Debug\&lt;framework&gt; or bin\Release\&lt;framework&gt;.
         /// </summary>
-        private static bool IsDevEnvironment()
+        private static bool IsDevEnvironment() => IsDevBuildDirectory(Application.ExecutablePath);
+
+        internal static bool IsDevBuildDirectory(string exePath)
         {
-            string exeDir = Path.GetFileName(Path.GetDirectoryName(Application.ExecutablePath) ?? string.Empty);
-            return exeDir.StartsWith("msvc-", StringComparison.OrdinalIgnoreCase) ||
-                   exeDir.Equals("bin", StringComparison.OrdinalIgnoreCase);
+            string configDir = Path.GetDirectoryName(Path.GetDirectoryName(exePath) ?? string.Empty) ?? string.Empty;
+            string config = Path.GetFileName(configDir);
+            return Path.GetFileName(Path.GetDirectoryName(configDir) ?? string.Empty).Equals("bin", StringComparison.OrdinalIgnoreCase) &&
+                   (config.Equals("Debug", StringComparison.OrdinalIgnoreCase) || config.Equals("Release", StringComparison.OrdinalIgnoreCase));
         }
 
         private void PrepopulateDevDefaults()

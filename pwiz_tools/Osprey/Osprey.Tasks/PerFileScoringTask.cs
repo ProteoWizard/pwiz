@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -28,10 +28,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
@@ -46,7 +48,7 @@ namespace pwiz.Osprey.Tasks
     /// boundary in the <c>Osprey-workflow.html</c> view -- each input
     /// file's Stage 1-4 work is independent of every other file's,
     /// so an HPC scheduler can fan this task out across N nodes and
-    /// the merge node only needs the resulting parquet sidecars.
+    /// SecondPassFDR only needs the resulting parquet sidecars.
     ///
     /// Phase A scope: this task is a thin orchestration wrapper that
     /// delegates to AnalysisPipeline's existing private (now
@@ -61,7 +63,7 @@ namespace pwiz.Osprey.Tasks
     ///
     /// Outputs (FullLibrary, LibraryById, PerFileEntries,
     /// PerFileCalibrations, PerFileIsolationMz, PerFileParquetPaths) are exposed
-    /// as instance properties for FirstJoinTask + downstream tasks to
+    /// as instance properties for FirstPassFdrTask + downstream tasks to
     /// consume after this one completes successfully.
     /// </summary>
     internal sealed class PerFileScoringTask : OspreyTask
@@ -73,35 +75,66 @@ namespace pwiz.Osprey.Tasks
         // path those calls are no-ops.
         private const int PROCESS_FILE_SEGMENTS = 4;
 
-        public override string Name => @"PerFileScoring";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = OspreyTaskNames.PER_FILE_SCORING;
 
         /// <summary>
-        /// Computes per-file scores from spectra only when no per-file scores
-        /// were supplied via --input-scores. Under --input-scores it is
-        /// excluded: a downstream task lazy-rehydrates the supplied scores
-        /// through <c>ctx.Demand&lt;PerFileScoringTask&gt;()</c>.
+        /// The largest share of generated decoys that may have no fragment of their own before
+        /// the library is refused. A well-annotated library has essentially none; a share this
+        /// large means the annotations or fragment numbers are missing, and even 1% of a
+        /// million-precursor library is 10,000 targets with no real decoy competition.
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public const double MAX_UNUSABLE_DECOY_FRACTION = 0.01;
+
+        public override string Name => TASK_NAME;
+
+        /// <summary>
+        /// The Stage 1-4 fan-out worker: each input produces a <c>{stem}.scores.parquet</c>
+        /// next to it, no FDR, no blib.
+        /// </summary>
+        public override bool IsPerFileWorker => true;
+
+        /// <summary>
+        /// mzML in, per-file <c>.scores.parquet</c> out: a library, but no <c>--output</c>,
+        /// which is accepted and not used.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
         {
-            bool inputs = ctx.Config.InputScores != null && ctx.Config.InputScores.Count > 0;
-            return !inputs;
+            if (!config.HasInputFiles)
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<mzML...>"));
+            if (config.LibrarySource == null)
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.LIBRARY));
+            return null;
+        }
+
+        /// <summary>
+        /// The real output rather than the ignored <c>--output</c> blib path.
+        /// </summary>
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return DescribePerInputOutput(config, ParquetScoreCache.GetScoresPath, ParquetScoreCache.EXT_SCORES,
+                config.OutputDir);
         }
 
         // Stage 1-4 byproducts this task publishes for downstream consumers to
         // pull by type. ScoredEntries is the first milestone of the shared
-        // mutable entry buffer (FirstJoin and PerFileRescore publish the later
+        // mutable entry buffer (FirstPassFDR and PerFileRescore publish the later
         // CompactedEntries / RescoredEntries milestones of the same backing
         // list); see PipelineByproducts.cs.
         public override IEnumerable<Type> Publishes => new[]
         {
             typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
+            typeof(PerFileCalibrationDiagnostics),
             typeof(PerFileIsolationMz), typeof(PerFileParquetPaths),
-            typeof(RescoreBundle), typeof(ScoredEntries),
+            typeof(ScoredEntries), typeof(SequencePool),
             // Must be declared, not just published: PipelineContext builds its
             // producer registry from this list, so an undeclared byproduct cannot be
             // lazily materialized and ctx.Get<T> throws UnknownByproductException on a
             // cache miss. Without this entry FdrProjections only resolves because
-            // FirstJoinTask happens to read ScoredEntries first, which materializes
+            // FirstPassFdrTask happens to read ScoredEntries first, which materializes
             // this task and co-publishes both -- an ordering coupling, not a contract.
             typeof(FdrProjections)
         };
@@ -111,31 +144,41 @@ namespace pwiz.Osprey.Tasks
         // outputs from a not-yet-run task never NPE on the accessor.
         private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
         private Dictionary<uint, LibraryEntry> _libraryById = new Dictionary<uint, LibraryEntry>();
+
+        // The validity stamp every per-file output of this run embeds (the parquet in its footer,
+        // the calibration JSON as its first property). Set once in Run, before any file is scored.
+        private ArtifactStamp _outputStamp;
+        // The ONE pool the run's sidecar readers canonicalize through, held here rather than
+        // built per loader so the instance this task's own stub loads use is the instance it
+        // publishes. Two pools over the same library would not share a single string.
+        private SequencePool _sequencePool = new SequencePool(new Dictionary<uint, LibraryEntry>());
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries
             = new List<KeyValuePair<string, List<FdrEntry>>>();
         private ConcurrentDictionary<string, RTCalibration> _perFileCalibrations
             = new ConcurrentDictionary<string, RTCalibration>();
+        // Per-file CAL-view calibration diagnostics for the --model-diagnostics HTML
+        // report, keyed by file name in input order (mirrors _perFileCalibrations).
+        // Empty on a normal run: only populated on the compute path when
+        // config.ModelDiagnostics is on. Published as PerFileCalibrationDiagnostics.
+        private ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow> _perFileCalibrationDiagnostics
+            = new ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow>();
+        // The per-run mass-error unit ("ppm" / "Th") for the CAL view, recorded from the
+        // first calibrated file (identical across files in a run). Null until then;
+        // published on PerFileCalibrationDiagnostics. Volatile: written under the parallel
+        // per-file fan-out, read once at publish.
+        private volatile string _calibrationMassUnit;
         private ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> _perFileIsolationMz
             = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
         private Dictionary<string, string> _perFileParquetPaths
             = new Dictionary<string, string>();
-        // Probe-the-disk hydration bundle: populated when the joinOnly
-        // dispatch finds every parquet's sibling .1st-pass.fdr_scores.bin
-        // sidecar already on disk. Null otherwise. Carries the reconciliation
-        // state that the worker-mode RescoreHydration.HydrateForRescore
-        // produces, sharing it with FirstJoinTask's reconciliation accessors
-        // so the worker entry-path collapse (next commit) does not need
-        // a separate code path.
-        private RescoreInputs _rescoreInputs;
-
         // The backing fields above are built and mutated ONLY inside this task
         // (during Run / hydration) and published once in FinalizeAndCheck as the
         // FullLibrary / LibraryById / PerFileCalibrations / PerFileParquetPaths /
-        // ScoredEntries / RescoreBundle byproducts; downstream tasks pull them by
+        // ScoredEntries byproducts; downstream tasks pull them by
         // type via ctx.Get<T>() rather than through producer-typed getters.
         //
         // _perFileEntries stays a live, mutable, shared
-        // List<KeyValuePair<string, List<FdrEntry>>>: FirstJoin compacts it and
+        // List<KeyValuePair<string, List<FdrEntry>>>: FirstPassFDR compacts it and
         // PerFileRescore overlays it in place on this one instance (the no-copy
         // hand-off is load-bearing at Astral scale). Its three in-place
         // milestones are the ScoredEntries / CompactedEntries / RescoredEntries
@@ -144,13 +187,14 @@ namespace pwiz.Osprey.Tasks
         // The FullLibrary byproduct wraps List<LibraryEntry> rather than
         // IReadOnlyList: tightening it would cascade through RunCoelutionScoring /
         // RunFdr / ProteinFdr signatures, out of proportion to the value.
-        // _rescoreInputs is the probe-the-disk reconciliation bundle (null at a
-        // Stage-5 entry / any non-joinOnly run), published wrapped in RescoreBundle.
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
-        // ValidityKey is the default (search + library hashes) -- those
-        // are the only parameters that affect per-file scoring output.
+        // ValidityKey is the default: the search and library hashes, plus
+        // the peak-pick arm the base key carries. The pick belongs to THIS
+        // stage - it chooses which candidate peak each precursor's row
+        // describes - so a re-run under a different pick model must not
+        // adopt these parquets.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
         {
             if (ctx.Config.LibrarySource != null && !string.IsNullOrEmpty(ctx.Config.LibrarySource.Path))
@@ -165,9 +209,16 @@ namespace pwiz.Osprey.Tasks
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
             {
-                yield return ParquetScoreCache.GetScoresPath(input);
-                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+                foreach (var output in OutputsForInput(input))
+                    yield return output;
             }
+        }
+
+        /// <summary>The outputs this task writes for one input file.</summary>
+        private static IEnumerable<string> OutputsForInput(string input)
+        {
+            yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
+            yield return ParquetScoreCache.GetScoresPath(input);
         }
 
         public override bool Run(PipelineContext ctx)
@@ -199,7 +250,7 @@ namespace pwiz.Osprey.Tasks
             // reconciliation can lazily load CWT candidates per file via
             // ParquetScoreCache.LoadCwtCandidatesFromParquet.
             var perFileParquetPaths = new Dictionary<string, string>();
-            // Decouple scoring from the join (issue #4355): during the scoring
+            // Decouple scoring from FirstPassFDR (issue #4355): during the scoring
             // loop below we record ONLY each scored file's name, in original
             // input order (by fileIdx -- the parallel branch re-collects by
             // input index, the sequential branch appends in that same order),
@@ -217,42 +268,60 @@ namespace pwiz.Osprey.Tasks
             // unmutated outer config. ProcessFile clones the config per
             // file and mutates FragmentTolerance during MS2 calibration,
             // so reading config.Identity.SearchParameterHash() inside ProcessFile
-            // would produce a hash that the join-only validator would
+            // would produce a hash that the --input-scores validator would
             // not recognize. Built unconditionally because Stage 6
             // reconciliation needs the per-file .scores.parquet on disk to
             // lazily load CWT candidates -- matches Rust's end-to-end
             // behavior, which always writes the parquet sidecar regardless
             // of --task PerFileScoring.
-            var parquetFooterMetadata = new Dictionary<string, string>
+            string validityKey = ValidityKey(ctx);
+            _outputStamp = OspreyVersion.Stamp(Name, validityKey);
+            var parquetFooterMetadata = ParquetScoreCache.WithStamp(new Dictionary<string, string>
             {
                 { @"osprey.version", OspreyVersion.Current },
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
-                { @"osprey.reconciled", @"false" },
-            };
+                { ParquetScoreCache.META_RECONCILED, @"false" },
+            }, _outputStamp);
 
-            // Resolve how many input files run concurrently for this invocation
-            // (--parallel-files, the OSPREY_MAX_PARALLEL_FILES back-compat cap,
-            // free RAM, and core count) in the one shared place. Stored on the
+            // Resolve how many input files score concurrently for this invocation
+            // (--parallel-files-scoring, else --parallel-files, the OSPREY_MAX_PARALLEL_FILES
+            // back-compat cap, free RAM, and core count) in the one shared place. Stored on the
             // per-run RunPlan (driver-owned run state), not on the parsed
             // OspreyConfig; ProcessFile reads it to divide the inner main-search
             // thread budget and avoid oversubscription.
-            int effectiveParallelism = ResolveFileParallelism(config, nFiles, ctx.LogInfo);
-            ctx.RunPlan.EffectiveFileParallelism = effectiveParallelism;
+            int effectiveParallelism = ResolveFileParallelism(config, FileStage.Scoring, nFiles, ctx.LogInfo);
+            ctx.RunPlan.ScoringFileParallelism = effectiveParallelism;
 
+            // A scoped profile (Profile-Osprey.ps1 -ScopeToMainSearch) collects from here to
+            // the end of the per-file loop: every file's spectra load, calibration, scoring and
+            // parquet write, but not the library load and decoy generation above, which a
+            // process pays once however many files it scores. A no-op without a profiler.
+            ProfilerHooks.StartMeasure();
             var swAllFiles = Stopwatch.StartNew();
             if (nFiles == 1)
             {
                 // Single file: process directly (no parallel overhead)
                 string inputFile = config.InputFiles[0];
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                string validityKey = ValidityKey(ctx);
                 var fileResult = ScoreOrLoadForFile(
                     inputFile, fileName, 0, 1,
                     fullLibrary, config, parquetFooterMetadata,
                     perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                 if (fileResult != null)
                     scoredFileNames.Add(fileName);
+                // Single-file scoring memory boundary. The pre-GC line's working_set
+                // peak is the in-scoring high-water mark (the ~tens-of-GB envelope one
+                // file's Stage 1-4 needs); the forced-GC line is the PERSISTENT set that
+                // survives -- the two together separate transient scoring buffers from
+                // genuinely retained structure ("why does one file need so much, and
+                // what is actually held"). When a dotMemory session is attached
+                // (Profile-Osprey.ps1 -MemoryProfile) the forced-GC probe also captures a
+                // retention snapshot here. Zero cost when OSPREY_LOG_MEMORY is unset; the
+                // multi-file batch never takes this single-file branch.
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"single file scored (pre-GC)");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-scored-live",
+                    string.Format(@"(post-GC, after scoring {0})", fileName));
             }
             else if (effectiveParallelism == 1)
             {
@@ -261,7 +330,6 @@ namespace pwiz.Osprey.Tasks
                 // Matches the memory envelope of the single-file path while
                 // still sharing the library load -- the safe choice for 3-file
                 // Astral runs that would OOM in parallel.
-                string validityKey = ValidityKey(ctx);
                 for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
                 {
                     string inputFile = config.InputFiles[fileIdx];
@@ -272,27 +340,23 @@ namespace pwiz.Osprey.Tasks
                         perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                     if (fileResult != null)
                         scoredFileNames.Add(fileName);
-                    ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
+                    ProfilerHooks.LogMemoryStatsIfEnabled(ctx,
                         string.Format(@"scored file {0}/{1}", fileIdx + 1, config.InputFiles.Count));
                 }
             }
             else
             {
                 // Multiple files in parallel, bounded by the resolved
-                // concurrent-file count (see ResolveFileParallelism).
-                var parallelOpts = new ParallelOptions
-                {
-                    MaxDegreeOfParallelism = effectiveParallelism
-                };
-                string validityKey = ValidityKey(ctx);
+                // concurrent-file count (see ResolveFileParallelism), handed out one at a
+                // time in input order so a lane that finishes takes the next file.
                 var fileResults = new ConcurrentDictionary<int, string>();
                 // Legend mapping each aggregate-line slot to its input file, printed once
                 // before the concurrent "[i] p%" line starts -- mirrors Skyline's numbered
                 // file list above its multi-file import progress, so a reader can tell which
                 // file each [i] is. Uses the same [i] token as the aggregate line.
-                ctx.LogInfo(string.Format(@"Scoring {0} files in parallel:", config.InputFiles.Count));
+                ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_Run_Scoring__0__files_in_parallel_, config.InputFiles.Count));
                 for (int legendIdx = 0; legendIdx < config.InputFiles.Count; legendIdx++)
-                    ctx.LogInfo(string.Format(@"  {0}. {1}", legendIdx + 1, config.InputFiles[legendIdx]));
+                    ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", legendIdx + 1, config.InputFiles[legendIdx]));
 
                 // Collapse the concurrent per-file progress onto a single throttled
                 // "[i] p%" aggregate line, and buffer each file's narrative so its
@@ -300,7 +364,7 @@ namespace pwiz.Osprey.Tasks
                 // with the other files' lines. Each file is one BeginFile scope; the
                 // PROCESS_FILE_SEGMENTS phases inside ProcessFile drive its percent.
                 var multi = new MultiProgressReporter();
-                Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
+                OrderedFileLanes.For(config.InputFiles.Count, effectiveParallelism, fileIdx =>
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
@@ -322,8 +386,9 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             swAllFiles.Stop();
-            ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
-                swAllFiles.Elapsed.TotalSeconds));
+            ProfilerHooks.SaveAndStopMeasure();
+            ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds);
 
             // Populate perFileParquetPaths from config.InputFiles so Stage 6
             // reconciliation can locate each file's freshly-written
@@ -335,87 +400,64 @@ namespace pwiz.Osprey.Tasks
                 perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
             }
 
-            // Now that every per-file scoring transient has been released,
-            // rematerialize the cold FdrEntry stubs the join needs by reloading
-            // them from each scored file's just-written .scores.parquet, in the
-            // same order scoring produced (issue #4355). Only the scalar stub
-            // fields are read back -- no PIN features / CWT / fragment arrays --
-            // which is exactly the cold shape the straight-through path already
-            // left here after ProcessFile spilled every file's full results and
-            // nulled those arrays (FirstJoin streams features back per file). The
-            // live per-file RTCalibration objects in perFileCalibrations are NOT
-            // reloaded: they are not stored in .scores.parquet, so they must stay
-            // the live objects harvested during scoring.
-            // The lean path is valid only where FirstJoinTask actually consumes a
-            // projection. It must mirror that task's dispatch exactly (FirstJoinTask.cs:
-            // UseFdrProjection && Percolator && !needsResidentFirstPassPool): any other
-            // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
-            // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
-            // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
-            bool needsResidentPool =
-                ctx.Config.ExpectReconciledInput ||
-                !OspreyEnvironment.UseFdrProjection ||
-                ctx.Config.FdrMethod != FdrMethod.Percolator ||
-                ctx.Config.ModelDiagnostics ||
-                (!string.IsNullOrEmpty(ctx.Config.OutputFdrBench) && ctx.Config.FdrBenchPass == 1) ||
-                OspreyEnvironment.Pass2TransferQ;
+            // Now that every per-file scoring transient has been released, hand FirstPassFDR
+            // the counts-only projection it streams from (issue #4355). The live per-file
+            // RTCalibration objects in perFileCalibrations are NOT reloaded: they are not
+            // stored in .scores.parquet, so they must stay the live objects harvested during
+            // scoring.
+            //
+            // The lean path is the only one: the resident fat-stub load that stood beside it
+            // was removed with OSPREY_FDR_PROJECTION (2026-10-10). A reconciled-input config
+            // could not take it, but Program.cs rejects --task
+            // SecondPassFDR combined with --input, so under --task SecondPassFDR this task is
+            // excluded by the membership rule and Run is never entered on that config.
+            AssertLeanProjection(ctx.Config);
 
-            FdrProjectionSet projections = null;
-            int totalScored = 0;
-
-            if (needsResidentPool)
+            // Issue #4397: rematerializing every file's FdrEntry stubs here cost
+            // ~53 GB on an 82-file Astral run (191M x ~280 B) purely so FirstPassFDR
+            // could convert them into 32 B FdrProjection rows and drop them. No FdrEntry is
+            // ever allocated. Counts-only (issue #4355 struct-shrink S3, Stage B): the
+            // projection carries per-file row counts only (no 32 B rows) because the
+            // 1st-pass streaming score path re-reads every row's identity + features from
+            // parquet, so the resident FdrProjection[] buffer that grew O(files) is never
+            // allocated.
+            // FOOTER COUNTS, not a scan. A counts-only projection is (file names, row
+            // counts) and nothing else, so streaming every row through a builder whose
+            // AddRow discards all five fields to arrive at those counts was 1.34 billion
+            // rows of work for 446 numbers Parquet already declares in its footer.
+            var leanNames = new List<string>(scoredFileNames.Count);
+            var leanCounts = new List<int>(scoredFileNames.Count);
+            foreach (string fileName in scoredFileNames)
             {
-                foreach (string fileName in scoredFileNames)
-                {
-                    string parquetPath = perFileParquetPaths[fileName];
-                    // A scored file always has a parquet here; the sole exception is
-                    // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
-                    // returns an empty result without writing one. Skip that case so
-                    // the run still stops cleanly at the "no scored entries" gate
-                    // below rather than throwing on a missing file.
-                    if (!File.Exists(parquetPath))
-                        continue;
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                        fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
-                }
-                foreach (var kvp in perFileEntries)
-                    totalScored += kvp.Value.Count;
+                string parquetPath = perFileParquetPaths[fileName];
+                // A scored file always has a parquet here; the sole exception is the
+                // OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which returns an empty
+                // result without writing one. Skip that case so the run still stops cleanly
+                // at the "no scored entries" gate below rather than throwing on a missing file.
+                if (!File.Exists(parquetPath))
+                    continue;
+                leanNames.Add(fileName);
+                leanCounts.Add(RowCountAsInt(
+                    ParquetScoreCache.ProbeResumeSchemaAndRows(parquetPath).RowCount,
+                    parquetPath));
+                // Keep the per-file key and ordering so ScoredEntries consumers and
+                // the file-count guard below still see one entry per scored file;
+                // the stub lists themselves stay empty on this path.
+                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                    fileName, new List<FdrEntry>()));
             }
-            else
-            {
-                // Issue #4397: rematerializing every file's FdrEntry stubs here cost
-                // ~53 GB on an 82-file Astral run (191M x ~280 B) purely so FirstJoin
-                // could convert them into 32 B FdrProjection rows and drop them. Stream
-                // the projection rows straight out of each .scores.parquet instead --
-                // no FdrEntry is ever allocated. Peptide ids arrive in insertion order
-                // and are remapped to the global Ordinal rank by Build(), so the result
-                // is element-for-element identical to BuildFromEntries (pinned by
-                // TestFdrProjectionBuilderMatchesBuildFromEntries).
-                var builder = new FdrProjectionSet.Builder();
-                foreach (string fileName in scoredFileNames)
-                {
-                    string parquetPath = perFileParquetPaths[fileName];
-                    if (!File.Exists(parquetPath))
-                        continue;
-                    builder.BeginFile(fileName);
-                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
-                            builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
-                    builder.EndFile();
-                    // Keep the per-file key and ordering so ScoredEntries consumers and
-                    // the file-count guard below still see one entry per scored file;
-                    // the stub lists themselves stay empty on this path.
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                        fileName, new List<FdrEntry>()));
-                }
-                projections = builder.Build();
-                totalScored = projections.TotalRows;
-            }
+            // No ProgressReporter here now. It existed because reading 82 files' rows ran
+            // minutes silent; a footer open per file is fast enough that a bar would be
+            // noise. If a cohort ever makes THIS visible, the bar comes back - but measure
+            // first, because a bar over work that should not exist is what hid the scan.
+            var projections = FdrProjectionSet.CountsOnly(leanNames, leanCounts);
+            // long: this is a COHORT total (1,342,686,095 at 446 files) and an int wraps past
+            // ~505 files on the 4.2 M-per-file shape, and a wrapped negative passes
+            // FinalizeAndCheck's "totalScored == 0" guard untouched.
+            long totalScored = projections.TotalRows;
 
             ctx.LogInfo(string.Empty);
-            ctx.LogInfo(string.Format(
-                @"Coelution analysis complete. {0} total scored entries across {1} files",
-                totalScored, nFiles));
+            LogScoringSummary(ctx, totalScored, nFiles, true);
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
                 perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, projections);
@@ -430,17 +472,29 @@ namespace pwiz.Osprey.Tasks
             // (CanRehydrate), and a downstream task is the first to touch its
             // state. Load those valid parquets straight from disk (never
             // compute) so Rehydrate stays pure -- Run is outer-loop-only. The
-            // worker-mode join-only disk-load below applies only when
-            // --input-scores actually supplied the per-file scores.
-            if (ctx.Config.InputScores == null || ctx.Config.InputScores.Count == 0)
+            // worker-mode join-only disk-load below applies only to the tasks that
+            // start after Stage 4. That used to be asked as "were parquets supplied";
+            // one seam now answers it, and it is the task.
+            // The fold-only leg joins the in-pipeline one here. It owes no analysis, so it needs
+            // neither the pre-compaction pool nor the reconciliation bundle the disk-load path
+            // below adopts for SecondPassFDR - which does not run on it. All its report streams
+            // from is the per-file keys and parquet paths, and this lean load is what produces
+            // them; it is also the route the whole pipeline takes when it reaches this task with
+            // every output current, so the two entry points fold the same way. Without this,
+            // `--task FirstPassFDR --model-diagnostics` built the ALL-RUNS bundle, O(files x
+            // entries), to render a page that reads none of it.
+            if (!ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config) ||
+                FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
+            {
                 return RehydrateFromOwnOutputs(ctx);
+            }
 
-            // Disk-load path for worker-mode entry (--input-scores): the
+            // Disk-load path for a node that starts after Stage 4: the
             // per-file Stage 2-4 scores already exist on disk, so load the
             // FdrEntry stubs + PIN features straight from the parquets
             // (Stage 1 library still loads -- Stage 5+ needs it) instead of
             // recomputing them from spectra, then adopt any reconciliation
-            // bundle that the merge node will read. The compute-from-spectra
+            // bundle that SecondPassFDR will read. The compute-from-spectra
             // counterpart is Run.
             var config = ctx.Config;
 
@@ -452,61 +506,45 @@ namespace pwiz.Osprey.Tasks
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
             var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
             // Rehydrated from calibration.json's isolation_scheme by
-            // LoadJoinOnlyScores (the merge node has no mzML to extract from).
+            // LoadJoinOnlyScores (SecondPassFDR has no mzML to extract from).
             var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
             // fileName -> .scores.parquet path; LoadJoinOnlyScores already
             // knows each input parquet path and fills this in.
             var perFileParquetPaths = new Dictionary<string, string>();
 
-            int nFiles = config.InputScores.Count;
+            int nFiles = config.InputFiles.Count;
 
-            // InputFiles is synthesized from the --input-scores parquet stems
-            // once at pipeline entry (AnalysisPipeline.Run), so downstream code
-            // (Stage 6 rescore's fileNameToIdx in particular) already has the
-            // synthetic input paths by the time this load runs.
-
-            // Mirror Run's EffectiveFileParallelism bookkeeping via the shared
-            // resolver (unused by the disk-load path, which never calls
-            // ProcessFile, but kept so the RunPlan reflects the same per-run
-            // state either way). No log callback: this path does not parallelize,
-            // so it should not emit a file-parallelism decision line.
-            ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
-
+            // No reconciliation bundle is adopted here, whatever sidecars a previous run left.
+            // A FirstPassFDR in this pipeline trains first-pass Percolator itself, so a --task
+            // FirstPassFDR re-run over a finished directory takes the same lean load as the HPC
+            // node that runs it first; it once took every run's first-pass candidates and built
+            // the all-runs bundle from them, which nothing then read. Every other task that
+            // starts here consumes runs one at a time.
             var swAllFiles = Stopwatch.StartNew();
-            LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
-                perFileCalibrations, perFileIsolationMz, ctx);
+            var projections = LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
+                perFileCalibrations, perFileIsolationMz,
+                out bool hydrationFailed, out bool loadsPerRun, ctx);
             swAllFiles.Stop();
-            ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
-                swAllFiles.Elapsed.TotalSeconds));
+            if (hydrationFailed)
+                return false;  // Error already logged and ExitCode set by the hydrate.
+            ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds);
 
-            int totalScored = 0;
-            foreach (var kvp in perFileEntries)
-                totalScored += kvp.Value.Count;
+            // long: the total is ~4.2 M per file and overflows an int past ~505 files. Null on
+            // the per-run arms, which read each run later, one at a time, and leave an empty
+            // list per run here: there is no total to report, and a sum of those lists is not
+            // zero scored peaks - it tripped the empty-score warning on every rescore worker
+            // and SecondPassFDR node.
+            long? totalScored = loadsPerRun ? null : projections.TotalRows;
 
-            ctx.LogInfo(string.Empty);
-            ctx.LogInfo(string.Format(
-                @"Coelution analysis complete. {0} total scored entries across {1} files",
-                totalScored, nFiles));
-
-            // Probe-the-disk reconciliation hydration: when every parquet
-            // already has a sibling .1st-pass.fdr_scores.bin sidecar, load
-            // the rescore bundle (1st-pass q-values overlay + reconciliation
-            // actions + refined RT calibration + gap-fill targets) so the
-            // worker hydration path and the in-pipeline path produce
-            // identical post-Stage-5 state. Mirrors the worker's
-            // RescoreHydration.HydrateForRescore but reuses the stubs +
-            // PIN features already loaded above (so PIN features survive
-            // for stage7's Percolator skip path). Stage 5 entry (no
-            // sidecars present yet) skips this block and _rescoreInputs
-            // stays null.
-            //
-            // The disk state determines the hydration shape, not the CLI
-            // flag (Phase C principle: mechanism-driven, not flag-driven).
-            if (!HydrateRescoreBundleIfPresent(config, perFileEntries, ctx))
-                return false;
+            if (totalScored.HasValue)
+            {
+                ctx.LogInfo(string.Empty);
+                LogScoringSummary(ctx, totalScored.Value, nFiles, false);
+            }
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, projections);
         }
 
         /// <summary>
@@ -519,9 +557,8 @@ namespace pwiz.Osprey.Tasks
         /// same disk-load <see cref="ScoreOrLoadForFile"/> takes on its fast-skip
         /// arm, but with no <see cref="ProcessFile"/> compute fallback, so a lazy
         /// Demand never triggers scoring (Run stays outer-loop-only). Produces
-        /// the identical post-Stage-4 state Run leaves on a resume:
-        /// <see cref="_rescoreInputs"/> stays null (a straight-through run wrote
-        /// no reconciliation bundle), and the same byproducts publish through the
+        /// the identical post-Stage-4 state Run leaves on a resume: the same
+        /// byproducts publish through the
         /// shared <see cref="FinalizeAndCheck"/> tail. Because CanRehydrate gated
         /// the outputs as valid, a load failure here is a genuine fault (not a
         /// "fall back to rescore" case) and stops the pipeline.
@@ -538,59 +575,212 @@ namespace pwiz.Osprey.Tasks
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
             var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
             // Rehydrated per file from calibration.json's isolation_scheme by
-            // TryLoadStubsAndCalibration (this pure-load path never re-extracts
+            // LoadCalibrationAndIsolation (this pure-load path never re-extracts
             // isolation windows from mzML).
             var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
             var perFileParquetPaths = new Dictionary<string, string>();
 
             int nFiles = config.InputFiles?.Count ?? 0;
 
-            // Mirror Run's EffectiveFileParallelism bookkeeping via the shared
-            // resolver (unused by the disk-load path, which never calls
-            // ProcessFile, but kept so the RunPlan reflects the same per-run
-            // state either way). No log callback: this path does not parallelize,
-            // so it should not emit a file-parallelism decision line.
-            ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
+            // Lean on resume too (#4400): a pure straight-through resume (all files
+            // skipped) used to rematerialize the full fat FdrEntry stub buffer + PIN
+            // features here -- ~53 GB across 82 files, the exact cost #4400 removed for
+            // the Run path - because this path had no lean branch. Mirror Run: publish the
+            // counts-only projection from each parquet's footer. FirstPassFDR consumes the
+            // projection set identically whether Run or this path produced it.
+            //
+            // --model-diagnostics is NOT a trigger, on a full resume or any other (#4505).
+            // It used to be: with every 1st-pass sidecar already on disk FirstPassFDR skips its
+            // score pass, so the streaming accumulator was never fed and the report fell back
+            // to a batch report over the RESIDENT entries. FirstPassFDR now folds the report
+            // itself, one run at a time, off the same PRE-compaction rows (FoldDiagnosticsOnly),
+            // so the report emits from this lean load at any file count.
+            // No eager projection on this arm at all: it publishes a factory instead, so
+            // there is nothing to declare and nothing to test for null.
+            // Captured for the DEFERRED projection build, and for the footer-only row total that
+            // replaces the scan the lean branch used to perform. Both are O(files) in COUNT and
+            // O(1) in bytes per file - a file name and its row count.
+            //
+            // The COUNT rides along on the schema probe each file already opens, which is the
+            // whole reason the projection needs no scan: the deferred build below is
+            // counts-only, and a counts-only projection IS these two lists.
+            var deferredScanNames = new List<string>();
+            var deferredScanCounts = new List<int>();
+            long leanRowCount = 0;
+            Func<FdrProjectionSet> deferredProjections = null;
 
             var swAllFiles = Stopwatch.StartNew();
             if (config.InputFiles != null)
             {
-                // Sequential in InputFiles order to match Run's "collect in
-                // original order" -- downstream FirstJoin iterates perFileEntries.
-                foreach (string inputFile in config.InputFiles)
+                // Counts-only (issue #4355 struct-shrink S3, Stage B): the resume lean path builds
+                // only per-file row counts; the 1st-pass streaming score path re-reads identity +
+                // features from parquet, so no resident FdrProjection[] buffer is allocated.
+                // Same predicate as the --input-scores loader, not a re-derivation of it (#4486).
+                // Not reachable with ExpectReconciledInput today (Run routes a post-Stage-4 task
+                // away from Rehydrate), and the resident load that config would have needed was
+                // removed with OSPREY_FDR_PROJECTION (2026-10-10), so it is asserted rather than
+                // served. Placed inside the InputFiles block because with no input files nothing
+                // loads and an assert here would only produce a false positive.
+                AssertLeanProjection(config);
+
+                // Per-file progress so this all-files load is not a silent multi-minute
+                // stall on a large resume (the phase that looked hung on the 82-file run).
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORED_ENTRIES, @"lean files={0}",
+                    config.InputFiles.Count));
+                using (var loadProgress = new ProgressReporter(
+                           CountText.Format(config.InputFiles.Count, OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for_1_file,
+                               OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for__0__files),
+                           config.InputFiles.Count))
                 {
-                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-                    // Strict load: CanRehydrate already certified these outputs
-                    // valid, so a failure is a genuine fault, not a "fall back to
-                    // rescore" case -- TryLoadStubsAndCalibration logs it as an
-                    // error (no misleading "will rescore" warning). Fail loudly;
-                    // Rehydrate must not compute.
-                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx, resumeStrict: true);
-                    if (stubs == null)
+                    int fileIdx = 0;
+                    // Sequential in InputFiles order to match Run's "collect in original
+                    // order" -- downstream FirstPassFDR iterates perFileEntries.
+                    foreach (string inputFile in config.InputFiles)
                     {
-                        ctx.ExitCode = 1;
-                        return false;
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                        string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+                        // Lean path: calibration + isolation still load (cheap); nothing
+                        // streams into a projection here any more and no fat stub or
+                        // feature vector is allocated. This arm's projection is built from
+                        // the footer counts collected below, so the invariant that holds it
+                        // together is TestFooterRowCountMatchesScan - NOT
+                        // TestFdrProjectionBuilderMatchesBuildFromEntries, which covers the
+                        // builder path this arm no longer takes.
+                        // Fail-fast corruption guard: streaming scalars never loads
+                        // features, so check the feature schema up front via a footer-only
+                        // probe (no feature memory). A foreign/truncated parquet missing
+                        // the feature schema stops the run here rather than surfacing at
+                        // a murkier point downstream. NOT applied to Run's fresh-compute
+                        // lean path (#4400), whose parquets this same run just wrote.
+                        var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(scoresPath);
+                        if (!probe.HasPinFeatures)
+                        {
+                            ctx.LogError(TextUtil.GetIndentation(1) + string.Format(
+                                OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs___Resuming___0__has_no_feature_columns__so_it_is_not_a_valid_Osprey_scores_file__Delete_,
+                                scoresPath));
+                            ctx.ExitCode = 1;
+                            return false;
+                        }
+                        LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
+                        // The SCAN does not happen here any more. It used to stream every row
+                        // of every parquet into the projection builder, and on the path that
+                        // reaches this code - a resume - the only consumer of that projection
+                        // (FirstPassFdrTask.Run) has usually been skipped because its outputs
+                        // are already valid. Measured on the 446-file CHS cohort:
+                        // 1,342,686,095 rows, 9m46s, discarded. That is a pre-processing pass
+                        // over all runs inside a task that must not have one.
+                        //
+                        // What survives here is only what a LATER consumer cannot get for
+                        // itself: this run's calibration and isolation windows, and its row
+                        // count - and the count comes from the footer, not a scan. The
+                        // projection is published as a factory (see the CountsOnly build
+                        // below) and costs nothing unless something asks for it.
+                        //
+                        // A validation goes with that, and it is a deliberate trade: this
+                        // was the last thing to DECODE a scores parquet's column data
+                        // before Stage 6 on the all-sidecars-current shortcut. A parquet
+                        // deleted or made undecodable after this footer read is now first
+                        // noticed in Stage 6, hours later, rather than here.
+                        // The row count rides along on the schema probe above - the footer
+                        // was already open, so it is free. No second read, and no scan.
+                        //
+                        // Kept PER FILE, not just summed, because that is the whole of what
+                        // the deferred build produces: a counts-only projection is exactly
+                        // (file names, row counts).
+                        //
+                        // Declared NumRows is what a scan reaches for any file this build can
+                        // read, but NOT unconditionally: ReadFdrStubScalars SKIPS a row group
+                        // whose entry_id or is_decoy column comes back null
+                        // (ParquetScoreCache.cs, "if (entryIdCol == null || isDecoyCol ==
+                        // null) continue"), which is all-or-nothing per file because the
+                        // lookup is over the file-level schema. Such a file would scan to 0
+                        // rows while its footer declares N - and the probe above does not
+                        // catch it, because it tests PIN_FEATURE_NAMES[0], not entry_id.
+                        // Before the scan went, both numbers came off the same reader and
+                        // could not diverge; now they can, and the divergence surfaces late,
+                        // as an inconsistent-row-count fault at the END of the Stage 5 score
+                        // pass rather than as the missing column it actually is.
+                        deferredScanNames.Add(fileName);
+                        deferredScanCounts.Add(RowCountAsInt(probe.RowCount, scoresPath));
+                        leanRowCount += probe.RowCount;
+                        // Empty stub list on the lean path (mirrors Run), so the file-
+                        // count guard + ScoredEntries consumers still see one entry per
+                        // scored file.
+                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
+                        perFileParquetPaths[fileName] = scoresPath;
+                        loadProgress.Report(++fileIdx);
                     }
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
-                    perFileParquetPaths[fileName] = scoresPath;
                 }
+                // The projection is built from the FOOTER COUNTS collected above, and there is no
+                // scan on any path - deferred or not.
+                //
+                // It used to stream every row of every parquet through a counts-only builder,
+                // whose AddRow discards all five fields and increments a counter. At 446 files
+                // that read 1,342,686,095 rows - entry_id, charge, is_decoy, coelution_sum and a
+                // STRING modified_sequence, decoded row group by row group - to produce 446 file
+                // names and 446 counts, then threw every value away. Measured at 618 s and
+                // ~5.7 GB of allocation on the run that DOES ask for it (446-run CHS,
+                // 2026-09-09), immediately before first-pass FDR re-read the same columns from
+                // the same files to do the actual work.
+                //
+                // Deferring it made that cost CONDITIONAL - a rescore worker skips
+                // FirstPassFdrTask.Run and so never paid it - which is why the 9m46s the
+                // resume-startup work removed and the 618 s seen here are the same scan seen
+                // from the two sides of that condition. The count was always free: Parquet's
+                // footer declares NumRows, ProbeResumeSchemaAndRows returns it from the open
+                // this loop already performs for the PIN-schema check, and a counts-only
+                // projection is nothing but those counts paired with their file names.
+                //
+                // Kept as a factory rather than built here so a consumer that never asks still
+                // allocates nothing, and so the shape stays the same as RescoredEntries'.
+                var scanNames = deferredScanNames;
+                var scanCounts = deferredScanCounts;
+                deferredProjections = () => FdrProjectionSet.CountsOnly(scanNames, scanCounts);
             }
             swAllFiles.Stop();
-            ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
-                swAllFiles.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds);
 
-            int totalScored = 0;
-            foreach (var kvp in perFileEntries)
-                totalScored += kvp.Value.Count;
+            // long, not int: the total is a footer sum over the whole cohort and hit
+            // 1,342,686,095 at 446 files - two thirds of int.MaxValue, and cohorts keep growing.
+            // From the parquet footers, NOT from perFileEntries: this load deliberately adds an
+            // EMPTY list per file, so summing those reports zero and trips the "No scored
+            // entries found" guard on a perfectly good resume.
+            long totalScored = leanRowCount;
 
             ctx.LogInfo(string.Empty);
-            ctx.LogInfo(string.Format(
-                @"Coelution analysis complete. {0} total scored entries across {1} files",
-                totalScored, nFiles));
+            LogScoringSummary(ctx, totalScored, nFiles, false);
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, null,
+                deferredProjections);
+        }
+
+        /// <summary>
+        /// The first-pass scoring summary, as prose for the person watching and as the count
+        /// <c>Get-MemoryReport.ps1</c> reads. <paramref name="scoredHere"/> is true on the scoring
+        /// path, where some files may still be kept from an earlier run (each says so on its own
+        /// line), so the scoring sentence does not claim every peak was scored now; false when
+        /// this process only loaded an earlier run's intermediate files.
+        /// </summary>
+        private static void LogScoringSummary(PipelineContext ctx, long totalScored, int nFiles, bool scoredHere)
+        {
+            string format;
+            if (scoredHere)
+            {
+                format = nFiles == 1
+                    ? OspreyTasksResources.PerFileScoringTask_LogScoringSummary_First_pass_scoring_complete___0__precursor_candidate_peaks_in_1_file_
+                    : OspreyTasksResources.PerFileScoringTask_LogScoringSummary_First_pass_scoring_complete___0__precursor_candidate_peaks_across__1__files_;
+            }
+            else
+            {
+                format = nFiles == 1
+                    ? OspreyTasksResources.PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from_1_file_
+                    : OspreyTasksResources.PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_;
+            }
+            ctx.LogInfo(string.Format(format, totalScored, nFiles));
+            ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_SCORED_CANDIDATES, @"total={0} files={1}",
+                totalScored, nFiles));
         }
 
         /// <summary>
@@ -598,8 +788,8 @@ namespace pwiz.Osprey.Tasks
         /// surface the per-file outputs for downstream tasks (before any
         /// early-exit, so a partial-success caller still sees the populated
         /// collections), then apply the two success-but-stop boundaries --
-        /// an empty score set (cannot run FDR) and <c>--task PerFileScoring</c> (Stage
-        /// 1-4 only). Returns <c>true</c> to continue the pipeline, or
+        /// an empty score set (cannot run FDR) and a per-file worker selection (Stage
+        /// 1-4 only, no join in this process). Returns <c>true</c> to continue the pipeline, or
         /// <c>false</c> with <see cref="PipelineContext.ExitCode"/> = 0 at
         /// either boundary.
         /// </summary>
@@ -608,7 +798,8 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             Dictionary<string, string> perFileParquetPaths,
-            int nFiles, int totalScored, FdrProjectionSet projections = null)
+            int nFiles, long? totalScored, FdrProjectionSet projections = null,
+            Func<FdrProjectionSet> deferredProjections = null)
         {
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
@@ -623,37 +814,64 @@ namespace pwiz.Osprey.Tasks
             // ExitCode == 0, a lazy Demand that drove this Rehydrate still gets
             // the published state and PipelineContext.DemandByType's
             // failure-throw (which fires only on a false return WITH ExitCode != 0)
-            // correctly treats them as benign. RescoreBundle wraps the nullable
-            // bundle (null at a Stage-5 entry / straight-through run).
+            // correctly treats them as benign.
             ctx.Publish(new FullLibrary(_fullLibrary));
             ctx.Publish(new LibraryById(_libraryById));
+            // Published next to the library it is seeded from: every stub reader that
+            // canonicalizes a sidecar ModifiedSequence has to reach THIS pool, or it will
+            // build a second set of instances beside the library's rather than share them.
+            // The published instance is the FIELD, not a fresh wrapper - this task loads
+            // stubs of its own before publishing, and those have to share the same pool.
+            ctx.Publish(_sequencePool);
             ctx.Publish(new PerFileCalibrations(_perFileCalibrations));
+            // CAL-view per-file diagnostics for --model-diagnostics. Harvested directly
+            // onto the instance field by ProcessFile (compute path only), so it is
+            // published from the field rather than a Finalize local. Empty on a normal
+            // run and on the rehydrate/resume paths (no calibration matches to shape) --
+            // FirstPassFdrTask reads it only under config.ModelDiagnostics and tolerates
+            // empty. See TODO-20260712 for the HPC-split persistence caveat.
+            ctx.Publish(new PerFileCalibrationDiagnostics(_perFileCalibrationDiagnostics, _calibrationMassUnit));
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the rehydrate/merge paths and
-            // on --model-diagnostics / FDRBench pass 1, which publish fat stubs above;
-            // FirstJoinTask falls back to ScoredEntries whenever this is null.
-            ctx.Publish(new FdrProjections(projections));
-            ctx.Publish(new RescoreBundle(_rescoreInputs));
+            // Lean first-pass rows (issue #4397). Null on the --input-scores stub-loading paths,
+            // which publish stubs above; FirstPassFdrTask falls back to ScoredEntries
+            // whenever this is null. A --model-diagnostics resume publishes a NON-null
+            // projection since #4505 - it no longer needs resident entries, because
+            // FirstPassFDR's rehydrate streams the report off its own per-file load.
+            // Deferred when the caller handed a factory instead of a built set (see
+            // FdrProjections); the eager form stays for the paths that genuinely built one.
+            ctx.Publish(deferredProjections != null
+                ? new FdrProjections(deferredProjections)
+                : new FdrProjections(projections));
 
+            // A null total is a per-run load, which has not read the rows yet: not empty.
             if (perFileEntries.Count == 0 || totalScored == 0)
             {
-                ctx.LogWarning(@"No scored entries found. Cannot perform FDR control.");
+                ctx.LogWarning(OspreyTasksResources.PerFileScoringTask_FinalizeAndCheck_No_precursor_candidates_were_scored__so_FDR_control_cannot_run_);
                 ctx.ExitCode = 0;
                 return false;
             }
 
-            // --task PerFileScoring: stop here. Per-file `.scores.parquet` files are
-            // now on disk; a separate `--task FirstPassFDR` invocation (typically
-            // on a merge node) will pick them up and run Stage 5+.
-            if (ctx.Config.NoJoin)
+            // A per-file worker stops here: nothing after Stage 1-4 joins in this process.
+            // For --task PerFileScoring the per-file `.scores.parquet` files are now on disk
+            // and a separate `--task FirstPassFDR` invocation (typically on a SecondPassFDR
+            // node) will pick them up and run Stage 5+. The rescore worker reaches this tail
+            // through its disk-load rehydrate, having loaded Stage 1-4 state rather than
+            // scored it, and stops the same way; the message says which happened. The
+            // messages speak in task names, the vocabulary the CLI and its help use; the
+            // stage numbers are the developer docs' and never reach an operator.
+            if (ctx.Config.SelectedTask?.IsPerFileWorker == true)
             {
-                ctx.LogInfo(string.Format(
-                    @"--task PerFileScoring: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
-                    @"Per-file `.scores.parquet` written next to each input mzML. " +
-                    @"Skipping FDR and blib output.",
-                    totalScored, nFiles));
+                // The scores file and its peak count were named when it was written; this
+                // line says what happens next. A rescore worker loading its run's scores says
+                // nothing here - its own summary follows.
+                if (ReferenceEquals(ctx.Config.SelectedTask, this))
+                {
+                    ctx.LogInfo(string.Format(
+                        OspreyTasksResources.PerFileScoringTask_FinalizeAndCheck___task__0__complete__FDR_and_the__blib_are_left_to_the_next_task___1___,
+                        OspreyArgNames.TaskText(Name), FirstPassFdrTask.TASK_NAME, LibrarySource.EXT_BLIB));
+                }
                 ctx.ExitCode = 0;
                 return false;
             }
@@ -662,24 +880,43 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Resolve the effective concurrent-file count for this invocation via the
+        /// Resolve one stage's concurrent-file count for this invocation via the
         /// shared <see cref="FileParallelismResolver"/> -- the single owner of the
-        /// precedence between <c>--parallel-files</c>, the
+        /// precedence between the stage's own flag, <c>--parallel-files</c>, the
         /// <c>OSPREY_MAX_PARALLEL_FILES</c> back-compat cap, free RAM, and the core
-        /// count. The memory probe and per-file footprint estimate are evaluated
+        /// count. Every per-file stage resolves through here (caching and re-scoring
+        /// too), so a stage's count can never be derived differently from another's.
+        /// The memory probe and per-file footprint estimate are evaluated
         /// lazily (auto mode only), so the common sequential / explicit paths do no
-        /// I/O. <paramref name="log"/> is null on the disk-load bookkeeping paths
-        /// that never actually parallelize, so they compute the same number without
-        /// emitting a misleading decision line.
+        /// I/O. <paramref name="log"/> is null where the count is resolved without the
+        /// stage doing its per-file work (a rehydrate), so no decision line is emitted.
+        ///
+        /// The <c>OSPREY_MAX_PARALLEL_FILES</c> cap does not apply to caching: it predates
+        /// caching on lanes and was sized for scoring's memory, and harnesses that set it to
+        /// match scoring (Test-PerfGate) must not find staging turned parallel by it.
         /// </summary>
-        private static int ResolveFileParallelism(OspreyConfig config, int nFiles, Action<string> log)
+        internal static int ResolveFileParallelism(OspreyConfig config, FileStage stage, int nFiles,
+            Action<string> log)
         {
+            var request = config.GetFileParallelism(stage, out string argName);
+            int envCap = stage == FileStage.Caching ? 0 : OspreyEnvironment.MaxParallelFiles;
             return FileParallelismResolver.Resolve(
-                config.FileParallelism, nFiles, OspreyEnvironment.MaxParallelFiles,
+                request, nFiles, envCap,
                 Environment.ProcessorCount,
                 SystemMemory.AvailablePhysicalBytes,
-                () => FileParallelismResolver.EstimatePerFileBytes(config.InputFiles),
-                log);
+                () => EstimateInputBytes(config.InputFiles),
+                log, argName);
+        }
+
+        /// <summary>
+        /// The per-file footprint estimate auto mode budgets RAM with: each input's size,
+        /// or, for an input whose source is gone or empty, its spectra cache's (the
+        /// demultiplexed one when it has one) - wherever <see cref="ArtifactPaths"/> puts
+        /// caches for this run, including a separate <c>--cache-dir</c>.
+        /// </summary>
+        internal static long EstimateInputBytes(IEnumerable<string> inputFiles)
+        {
+            return FileParallelismResolver.EstimatePerFileBytes(inputFiles, DemuxCache.GetLargestCachePath);
         }
 
         /// <summary>
@@ -693,31 +930,84 @@ namespace pwiz.Osprey.Tasks
         /// missing library decoys, an unreadable pairing manifest, or a
         /// pairing fraction below the configured threshold.
         /// </summary>
-        private bool LoadLibraryAndDecoys(OspreyConfig config, out List<LibraryEntry> fullLibrary, PipelineContext ctx)
+        internal bool LoadLibraryAndDecoys(OspreyConfig config, out List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
             fullLibrary = null;
 
+            // A StopAfterStage5 worker (--task FirstPassFDR) reads only the six
+            // identity scalars per library entry (the FDR stages never touch
+            // fragments), so skip retaining the fragment peaks -- ~3.2 GB at
+            // SEA-AD scale of otherwise-resident dead weight. Gate strictly on
+            // StopAfterStage5: a straight-through run (or any run that later
+            // writes the .blib) still needs the fragments. Decoy generation and
+            // the fragment diagnostic below are told about the omission so they
+            // stay byte-identical (see LibraryLoadOptions / DecoyGenerator).
+            bool omitFragments = config.StopAfterStage5;
+            var loadOptions = new LibraryLoadOptions { OmitFragments = omitFragments };
+
+            // --task SecondPassFDR knows its retained set BEFORE the library is read, so it can
+            // skip the spectra it would otherwise load and release moments later (issue #4650).
+            // This is only addressable because the cache now holds a FINISHED library: while
+            // pairing ran after the load, a cached decoy's Id was a parse-order id and a set of
+            // final base_ids could not name it. Now the ids in the cache are the ids everything
+            // downstream uses, and a target's paired decoy shares its base_id, so retaining one
+            // retains both.
+            //
+            // ONLY this leg. It is the one where the set is already on disk AND nothing between
+            // here and the blib write reads a fragment: DecoyGenerator is skipped outright
+            // below, and the supplied-decoy arm is finished inside the load. --task
+            // PerFileRescoring also has the set but DOES generate decoys, and DecoyGenerator's
+            // fragment-count gate excludes a target whose spectrum is gone.
+            //
+            // Null when the summary cannot be read, which leaves a full load and Stage 7's
+            // release to drop the same set afterwards. The run is correct either way, so this
+            // stays a startup optimisation rather than a second thing that can fail the leg.
+            if (config.ExpectReconciledInput)
+                loadOptions.RetainFragmentsFor = ScoringTaskShared.ReadRetainedBaseIds(config, out _);
+
             var swLibrary = Stopwatch.StartNew();
-            var library = LibraryLoader.Load(config, ctx.LogInfo, ctx.LogWarning);
+            // Load AND finish: marking and pairing a supplied-decoy library moved inside the
+            // loader (issue #4650) so the .libcache holds the finished library rather than a
+            // half-built one the caller completes. The pairing faults still stop the run
+            // here, with the same messages and the same exit code - they arrive as `loadError`
+            // instead of being raised in this method.
+            var library = LibraryLoader.Load(config, loadOptions, ctx, ctx.LogWarning,
+                out string loadError);
+            if (loadError != null)
+            {
+                ctx.LogError(loadError);
+                ctx.ExitCode = 1;
+                return false;
+            }
             if (library == null || library.Count == 0)
             {
-                ctx.LogError(@"Library is empty after loading");
+                ctx.LogError(OspreyTasksResources.PerFileScoringTask_LoadLibraryAndDecoys_The_spectral_library_is_empty_after_loading_);
                 ctx.ExitCode = 1;
                 return false;
             }
 
-            // Decoys: either supplied by the library (DIA-NN / EncyclopeDIA
-            // output with rev_ / DECOY_ prefixes) or generated by Osprey
-            // from the targets. DecoyMethod.FromLibrary is treated as a
-            // synonym for DecoysInLibrary -- historically it silently fell
-            // through to Reverse generation, which was the bug behind
-            // v26.5.3's library-decoy mode being effectively unusable.
-            // Mark BEFORE counting targets so the count reflects post-
-            // marking state and matches Rust pipeline.rs.
-            bool librarySuppliesDecoys = config.DecoysInLibrary ||
-                config.DecoyMethod == DecoyMethod.FromLibrary;
-            if (librarySuppliesDecoys)
-                MarkSuppliedDecoys(library, config, ctx);
+            // Measurement harness (OSPREY_LIBRARY_LOAD_ONLY), before decoys so the number is the
+            // LOAD and nothing else. See OspreyEnvironment.LibraryLoadOnly.
+            if (OspreyEnvironment.LibraryLoadOnly)
+            {
+                ctx.LogInfo(LogTag.LIB_LOAD, string.Format(
+                    @"{0} library precursors in {1:F2}s (task={2}, omitFragments={3}, retainSet={4})",
+                    library.Count, swLibrary.Elapsed.TotalSeconds, config.SelectedTask?.Name,
+                    loadOptions.OmitFragments,
+                    loadOptions.RetainFragmentsFor == null
+                        ? @"none"
+                        : loadOptions.RetainFragmentsFor.Count.ToString(CultureInfo.InvariantCulture)));
+                OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_LIBRARY_LOAD_ONLY");
+            }
+
+            // Decoys: either supplied by the library (DIA-NN / EncyclopeDIA output with rev_ /
+            // DECOY_ prefixes) or generated by Osprey from the targets; which one is
+            // OspreyConfig.LibrarySuppliesDecoys, the rule's one definition.
+            //
+            // The supplied-decoy half is DONE by now: marking and pairing are inside the load
+            // (issue #4650), so the count below already reflects post-marking state, as it did
+            // when marking ran here.
+            bool librarySuppliesDecoys = config.LibrarySuppliesDecoys;
 
             int nLibraryTargets = 0;
             foreach (var entry in library)
@@ -726,10 +1016,28 @@ namespace pwiz.Osprey.Tasks
                     nLibraryTargets++;
             }
             double libLoadSec = swLibrary.Elapsed.TotalSeconds;
-            ctx.LogInfo(string.Format(@"[COUNT] Library targets loaded: {0}", nLibraryTargets));
+            ctx.LogInfo(LogTag.COUNT, @"Library targets loaded: {0}", nLibraryTargets);
 
             List<LibraryEntry> decoys;
-            if (config.ExpectReconciledInput)
+            // ORDER MATTERS. A library that supplies its own decoys is handled FIRST,
+            // before the SecondPassFDR skip, because that arm is not only about decoys:
+            // TryPairSuppliedDecoys is the sole caller of DecoyPairingManifest.ApplyToLibrary,
+            // which rewrites ProteinIds from the manifest's clean accessions. Testing
+            // ExpectReconciledInput first made this arm unreachable in SecondPassFDR - the one
+            // phase that writes the blib - so a distributed run with --decoy-pairing-manifest
+            // emitted the library's per-peptide "sp|P12345_pep00001|GENE" accessions instead of
+            // the clean ones, and computed protein parsimony and picked-protein FDR on them.
+            // Straight-through and resume never hit it, which is why only the HPC chain diverged.
+            // Rust gates on library_supplies_decoys alone and was always correct here, so this
+            // restores cross-impl parity rather than changing behavior away from it.
+            if (librarySuppliesDecoys)
+            {
+                // Nothing to do: the loader marked and paired these, and applied the manifest's
+                // accessions, before it wrote the cache. Kept as an explicit arm so the three
+                // decoy shapes still read as three arms rather than two and a fall-through.
+                decoys = new List<LibraryEntry>();
+            }
+            else if (config.ExpectReconciledInput)
             {
                 // --task SecondPassFDR: decoy LibraryEntries are unused
                 // downstream. The reconciled parquet already carries
@@ -744,51 +1052,89 @@ namespace pwiz.Osprey.Tasks
                 // Stage 7 cs run before this fix:
                 //   BuildDecoyFromSequence  total=45665 ms (89% wall)
                 //   GenerateDecoys.<>b__0   total=46792 ms
+                // The ~45s saved is DecoyGenerator work, done only by the generated-decoy
+                // arm below, so ordering the supplied-decoy arm ahead of this costs nothing.
                 decoys = new List<LibraryEntry>();
-            }
-            else if (!librarySuppliesDecoys)
-            {
-                decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
-                    library, config, ctx.LogInfo, out List<LibraryEntry> validTargets);
-                library = validTargets;
             }
             else
             {
-                decoys = new List<LibraryEntry>();
-                if (!TryPairSuppliedDecoys(library, config, nLibraryTargets, ctx))
+                // GenerateAllWithCollisionDetection interns the freshly-minted
+                // decoy strings ("DECOY_"+accession / modified sequence) through
+                // its own pool and logs the collapse summary; no post-pass
+                // interning is needed here.
+                decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                    library, config, ctx.LogInfo, omitFragments, out List<LibraryEntry> validTargets);
+                library = validTargets;
+                // A decoy's fragments are recomputed from the target's b/y ion annotations; a
+                // fragment of unknown type is copied verbatim and one with no usable fragment
+                // number is dropped. A decoy left with no fragment of its own - a .blib whose
+                // peaks are not b or y ions within the fragment tolerance, or a TSV whose fragment
+                // types or numbers are missing - scores exactly like its target or not at all, so
+                // its target has no real decoy competition.
+                // Only checkable where fragments were loaded; the first task of every run loads
+                // them, so a bad library stops before any work.
+                if (!omitFragments && loadOptions.RetainFragmentsFor == null &&
+                    !CheckDecoysUsable(library, decoys, config, ctx))
+                {
+                    ctx.ExitCode = 1;
                     return false;
+                }
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
-            ctx.LogInfo(string.Format(@"[TIMING] Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
-                totalSec, libLoadSec, totalSec - libLoadSec));
+            ctx.LogInfo(LogTag.TIMING, @"Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
+                totalSec, libLoadSec, totalSec - libLoadSec);
 
-            ctx.LogInfo(string.Format(@"[COUNT] Library decoys generated: {0}", decoys.Count));
+            ctx.LogInfo(LogTag.COUNT, @"Library decoys generated: {0}", decoys.Count);
 
             fullLibrary = new List<LibraryEntry>(library.Count + decoys.Count);
             fullLibrary.AddRange(library);
             fullLibrary.AddRange(decoys);
 
-            ctx.LogInfo(string.Format(@"Full library: {0} entries ({1} targets + {2} decoys)",
-                fullLibrary.Count, library.Count, decoys.Count));
-            ctx.LogInfo(string.Format(@"[COUNT] Full library: {0} ({1} targets + {2} decoys)",
-                fullLibrary.Count, library.Count, decoys.Count));
-
-            // Count entries with few fragments (diagnostic for entry count parity)
-            int nZeroFrag = 0, nOneFrag = 0, nTwoFrag = 0;
-            foreach (var entry in fullLibrary)
+            // Counted over the full library, not the two lists: a library that supplies its own
+            // decoys carries them in `library` with nothing in `decoys`.
+            int nFullDecoys = fullLibrary.Count(e => e.IsDecoy);
+            if (nFullDecoys == 0 && config.ExpectReconciledInput)
             {
-                int fc = entry.Fragments != null ? entry.Fragments.Count : 0;
-                if (fc == 0)
-                    nZeroFrag++;
-                else if (fc == 1)
-                    nOneFrag++;
-                else if (fc == 2)
-                    nTwoFrag++;
+                ctx.LogInfo(string.Format(
+                    OspreyTasksResources.PerFileScoringTask_LoadLibraryAndDecoys_Full_library___0__target_precursor_candidates__second_pass_FDR_does_not_need_the_decoys_,
+                    fullLibrary.Count));
             }
-            if (nZeroFrag + nOneFrag + nTwoFrag > 0)
-                ctx.LogInfo(string.Format(@"[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
-                    nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag));
+            else
+            {
+                ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_LoadLibraryAndDecoys_Full_library___0__precursor_candidates___1__targets____2__decoys_,
+                    fullLibrary.Count, fullLibrary.Count - nFullDecoys, nFullDecoys));
+            }
+            ctx.LogInfo(LogTag.COUNT, @"Full library: {0} ({1} targets + {2} decoys)",
+                fullLibrary.Count, library.Count, decoys.Count);
+
+            // Count entries with few fragments (diagnostic for entry count
+            // parity). Skipped whenever the load was LEAN, in either of the two ways it can be.
+            // Under OmitFragments no entry carries an array, so every count reads 0 and the line
+            // would misreport the whole library as sub-3-fragment. Under a retain set most
+            // entries hold a RELEASED spectrum, so the count is both meaningless AND fatal -
+            // reading it is what the released state exists to refuse (issue #4650).
+            //
+            // The guard said `!omitFragments` while that was the only lean mode, which is the
+            // same all-or-nothing assumption DecoyGenerator's fragment-count gate makes. Any
+            // future site that walks Fragments over the WHOLE library owes the same widening.
+            if (!omitFragments && loadOptions.RetainFragmentsFor == null)
+            {
+                int nZeroFrag = 0, nOneFrag = 0, nTwoFrag = 0;
+                foreach (var entry in fullLibrary)
+                {
+                    int fc = entry.Fragments != null ? entry.Fragments.Count : 0;
+                    if (fc == 0)
+                        nZeroFrag++;
+                    else if (fc == 1)
+                        nOneFrag++;
+                    else if (fc == 2)
+                        nTwoFrag++;
+                }
+                if (nZeroFrag + nOneFrag + nTwoFrag > 0)
+                    ctx.LogInfo(LogTag.COUNT, @"Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
+                        nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag);
+            }
 
             // Build library lookup by ID for fast access
             var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
@@ -797,296 +1143,358 @@ namespace pwiz.Osprey.Tasks
 
             _fullLibrary = fullLibrary;
             _libraryById = libraryById;
+            _sequencePool = new SequencePool(libraryById);
 
             // Diagnostic: the true resident-library managed heap. The working set
             // at this point still holds the one-time TSV/cache read buffers and freed
             // load garbage, so the settled managed heap is the clean resident number.
             // Collect/WaitForPendingFinalizers/Collect settles finalizable objects,
             // then GetTotalMemory(false) reads the result WITHOUT forcing a further
-            // collection. Zero-cost when OSPREY_LOG_MEMORY is unset.
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY")))
+            // collection. Zero-cost when OSPREY_LOG_MEMORY is off - which includes the value "0",
+            // the form the dataset runners write; see OspreyEnvironment.LogMemory.
+            if (OspreyEnvironment.LogMemory)
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 GC.Collect();
                 long managedBytes = GC.GetTotalMemory(false);
-                ctx.LogInfo(string.Format(CultureInfo.InvariantCulture,
-                    @"[MEM library-resident] managed_heap={0:F2} GB ({1} entries)",
-                    managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count));
+                ctx.LogInfo(LogTag.Mem(@"library-resident"), @"managed_heap={0:F2} GB ({1} library precursors)",
+                    managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count);
             }
 
             return true;
         }
 
         /// <summary>
-        /// When the library supplies its own decoys (DIA-NN / EncyclopeDIA
-        /// output with rev_ / DECOY_ prefixes), mark them in place by Decoy
-        /// column / protein-accession prefix. DecoyMethod.FromLibrary is treated
-        /// as a synonym for DecoysInLibrary -- historically it silently fell
-        /// through to Reverse generation, the bug behind v26.5.3's library-decoy
-        /// mode being effectively unusable. Marking runs BEFORE the target count
-        /// is taken so the count reflects post-marking state and matches Rust
-        /// pipeline.rs.
+        /// True when at least one target carries a b or y fragment - the only annotations
+        /// <see cref="DecoyGenerator"/> can recompute for a permuted sequence.
         /// </summary>
-        private void MarkSuppliedDecoys(List<LibraryEntry> library, OspreyConfig config, PipelineContext ctx)
-        {
-            LibraryDecoyMarker.ApplyLibraryDecoyMarking(
-                library, config.DecoyPrefixes, out var markingStats);
-            ctx.LogInfo(string.Format(
-                @"Library-decoy mode: matched prefixes {0}",
-                FormatPrefixList(config.DecoyPrefixes)));
-            ctx.LogInfo(string.Format(
-                @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
-                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
-        }
-
         /// <summary>
-        /// Library-supplied-decoy path: confirm the library actually contains
-        /// decoys, then pair each decoy with its target so their base_ids match
-        /// -- required for SVM target-decoy competition, LDA calibration, and CV
-        /// fold grouping. Hybrid: manifest first when provided (exact pairs from
-        /// FDRBench), amino-acid composition fallback for the remainder. Returns
-        /// false (with <see cref="PipelineContext.ExitCode"/> set) when there
-        /// are no decoys at all, the pairing manifest is unreadable, or the
-        /// paired fraction is below <c>config.DecoyPairMinFraction</c>.
+        /// Warn when any generated decoy has no fragment of its own - none, or only m/z values
+        /// copied from its target - and refuse the library when more than
+        /// <see cref="MAX_UNUSABLE_DECOY_FRACTION"/> of them do: that many means the library
+        /// itself is missing b/y annotations or fragment numbers, not a few stray entries.
         /// </summary>
-        private bool TryPairSuppliedDecoys(
-            List<LibraryEntry> library, OspreyConfig config, int nLibraryTargets, PipelineContext ctx)
+        private static bool CheckDecoysUsable(List<LibraryEntry> targets, List<LibraryEntry> decoys,
+            OspreyConfig config, PipelineContext ctx)
         {
-            // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
-            // "no decoys at all" check runs BEFORE manifest
-            // application. The manifest CAN flip predictor-stripped
-            // entries to IsDecoy=true (the Carafe failure mode commit
-            // d23d496 was built for), so this ordering means a
-            // manifest cannot rescue a load that the prefix scan
-            // misses entirely. TODO(brendanmaclean,maccoss): discuss
-            // with Mike whether this should be relaxed to defer the
-            // check until after manifest application; current C#
-            // ordering matches Rust v26.6.0 for byte parity on the
-            // cross-impl Test-Regression gate.
-            int nLibraryDecoys = library.Count - nLibraryTargets;
-            if (nLibraryDecoys == 0)
+            if (decoys.Count == 0)
+                return true;
+            var targetById = new Dictionary<uint, LibraryEntry>(targets.Count);
+            foreach (var target in targets)
+                targetById[target.Id] = target;
+            int nUnusable = 0;
+            foreach (var decoy in decoys)
             {
-                ctx.LogError(string.Format(
-                    @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
-                    @"Check that the library actually contains decoys with one of these prefixes on " +
-                    @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
-                    FormatPrefixList(config.DecoyPrefixes)));
-                ctx.ExitCode = 1;
-                return false;
+                targetById.TryGetValue(decoy.Id & ~LibraryEntry.DECOY_ID_BIT, out var target);
+                if (!HasOwnFragment(decoy, target))
+                    nUnusable++;
             }
-
-            // Hybrid pairing. Net result on real Carafe-generated entrapment
-            // libraries: ~30% via manifest, ~70% via composition, >99% total.
-            var pairingState = new PairingState();
-            LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                out int nTargetsForStats, out int nDecoysForStats);
-            var pairingStats = new PairingStats
+            if (nUnusable == 0)
+                return true;
+            double fraction = nUnusable / (double)decoys.Count;
+            string library = config.LibrarySource?.Path;
+            if (fraction > MAX_UNUSABLE_DECOY_FRACTION)
             {
-                NTargets = nTargetsForStats,
-                NDecoys = nDecoysForStats,
-            };
-            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
-            {
-                ctx.LogInfo(string.Format(
-                    @"Loading decoy pairing manifest from {0}",
-                    config.DecoyPairingManifestPath));
-                DecoyPairingManifest manifest;
-                try
-                {
-                    manifest = DecoyPairingManifest.FromTsv(
-                        config.DecoyPairingManifestPath);
-                }
-                catch (Exception ex)
+                // A .blib's peaks are typed from m/z, so what it lacks is peaks within the
+                // fragment tolerance of the peptide's b and y ions, not annotations.
+                if (config.LibrarySource?.Format == LibraryFormat.Blib)
                 {
                     ctx.LogError(string.Format(
-                        @"Failed to read decoy pairing manifest {0}: {1}",
-                        config.DecoyPairingManifestPath, ex.Message));
-                    ctx.ExitCode = 1;
-                    return false;
+                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance,
+                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
+                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY),
+                        config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit.GetLocalizedString(),
+                        OspreyArgNames.Text(OspreyArgNames.FRAGMENT_TOLERANCE), OspreyArgNames.Text(OspreyArgNames.RESOLUTION)));
                 }
-                var manifestStats = manifest.ApplyToLibrary(library, pairingState);
-                pairingStats.NPairedViaManifest = manifestStats.NPaired;
-                if (manifestStats.NProteinsReplaced > 0)
+                else
                 {
-                    ctx.LogInfo(string.Format(
-                        @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
-                        @"entries (clean source-protein accessions from the manifest's " +
-                        @"`proteins` column)",
-                        manifestStats.NProteinsReplaced));
+                    ctx.LogError(string.Format(
+                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
+                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
+                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
                 }
-                if (manifestStats.NNewlyMarkedDecoy > 0)
-                {
-                    // Manifest classified entries as decoy that were
-                    // loaded as targets (the predictor stripped the
-                    // decoy prefix). Update the decoy count so the
-                    // pairing fraction is honest.
-                    ctx.LogInfo(string.Format(
-                        @"Library-decoy mode: manifest classified {0} additional library " +
-                        @"entries as decoys (their protein accessions lacked a decoy prefix)",
-                        manifestStats.NNewlyMarkedDecoy));
-                    LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                        out nTargetsForStats, out nDecoysForStats);
-                    pairingStats.NTargets = nTargetsForStats;
-                    pairingStats.NDecoys = nDecoysForStats;
-                }
-            }
-            else
-            {
-                ctx.LogInfo(
-                    @"Pairing library decoys to targets by amino-acid composition " +
-                    @"(no manifest provided).");
-            }
-            pairingStats.NPairedViaComposition =
-                LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                    library, config.DecoyPrefixes, pairingState);
-            pairingStats.NPaired = pairingStats.NPairedViaManifest +
-                pairingStats.NPairedViaComposition;
-            // Defense-in-depth saturating subtract (matches Rust's
-            // saturating_sub intent; not load-bearing).
-            pairingStats.NUnpairedDecoys = Math.Max(0,
-                pairingStats.NDecoys - pairingStats.NPaired);
-            pairingStats.NUnpairedTargets = Math.Max(0,
-                pairingStats.NTargets - pairingState.ClaimedTargets.Count);
-            ctx.LogInfo(string.Format(
-                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
-                @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
-                pairingStats.NPaired, pairingStats.NDecoys,
-                pairingStats.PairedFraction * 100.0,
-                pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
-                pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
-            if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
-            {
-                ctx.LogError(string.Format(
-                    @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
-                    @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
-                    @"target-decoy competition. Either supply a pairing manifest, ensure the " +
-                    @"library uses matching protein accessions with one of `decoy_prefixes` " +
-                    @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
-                    pairingStats.PairedFraction * 100.0,
-                    config.DecoyPairMinFraction * 100.0,
-                    FormatPrefixList(config.DecoyPrefixes)));
-                ctx.ExitCode = 1;
                 return false;
             }
+            ctx.LogWarning(string.Format(
+                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_,
+                nUnusable, decoys.Count, fraction, library));
             return true;
         }
 
         /// <summary>
-        /// --task FirstPassFDR: load per-file FdrEntry stubs + PIN features directly
-        /// from each <c>.scores.parquet</c> listed via <c>--input-scores</c>
-        /// (skips the per-file Stage 2-4 scoring; Stage 1 library load
-        /// already ran in <see cref="Run"/>), plus a best-effort
-        /// calibration-JSON load per file for Stage 6 reconciliation.
+        /// Whether <paramref name="decoy"/> has at least one fragment m/z its target does not.
+        /// </summary>
+        private static bool HasOwnFragment(LibraryEntry decoy, LibraryEntry target)
+        {
+            if (decoy.Fragments == null || decoy.Fragments.Count == 0)
+                return false;
+            if (target?.Fragments == null)
+                return true;
+            var targetMzs = new HashSet<double>(target.Fragments.Select(f => f.Mz));
+            return decoy.Fragments.Any(f => !targetMzs.Contains(f.Mz));
+        }
+
+        /// <summary>
+        /// The disk load for a task that starts after Stage 4: each run's
+        /// <c>.scores.parquet</c>, derived from its input stem, read as footer row counts
+        /// (or, on the per-run arms, not read at all until its run comes up), plus a
+        /// best-effort calibration-JSON load per file for Stage 6 reconciliation.
         /// Validates the parquet group's
         /// hashes against the current library/search params first (throws
         /// <see cref="InvalidDataException"/> on mismatch). Populates
         /// <paramref name="perFileEntries"/>, <paramref name="perFileParquetPaths"/>,
         /// and <paramref name="perFileCalibrations"/>.
+        /// <paramref name="hydrationFailed"/> is set when a --task SecondPassFDR directory
+        /// cannot be folded run by run: the refusal is already logged and
+        /// <see cref="PipelineContext.ExitCode"/> set, so the caller only has to stop.
         /// </summary>
-        private void LoadJoinOnlyScores(
+        private FdrProjectionSet LoadJoinOnlyScores(
             OspreyConfig config,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             Dictionary<string, string> perFileParquetPaths,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            out bool hydrationFailed,
+            out bool loadsPerRun,
             PipelineContext ctx)
         {
+            hydrationFailed = false;
+            loadsPerRun = false;
+            // Each run's parquet, derived from its input stem: the reconciled sibling where
+            // Stage 6 wrote one, else the Stage 4 file. This list used to arrive ready-made
+            // on --input-scores, and the pipeline's first act was to convert it BACK into
+            // input stems so the sidecar helpers could work.
+            var scoresPaths = ScoringTaskShared.ScoresPathsForInputs(config);
             // --task FirstPassFDR: load per-file FdrEntry stubs directly from
-            // each .scores.parquet listed via --input-scores. Skips the
+            // each run's .scores.parquet, derived from its input stem. Skips the
             // per-file Stage 2-4 scoring (Stage 1 library load already ran
             // in Run). Also loads a best-effort calibration JSON sibling
             // per file (the loop below) for Stage 6 reconciliation, like
             // the Rust impl.
             // Guard: hash check against current --library and search params.
             // Aborts with a clear, file-named error if the operator points
-            // the merge node at parquets from a different scoring run.
+            // SecondPassFDR at parquets from a different scoring run.
             string validationError = ParquetScoreCache.ValidateScoresParquetGroup(
-                config.InputScores, config, OspreyVersion.Current);
+                scoresPaths, config, OspreyVersion.Current);
             if (validationError != null)
                 throw new InvalidDataException(validationError);
 
-            ctx.LogInfo(string.Format(
-                @"--input-scores: loading {0} per-file score parquet(s)",
-                config.InputScores.Count));
-            for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
+            ctx.LogInfo(scoresPaths.Count == 1
+                ? OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_first_pass_scores_for_1_file
+                : string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_first_pass_scores_for__0__files, scoresPaths.Count));
+            // Two lists, not a Builder: the lean arm's projection is counts-only, which IS
+            // (file names, row counts). Same reason as the resume arm.
+            var joinLeanNames = new List<string>();
+            var joinLeanCounts = new List<int>();
+
+            // The per-run rescore hydrates each run inside its own iteration, so building ANY
+            // all-runs structure here is work whose product that loop overwrites. Publish the
+            // run names, their parquet paths and their calibrations - the run-count-independent
+            // state the loop indexes by - and stop.
+            //
+            // This is the fan-out contract stated as code: entering PerFileRescoring must cost
+            // the same whether the process was handed 1 run or 446, because an HPC node holding
+            // one run cannot pay for the other 445 and must still produce identical output.
+            // The SAME early return for the reconciled-input merge, whose consumer is Stage 7's
+            // fold rather than the rescore loop (issue #4486). Both legs want exactly this: the
+            // run names, their parquet paths and their calibrations, and no rows. What differs
+            // is only which downstream loop refills a run and drops it - so the predicate is a
+            // sibling rather than a widening of the one above, and the log line names the
+            // consumer so a reader of the run log can tell which leg took this path.
+            bool perRunRescore = ScoringTaskShared.CanHydratePerRun(config);
+            bool perRunJoin = !perRunRescore && ScoringTaskShared.CanStreamStage7Join(config);
+            // --task SecondPassFDR that cannot fold run by run is a directory Stage 7 cannot
+            // read, so it is refused here, naming what is missing, before any run is loaded. It
+            // once fell through to the all-runs load below, and then failed in Stage 7 on the
+            // same missing or older-build file, with a stack trace.
+            if (config.ExpectReconciledInput && !perRunRescore && !perRunJoin)
             {
-                string parquetPath = config.InputScores[fileIdx];
-                // Derive the bare input stem via the single shared suffix-strip
-                // helper so a .scores-reconciled.parquet input maps to the same
-                // fileName key as its .scores.parquet sibling (a naive trailing
-                // ".scores" strip would leave the bogus key "<stem>.reconciled").
+                ctx.LogError(ScoringTaskShared.UnstreamableJoinError(config));
+                ctx.ExitCode = 1;
+                hydrationFailed = true;
+                return null;
+            }
+            if (perRunRescore || perRunJoin)
+            {
+                loadsPerRun = true;
+                LoadJoinOnlyPerRunNames(config, perFileEntries, perFileParquetPaths,
+                    perFileCalibrations, perFileIsolationMz,
+                    perRunJoin ? OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Second_pass_FDR : OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring, ctx);
+                if (ctx.Diagnostics?.CalibrationOnly ?? false)
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+                return null;
+            }
+
+            // Every other task reaching here takes the lean counts-only load: one EMPTY entry list
+            // per run, with each run's rows read later from its own parquet. The reconciled-input
+            // merge cannot reach it - the refusal and the per-run arms above return for every
+            // --task SecondPassFDR. Two other loads once sat here, the resident stubs-only loop
+            // and the reconciliation-bundle hydrate, and neither had a route left that finished.
+
+            // One heading with a percent in place of a line per file: at cohort scale the
+            // per-file lines were most of the log. The file names stay behind --verbose.
+            var loadProgress = new ProgressReporter(CountText.Format(scoresPaths.Count,
+                    OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for_1_file,
+                    OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for__0__files),
+                scoresPaths.Count, intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
+            for (int fileIdx = 0; fileIdx < scoresPaths.Count; fileIdx++)
+            {
+                string parquetPath = scoresPaths[fileIdx];
+                // The input's own stem, not one recovered from the parquet name. The
+                // recovery existed because the parquet was all this path was given; it had
+                // to strip ".scores" or ".scores-reconciled" to get back to a key that
+                // matches the rest of the pipeline, and a naive trailing strip left the
+                // bogus key "<stem>.reconciled".
                 string fileName = Path.GetFileNameWithoutExtension(
-                    RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
-                ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
-                    fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
-                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
-                // Stage 5+ (Percolator SVM) requires the 21 PIN features
-                // on each FdrEntry. Load them in lockstep with the stubs
-                // and bind by row index (parquet rows are stable).
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
-                if (features.Count != stubs.Count)
+                    config.InputFiles[fileIdx]) ?? string.Empty;
+                ctx.LogVerbose(string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Loading_file__0___1____2___from__3__,
+                    fileIdx + 1, scoresPaths.Count, fileName, parquetPath));
+                // Lean: no fat FdrEntry stub or 21-float feature vector is ever allocated,
+                // and no column data is read at all.
+                // Fail-fast corruption guard: this branch never loads features, so check
+                // the feature schema up front via a footer-only probe (no feature memory).
+                // A SecondPassFDR node pointed at a foreign/truncated parquet missing the
+                // feature schema stops here rather than surfacing downstream. The
+                // scores-group hash check above (ValidateScoresParquetGroup) catches a
+                // wrong-library parquet; this catches a same-library corrupt one.
+                // FOOTER COUNT, and nothing else. This branch produced a counts-only
+                // projection, so the scan that used to sit here read every row of the file
+                // to arrive at a number the footer declares - the same 1.34-billion-row
+                // waste the resume path carried, on the node that can least afford it.
+                //
+                // It also read that footer TWICE and used neither count: HasPinFeatureColumns
+                // above opened the file for the schema, ProbeCwtRowMetadata opened it again
+                // for NumRows, and the resulting hint was handed to BeginFile - which
+                // returns before touching capacityHint in counts-only mode, because there is
+                // no row list to pre-size. ProbeResumeSchemaAndRows answers both in one open.
+                var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(parquetPath);
+                if (!probe.HasPinFeatures)
                 {
                     throw new InvalidDataException(string.Format(
-                        @"--input-scores: parquet {0} has {1} stubs but {2} feature rows",
-                        parquetPath, stubs.Count, features.Count));
+                        OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_,
+                        parquetPath));
                 }
-                for (int j = 0; j < stubs.Count; j++)
-                    stubs[j].Features = features[j];
-                ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                joinLeanNames.Add(fileName);
+                joinLeanCounts.Add(RowCountAsInt(probe.RowCount, parquetPath));
+                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
                 perFileParquetPaths[fileName] = parquetPath;
-
-                // Best-effort calibration JSON load for Stage 6
-                // reconciliation. Mirrors osprey/src/pipeline.rs:2573-2588.
-                try
-                {
-                    string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
-                    if (parquetDir != null)
-                    {
-                        // fileName is the bare input stem (the scores /
-                        // reconciled-scores suffix was stripped above via
-                        // SyntheticInputFromParquet), so combining it with
-                        // parquetDir yields the same input-stem path
-                        // ProcessFile passes to CalibrationPathForInput.
-                        string calStemPath = Path.Combine(parquetDir, fileName);
-                        string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
-                        if (File.Exists(calPath))
-                        {
-                            var calParams = CalibrationIO.LoadCalibration(calPath);
-                            if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
-                            {
-                                var mp = calParams.RtCalibration.ModelParams;
-                                if (ctx.Diagnostics?.DumpCalibration ?? false)
-                                {
-                                    ctx.Diagnostics?.WriteStage6CalibrationDump(
-                                        fileName, mp.LibraryRts, mp.FittedRts);
-                                }
-                                var rtCal = RTCalibration.FromModelParams(
-                                    mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
-                                    calParams.RtCalibration.ResidualSD);
-                                perFileCalibrations[fileName] = rtCal;
-                            }
-
-                            // Isolation-window coverage for the gap-fill m/z
-                            // filter -- read independent of RT calibration from
-                            // the isolation_scheme block, so a merge node with no
-                            // mzML still gets per-file coverage. Mirrors Rust's
-                            // isolation_intervals_from_cal (pipeline.rs).
-                            var isoIntervals = IsolationIntervalsFromWindows(
-                                calParams.Metadata?.IsolationScheme?.Windows);
-                            if (isoIntervals != null)
-                                perFileIsolationMz[fileName] = isoIntervals;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
-                }
+                LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
+                    perFileIsolationMz, ctx);
+                loadProgress.Report(fileIdx + 1);
             }
+            loadProgress.Dispose();
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+            return FdrProjectionSet.CountsOnly(joinLeanNames, joinLeanCounts);
+        }
+
+        /// <summary>
+        /// Publish the run-count-independent state the per-run rescore loop indexes by: one
+        /// EMPTY entry list per run (keyed by stem, in input order), each run's parquet path,
+        /// and its best-effort calibration sibling. No parquet rows are read.
+        ///
+        /// <para>The empty lists are the shared backing store the loop refills and drains one
+        /// run at a time - the same list OBJECTS the <c>ScoredEntries</c> / <c>CompactedEntries</c>
+        /// milestones wrap, which is why they are created here rather than by the loop. Contents
+        /// are transient; identity is not.</para>
+        ///
+        /// <para>The calibration read stays here because it is the run's own JSON sibling and is
+        /// the FALLBACK when a run's envelope carries no refined calibration.</para>
+        ///
+        /// <para><b>It is the one term on this path that still grows with run count</b>, and it
+        /// is left here knowingly rather than overlooked. <c>PerFileCalibrations</c> retains one
+        /// <see cref="RTCalibration"/> per run, each holding the anchor arrays
+        /// (<c>AbsResiduals</c>, <c>FittedRts</c>, <c>LibraryRts</c>) - on the CHS cohort a
+        /// run's refined calibration is ~2 MB, so 446 runs is order-1 GB. Small enough to be
+        /// invisible at plate scale and NOT O(1), so it must be measured at 446 rather than
+        /// assumed: the mistake this whole change exists to correct was reading a single-point
+        /// measurement as a slope. Moving it inside the iteration is the fix if the measurement
+        /// says it matters.</para>
+        /// </summary>
+        private static void LoadJoinOnlyPerRunNames(
+            OspreyConfig config,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            Dictionary<string, string> perFileParquetPaths,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            string consumer,
+            PipelineContext ctx)
+        {
+            var scoresPaths = ScoringTaskShared.ScoresPathsForInputs(config);
+            ctx.LogVerbose(CountText.Format(scoresPaths.Count,
+                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyPerRunNames__1__loads_the_file_on_its_own_,
+                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyPerRunNames__1__loads_one_file_at_a_time___0__files__,
+                consumer));
+            for (int i = 0; i < scoresPaths.Count; i++)
+            {
+                string parquetPath = scoresPaths[i];
+                string fileName = Path.GetFileNameWithoutExtension(
+                    config.InputFiles[i]) ?? string.Empty;
+                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
+                perFileParquetPaths[fileName] = parquetPath;
+                LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
+                    perFileIsolationMz, ctx);
+            }
+        }
+
+        /// <summary>
+        /// Best-effort per-file calibration JSON load for Stage 6 reconciliation: the refined
+        /// RT calibration plus the isolation-window coverage the gap-fill m/z filter needs.
+        /// Mirrors osprey/src/pipeline.rs:2573-2588. A read failure is logged and swallowed -
+        /// a SecondPassFDR node with no calibration sibling still runs, with the filter disabled for
+        /// that file.
+        /// </summary>
+        private static void LoadJoinOnlyCalibration(
+            string fileName,
+            string parquetPath,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            PipelineContext ctx)
+        {
+            try
+            {
+                string parquetDir = Path.GetDirectoryName(Path.GetFullPath(parquetPath));
+                if (parquetDir != null)
+                {
+                    // fileName is the bare input stem (the scores / reconciled-scores suffix
+                    // was stripped by SyntheticInputFromParquet), so combining it with
+                    // parquetDir yields the same input-stem path ProcessFile passes to
+                    // CalibrationPathForInput.
+                    string calStemPath = Path.Combine(parquetDir, fileName);
+                    string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                    if (File.Exists(calPath))
+                    {
+                        var calParams = CalibrationIO.LoadCalibration(calPath);
+                        if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                        {
+                            var mp = calParams.RtCalibration.ModelParams;
+                            if (ctx.Diagnostics?.DumpCalibration ?? false)
+                            {
+                                ctx.Diagnostics?.WriteStage6CalibrationDump(
+                                    fileName, mp.LibraryRts, mp.FittedRts);
+                            }
+                            var rtCal = RTCalibration.FromModelParams(
+                                mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                calParams.RtCalibration.ResidualSD);
+                            perFileCalibrations[fileName] = rtCal;
+                        }
+
+                        // Isolation-window coverage for the gap-fill m/z filter -- read
+                        // independent of RT calibration from the isolation_scheme block, so
+                        // a SecondPassFDR node with no mzML still gets per-file coverage. Mirrors
+                        // Rust's isolation_intervals_from_cal (pipeline.rs).
+                        var isoIntervals = IsolationIntervalsFromWindows(
+                            calParams.Metadata?.IsolationScheme?.Windows);
+                        if (isoIntervals != null)
+                            perFileIsolationMz[fileName] = isoIntervals;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyCalibration___Failed_to_load_calibration_for__0____1_, fileName, ex.Message));
+            }
         }
 
         /// <summary>
@@ -1113,84 +1521,13 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Probe-the-disk reconciliation hydration: when every <c>--input-scores</c>
-        /// parquet already has both a sibling .1st-pass.fdr_scores.bin and a
-        /// .reconciliation.json, load the rescore bundle (1st-pass q-value
-        /// overlay + reconciliation actions + refined RT calibration +
-        /// gap-fill targets) into <see cref="_rescoreInputs"/> so the worker
-        /// hydration path and the in-pipeline path produce identical
-        /// post-Stage-5 state, and clear PIN features on the hydrated stubs.
-        /// Returns false (with <see cref="PipelineContext.ExitCode"/> set) if
-        /// hydration throws <see cref="InvalidDataException"/>; true otherwise
-        /// (including when no sidecars are present yet and
-        /// <see cref="_rescoreInputs"/> stays null). Other exception types
-        /// propagate uncaught, matching the original inline behavior.
-        /// </summary>
-        private bool HydrateRescoreBundleIfPresent(
-            OspreyConfig config,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            PipelineContext ctx)
-        {
-            bool allHave1stPassAndRecon = true;
-            foreach (var parquetPath in config.InputScores)
-            {
-                string syntheticInput = RescoreHydration.SyntheticInputFromParquet(parquetPath);
-                if (!File.Exists(FdrScoresSidecar.Pass1Path(syntheticInput))
-                    || !File.Exists(ReconciliationFile.PathForInput(syntheticInput)))
-                {
-                    allHave1stPassAndRecon = false;
-                    break;
-                }
-            }
-            if (allHave1stPassAndRecon)
-            {
-                try
-                {
-                    _rescoreInputs = RescoreHydration.HydrateReconciliationOverlay(
-                        perFileEntries, config.InputScores);
-                }
-                catch (InvalidDataException ex)
-                {
-                    ctx.LogError(string.Format(
-                        @"--input-scores hydration failed: {0}", ex.Message));
-                    ctx.ExitCode = 1;
-                    return false;
-                }
-                // Clear PIN features on bundle-hydrated stubs so
-                // PerFileRescoreTask's WriteReconciledParquet can keep
-                // its "Features != null means this entry was rescored"
-                // criterion -- with features pre-populated from the
-                // parquet, every entry would otherwise look rescored
-                // and overwrite the original parquet row's binary
-                // blob columns (fragment_mzs, ref_xic_*, bounds_*).
-                // Bundle path doesn't need PIN features downstream:
-                // FirstJoinTask skips Percolator on this path, so the
-                // SVM training input is irrelevant.
-                foreach (var kvp in perFileEntries)
-                    foreach (var entry in kvp.Value)
-                        entry.Features = null;
-                ctx.LogInfo(string.Format(
-                    @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
-                    @"{2} refined RT calibration(s), {3} gap-fill target(s))",
-                    perFileEntries.Count,
-                    _rescoreInputs.TotalActions,
-                    _rescoreInputs.RefinedCalibrations.Count,
-                    _rescoreInputs.TotalGapFillTargets));
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Phase B per-file resume: if the file's <c>.scores.parquet</c>
-        /// already exists with a matching <c>.PerFileScoring.osprey.task</c>
-        /// sidecar (validity key matches the current config), load the
-        /// stubs + PIN features + best-effort calibration from disk and
-        /// skip <see cref="ProcessFile"/>. Otherwise clear any stale
-        /// sidecar, run <see cref="ProcessFile"/>, and on success write
-        /// a fresh sidecar. The pre-Run delete is the per-file analogue
-        /// of the task-level safety net other tasks use: a mid-Run crash
-        /// leaves no sidecar pointing at the partial parquet, so the
-        /// resume invocation reprocesses that file.
+        /// Phase B per-file resume: if every output this task writes for the file - the
+        /// <c>.scores.parquet</c> and the <c>.calibration.json</c> - carries a current validity
+        /// stamp (<see cref="IsFileCurrent"/>), load the stubs + PIN features + best-effort
+        /// calibration from disk and skip <see cref="ProcessFile"/>. Otherwise run
+        /// <see cref="ProcessFile"/>, whose writes embed this run's stamp. Nothing is cleared
+        /// first: each output commits atomically with its own stamp, so a crash between the two
+        /// writes leaves one output stale or missing and the file is rescored on resume.
         ///
         /// Returns the per-file <see cref="FdrEntry"/> list (from the
         /// disk load or <see cref="ProcessFile"/>), or <c>null</c> on
@@ -1210,88 +1547,96 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            if (PerFileResumeDriver.IsCurrent(scoresPath, Name, validityKey))
+            if (IsFileCurrent(inputFile, validityKey))
             {
                 var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
                 if (loaded != null)
                 {
                     ctx.LogInfo(string.Format(
-                        @"[file] {0}/{1} {2}: skipping (outputs valid)",
+                        OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_File__0___1____2__was_already_scored__keeping_it_,
                         fileIdx + 1, totalFiles, fileName));
                     return loaded;
                 }
                 // load failed -- fall through and rescore the file.
             }
 
-            ctx.LogInfo(string.Format(@"Scoring file {0}/{1}: {2}",
+            ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ScoreOrLoadForFile_Scoring_file__0___1____2_,
                 fileIdx + 1, totalFiles, inputFile));
-            // Clear stale sidecar so a mid-ProcessFile crash leaves no
-            // false-positive sidecar on the next invocation.
-            PerFileResumeDriver.ClearStale(scoresPath, Name);
-            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
-            if (fileResult != null)
-            {
-                PerFileResumeDriver.Stamp(scoresPath, Name, OspreyVersion.Current,
-                    validityKey, new[] { inputFile }, ctx.LogWarning);
-            }
-            return fileResult;
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORE_FILE, @"{0}/{1}", fileIdx + 1, totalFiles));
+            return ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
         }
 
         /// <summary>
-        /// Best-effort load of one file's stubs + PIN features from a
-        /// <c>.scores.parquet</c> plus the calibration sibling. Returns
-        /// the stub list on success or <c>null</c> on a stub/feature read
-        /// failure. With <paramref name="resumeStrict"/> = <c>false</c> (the
-        /// default, used by <see cref="ScoreOrLoadForFile"/>) the caller falls
-        /// back to rescoring, so a failure logs a "will rescore" warning. With
-        /// <paramref name="resumeStrict"/> = <c>true</c> (the pure-load resume
-        /// path, where <see cref="PipelineContext.CanRehydrate"/> already
-        /// certified the outputs valid and there is NO rescore fallback) a
-        /// failure is a genuine fault and logs an error instead -- no misleading
-        /// "will rescore" messaging. Mirrors the load logic in the
-        /// <c>--task FirstPassFDR</c> branch above.
+        /// Whether every output this task writes for <paramref name="inputFile"/> carries a
+        /// stamp current for this task and <paramref name="validityKey"/>: the one predicate for
+        /// "this file is already scored", so the file's outputs are valid together or not at all.
         /// </summary>
-        private static List<FdrEntry> TryLoadStubsAndCalibration(
+        private bool IsFileCurrent(string inputFile, string validityKey)
+        {
+            foreach (var output in OutputsForInput(inputFile))
+            {
+                if (!ArtifactValidity.IsCurrent(output, Name, validityKey))
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The <c>--input-files</c> loads (<see cref="Run"/> and
+        /// <see cref="RehydrateFromOwnOutputs"/>) have only the lean projection path; the
+        /// resident fat-stub load that served a config which may not go lean was removed with
+        /// <c>OSPREY_FDR_PROJECTION</c>. The one such config, <c>ExpectReconciledInput</c>,
+        /// does not reach either load, so arriving here with it is a routing defect.
+        /// </summary>
+        private static void AssertLeanProjection(OspreyConfig config)
+        {
+            if (config.ExpectReconciledInput)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"A reconciled-input ({0}) configuration reached the per-file scoring load, which has no resident first-pass pool to serve it.",
+                    OspreyArgNames.TaskText(OspreyTaskNames.SECOND_PASS_FDR)));
+            }
+        }
+
+        /// <summary>
+        /// One file's declared row count as the <c>int</c> a counts-only projection holds, or a
+        /// hard failure naming the file.
+        ///
+        /// <para>Refuses rather than casting, but note which quantity is actually close to the
+        /// edge. A single run reaching 2.1 billion rows is remote - 446-file CHS averages
+        /// ~3.0 M per file, so this has ~700x headroom. The COHORT total is the tight one:
+        /// 1,342,686,095 across 446 files is already 62% of <c>int.MaxValue</c>, and the
+        /// comment beside <c>totalScored</c> puts the wrap at ~505 files for the 4.2 M-per-file
+        /// shape. That is why the totals here are <c>long</c>. This guard exists so the
+        /// narrowing that feeds them is stated rather than silent, NOT because it is the
+        /// likely failure.</para>
+        /// </summary>
+        private static int RowCountAsInt(long rowCount, string scoresPath)
+        {
+            if (rowCount < 0 || rowCount > int.MaxValue)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.PerFileScoringTask_RowCountAsInt__0__holds__1__rows__more_than_this_version_of_Osprey_can_process___2___,
+                    scoresPath, rowCount, int.MaxValue));
+            }
+            return (int)rowCount;
+        }
+
+        /// <summary>
+        /// Load a resumed file's RT calibration + gap-fill isolation m/z coverage from its
+        /// sibling <c>calibration.json</c> into the shared maps, so a cached-calibration
+        /// file gets the same filter input a fresh ProcessFile computes (mirrors Rust's
+        /// isolation_intervals_from_cal). Independent of the stub/projection load, so both
+        /// <see cref="TryLoadStubsAndCalibration"/> and the lean resume path reuse it.
+        /// A failure is logged and swallowed -- calibration is an enrichment, not a gate.
+        /// </summary>
+        private static void LoadCalibrationAndIsolation(
             string scoresPath,
             string fileName,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
-            PipelineContext ctx,
-            bool resumeStrict = false)
+            PipelineContext ctx)
         {
-            List<FdrEntry> stubs;
-            try
-            {
-                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath);
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
-                if (features.Count != stubs.Count)
-                {
-                    if (resumeStrict)
-                        ctx.LogError(string.Format(
-                            @"  Resume rehydrate: {0} has {1} stubs but {2} feature rows; cannot load valid-on-disk scores.",
-                            scoresPath, stubs.Count, features.Count));
-                    else
-                        ctx.LogWarning(string.Format(
-                            @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
-                            scoresPath, stubs.Count, features.Count));
-                    return null;
-                }
-                for (int j = 0; j < stubs.Count; j++)
-                    stubs[j].Features = features[j];
-            }
-            catch (Exception ex)
-            {
-                if (resumeStrict)
-                    ctx.LogError(string.Format(
-                        @"  Resume rehydrate: failed to load valid-on-disk scores from {0}: {1}",
-                        scoresPath, ex.Message));
-                else
-                    ctx.LogWarning(string.Format(
-                        @"  Per-file resume: failed to load {0}: {1}; will rescore.",
-                        scoresPath, ex.Message));
-                return null;
-            }
-
             try
             {
                 string parquetDir = Path.GetDirectoryName(Path.GetFullPath(scoresPath));
@@ -1311,11 +1656,10 @@ namespace pwiz.Osprey.Tasks
                             perFileCalibrations[fileName] = rtCal;
                         }
 
-                        // Rehydrate the gap-fill m/z coverage from the
-                        // isolation_scheme block too (independent of RT cal), so a
-                        // resumed / cached-calibration file gets the same filter
-                        // input a fresh ProcessFile computes. Mirrors Rust's
-                        // isolation_intervals_from_cal (pipeline.rs).
+                        // Rehydrate the gap-fill m/z coverage from the isolation_scheme
+                        // block too (independent of RT cal), so a resumed / cached-
+                        // calibration file gets the same filter input a fresh ProcessFile
+                        // computes. Mirrors Rust's isolation_intervals_from_cal (pipeline.rs).
                         var isoIntervals = IsolationIntervalsFromWindows(
                             calParams.Metadata?.IsolationScheme?.Windows);
                         if (isoIntervals != null)
@@ -1325,8 +1669,50 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+                ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.PerFileScoringTask_LoadCalibrationAndIsolation___Failed_to_load_calibration_for__0____1_, fileName, ex.Message));
             }
+        }
+
+        /// <summary>
+        /// Best-effort load of one file's stubs + PIN features from a
+        /// <c>.scores.parquet</c> plus the calibration sibling. Returns
+        /// the stub list on success or <c>null</c> on a stub/feature read
+        /// failure, which the caller (<see cref="ScoreOrLoadForFile"/>) answers by
+        /// rescoring the file, so a failure logs a "will rescore" warning. No sequence
+        /// pool: the result is one file's own scoring output on its way to that file's
+        /// parquet, so pooling it would canonicalize strings nothing holds afterwards.
+        /// </summary>
+        private static List<FdrEntry> TryLoadStubsAndCalibration(
+            string scoresPath,
+            string fileName,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            PipelineContext ctx)
+        {
+            List<FdrEntry> stubs;
+            try
+            {
+                stubs = ParquetScoreCache.LoadFdrStubsFromParquet(scoresPath, null, null);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                if (features.Count != stubs.Count)
+                {
+                    ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(
+                        OspreyTasksResources.PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__scoring_it_again_,
+                        scoresPath, stubs.Count, features.Count));
+                    return null;
+                }
+                for (int j = 0; j < stubs.Count; j++)
+                    stubs[j].Features = features[j];
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(
+                    OspreyTasksResources.PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_,
+                    scoresPath, ex.Message));
+                return null;
+            }
+
+            LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
             return stubs;
         }
 
@@ -1358,26 +1744,32 @@ namespace pwiz.Osprey.Tasks
             // 32 threads on a 32-core box, the prior 96-way oversubscription
             // produced 45-95s wall-time variance on Stellar; a fair share
             // (10 threads each) holds the run near steady-state.
-            if (ctx.RunPlan.EffectiveFileParallelism > 1)
+            if (ctx.RunPlan.ScoringFileParallelism > 1)
             {
-                int perFileThreads = Math.Max(1, config.NThreads / ctx.RunPlan.EffectiveFileParallelism);
-                ctx.LogInfo(string.Format(
-                    "[BENCH] Per-file thread cap: {0} ({1} total / {2} files in parallel)",
-                    perFileThreads, config.NThreads, ctx.RunPlan.EffectiveFileParallelism));
+                int perFileThreads = Math.Max(1, config.NThreads / ctx.RunPlan.ScoringFileParallelism);
+                ctx.LogInfo(LogTag.BENCH, @"Per-file thread cap: {0} ({1} total / {2} files in parallel)",
+                    perFileThreads, config.NThreads, ctx.RunPlan.ScoringFileParallelism);
                 config.NThreads = perFileThreads;
             }
 
             var context = new ScoringContext(config, fileName);
 
-            // Load spectra (from mzML or .spectra.bin cache)
-            // Segment 1/4 (read): the mzML/cache read reporter inside LoadSpectra
-            // feeds this file's first progress slice under --parallel-files.
+            // Per-candidate rank-term capture (OSPREY_PICK_DUMP_CANDIDATES): attach a
+            // thread-safe collector the scorer appends to under the per-window Parallel.For.
+            // Flushed once below, after scoring, to a per-file TSV. Null (zero overhead) when
+            // the flag is unset.
+            if (OspreyEnvironment.PickDumpCandidates)
+                context.PickDump = new PickCandidateDump();
+
+            // Load the per-file spectra as a STREAMING index over the .spectra.bin cache,
+            // never materializing the full ~6 GB MS2 List<Spectrum>: Stages 1-4 (calibration
+            // + scoring) stream each isolation window on demand. Segment 1/4 (read): the
+            // mzML/cache read reporter inside EnsureSpectraCache feeds this file's first
+            // progress slice under --parallel-files.
             MultiProgressReporter.Current?.BeginSegment();
-            List<Spectrum> spectra;
-            List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
-            LoadSpectra(inputFile, ctx.RunPlan.EffectiveFileParallelism > 1,
-                out spectra, out ms1Spectra, out int unsortedCount, ctx);
+            SpectraWindowIndex windowIndex = ScoringTaskShared.EnsureSpectraCache(
+                inputFile, ctx.RunPlan.ScoringFileParallelism > 1, out int unsortedCount, ctx);
             swParse.Stop();
 
             long inputBytes = 0;
@@ -1395,32 +1787,35 @@ namespace pwiz.Osprey.Tasks
             if (inputBytes > 0 && parseSeconds > 0.001)
             {
                 double mbPerSec = (inputBytes / 1024.0 / 1024.0) / parseSeconds;
-                ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s ({1:F1} MB/s)",
-                    parseSeconds, mbPerSec));
+                ctx.LogInfo(LogTag.TIMING, @"mzML parsing: {0:F1}s ({1:F1} MB/s)",
+                    parseSeconds, mbPerSec);
             }
             else
             {
-                ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s", parseSeconds));
+                ctx.LogInfo(LogTag.TIMING, @"mzML parsing: {0:F1}s", parseSeconds);
             }
 
-            if (spectra == null || spectra.Count == 0)
+            if (windowIndex == null || windowIndex.Ms2Count == 0)
             {
-                ctx.LogWarning(string.Format("No spectra found in {0}", inputFile));
+                ctx.LogWarning(string.Format(OspreyTasksResources.PerFileScoringTask_ProcessFile_No_spectra_found_in__0_, inputFile));
                 return null;
             }
 
-            // Extract isolation windows from spectra
-            var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
+            // MS1 and the isolation windows come straight from the streaming index (copies of
+            // its own small lists); the full MS2 list is never materialized here.
+            var ms1Spectra = windowIndex.Ms1Spectra.ToList();
+            var isolationWindows = windowIndex.IsolationWindows.ToList();
             ctx.LogInfo(string.Format(
-                "Loaded {0} MS1 and {1} MS/MS spectra with {2} unique isolation windows{3}",
-                ms1Spectra != null ? ms1Spectra.Count : 0, spectra.Count, isolationWindows.Count,
+                OspreyTasksResources.PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_,
+                ms1Spectra.Count, windowIndex.Ms2Count, isolationWindows.Count,
                 unsortedCount > 0
-                    ? string.Format(" ({0} had unsorted peaks, re-sorted; use --verbose for detail)", unsortedCount)
+                    ? @" " + string.Format(OspreyTasksResources.PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_, unsortedCount,
+                        OspreyArgNames.Text(OspreyArgNames.VERBOSE))
                     : string.Empty));
-            ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
-                fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
-            ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
-                fileName, isolationWindows.Count));
+            ctx.LogInfo(LogTag.COUNT, @"mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
+                fileName, windowIndex.Ms2Count, ms1Spectra.Count);
+            ctx.LogInfo(LogTag.COUNT, @"Isolation windows [{0}]: {1}",
+                fileName, isolationWindows.Count);
 
             // Resolve the per-file calibration (load a cached/Rust JSON or
             // compute via Calibrator) and persist the calibration JSON.
@@ -1428,15 +1823,45 @@ namespace pwiz.Osprey.Tasks
             // carries the file forward as a step when scoring begins.
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
-                inputFile, fileName, fullLibrary, spectra, ms1Spectra, isolationWindows,
-                context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal, ctx);
+                inputFile, fileName, fullLibrary, windowIndex, ms1Spectra, isolationWindows,
+                context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+                out ModelDiagnosticsData.CalFileRow calDiagnostics, ctx);
+
+            // Harvest the CAL-view per-file diagnostics for the --model-diagnostics
+            // HTML report. Only non-null on the compute path under config.ModelDiagnostics;
+            // FirstPassFdrTask assembles these into ModelDiagnosticsData.Cal. Keyed by file
+            // name in input order, mirroring the per-file calibration harvest below. The
+            // ConcurrentDictionary field tolerates the parallel per-file fan-out.
+            if (calDiagnostics != null)
+            {
+                _perFileCalibrationDiagnostics[fileName] = calDiagnostics;
+                // Record the per-run mass-error unit from the mass calibration (the
+                // CalFileRow does not carry it -- it is a per-run scalar). ms1 is
+                // authoritative; ms2 covers an uncalibrated ms1 that defaulted its unit.
+                if (_calibrationMassUnit == null)
+                    _calibrationMassUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
+            }
+
+            // Calibration-phase memory boundary (companion to the perfile-scoring-peak
+            // capture below). The [MEM] line's working_set peak is the calibration
+            // high-water mark before scoring pushes it higher; its managed_heap is taken
+            // WITHOUT a forced GC, so the transient per-window float[][] XCorr caches the
+            // calibration scoring builds and releases per isolation window -- not yet
+            // collected here -- are still counted, sizing the calibration peak.
+            // The paired retention snapshot forces its own GC first (dotMemory), so it
+            // captures the post-calibration FLOOR that scoring inherits (library + spectra)
+            // rather than the transient cache. Both are no-ops off a profiling run
+            // (OSPREY_LOG_MEMORY unset / no dotMemory attached), so the batch and the
+            // regression golden are unaffected; the per-file fan-out reaches this per file.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"post-calibration");
+            ProfilerHooks.CaptureRetentionSnapshot(@"post-calibration");
 
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
             // search incrementally without paying the Stage 4 cost.
             if (OspreyEnvironment.ExitAfterCalibration)
             {
-                ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
+                ctx.LogInfo(LogTag.BENCH, @"OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
                 return new List<FdrEntry>();
             }
 
@@ -1464,9 +1889,42 @@ namespace pwiz.Osprey.Tasks
             // in ScoringPipeline feeds this slice -- the long phase that shows the
             // bulk of a file's motion on the aggregate line.
             MultiProgressReporter.Current?.BeginSegment();
+
+            // Scoring streams each isolation window's peaks from the same index built at load
+            // (Stage 3 calibration used it too), so the full MS2 list is never resident.
+            IWindowSpectraProvider spectraProvider =
+                new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
+
             var scoredEntries = ScoreAndDeduplicate(
-                fullLibrary, spectra, ms1Spectra, isolationWindows,
+                fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Per-candidate rank-term dump (OSPREY_PICK_DUMP_CANDIDATES): the parallel per-window
+            // scoring above accumulated one row per CWT candidate into context.PickDump; write it
+            // out now, once, next to the other per-file artifacts. No-op when the flag is unset.
+            if (context.PickDump != null)
+            {
+                string pickPath = Path.Combine(
+                    ArtifactPaths.ResolveOutputDir(inputFile),
+                    fileName + @".pick_candidates.tsv");
+                context.PickDump.Flush(pickPath);
+                ctx.LogInfo(string.Format(@"Wrote per-candidate pick dump to {0}", pickPath));
+            }
+
+            // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
+            // work targets. Here scoredEntries still hold every heavy per-entry array
+            // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
+            // ReferenceXic*) and the library is still resident, but the resident MS2 is
+            // gone on the streaming path (dropped above), which is the reduction this
+            // snapshot exists to confirm. Those per-entry arrays are dropped a few lines
+            // below (the #4355 write-then-null), so the later
+            // perfile-scored-live probe captures only the post-release floor and CANNOT
+            // show them -- a forced-GC snapshot never captures unreferenced objects.
+            // Deliberately a direct SnapshotReady-gated capture (NOT via a forced-GC [MEM]
+            // boundary): a no-op on the batch (no profiler attached), fires only under
+            // Profile-Osprey.ps1 -MemoryProfile, and dotMemory forces its own GC so the
+            // captured live set is the true retained peak (arrays are live here, so kept).
+            ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
 
             // Optional: write per-entry feature TSV for comparison against Rust's PIN output
             if (config.WritePin)
@@ -1481,7 +1939,7 @@ namespace pwiz.Osprey.Tasks
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
             // as a Phase 4 follow-up. The metadata dictionary is precomputed
-            // in Run() against the original (un-mutated) outer config — see
+            // in Run() against the original (un-mutated) outer config - see
             // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
             // Segment 4/4 (write): the parquet build/write reporters in
@@ -1499,14 +1957,14 @@ namespace pwiz.Osprey.Tasks
                     parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
-                    "Wrote {0} scored entries to {1} ({2:F1}s)",
+                    OspreyTasksResources.PerFileScoringTask_ProcessFile_Wrote__0__precursor_candidate_peaks_to__1____2_s_,
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
                 // the parquet above and are reloadable by ParquetIndex, so drop them from
                 // the retained buffer to bound memory -- all N files' entries are held at
-                // once for the join, and these arrays dominate. Features is reloaded before
-                // first-pass Percolator (FirstJoinTask); CWT / fragments / ref-XIC are
+                // once for FirstPassFDR, and these arrays dominate. Features is reloaded before
+                // first-pass Percolator (FirstPassFdrTask); CWT / fragments / ref-XIC are
                 // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
                 // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
                 // docs, which already document these as null on parquet-loaded stubs).
@@ -1533,17 +1991,20 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private List<FdrEntry> ScoreAndDeduplicate(
             List<LibraryEntry> fullLibrary,
-            List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            IWindowSpectraProvider spectraProvider, List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Cal, MzCalibrationResult ms1Cal,
             ScoringContext context, OspreyConfig config,
             string fileName, PipelineContext ctx)
         {
-            // Run coelution scoring across all isolation windows
+            // Run coelution scoring across all isolation windows from the caller's
+            // window-spectra source (streaming per window, or the resident fallback).
+            // Stage-4 scores a file once; then only DeduplicateDoubleCounting touches
+            // the spectra, and it needs only the MS2 RTs the provider carries.
             var swScoring = Stopwatch.StartNew();
             var scoredEntries = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
-                fullLibrary, spectra, ms1Spectra,
+                fullLibrary, spectraProvider, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
                 context);
@@ -1552,14 +2013,27 @@ namespace pwiz.Osprey.Tasks
             double ratePerSec = scoringSeconds > 0.001
                 ? scoredEntries.Count / scoringSeconds
                 : 0.0;
-            ctx.LogInfo(string.Format(
-                "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
-                scoringSeconds, scoredEntries.Count, ratePerSec));
+            ctx.LogInfo(LogTag.TIMING, @"Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
+                scoringSeconds, scoredEntries.Count, ratePerSec);
 
-            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
-            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
-                scoredEntries.Count,
+            // Distinct candidates, not rows: with overlapping isolation windows ScoreWindow scores
+            // a candidate once per window, and the duplicates are only removed below. Counting rows
+            // would let the "N of M" line claim more candidates than the library holds.
+            var scoredIds = new HashSet<uint>();
+            int nScoredTargets = 0, nScoredDecoys = 0;
+            foreach (var entry in scoredEntries)
+            {
+                if (!scoredIds.Add(entry.EntryId))
+                    continue;
+                if (entry.IsDecoy)
+                    nScoredDecoys++;
+                else
+                    nScoredTargets++;
+            }
+            ctx.LogInfo(string.Format(
+                OspreyTasksResources.PerFileScoringTask_ScoreAndDeduplicate_Scored_peaks_for__0__of__1__precursor_candidates___2__targets___3__decoys__in__4_,
+                scoredIds.Count,
+                fullLibrary.Count,
                 nScoredTargets,
                 nScoredDecoys,
                 fileName));
@@ -1569,21 +2043,19 @@ namespace pwiz.Osprey.Tasks
             // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
             // same call site, between scoring and pair-deduplication.
             scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicateDoubleCounting(
-                scoredEntries, fullLibrary, spectra, ms2Cal,
+                scoredEntries, fullLibrary, spectraProvider.Ms2RetentionTimes, ms2Cal,
                 isolationWindows, config);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format(
-                "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
-                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
+            ctx.LogInfo(LogTag.COUNT, @"Coelution scored [{0}]: {1} peaks ({2} targets, {3} decoys)",
+                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys);
 
             // Deduplicate: keep best target and best decoy per base_id
             int nBeforeDedup = scoredEntries.Count;
             scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicatePairs(scoredEntries);
             int nAfterDedup = scoredEntries.Count;
-            ctx.LogInfo(string.Format(
-                "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
-                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
+            ctx.LogInfo(LogTag.COUNT, @"Deduplication [{0}]: {1} -> {2} ({3} removed)",
+                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup);
 
             return scoredEntries;
         }
@@ -1599,15 +2071,20 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private RTCalibration ResolveCalibration(
             string inputFile, string fileName,
-            List<LibraryEntry> fullLibrary, List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            List<LibraryEntry> fullLibrary, SpectraWindowIndex windowIndex,
+            List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             ScoringContext context, OspreyConfig config,
             out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+            out ModelDiagnosticsData.CalFileRow calDiagnostics,
             PipelineContext ctx)
         {
             RTCalibration rtCalibration = null;
             ms2Cal = MzCalibrationResult.Uncalibrated();
             ms1Cal = MzCalibrationResult.Uncalibrated();
+            // CAL-view per-file diagnostics for --model-diagnostics; null on the cached-JSON
+            // load path (no calibration matches available) and on a normal run.
+            calDiagnostics = null;
             // The wide pre-calibration RT tolerance (the "before" number in the
             // console calibration summary). Set by the compute path below; stays 0
             // when calibration is loaded from a cached JSON (no summary emitted then).
@@ -1624,7 +2101,7 @@ namespace pwiz.Osprey.Tasks
             string loadCalPath = OspreyEnvironment.LoadCalibrationPath;
             if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
             {
-                ctx.LogInfo(string.Format("[BISECT] Loading calibration from: {0}", loadCalPath));
+                ctx.LogInfo(LogTag.BISECT, string.Format(@"Loading calibration from: {0}", loadCalPath));
                 var calParams = CalibrationIO.LoadCalibration(loadCalPath);
                 if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
                 {
@@ -1632,7 +2109,7 @@ namespace pwiz.Osprey.Tasks
                     rtCalibration = RTCalibration.FromModelParams(
                         mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
                         calParams.RtCalibration.ResidualSD);
-                    ctx.LogInfo(string.Format("Loaded RT calibration: {0} points, R2={1:F4}",
+                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_RT_calibration___0__points__R2__1_,
                         calParams.RtCalibration.NPoints, calParams.RtCalibration.RSquared));
                 }
                 if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
@@ -1647,8 +2124,8 @@ namespace pwiz.Osprey.Tasks
                         AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
                         Calibrated = true
                     };
-                    ctx.LogInfo(string.Format("Loaded MS2 calibration: mean={0:F4} {1}, SD={2:F4}",
-                        ms2Cal.Mean, ms2Cal.Unit, ms2Cal.SD));
+                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2_,
+                        ms2Cal.Mean, MzCalibration.GetUnitText(ms2Cal.Unit), ms2Cal.SD));
                 }
                 if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
                 {
@@ -1662,22 +2139,21 @@ namespace pwiz.Osprey.Tasks
                         AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
                         Calibrated = true
                     };
-                    ctx.LogInfo(string.Format("Loaded MS1 calibration: mean={0:F4} {1}, SD={2:F4}",
-                        ms1Cal.Mean, ms1Cal.Unit, ms1Cal.SD));
+                    ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2_,
+                        ms1Cal.Mean, MzCalibration.GetUnitText(ms1Cal.Unit), ms1Cal.SD));
                 }
             }
             else if (config.RtCalibration.Enabled)
             {
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = new Calibrator(ctx).RunCalibration(
-                    fullLibrary, spectra, ms1Spectra, context,
+                    fullLibrary, windowIndex, ms1Spectra, context,
                     out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata,
-                    out calInitialRtTolerance);
+                    out calInitialRtTolerance, out calDiagnostics);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
-                ctx.LogInfo(string.Format(
-                    "[TIMING] RT calibration: {0:F1}s ({1} calibration points)",
-                    swCal.Elapsed.TotalSeconds, nPoints));
+                ctx.LogInfo(LogTag.TIMING, @"RT calibration: {0:F1}s ({1} calibration points)",
+                    swCal.Elapsed.TotalSeconds, nPoints);
 
                 // Curated calibration summary on the DEFAULT console (issue #4364):
                 // the RT window before vs. after, the final search-window half-width
@@ -1715,9 +2191,9 @@ namespace pwiz.Osprey.Tasks
                             ? rtCalibration.Stats().NPoints
                             : 0,
                         NumSampledPrecursors = numSampledPrecursorsForMetadata,
-                        Timestamp = DateTime.UtcNow.ToString("o"),
+                        Timestamp = DateTime.UtcNow.ToString(@"o"),
                         // DIA isolation scheme (from the first MS2 cycle) so an HPC
-                        // merge node with no mzML can rehydrate the gap-fill m/z
+                        // SecondPassFDR node with no mzML can rehydrate the gap-fill m/z
                         // filter's per-file coverage. Mirrors Rust's
                         // CalibrationMetadata.isolation_scheme (pipeline.rs).
                         IsolationScheme = BuildIsolationScheme(isolationWindows)
@@ -1736,12 +2212,12 @@ namespace pwiz.Osprey.Tasks
                 // the configured output dir (or the input's own directory by
                 // default), matching where the resume-existence check looks.
                 string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
-                CalibrationIO.SaveCalibration(calParams, calPath);
-                ctx.LogInfo(string.Format("Saved calibration to {0}", calPath));
+                CalibrationIO.SaveCalibration(calParams, calPath, _outputStamp);
+                ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Saved_calibration_to__0_, calPath));
             }
             catch (Exception ex)
             {
-                ctx.LogInfo("Warning: failed to save calibration JSON: " + ex.Message);
+                ctx.LogWarning(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Failed_to_save_the_calibration_file___0_, ex.Message));
             }
 
             return rtCalibration;
@@ -1749,8 +2225,8 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Build the DIA <see cref="IsolationSchemeJson"/> block persisted in
-        /// calibration.json from a file's first-cycle isolation windows, so an HPC
-        /// merge node (which has no mzML) can rehydrate the gap-fill m/z filter's
+        /// calibration.json from a file's isolation windows, so an HPC
+        /// SecondPassFDR node (which has no mzML) can rehydrate the gap-fill m/z filter's
         /// coverage. Windows are stored as <c>[center, width]</c> pairs; the scalar
         /// summary fields (num_windows / mz_min / mz_max / typical_width /
         /// uniform_width) mirror Rust's IsolationScheme (osprey/src/pipeline.rs
@@ -1779,7 +2255,7 @@ namespace pwiz.Osprey.Tasks
                     break;
                 }
             }
-            // ExtractIsolationWindows sorts by center, so first/last are min/max
+            // SpectraWindowIndex sorts its windows by center, so first/last are min/max
             // -- matches Rust's mz_min/mz_max taken from the sorted window list.
             return new IsolationSchemeJson
             {
@@ -1801,8 +2277,8 @@ namespace pwiz.Osprey.Tasks
         /// units. This is Mike's "is the AI library usable / how fast will the
         /// search be" sanity check. The detailed per-pass lines stay at --verbose
         /// inside the Calibrator; this promotes only the summary. Numeric values are
-        /// formatted with the invariant culture (fixed decimals), not localizable
-        /// text. Called only on the compute path (a loaded cal JSON is silent).
+        /// formatted with the current culture, like the rest of the log.
+        /// Called only on the compute path (a loaded cal JSON is silent).
         /// </summary>
         private static void EmitCalibrationSummary(
             PipelineContext ctx, OspreyConfig config, string fileName,
@@ -1810,12 +2286,11 @@ namespace pwiz.Osprey.Tasks
             MzCalibrationResult ms1Cal, MzCalibrationResult ms2Cal,
             double initialRtTolerance)
         {
-            var ic = CultureInfo.InvariantCulture;
-            ctx.LogInfo(string.Format(ic, "Calibration summary [{0}]:", fileName));
+            ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___, fileName));
 
             if (rtCalibration == null)
             {
-                ctx.LogInfo("  RT: calibration failed - using fallback RT tolerance");
+                ctx.LogInfo(TextUtil.GetIndentation(1) + OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT__calibration_failed___using_fallback_RT_tolerance);
             }
             else
             {
@@ -1825,49 +2300,49 @@ namespace pwiz.Osprey.Tasks
                     stats.MAD, stats.NPoints,
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
-                string beforeStr = initialRtTolerance.ToString("F2", ic);
-                string rawStr = rawTolerance.ToString("F2", ic);
-                string finalStr = finalTolerance.ToString("F2", ic);
+                string beforeStr = initialRtTolerance.ToString(@"F2", CultureInfo.CurrentCulture);
+                string rawStr = rawTolerance.ToString(@"F2", CultureInfo.CurrentCulture);
+                string finalStr = finalTolerance.ToString(@"F2", CultureInfo.CurrentCulture);
                 string rtToleranceLine;
                 if (double.IsNaN(finalTolerance))
                 {
                     // Degenerate calibration (e.g. NaN MAD): no usable spread to report.
-                    rtToleranceLine = string.Format(ic,
-                        "  RT tolerance: +/-{0} min before -> undetermined after calibration (no usable RT spread)",
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
+                        OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before____undetermined_after_calibration__no_usable_RT_spread_,
                         beforeStr);
                 }
                 else if (rawStr == finalStr)
                 {
                     // In range, or a clamp too small to show at this precision: a single
                     // value is unambiguous, so skip the computed-vs-clamp call-out.
-                    rtToleranceLine = string.Format(ic,
-                        "  RT tolerance: +/-{0} min before -> +/-{1} min after calibration",
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
+                        OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_after_calibration,
                         beforeStr, finalStr);
                 }
                 else if (finalTolerance > rawTolerance)
                 {
                     // The computed 3*MAD*1.4826 was tighter than the floor: show the
                     // computed tolerance and the floor actually in use.
-                    rtToleranceLine = string.Format(ic,
-                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration",
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
+                        OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___using_____2__min_,
                         beforeStr, rawStr, finalStr);
                 }
                 else
                 {
                     // finalTolerance < rawTolerance: the computed value exceeded the
                     // ceiling, so show the computed tolerance and the cap in use.
-                    rtToleranceLine = string.Format(ic,
-                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration",
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
+                        OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___capped_at_____2__,
                         beforeStr, rawStr, finalStr);
                 }
                 ctx.LogInfo(rtToleranceLine);
-                ctx.LogInfo(string.Format(ic,
-                    "  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3} points",
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
+                    OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_fit__MAD__0__min__residual_SD__1__min__R_2__2___n__3__points,
                     stats.MAD, stats.ResidualSD, stats.RSquared, stats.NPoints));
             }
 
-            EmitMassCalibrationLine(ctx, "MS1", "precursor", ms1Cal);
-            EmitMassCalibrationLine(ctx, "MS2", "fragment", ms2Cal);
+            EmitMassCalibrationLine(ctx, @"MS1", OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary_precursor, ms1Cal);
+            EmitMassCalibrationLine(ctx, @"MS2", OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary_fragment, ms2Cal);
         }
 
         /// <summary>
@@ -1879,16 +2354,15 @@ namespace pwiz.Osprey.Tasks
         private static void EmitMassCalibrationLine(
             PipelineContext ctx, string level, string matchNoun, MzCalibrationResult cal)
         {
-            var ic = CultureInfo.InvariantCulture;
             if (cal == null || !cal.Calibrated)
             {
-                ctx.LogInfo(string.Format(ic, "  {0} mass: not calibrated", level));
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.PerFileScoringTask_EmitMassCalibrationLine____0__mass__not_calibrated, level));
                 return;
             }
             double tolerance = cal.AdjustedTolerance ?? (Math.Abs(cal.Mean) + 3.0 * cal.SD);
-            ctx.LogInfo(string.Format(ic,
-                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5} {6} matches)",
-                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count, matchNoun));
+            ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
+                OspreyTasksResources.PerFileScoringTask_EmitMassCalibrationLine____0__mass__correction__1___2___SD__3___2___tolerance_____4___2___n__5___6__matches_,
+                level, cal.Mean, MzCalibration.GetUnitText(cal.Unit), cal.SD, tolerance, cal.Count, matchNoun));
         }
 
         /// <summary>
@@ -1902,22 +2376,22 @@ namespace pwiz.Osprey.Tasks
             List<FdrEntry> scoredEntries, PipelineContext ctx)
         {
             string dumpPath = Path.Combine(
-                Path.GetDirectoryName(inputFile) ?? ".",
-                fileName + ".cs_features.tsv");
+                Path.GetDirectoryName(inputFile) ?? @".",
+                fileName + @".cs_features.tsv");
 
             var header = new[]
             {
-                "SpecId", "Label", "ScanNr", "Charge",
-                "fragment_coelution_sum", "fragment_coelution_max", "n_coeluting_fragments",
-                "peak_apex", "peak_area", "peak_sharpness",
-                "xcorr", "consecutive_ions", "explained_intensity",
-                "mass_accuracy_deviation_mean", "abs_mass_accuracy_deviation_mean",
-                "rt_deviation", "abs_rt_deviation",
-                "ms1_precursor_coelution", "ms1_isotope_cosine",
-                "median_polish_cosine", "median_polish_residual_ratio",
-                "sg_weighted_xcorr", "sg_weighted_cosine",
-                "median_polish_min_fragment_r2", "median_polish_residual_correlation",
-                "Peptide"
+                @"SpecId", @"Label", @"ScanNr", @"Charge",
+                @"fragment_coelution_sum", @"fragment_coelution_max", @"n_coeluting_fragments",
+                @"peak_apex", @"peak_area", @"peak_sharpness",
+                @"xcorr", @"consecutive_ions", @"explained_intensity",
+                @"mass_accuracy_deviation_mean", @"abs_mass_accuracy_deviation_mean",
+                @"rt_deviation", @"abs_rt_deviation",
+                @"ms1_precursor_coelution", @"ms1_isotope_cosine",
+                @"median_polish_cosine", @"median_polish_residual_ratio",
+                @"sg_weighted_xcorr", @"sg_weighted_cosine",
+                @"median_polish_min_fragment_r2", @"median_polish_residual_correlation",
+                @"Peptide"
             };
 
             var sorted = scoredEntries
@@ -1927,121 +2401,40 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(e => e.ScanNumber)
                 .ToList();
 
-            using (var writer = new StreamWriter(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
-                // LF newlines so the dump is byte-stable across Windows and
-                // Linux for cross-impl diffing against Rust's PIN output;
-                // matches the convention used by OspreyDiagnosticsLog.
-                writer.NewLine = "\n";
-                writer.WriteLine(string.Join("\t", header));
-                foreach (var e in sorted)
+                using (var writer = new StreamWriter(saver.SafeName))
                 {
-                    string psmId = string.Format("{0}_{1}_{2}_{3}",
-                        fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
-                    int label = e.IsDecoy ? -1 : 1;
-                    var cols = new List<string>(26)
+                    // LF newlines so the dump is byte-stable across Windows and
+                    // Linux for cross-impl diffing against Rust's PIN output;
+                    // matches the convention used by OspreyDiagnosticsLog.
+                    var inv = CultureInfo.InvariantCulture;
+                    writer.NewLine = TextUtil.LF;
+                    writer.WriteLine(header.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var e in sorted)
                     {
-                        psmId,
-                        label.ToString(),
-                        e.ScanNumber.ToString(),
-                        e.Charge.ToString()
-                    };
-                    for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
-                        cols.Add(e.Features[i].ToString("G17"));
-                    cols.Add(e.ModifiedSequence ?? "");
-                    writer.WriteLine(string.Join("\t", cols));
-                }
-            }
-
-            ctx.LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",
-                dumpPath, sorted.Count));
-        }
-
-        /// <summary>
-        /// Load spectra from mzML file or spectra cache. When multiple
-        /// files are processed in parallel, the mzML parse is gated so
-        /// only one disk scan runs at a time (see s_mzmlReadGate).
-        /// </summary>
-        private void LoadSpectra(string inputFile, bool serializeMzmlRead,
-            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra,
-            out int unsortedCount, PipelineContext ctx)
-        {
-            unsortedCount = 0;
-            // Check for binary spectra cache. Use the shared GetCachePath so the
-            // write and the rescore read (PerFileRescoreTask) derive an identical
-            // filename + directory (ArtifactPaths redirects the dir).
-            string cachePath = SpectraCache.GetCachePath(inputFile);
-            if (File.Exists(cachePath))
-            {
-                ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
-                try
-                {
-                    // null = stale (source changed) or invalid (bad magic/version)
-                    // cache: a normal miss, not an error. Re-parse the mzML below.
-                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath, inputFile);
-                    if (cacheResult != null)
-                    {
-                        ms2Spectra = cacheResult.Ms2Spectra;
-                        ms1Spectra = cacheResult.Ms1Spectra;
-                        return;
+                        string psmId = string.Format(inv, @"{0}_{1}_{2}_{3}",
+                            fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
+                        int label = e.IsDecoy ? -1 : 1;
+                        var cols = new List<string>(26)
+                        {
+                            psmId,
+                            label.ToString(inv),
+                            e.ScanNumber.ToString(inv),
+                            e.Charge.ToString(inv)
+                        };
+                        for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
+                            cols.Add(e.Features[i].ToString(@"G17", inv));
+                        cols.Add(e.ModifiedSequence ?? string.Empty);
+                        writer.WriteLine(cols.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     }
-                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
                 }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Failed to load spectra cache: {0}. Falling back to mzML.", ex.Message));
-                }
+                saver.Commit();
             }
 
-            // Parse mzML directly, optionally serialized across files. The "Processing
-            // file N/M: <path>" banner already named the file; the consolidated
-            // "Loaded ... spectra with ... isolation windows" line is emitted by the caller.
-            MzmlResult mzmlResult;
-            if (serializeMzmlRead)
-                ScoringTaskShared.s_mzmlReadGate.Wait();
-            try
-            {
-                mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
-            }
-            finally
-            {
-                if (serializeMzmlRead)
-                    ScoringTaskShared.s_mzmlReadGate.Release();
-            }
-            ms2Spectra = mzmlResult.Ms2Spectra;
-            ms1Spectra = mzmlResult.Ms1Spectra;
-            unsortedCount = mzmlResult.UnsortedSpectrumCount;
-
-            // Save to cache for next run
-            try
-            {
-                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra, inputFile);
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
-            }
+            ctx.LogInfo(LogTag.COUNT, @"Wrote feature dump: {0} ({1} peaks)",
+                dumpPath, sorted.Count);
         }
 
-        /// <summary>
-        /// Render a prefix list in Rust's <c>{:?}</c> debug format
-        /// (<c>["DECOY_", "rev_", "decoy_"]</c>) for log messages and
-        /// error reports, so cross-impl messages compare consistently.
-        /// </summary>
-        private static string FormatPrefixList(IList<string> prefixes)
-        {
-            var sb = new System.Text.StringBuilder("[");
-            if (prefixes != null)
-            {
-                for (int i = 0; i < prefixes.Count; i++)
-                {
-                    if (i > 0) sb.Append(", ");
-                    sb.Append('"').Append(prefixes[i] ?? string.Empty).Append('"');
-                }
-            }
-            sb.Append(']');
-            return sb.ToString();
-        }
     }
 }

@@ -37,6 +37,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
@@ -70,6 +71,188 @@ namespace pwiz.Osprey.FDR
         public static readonly bool DumpBestPeptideScores = IsOne(@"OSPREY_DUMP_BEST_PEPTIDE_SCORES");
 
         /// <summary>
+        /// OSPREY_DUMP_COASSIGN_ROWS: directory to write the peak co-assignment
+        /// panel's OWN INPUT to, one row per pool observation, plus the sealed
+        /// acceptance boundaries. Unset (the default) writes nothing.
+        ///
+        /// <para>Directory-valued rather than the usual <c>=1</c> because the
+        /// question this answers is always an A/B between two binaries, and two
+        /// runs writing <c>cs_*.tsv</c> into a shared working directory overwrite
+        /// each other. Naming the destination per side removes the copy-out race
+        /// that costs more time than the runs.</para>
+        ///
+        /// <para>The panel reduces the pool to counts, so a moved count says only
+        /// THAT something moved. These are the fields <c>BuildCoAssignment</c>
+        /// actually reads - score, persisted experiment aggregate, both effective
+        /// q-values, apex RT, identity - beside the verdict the builder reached
+        /// for the row. Diffing two sides row-wise separates the three ways the
+        /// panel can move: a changed per-entry VALUE, a changed MEMBERSHIP verdict
+        /// at an unchanged value, or an unchanged pool re-cut by a moved
+        /// BOUNDARY.</para>
+        /// </summary>
+        public static readonly string DumpCoAssignRowsDir =
+            Environment.GetEnvironmentVariable(@"OSPREY_DUMP_COASSIGN_ROWS");
+
+        /// <summary>
+        /// Streaming sink for <see cref="DumpCoAssignRowsDir"/>: writes
+        /// <c>cs_coassign_pass&lt;N&gt;_rows.tsv</c> a row at a time rather than
+        /// accumulating, since the pass-2 pool is the survivor set of every file
+        /// and the panel's whole scaling argument is that nothing holds it twice.
+        /// Returns null when the gate is unset, so callers can null-test instead
+        /// of paying for the row projection.
+        /// </summary>
+        public static CoAssignRowDump CreateCoAssignRowDump(int pass)
+        {
+            return string.IsNullOrWhiteSpace(DumpCoAssignRowsDir)
+                ? null
+                : new CoAssignRowDump(DumpCoAssignRowsDir, pass);
+        }
+
+        /// <summary>
+        /// The <see cref="CreateCoAssignRowDump"/> sink. A log, not an artifact: it writes
+        /// the rows file directly at its final path rather than through
+        /// <see cref="SimpleFileSaver"/>. Seeing however far a panel got is the whole reason to
+        /// stream rather than buffer, so a throw mid-panel should leave whatever rows were
+        /// written, not discard them - a TSV degrades to a readable partial file, and
+        /// nothing downstream reads this back to gate correctness, so presence not proving
+        /// completeness costs nothing here. <c>WriteCutoffs</c> is a separate, ordinary
+        /// one-shot <see cref="SimpleFileSaver"/> write, since a boundary table is either fully
+        /// known or not worth having at all.
+        /// </summary>
+        public sealed class CoAssignRowDump : IDisposable
+        {
+            private readonly string _dir;
+            private readonly int _pass;
+            private readonly int _seq;
+            private readonly StreamWriter _rows;
+
+            /// <summary>
+            /// The first unused sequence number in <paramref name="dir"/>. One run builds this
+            /// panel more than once - the straight-through Stage 7 and then any
+            /// <c>--task ModelDiagnostics</c> regeneration over the same directory - and those
+            /// are DIFFERENT pools whenever the regeneration path is what is under suspicion.
+            /// Overwriting silently hands back the last one under the first one's name, which is
+            /// the failure this whole dump exists to avoid making by hand.
+            /// </summary>
+            private static int NextSequence(string dir, int pass)
+            {
+                int seq = 0;
+                while (File.Exists(NameFor(dir, pass, seq, @"rows")))
+                    seq++;
+                return seq;
+            }
+
+            private static string NameFor(string dir, int pass, int seq, string kind)
+            {
+                var inv = CultureInfo.InvariantCulture;
+                return Path.Combine(dir, seq == 0
+                    ? string.Format(inv, @"cs_coassign_pass{0}_{1}.tsv", pass, kind)
+                    : string.Format(inv, @"cs_coassign_pass{0}_{1}.{2}.tsv", pass, kind, seq));
+            }
+
+            public CoAssignRowDump(string dir, int pass)
+            {
+                _dir = dir;
+                _pass = pass;
+                Directory.CreateDirectory(dir);
+                _seq = NextSequence(dir, pass);
+                string rowsPath = NameFor(dir, pass, _seq, @"rows");
+                // FileMode.CreateNew claims the sequence number and opens the file for
+                // writing in one step: the file exists at its final path immediately, so a
+                // concurrent instance's NextSequence sees it and cannot compute the same
+                // _seq - the exact collision NextSequence's own doc comment exists to avoid.
+                // Fails loudly if two instances still race this line.
+                _rows = new StreamWriter(new FileStream(rowsPath, FileMode.CreateNew, FileAccess.Write, FileShare.None));
+                _rows.WriteLine(new[]
+                {
+                    @"file_idx", @"file", @"entry_id", @"base_id", @"is_decoy", @"class", @"score",
+                    @"exp_agg_score", @"run_q", @"exp_q", @"apex_rt", @"charge", @"included",
+                    @"modified_sequence"
+                }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+            }
+
+            /// <summary>
+            /// One pool observation as the panel saw it. <paramref name="included"/> is the
+            /// builder's own gate verdict, recorded rather than recomputed so a diff cannot
+            /// disagree with the panel about what it counted.
+            /// </summary>
+            public void WriteRow(int fileIdx, string fileName, uint entryId, uint baseId, bool isDecoy,
+                string entrapmentClass, double score, double experimentAggregateScore,
+                double runQvalue, double experimentQvalue, double apexRt, byte charge,
+                bool included, string modifiedSequence)
+            {
+                var inv = CultureInfo.InvariantCulture;
+                _rows.WriteLine(new[]
+                {
+                    fileIdx.ToString(inv), fileName, entryId.ToString(inv), baseId.ToString(inv),
+                    isDecoy.ToLowerText(), entrapmentClass,
+                    Diagnostics.FormatF64Roundtrip(score),
+                    Diagnostics.FormatF64Roundtrip(experimentAggregateScore),
+                    Diagnostics.FormatF64Roundtrip(runQvalue),
+                    Diagnostics.FormatF64Roundtrip(experimentQvalue),
+                    Diagnostics.FormatF64Roundtrip(apexRt),
+                    charge.ToString(inv), included.ToLowerText(), modifiedSequence
+                }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+            }
+
+            /// <summary>
+            /// The sealed boundaries, written once. Every per-row verdict above is a
+            /// comparison against one of these, so a diff that finds no moved row but a
+            /// moved boundary has still explained the panel.
+            /// </summary>
+            public void WriteCutoffs(Func<int, double> runCutoffByFile, string[] runNames,
+                double experimentCutoff, double experimentCutoffInStratum,
+                double experimentCutoffOffStratum, int acceptedInStratum, int acceptedOffStratum)
+            {
+                var inv = CultureInfo.InvariantCulture;
+                using (var saver = new SimpleFileSaver(NameFor(_dir, _pass, _seq, @"cutoffs")))
+                {
+                    using (var sw = new StreamWriter(saver.SafeName))
+                    {
+                        sw.WriteLine(new[] { @"scope", @"file_idx", @"file", @"value" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        for (int f = 0; f < runNames.Length; f++)
+                        {
+                            sw.WriteLine(new[]
+                            {
+                                @"run", f.ToString(inv), runNames[f], Diagnostics.FormatF64Roundtrip(runCutoffByFile(f))
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        }
+                        WriteExperimentCutoff(sw, @"experiment", Diagnostics.FormatF64Roundtrip(experimentCutoff));
+                        WriteExperimentCutoff(sw, @"experimentInStratum", Diagnostics.FormatF64Roundtrip(experimentCutoffInStratum));
+                        WriteExperimentCutoff(sw, @"experimentOffStratum", Diagnostics.FormatF64Roundtrip(experimentCutoffOffStratum));
+                        WriteExperimentCutoff(sw, @"acceptedInStratum", acceptedInStratum.ToString(inv));
+                        WriteExperimentCutoff(sw, @"acceptedOffStratum", acceptedOffStratum.ToString(inv));
+                    }
+                    saver.Commit();
+                }
+            }
+
+            public void Dispose()
+            {
+                // Swallowed rather than logged: this class has no logging handle, and a
+                // dump write is never allowed to mask the panel-build exception it is
+                // trying to help diagnose. Nothing to commit - rows were written directly
+                // to their final path as they came in, so whatever got through is already
+                // there.
+                try
+                {
+                    _rows.Dispose();
+                }
+                catch (IOException)
+                {
+                }
+                catch (ObjectDisposedException)
+                {
+                }
+            }
+
+            private static void WriteExperimentCutoff(TextWriter sw, string scope, string value)
+            {
+                sw.WriteLine(new[] { scope, @"-1", @"-", value }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+            }
+        }
+
+        /// <summary>
         /// Write cs_stage7_winners.tsv. Caller passes a (score, is_decoy)
         /// tuple list in sort order plus the parallel q-value arrays. Check
         /// <see cref="DumpStage7Winners"/> first to skip the LINQ projection
@@ -82,18 +265,27 @@ namespace pwiz.Osprey.FDR
         {
             const string path = @"cs_stage7_winners.tsv";
             var inv = CultureInfo.InvariantCulture;
-            using (var sw = new StreamWriter(path))
+            using (var saver = new SimpleFileSaver(path))
             {
-                sw.WriteLine("rank\tscore\tis_decoy\traw_qvalue\tmonotonic_qvalue");
-                for (int i = 0; i < winners.Count; i++)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}\t{4}",
-                        i,
-                        Diagnostics.FormatF64Roundtrip(winners[i].Score),
-                        winners[i].IsDecoy ? "true" : "false",
-                        Diagnostics.FormatF64Roundtrip(rawQvalues[i]),
-                        Diagnostics.FormatF64Roundtrip(monotonicQvalues[i])));
+                    sw.WriteLine(new[]
+                    {
+                        @"rank", @"score", @"is_decoy", @"raw_qvalue", @"monotonic_qvalue"
+                    }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    for (int i = 0; i < winners.Count; i++)
+                    {
+                        sw.WriteLine(new[]
+                        {
+                            i.ToString(inv),
+                            Diagnostics.FormatF64Roundtrip(winners[i].Score),
+                            winners[i].IsDecoy.ToLowerText(),
+                            Diagnostics.FormatF64Roundtrip(rawQvalues[i]),
+                            Diagnostics.FormatF64Roundtrip(monotonicQvalues[i])
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    }
                 }
+                saver.Commit();
             }
         }
 
@@ -107,18 +299,27 @@ namespace pwiz.Osprey.FDR
             var inv = CultureInfo.InvariantCulture;
             var keys = new List<string>(best.Keys);
             keys.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only (not parity-sensitive); keys are unique dictionary keys so the comparator never ties anyway
-            using (var sw = new StreamWriter(path))
+            using (var saver = new SimpleFileSaver(path))
             {
-                sw.WriteLine("modified_sequence\tscore\tis_decoy\tbest_qvalue");
-                foreach (var seq in keys)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var ps = best[seq];
-                    sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}",
-                        seq,
-                        Diagnostics.FormatF64Roundtrip(ps.Score),
-                        ps.IsDecoy ? "true" : "false",
-                        Diagnostics.FormatF64Roundtrip(ps.BestQvalue)));
+                    sw.WriteLine(new[]
+                    {
+                        @"modified_sequence", @"score", @"is_decoy", @"best_qvalue"
+                    }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    foreach (var seq in keys)
+                    {
+                        var ps = best[seq];
+                        sw.WriteLine(new[]
+                        {
+                            seq,
+                            Diagnostics.FormatF64Roundtrip(ps.Score),
+                            ps.IsDecoy.ToLowerText(),
+                            Diagnostics.FormatF64Roundtrip(ps.BestQvalue)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    }
                 }
+                saver.Commit();
             }
         }
     }

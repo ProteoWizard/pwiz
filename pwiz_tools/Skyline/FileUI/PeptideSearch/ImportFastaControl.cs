@@ -241,7 +241,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get
             {
                 double numDecoys;
-                return !string.IsNullOrEmpty(DecoyGenerationMethod) && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
+                return !string.IsNullOrEmpty(DecoyGenerationMethod) && double.TryParse(txtNumDecoys.Text, out numDecoys) ? numDecoys : null;
             }
             set { txtNumDecoys.Text = value.ToString(); }
         }
@@ -353,6 +353,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MessageDlg.ShowWithException(WizardForm, TextUtil.LineSeparate(string.Format(PeptideSearchResources.ImportFastaControl_SetFastaContent_Error_adding_FASTA_file__0__, fastaFilePath), x.Message), x);
             }
+        }
+
+        /// <summary>
+        /// Move the FASTA path textbox caret to the end of its text and give it focus,
+        /// so the rightmost portion (the filename) is what's visible. Used for tutorial
+        /// screenshots — without this the textbox shows only the leftmost characters of
+        /// a long absolute path.
+        /// </summary>
+        public void ShowFastaPathFileName()
+        {
+            tbxFasta.Focus();
+            tbxFasta.Select(tbxFasta.Text.Length, 0);
         }
 
         private string GetFastaFileContent(string fastaFileName)

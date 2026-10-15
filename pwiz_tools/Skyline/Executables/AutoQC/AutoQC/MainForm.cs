@@ -873,7 +873,9 @@ namespace AutoQC
 
         public string GetSelectedLogName()
         {
-            return comboConfigs.SelectedItem.ToString();
+            // DropDownList over the log-name strings, so Text is the selected item's text and,
+            // unlike SelectedItem, is never null.
+            return comboConfigs.Text;
         }
 
         public void ClickConfig(int index) => SelectConfig(index);

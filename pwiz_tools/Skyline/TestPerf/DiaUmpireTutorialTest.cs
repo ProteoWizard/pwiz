@@ -43,6 +43,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
@@ -94,6 +95,9 @@ namespace TestPerf
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
             public PointF ChromatogramClickPoint;
+            // Peptide to select for the manual-review chromatogram click and screenshots.
+            // Instrument-specific because the search results differ between instruments.
+            public string ExemplarPeptide;
 
             public string FastaPathForSearch => "DDA_search\\nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta";
             public string FastaPath =>
@@ -145,6 +149,7 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
+                ExemplarPeptide = "TDINQALNR",
             };
 
             TestTtofData();
@@ -164,6 +169,7 @@ namespace TestPerf
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(23.02F, 150.0F),
+                ExemplarPeptide = "TDINQALNR",
             };
 
             if (!IsCoverShotMode)
@@ -204,7 +210,9 @@ namespace TestPerf
             {
                 KeepPrecursors = false,
                 IrtFilterText = "standard",
-                ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
+                // AIDLIDEAASSIR (CLPB_ECOLI); TDINQALNR is no longer a net8 target here.
+                ChromatogramClickPoint = new PointF(48.14f, 2.0e6f),
+                ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
             if (!IsCoverShotMode)
@@ -224,7 +232,8 @@ namespace TestPerf
                 IrtFilterText = "iRT",
                 MinPeptidesPerProtein = 2,
                 RemoveDuplicates = true,
-                ChromatogramClickPoint = new PointF(18.13f, 5.51e5f),
+                ChromatogramClickPoint = new PointF(48.14f, 2.0e6f),
+                ExemplarPeptide = "AIDLIDEAASSIR",
             };
 
             if (!IsCoverShotMode)
@@ -321,6 +330,22 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         protected override void DoTest()
+        {
+            try
+            {
+                DoTutorialSteps();
+            }
+            finally
+            {
+                // Cleanup output files in persistent dir, even when the test fails: the DIA-SWATH tutorial
+                // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
+                // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+                if (!IsRecordMode)
+                    CleanUpPersistentDir(GetTestPath("DIA\\"), GetTestPath("DDA_search\\"));
+            }
+        }
+
+        private void DoTutorialSteps()
         {
             Assert.IsNotNull(_expectedValues);
 
@@ -541,9 +566,17 @@ namespace TestPerf
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                // Search with MSFragger instead of the tutorial's MSAmanda, whose parallel ordering
+                // drives a +/-2 per-machine drift in the library count. Not Comet either: crux.exe
+                // writes Comet's Percolator features with the OS C runtime's printf, which rounds
+                // exact ties differently before Windows 10 2004 (build 19041), so the count differed
+                // on Windows Server 2019. MSFragger (Java) and Skyline's pin rewrite (.NET) format
+                // those features the same on every OS.
+                importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.MSFragger;
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = _instrumentValues.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b, y";
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b,y";
+                importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
                 importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
                 Assert.AreEqual(PropertyNames.CutoffScore_PERCOLATOR_QVALUE, importPeptideSearchDlg.SearchSettingsControl.CutoffLabel);
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
@@ -569,12 +602,32 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
+
+            // Run the search. Click asynchronously so the test thread stays free to accept the
+            // MSFragger license and the Java/Crux download prompt when the tools are not yet installed.
+            bool hasMissingDependencies = !SearchSettingsControl.HasRequiredFilesDownloaded(SearchEngine.MSFragger);
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+
+            if (hasMissingDependencies)
+            {
+                var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
+                if (msfraggerDownloaderDlg != null)
+                {
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
+                    OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
+                }
+
+                var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
+                if (downloaderDlg != null)
+                {
+                    OkDialog(downloaderDlg, downloaderDlg.ClickYes);
+                    var waitDlg = WaitForOpenForm<LongWaitDlg>();
+                    WaitForClosedForm(waitDlg);
+                }
+            }
 
             try
             {
@@ -678,7 +731,6 @@ namespace TestPerf
                         { "collinsb_I180316_002", 41 }
                     }))
             {
-                CleanUpPersistentDir(diaDir);
                 return;
             }
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
@@ -754,14 +806,29 @@ namespace TestPerf
             RunUIForScreenShot(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode);
             PauseForScreenShot("Manual review window layout with protein selected");
 
-            FindNode("TDINQALNR");
+            FindNode(_analysisValues.ExemplarPeptide);
             WaitForGraphs();
             PauseForScreenShot("Manual review window layout with peptide selected");
 
             FindNode("_HUMAN");
             WaitForGraphs();
-            FindNode("TDINQALNR");
-            RunUI(SkylineWindow.AutoZoomBestPeak);
+            FindNode(_analysisValues.ExemplarPeptide);
+            // Select a single precursor and show individual transitions. With a multi-precursor peptide
+            // selected the chromatogram graph shows only one per-precursor total curve (even in "all"
+            // mode); totals carry no full-scan info, so the tracking dot the click below needs never
+            // appears. Drilling into one precursor shows its individual transition curves - each tied to a
+            // scan - which enables the tracking dot. (A single-precursor peptide already shows these, so
+            // this is a no-op there.) The transition-display mode is also a persisted setting that can
+            // otherwise leak in as "total" from an earlier test, so force it to "all".
+            RunUI(() =>
+            {
+                var pepPath = SkylineWindow.SelectedPath;
+                var nodePep = SkylineWindow.Document.FindNode(pepPath) as PeptideDocNode;
+                if (nodePep != null && nodePep.TransitionGroupCount > 0)
+                    SkylineWindow.SelectedPath = new IdentityPath(pepPath, nodePep.TransitionGroups.First().Id);
+                SkylineWindow.ShowAllTransitions();
+                SkylineWindow.AutoZoomBestPeak();
+            });
             WaitForGraphs();
             PauseForChromGraphScreenShot("Snip just one chromatogram pane", "1_SW-A");
 
@@ -848,13 +915,6 @@ namespace TestPerf
                 TakeCoverShot();
             }
 
-            // Cleanup output files in persistent dir
-            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
-            if (!IsRecordMode)
-            {
-                CleanUpPersistentDir(diaDir);
-            }
-
             if (IsRecordMode)
             {
                 Assert.IsNotNull(_expectedValues);
@@ -868,9 +928,20 @@ namespace TestPerf
             }
         }
 
-        private static void CleanUpPersistentDir(string diaDir)
+        private static void CleanUpPersistentDir(string diaDir, string ddaSearchDir)
         {
-            foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
+            // Remove every search-generated file so the persistent dir returns to its downloaded
+            // state (the framework fails the test if the persistent dir is left modified).
+            // "*-diaumpire*" catches the pseudo-spectra plus all per-file MSFragger and Percolator
+            // outputs (.pepXML, .pin, fixed.pin); the remaining globs catch the fixed-name
+            // intermediates left when the search keeps or fails to delete them.
+            foreach (var pattern in new[] { "*-diaumpire*", "msfragger.params", "crux.*" })
+                foreach (var file in Directory.GetFiles(diaDir, pattern))
+                    FileEx.SafeDelete(file);
+            DirectoryEx.SafeDelete(Path.Combine(diaDir, "crux-output"));
+            // MSFragger writes a decoy database and its .pepindex files next to the search FASTA,
+            // which has no decoys of its own
+            foreach (var file in Directory.GetFiles(ddaSearchDir, "decoy_*"))
                 FileEx.SafeDelete(file);
         }
 

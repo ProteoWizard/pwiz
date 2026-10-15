@@ -51,8 +51,7 @@ namespace pwiz.SkylineTestFunctional
     {
         private bool AsSmallMolecules;
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestOptimization()
         {
             AsSmallMolecules = false;
@@ -60,8 +59,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestOptimizationAsSmallMolecules ()
         {
             AsSmallMolecules = true;

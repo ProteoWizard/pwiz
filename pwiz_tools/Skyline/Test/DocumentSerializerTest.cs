@@ -41,7 +41,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestDocumentFormatCurrent()
         {
-            if (Install.Build > 1) return; // Skip this test for .9 feature complete releases, e.g. 23.0.9
+            if (Install.Build == 9) return; // Skip this test for .9 feature complete releases, e.g. 23.0.9 (2 is the .NET 10 daily line, e.g. 26.1.2, and is checked)
 
             double expectedDocumentFormat = Install.MajorVersion + Install.MinorVersion * 0.1;
             if (expectedDocumentFormat == 21.2)

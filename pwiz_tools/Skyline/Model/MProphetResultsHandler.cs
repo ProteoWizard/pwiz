@@ -49,6 +49,12 @@ namespace pwiz.Skyline.Model
 
         private const string Q_VALUE_ANNOTATION = "QValue"; // : for now, we are not localizing column headers
 
+        /// <summary>
+        /// Header for the replicate-name column in the exported mProphet feature file. Not localized (like the
+        /// other feature-file headers), and shared with the peak-boundary import side so the two cannot drift.
+        /// </summary>
+        public const string REPLICATE_NAME_COLUMN = "ReplicateName";
+
         public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; } }
 
         public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + @"Score"; } }
@@ -250,7 +256,23 @@ namespace pwiz.Skyline.Model
                 writer.Write(first ? @"main_var_{0}" : @"var_{0}", peakFeatureCalculator.HeaderName.Replace(@" ", @"_"));
                 first = false;
             }
+            // ReplicateName is intentionally the LAST column (after the variable-length feature columns)
+            // so that adding it does not shift the index of any existing column for position-based parsers.
+            WriteTrailingField(writer, REPLICATE_NAME_COLUMN, separator, first);
             writer.WriteLine();
+        }
+
+        /// <summary>
+        /// Writes the final <see cref="WriteHeaderRow"/>/<see cref="WriteRow"/> column, which follows the
+        /// variable-length feature columns. <paramref name="first"/> is true when no feature column was
+        /// written, in which case the trailing separator already emitted after the fixed columns serves as
+        /// the delimiter and no extra separator is added (avoids an empty column).
+        /// </summary>
+        private static void WriteTrailingField(TextWriter writer, string value, char separator, bool first)
+        {
+            if (!first)
+                writer.Write(separator);
+            writer.WriteDsvField(value, separator);
         }
 
         private void WriteTransitionGroup(TextWriter writer,
@@ -303,10 +325,13 @@ namespace pwiz.Skyline.Model
                 Convert.ToString(features.Id, cultureInfo),
                 Convert.ToString(features.Id.Run, cultureInfo),
                 fileName,
+                // Retention times are float - use ToFieldString to pin the format to G7
+                // so the CSV round-trips identically across net472 and net8+ (net6 changed
+                // Single.ToString() default from G7 to G9).
                 // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
-                Convert.ToString(peakGroupFeatures.RetentionTime, cultureInfo),
-                Convert.ToString(peakGroupFeatures.StartTime, cultureInfo),
-                Convert.ToString(peakGroupFeatures.EndTime, cultureInfo),
+                ToFieldString(peakGroupFeatures.RetentionTime, cultureInfo),
+                ToFieldString(peakGroupFeatures.StartTime, cultureInfo),
+                ToFieldString(peakGroupFeatures.EndTime, cultureInfo),
                 features.Id.RawUnmodifiedTextId, // Unmodified sequence, or custom ion name
                 features.Id.RawTextId, // Modified sequence, or custom ion name
                 features.Id.NodePepGroup.Name,
@@ -329,12 +354,19 @@ namespace pwiz.Skyline.Model
                 writer.WriteDsvField(ToFieldString(featureColumn, cultureInfo), separator);
                 first = false;
             }
+            // ReplicateName is the last column - see WriteHeaderRow. The replicate name comes straight from
+            // the document's ChromatogramSet, giving callers a vendor-independent key alongside FileName.
+            WriteTrailingField(writer, features.Id.ChromatogramSet.Name, separator, first);
             writer.WriteLine();
         }
 
         private static string ToFieldString(float f, IFormatProvider cultureInfo)
         {
-            return float.IsNaN(f) ? TextUtil.EXCEL_NA : Convert.ToString(f, cultureInfo);
+            // Pin to G7 (7 significant digits - the round-trippable precision for
+            // Single). On net472 this was the default float.ToString() behavior; on
+            // net6+ the default switched to G9 which yields extra digits (e.g. 2.1748452
+            // instead of 2.174845) and breaks ExportMProphet golden diffs.
+            return float.IsNaN(f) ? TextUtil.EXCEL_NA : f.ToString(@"G7", cultureInfo);
         }
 
         public ReintegrateDlgSettings GetReintegrateDlgSettings()

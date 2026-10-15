@@ -63,6 +63,15 @@ namespace pwiz.Osprey.IO
         /// authoritative source of protein info when present.
         /// </summary>
         public int NProteinsReplaced { get; set; }
+
+        /// <summary>
+        /// Library indices of entries that are decoys (by the protein-prefix rule) whose
+        /// sequence the manifest lists as a target. Nothing legitimate produces this - Carafe
+        /// merging a decoy with an identical real target into one "decoy_"-prefixed row did -
+        /// so the library and its manifest disagree. They are left out of pairing, and the
+        /// loader refuses the library, listing every one.
+        /// </summary>
+        public List<int> DecoysListedAsTargets { get; } = new List<int>();
     }
 
     /// <summary>
@@ -93,6 +102,11 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class DecoyPairingManifest
     {
+        // Required column headings, named in the error a manifest without them gets.
+        private const string COLUMN_SEQUENCE = @"sequence";
+        private const string COLUMN_PEPTIDE_TYPE = @"peptide_type";
+        private const string COLUMN_PEPTIDE_PAIR_INDEX = @"peptide_pair_index";
+
         private readonly Dictionary<string, ManifestEntryInfo> _seqToInfo;
 
         private DecoyPairingManifest(Dictionary<string, ManifestEntryInfo> seqToInfo)
@@ -151,16 +165,16 @@ namespace pwiz.Osprey.IO
             {
                 string header = reader.ReadLine();
                 if (header == null)
-                    throw new InvalidDataException(@"FDRBench manifest is empty");
-                var cols = header.Split('\t');
+                    throw new InvalidDataException(OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_);
+                var cols = header.Split(TextUtil.SEPARATOR_TSV);
                 int iSeq = -1, iType = -1, iPair = -1, iProteins = -1;
                 for (int i = 0; i < cols.Length; i++)
                 {
-                    if (cols[i] == @"sequence")
+                    if (cols[i] == COLUMN_SEQUENCE)
                         iSeq = i;
-                    else if (cols[i] == @"peptide_type")
+                    else if (cols[i] == COLUMN_PEPTIDE_TYPE)
                         iType = i;
-                    else if (cols[i] == @"peptide_pair_index")
+                    else if (cols[i] == COLUMN_PEPTIDE_PAIR_INDEX)
                         iPair = i;
                     else if (cols[i] == @"proteins")
                         iProteins = i;
@@ -168,9 +182,8 @@ namespace pwiz.Osprey.IO
                 if (iSeq < 0 || iType < 0 || iPair < 0)
                 {
                     throw new InvalidDataException(string.Format(
-                        @"FDRBench manifest header missing required columns " +
-                        @"(need sequence, peptide_type, peptide_pair_index). Got: {0}",
-                        header));
+                        OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_,
+                        header, COLUMN_SEQUENCE, COLUMN_PEPTIDE_TYPE, COLUMN_PEPTIDE_PAIR_INDEX));
                 }
                 // `proteins` is optional -- older manifests without it still
                 // parse fine; ApplyToLibrary simply won't replace
@@ -194,7 +207,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (line.Length == 0)
                         continue;
-                    var fields = line.Split('\t');
+                    var fields = line.Split(TextUtil.SEPARATOR_TSV);
                     if (fields.Length < minRequiredCols)
                     {
                         nSkipped++;
@@ -261,7 +274,8 @@ namespace pwiz.Osprey.IO
         /// manifest's <c>peptide_type</c> column is taken as the source
         /// of truth.
         /// </summary>
-        public ManifestApplyStats ApplyToLibrary(IList<LibraryEntry> library, PairingState state)
+        public ManifestApplyStats ApplyToLibrary(IList<LibraryEntry> library, PairingState state,
+            Action<string> logInfo = null)
         {
             var stats = new ManifestApplyStats();
             if (library == null || library.Count == 0 || state == null)
@@ -295,6 +309,15 @@ namespace pwiz.Osprey.IO
                 if (!_seqToInfo.TryGetValue(entry.Sequence, out var info))
                     continue;
                 bool isTargetSide = IsTargetSideOf(info.Kind);
+                // A decoy is never a pairing target, even where the manifest calls its
+                // sequence one (Carafe merges a decoy with an identical real target into one
+                // "decoy_"-prefixed row). Its id already carries the decoy bit, so a decoy
+                // paired to it would copy that id and two decoys would share an entry_id.
+                if (isTargetSide && entry.IsDecoy)
+                {
+                    stats.DecoysListedAsTargets.Add(idx);
+                    continue;
+                }
                 var key = new BucketKey(info.PairIndex, PartitionOf(info.Kind),
                     entry.Charge, isTargetSide);
                 if (!buckets.TryGetValue(key, out var list))
@@ -335,11 +358,20 @@ namespace pwiz.Osprey.IO
 
             // Replace library ProteinIds with the manifest's clean
             // accessions for every sequence the manifest covers and
-            // whose stored ProteinIds disagree.
+            // whose stored ProteinIds disagree. The manifest overrides
+            // nearly every entry of a library-decoy run (one source
+            // protein maps to many peptides), so materialize each
+            // replacement through a shared interner into a read-only
+            // array: a fresh List per entry would discard the loader's
+            // string interning for almost the whole resident library.
+            // Interning is identity-only, so output stays byte-identical.
             stats.NProteinsReplaced = proteinOverride.Count;
-            foreach (var kv in proteinOverride)
+            if (proteinOverride.Count > 0)
             {
-                library[kv.Key].ProteinIds = new List<string>(kv.Value);
+                var interner = new LibraryStringInterner();
+                foreach (var kv in proteinOverride)
+                    library[kv.Key].ProteinIds = interner.InternToArray(kv.Value);
+                interner.LogPairingManifestSummary(logInfo);
             }
 
             // Walk every target-side bucket; pair with the matching
@@ -430,7 +462,7 @@ namespace pwiz.Osprey.IO
         // Cheap ordinal equality on two protein-ID lists. Used to decide
         // whether the manifest's clean accessions would actually change
         // the library entry (skip the rewrite when they match).
-        private static bool ProteinListsEqual(IList<string> a, IList<string> b)
+        private static bool ProteinListsEqual(IReadOnlyList<string> a, IReadOnlyList<string> b)
         {
             if (a == null)
                 return b == null || b.Count == 0;

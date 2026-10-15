@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     File.WriteAllText(cruxParamsFile, cruxParamsFileText);
 
                     // Run Crux Percolator
-                    string cruxOutputDir = Path.Combine(defaultOutputDirectory, "crux-output");
+                    string cruxOutputDir = Path.Combine(defaultOutputDirectory, @"crux-output");
                     _intermediateFiles.Add(cruxOutputDir);
                     psi.FileName = CruxBinary;
                     psi.Arguments = $@"percolator {PercolatorArgs} --only-psms T --output-dir ""{PathEx.GetNonUnicodePath(cruxOutputDir)}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{PathEx.GetNonUnicodePath(cruxParamsFile)}""";
@@ -321,8 +321,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                     {
                         string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
                             spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
-                        string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
-                        string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
+                        string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), @".pin");
+                        string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), @"fixed.pin");
                         _intermediateFiles.Add(cruxInputFilepath);
                         _intermediateFiles.Add(cruxFixedInputFilepath);
                         FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, this);

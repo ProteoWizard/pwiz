@@ -37,9 +37,14 @@ namespace AutoQC
 
             _fileWatcher.NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite;
 
-            _fileWatcher.Filter = Path.GetFileName(mainSettings.AnnotationsFilePath);
+            // ConfigRunner only creates this watcher when MainSettings.HasAnnotationsFile(), so
+            // the path is set and both of these are non-null. The coalesce is for the analyser,
+            // which cannot see that invariant from here.
+            var annotationsFilePath = mainSettings.AnnotationsFilePath;
 
-            _fileWatcher.Path = Path.GetDirectoryName(mainSettings.AnnotationsFilePath);
+            _fileWatcher.Filter = Path.GetFileName(annotationsFilePath) ?? string.Empty;
+
+            _fileWatcher.Path = Path.GetDirectoryName(annotationsFilePath) ?? string.Empty;
         }
 
         public void StartWatching()

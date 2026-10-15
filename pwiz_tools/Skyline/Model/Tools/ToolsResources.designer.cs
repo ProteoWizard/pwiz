@@ -286,6 +286,15 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Timed out after {0} minutes running: [{1}].
+        /// </summary>
+        public static string PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_RunProcessOrThrow_Timed_out_after__0__minutes_running___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Failed to parse package name and version from entry [{0}]..
         /// </summary>
         public static string PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__ {
@@ -388,7 +397,18 @@ namespace pwiz.Skyline.Model.Tools {
                 return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The tool {0} was installed for all users of this Skyline installation. Only the owner of the installation folder can reinstall or update it..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_The_tool__0__was_installed_for_all_users_of_this_Skyline_installation__Only_the_owner_of_the_installation_folder_can_reinstall_or_update_it_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_tool__0__was_installed_for_all_users_of_this_Skyl" +
+                        "ine_installation__Only_the_owner_of_the_installation_folder_can_reinstall_or_upd" +
+                        "ate_it_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Tool Uses R and specifies Packages without an {0} file in the tool-inf directory..
         /// </summary>

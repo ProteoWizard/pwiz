@@ -36,11 +36,11 @@ namespace pwiz.Skyline.FileUI
         public static bool UnrecognizedPeptidesCancel(this PeakBoundaryImporter importer, IWin32Window parent)
         {
             const int itemsToShow = 10;
-            if (!ShowMissingMessage(parent, itemsToShow, importer.UnrecognizedPeptides, p => p.ToString(), PeptideMessages))
+            if (!ShowMissingMessage(parent, itemsToShow, importer.UnrecognizedPeptides.Keys, p => p.ToString(), PeptideMessages))
                 return false;
-            if (!ShowMissingMessage(parent, itemsToShow, importer.UnrecognizedFiles, f => f.ToString(), FileMessages))
+            if (!ShowMissingMessage(parent, itemsToShow, importer.UnrecognizedFiles.Keys, f => f.ToString(), FileMessages))
                 return false;
-            if (!ShowMissingMessage(parent, itemsToShow, importer.UnrecognizedChargeStates, c => c.PrintLine(' '), ChargeMessages))
+            if (!ShowMissingMessage(parent, itemsToShow, importer.UnrecognizedChargeStates.Keys, c => c.PrintLine(' '), ChargeMessages))
                 return false;
             return true;
         }
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private static bool ShowMissingMessage<TItem>(IWin32Window parent, int maxItems, HashSet<TItem> items,
+        private static bool ShowMissingMessage<TItem>(IWin32Window parent, int maxItems, ICollection<TItem> items,
             Func<TItem, string> printLine, Func<int, MissingMessageLines> getMessageLines)
         {
             if (items.Any())

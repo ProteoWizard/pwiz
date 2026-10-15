@@ -1410,8 +1410,8 @@ namespace CommonTest
 
             HttpClientTestHelper CreateNormalHelper()
             {
-                // Use HttpRecordingScope if provided (always provided for normal tests)
-                if (scope != null)
+                // Use HttpRecordingScope if one was created (always created for normal tests)
+                if (scope != null && scope.HasRecordingScope)
                 {
                     return scope.Helper; // May be null for real network access when DoActualWebAccess=true and IsRecordMode=false
                 }
@@ -1438,6 +1438,11 @@ namespace CommonTest
                 return BeginLegacyPlayback(testList);
             }
 
+            // A pass that is not going to the web must have a test helper installed. A null helper
+            // hands the request to the live network, which stalls this test when the service does
+            // not answer.
+            if (!useNetAccess)
+                Assert.IsNotNull(helper, "No HTTP test helper for an offline pass, so it would reach the live web");
 
             var initialSnapshot = CaptureResults
                 ? proteins.Select((p, i) => CreateDiagnosticEntry(p, i, includeHistory: false)).ToList()
@@ -1730,6 +1735,12 @@ namespace CommonTest
             private readonly HttpRecordingScope _scope;
 
             public HttpClientTestHelper Helper => _scope?.Helper;
+
+            /// <summary>
+            /// True when a recording scope was created. A null <see cref="Helper"/> means live web
+            /// access only in that case; without a scope the caller supplies its own playback.
+            /// </summary>
+            public bool HasRecordingScope => _scope != null;
 
             public ConditionalHttpRecordingScope(FastaImporterTest test, bool createScope)
             {

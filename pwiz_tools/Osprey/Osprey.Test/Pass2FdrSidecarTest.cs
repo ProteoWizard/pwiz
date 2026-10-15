@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -34,12 +33,12 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Unit tests for <see cref="Pass2FdrSidecar"/>, the merge-node 2nd-pass FDR
-    /// sidecar step extracted from MergeNodeTask.Run. Covers the pure
-    /// <see cref="Pass2FdrSidecar.MapFeaturesByIdentity"/> seam (the
+    /// Unit tests for <see cref="Pass2FdrSidecar"/>, the SecondPassFDR 2nd-pass FDR
+    /// sidecar step extracted from SecondPassFdrTask.Run. Covers the pure
+    /// <see cref="Pass2FdrSidecar.MapFeaturesByScoreIndex"/> seam (the
     /// reconciled-feature overlay) that previously rode only the nightly
-    /// regression, plus the increment (A) scan-omitted 2nd-pass projection sort
-    /// equivalence (<see cref="TestScanOmittedProjectionSortMatchesLegacyOrder"/>).
+    /// regression, plus the OSPREY_PASS2_QVALUE=transfer score-to-q table and its
+    /// per-run q assignment.
     /// The reload/percolator/sidecar-IO orchestration itself stays parity-locked
     /// and is characterized by regression.ps1, not here.
     /// </summary>
@@ -47,215 +46,53 @@ namespace pwiz.Osprey.Test
     public class Pass2FdrSidecarTest
     {
         /// <summary>
-        /// MapFeaturesByIdentity must: assign each entry's Features from the
-        /// feature row whose stable identity (entry_id, charge, scan_number)
-        /// matches -- NOT its ParquetIndex, which is stale relative to the
-        /// re-indexed reconciled parquet (issue #4355) -- skip any entry whose
-        /// identity is absent from the map (leaving its Features untouched so the
-        /// caller's nMapped &lt; count check fires), and return the count mapped.
+        /// MapFeaturesByScoreIndex must assign each entry's Features from the feature row
+        /// whose <c>score_index</c> matches the entry's <see cref="FdrEntry.ParquetIndex"/>,
+        /// skip any entry whose index is absent from the map (leaving its Features untouched
+        /// so the caller's nMapped &lt; count check fires), and return the count mapped.
+        ///
+        /// <para>This replaces a compound (entry_id, charge, scan_number) key, which existed
+        /// only because the reconciled parquet used to be re-indexed relative to the stubs and
+        /// the row ordinal therefore addressed the wrong row. Now that the reconciled parquet
+        /// PERSISTS the Stage 4 ordinal as <c>score_index</c>, the index is the identity and
+        /// the compound key is unnecessary. The compound key was also subtly wrong for
+        /// anything spanning a rescore: re-integrating at the consensus boundary moves the
+        /// apex, so <c>scan_number</c> differs before and after (#4486).</para>
         /// </summary>
         [TestMethod]
-        public void TestMapFeaturesByIdentity()
+        public void TestMapFeaturesByScoreIndex()
         {
             var rowA = new[] { 0.0, 0.1 };
             var rowB = new[] { 1.0, 1.1 };
-            var featByIdentity = new Dictionary<(uint, byte, uint), double[]>
+            var featByScoreIndex = new Dictionary<uint, double[]>
             {
-                { (10u, 2, 100u), rowA },
-                { (20u, 3, 200u), rowB },
+                { 999u, rowA },
+                { 0u, rowB },
             };
 
-            // matchA carries a deliberately WRONG ParquetIndex (999): identity, not
-            // the index, must select its features -- the exact reconciled-parquet
-            // reindex case that regressed 2nd-pass FDR. matchB matches too; noMatch
-            // has an identity absent from the map and must keep its stale features.
+            // matchA's scan_number deliberately differs from anything in the map: the score
+            // index alone must select its features, which is what makes the mapping survive a
+            // rescore that moved the apex. noMatch's index is absent and must keep its stale
+            // features.
             var stale = new[] { 9.0 };
             var matchA = new FdrEntry { EntryId = 10, Charge = 2, ScanNumber = 100, ParquetIndex = 999, Features = null };
             var matchB = new FdrEntry { EntryId = 20, Charge = 3, ScanNumber = 200, ParquetIndex = 0, Features = null };
             var noMatch = new FdrEntry { EntryId = 30, Charge = 2, ScanNumber = 300, ParquetIndex = 1, Features = stale };
             var entries = new List<FdrEntry> { matchA, matchB, noMatch };
 
-            int nMapped = Pass2FdrSidecar.MapFeaturesByIdentity(entries, featByIdentity);
+            int nMapped = Pass2FdrSidecar.MapFeaturesByScoreIndex(entries, featByScoreIndex);
 
-            // Only the two identity-matched entries are mapped; the caller detects
-            // the mismatch via nMapped (2) < entries.Count (3).
             Assert.AreEqual(2, nMapped);
-
-            // Features are assigned by identity, by reference (same array instance),
-            // ignoring the stale ParquetIndex.
             Assert.AreSame(rowA, matchA.Features);
             Assert.AreSame(rowB, matchB.Features);
-
-            // The unmatched entry keeps its original (stale) features untouched.
             Assert.AreSame(stale, noMatch.Features);
 
             // Empty map maps nothing and never throws.
-            var loneEntry = new FdrEntry { EntryId = 40, Charge = 1, ScanNumber = 400, Features = stale };
-            int nMappedEmpty = Pass2FdrSidecar.MapFeaturesByIdentity(
-                new List<FdrEntry> { loneEntry }, new Dictionary<(uint, byte, uint), double[]>());
+            var loneEntry = new FdrEntry { EntryId = 40, Charge = 1, ScanNumber = 400, ParquetIndex = 7, Features = stale };
+            int nMappedEmpty = Pass2FdrSidecar.MapFeaturesByScoreIndex(
+                new List<FdrEntry> { loneEntry }, new Dictionary<uint, double[]>());
             Assert.AreEqual(0, nMappedEmpty);
             Assert.AreSame(stale, loneEntry.Features);
-        }
-
-        /// <summary>
-        /// Guards the byte-identity invariant behind increment (A): the scan-omitted
-        /// 2nd-pass projection sort key <c>(EntryId, Charge, ParquetIndex)</c> -- where
-        /// <c>ParquetIndex</c> is the RECONCILED-parquet row baked by
-        /// <see cref="Pass2FdrSidecar.BuildReconciledIdentityToRow"/> -- must produce
-        /// the SAME row order as the legacy/oracle resident sort key
-        /// <c>(EntryId, Charge, ScanNumber, original-ParquetIndex)</c> (the FdrEntry
-        /// overload of <c>PercolatorEngine.RunPercolatorFdr</c>). The two provably
-        /// coincide for distinct scans because the reconciled parquet is written
-        /// <c>(entry_id, charge, scan)</c>-sorted, so its row is scan-monotonic within
-        /// a <c>(entry_id, charge)</c> group. The never-asserted corner -- exercised
-        /// here -- is the scan-tie / gap-fill case: the reconciled re-sort is a STABLE
-        /// <c>OrderBy(EntryId).ThenBy(Charge).ThenBy(ScanNumber)</c> with NO ParquetIndex
-        /// tiebreak (<c>ParquetScoreCache.WriteScoresParquet</c>) and gap-fill rows are
-        /// appended (<c>ReconciledParquetWriter.ApplyRescoredRows</c>). Two clean 8-file
-        /// Carafe runs were byte-identical end-to-end but never asserted this in
-        /// isolation.
-        ///
-        /// The fixture packs all three risk factors into one <c>(EntryId, Charge)</c>
-        /// group: multiple distinct scans, a scan-tie (two rows sharing
-        /// <c>(EntryId, Charge, ScanNumber)</c> with different original ParquetIndex),
-        /// and an appended gap-fill row (the <see cref="uint.MaxValue"/> sentinel). The
-        /// reconciled parquet is produced by the REAL Stage-6 paths -- the gap-fill is
-        /// appended through <c>ReconciledParquetWriter.ApplyRescoredRows</c>, written and
-        /// stably re-sorted by <c>ParquetScoreCache.WriteScoresParquet</c>, and read back
-        /// through <c>BuildReconciledIdentityToRow</c> -- so the tie/gap-fill placement
-        /// is production's, not a mock. The projection itself is baked by the real
-        /// <see cref="FdrProjectionSet.BuildFromEntries"/> resolver path.
-        /// </summary>
-        [TestMethod]
-        public void TestScanOmittedProjectionSortMatchesLegacyOrder()
-        {
-            const string fileName = @"file1";
-
-            // Survivor buffer (the rows both sorts operate on), in a deliberately
-            // scrambled construction order so neither sort is a no-op. Each row carries
-            // a distinct CoelutionSum marker (10..70) used only as a stable per-row token
-            // to compare the two resulting orders -- BuildFromEntries copies CoelutionSum
-            // straight onto the FdrProjection. Group A = (EntryId 100, Charge 2):
-            // P(scan10), G(gap-fill scan15), Q(scan20), R(scan20 == scan-tie with Q),
-            // S(scan30). Group B = (EntryId 200, Charge 3, decoys): T(scan5), U(scan25).
-            // Original ParquetIndex is (entry,charge,scan)-monotonic across the real rows
-            // (0..5); the gap-fill carries the uint.MaxValue sentinel.
-            var rowP = MakeSurvivor(100, 2, 10, 0, 10.0, false);
-            var rowQ = MakeSurvivor(100, 2, 20, 1, 20.0, false);
-            var rowR = MakeSurvivor(100, 2, 20, 2, 30.0, false); // scan-tie with Q
-            var rowS = MakeSurvivor(100, 2, 30, 3, 40.0, false);
-            var rowT = MakeSurvivor(200, 3, 5, 4, 50.0, true);
-            var rowU = MakeSurvivor(200, 3, 25, 5, 60.0, true);
-            var rowG = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false); // gap-fill sentinel
-            var survivors = new List<FdrEntry> { rowS, rowR, rowT, rowG, rowP, rowU, rowQ };
-
-            // Build the reconciled parquet through the REAL Stage-6 paths on fresh clones
-            // (the writer reassigns ParquetIndex, so cloning keeps the survivor buffer's
-            // original ParquetIndex -- the legacy sort tiebreak -- intact).
-            var reconEntries = new List<FdrEntry>
-            {
-                MakeSurvivor(100, 2, 10, 0, 10.0, false),
-                MakeSurvivor(100, 2, 20, 1, 20.0, false),
-                MakeSurvivor(100, 2, 20, 2, 30.0, false),
-                MakeSurvivor(100, 2, 30, 3, 40.0, false),
-                MakeSurvivor(200, 3, 5, 4, 50.0, true),
-                MakeSurvivor(200, 3, 25, 5, 60.0, true),
-            };
-            var reconGapFill = MakeSurvivor(100, 2, 15, uint.MaxValue, 70.0, false);
-            ReconciledParquetWriter.ApplyRescoredRows(
-                reconEntries, new List<FdrEntry> { reconGapFill }, fileName, s => { },
-                out int nAppended);
-            Assert.AreEqual(1, nAppended, @"gap-fill row must append through the real Stage-6 path");
-
-            string reconciledPath = Path.Combine(Path.GetTempPath(),
-                @"osprey_pass2sort_" + Guid.NewGuid().ToString(@"N") + @".parquet");
-            try
-            {
-                ParquetScoreCache.WriteScoresParquet(reconciledPath, reconEntries, null, null, fileName);
-
-                // REAL identity -> reconciled-row map (last-write-wins collapses a scan-tie).
-                var reconMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(reconciledPath);
-
-                // Legacy/oracle order: sort a fresh copy by the resident FdrEntry key.
-                var legacyList = new List<FdrEntry>(survivors);
-                legacyList.Sort(LegacyResidentComparison);
-                var legacyOrder = legacyList.Select(e => e.CoelutionSum).ToList();
-
-                // Projection order, mirroring Pass2FdrSidecar.ComputePass2Projection:
-                // (1) canonicalize the survivor buffer with the SAME legacy key (the
-                // production pre-sort), (2) build the projection with each row's
-                // ParquetIndex baked to its reconciled row, (3) sort by the scan-omitted
-                // projection key.
-                var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
-                {
-                    new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>(survivors)),
-                };
-                perFileEntries[0].Value.Sort(LegacyResidentComparison); // ComputePass2Projection pre-sort
-
-                var projections = FdrProjectionSet.BuildFromEntries(perFileEntries, _ => reconMap);
-                Assert.AreEqual(1, projections.PerFile.Count);
-                var projRows = projections.PerFile[0].Value;
-                Assert.AreEqual(survivors.Count, projRows.Count);
-
-                // Sanity: confirm the corner is actually exercised. The gap-fill (marker
-                // 70) must have interleaved BY SCAN into the reconciled parquet -- its row
-                // falls between P's scan-10 row and Q's scan-20 row, not appended at the
-                // end -- and the scan-tied pair (markers 20 and 30) must collapse to the
-                // SAME reconciled row so the projection comparer genuinely ties on them.
-                var reconRowByMarker = new Dictionary<double, uint>();
-                foreach (var p in projRows)
-                    reconRowByMarker[p.CoelutionSum] = p.ParquetIndex;
-                Assert.IsTrue(
-                    reconRowByMarker[10.0] < reconRowByMarker[70.0] &&
-                    reconRowByMarker[70.0] < reconRowByMarker[20.0],
-                    @"gap-fill row must interleave by scan in the reconciled parquet");
-                Assert.AreEqual(reconRowByMarker[20.0], reconRowByMarker[30.0],
-                    @"scan-tied rows must bake the same reconciled row (last-write-wins collapse)");
-
-                projRows.Sort(ProjectionComparison);
-                var projectionOrder = projRows.Select(p => p.CoelutionSum).ToList();
-
-                // The guarded invariant: scan-omitted projection order == legacy order.
-                CollectionAssert.AreEqual(legacyOrder, projectionOrder,
-                    @"scan-omitted projection sort diverged from the legacy resident sort; legacy=[" +
-                    string.Join(@",", legacyOrder) + @"] projection=[" +
-                    string.Join(@",", projectionOrder) + @"]");
-            }
-            finally
-            {
-                if (File.Exists(reconciledPath))
-                    File.Delete(reconciledPath);
-            }
-        }
-
-        private static FdrEntry MakeSurvivor(
-            uint entryId, byte charge, uint scanNumber, uint parquetIndex, double marker, bool isDecoy)
-        {
-            return new FdrEntry
-            {
-                EntryId = entryId,
-                Charge = charge,
-                ScanNumber = scanNumber,
-                ParquetIndex = parquetIndex,
-                CoelutionSum = marker,
-                IsDecoy = isDecoy,
-                ModifiedSequence = @"PEPTIDE" + entryId,
-            };
-        }
-
-        // Verbatim copy of the FdrEntry-overload comparer in
-        // PercolatorEngine.RunPercolatorFdr (the legacy/oracle resident sort). Inlined
-        // because the production comparer is a private lambda inside the SVM run and
-        // cannot be invoked in isolation.
-        private static int LegacyResidentComparison(FdrEntry a, FdrEntry b)
-        {
-            int c = a.EntryId.CompareTo(b.EntryId);
-            if (c != 0) return c;
-            c = a.Charge.CompareTo(b.Charge);
-            if (c != 0) return c;
-            c = a.ScanNumber.CompareTo(b.ScanNumber);
-            if (c != 0) return c;
-            return a.ParquetIndex.CompareTo(b.ParquetIndex);
         }
 
         /// <summary>
@@ -327,16 +164,166 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.0, Pass2FdrSidecar.LookupQForScore(0.0, new double[0], new double[0]), 1e-12);
         }
 
-        // Verbatim copy of the FdrProjectionSet-overload comparer in
-        // PercolatorEngine.RunPercolatorFdr (the scan-omitted projection sort). Same
-        // isolation caveat as LegacyResidentComparison.
-        private static int ProjectionComparison(FdrProjection a, FdrProjection b)
+        /// <summary>
+        /// The core of the per-run-only redesign
+        /// (<see cref="Pass2FdrSidecar.AssignPerRunQ"/>): pass 2 may change ONLY the per-run
+        /// q of a reconciliation-moved peak; the experiment q is a pass-1 property carried
+        /// through unchanged (the best-peak anchor). Exercises all three classes against a
+        /// hand-built per-file (score -&gt; run q) table.
+        /// </summary>
+        [TestMethod]
+        public void TestAssignPerRunQCarriesExperimentQ()
         {
-            int c = a.EntryId.CompareTo(b.EntryId);
-            if (c != 0) return c;
-            c = a.Charge.CompareTo(b.Charge);
-            if (c != 0) return c;
-            return a.ParquetIndex.CompareTo(b.ParquetIndex);
+            // Per-file tables: score DESCENDING, q non-decreasing along it (a better score ->
+            // a lower q). Distinct precursor/peptide tables prove the two levels stay separate.
+            var precScoresDesc = new[] { 10.0, 5.0, 0.0 };
+            var precQDesc = new[] { 0.001, 0.01, 0.5 };
+            var pepScoresDesc = new[] { 10.0, 5.0, 0.0 };
+            var pepQDesc = new[] { 0.002, 0.02, 0.6 };
+
+            // A well-identified 1st-pass record for a precursor: high score, low q at every level.
+            // rec.Score is the averaged-model score the pass-2 recomputation reproduces bit-exact.
+            // experimentAggregateScore is deliberately DIFFERENT from score: it is the
+            // cross-run roll-up, not the per-row discriminant, so a carry that confused the
+            // two would show up here.
+            var rec = new FdrScoreRecord(
+                entryId: 1, score: 10.0,
+                runPrecursorQvalue: 0.001, runPeptideQvalue: 0.002, apexRt: 21.75);
+            // The EXPERIMENT-scope half is one analysis-wide record per entry_id (format v5,
+            // issue #4486), so it arrives beside the run-scope record rather than inside it.
+            var exp = new FdrExperimentRecord(
+                entryId: 1, experimentPrecursorQvalue: 0.0005,
+                experimentPeptideQvalue: 0.0006, experimentProteinQvalue: 0.004,
+                experimentAggregateScore: 12.5, pep: 0.03);
+
+            // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
+            var unchanged = new FdrEntry { EntryId = 1 };
+            var clsU = Pass2FdrSidecar.AssignPerRunQ(unchanged, 10.0, rec, exp,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Unchanged, clsU);
+            Assert.AreEqual(12.5, unchanged.ExperimentAggregateScore, 1e-12);
+            Assert.AreEqual(10.0, unchanged.Score, 1e-12);
+            Assert.AreEqual(0.001, unchanged.RunPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.002, unchanged.RunPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.0005, unchanged.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.0006, unchanged.ExperimentPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.03, unchanged.Pep, 1e-12);
+
+            // (b) MOVED: reconciliation dropped the score to 5.0 -> run q re-maps UP (worse), but
+            // the experiment q is CARRIED from the 1st-pass record unchanged. This is the whole
+            // invariant: only per-run q moves, and only toward higher (less confident) values.
+            var moved = new FdrEntry { EntryId = 1 };
+            var clsM = Pass2FdrSidecar.AssignPerRunQ(moved, 5.0, rec, exp,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.Moved, clsM);
+            Assert.AreEqual(5.0, moved.Score, 1e-12);
+            Assert.AreEqual(0.01, moved.RunPrecursorQvalue, 1e-12);   // table lookup at score 5
+            Assert.AreEqual(0.02, moved.RunPeptideQvalue, 1e-12);     // peptide table, distinct value
+            Assert.AreEqual(0.0005, moved.ExperimentPrecursorQvalue, 1e-12); // CARRIED, not re-mapped
+            Assert.AreEqual(0.0006, moved.ExperimentPeptideQvalue, 1e-12);   // CARRIED, not re-mapped
+            Assert.IsTrue(moved.RunPrecursorQvalue > rec.RunPrecursorQvalue,
+                "a moved peak's per-run q can only worsen");
+
+            // (c) GAP-FILL: no 1st-pass RUN-scope record -> run q from the table; the
+            // experiment values still come from the precursor's analysis-wide record, which is
+            // the point of the v5 split - a gap-fill peak is no longer a special case needing a
+            // separately reduced cross-file value. A gap-fill that took the q without the
+            // aggregate would persist a real q beside ResetScores' 0.0, and a score-space
+            // acceptance boundary read back from the 2nd-pass artifacts would collapse onto it.
+            var gap = new FdrEntry { EntryId = 2 };
+            gap.ResetScores();
+            var gapExp = new FdrExperimentRecord(
+                entryId: 2, experimentPrecursorQvalue: 0.004,
+                experimentPeptideQvalue: 0.006, experimentProteinQvalue: 0.5,
+                experimentAggregateScore: 7.25, pep: 1.0);
+            var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null, gapExp,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
+            Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);
+            Assert.AreEqual(5.0, gap.Score, 1e-12);
+            Assert.AreEqual(0.01, gap.RunPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.02, gap.RunPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.004, gap.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(0.006, gap.ExperimentPeptideQvalue, 1e-12);
+            Assert.AreEqual(7.25, gap.ExperimentAggregateScore, 1e-12);
+
+            // (d) NO experiment record at all: an entry that competed in nothing takes the
+            // defaults rather than inheriting whatever the last lookup left behind.
+            var orphan = new FdrEntry { EntryId = 3 };
+            orphan.ResetScores();
+            Pass2FdrSidecar.AssignPerRunQ(orphan, 5.0, null, null,
+                precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
+            Assert.AreEqual(1.0, orphan.ExperimentPrecursorQvalue, 1e-12);
+            Assert.AreEqual(1.0, orphan.ExperimentPeptideQvalue, 1e-12);
+            Assert.AreEqual(0.0, orphan.ExperimentAggregateScore, 1e-12);
+        }
+
+        /// <summary>
+        /// OSPREY_PASS2_QVALUE=transfer must re-score each survivor with whichever classifier the
+        /// first pass trained (<see cref="Pass2FdrSidecar.TransferOneFile"/>). It averaged the
+        /// fold weights itself, which threw on a gradient-boosted-tree model - there are no
+        /// weights - before a single file was transferred; nothing reached it with one while the
+        /// default first pass trained the SVM when gbdt was selected.
+        ///
+        /// <para>The UNCHANGED classification is the key check: it needs the re-score to
+        /// reproduce the first pass's score bit for bit, which only the tree model itself can.
+        /// One record carries a different first-pass score, standing in for a peak that
+        /// reconciliation moved, so the MOVED branch runs too.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestTransferOneFileScoresTreeModel()
+        {
+            var scorer = FrozenModelScorer.TryCreate(FirstPassModelIoTest.MakeTreeModel());
+            Assert.IsNotNull(scorer);
+            Assert.IsTrue(scorer.IsGradientBoostedTrees);
+
+            string dir = Path.Combine(Path.GetTempPath(),
+                @"osprey_transfer_trees_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            string inputFile = Path.Combine(dir, @"run1.mzML");
+            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+            try
+            {
+                const uint movedId = 7;
+                var rng = new Random(3);
+                var survivors = new List<FdrEntry>();
+                var records = new List<FdrScoreRecord>();
+                for (uint id = 1; id <= 20; id++)
+                {
+                    var features = new double[scorer.NumFeatures];
+                    for (int j = 0; j < features.Length; j++)
+                        features[j] = rng.NextDouble();
+                    // The score the first pass wrote: this model, these features.
+                    double firstPassScore = scorer.Score(features);
+                    if (id == movedId)
+                        firstPassScore += 1.0;
+                    records.Add(new FdrScoreRecord(id, firstPassScore, 0.001 * id, 0.002 * id, 10.0 + id));
+                    survivors.Add(new FdrEntry { EntryId = id, Features = features });
+                }
+                FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+
+                var tally = new Pass2FdrSidecar.TransferTally();
+                Pass2FdrSidecar.TransferOneFile(@"run1", pass1Path, survivors, scorer,
+                    new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
+
+                Assert.AreEqual(1, tally.FilesDone);
+                Assert.AreEqual(0, tally.Skipped);
+                Assert.AreEqual(1, tally.Moved);
+                Assert.AreEqual(survivors.Count - 1, tally.Unchanged);
+                foreach (var entry in survivors)
+                {
+                    if (entry.EntryId == movedId)
+                        continue;
+                    // Carried verbatim from the first-pass record it reproduced.
+                    Assert.AreEqual(0.001 * entry.EntryId, entry.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(0.002 * entry.EntryId, entry.RunPeptideQvalue, 0.0);
+                }
+            }
+            finally
+            {
+                if (File.Exists(pass1Path))
+                    File.Delete(pass1Path);
+                Directory.Delete(dir, true);
+            }
         }
     }
 }

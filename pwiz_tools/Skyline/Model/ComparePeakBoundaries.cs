@@ -129,8 +129,12 @@ namespace pwiz.Skyline.Model
                     var line = reader.ReadLine();
                     var fieldNames = PeakBoundaryImporter.FIELD_NAMES.ToList();
                     int[] fieldIndices;
+                    // File identity may be a FileName or a ReplicateName column (see FILE_ID_FIELDS), so do not
+                    // require filename here - otherwise a replicate-keyed file (no FileName column) fails to
+                    // detect its separator even though PeakBoundaryImporter.Import accepts it.
                     var separator = PeakBoundaryImporter.DetermineCorrectSeparator(line, fieldNames,
-                        PeakBoundaryImporter.REQUIRED_NO_CHROM, out fieldIndices, out _);
+                        PeakBoundaryImporter.REQUIRED_NO_CHROM.Where(f => f != (int) PeakBoundaryImporter.Field.filename).ToArray(),
+                        out fieldIndices, out _, PeakBoundaryImporter.FILE_ID_FIELDS);
                     ApexPresent = separator != null && fieldIndices[(int) PeakBoundaryImporter.Field.apex_time] != -1;
                 }
                 _docCompare = Importer.Import(FilePath, progressMonitor, lineCount, true, !ApexPresent);

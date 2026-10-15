@@ -181,8 +181,12 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(moleculeDlg, moleculeDlg.OkDialog);
             newDoc = WaitForDocumentChange(newDoc);
-            var compareIon = new CustomIon(C12H12, Adduct.SINGLY_PROTONATED, null, null, testNametextA);
             const int transY1Index = 3;
+            // The dialog stores the small-molecule adduct in formula form ([M+H]), not the proteomic
+            // charge-only Adduct.SINGLY_PROTONATED (both mean +1 protonation). This comparison previously
+            // passed only because MSTest v2's Assert.AreEqual used object.Equals -> CustomMolecule.Equals,
+            // which ignores the adduct; v3 uses the IEquatable path (CustomIon.Equals), which compares it.
+            var compareIon = new CustomIon(C12H12, Adduct.NonProteomicProtonatedFromCharge(1), null, null, testNametextA);
             Assert.AreEqual(compareIon, newDoc.MoleculeTransitions.ElementAt(transY1Index).Transition.CustomIon);
             Assert.AreEqual(1, newDoc.MoleculeTransitions.ElementAt(transY1Index).Transition.Charge);
             var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);

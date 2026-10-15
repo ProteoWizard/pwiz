@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Util
             if (ExecutesJobOnBackgroundThread)
             {
                 RunOnBackgroundThread(action);
+                return;
             }
             RunOnThisThread(action);
         }

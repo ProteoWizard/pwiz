@@ -32,6 +32,13 @@ namespace SkylineAiConnector
 {
     public partial class MainForm : Form
     {
+        /// <summary>
+        /// The oldest Skyline the connector supports: the first Skyline-daily with the JSON-RPC
+        /// IJsonToolService. Every MCP tool works with it unless the tool declares a newer method
+        /// with [RequiresJsonToolServiceMethod].
+        /// </summary>
+        public static readonly System.Version MIN_SKYLINE_VERSION = new System.Version(26, 1, 1, 83);
+
         private bool _setupExpanded;
         // Suppress CheckedChanged events while probing initial state
         private bool _suppressCheckEvents;
@@ -98,11 +105,11 @@ namespace SkylineAiConnector
                 return;
             }
 
-            if (!IsSupportedVersion(version))
+            if (new System.Version(version.Major, version.Minor, version.Build, version.Revision) < MIN_SKYLINE_VERSION)
             {
                 labelStatus.Text = string.Format("Skyline {0}.{1}.{2}.{3} does not support AI connections.",
                     version.Major, version.Minor, version.Build, version.Revision);
-                labelVersion.Text = "This tool requires Skyline 26.1.1.061 or later.";
+                labelVersion.Text = string.Format("This tool requires Skyline {0} or later.", MIN_SKYLINE_VERSION);
                 labelDocument.Visible = false;
                 buttonSetup.Enabled = false;
 
@@ -148,30 +155,24 @@ namespace SkylineAiConnector
             }
         }
 
-        private static bool IsSupportedVersion(Version version)
-        {
-            if (version.Major < 26) // 25.x or earlier
-                return false;
-            if (version.Major == 26 && version.Minor < 1) // 26.0.9
-                return false;
-            if (version.Major == 26 && version.Minor == 1 && version.Build < 1) // 26.1.0
-                return false;
-            return version.Major != 26 || version.Minor != 1 || version.Build != 1 || version.Revision >= 70; // 26.1.1.xxx < 70
-        }
-
         private void DeployMcpServer()
         {
-            if (!McpServerDeployer.IsDotNet8Installed())
+            if (!McpServerDeployer.IsDotNetDesktopRuntimeInstalled())
             {
                 var result = MessageBox.Show(this,
-                    "The AI Connector requires the .NET 8.0 Desktop Runtime, which was not found on this computer.\n\n" +
+                    "The AI Connector requires the .NET 10.0 Desktop Runtime, which was not found on this computer.\n\n" +
                     "Would you like to open the download page?",
-                    ".NET 8.0 Required",
+                    ".NET 10.0 Required",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes)
-                    Process.Start(McpServerDeployer.DotNetDownloadUrl);
-                labelStatus.Text = ".NET 8.0 Desktop Runtime is required.";
+                {
+                    // UseShellExecute defaults to false on .NET Core and later, where the string
+                    // overload starts an executable and a URL throws Win32Exception. This prompt is
+                    // what a user sees when the runtime is missing, so the download page has to open.
+                    Process.Start(new ProcessStartInfo(McpServerDeployer.DotNetDownloadUrl) { UseShellExecute = true });
+                }
+                labelStatus.Text = ".NET 10.0 Desktop Runtime is required.";
                 return;
             }
 
@@ -359,18 +360,35 @@ namespace SkylineAiConnector
             {
                 if (checkGeminiCli.Checked)
                 {
-                    ChatAppRegistry.AddToGeminiCli();
-                    labelSetupStatus.Text = "Gemini CLI: Registered.";
+                    bool registeredAny = false;
+                    if (ChatAppRegistry.IsGeminiCliInstalled())
+                    {
+                        ChatAppRegistry.AddToGeminiCli();
+                        registeredAny = true;
+                    }
+                    if (ChatAppRegistry.IsAntigravityInstalled())
+                    {
+                        ChatAppRegistry.AddToAntigravity();
+                        registeredAny = true;
+                    }
+                    labelSetupStatus.Text = registeredAny ? "Gemini / Antigravity: Registered." : "Gemini / Antigravity: No installation found.";
                 }
                 else
                 {
-                    ChatAppRegistry.RemoveFromGeminiCli();
-                    labelSetupStatus.Text = "Gemini CLI: Removed.";
+                    if (ChatAppRegistry.IsGeminiCliInstalled())
+                    {
+                        ChatAppRegistry.RemoveFromGeminiCli();
+                    }
+                    if (ChatAppRegistry.IsAntigravityInstalled())
+                    {
+                        ChatAppRegistry.RemoveFromAntigravity();
+                    }
+                    labelSetupStatus.Text = "Gemini / Antigravity: Removed.";
                 }
             }
             catch (Exception ex)
             {
-                labelSetupStatus.Text = "Gemini CLI: " + ex.Message;
+                labelSetupStatus.Text = "Gemini / Antigravity: " + ex.Message;
                 RevertCheckbox(checkGeminiCli);
             }
         }
@@ -423,6 +441,30 @@ namespace SkylineAiConnector
             }
         }
 
+        private void checkCodex_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_suppressCheckEvents)
+                return;
+            try
+            {
+                if (checkCodex.Checked)
+                {
+                    ChatAppRegistry.AddToCodex();
+                    labelSetupStatus.Text = "Codex: Registered. Restart Codex to activate.";
+                }
+                else
+                {
+                    ChatAppRegistry.RemoveFromCodex();
+                    labelSetupStatus.Text = "Codex: Removed. Restart Codex to apply.";
+                }
+            }
+            catch (Exception ex)
+            {
+                labelSetupStatus.Text = "Codex: " + ex.Message;
+                RevertCheckbox(checkCodex);
+            }
+        }
+
         // -- Expand/collapse --
 
         private void ToggleSetupPanel()
@@ -472,13 +514,23 @@ namespace SkylineAiConnector
                 else
                     checkClaudeCode.Text = "Claude Code (not installed)";
 
-                // Gemini CLI
+                // Gemini / Antigravity
                 bool geminiInstalled = ChatAppRegistry.IsGeminiCliInstalled();
-                checkGeminiCli.Enabled = geminiInstalled;
-                if (geminiInstalled)
-                    checkGeminiCli.Checked = ChatAppRegistry.IsRegisteredInGeminiCli();
+                bool antigravityInstalled = ChatAppRegistry.IsAntigravityInstalled();
+                bool eitherInstalled = geminiInstalled || antigravityInstalled;
+                checkGeminiCli.Enabled = eitherInstalled;
+                if (eitherInstalled)
+                {
+                    bool geminiRegistered = !geminiInstalled || ChatAppRegistry.IsRegisteredInGeminiCli();
+                    bool antigravityRegistered = !antigravityInstalled || ChatAppRegistry.IsRegisteredInAntigravity();
+                    checkGeminiCli.Checked = geminiRegistered && antigravityRegistered;
+                    checkGeminiCli.Text = "&Gemini / Antigravity";
+                }
                 else
-                    checkGeminiCli.Text = "Gemini CLI (not installed)";
+                {
+                    checkGeminiCli.Checked = false;
+                    checkGeminiCli.Text = "Gemini / Antigravity (not installed)";
+                }
 
                 // VS Code (Copilot)
                 bool vscodeInstalled = ChatAppRegistry.IsVSCodeInstalled();
@@ -495,6 +547,14 @@ namespace SkylineAiConnector
                     checkCursor.Checked = ChatAppRegistry.IsRegisteredInCursor();
                 else
                     checkCursor.Text = "Cursor (not installed)";
+
+                // Codex
+                bool codexInstalled = ChatAppRegistry.IsCodexInstalled();
+                checkCodex.Enabled = codexInstalled;
+                if (codexInstalled)
+                    checkCodex.Checked = ChatAppRegistry.IsRegisteredInCodex();
+                else
+                    checkCodex.Text = "Codex (not installed)";
             }
             finally
             {

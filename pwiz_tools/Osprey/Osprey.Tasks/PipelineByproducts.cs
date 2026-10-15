@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -21,11 +21,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
-using pwiz.Osprey.FDR.Reconciliation;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -40,7 +42,9 @@ namespace pwiz.Osprey.Tasks
     // wraps its value, consumers read .Value. They carry no behavior -- the
     // type identity is the whole point. The one mutable shared buffer is
     // modeled as a small state hierarchy (see PerFileEntries below) so that it,
-    // too, resolves through the byproduct->producer registry uniformly.
+    // too, resolves through the byproduct->producer registry uniformly, and it
+    // is the one exception to "no behavior": RescoredEntries may be published
+    // DEFERRED, so that reading it is what brings the buffer to that milestone.
 
     /// <summary>The spectral library (with decoys) produced by Stage 1.</summary>
     internal sealed class FullLibrary
@@ -56,6 +60,96 @@ namespace pwiz.Osprey.Tasks
         public LibraryById(IReadOnlyDictionary<uint, LibraryEntry> value) { Value = value; }
     }
 
+    /// <summary>
+    /// The run's ONE modified-sequence pool, seeded from the library so that every sidecar
+    /// reader canonicalizes onto the library's own string instances.
+    ///
+    /// <para>A parquet reader hands out a fresh string per row, so the FDR pool would hold one
+    /// string object per observation - ~72 B of a survivor's measured 274 B, about 9.9 GB at
+    /// 137 M survivors (issue #4486). Interning against a pool of its OWN would elect the first
+    /// parquet instance as canonical, leaving the run holding the library's set AND the
+    /// sidecars', which costs more than it saves. Seeding from the library first is what makes
+    /// this a collapse rather than a duplication, and it is why there is exactly one of these
+    /// per run rather than one per loader.</para>
+    ///
+    /// <para>Seeded LAZILY: a run that never loads stubs (Stage 1-4 only) should not pay a walk
+    /// of six million library entries. The seed is guarded because the byproduct is reachable
+    /// from more than one task; <see cref="LibraryStringInterner"/> itself is not synchronized,
+    /// so its CALLERS must stay single-threaded loads - which every stub loader is.</para>
+    /// </summary>
+    internal sealed class SequencePool
+    {
+        private readonly IReadOnlyDictionary<uint, LibraryEntry> _libraryById;
+        private readonly object _seedLock = new object();
+        private LibraryStringInterner _interner;
+
+        public SequencePool(IReadOnlyDictionary<uint, LibraryEntry> libraryById)
+        {
+            _libraryById = libraryById;
+        }
+
+        public LibraryStringInterner Value
+        {
+            get
+            {
+                lock (_seedLock)
+                {
+                    if (_interner == null)
+                        _interner = Seed();
+                    return _interner;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Distinct sequences the LIBRARY contributed, captured before any sidecar was read.
+        /// Compared against the pool's distinct count afterwards it answers the only question
+        /// worth asking of this design: a count that has not moved means every sidecar value
+        /// landed on a library instance and the readers allocated no sequences at all.
+        /// </summary>
+        public int SeedCount { get; private set; }
+
+        /// <summary>
+        /// Log what the pool holds and how much of it the library supplied. No-op when the pool
+        /// was never seeded - a run that read no sidecar has nothing to report.
+        /// </summary>
+        public void LogSummary(Action<string> logInfo)
+        {
+            if (logInfo == null)
+                return;
+            LibraryStringInterner interner;
+            lock (_seedLock)
+                interner = _interner;
+            if (interner == null || !OspreyOutput.Verbose)
+                return;
+            logInfo(string.Format(
+                OspreyTasksResources.SequencePool_LogSummary_Unique_peptide_sequences___0__from_the_library___1__read_from_intermediate_files_were_not_,
+                SeedCount, interner.FrozenMisses));
+        }
+
+        /// <summary>
+        /// Prime the pool with every library modified sequence, so a later sidecar value equal
+        /// to one of them is answered with the LIBRARY's instance and costs no string at all.
+        /// </summary>
+        private LibraryStringInterner Seed()
+        {
+            var interner = new LibraryStringInterner();
+            if (_libraryById == null)
+                return interner;
+            foreach (var entry in _libraryById.Values)
+            {
+                if (entry != null)
+                    interner.Intern(entry.ModifiedSequence);
+            }
+            SeedCount = interner.DistinctCount;
+            // Frozen from here on. Stage 6 reads this pool from inside a Parallel.For over
+            // files, and a Dictionary tolerates concurrent readers but not a writer among
+            // them - so the seeding walk is the only write it ever takes.
+            interner.Freeze();
+            return interner;
+        }
+    }
+
     /// <summary>Per-file first-pass RT calibrations from Stages 2-4.</summary>
     internal sealed class PerFileCalibrations
     {
@@ -64,10 +158,39 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
+    /// Per-file CAL-view calibration diagnostics for the <c>--model-diagnostics</c>
+    /// HTML report, captured during Stage 3 calibration and keyed by file name in
+    /// input order (parallels <see cref="PerFileCalibrations"/>). Empty on a normal
+    /// run and on the rehydrate / resume / HPC-worker paths, where the per-file
+    /// calibration MATCHES are not available (only the small calibration.json is
+    /// reloaded), so the rows cannot be reconstructed -- FirstPassFdrTask reads this
+    /// only under <c>config.ModelDiagnostics</c> and tolerates an empty map.
+    ///
+    /// <see cref="MassUnit"/> is the per-run mass-error unit ("ppm" or "Th") the CAL
+    /// view labels its MS1/MS2 axes with. It is captured alongside the rows because
+    /// <see cref="ModelDiagnosticsData.CalFileRow"/> deliberately does not carry it (it
+    /// is a per-run scalar on <see cref="ModelDiagnosticsData.CalibrationData"/>, and
+    /// the resolution mode that fixes it is resolved per-file at scoring time, not
+    /// derivable from config at FirstPassFDR). Null until the first calibrated file records
+    /// it; defaults to "ppm" downstream.
+    /// </summary>
+    internal sealed class PerFileCalibrationDiagnostics
+    {
+        public IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> Value { get; }
+        public string MassUnit { get; }
+        public PerFileCalibrationDiagnostics(
+            IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> value, string massUnit)
+        {
+            Value = value;
+            MassUnit = massUnit;
+        }
+    }
+
+    /// <summary>
     /// Per-file isolation-window m/z intervals (half-open <c>[Lo, Hi)</c>) from
     /// Stages 2-4 -- the gap-fill m/z filter's per-file coverage map. Straight
     /// through, each file's list is built from its extracted isolation windows
-    /// (<c>center +/- width/2</c>); on an HPC merge node (no mzML) it is
+    /// (<c>center +/- width/2</c>); on an HPC SecondPassFDR node (no mzML) it is
     /// rehydrated from the <c>isolation_scheme</c> block in calibration.json.
     /// Always published non-null (empty when no scheme is available), so the
     /// byproduct exists for every run. Parallels <see cref="PerFileCalibrations"/>
@@ -87,40 +210,12 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// The probe-the-disk reconciliation bundle PerFileScoring hydrates from
-    /// sibling sidecars in worker mode, or <c>null</c> at a Stage-5 entry / any
-    /// straight-through run that wrote no bundle. The wrapper is always
-    /// published once (presence == "PerFileScoring has been materialized"); its
-    /// <see cref="Value"/> is the nullable bundle, so a consumer distinguishes
-    /// "no bundle" (Value == null) from "producer not yet run" (cache miss).
-    /// </summary>
-    internal sealed class RescoreBundle
-    {
-        public RescoreInputs Value { get; }
-        public RescoreBundle(RescoreInputs value) { Value = value; }
-    }
-
-    /// <summary>
-    /// Stage 6 multi-charge consensus rescore targets per file (post-compaction
-    /// apex/start/end by stub index), produced by FirstJoin's planning step.
-    /// </summary>
-    internal sealed class PerFileConsensusTargets
-    {
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> Value { get; }
-        public PerFileConsensusTargets(
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> value)
-        {
-            Value = value;
-        }
-    }
-
-    /// <summary>
-    /// Whether FirstJoin's Stage 6 planning block actually ran (<c>true</c>) vs
+    /// Whether FirstPassFDR's Stage 6 planning block actually ran (<c>true</c>) vs
     /// was skipped (single-file / reconciliation off) or rehydrated from disk
     /// (<c>false</c>). This is the gate PerFileRescore's self-gate checks to tell
     /// "planning ran" from "planning was skipped." Routing it through the typed
     /// byproduct registry replaces PerFileRescore's former concrete-type reach
-    /// (<c>ctx.Demand&lt;FirstJoinTask&gt;().DidPlan(ctx)</c>) -- the last
+    /// (<c>ctx.Demand&lt;FirstPassFdrTask&gt;().DidPlan(ctx)</c>) -- the last
     /// compile-time edge to a sibling task in the otherwise uniform
     /// <c>ctx.Get&lt;T&gt;()</c> spine.
     /// </summary>
@@ -130,32 +225,41 @@ namespace pwiz.Osprey.Tasks
         public PlanningPerformed(bool value) { Value = value; }
     }
 
-    /// <summary>Stage 6 reconciliation actions keyed by (file, post-compaction index).</summary>
-    internal sealed class ReconciliationActions
+    /// <summary>
+    /// How many peak re-picks and boundary imputations FirstPassFDR's Stage 6 planning
+    /// produced across the run - a COUNT, for the rescore summary. The actions themselves
+    /// travel in each run's own <c>.reconciliation.json</c>, which is where the per-run
+    /// rescore reads them; the whole-experiment action map that used to be published here
+    /// (30.8 M entries at 446 runs) had no other reader. Zero when planning did not run in
+    /// this process.
+    /// </summary>
+    internal sealed class PlannedActionCount
     {
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> Value { get; }
-        public ReconciliationActions(IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> value) { Value = value; }
+        public int Value { get; }
+        public PlannedActionCount(int value) { Value = value; }
     }
 
-    /// <summary>Per-file refined RT calibrations from the Stage 6 calibration refit.</summary>
-    internal sealed class RefinedCalibrations
+    /// <summary>
+    /// Base_ids of the protein-compact stratum (OSPREY_PASS2_QVALUE=protein-compact):
+    /// every library precursor whose peptide maps to a protein detected in the 1st pass
+    /// by &gt;=2 DISTINCT peptides (the honest anchor -- single-hit proteins break the
+    /// independent-filtering assumption; the entrapment prototype showed &gt;=2 restores
+    /// FDP control at full gain). Built in FirstPassFDR (which has the full library + the
+    /// 1st-pass detected-peptide set) and consumed by the pass-2 stratified competition.
+    /// Bounded by the library (not the observation count) -> flat in file count. Only
+    /// published when the mode is set.
+    /// </summary>
+    internal sealed class ProteinCompactStratum
     {
-        public IReadOnlyDictionary<string, RTCalibration> Value { get; }
-        public RefinedCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
-    }
-
-    /// <summary>Per-file gap-fill targets for the Stage 6 rescore.</summary>
-    internal sealed class PerFileGapFillForRescore
-    {
-        public IReadOnlyDictionary<string, List<GapFillTarget>> Value { get; }
-        public PerFileGapFillForRescore(IReadOnlyDictionary<string, List<GapFillTarget>> value) { Value = value; }
+        public HashSet<uint> BaseIds { get; }
+        public ProteinCompactStratum(HashSet<uint> baseIds) { BaseIds = baseIds; }
     }
 
     /// <summary>
     /// The pipeline's working per-file FDR entry buffer. UNLIKE every other
     /// byproduct here, this is a deliberately MUTABLE shared buffer: the same
     /// inner <see cref="Value"/> list reference is created once by PerFileScoring,
-    /// compacted in place by FirstJoin, then overlaid in place by PerFileRescore
+    /// compacted in place by FirstPassFDR, then overlaid in place by PerFileRescore
     /// (the no-copy hand-off is load-bearing at Astral scale).
     ///
     /// The three in-place mutation milestones are modeled as the distinct
@@ -163,7 +267,7 @@ namespace pwiz.Osprey.Tasks
     /// -> <see cref="RescoredEntries"/>), each published once by its single
     /// producing task, so the buffer resolves through the byproduct->producer
     /// registry like every other byproduct: a consumer asks for the milestone it
-    /// needs (e.g. MergeNode wants <see cref="RescoredEntries"/>) and a cache
+    /// needs (e.g. SecondPassFDR wants <see cref="RescoredEntries"/>) and a cache
     /// miss lazily materializes the producer that reaches that state.
     ///
     /// IMPORTANT: these subtypes are MILESTONE TOKENS over a shared backing
@@ -178,8 +282,50 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal abstract class PerFileEntries
     {
-        public List<KeyValuePair<string, List<FdrEntry>>> Value { get; }
-        protected PerFileEntries(List<KeyValuePair<string, List<FdrEntry>>> value) { Value = value; }
+        private readonly List<KeyValuePair<string, List<FdrEntry>>> _buffer;
+
+        protected PerFileEntries(List<KeyValuePair<string, List<FdrEntry>>> value) { _buffer = value; }
+
+        /// <summary>
+        /// The shared buffer, at this milestone's state. <see cref="RescoredEntries"/>
+        /// refuses it: its runs are read one at a time through its per-file source.
+        /// </summary>
+        public virtual List<KeyValuePair<string, List<FdrEntry>>> Value => _buffer;
+
+        /// <summary>
+        /// The run's file names, in buffer order, WITHOUT pulling a deferred milestone.
+        ///
+        /// <para>The keys are present from the moment the buffer is built and never change:
+        /// a per-file source fills each file's list IN PLACE - it writes into the very pairs it
+        /// materializes - and adds no pair. So a consumer that needs
+        /// only names can have them without materializing every file's survivors, which at
+        /// 446 CHS runs meant building 289 M entries to answer a question about 446 strings.</para>
+        ///
+        /// <para>Unlike <see cref="BufferIdentity"/> this is safe to hand out. Names are
+        /// correct whether or not the entries are resident, so there is no state in which it
+        /// returns something that reads as valid and is not.</para>
+        /// </summary>
+        public IReadOnlyList<string> FileNames => _buffer.ConvertAll(kv => kv.Key);
+
+        /// <summary>
+        /// The number of files in the buffer, WITHOUT pulling a deferred milestone, for the
+        /// callers that were reading <see cref="Value"/> only to take its <c>Count</c>. Same
+        /// reasoning as <see cref="FileNames"/>.
+        /// </summary>
+        public int FileCount => _buffer.Count;
+
+        /// <summary>
+        /// The backing list as an OPAQUE reference, for identity comparison only - the DEBUG
+        /// milestone-ordering guard in <see cref="PipelineContext"/> keys on which milestone
+        /// was last published over a given buffer, and reading <see cref="Value"/> to get it
+        /// would make the guard itself the thing that pulls.
+        ///
+        /// <para>Typed as <see cref="object"/> on purpose. The same accessor typed as the
+        /// list would sit one keystroke from <c>Value</c> in every task in this assembly, and
+        /// on a deferred milestone it hands back 82 empty per-file lists with no exception and
+        /// no warning - a blib with no precursors. Nothing can read entries through this.</para>
+        /// </summary>
+        internal object BufferIdentity => _buffer;
     }
 
     /// <summary>The buffer as produced by PerFileScoring (per-file scored stubs).</summary>
@@ -192,33 +338,301 @@ namespace pwiz.Osprey.Tasks
     /// The lean first-pass projection built straight from each file's .scores.parquet,
     /// bypassing the fat <see cref="FdrEntry"/> stub buffer entirely (issue #4397:
     /// rematerializing 191M stubs to convert them into 32 B rows cost ~53 GB).
-    /// <c>Value</c> is null when the run needs the resident stub pool instead
-    /// (--model-diagnostics / FDRBench pass 1) or on the rehydrate/merge paths, which
-    /// still publish fat stubs via <see cref="ScoredEntries"/>.
+    /// <c>Value</c> is null on the rehydrate / reconciled-input paths, which still publish
+    /// stubs via <see cref="ScoredEntries"/>.
     /// </summary>
     internal sealed class FdrProjections
     {
-        public FdrProjectionSet Value { get; }
-        public FdrProjections(FdrProjectionSet value) { Value = value; }
+        // DEFERRED, because on a resume this is usually built and never read. Its ONLY consumer
+        // is FirstPassFdrTask.Run (ctx.Consume<FdrProjections>()), and a resume whose 1st-pass
+        // outputs are already valid SKIPS that Run entirely - so PerFileScoring's rehydrate was
+        // streaming every row of every parquet to build a set nobody would ask for. Measured
+        // 2026-09-03 on the 446-file CHS cohort: 9m46s scanning 1,342,686,095 rows, discarded.
+        //
+        // Same shape as the RescoredEntries milestone, and for the same reason: the work belongs
+        // to whoever needs the product, at the moment they need it. Building it eagerly in a
+        // fan-out task is a pre-processing pass over all runs, which the target shape forbids.
+        private readonly Func<FdrProjectionSet> _build;
+        private FdrProjectionSet _value;
+        private bool _built;
+
+        public FdrProjections(FdrProjectionSet value)
+        {
+            _value = value;
+            _built = true;
+        }
+
+        /// <summary>Build on first read. A null factory means "no projection".</summary>
+        public FdrProjections(Func<FdrProjectionSet> build)
+        {
+            _build = build;
+        }
+
+        public FdrProjectionSet Value
+        {
+            get
+            {
+                if (!_built)
+                {
+                    _value = _build?.Invoke();
+                    _built = true;
+                }
+                return _value;
+            }
+        }
     }
 
-    /// <summary>The buffer after FirstJoin's first-pass FDR + compaction.</summary>
+    /// <summary>The buffer after FirstPassFDR's first-pass FDR + compaction.</summary>
     internal sealed class CompactedEntries : PerFileEntries
     {
         public CompactedEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
     }
 
-    /// <summary>The buffer after PerFileRescore's Stage 6 rescore / reconciliation overlay.</summary>
+    /// <summary>
+    /// The buffer after PerFileRescore's Stage 6 rescore / reconciliation overlay, read ONE
+    /// FILE AT A TIME through its per-file source.
+    ///
+    /// <para>The streamed Stage 6 rescore drops each file's entries as it goes (issue #4526),
+    /// so the buffer holds one EMPTY list per run, and the source brings a run to its
+    /// post-rescore state from disk when a consumer asks for it: <see cref="StreamFiles"/> for
+    /// a fold over every run, <see cref="MaterializeFile"/> for a consumer that picks the run.
+    /// Nothing reads every run's survivors at once. A whole-run build stood behind
+    /// <see cref="Value"/> until no route read it, and reading <see cref="Value"/> now throws
+    /// rather than handing back the empty lists - a blib with no precursors, and no
+    /// error.</para>
+    ///
+    /// <para>The source is null only on a <c>--task PerFileRescoring</c> worker whose analysis
+    /// has no retained base_id summary to rebuild from. Nothing reads the milestone there: the
+    /// worker exits after Stage 6.</para>
+    /// </summary>
     internal sealed class RescoredEntries : PerFileEntries
     {
-        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+        /// <summary>Brings ONE file's list to its post-rescore state.</summary>
+        private readonly Action<string, List<FdrEntry>> _materializeFile;
+
+        /// <summary>
+        /// Applied to each file right after the per-file source has filled it, so a consumer
+        /// that runs LATER in the stage sees the state the stage has reached rather than the
+        /// state on disk when the fold started.
+        ///
+        /// <para>The entries do not outlive a fold, so a fact the stage computes - a pass-2
+        /// overlay, an experiment-q floor - has to be re-applied to each run as it is rebuilt,
+        /// where a resident pool would have been stamped once.</para>
+        ///
+        /// <para>Added to by the stage, in the order the stage computes the facts: the
+        /// second-pass sidecar overlay once the sidecars are final, then the experiment-q floors
+        /// once they have been folded. Order is the point - the floors raise a value the sidecar
+        /// overlay has just written - so they compose in call order rather than replacing one
+        /// another.</para>
+        /// </summary>
+        private Action<string, List<FdrEntry>> _postMaterialize;
+
+        /// <summary>
+        /// True when this milestone has a per-file source, which every milestone a consumer
+        /// reads does. Kept as the question Stage 7 asks before its first pull, so a missing
+        /// source is reported where the join starts rather than as an empty fold.
+        /// </summary>
+        public bool Streams => _materializeFile != null;
+
+        /// <summary>
+        /// How many files <see cref="StreamFiles"/> prepares at once: the materializer and every
+        /// post-materialize overlay run for files ahead of the consumer on this many lanes, while
+        /// the consumer still receives the files one at a time, in order. Both must therefore be
+        /// safe to run for different files concurrently. One - the default - prepares each file
+        /// only when the walk reaches it.
+        /// </summary>
+        public int Lanes { get; set; } = 1;
+
+        /// <param name="value">The shared backing buffer, one list per run, filled one run at
+        /// a time by <paramref name="materializeFile"/>.</param>
+        /// <param name="materializeFile">Brings ONE file's list to its post-rescore state.
+        /// Null only where nothing will read the milestone (see the class remarks).</param>
+        public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value,
+            Action<string, List<FdrEntry>> materializeFile)
+            : base(value)
+        {
+            _materializeFile = materializeFile;
+        }
+
+        /// <summary>
+        /// Refused: the run's survivors are never all resident. Fold through
+        /// <see cref="StreamFiles"/> or read one run with <see cref="MaterializeFile"/>.
+        /// </summary>
+        public override List<KeyValuePair<string, List<FdrEntry>>> Value =>
+            throw new InvalidOperationException(
+                @"RescoredEntries.Value was read, but the second-pass survivors are read one run " +
+                @"at a time: fold through StreamFiles or read one run with MaterializeFile.");
+
+        /// <summary>
+        /// Append to the per-file overlay described on <see cref="_postMaterialize"/>, so it
+        /// runs after everything already installed.
+        /// </summary>
+        public void AddPostMaterialize(Action<string, List<FdrEntry>> overlay)
+        {
+            if (overlay == null)
+                throw new ArgumentNullException(nameof(overlay));
+            RequireSource();
+            var existing = _postMaterialize;
+            _postMaterialize = existing == null
+                ? overlay
+                : (name, entries) => { existing(name, entries); overlay(name, entries); };
+        }
+
+        /// <summary>
+        /// The run's files one at a time, each materialized on arrival and DROPPED once the
+        /// consumer has folded it. Peak is one file's survivors plus whatever the consumer
+        /// accumulates, instead of every file's at once: at 446 CHS runs that is ~0.2 GB
+        /// against ~79 GB.
+        ///
+        /// <para>Yields the buffer's own pairs, and the stamps a consumer writes onto them do
+        /// not outlive the yield, which is exactly why the per-file SIDECAR - not the entry - is
+        /// what carries Stage 7's results forward, as <c>ComputePass2TransferCompeteFull</c>
+        /// documents.</para>
+        ///
+        /// <para>Re-enumerable: a second pass re-materializes each file from disk. Two passes
+        /// are the shape a fold-then-apply step needs (accumulate O(distinct) floors over every
+        /// file, then apply them), and paying a second read is the trade that removes the pool.</para>
+        /// </summary>
+        /// <param name="label">What this fold is doing, for the per-run progress line. Supply
+        /// it: each pass REBUILDS every run from disk, so a fold runs for minutes, and an
+        /// unreported one is a silence in the middle of a multi-hour stage - the shape this
+        /// codebase has repeatedly had to go back and fix. Null suppresses the line, which is
+        /// right only for a fold that already reports its own progress.</param>
+        public IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamFiles(string label = null)
+        {
+            RequireSource();
+            return StreamSourcedFiles(label);
+        }
+
+        private IEnumerable<KeyValuePair<string, List<FdrEntry>>> StreamSourcedFiles(string label)
+        {
+            // Disposed by the enumerator's own finally, so an abandoned fold closes its
+            // reporter rather than leaving the heading as the last line in the log.
+            using (var progress = label == null
+                       ? null
+                       : new ProgressReporter(CountText.Format(FileCount, OspreyTasksResources.RescoredEntries_StreamFiles__1___1_file_, OspreyTasksResources.RescoredEntries_StreamFiles__1____0__files_, label),
+                           FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+            {
+                int done = 0;
+                // base.Value, not Value: the pairs and their (empty) lists are what we
+                // materialize INTO.
+                var files = base.Value;
+                int consumed = 0;
+                try
+                {
+                    foreach (var kv in OrderedFileLanes.Enumerate(files.Count, Lanes, i =>
+                             {
+                                 var file = files[i];
+                                 _materializeFile(file.Key, file.Value);
+                                 _postMaterialize?.Invoke(file.Key, file.Value);
+                                 return file;
+                             }))
+                    {
+                        progress?.Report(++done);
+                        yield return kv;
+                        // Dropped as soon as the consumer's foreach body returns. TrimExcess too:
+                        // Clear leaves the backing array at its high-water capacity, which for a
+                        // CHS file is ~648 K references still committed per file.
+                        kv.Value.Clear();
+                        kv.Value.TrimExcess();
+                        consumed++;
+                    }
+                }
+                finally
+                {
+                    // A walk abandoned early leaves the files the lanes prepared AHEAD of it
+                    // populated; drop them as consumed ones are dropped. Not the file the walk
+                    // stopped in, which the consumer may still be holding.
+                    for (int i = consumed + 1; i < files.Count; i++)
+                    {
+                        files[i].Value.Clear();
+                        files[i].Value.TrimExcess();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// ONE named file's post-rescore survivors, for a consumer that is driven by something
+        /// other than this buffer's order - the streamed pass-2 competition asks for the file
+        /// the FDR layer has just decided to read next, not for "the next one".
+        ///
+        /// <para>The list is the buffer's own, just filled from disk, and the caller owns
+        /// dropping it (<see cref="DropFile"/>): only the caller knows whether it is done with
+        /// the file or merely finished one of several passes over it.</para>
+        ///
+        /// <para>An unknown name returns an empty list rather than throwing: that is what the
+        /// resident lookup this replaced did for a file the buffer never held, and turning it
+        /// into a throw here would convert a tolerated input-naming drift (reported in its own
+        /// words upstream) into an abort hours into a run.</para>
+        /// </summary>
+        public List<FdrEntry> MaterializeFile(string fileName)
+        {
+            RequireSource();
+            foreach (var kv in base.Value)
+            {
+                if (!string.Equals(kv.Key, fileName, StringComparison.Ordinal))
+                    continue;
+                _materializeFile(kv.Key, kv.Value);
+                _postMaterialize?.Invoke(kv.Key, kv.Value);
+                return kv.Value;
+            }
+            return new List<FdrEntry>();
+        }
+
+        /// <summary>
+        /// Release one file materialized by <see cref="MaterializeFile"/>.
+        /// </summary>
+        public void DropFile(string fileName)
+        {
+            foreach (var kv in base.Value)
+            {
+                if (!string.Equals(kv.Key, fileName, StringComparison.Ordinal))
+                    continue;
+                kv.Value.Clear();
+                kv.Value.TrimExcess();
+                return;
+            }
+        }
+
+        private void RequireSource()
+        {
+            if (_materializeFile == null)
+            {
+                throw new InvalidOperationException(
+                    @"RescoredEntries was read on a milestone with no per-file source, which only " +
+                    @"a rescore worker publishes and nothing there reads.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// The means to REBUILD any one file's post-compaction survivors from disk,
+    /// published by FirstPassFDR alongside <see cref="CompactedEntries"/>.
+    ///
+    /// <para>Every artifact the rebuild needs - the original <c>.scores.parquet</c>
+    /// and the finalized <c>.1st-pass.fdr_scores.bin</c> - is on disk by the time
+    /// Stage 5 compacts, so holding the survivors is a choice rather than a
+    /// requirement. It is an expensive one: the all-files survivor buffer is
+    /// 88.9 M entries / 28 GB at 163 files, live for the whole Stage 6 rescore
+    /// (issue #4526). A consumer that works one file at a time takes this instead
+    /// and the buffer never has to exist.</para>
+    ///
+    /// <para><c>Value</c> is null when the run kept the resident buffer (the
+    /// token-gated parity oracle), so a consumer must fall back to
+    /// <see cref="CompactedEntries"/> when it is absent.</para>
+    /// </summary>
+    internal sealed class FirstPassSurvivorSource
+    {
+        public FirstPassSurvivorLoader Value { get; }
+        public FirstPassSurvivorSource(FirstPassSurvivorLoader value) { Value = value; }
     }
 
     /// <summary>
     /// The FROZEN 1st-pass Percolator model (fold weights + biases + feature
     /// standardizer, carried on <see cref="PercolatorResults"/>), captured at
     /// first-pass FDR time. Published only under the OSPREY_PASS2_QVALUE=transfer
-    /// path so the merge-node 2nd-pass step can re-score reconciled features with
+    /// path so the SecondPassFDR 2nd-pass step can re-score reconciled features with
     /// this frozen model (TRIC-style confidence transfer) instead of retraining a
     /// decoy-depleted 2nd-pass SVM. Absent (never published) on the default
     /// percolator path. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
@@ -226,29 +640,20 @@ namespace pwiz.Osprey.Tasks
     internal sealed class FirstPassPercolatorModel
     {
         public PercolatorResults Results { get; set; }
-    }
 
-    /// <summary>
-    /// The FULL 1st-pass-population score-&gt;q lookup table (each entry's raw
-    /// averaged-model score paired with its unbiased 1st-pass effective q),
-    /// captured at first-pass FDR time BEFORE compaction -- so it retains the
-    /// high-q failing/decoy region that the compacted reported pool no longer
-    /// holds. <see cref="ScoresDesc"/> is sorted by score descending; the parallel
-    /// <see cref="QDesc"/> is q as a monotone NON-INCREASING function of score --
-    /// i.e. q is non-decreasing as you walk <see cref="ScoresDesc"/> from high to
-    /// low score (a higher score is a better ID, so a lower q). Published only under
-    /// OSPREY_PASS2_QVALUE=transfer; the merge-node 2nd-pass transfer maps each
-    /// frozen-model reconciled score to a q via THIS table instead of one rebuilt
-    /// from the decoy-depleted compacted entries. Absent (never published) on the
-    /// default percolator path.
-    /// </summary>
-    internal sealed class FirstPassScoreQTable
-    {
-        /// <summary>Raw averaged-model scores, sorted descending.</summary>
-        public double[] ScoresDesc { get; set; }
-        /// <summary>Effective q parallel to <see cref="ScoresDesc"/>; q is a monotone
-        /// non-increasing function of score, so this array is non-decreasing as
-        /// <see cref="ScoresDesc"/> descends (higher score -&gt; lower q).</summary>
-        public double[] QDesc { get; set; }
+        /// <summary>
+        /// The normalized OSPREY_EXPERIMENT_AGG arm that the FIRST pass actually ran under
+        /// (<see cref="OspreyEnvironment.ExperimentAgg"/> as of that process), or null when the
+        /// model came from a sidecar written before this was recorded.
+        ///
+        /// Recorded rather than re-read, because the 2nd pass may not be the same process: a
+        /// distributed <c>--task SecondPassFDR</c> node reloads this model from disk
+        /// (<see cref="FirstPassModelIO"/>) and never trained pass 1, so ITS environment says
+        /// nothing about which aggregation produced the q-values it is about to rewrite.
+        /// Inferring from the live process was wrong in both directions - a SecondPassFDR node with the
+        /// variable unset would emit a mixed q column with no refusal, and a consistent run
+        /// could be aborted by a stale exported variable. Provenance travels with the artifact.
+        /// </summary>
+        public string ExperimentAgg { get; set; }
     }
 }

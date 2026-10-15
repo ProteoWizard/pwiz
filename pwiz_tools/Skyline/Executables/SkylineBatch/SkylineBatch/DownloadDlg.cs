@@ -1,7 +1,6 @@
 using SharedBatch;
 using System;
 using System.IO;
-using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -53,36 +52,45 @@ namespace SkylineBatch
         {
             CommonActionUtil.RunAsync(() =>
             {
-                using (var wc = new WebClient())
+                var realName = Path.Combine(_panoramaFile.DownloadFolder, _panoramaFile.FileName);
+                var panoramaServerUri = new Uri(Uri.UnescapeDataString(_server.URI.GetLeftPart(UriPartial.Authority)));
+                var downloadUri = new Uri(_panoramaFile.DownloadUrl);
+                var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri,
+                    new WebPanoramaClient(panoramaServerUri, _server.FileSource.Username,
+                    _server.FileSource.Password),
+                    new CancellationToken());
+
+                // Cap at 99 as before: the dialog closes on completion, so 100 was never shown
+                // and a full bar next to an open dialog reads as stuck. Floor at 0 because
+                // HttpClientWithProgress reports -1 when it cannot know the total size, and the
+                // timer assigns this straight to ProgressBar.Value, which rejects a negative.
+                var progressMonitor = new DownloadProgressMonitor(
+                    percent => _percent = Math.Max(0, Math.Min(percent, 99)), _source.Token);
+
+                using (var httpClient = new HttpClientWithProgress(progressMonitor))
+                using (var fs = new SimpleFileSaver(realName))
                 {
-                    var realName = Path.Combine(_panoramaFile.DownloadFolder, _panoramaFile.FileName);
-                    var panoramaServerUri = new Uri(Uri.UnescapeDataString(_server.URI.GetLeftPart(UriPartial.Authority)));
-                    var downloadUri = new Uri(_panoramaFile.DownloadUrl);
-                    var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri,
-                        new WebPanoramaClient(panoramaServerUri, _server.FileSource.Username,
-                        _server.FileSource.Password),
-                        new CancellationToken());
-
-                    _source.Token.Register(wc.CancelAsync);
-
-                    using (var fs = new FileSaver(realName))
+                    try
                     {
+                        // Cancellation now travels through the monitor rather than a
+                        // Token.Register(wc.CancelAsync) callback.
+                        httpClient.DownloadFile(downloadUri, fs.SafeName, size > 0 ? size : null);
                         try
                         {
-                            wc.DownloadProgressChanged += (sender, e) =>
-                            {
-                                _percent = Math.Min((int)((double)e.BytesReceived / size * 100), 99);
-                            };
-
-                            // Use synchronous Wait to avoid async void in background thread; ConfigureAwait(false) prevents context capture.
-                            wc.DownloadFileTaskAsync(downloadUri, fs.SafeName).ConfigureAwait(false).GetAwaiter().GetResult();
                             fs.Commit();
-                            if (Visible) BeginInvoke((MethodInvoker)delegate { Close(); });
                         }
-                        catch (Exception)
+                        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
                         {
-                            // Do nothing, file saver will clean up
+                            // The destination could not be replaced (open in another program): the
+                            // download is discarded, as it was when the SharedBatch writer swallowed
+                            // this, and the dialog still closes below.
                         }
+                        if (Visible)
+                            BeginInvoke((MethodInvoker)delegate { Close(); });
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing, file saver will clean up
                     }
                 }
             });

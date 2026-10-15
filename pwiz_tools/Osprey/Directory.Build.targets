@@ -1,35 +1,27 @@
 <Project>
 
-  <!--
-    Override the NuGet-resolved Parquet.Net assembly (Parquet.dll) with the
-    patched build that lives in pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll.
+  <!-- The patched Parquet.Net reference, which used to live here. Imported here as well as from
+       pwiz_tools/Directory.Build.targets because this file, being the nearest
+       Directory.Build.targets, is the only one MSBuild imports for the Osprey tree. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
 
-    The patch fixes a struct-skip bug in Parquet.Net's ThriftCompactProtocolReader
-    (see C:\proj\maccoss-developers\skylinedev\Parquet.Net\PATCH-NOTES.md) that
-    prevents reading parquet files written by parquet-rs >= 58 (the Rust crate
-    used by maccoss/osprey) when those files include the cross-tool .scores.parquet
-    branch consumes.
-
-    Skyline already references Lib/Parquet/ParquetNet.dll directly via <Reference>
-    (see pwiz_tools/Skyline/Skyline.csproj). Osprey uses the upstream NuGet
-    PackageReference for transitive dependency resolution (deps.json on net8.0,
-    auto-deploy on net472), and this target swaps in the patched binary on top.
-    The patched dll has the same AssemblyVersion=4.0.0 as the stock 4.25.0
-    NuGet release, so binding redirects and reflection-based lookups continue
-    to work unchanged.
-
-    Conditioned on Exists() so the target is a no-op for projects that don't
-    transitively reference Parquet.Net.
-  -->
-  <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
-    <PropertyGroup>
-      <_PatchedParquetSource>$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.dll</_PatchedParquetSource>
-      <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
-    </PropertyGroup>
-    <Copy SourceFiles="$(_PatchedParquetSource)"
-          DestinationFiles="$(_ResolvedParquetTarget)"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
+  <!-- ProteowizardWrapper, CommonUtil and pwiz-sharp are not in Osprey.sln, so a solution build
+       strips Configuration and Platform from references to them and every level below falls back
+       to Debug|AnyCPU. Give them this build's Configuration and AnyCPU, as
+       pwiz_tools\Directory.Build.targets does for Skyline.sln, so Osprey and Skyline share one
+       pwiz-sharp build in bin\<Configuration>. A target rather than reference metadata, because
+       the SDK flattens transitive references into every Osprey project and each one must pass the
+       same global properties, or a second instance is built. -->
+  <Target Name="CarryConfigurationToOutOfSolutionReferences"
+          AfterTargets="AssignProjectConfiguration"
+          Condition="'$(CurrentSolutionConfigurationContents)' != ''">
+    <ItemGroup>
+      <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
+        <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
+        <SetPlatform>Platform=AnyCPU;ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
+        <GlobalPropertiesToRemove />
+      </ProjectReferenceWithConfiguration>
+    </ItemGroup>
   </Target>
 
   <!-- Stamp the Osprey version + git short hash on EVERY build path, not just

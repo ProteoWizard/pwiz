@@ -40,7 +40,7 @@ namespace TestPerf
     [TestClass]
     public class PeakBoundaryImputationDiaTutorial : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Exhausts memory when run alongside other workers
         public void TestPeakBoundaryImputationDiaTutorial()
         {
             if (IsTranslationRequired)

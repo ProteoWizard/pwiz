@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using ReplicateValue = pwiz.Skyline.Model.Results.ReplicateValue;
 
 namespace pwiz.Skyline.Menus
 {

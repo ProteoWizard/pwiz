@@ -35,28 +35,31 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestLocalizedTutorialHtml()
         {
-            string tutorialRoot = GetHtmlTutorialsRoot();
-            if (tutorialRoot == null)
+            var tutorialRoots = GetHtmlTutorialsRoots();
+            if (tutorialRoots.Count == 0)
             {
                 return;
             }
 
             var failures = new List<Exception>();
-            foreach (var folder in Directory.GetDirectories(tutorialRoot))
+            foreach (var tutorialRoot in tutorialRoots)
             {
-                foreach (var language in new[] { "ja", "zh-CHS" })
+                foreach (var folder in Directory.GetDirectories(tutorialRoot))
                 {
-                    var languageFolder = Path.Combine(folder, language);
-                    if (File.Exists(Path.Combine(languageFolder, "index.html"))
-                        && File.Exists(Path.Combine(languageFolder, "invariant.html")))
+                    foreach (var language in new[] { "ja", "zh-CHS" })
                     {
-                        try
+                        var languageFolder = Path.Combine(folder, language);
+                        if (File.Exists(Path.Combine(languageFolder, "index.html"))
+                            && File.Exists(Path.Combine(languageFolder, "invariant.html")))
                         {
-                            VerifyInvariantMatchesLocalized(languageFolder);
-                        }
-                        catch (Exception ex)
-                        {
-                            failures.Add(ex);
+                            try
+                            {
+                                VerifyInvariantMatchesLocalized(languageFolder);
+                            }
+                            catch (Exception ex)
+                            {
+                                failures.Add(ex);
+                            }
                         }
                     }
                 }
@@ -71,21 +74,26 @@ namespace pwiz.SkylineTest
         }
 
 
-        private string GetHtmlTutorialsRoot()
+        private List<string> GetHtmlTutorialsRoots()
         {
+            var roots = new List<string>();
             string codeBaseRoot = GetCodeBaseRoot();
             if (codeBaseRoot == null)
             {
-                return null;
+                // Skip the test if we cannot locate the source: the source code is probably not where it needs to be
+                return roots;
             }
 
-            var path = Path.Combine(codeBaseRoot, "Documentation", "Tutorials");
-            if (!Directory.Exists(path))
+            // Check both published tutorials and in-progress drafts (whose screenshots/HTML live alongside them).
+            foreach (var folderName in new[] { "Tutorials", "Tutorial-Drafts" })
             {
-                // Skip the test if the folder does not exist: the source code is probably not where it needs to be
-                return null;
+                var path = Path.Combine(codeBaseRoot, "Documentation", folderName);
+                if (Directory.Exists(path))
+                {
+                    roots.Add(path);
+                }
             }
-            return path;
+            return roots;
         }
 
         private string GetCodeBaseRoot()

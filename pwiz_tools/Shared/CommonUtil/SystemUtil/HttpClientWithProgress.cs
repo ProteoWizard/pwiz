@@ -1,6 +1,7 @@
 /*
  * Original author: brendanx .at. uw.edu
  * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ *                Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  * 
@@ -25,6 +26,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,6 +51,7 @@ namespace pwiz.Common.SystemUtil
         private IProgressStatus _progressStatus;
         private string _progressMessageWithoutSize; // Base message before download size is appended
         private const int ReadTimeoutMilliseconds = 15000; // timeout per chunk to avoid long hangs when network drops
+        private const int RESPONSE_TIMEOUT_MILLISECONDS_DEFAULT = 120000;
         private TimeSpan? _requestTimeout;
 
         // Per-request state (stored in instance, applied to HttpRequestMessage)
@@ -63,9 +66,19 @@ namespace pwiz.Common.SystemUtil
         public bool ShowTransferSize { get; set; } = true;
 
         /// <summary>
+        /// How long to wait for a server to begin answering before giving up on the request.
+        /// Deliberately generous: this exists to break an endless wait, not to hold a server to a
+        /// latency target, so real services answer well inside it and a caller wanting to give up
+        /// sooner should cancel through its progress monitor. Tests that stall a server on purpose
+        /// shorten it, and must restore it afterwards.
+        /// </summary>
+        public static int ResponseTimeoutMilliseconds { get; set; } = RESPONSE_TIMEOUT_MILLISECONDS_DEFAULT;
+
+        /// <summary>
         /// Optional request timeout. This property is retained for API compatibility but does not
-        /// affect the underlying HttpClient (which uses infinite timeout). Timeouts are handled
-        /// per-chunk via ReadTimeoutMilliseconds to detect stalled transfers.
+        /// affect the underlying HttpClient (which uses infinite timeout). Waiting for a response is
+        /// bounded by ResponseTimeoutMilliseconds and reading the body per chunk by
+        /// ReadTimeoutMilliseconds, neither of which this value can tighten or relax.
         /// </summary>
         public TimeSpan? RequestTimeout
         {
@@ -472,13 +485,34 @@ namespace pwiz.Common.SystemUtil
         {
             // Apply per-instance headers and cookies to the request
             ApplyHeadersToRequest(request);
-            
+
+            // Consult the request-level test seam so every verb is mockable, not just GET. The
+            // consult sits outside the exception mapping, like the download path's, so an
+            // exception thrown by a behavior's factory - a simulated HTTP failure or a genuine
+            // test assertion - reaches the caller unmapped.
+            if (TestBehavior != null)
+            {
+                var mockStream = TestBehavior.GetMockResponseStreamFromRequest(request);
+                if (mockStream != null)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StreamContent(mockStream),
+                        RequestMessage = request
+                    };
+                }
+            }
+
+            // Bounded like the download path. This one reads the body too (ResponseContentRead),
+            // because callers of SendRequest read Content afterwards and ReadChunk's per-chunk guard
+            // covers only the download loop, so an unbounded send here could still hang on a server
+            // that answers with headers and then stalls the body.
             var response = WithExceptionHandling(request.RequestUri,
-                () => _sharedHttpClient.SendAsync(request, CancellationToken).Result);
-            
+                () => SendWithResponseTimeout(request, HttpCompletionOption.ResponseContentRead));
+
             // Process cookies from response
             ProcessResponseCookies(response, request.RequestUri);
-            
+
             return response;
         }
 
@@ -504,13 +538,15 @@ namespace pwiz.Common.SystemUtil
             }
 
             // Add cookies from cookie container
-            if (_cookieContainer != null && !request.Headers.Contains(cookieHeaderName))
+            // RequestUri is nullable on HttpRequestMessage and GetCookies rejects null. Every
+            // request that reaches here has one, but there are no cookies to attach without it.
+            if (_cookieContainer != null && request.RequestUri != null && !request.Headers.Contains(cookieHeaderName))
             {
                 var cookies = _cookieContainer.GetCookies(request.RequestUri);
                 if (cookies.Count > 0)
                 {
                     var cookieHeader = string.Join(@"; ", 
-                        cookies.Cast<Cookie>().Select(c => $@"{c.Name}={c.Value}"));
+                        cookies.Select(c => $@"{c.Name}={c.Value}"));
                     request.Headers.Add(cookieHeaderName, cookieHeader);
                 }
             }
@@ -535,11 +571,63 @@ namespace pwiz.Common.SystemUtil
         {
             // Process cookies from response
             var response = WithExceptionHandling(request.RequestUri,
-                () => _sharedHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationToken).Result);
-            
+                () => SendWithResponseTimeout(request));
+
             ProcessResponseCookies(response, request.RequestUri);
-            
+
             return response;
+        }
+
+        /// <summary>
+        /// Sends a request and waits up to <see cref="ResponseTimeoutMilliseconds"/> for it to
+        /// complete. A server that accepts a connection and then never answers would otherwise block
+        /// the calling thread forever, because the shared HttpClient has no timeout of its own.
+        /// Only the wait is abandoned, never the request: cancelling it here would also tear down a
+        /// response that may be arriving. This is the pattern <see cref="ReadChunk"/> uses.
+        /// <para><paramref name="completionOption"/> decides what "complete" means: the download path
+        /// waits for headers only and guards the body per chunk with
+        /// <see cref="ReadTimeoutMilliseconds"/>, while <see cref="SendRequest"/> waits for the whole
+        /// response, since nothing guards its body.</para>
+        /// </summary>
+        private HttpResponseMessage SendWithResponseTimeout(HttpRequestMessage request,
+            HttpCompletionOption completionOption = HttpCompletionOption.ResponseHeadersRead)
+        {
+            var sendTask = _sharedHttpClient.SendAsync(request, completionOption, CancellationToken);
+
+            // Dedicated source for the delay so its timer is released as soon as the wait ends.
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
+            try
+            {
+                var delayTask = Task.Delay(ResponseTimeoutMilliseconds, timeoutCts.Token);
+                if (Task.WaitAny(sendTask, delayTask) != 0)
+                {
+                    // Nothing else will look at the abandoned request, so observe its outcome and
+                    // release a response that turns up after we have stopped waiting.
+                    sendTask.ContinueWith(t =>
+                    {
+                        if (t.IsFaulted)
+                            _ = t.Exception;
+                        else if (t.Status == TaskStatus.RanToCompletion)
+                            t.Result.Dispose();
+                    }, TaskScheduler.Default);
+
+                    // The delay shares the caller's token, so cancelling completes it too and the
+                    // wait ends exactly as it would on a timeout. Without this the user who clicked
+                    // Cancel is told the request timed out, and callers that catch
+                    // NetworkRequestException before OperationCanceledException record the work as
+                    // failed rather than cancelled. Same guard ReadChunk applies after its WaitAny.
+                    CancellationToken.ThrowIfCancellationRequested();
+
+                    throw new TimeoutException(string.Format(
+                        MessageResources.HttpClientWithProgress_MapHttpException_The_request_to__0__timed_out__Please_try_again_,
+                        request.RequestUri));
+                }
+                return sendTask.Result;
+            }
+            finally
+            {
+                timeoutCts.Cancel();
+            }
         }
 
         /// <summary>
@@ -941,8 +1029,14 @@ namespace pwiz.Common.SystemUtil
             try
             {
                 // Attempt to read response body for server-specific error details
-                // This is important for servers like LabKey that include structured error info in responses
-                responseBody = response.Content.ReadAsStringAsync().Result;
+                // This is important for servers like LabKey that include structured error info in responses.
+                // Bounded, because a server that sends error headers and then stalls the body would
+                // otherwise block here exactly as an unanswered request once did.
+                var readTask = response.Content.ReadAsStringAsync();
+                if (readTask.Wait(ReadTimeoutMilliseconds))
+                    responseBody = readTask.Result;
+                else
+                    readTask.ContinueWith(t => _ = t.Exception, TaskScheduler.Default);
             }
             catch
             {
@@ -1101,18 +1195,45 @@ namespace pwiz.Common.SystemUtil
                 return new NetworkRequestException(message, statusCodeValue, uri, httpEx);
             }
                 
-            // DNS resolution failure (e.g., 'The remote name could not be resolved')
-            // This is real and has been seen in a debugger. The InnerException is a WebException
-            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
-            if (httpEx.InnerException is WebException { Status: WebExceptionStatus.NameResolutionFailure })
+            // DNS resolution failure (e.g., 'No such host is known')
+            if (IsDnsResolutionFailure(httpEx))
+            {
                 return new NetworkRequestException(
                     string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
                     NetworkFailureType.DnsResolution, uri, httpEx);
+            }
 
             // Generic connection failure (no HTTP response received)
             return new NetworkRequestException(
                 string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
                 NetworkFailureType.ConnectionFailed, uri, httpEx);
+        }
+
+        /// <summary>
+        /// Whether the request failed because a host name could not be resolved, as opposed to
+        /// resolving and then failing to connect. The two are reported differently to the user.
+        /// Not every resolver failure is reported as <see cref="HttpRequestError.NameResolutionError"/>:
+        /// a name that exists but has no address record arrives as
+        /// <see cref="HttpRequestError.ConnectionError"/> with an inner <see cref="SocketException"/>
+        /// of <see cref="SocketError.NoData"/>, so the inner socket error is checked as well.
+        /// </summary>
+        private static bool IsDnsResolutionFailure(HttpRequestException httpEx)
+        {
+            if (httpEx.HttpRequestError == HttpRequestError.NameResolutionError)
+                return true;
+            var socketEx = httpEx.InnerException as SocketException;
+            if (socketEx == null)
+                return false;
+            switch (socketEx.SocketErrorCode)
+            {
+                case SocketError.HostNotFound:
+                case SocketError.NoData:
+                case SocketError.NoRecovery:
+                case SocketError.TryAgain:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public static bool IsNetworkReallyAvailable()
@@ -1172,8 +1293,9 @@ namespace pwiz.Common.SystemUtil
             // This prevents background threads from blocking process shutdown
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => DisposeInstance();
 
-            // Use HttpClientHandler (SocketsHttpHandler is not available in .NET Framework 4.7.2)
-            // Note: Connection pooling and DNS refresh are handled automatically by HttpClient
+            // On .NET, HttpClientHandler delegates to SocketsHttpHandler, which pools connections.
+            // PooledConnectionLifetime is not set, so a connection kept busy keeps the address it
+            // first resolved; only idle connections are dropped and re-resolved.
             _handler = new HttpClientHandler
             {
                 UseProxy = true,

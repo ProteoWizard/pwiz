@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -54,12 +55,34 @@ namespace pwiz.SkylineTest
                 AssertEx.IsDocumentState(docPrecOnly, 3, 1, 4, 5, 15);
                 Assert.IsFalse(docPrecOnly.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType != IonType.precursor));
 
+                // Extend MS1 filtering below the monoisotopic peak
+                var docMinusOne = docPrecOnly.ChangeSettings(docPrecOnly.Settings.ChangeTransitionFullScan(fs =>
+                    fs.ChangeIncludeMinusOnePrecursor(true)));
+                // All precursors should now have 4 precursor transitions (M-1, M, M+1 and M+2)
+                AssertEx.IsDocumentState(docMinusOne, 4, 1, 4, 5, 20);
+                Assert.AreEqual(5, docMinusOne.PeptideTransitions.Count(nodeTran => nodeTran.Transition.MassIndex == -1));
+
+                // Turning the option back off should remove the M-1 transitions again
+                var docMinusOneOff = docMinusOne.ChangeSettings(docMinusOne.Settings.ChangeTransitionFullScan(fs =>
+                    fs.ChangeIncludeMinusOnePrecursor(false)));
+                AssertEx.IsDocumentState(docMinusOneOff, 5, 1, 4, 5, 15);
+
+                // Extending below the monoisotopic peak also works with percentage based filtering
+                var docMinusOnePercent = docPrecOnly.ChangeSettings(docPrecOnly.Settings.ChangeTransitionFullScan(fs =>
+                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 20, fs.IsotopeEnrichments)
+                        .ChangeIncludeMinusOnePrecursor(true)));
+                Assert.AreEqual(5, docMinusOnePercent.PeptideTransitions.Count(nodeTran => nodeTran.Transition.MassIndex == -1));
+
                 // Use low resolution MS1 filtering
                 var docLowMs1 = docPrecOnly.ChangeSettings(docPrecOnly.Settings.ChangeTransitionFullScan(fs =>
                     fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, null)
                       .ChangePrecursorResolution(FullScanMassAnalyzerType.qit, 0.5, null)));
                 // All precursors should have one precursor transition
                 AssertEx.IsDocumentState(docLowMs1, 4, 1, 4, 5, 5);
+
+                // The M-1 precursor isotope is not supported by a low resolution mass analyzer
+                AssertEx.ThrowsException<InvalidDataException>(() =>
+                    docLowMs1.Settings.TransitionSettings.FullScan.ChangeIncludeMinusOnePrecursor(true));
 
                 // Add y-ions to low resolution filtering
                 var docLowMs1Y = docLowMs1.ChangeSettings(docLowMs1.Settings.ChangeTransitionFilter(filter =>

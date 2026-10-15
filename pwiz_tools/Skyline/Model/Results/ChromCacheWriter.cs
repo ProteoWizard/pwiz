@@ -55,10 +55,23 @@ namespace pwiz.Skyline.Model.Results
         {
             CachePath = cachePath;
             CacheFormat = CacheFormat.CURRENT;
-            _fs = new FileSaver(CachePath);
-            _fsScans = new FileSaver(CachePath + ChromatogramCache.SCANS_EXT, true);
-            _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
-            _fsScores = new FileSaver(CachePath + ChromatogramCache.SCORES_EXT, true);
+            try
+            {
+                _fs = new FileSaver(CachePath);
+                _fsScans = new FileSaver(CachePath + ChromatogramCache.SCANS_EXT, true);
+                _fsPeaks = new FileSaver(CachePath + ChromatogramCache.PEAKS_EXT, true);
+                _fsScores = new FileSaver(CachePath + ChromatogramCache.SCORES_EXT, true);
+            }
+            catch (Exception)
+            {
+                // Creating a later temp file can fail, and then the caller never gets an
+                // object to dispose, so the ones already created would keep their files open.
+                _fs?.Dispose();
+                _fsScans?.Dispose();
+                _fsPeaks?.Dispose();
+                _fsScores?.Dispose();
+                throw;
+            }
             _loader = loader;
             _status = status;
             _completed = completed;

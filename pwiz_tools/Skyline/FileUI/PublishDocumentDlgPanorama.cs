@@ -250,7 +250,7 @@ namespace pwiz.Skyline.FileUI
                     if (ex is NetworkRequestException || ex is PanoramaServerException)
                     {
                         var error = ex.Message;
-                        if (error != null && error.Contains(PanoramaClient.Properties.Resources
+                        if (error.Contains(PanoramaClient.Properties.Resources
                                 .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
                         {
                             error = TextUtil.LineSeparate(error, FileUIResources

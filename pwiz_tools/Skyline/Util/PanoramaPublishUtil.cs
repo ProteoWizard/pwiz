@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -321,7 +320,7 @@ namespace pwiz.Skyline.Util
                         MultiButtonMsgDlg.BUTTON_NO, false)
                     == DialogResult.Yes)
                 {
-                    Process.Start(result.ToString());
+                    ProcessEx.OpenInShell(result.ToString());
                 }
             }
             catch (Exception x)
@@ -361,7 +360,7 @@ namespace pwiz.Skyline.Util
                             MultiButtonMsgDlg.BUTTON_NO, false)
                         == DialogResult.Yes)
                     {
-                        Process.Start(panoramaEx.JobUrl.ToString());
+                        ProcessEx.OpenInShell(panoramaEx.JobUrl.ToString());
                     }
                 }
                 
@@ -375,7 +374,12 @@ namespace pwiz.Skyline.Util
 
             // Change PanoramaUrl setting to the successful url used
             var uriString = PanoramaClient.ServerUri + folderPath;
+            // EscapeDataString is NOT the replacement here: this escapes a whole absolute URI, and
+            // percent-encoding its "://" would make the IsWellFormedUriString check below fail.
+            // Retiring this properly means composing the Uri instead of escaping a built string.
+#pragma warning disable SYSLIB0013
             uriString = Uri.EscapeUriString(uriString);
+#pragma warning restore SYSLIB0013
             var window = parent as SkylineWindow;
             if (window != null && Uri.IsWellFormedUriString(uriString, UriKind.Absolute)) // cant do Uri.isWellFormed because of port and ip
             {

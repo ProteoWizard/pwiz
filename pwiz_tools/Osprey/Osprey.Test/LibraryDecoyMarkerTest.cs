@@ -41,8 +41,7 @@ namespace pwiz.Osprey.Test
         private static LibraryEntry MakeLibEntry(uint id, params string[] proteinIds)
         {
             var e = new LibraryEntry(id, @"PEPTIDE", @"PEPTIDE", 2, 500.0, 10.0);
-            foreach (var p in proteinIds)
-                e.ProteinIds.Add(p);
+            e.ProteinIds = proteinIds;
             return e;
         }
 

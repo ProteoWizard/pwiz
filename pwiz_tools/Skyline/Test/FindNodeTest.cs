@@ -117,7 +117,7 @@ namespace pwiz.SkylineTest
             var docHeavy = refineRemoveLight.Refine(doc);
             Assert.AreEqual(0, CountOccurrances(docHeavy, missmatchFinder, displaySettings));
             var docMulti = ResultsUtil.DeserializeDocument("MultiLabel.sky", GetType());
-            docMulti = (new RefinementSettings()).ConvertToSmallMolecules(docMulti, TestContext.TestDir, asSmallMolecules);
+            docMulti = (new RefinementSettings()).ConvertToSmallMolecules(docMulti, TestContext.TestRunDirectory, asSmallMolecules);
             Assert.AreEqual(0, CountOccurrances(docMulti, missmatchFinder, displaySettings));
             var pathTranMultiRemove = docMulti.GetPathTo((int) SrmDocument.Level.Transitions, 7);
             var tranMultiRemove = docMulti.FindNode(pathTranMultiRemove);

@@ -15,14 +15,42 @@ not the drill-down.
 | File | Role |
 |------|------|
 | `../regression.ps1` | the harness — acquire data, run, compare, report |
-| `../tctest.bat` | scheduled TeamCity entry point (`regression.ps1 -TeamCity -Dataset All`) |
+| `../tctest.bat` | scheduled TeamCity entry point (`regression-parallel.ps1 -TeamCity -Dataset All`: two lanes, one `regression.ps1` invocation per dataset) |
 | `RegressionData.ps1` | download + unzip + skip-if-present (TestPerf-style) |
 | `BlibGolden.ps1` | blib projection schema + golden capture/compare + full blib-vs-blib |
+| `DiagnosticsGolden.ps1` | model-diagnostics metric projection + golden compare + fixed FDR sanity bounds |
+
+## Datasets
+
+| Dataset | Decoys | Entrapment | Resolution | Role |
+|---|---|---|---|---|
+| `Stellar` | generated (reverse) | no | unit | fast local pre-commit gate |
+| `StellarLibDecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the recommended path; measures true FDP against library decoys — `DecoyGenerator` never runs |
+| `StellarGenDecoyEntrap` | generated (reverse), from the same library file with `StripDecoys` | yes, retained | unit | the only leg that guards `DecoyGenerator` against a true-FDP oracle |
+| `Astral` | generated (reverse) | no | hram | larger, HRAM, MS1 features live |
+
+`StellarLibDecoy` reuses the **same** Stellar mzML (via the spec's `LibraryFolder`),
+so the published zip carries one copy of the raw data. Its 2.4 GB library ships as a
+**nested zip** (`stellar-libdecoy/libdecoy-entrapment.zip`) that is extracted only when
+that dataset is selected — so `-Dataset Stellar` never pays for it.
+
+The data zip is **`osprey-testfiles-mzML-v2.zip`**. Acquisition is skip-if-present on
+the extracted root, so adding files under the old name would never reach a machine that
+already had the tree; the v1 zip and URL stay live for older branches.
 
 ## What it asserts
 
-For each dataset (Stellar = unit, Astral = hram), with **zero input copies**
-(inputs referenced read-only from `<Downloads>\Perftests\osprey-testfiles-mzML`,
+**Pipeline behavior is not asserted here.** Caching, resume, rehydrate, task boundaries,
+sidecar contracts, route markers and which files a run writes are valid on any data, so they
+are checked in `Osprey.Test\SubsetPipelineTest.cs`, which runs the whole pipeline in-process
+on committed subsets of this data on every commit. This gate is for results at real-data
+scale: the answer against its golden, the FDR bounds, and the comparisons whose value is
+scale fidelity (the HPC chain against straight-through). The rehydrate, diagnostics
+regeneration, pay-later, rescore-resume and alternate pass-2 legs (modes 5 and 7-11) moved
+there in #4728. Put a new pipeline-behavior check there, not here.
+
+For each dataset, with **zero input copies**
+(inputs referenced read-only from `<Downloads>\Perftests\osprey-testfiles-mzML-v2`,
 all output + caches under a per-run timestamped `TestResults/regression-<stamp>`
 via `--work-dir` — gitignored scratch, **nothing is published as a TeamCity
 artifact**, so the multi-GB spectra caches there are harmless):
@@ -31,10 +59,64 @@ artifact**, so the multi-GB spectra caches there are harmless):
    correctness gate). Compares the Stage 7 protein-FDR dump + a deterministic
    ~500-precursor subset + a full-set summary against `osprey-regression.data/`
    at 1e-9.
-2. **mode 2 — resume vs straight-through self-consistency**. Re-runs the build
+2. **mode 1b — FDR-calibration spot checks** (datasets with `ModelDiagnostics`).
+   Two independent tiers over the `--model-diagnostics` report: the metric
+   projection vs `diagnostics.tsv` at 1e-9, **plus fixed sanity bounds that
+   `-CreateGolden` does not regenerate**. The blib golden proves the search did
+   not change; it cannot prove the calibration is still *correct*, because a
+   change can leave the ranking intact and only wreck the reported q-values —
+   which is exactly what the b↔y decoy swap did at ~12x the claimed error rate.
+   The bounds are the only thing that fails when a bad change is blessed into a
+   regenerated baseline, so they must not be derived from the run.
+3. **mode 2 — resume vs straight-through self-consistency**. Re-runs the build
    in resume mode (invalidate the Stage 5 join + blib, re-run the same command
    so the rehydrate paths fire) and asserts the resume blib equals the
    straight-through blib at 1e-9. The build is its own oracle — no baseline.
+6. **mode 6 - library-fragment release engagement** (issue #4532). Asserts, from
+   each leg's own log, that the Stage 5 -> 6 library-fragment release RAN wherever
+   the library is held - straight-through, resume, every
+   `--task PerFileRescoring` worker, and the `SecondPassFDR` node - and did **not**
+   run on `--task FirstPassFDR`, which loads with `OmitFragments` and so can only
+   ever report a saving it did not make.
+
+   No output comparator can make this assertion. The release is **output-neutral by
+   design** - that is its safety argument - so modes 1-4 pass identically whether it
+   ran or was deleted outright. They catch an *over*-release (the released-spectrum
+   tripwire throws) but are structurally blind to it silently not happening, and
+   every defect found reviewing #4534 was in that blind spot. Verified by
+   construction: with `OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` the other legs stay green
+   and only mode 6 goes red.
+
+   Asserts presence and non-zero counts, **never absolute counts** - those move with any
+   scoring change. It does assert counts against *each other* (issue #4650): on every leg
+   that runs Stage 7's release, its retained count must equal the count the summary's
+   producer logged, Stage 5's retained count must equal it too, and where Stage 5 released
+   in the same process Stage 7 must release 0. All three move together with any scoring
+   change, so none of them cries wolf, and together they say Stage 7 READ the analysis-wide
+   summary rather than folding every run's final pool to rebuild it.
+
+   One run-wide check asserts the log pattern matched *somewhere*, so
+   a reworded C# line fails the gate instead of quietly satisfying the
+   "must not release" leg. Always on; there is no skip switch.
+
+   Runs **last**, because it reads the logs every leg above wrote. The own-sidecar
+   rehydrate's release is asserted by `SubsetPipelineTest` (#4728).
+
+**modes 3 and 4** (the HPC 4-task worker chain, and the warm re-run cache-hit
+assertion) are described in `regression.ps1`'s own comment header, alongside why
+comparing output alone cannot detect a cache-invalidation regression.
+
+There is no resident-pool allowance any more. The named-token ratchet
+(`OSPREY_ALLOW_UNFIXED_RESIDENT`, which replaced the blanket `OSPREY_ALLOW_UNBOUNDED_MEMORY=1`
+after that let an `OSPREY_PASS2_QVALUE=transfer` regression ride along for ten days) shrank to
+no tokens and was removed on 2026-10-12 with the last resident route; Osprey refuses the
+variable at startup like any other unknown `OSPREY_*` name, so an inherited value fails the
+gate loudly rather than being cleared. Stage 7 folds run by run on every leg (#4486), which the
+`(streamed join)` lines assert.
+
+Every leg of a dataset — straight-through, resume, and each HPC phase — is given
+the **same** dataset CLI flags (`Get-DatasetCliArgs`). A self-consistency oracle
+only means anything if both sides ran the same search.
 
 Any mismatch emits a TeamCity `buildProblem` and a non-zero exit.
 
@@ -81,11 +163,12 @@ unexplained failure go green; a red mode-1 means the output moved.
 ## Local use
 
 ```powershell
-# Stellar only, against the committed golden (mode 1 + mode 2)
+# Stellar only, against the committed golden: modes 1, 1c, 4 and 6. Resume, rehydrate and
+# the HPC chain are in the unit tests (SubsetPipelineTest); run those first.
 pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar
 
-# Mode 1 only (skip the resume leg)
-pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar -SkipResume
+# Resume and the HPC chain at full size
+pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset StellarLibDecoy
 
 # Reuse an existing Release build (skip the build step)
 pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar -NoBuild

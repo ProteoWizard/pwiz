@@ -71,8 +71,10 @@ namespace pwiz.Skyline.Controls.AuditLog
             // 
             // AuditLogExtraInfoForm
             // 
+            this.AcceptButton = this.okButton;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.okButton;
             this.Controls.Add(this.extraInfoTextBox);
             this.Controls.Add(this.copyButton);
             this.Controls.Add(this.okButton);

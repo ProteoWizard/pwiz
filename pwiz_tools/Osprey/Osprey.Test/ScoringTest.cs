@@ -40,6 +40,16 @@ namespace pwiz.Osprey.Test
     {
         private const double TOLERANCE = 1e-6;
 
+        // FragmentMath memoizes top-6 m/z by entry Id in a process-wide cache, so every entry
+        // handed to HasTopNFragmentMatch needs a unique Id across the whole test process. Each
+        // test that does so takes its own high base, 10000 apart, and the four must stay
+        // disjoint: a reused Id returns another test's fragment m/z values and fails (or passes)
+        // for the wrong reason. FragmentSelectionTest.FRAG_ID_BASE = 900000,
+        // MZ_INDEX_ID_BASE = 910000, SCAN_MAJOR_ID_BASE = 920000 (scan-major prefilter test),
+        // CalibrationTest.SCAN_MAJOR_CAL_ID_BASE = 930000.
+        private const uint MZ_INDEX_ID_BASE = 910000u;
+        private const uint SCAN_MAJOR_ID_BASE = 920000u;
+
         #region DecoyGenerator Tests
 
         [TestMethod]
@@ -73,13 +83,16 @@ namespace pwiz.Osprey.Test
         {
             var generator = new DecoyGenerator(Enzyme.Trypsin);
             var target = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
-            target.Modifications.Add(new Modification
+            target.Modifications = new[]
             {
-                Position = 3, // T in PEPTIDEK
-                UnimodId = 35,
-                MassDelta = 15.994915,
-                Name = "Oxidation"
-            });
+                new Modification
+                {
+                    Position = 3, // T in PEPTIDEK
+                    UnimodId = 35,
+                    MassDelta = 15.994915,
+                    Name = "Oxidation"
+                }
+            };
 
             var decoy = generator.Generate(target);
 
@@ -392,12 +405,15 @@ namespace pwiz.Osprey.Test
 
             // Library entry with two fragments in the SAME bin (~500 Th)
             var entryTwoFrags = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entryTwoFrags.Fragments.Add(new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f });
-            entryTwoFrags.Fragments.Add(new LibraryFragment { Mz = 500.3, RelativeIntensity = 1.0f });
+            entryTwoFrags.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 500.3, RelativeIntensity = 1.0f }
+            };
 
             // Library entry with one fragment in that bin
             var entryOneFrag = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            entryOneFrag.Fragments.Add(new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f });
+            entryOneFrag.Fragments = new[] { new LibraryFragment { Mz = 500.1, RelativeIntensity = 1.0f } };
 
             double scoreTwoFrags = scorer.XcorrAtScan(spectrum, entryTwoFrags);
             double scoreOneFrag = scorer.XcorrAtScan(spectrum, entryOneFrag);
@@ -428,7 +444,7 @@ namespace pwiz.Osprey.Test
             };
 
             var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entry.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            entry.Fragments = new[] { new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f } };
 
             double score = scorer.LibCosine(spectrum, entry, tolerance);
 
@@ -440,8 +456,11 @@ namespace pwiz.Osprey.Test
 
             // Better test: add a second fragment that is unmatched.
             var entry2 = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            entry2.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
-            entry2.Fragments.Add(new LibraryFragment { Mz = 800.0, RelativeIntensity = 1.0f });
+            entry2.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 800.0, RelativeIntensity = 1.0f }
+            };
 
             double score2 = scorer.LibCosine(spectrum, entry2, tolerance);
 
@@ -460,8 +479,11 @@ namespace pwiz.Osprey.Test
                 Intensities = new[] { 100.0f, 10000.0f, 5000.0f }
             };
             var entry3 = new LibraryEntry(3, "TEST3", "TEST3", 2, 300.0, 10.0);
-            entry3.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
-            entry3.Fragments.Add(new LibraryFragment { Mz = 600.0, RelativeIntensity = 0.5f });
+            entry3.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 600.0, RelativeIntensity = 0.5f }
+            };
 
             double score3 = scorer.LibCosine(spectrum3, entry3, tolerance);
 
@@ -609,6 +631,61 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The linear-time median selection median polish uses returns exactly the median a full
+        /// sort gives - the same double, bit for bit - for odd and even counts, heavy ties,
+        /// already-sorted and reversed input, and both signs of value. SelectInPlace leaves its
+        /// element in sorted position with the values partitioned around it.
+        /// </summary>
+        [TestMethod]
+        public void TestMedianSelectionMatchesSort()
+        {
+            var random = new Random(4242);
+            for (int n = 1; n <= 64; n++)
+            {
+                for (int trial = 0; trial < 20; trial++)
+                {
+                    var values = new double[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        // Alternate between continuous values and a few distinct levels (ties).
+                        values[i] = trial % 2 == 0
+                            ? (random.NextDouble() - 0.5) * 1000
+                            : random.Next(-3, 4) * 1.25;
+                    }
+                    if (trial == 2)
+                        Array.Sort(values);
+                    else if (trial == 4)
+                        Array.Sort(values, (a, b) => b.CompareTo(a));
+                    AssertMedianMatchesSort(values);
+
+                    int k = random.Next(n);
+                    var partitioned = (double[])values.Clone();
+                    var sorted = (double[])values.Clone();
+                    Array.Sort(sorted);
+                    Assert.AreEqual(sorted[k], MedianMath.SelectInPlace(partitioned, k));
+                    Assert.AreEqual(sorted[k], partitioned[k]);
+                    for (int i = 0; i < n; i++)
+                    {
+                        Assert.IsTrue(i < k ? partitioned[i] <= partitioned[k] : partitioned[i] >= partitioned[k],
+                            string.Format("Value {0} of {1} is on the wrong side of element {2}", i, n, k));
+                    }
+                }
+            }
+            Assert.IsTrue(double.IsNaN(MedianMath.MedianInPlace(new double[0])));
+        }
+
+        private static void AssertMedianMatchesSort(double[] values)
+        {
+            var sorted = (double[])values.Clone();
+            Array.Sort(sorted);
+            int mid = sorted.Length / 2;
+            double expected = sorted.Length % 2 == 0 ? 0.5 * (sorted[mid - 1] + sorted[mid]) : sorted[mid];
+            double actual = MedianMath.MedianInPlace((double[])values.Clone());
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual),
+                string.Format("Median of {0} values: expected {1:R}, got {2:R}", values.Length, expected, actual));
+        }
+
+        /// <summary>
         /// Session 5-8 fix: Apex selection ties must resolve to LAST index
         /// (>=, not >) to match Rust's Iterator::max_by which returns the
         /// last element among equal maxima.
@@ -748,6 +825,41 @@ namespace pwiz.Osprey.Test
             double correctedMz = observedMz - meanError; // 500.065
             Assert.AreEqual(500.065, correctedMz, 1e-10,
                 "m/z offset correction should shift by -meanError");
+
+            AssertDoubleCountingToleranceIsTheSearchTolerance();
+        }
+
+        /// <summary>
+        /// The double-counting dedup's tolerance delegates to the search's calibrated
+        /// tolerance. Pinned to the values its former copy of the rule computed for both units
+        /// calibration records ("ppm", "Th"), floors included, so the dedup is unchanged.
+        /// </summary>
+        private static void AssertDoubleCountingToleranceIsTheSearchTolerance()
+        {
+            var config = new OspreyConfig
+            {
+                FragmentTolerance = new FragmentToleranceConfig { Tolerance = 20, Unit = ToleranceUnit.Ppm },
+            };
+            foreach (var (unit, sd, expected, expectedUnit) in new[]
+                     {
+                         ("Th", 0.13, 0.39, ToleranceUnit.Mz),
+                         ("Th", 0.01, 0.05, ToleranceUnit.Mz),
+                         ("ppm", 2.0, 6.0, ToleranceUnit.Ppm),
+                         ("ppm", 0.2, 1.0, ToleranceUnit.Ppm),
+                     })
+            {
+                var cal = new MzCalibrationResult { Calibrated = true, SD = sd, Unit = unit };
+                ScoringPipeline.DoubleCountingTolerance(cal, config, out double value, out ToleranceUnit valueUnit);
+                Assert.AreEqual(Math.Max(3.0 * sd, expectedUnit == ToleranceUnit.Mz ? 0.05 : 1.0), value, 0.0, unit);
+                Assert.AreEqual(expected, value, 1e-12, unit);
+                Assert.AreEqual(expectedUnit, valueUnit, unit);
+            }
+            foreach (var uncalibrated in new[] { null, MzCalibrationResult.Uncalibrated() })
+            {
+                ScoringPipeline.DoubleCountingTolerance(uncalibrated, config, out double value, out ToleranceUnit valueUnit);
+                Assert.AreEqual(20.0, value);
+                Assert.AreEqual(ToleranceUnit.Ppm, valueUnit);
+            }
         }
 
         /// <summary>
@@ -881,19 +993,25 @@ namespace pwiz.Osprey.Test
 
             // Target 1: ABCDEFK -> reversal = FEDCBAK
             var target1 = new LibraryEntry(1, "ABCDEFK", "ABCDEFK", 2, 500.0, 10.0);
-            target1.Fragments.Add(new LibraryFragment
+            target1.Fragments = new[]
             {
-                Mz = 300.0, RelativeIntensity = 1.0f,
-                Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 3, Charge = 1 }
-            });
+                new LibraryFragment
+                {
+                    Mz = 300.0, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 3, Charge = 1 }
+                }
+            };
 
             // Target 2: IS the reversal of target 1 (FEDCBAK)
             var target2 = new LibraryEntry(2, "FEDCBAK", "FEDCBAK", 2, 500.0, 12.0);
-            target2.Fragments.Add(new LibraryFragment
+            target2.Fragments = new[]
             {
-                Mz = 350.0, RelativeIntensity = 1.0f,
-                Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 1 }
-            });
+                new LibraryFragment
+                {
+                    Mz = 350.0, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 1 }
+                }
+            };
 
             // Target 1's decoy (FEDCBAK) collides with target 2.
             // The generator should detect this and fall back to cycling.
@@ -918,6 +1036,100 @@ namespace pwiz.Osprey.Test
                 "Cycled sequence must differ from original");
             Assert.AreNotEqual("FEDCBAK", cycled,
                 "Cycled sequence must differ from the collision target");
+        }
+
+        /// <summary>
+        /// A StopAfterStage5 worker loads the library lean (fragment peaks
+        /// dropped), so decoy generation runs in omit mode. It must produce the
+        /// SAME set of valid targets and decoys, with byte-identical six identity
+        /// scalars (Id, ModifiedSequence, Charge, PrecursorMz, IsDecoy,
+        /// ProteinIds), as a full-fragment run -- differing only in that the decoy
+        /// fragment lists are empty. This guards the byte-identity of the
+        /// FirstPassFDR target+decoy set, whose members the FDR stages look up by
+        /// the six scalars alone.
+        /// </summary>
+        [TestMethod]
+        public void TestDecoyGenerationOmitFragments()
+        {
+            var config = new OspreyConfig(); // DecoyMethod defaults to Reverse
+
+            var full = MakeDecoyTestTargets();
+            // Simulate the lean load: same entries, but no retained fragments.
+            var lean = MakeDecoyTestTargets();
+            foreach (var t in lean)
+                t.Fragments = Array.Empty<LibraryFragment>();
+
+            var fullDecoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                full, config, null, false, out var fullValid);
+            var leanDecoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                lean, config, null, true, out var leanValid);
+
+            // Valid-target membership is sequence / collision driven, never
+            // fragment-content driven, so the two runs keep the same targets.
+            Assert.AreEqual(fullValid.Count, leanValid.Count);
+            for (int i = 0; i < fullValid.Count; i++)
+                Assert.AreEqual(fullValid[i].Id, leanValid[i].Id);
+
+            // Same decoys, six identity scalars byte-identical...
+            Assert.IsTrue(fullDecoys.Count > 0, "Expected at least one decoy");
+            Assert.AreEqual(fullDecoys.Count, leanDecoys.Count);
+            for (int i = 0; i < fullDecoys.Count; i++)
+            {
+                var fd = fullDecoys[i];
+                var ld = leanDecoys[i];
+                Assert.AreEqual(fd.Id, ld.Id);
+                Assert.AreEqual(fd.ModifiedSequence, ld.ModifiedSequence);
+                Assert.AreEqual(fd.Charge, ld.Charge);
+                Assert.AreEqual(fd.PrecursorMz, ld.PrecursorMz, 1e-10);
+                Assert.AreEqual(fd.IsDecoy, ld.IsDecoy);
+                CollectionAssert.AreEqual(fd.ProteinIds.ToArray(), ld.ProteinIds.ToArray());
+
+                // ...but the lean decoy carries no fragments (dead weight for FDR),
+                // while the full-mode decoy still recalculates them.
+                Assert.IsTrue(fd.Fragments.Count > 0, "Full-mode decoy should keep fragments");
+                Assert.AreEqual(0, ld.Fragments.Count, "Lean-mode decoy fragments must be empty");
+            }
+        }
+
+        /// <summary>
+        /// Two trypsin (C-terminal K) targets whose reversals collide with
+        /// neither each other nor the originals, so both yield reversed decoys.
+        /// </summary>
+        private static List<LibraryEntry> MakeDecoyTestTargets()
+        {
+            var t1 = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 471.2567, 25.3);
+            t1.ProteinIds = new[] { "P11111" };
+            t1.Fragments = new[]
+            {
+                new LibraryFragment
+                {
+                    Mz = 147.11, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 1, Charge = 1 }
+                },
+                new LibraryFragment
+                {
+                    Mz = 262.14, RelativeIntensity = 0.5f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 2, Charge = 1 }
+                }
+            };
+
+            var t2 = new LibraryEntry(2, "SAMPLERK", "SAMPLERK", 3, 402.55, 30.1);
+            t2.ProteinIds = new[] { "Q22222" };
+            t2.Fragments = new[]
+            {
+                new LibraryFragment
+                {
+                    Mz = 175.12, RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 1, Charge = 1 }
+                },
+                new LibraryFragment
+                {
+                    Mz = 288.20, RelativeIntensity = 0.4f,
+                    Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 2, Charge = 1 }
+                }
+            };
+
+            return new List<LibraryEntry> { t1, t2 };
         }
 
         /// <summary>
@@ -988,7 +1200,7 @@ namespace pwiz.Osprey.Test
 
             // Library with one fragment at 400 Th
             var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entry.Fragments.Add(new LibraryFragment { Mz = 400.0, RelativeIntensity = 1.0f });
+            entry.Fragments = new[] { new LibraryFragment { Mz = 400.0, RelativeIntensity = 1.0f } };
 
             double score = scorer.XcorrAtScan(spectrum, entry);
 
@@ -998,7 +1210,7 @@ namespace pwiz.Osprey.Test
 
             // Library with fragment at 700 Th (no matching peak)
             var noMatch = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            noMatch.Fragments.Add(new LibraryFragment { Mz = 700.0, RelativeIntensity = 1.0f });
+            noMatch.Fragments = new[] { new LibraryFragment { Mz = 700.0, RelativeIntensity = 1.0f } };
 
             double noMatchScore = scorer.XcorrAtScan(spectrum, noMatch);
 
@@ -1099,11 +1311,11 @@ namespace pwiz.Osprey.Test
 
             // Library with fragment at 300 (matching strong peak)
             var entryStrong = new LibraryEntry(1, "T1", "T1", 2, 200.0, 5.0);
-            entryStrong.Fragments.Add(new LibraryFragment { Mz = 300.0, RelativeIntensity = 1.0f });
+            entryStrong.Fragments = new[] { new LibraryFragment { Mz = 300.0, RelativeIntensity = 1.0f } };
 
             // Library with fragment at 1500 (matching weak peak)
             var entryWeak = new LibraryEntry(2, "T2", "T2", 2, 200.0, 5.0);
-            entryWeak.Fragments.Add(new LibraryFragment { Mz = 1500.0, RelativeIntensity = 1.0f });
+            entryWeak.Fragments = new[] { new LibraryFragment { Mz = 1500.0, RelativeIntensity = 1.0f } };
 
             double scoreStrong = scorer.XcorrAtScan(spectrum, entryStrong);
             double scoreWeak = scorer.XcorrAtScan(spectrum, entryWeak);
@@ -1229,6 +1441,136 @@ namespace pwiz.Osprey.Test
                     nWithLowQ, nPassing));
         }
 
+        /// <summary>
+        /// The --verbose calibration training report (the out-CalibrationTrainingReport
+        /// overload) must capture a coherent picture of the training run: a seed feature,
+        /// final model weights, per-feature target/decoy means, a stop reason, the 1% / 0.1%
+        /// yield, and a per-feature contribution decomposition whose shares sum to 100%.
+        /// Also verifies the report is a pure read-out -- the overload returns the same
+        /// nPassing as the plain call on the same input.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationTrainingReport()
+        {
+            var matches = BuildSyntheticCalibrationMatches();
+            var matchesCopy = BuildSyntheticCalibrationMatches();
+
+            int nPassingPlain = CalibrationScorer.TrainAndScoreCalibration(matchesCopy, false);
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(
+                matches, false, out CalibrationTrainingReport report);
+
+            Assert.AreEqual(nPassingPlain, nPassing,
+                "Report overload must return the same nPassing as the plain overload");
+            Assert.IsNotNull(report, "Report must be populated for a non-empty match set");
+
+            // Structural completeness.
+            Assert.AreEqual(4, report.FeatureNames.Length, "Expected 4 calibration features");
+            Assert.IsNotNull(report.FinalWeights, "Final weights must be captured");
+            Assert.AreEqual(4, report.FinalWeights.Length);
+            Assert.AreEqual(4, report.FeatureMeanTarget.Length);
+            Assert.AreEqual(4, report.FeatureMeanDecoy.Length);
+            Assert.IsFalse(string.IsNullOrEmpty(report.StopReason), "A stop reason must be recorded");
+            Assert.IsTrue(report.SeedFeatureIndex >= 0 && report.SeedFeatureIndex < 4,
+                string.Format("Seed feature index out of range: {0}", report.SeedFeatureIndex));
+
+            // Counts are consistent with the input (200 target / 200 decoy).
+            Assert.AreEqual(200, report.NTargets);
+            Assert.AreEqual(200, report.NDecoys);
+            Assert.AreEqual(400, report.NTotal);
+
+            // Yield is monotone across thresholds and matches nPassing at 1%.
+            Assert.IsTrue(report.NTargetsAt1Pct >= report.NTargetsAtTenthPct,
+                "1% target yield must be >= 0.1% yield");
+            int nWithLowQ = 0;
+            foreach (var m in matches)
+                if (!m.IsDecoy && m.QValue <= 0.01)
+                    nWithLowQ++;
+            Assert.AreEqual(nWithLowQ, report.NTargetsAt1Pct,
+                "Report 1% yield must match the targets with q<=0.01");
+
+            // Contribution decomposition: for well-separated targets/decoys the composite
+            // is non-degenerate, so the report emits a contribution line per feature whose
+            // shares sum to ~100%. Parse the shares out of the formatted table.
+            var lines = new List<string>(report.ToReportLines("unit-test"));
+            double shareSum = 0;
+            int shareRows = 0;
+            foreach (string line in lines)
+            {
+                // A contribution row starts (after indent) with a known feature name and
+                // ends with "<number>%". Other lines carrying '%' (seed FDR, iteration
+                // cutoffs, the yield line) do not start with a feature name, so they are
+                // excluded -- this isolates exactly the 4 feature rows.
+                string trimmed = line.TrimStart();
+                bool isFeatureRow = false;
+                foreach (string fname in report.FeatureNames)
+                {
+                    if (trimmed.StartsWith(fname + " "))
+                    {
+                        isFeatureRow = true;
+                        break;
+                    }
+                }
+                if (!isFeatureRow)
+                    continue;
+                int pctIdx = line.IndexOf('%');
+                string beforePct = line.Substring(0, pctIdx);
+                int sp = beforePct.LastIndexOf(' ');
+                string token = beforePct.Substring(sp + 1);
+                // The table is prose, written in the current culture (12,3 under fr-FR).
+                if (double.TryParse(token, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.CurrentCulture, out double share))
+                {
+                    shareSum += share;
+                    shareRows++;
+                }
+            }
+            Assert.AreEqual(4, shareRows, "Expected a contribution share row per feature");
+            Assert.IsTrue(Math.Abs(shareSum - 100.0) < 0.5,
+                string.Format("Feature shares should sum to ~100%, got {0:F2}", shareSum));
+        }
+
+        /// <summary>
+        /// Build a synthetic 200-pair calibration match set (120 well-separated "good"
+        /// targets, 80 noisy, 200 noise decoys) suitable for exercising the iterative LDA.
+        /// Deterministic (fixed seed) so tests are reproducible.
+        /// </summary>
+        private static CalibrationMatch[] BuildSyntheticCalibrationMatches()
+        {
+            var rng = new Random(12345);
+            int nPairs = 200;
+            var matches = new CalibrationMatch[nPairs * 2];
+            for (int p = 0; p < nPairs; p++)
+            {
+                uint baseId = (uint)(p + 1);
+                bool isGoodTarget = p < 120;
+                double corr = isGoodTarget ? 3.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 2.0;
+                double libcos = isGoodTarget ? 0.6 + rng.NextDouble() * 0.3 : rng.NextDouble() * 0.4;
+                double top6 = isGoodTarget ? 4.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 3.0;
+                double xcorr = isGoodTarget ? 0.5 + rng.NextDouble() * 1.5 : rng.NextDouble() * 0.5;
+                matches[p * 2] = new CalibrationMatch
+                {
+                    EntryId = baseId,
+                    IsDecoy = false,
+                    Sequence = string.Format("PEPTIDE{0}K", p),
+                    CorrelationScore = corr,
+                    LibcosineApex = libcos,
+                    Top6MatchedApex = (byte)Math.Min(6, (int)top6),
+                    XcorrScore = xcorr
+                };
+                matches[p * 2 + 1] = new CalibrationMatch
+                {
+                    EntryId = baseId | 0x80000000,
+                    IsDecoy = true,
+                    Sequence = string.Format("DECOY_PEPTIDE{0}K", p),
+                    CorrelationScore = rng.NextDouble() * 2.0,
+                    LibcosineApex = rng.NextDouble() * 0.3,
+                    Top6MatchedApex = (byte)(rng.Next(4)),
+                    XcorrScore = rng.NextDouble() * 0.4
+                };
+            }
+            return matches;
+        }
+
         // Helper: Pearson correlation for test use
         private static double ComputePearson(double[] x, double[] y)
         {
@@ -1273,6 +1615,368 @@ namespace pwiz.Osprey.Test
             // 10 ppm of 500 = 0.005 Da
             Assert.IsTrue(SpectralScorer.HasMatch(500.002, spectrumMzs, ppmTolerance));
             Assert.IsFalse(SpectralScorer.HasMatch(500.01, spectrumMzs, ppmTolerance));
+        }
+
+        #endregion
+
+        #region m/z bucket index
+
+        /// <summary>
+        /// <see cref="MzBucketIndex"/> must return exactly the binary search's lower bound for
+        /// every query - it replaces that search in the scoring hot paths, so any difference
+        /// would silently move a peak match. Checks clustered, duplicate, single-peak, all-equal,
+        /// bucket-edge and irregular (unsorted, non-finite, overflowing span) spectra against
+        /// queries at, between, below, above every peak, at every bucket edge and 1 ulp either
+        /// side, and NaN, then the two scoring entry points through a <see cref="Spectrum"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestMzBucketIndexMatchesBinarySearch()
+        {
+            var random = new Random(4768);
+            var spectra = new List<double[]>
+            {
+                new[] { 500.0 },
+                new[] { 500.0, 500.0, 500.0 },
+                new[] { 100.0, 100.0, 100.5, 200.0, 200.0, 1999.9 },
+                new[] { 150.0, 150.0000001, 150.0000002, 1800.0 },   // a dense cluster, then a gap
+                // More peaks in one bucket than the linear scan takes: binary searched.
+                Enumerable.Range(0, 20).Select(i => 500.0 + i * 1e-9).Concat(new[] { 1500.0 }).ToArray(),
+                Enumerable.Repeat(500.0, 30).Concat(new[] { 600.0 }).ToArray(),
+                // Arrays the buckets cannot describe: the index falls back to the binary search.
+                new[] { 300.0, 200.0, 400.0 },
+                new[] { 100.0, double.NaN, 300.0 },
+                new[] { double.NegativeInfinity, 200.0, 300.0 },
+                new[] { 100.0, 200.0, double.PositiveInfinity },
+                new[] { 0.0, double.Epsilon, 2 * double.Epsilon },   // n / span overflows
+                new[] { -1e308, 0.0, 1e308 },                        // span overflows
+            };
+            // Interior peaks exactly on the bucket edges, and 1 ulp below and above them.
+            foreach (int n in new[] { 3, 7, 100, 1001 })
+            {
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, mz => mz));
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, Math.BitDecrement));
+                spectra.Add(BucketEdgeSpectrum(123.456, 1789.123, n, Math.BitIncrement));
+            }
+            for (int s = 0; s < 20; s++)
+            {
+                int n = 1 + random.Next(3000);
+                var mzs = new double[n];
+                double mz = 150 + random.NextDouble() * 10;
+                for (int i = 0; i < n; i++)
+                {
+                    // Mostly fine steps, occasional duplicates and large gaps.
+                    double r = random.NextDouble();
+                    mz += r < 0.05 ? 0 : r < 0.1 ? random.NextDouble() * 200 : random.NextDouble() * 0.5;
+                    mzs[i] = mz;
+                }
+                spectra.Add(mzs);
+            }
+
+            foreach (var mzs in spectra)
+            {
+                var index = new MzBucketIndex(mzs);
+                var queries = new List<double> { double.NaN, double.NegativeInfinity, double.PositiveInfinity,
+                    mzs[0] - 1, mzs[0], mzs[mzs.Length - 1], mzs[mzs.Length - 1] + 1 };
+                foreach (double peak in mzs)
+                {
+                    queries.Add(peak);
+                    queries.Add(peak - 1e-9);
+                    queries.Add(peak + 1e-9);
+                    queries.Add(peak + random.NextDouble());
+                }
+                double first = mzs[0], span = mzs[mzs.Length - 1] - first;
+                for (int b = 0; b <= mzs.Length; b++)
+                {
+                    double edge = first + b * span / mzs.Length;
+                    queries.Add(edge);
+                    queries.Add(Math.BitDecrement(edge));
+                    queries.Add(Math.BitIncrement(edge));
+                }
+                foreach (double q in queries)
+                {
+                    Assert.AreEqual(ScoringMath.BinarySearchLowerBound(mzs, q), index.LowerBound(q),
+                        string.Format("Lower bound of {0:R} in a {1}-peak spectrum", q, mzs.Length));
+                }
+            }
+            Assert.AreEqual(0, new MzBucketIndex(new double[0]).LowerBound(500.0));
+            Assert.AreEqual(0, new MzBucketIndex(null).LowerBound(500.0));
+            Assert.AreEqual(0, new Spectrum().MzLowerBound(500.0));
+
+            // The scoring entry points through a Spectrum agree with the binary search. Each
+            // entry has a unique Id (the top-6 memo is keyed by it) and 0-3 of its 6 fragments
+            // on a peak, the rest at m/z 10-15, where no spectrum has a peak, so both outcomes
+            // occur.
+            var tolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm };
+            bool sawMatch = false, sawNoMatch = false;
+            for (int s = 0; s < spectra.Count; s++)
+            {
+                var mzs = spectra[s];
+                var spectrum = new Spectrum { Mzs = mzs, Intensities = new float[mzs.Length] };
+                for (int k = 0; k < 50; k++)
+                {
+                    double target = mzs[random.Next(mzs.Length)] + (random.NextDouble() - 0.5) * 0.02;
+                    double tolDa = tolerance.ToleranceDa(target);
+                    Assert.AreEqual(
+                        TopFragmentExtractor.FindClosestPeakInWindow(mzs, target, target - tolDa, target + tolDa),
+                        TopFragmentExtractor.FindClosestPeakInWindow(spectrum, target, target - tolDa, target + tolDa));
+                }
+                var entry = new LibraryEntry(MZ_INDEX_ID_BASE + (uint)s, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+                int onPeak = s % 4;
+                var fragMzs = new double[6];
+                for (int f = 0; f < fragMzs.Length; f++)
+                    fragMzs[f] = f < onPeak ? mzs[random.Next(mzs.Length)] : 10.0 + f;
+                entry.Fragments = fragMzs.Select((mz, f) => new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f + f }).ToList();
+                bool expected = ExpectedTopNFragmentMatch(fragMzs, mzs, tolerance);
+                Assert.AreEqual(expected, FragmentMath.HasTopNFragmentMatch(entry, spectrum, tolerance));
+                Assert.AreEqual(expected, FragmentMath.HasTopNFragmentMatch(entry, mzs, tolerance));
+                sawMatch |= expected;
+                sawNoMatch |= !expected;
+            }
+            Assert.IsTrue(sawMatch);
+            Assert.IsTrue(sawNoMatch);
+
+            // A new m/z array replaces the index.
+            var reassigned = new Spectrum { Mzs = new[] { 100.0, 200.0 } };
+            Assert.AreEqual(1, reassigned.MzLowerBound(150.0));
+            reassigned.Mzs = new[] { 160.0, 170.0, 180.0 };
+            Assert.AreEqual(0, reassigned.MzLowerBound(150.0));
+        }
+
+        /// <summary>
+        /// An ascending spectrum of n peaks from <paramref name="first"/> to
+        /// <paramref name="last"/> whose interior peaks are the edges of the index's n buckets,
+        /// each passed through <paramref name="shift"/> (identity, or 1 ulp down or up).
+        /// </summary>
+        private static double[] BucketEdgeSpectrum(double first, double last, int n, Func<double, double> shift)
+        {
+            var mzs = new double[n];
+            mzs[0] = first;
+            for (int k = 1; k < n - 1; k++)
+                mzs[k] = shift(first + k * (last - first) / n);
+            mzs[n - 1] = last;
+            return mzs;
+        }
+
+        /// <summary>
+        /// HasTopNFragmentMatch's rule for 6 fragments, by the plain binary search: at least 2
+        /// fragments with a peak inside their tolerance window.
+        /// </summary>
+        private static bool ExpectedTopNFragmentMatch(double[] fragMzs, double[] mzs, FragmentToleranceConfig tolerance)
+        {
+            int matches = 0;
+            foreach (double mz in fragMzs)
+            {
+                double tolDa = tolerance.ToleranceDa(mz);
+                int lo = ScoringMath.BinarySearchLowerBound(mzs, mz - tolDa);
+                if (lo < mzs.Length && mzs[lo] <= mz + tolDa)
+                    matches++;
+            }
+            return matches >= 2;
+        }
+
+        #endregion
+
+        #region Scan-major prefilter
+
+        /// <summary>
+        /// The window-level scan-major prefilter gives every candidate the verdict the
+        /// candidate-major loop in TryExtract gives it, and leaves the candidates TryExtract never
+        /// prefilters (boundary override, no scan range) to TryExtract. The spectra draw each of a
+        /// small pool of fragment m/z values at random, so candidates pass at varied offsets into
+        /// their ranges and others run out of range without passing. Candidates carry 1 to 12
+        /// fragments with tied relative intensities (fewer than 6 windows, and top-6 selection
+        /// among ties), and two have none. The passing candidates' scan-major XICs
+        /// (ExtractXicsScanMajor) equal the candidate-major ones bitwise, in blocks of any
+        /// candidate count or byte budget.
+        /// </summary>
+        [TestMethod]
+        public void TestScanMajorPrefilterMatchesCandidateMajor()
+        {
+            var random = new Random(4711);
+            // Intensities and near-duplicate peaks draw from their own stream, leaving the
+            // prefilter's m/z draws as they were.
+            var randomXic = new Random(817);
+            const int nScans = 80;
+            var pool = new double[24];
+            for (int p = 0; p < pool.Length; p++)
+                pool[p] = 300.0 + 600.0 * random.NextDouble();
+            var spectra = new List<Spectrum>(nScans);
+            var rts = new double[nScans];
+            for (int s = 0; s < nScans; s++)
+            {
+                rts[s] = 10.0 + 0.05 * s;
+                var mzs = new List<double>();
+                foreach (double mz in pool)
+                {
+                    if (random.NextDouble() < 0.3)
+                    {
+                        mzs.Add(mz);
+                        // A second peak inside the 10 ppm window, so the closest-peak pick matters.
+                        if (randomXic.NextDouble() < 0.3)
+                            mzs.Add(mz * (1.0 + (randomXic.NextDouble() - 0.5) * 1.6e-5));
+                    }
+                }
+                for (int n = 0; n < 20; n++)
+                    mzs.Add(200.0 + 800.0 * random.NextDouble());
+                mzs.Sort();
+                var intensities = mzs.Select(_ => (float)(1000.0 * randomXic.NextDouble())).ToArray();
+                spectra.Add(new Spectrum { Mzs = mzs.ToArray(), Intensities = intensities, RetentionTime = rts[s] });
+            }
+
+            var candidates = new List<LibraryEntry>();
+            for (int c = 0; c < 400; c++)
+            {
+                // RTs past both ends of the window too, so some ranges are clipped or empty.
+                double rt = 9.0 + 6.0 * random.NextDouble();
+                var entry = new LibraryEntry(SCAN_MAJOR_ID_BASE + (uint)c, "PEPTIDEK", "PEPTIDEK", 2, 500.0, rt);
+                entry.Fragments = Enumerable.Range(0, 1 + c % 12).Select(f => new LibraryFragment
+                {
+                    Mz = f % 3 != 2 ? pool[random.Next(pool.Length)] : 100.0 + f,
+                    RelativeIntensity = 1.0f + f % 4    // Ties among 5 or more fragments
+                }).ToList();
+                candidates.Add(entry);
+            }
+            // In range but without fragments: both loops pass them (no fragment windows match
+            // every spectrum), and both extract no XICs for them.
+            var noFragments = new[]
+            {
+                new LibraryEntry(SCAN_MAJOR_ID_BASE + 400, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 11.0) { Fragments = null },
+                new LibraryEntry(SCAN_MAJOR_ID_BASE + 401, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 11.0) { Fragments = new List<LibraryFragment>() },
+            };
+            candidates.AddRange(noFragments);
+
+            var config = new OspreyConfig
+            {
+                FragmentTolerance = new FragmentToleranceConfig { Tolerance = 10, Unit = ToleranceUnit.Ppm }
+            };
+            var overrideId = candidates[0].Id;
+            var context = new ScoringContext(config, @"synthetic")
+            {
+                BoundaryOverrides = new Dictionary<uint, (double Apex, double Start, double End)>
+                {
+                    { overrideId, (11.0, 10.9, 11.1) },
+                },
+            };
+            const double rtTolerance = 0.3;
+            var extractor = new PeakDataExtractor(null);
+            var prefilter = extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context);
+            Assert.IsNotNull(prefilter);
+            var verdicts = prefilter.Verdicts;
+            Assert.AreEqual(candidates.Count, verdicts.Length);
+
+            var counts = new Dictionary<PrefilterVerdict, int>();
+            for (int c = 0; c < candidates.Count; c++)
+            {
+                var expected = PrefilterVerdict.not_computed;
+                if (PeakDataExtractor.TryResolveScanRange(candidates[c], rts, null, rtTolerance, context,
+                        out var overrideBounds, out double expectedRt, out int startScan, out int endScan) &&
+                    !overrideBounds.HasValue)
+                {
+                    expected = PeakDataExtractor.HasPrefilterSignal(candidates[c], spectra, startScan, endScan,
+                        config.FragmentTolerance)
+                        ? PrefilterVerdict.passed
+                        : PrefilterVerdict.failed;
+                    // The range TryExtract then takes instead of resolving it again.
+                    Assert.AreEqual(startScan, prefilter.StartScans[c]);
+                    Assert.AreEqual(endScan, prefilter.EndScans[c]);
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(expectedRt),
+                        BitConverter.DoubleToInt64Bits(prefilter.ExpectedRts[c]));
+                }
+                Assert.AreEqual(expected, verdicts[c], string.Format(@"candidate {0}", c));
+                counts.TryGetValue(expected, out int n);
+                counts[expected] = n + 1;
+            }
+            Assert.AreEqual(PrefilterVerdict.not_computed, verdicts[0], @"a boundary override is not prefiltered");
+            foreach (var entry in noFragments)
+                Assert.AreEqual(PrefilterVerdict.passed, verdicts[candidates.IndexOf(entry)]);
+            foreach (var verdict in new[] { PrefilterVerdict.not_computed, PrefilterVerdict.passed, PrefilterVerdict.failed })
+                Assert.IsTrue(counts.ContainsKey(verdict) && counts[verdict] > 10, verdict.ToString());
+
+            // The passing candidates' scan-major XICs equal the candidate-major ones bitwise,
+            // whatever the block size, by candidate count or by byte budget. A 1-byte budget
+            // gives every passing candidate a block of its own; 20,000 bytes is about a dozen.
+            foreach (int blockSize in new[] { 1, 37, 128, candidates.Count })
+                AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config, blockSize, long.MaxValue);
+            foreach (long blockBytes in new[] { 1L, 20000L })
+            {
+                int nBlocks = AssertScanMajorXicsMatch(candidates, prefilter, spectra, rts, config,
+                    candidates.Count, blockBytes);
+                Assert.IsTrue(nBlocks > counts[PrefilterVerdict.passed] / 20, nBlocks.ToString());
+            }
+
+            // With the prefilter off, or a window too short to score, there is nothing to compute.
+            config.PrefilterEnabled = false;
+            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra, rts, null, rtTolerance, context));
+            config.PrefilterEnabled = true;
+            Assert.IsNull(extractor.ComputePrefilterScanMajor(candidates, spectra.Take(4).ToList(), rts.Take(4).ToArray(),
+                null, rtTolerance, context));
+        }
+
+        /// <summary>
+        /// Extract the XICs scan-major in the blocks <see cref="WindowPrefilter.NextXicBlockEnd"/>
+        /// gives for <paramref name="maxCandidates"/> and <paramref name="maxBytes"/>, check that
+        /// each block keeps to the budget or holds one candidate, and check every passing
+        /// candidate's XICs against TopFragmentExtractor.ExtractFragmentXics over its scan range,
+        /// bit for bit, and that no other candidate gets any. Returns the number of blocks.
+        /// </summary>
+        private static int AssertScanMajorXicsMatch(List<LibraryEntry> candidates, WindowPrefilter prefilter,
+            List<Spectrum> spectra, double[] rts, OspreyConfig config, int maxCandidates, long maxBytes)
+        {
+            var verdicts = prefilter.Verdicts;
+            var startScans = prefilter.StartScans;
+            var endScans = prefilter.EndScans;
+            int nonZero = 0;
+            int nBlocks = 0;
+            int blockEnd;
+            for (int blockStart = 0; blockStart < candidates.Count; blockStart = blockEnd)
+            {
+                blockEnd = prefilter.NextXicBlockEnd(blockStart, maxCandidates, maxBytes);
+                Assert.IsTrue(blockEnd > blockStart && blockEnd - blockStart <= maxCandidates);
+                nBlocks++;
+                var blockXics = PeakDataExtractor.ExtractXicsScanMajor(candidates, blockStart, blockEnd, prefilter,
+                    spectra, rts, config);
+                Assert.AreEqual(blockEnd - blockStart, blockXics.Length);
+                long blockBytes = 0;
+                for (int c = blockStart; c < blockEnd; c++)
+                {
+                    var xics = blockXics[c - blockStart];
+                    if (xics != null)
+                        blockBytes += (xics.Count + 1L) * (endScans[c] - startScans[c] + 1) * sizeof(double);
+                }
+                Assert.IsTrue(blockBytes <= maxBytes || blockEnd - blockStart == 1, blockBytes.ToString());
+                for (int c = blockStart; c < blockEnd; c++)
+                {
+                    var actual = blockXics[c - blockStart];
+                    if (verdicts[c] != PrefilterVerdict.passed)
+                    {
+                        Assert.IsNull(actual, string.Format(@"candidate {0}", c));
+                        continue;
+                    }
+                    Assert.IsNotNull(actual);
+                    var expected = TopFragmentExtractor.ExtractFragmentXics(candidates[c], spectra, rts,
+                        startScans[c], endScans[c], config);
+                    Assert.AreEqual(expected.Count, actual.Count);
+                    for (int f = 0; f < expected.Count; f++)
+                    {
+                        Assert.AreEqual(expected[f].FragmentIndex, actual[f].FragmentIndex);
+                        AssertBitwiseEqual(expected[f].RetentionTimes, actual[f].RetentionTimes, c, f);
+                        AssertBitwiseEqual(expected[f].Intensities, actual[f].Intensities, c, f);
+                        nonZero += expected[f].Intensities.Count(i => i != 0);
+                    }
+                }
+            }
+            Assert.IsTrue(nonZero > 1000, nonZero.ToString());
+            return nBlocks;
+        }
+
+        private static void AssertBitwiseEqual(double[] expected, double[] actual, int candidate, int fragment)
+        {
+            Assert.AreEqual(expected.Length, actual.Length);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected[i]), BitConverter.DoubleToInt64Bits(actual[i]),
+                    string.Format(@"candidate {0} fragment {1} scan {2}", candidate, fragment, i));
+            }
         }
 
         #endregion
@@ -1338,12 +2042,48 @@ namespace pwiz.Osprey.Test
 
             // End to end: the two scoring entry points must agree exactly.
             var entry = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+            var entryFrags = new List<LibraryFragment>();
             foreach (double mz in new[] { 150.001, 175.5, 400.25, 500.0, 700.75, 1200.5, 1999.98 })
-                entry.Fragments.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+                entryFrags.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+            entry.Fragments = entryFrags;
 
             double denseScore = scorer.XcorrFromPreprocessed(dense, entry, new bool[nBins]);
             double sparseScore = scorer.XcorrFromSparse(sparse, entry, new bool[nBins]);
             Assert.AreEqual(denseScore, sparseScore, 0.0, "XcorrFromSparse must match XcorrFromPreprocessed exactly");
+
+            // Through the HRAM strategy's window cache, which fills each row on demand from one
+            // scratch it holds for the window: every row, filled in any order, must score exactly
+            // as a spectrum preprocessed on its own, and a row filled before release must still be
+            // served after it (not fall back to the live f64 path).
+            var windowSpectra = new List<Spectrum>();
+            for (int s = 0; s < 4; s++)
+            {
+                var shifted = new double[spectrum.Mzs.Length];
+                for (int i = 0; i < shifted.Length; i++)
+                    shifted[i] = spectrum.Mzs[i] + s * 0.37;
+                windowSpectra.Add(new Spectrum { Mzs = shifted, Intensities = spectrum.Intensities });
+            }
+            var expectedScores = new double[windowSpectra.Count];
+            for (int s = 0; s < windowSpectra.Count; s++)
+            {
+                expectedScores[s] = scorer.XcorrFromSparse(
+                    scorer.PreprocessSpectrumForXcorrSparse(windowSpectra[s], new XcorrScratch(nBins)), entry, new bool[nBins]);
+            }
+            var hram = ResolutionStrategy.Create(ResolutionMode.HRAM);
+            var pool = new XcorrScratchPool(nBins);
+            var cache = hram.PreprocessWindowSpectra(windowSpectra, scorer, pool);
+            var filled = new[] { 2, 0, 3 };     // out of order; row 1 is never filled
+            foreach (int s in filled)
+            {
+                Assert.AreEqual(expectedScores[s], hram.ScoreXcorr(cache, s, windowSpectra[s], entry, scorer, pool), 0.0,
+                    string.Format("On-demand row {0} must match its own preprocessing", s));
+            }
+            hram.ReleaseWindowCache(cache, pool);
+            foreach (int s in filled)
+            {
+                Assert.AreEqual(expectedScores[s], hram.ScoreXcorr(cache, s, windowSpectra[s], entry, scorer, pool), 0.0,
+                    string.Format("Row {0} filled before release must be served after it", s));
+            }
         }
 
         /// <summary>
@@ -1368,7 +2108,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0f, sparse.CenteredAt(nBins));
 
             var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            entry.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            entry.Fragments = new[] { new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f } };
             Assert.AreEqual(0.0, scorer.XcorrFromSparse(sparse, entry, new bool[nBins]), 0.0);
         }
 
@@ -1393,11 +2133,14 @@ namespace pwiz.Osprey.Test
 
             // HRAM bins are 0.02 Th, so 500.001 and 500.009 land in the same bin.
             var twoFrags = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
-            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
-            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.009, RelativeIntensity = 1.0f });
+            twoFrags.Fragments = new[]
+            {
+                new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f },
+                new LibraryFragment { Mz = 500.009, RelativeIntensity = 1.0f }
+            };
 
             var oneFrag = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
-            oneFrag.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
+            oneFrag.Fragments = new[] { new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f } };
 
             Assert.AreEqual(scorer.BinConfig.MzToBin(500.001), scorer.BinConfig.MzToBin(500.009),
                 "Test premise: both fragments must fall in the same HRAM bin");

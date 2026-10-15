@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Lib {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class LibResources {
@@ -169,7 +169,16 @@ namespace pwiz.Skyline.Model.Lib {
                 return ResourceManager.GetString("BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The search produced no spectra that passed the library-build score cutoff....
+        /// </summary>
+        public static string BiblioSpecLiteBuilder_BuildLibrary_No_spectra_passed_filter_ {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteBuilder_BuildLibrary_No_spectra_passed_filter_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Aligning library retention times.
         /// </summary>
@@ -299,6 +308,24 @@ namespace pwiz.Skyline.Model.Lib {
         public static string CachedLibrary_LoadSpectrum_Library_entry_not_found__0__ {
             get {
                 return ResourceManager.GetString("CachedLibrary_LoadSpectrum_Library_entry_not_found__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generating predicted spectral library from FASTA....
+        /// </summary>
+        public static string DiannHelpers_RunSearch_Generating_predicted_spectral_library_from_FASTA___ {
+            get {
+                return ResourceManager.GetString("DiannHelpers_RunSearch_Generating_predicted_spectral_library_from_FASTA___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching DIA files against predicted library....
+        /// </summary>
+        public static string DiannHelpers_RunSearch_Searching_DIA_files_against_predicted_library___ {
+            get {
+                return ResourceManager.GetString("DiannHelpers_RunSearch_Searching_DIA_files_against_predicted_library___", resourceCulture);
             }
         }
         

@@ -635,13 +635,11 @@ namespace pwiz.SkylineTestFunctional
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             WaitForGraphs();
 
-            //Labels are not created in offscreen mode, so we just validate total number of ions matching the show settings
-            // Onscreen counts are sensitive to MSGraphPane's label-overlap pass, which is in turn
-            // sensitive to Y-axis label width — the title relocation (Intensity into the spacer
-            // pane, Drift Time into the mobilogram pane) shrinks the heatmap Y-axis area, which
-            // bumps the onscreen count back up. Offscreen count (70 — the data-level ion list)
-            // is unchanged and is the authoritative data-level check.
-            Assert.AreEqual(ExpectedLabelCount(70, 20, 15), SkylineWindow.GraphFullScan.IonLabels.Count());
+            // Validate the total number of ions matching the show settings. Only the matched
+            // ion list is checked, and not the labels actually painted on the graph: how many
+            // of those survive MSGraphPane's culling depends on the pixel size of the chart,
+            // which varies with screen resolution, DPI and font metrics.
+            RunUI(() => AssertEx.AreEqual(70, SkylineWindow.GraphFullScan.SpectrumInfo.PeaksMatched.Count()));
 
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
@@ -667,20 +665,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.GraphFullScan.SetIntensityScale(400);
             });
             WaitForGraphs();
-            var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
-            Assert.AreEqual(ExpectedLabelCount(48, 2, 2), graphLabels.Count());
-        }
-
-        private static int ExpectedLabelCount(int offscreenCount, int onscreenEnCount, int onscreenJaCount)
-        {
-            if (Skyline.Program.SkylineOffscreen)
-                return offscreenCount;
-
-            var cultureShort = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-            if (Equals(cultureShort, "ja") || Equals(cultureShort, "zh"))
-                return onscreenJaCount;
-
-            return onscreenEnCount;
+            TestScale(100, 600, 0, 400);    // The matched ion count below does not depend on the scale
+            RunUI(() => AssertEx.AreEqual(48, SkylineWindow.GraphFullScan.SpectrumInfo.PeaksMatched.Count()));
         }
 
         private void TestPropertySheet(Dictionary<string, object> expectedPropertiesDict)

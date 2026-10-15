@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
     /// Holds the name of the library that has retention time information for a 
     /// particular data file.
     /// The <see cref="RetentionTimeSource.Name"/> property of this object
-    /// is the base name (<see cref="Path.GetFileNameWithoutExtension" />) of a
+    /// is the base name (<see cref="Path.GetFileNameWithoutExtension(string)" />) of a
     /// data file and the <see cref="Library"/> property is a library name
     /// in the document.
     /// </summary>

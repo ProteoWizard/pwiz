@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Model
         Java8,
         MSFragger,
         MSGFPlus,
+        MSAmanda,
         Sage
     }
     

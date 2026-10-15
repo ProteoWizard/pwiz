@@ -52,6 +52,7 @@ namespace pwiz.Common.DataBinding
         /// <summary>Exports all of the rows of data to a file.</summary>
         void ExportToFile(Control owner, BindingListSource bindingListSource, String filename, char separator);
         void CopyAll(Control owner, BindingListSource bindingListSource);
+        string GetCopyAllText(Control owner, BindingListSource bindingListSource);
         ViewSpec NewView(Control owner, ViewGroup viewGroup);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewGroup);
         ViewLayoutList GetViewLayoutList(ViewName viewName);

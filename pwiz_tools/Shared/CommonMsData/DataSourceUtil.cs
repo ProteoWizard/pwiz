@@ -42,14 +42,14 @@ namespace pwiz.CommonMsData
         public const string EXT_XML = ".xml";
         public const string EXT_UIMF = ".uimf";
         public const string EXT_WATERS_RAW = ".raw";    // Folder
-        public const string EXT_AGILENT_BRUKER_RAW = ".d";  // Folder
+        public const string EXT_AGILENT_BRUKER_D = ".d";  // Folder
         public const string EXT_MOBILION_MBI = ".mbi";
 
         public static readonly string[] EXT_FASTA = {".fasta", ".fa", ".faa"};
 
         public const string TYPE_WIFF = "Sciex WIFF";
         public const string TYPE_WIFF2 = "Sciex WIFF2";
-        public const string TYPE_AGILENT = "Agilent MassHunter Data";
+        public const string TYPE_AGILENT = "Agilent MassHunter";
         public const string TYPE_BRUKER = "Bruker BAF/TDF/TSF";
         public const string TYPE_SHIMADZU = "Shimadzu LCD";
         public const string TYPE_THERMO_RAW = "Thermo RAW";
@@ -67,6 +67,57 @@ namespace pwiz.CommonMsData
         public const string UNKNOWN_TYPE = "unknown";
         public const string EDIT_ACCOUNT = "edit account";
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters Acquisition Method";
+
+        /// <summary>
+        /// What the reader is allowed to make a data source of, and the type each of its answers
+        /// becomes: it names each Bruker format separately where <see cref="TYPE_BRUKER"/> lumps
+        /// them together. An answer outside this set is not taken - see
+        /// <see cref="GetSourceTypeFromReader"/> - so this is the whole list of formats reached
+        /// by looking inside a directory rather than by its name. Types are matched by equality,
+        /// to filter what the open dialogs list and to decide vendor specific behavior, so a name
+        /// that reached a caller untranslated would read as neither a known type nor a folder.
+        /// </summary>
+        private static readonly IDictionary<string, string> READER_TYPES_TO_TYPES = new Dictionary<string, string>
+        {
+            { "Bruker FID", TYPE_BRUKER },
+            { "Bruker YEP", TYPE_BRUKER },
+            { "Bruker BAF", TYPE_BRUKER },
+            { "Bruker U2", TYPE_BRUKER },
+            { "Bruker TDF", TYPE_BRUKER },
+            { "Bruker TSF", TYPE_BRUKER }
+        };
+
+        /// <summary>
+        /// The one reader answer taken for a directory whose name says nothing. The reader decides
+        /// it by what lies below rather than by a file sitting in the directory, so a copy of an
+        /// acquisition's files under some other name cannot be mistaken for it - which is what
+        /// <see cref="EXT_AGILENT_BRUKER_D"/> guards against for the rest.
+        /// </summary>
+        private const string READER_TYPE_BRUKER_FID = "Bruker FID";
+
+        private const string EXT_BRUKER_U2 = ".u2"; // A file inside the directory, named for it
+        private const string AGILENT_ACQUISITION_DIRECTORY = "AcqData";
+
+        /// <summary>
+        /// What an Agilent or Bruker ".d" directory holds when it is Bruker rather than Agilent.
+        /// Matched without regard to case, which is how the filesystem and the reader match them.
+        /// </summary>
+        private static readonly ICollection<string> BRUKER_ANALYSIS_FILES = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "analysis.baf", "analysis.tdf", "analysis.tsf" // tdf and tsf are TIMS ion mobility data
+        };
+
+        /// <summary>
+        /// The file names that can make a directory a data source without the directory name
+        /// saying so. A directory holding none of them, and no subdirectories either, is an
+        /// ordinary folder whatever the reader would say, so it can be answered without asking.
+        /// That matters because the question is asked of every directory a file open dialog
+        /// lists, and answering it costs the reader a scan of the directory.
+        /// </summary>
+        private static readonly ICollection<string> READER_DIRECTORY_FILES = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "fid", "analysis.baf", "analysis.yep", "analysis.tdf", "analysis.tsf"
+        };
         // ReSharper restore LocalizableElement
 
         public static bool IsDataSource(string path)
@@ -96,9 +147,23 @@ namespace pwiz.CommonMsData
         {
             try
             {
-                return GetSourceType(dirInfo.FullName,
-                    dirInfo.GetFiles().Select(f => f.Name).ToArray(),
-                    dirInfo.GetDirectories().Select(d => d.Name).ToArray());
+                var directoryPath = dirInfo.FullName;
+                // Only these two directory extensions are decided from a listing, so only they
+                // are worth listing a directory for. Every other directory - which is most of
+                // what a file open dialog shows - is answered by the probes below, each of
+                // which is a single question where a listing is one per entry in the directory.
+                if (PathEx.HasExtension(directoryPath, EXT_WATERS_RAW) ||
+                    PathEx.HasExtension(directoryPath, EXT_AGILENT_BRUKER_D))
+                {
+                    var sourceType = GetSourceType(directoryPath,
+                        dirInfo.GetFiles().Select(f => f.Name).ToArray(),
+                        dirInfo.GetDirectories().Select(d => d.Name).ToArray());
+                    if (!Equals(sourceType, FOLDER_TYPE))
+                        return sourceType;
+                }
+                // Directory formats with no distinguishing extension, Bruker FID among them,
+                // can only be told apart by looking inside, which is what the reader does.
+                return CouldBeReaderDirectorySource(dirInfo) ? GetSourceTypeFromReader(directoryPath) : FOLDER_TYPE;
             }
             catch (Exception) // Probably dirInfo was constructed with a file path rather than an actual directory
             {
@@ -107,6 +172,11 @@ namespace pwiz.CommonMsData
             }
         }
 
+        /// <summary>
+        /// Decides a directory's type from names alone, for callers holding a listing rather
+        /// than a directory to look in - <see cref="GetSourceType(DirectoryInfo)"/> for one,
+        /// and sharing a document, where the names come from a zip archive.
+        /// </summary>
         public static string GetSourceType(string directoryName, string[] fileNames, string[] subdirectoryNames)
         {
             if (PathEx.HasExtension(directoryName, EXT_WATERS_RAW) &&
@@ -114,13 +184,13 @@ namespace pwiz.CommonMsData
                                     fn.EndsWith(@".DAT", StringComparison.InvariantCultureIgnoreCase) &&
                                     fn.Count(ch => ch == '.') == 1))
                 return TYPE_WATERS_RAW;
-            if (PathEx.HasExtension(directoryName, EXT_AGILENT_BRUKER_RAW))
+            if (PathEx.HasExtension(directoryName, EXT_AGILENT_BRUKER_D))
             {
-                if (subdirectoryNames.Contains(@"AcqData"))
+                // Compared without regard to case, as the filesystem these names come from
+                // compares them, and as the reader looks for them
+                if (subdirectoryNames.Contains(AGILENT_ACQUISITION_DIRECTORY, StringComparer.OrdinalIgnoreCase))
                     return TYPE_AGILENT;
-                if (fileNames.Contains(@"analysis.baf") ||
-                    fileNames.Contains(@"analysis.tdf") || // TIMS ion mobility data
-                    fileNames.Contains(@"analysis.tsf"))
+                if (fileNames.Any(BRUKER_ANALYSIS_FILES.Contains))
                     return TYPE_BRUKER;
             }
             return FOLDER_TYPE;
@@ -209,6 +279,59 @@ namespace pwiz.CommonMsData
         public static bool IsUnknownType(string type)
         {
             return Equals(type, UNKNOWN_TYPE);
+        }
+
+        /// <summary>
+        /// Whether a directory holds anything the reader could make a data source of. The
+        /// files it looks for are named in <see cref="READER_DIRECTORY_FILES"/>, and it also
+        /// looks a level or two down: a MALDI FID acquisition keeps its fid files under one
+        /// subdirectory per spot, so a directory with subdirectories has to be asked about.
+        /// One walk of the directory answers all of that, and stops at the first entry that
+        /// settles it. This runs for every directory a file open dialog shows, and on a network
+        /// share a walk is what costs, so the point is to make one do.
+        /// </summary>
+        private static bool CouldBeReaderDirectorySource(DirectoryInfo dirInfo)
+        {
+            // The U2 file is named for the directory holding it
+            var u2FileName = Path.ChangeExtension(dirInfo.Name, EXT_BRUKER_U2);
+            return dirInfo.EnumerateFileSystemInfos().Any(entry => entry is DirectoryInfo ||
+                                                                   READER_DIRECTORY_FILES.Contains(entry.Name) ||
+                                                                   string.Equals(u2FileName, entry.Name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Asks the reader what it makes of a directory, for the formats that cannot be
+        /// recognized from names alone. Returns <see cref="FOLDER_TYPE"/> when it makes
+        /// nothing of it, which is what callers expect for "not a data source".
+        /// Only the answers in <see cref="READER_TYPES_TO_TYPES"/> are taken. The reader is
+        /// asked here about the Bruker directory formats and nothing else - every other
+        /// directory format is named for what it is, and decided before this is reached - so
+        /// an answer outside that set is a directory resembling a format rather than being
+        /// one. Taking it would leave a folder that cannot be navigated into and whose type
+        /// matches nothing the dialogs filter by.
+        /// </summary>
+        private static string GetSourceTypeFromReader(string directoryPath)
+        {
+            try
+            {
+                var readerType = MsDataFileImpl.IdentifyReaderType(directoryPath);
+                if (string.IsNullOrEmpty(readerType))
+                    return FOLDER_TYPE;
+                if (!READER_TYPES_TO_TYPES.TryGetValue(readerType, out var sourceType))
+                    return FOLDER_TYPE;
+                // The reader answers by what a directory holds, which a copy of an acquisition's
+                // files holds too, so its answer is taken only where the name agrees. FID is the
+                // exception this is all for: its directories carry no extension, and the reader
+                // reaches it by descending rather than by a file lying in the directory.
+                if (!Equals(readerType, READER_TYPE_BRUKER_FID) &&
+                    !PathEx.HasExtension(directoryPath, EXT_AGILENT_BRUKER_D))
+                    return FOLDER_TYPE;
+                return sourceType;
+            }
+            catch (Exception)
+            {
+                return FOLDER_TYPE; // Reader could not make sense of the path
+            }
         }
 
         private static string GetSourceTypeFromXML(string filepath)

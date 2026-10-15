@@ -49,5 +49,46 @@ namespace pwiz.Skyline.Util.Extensions
                 catch (LoadCanceledException) {}
             }, threadName);
         }
+
+        /// <summary>
+        /// Calls a function with no SynchronizationContext installed on this thread, and puts
+        /// the original one back when it returns.
+        ///
+        /// This is what makes it safe to block on an async-only API from a thread whose
+        /// SynchronizationContext posts back to that same thread, which is what a WindowsForms
+        /// UI thread has. Blocking on such a thread deadlocks as soon as the library resumes
+        /// on the caller's context: the continuation is posted to a thread already blocked
+        /// waiting for the result, so neither ever runs. With no context installed the
+        /// continuations resume on the thread pool instead, and the blocking call finishes.
+        ///
+        /// Note that this only removes the deadlock, not the blocking. The calling thread
+        /// still waits, so this is not a way to do slow work on the UI thread.
+        /// </summary>
+        public static T CallWithoutSynchronizationContext<T>(Func<T> func)
+        {
+            var saveContext = SynchronizationContext.Current;
+            SynchronizationContext.SetSynchronizationContext(null);
+            try
+            {
+                return func();
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(saveContext);
+            }
+        }
+
+        /// <summary>
+        /// Calls an action with no SynchronizationContext installed on this thread.
+        /// See <see cref="CallWithoutSynchronizationContext{T}"/>.
+        /// </summary>
+        public static void CallWithoutSynchronizationContext(Action action)
+        {
+            CallWithoutSynchronizationContext(() =>
+            {
+                action();
+                return true;
+            });
+        }
     }
 }

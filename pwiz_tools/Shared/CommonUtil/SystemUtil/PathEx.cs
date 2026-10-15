@@ -30,6 +30,24 @@ namespace pwiz.Common.SystemUtil
     public static class PathEx
     {
         /// <summary>
+        /// Name a per-test working directory, short enough that it does not push command lines run
+        /// against it over the length limit: long test names become their capitals and digits plus the
+        /// original length, e.g. "Foo7WithBar" to "F7WB11".
+        /// <para>
+        /// Shared so that anything needing to name or reason about one of these directories agrees on
+        /// the name. In particular the parallel test runner locks them, and a lock keyed any differently
+        /// would let two tests that shorten to the same thing into the same directory at once.
+        /// </para>
+        /// </summary>
+        public static string GetTestDirectoryName(string testName, string cultureName)
+        {
+            var shortened = testName.Length > 10 // Arbitrary cutoff, but too little is likely to lead to ambiguous names
+                ? string.Concat(testName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + testName.Length
+                : testName;
+            return $@"{shortened}_{cultureName}";
+        }
+
+        /// <summary>
         /// Determines whether the file name in the given path has a
         /// specific extension.  Because this is Windows, the comparison
         /// is case insensitive.  Note that ToLowerInvariant() is used to make
@@ -44,6 +62,50 @@ namespace pwiz.Common.SystemUtil
         public static bool HasExtension(string path, string ext)
         {
             return path.ToLowerInvariant().EndsWith(ext.ToLowerInvariant());
+        }
+
+        /// <summary>
+        /// Resolves the name of an executable that ships next to the running application (in
+        /// <see cref="AppContext.BaseDirectory"/>) to a rooted path. .NET Framework's Process.Start
+        /// searched the current working directory for a bare executable name; .NET 8 does not, so a
+        /// bundled tool invoked by bare name (e.g. "msconvert") fails to launch on net8 unless it also
+        /// happens to be on PATH. Rooting the path to the application directory makes the launch work on
+        /// both frameworks. If the executable is not found next to the application, the original name is
+        /// returned unchanged so a PATH-based lookup can still succeed.
+        /// </summary>
+        public static string ResolveBundledExe(string exeName)
+        {
+            if (string.IsNullOrEmpty(exeName) || Path.IsPathRooted(exeName))
+            {
+                return exeName;
+            }
+            var fileName = string.IsNullOrEmpty(Path.GetExtension(exeName)) ? exeName + @".exe" : exeName;
+            var candidate = Path.Combine(AppContext.BaseDirectory, fileName);
+            return File.Exists(candidate) ? candidate : exeName;
+        }
+
+        /// <summary>
+        /// True if <paramref name="a"/> and <paramref name="b"/> refer to the same
+        /// path on disk. Normalizes both sides (GetFullPath + trailing-separator trim)
+        /// and compares case-insensitively, which is the right semantics on Windows.
+        /// Null/empty paths compare equal only to each other.
+        /// </summary>
+        public static bool SamePath(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b))
+                return string.Equals(a, b);
+            try
+            {
+                string Normalize(string p) => Path.GetFullPath(p)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                return string.Equals(Normalize(a), Normalize(b), StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                // GetFullPath throws on paths with invalid characters — fall back to a
+                // raw string comparison rather than masking that as "different".
+                return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+            }
         }
 
         public static string GetCommonRoot(IEnumerable<string> paths)
@@ -147,7 +209,7 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Wrapper around <see cref="Path.GetDirectoryName"/> which, if an error occurs, adds
+        /// Wrapper around <see cref="Path.GetDirectoryName(string)"/> which, if an error occurs, adds
         /// the path to the exception message.
         /// Eventually, this method might catch the exception and try to return something reasonable,
         /// but, for now, we are trying to figure out the source of invalid paths.

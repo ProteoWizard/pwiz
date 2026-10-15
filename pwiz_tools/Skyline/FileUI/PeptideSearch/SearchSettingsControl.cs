@@ -237,8 +237,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return EnsureRequiredFilesDownloaded(TideSearchEngine.FilesToDownload);
                 case SearchEngine.Sage:
                     return EnsureRequiredFilesDownloaded(SageSearchEngine.FilesToDownload);
-                case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
+                    return EnsureRequiredFilesDownloaded(MSAmandaSearchWrapper.FilesToDownload);
+                case SearchEngine.Hardklor:
                     return true;
                 default:
                     throw new NotImplementedException();
@@ -250,8 +251,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             switch (searchEngine)
             {
                 case SearchEngine.Hardklor:
-                case SearchEngine.MSAmanda:
                     return Array.Empty<FileDownloadInfo>();
+                case SearchEngine.MSAmanda:
+                    return MSAmandaSearchWrapper.FilesToDownload;
                 case SearchEngine.MSGFPlus:
                     return MsgfPlusSearchEngine.FilesToDownload;
                 case SearchEngine.MSFragger:

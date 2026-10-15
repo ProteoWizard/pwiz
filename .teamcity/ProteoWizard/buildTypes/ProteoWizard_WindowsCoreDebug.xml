@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="88d5c3c4-c201-449e-90c8-289d1cba7148" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Windows core debug</name>
+  <settings>
+    <options>
+      <option name="artifactRules" value="build-nt-x86/VERSION" />
+      <option name="buildNumberPattern" value="%build.counter% (%system.build.vcs.number%)" />
+      <option name="checkoutDirectory" value="%WINDOWS_CHECKOUT_DIR%" />
+      <option name="checkoutMode" value="ON_AGENT" />
+      <option name="executionTimeoutMin" value="90" />
+    </options>
+    <disabled-settings>
+      <setting-ref ref="RQ_1818" />
+      <setting-ref ref="TRIGGER_80" />
+      <setting-ref ref="vcsTrigger" />
+    </disabled-settings>
+    <parameters>
+      <param name="env.address_model_property" value="address-model=64" />
+      <param name="env.architecture_property" value="" />
+      <param name="env.link_property" value="" />
+      <param name="env.toolset_property" value="" />
+      <param name="env.variant_property" value="debug" />
+    </parameters>
+    <build-runners>
+      <runner id="RUNNER_simpleRunner_142" name="" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="scripts/misc/tcbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated pwiz/utility/bindings/CLI/timstof_prm_scheduler -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% runtime-checks=on" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_314" name="New build step" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="quickbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated executables pwiz pwiz_aux pwiz_tools/commandline pwiz_tools/examples pwiz_tools/sld pwiz_tools/SeeMS pwiz_tools/MSConvertGUI -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% runtime-checks=on --remove-test-targets -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+      <runner id="RUNNER_45" name="BiblioSpec tests" type="simpleRunner">
+        <parameters>
+          <param name="command.executable" value="quickbuild.bat" />
+          <param name="command.parameters" value="--i-agree-to-the-vendor-licenses --automated  pwiz_tools/BiblioSpec/tests -j%env.NUMBER_OF_CORES% %env.toolset_property% %env.address_model_property% %env.architecture_property% %env.variant_property% %env.link_property% runtime-checks=on --remove-test-targets -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.downloadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.uploadSpecSource" value="Job configuration" />
+          <param name="org.jfrog.artifactory.selectedDeployableServer.useSpecs" value="false" />
+          <param name="teamcity.step.mode" value="default" />
+        </parameters>
+      </runner>
+    </build-runners>
+    <vcs-settings>
+      <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+    </vcs-settings>
+    <requirements>
+      <contains id="RQ_1816" name="teamcity.agent.jvm.os.name" value="Windows" />
+      <exists id="RQ_1818" name="VS2017" />
+    </requirements>
+    <build-triggers>
+      <build-trigger id="vcsTrigger" type="vcsTrigger">
+        <parameters>
+          <param name="enableQueueOptimization" value="true" />
+          <param name="quietPeriod" value="-1" />
+          <param name="quietPeriodMode" value="USE_CUSTOM" />
+        </parameters>
+      </build-trigger>
+      <build-trigger id="TRIGGER_80" type="schedulingTrigger">
+        <parameters>
+          <param name="branchFilter"><![CDATA[+:*
+-:Skyline/skyline_*]]></param>
+          <param name="dayOfWeek" value="Sunday" />
+          <param name="enableQueueOptimization" value="true" />
+          <param name="hour" value="0" />
+          <param name="minute" value="0" />
+          <param name="revisionRule" value="lastFinished" />
+          <param name="schedulingPolicy" value="daily" />
+          <param name="timezone" value="SERVER" />
+          <param name="triggerBuildWithPendingChangesOnly" value="true" />
+          <param name="triggerRules"><![CDATA[+:.
+-:README.md
+-:.travis.yml
+-:appveyor.yml
+-:.gitignore
+-:%teamcity.build.checkoutDir%/pwiz_tools/Skyline/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Topograph/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Bumbershoot/**
+-:%teamcity.build.checkoutDir%/pwiz_tools/Shared/**]]></param>
+        </parameters>
+      </build-trigger>
+    </build-triggers>
+  </settings>
+</template>
+

@@ -25,10 +25,10 @@ namespace pwiz.Osprey.FDR
 {
     /// <summary>
     /// The Stage 5 Percolator diagnostic-dump gates, carried into the otherwise
-    /// pure <see cref="PercolatorFdr.RunPercolator"/> on
+    /// pure <see cref="PercolatorTrainer.RunPercolator"/> on
     /// <see cref="PercolatorConfig.Diagnostics"/>. Each <c>Dump*</c> flag enables
     /// writing one byte-stable cross-impl bisection dump; the paired <c>*Only</c>
-    /// flag asks <see cref="PercolatorFdr.RunPercolator"/> to stop after that dump
+    /// flag asks <see cref="PercolatorTrainer.RunPercolator"/> to stop after that dump
     /// by returning <see cref="PercolatorResults.DiagnosticAbort"/> -- the FDR
     /// engine never reads an env var and never exits the process. The Tasks-layer
     /// caller populates this from the run's <c>IOspreyDiagnostics</c> gate flags

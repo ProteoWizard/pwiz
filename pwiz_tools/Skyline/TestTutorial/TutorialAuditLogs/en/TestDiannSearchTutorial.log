@@ -1,0 +1,129 @@
+Undo Redo : Added spectral library "DiannSearchPerf"
+Summary   : Added spectral library "DiannSearchPerf"
+All Info  :
+Added spectral library "DiannSearchPerf"
+Build Spectral Library > Search files : contains { File = "diann-output-lib.parquet", Score type = "q-value", Score threshold = "0.01" }
+Build Spectral Library > iRT standard peptides is None
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "DIA"
+Build Spectral Library > Input File Type is "Search results (build library directly)"
+Extra Info: Search files = 
+[
+    {
+        File = "diann-output-lib.parquet",
+        Score type = "q-value",
+        Score threshold = "0.01"
+    }
+],
+iRT standard peptides = None,
+Include ambiguous matches = False,
+Filter for document peptides = False,
+Workflow = "DIA",
+Input File Type = "Search results (build library directly)"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_01.half.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_02.half.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_01.half.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_02.half.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Extract Chromatograms > Removed prefix is "LFQ_Orbitrap_AIF_Condition_"
+Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16]"
+Import Peptide Search > Configure Transition Settings > Ion types is "y, p"
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0.05" m/z
+Import Peptide Search > Configure Transition Settings > Pick min product ions is "6"
+Import Peptide Search > Configure Transition Settings > Pick product ions is "6"
+Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 1"
+Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
+Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
+Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "DIA"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "Results only"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Isolation width is "Results"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows is Empty
+Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "10"
+Import Peptide Search > Configure Full-Scan Settings > Isotope peaks included is "Count"
+Import Peptide Search > Configure Full-Scan Settings > Peaks is "3"
+Import Peptide Search > Configure Full-Scan Settings > Precursor mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "10"
+Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Peptide Search > Import FASTA > Enzyme is "Trypsin/P [KR | -]"
+Import Peptide Search > Import FASTA > FASTA file is "ProteoBenchFASTA_MixedSpecies_HYE_identified.fasta"
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "8550"
+Import Peptide Search > Associate Proteins > Peptides mapped is "28483"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "3009"
+Import Peptide Search > Associate Proteins > Protein targets is "8550"
+Import Peptide Search > Associate Proteins > Peptide targets is "33119"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_01.half.mzML",
+        "LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_02.half.mzML",
+        "LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_01.half.mzML",
+        "LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_02.half.mzML"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "LFQ_Orbitrap_AIF_Condition_"
+},
+Add Modifications = 
+{
+    Added modifications = 
+    [
+        "Oxidation (M) = M[16]"
+    ]
+},
+Configure Transition Settings = 
+{
+    Ion types = "y, p",
+    Ion match tolerance = "0.05" m/z,
+    Pick min product ions = "6",
+    Pick product ions = "6",
+    Product ion selection start = "ion 1",
+    Product ion selection end = "last ion",
+    Max ion m/z = "2000"
+},
+Configure Full-Scan Settings = 
+{
+    Acquisition method = "DIA",
+    Isolation scheme = "Results only": 
+{
+        Isolation width = "Results",
+        Prespecified isolation windows = Empty
+    },
+    Product mass analyzer = "Centroided",
+    Mass accuracy = "10",
+    Isotope peaks included = "Count",
+    Peaks = "3",
+    Precursor mass analyzer = "Centroided",
+    Mass accuracy = "10",
+    Isotope labeling enrichment = "Default"
+},
+Import FASTA = 
+{
+    Enzyme = "Trypsin/P [KR | -]",
+    FASTA file = "ProteoBenchFASTA_MixedSpecies_HYE_identified.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "8550",
+    Peptides mapped = "28483",
+    Proteins unmapped = "3009",
+    Protein targets = "8550",
+    Peptide targets = "33119"
+}
+

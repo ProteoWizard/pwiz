@@ -25,7 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using pwiz.Osprey.Core;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.IO
 {
@@ -51,20 +52,22 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class ReconciliationFile
     {
+        public const string EXT = @".reconciliation.json";
+
         /// <summary>
         /// Current schema version. Bump on incompatible changes.
         ///
         /// v1: initial format.
         /// v2: added <c>file_stems</c> so per-file Stage 6 rescore workers
         ///     can compute the reconciliation parameter hash that the
-        ///     downstream <c>--task SecondPassFDR</c> merge node expects (the
+        ///     downstream <c>--task SecondPassFDR</c> node expects (the
         ///     hash is computed over all files in the join, not the
         ///     worker's single parquet). Old v1 files deserialize with an
         ///     empty <see cref="FileStems"/> list; the worker falls back
         ///     to its <c>OspreyConfig.InputFiles</c> stems in that case,
         ///     preserving v1 behavior.
         /// v3: added <c>first_pass_base_ids</c>, the JOIN-WIDE set of base_ids
-        ///     that survived first-pass compaction. FirstJoin computes it with
+        ///     that survived first-pass compaction. FirstPassFDR computes it with
         ///     every file in memory; a per-file HPC rescore worker uses it to
         ///     compact to exactly the set the in-memory straight-through pipeline
         ///     used, instead of recomputing a PER-FILE subset that drops cross-file
@@ -74,35 +77,47 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public const int CurrentFormatVersion = 3;
 
-        [JsonProperty("file_stems", Order = 0)]
+        // JSON keys a load error names, so a user can find them in the file.
+        private const string KEY_FILE_STEMS = @"file_stems";
+        private const string KEY_FORMAT_VERSION = @"format_version";
+
+        /// <summary>
+        /// The writing task's <see cref="ArtifactStamp"/>, serialized FIRST so a resume check
+        /// reads it without parsing the rest of a multi-megabyte document
+        /// (<see cref="ArtifactStamp.TryReadJsonHead"/>). Set by <see cref="Save"/>.
+        /// </summary>
+        [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+        public string OspreyValidity { get; set; }
+
+        [JsonProperty(KEY_FILE_STEMS, Order = 0)]
         public List<string> FileStems { get; set; }
 
         /// <summary>
         /// Join-wide first-pass passing base_ids (sorted ascending for
         /// deterministic, byte-parity output). See v3 note above.
         /// </summary>
-        [JsonProperty("first_pass_base_ids", Order = 1)]
+        [JsonProperty(@"first_pass_base_ids", Order = 1)]
         public uint[] FirstPassBaseIds { get; set; }
 
-        [JsonProperty("forced_integration_actions", Order = 2)]
+        [JsonProperty(@"forced_integration_actions", Order = 2)]
         public List<ForcedIntegrationEntry> ForcedIntegrationActions { get; set; }
 
-        [JsonProperty("format_version", Order = 3)]
+        [JsonProperty(KEY_FORMAT_VERSION, Order = 3)]
         public int FormatVersion { get; set; }
 
-        [JsonProperty("gap_fill_targets", Order = 4)]
+        [JsonProperty(@"gap_fill_targets", Order = 4)]
         public List<GapFillEntry> GapFillTargets { get; set; }
 
-        [JsonProperty("library_hash", Order = 5)]
+        [JsonProperty(@"library_hash", Order = 5)]
         public string LibraryHash { get; set; }
 
-        [JsonProperty("refined_rt_calibration", Order = 6, NullValueHandling = NullValueHandling.Include)]
+        [JsonProperty(@"refined_rt_calibration", Order = 6, NullValueHandling = NullValueHandling.Include)]
         public RefinedRtCalibrationJson RefinedRtCalibration { get; set; }
 
-        [JsonProperty("search_hash", Order = 7)]
+        [JsonProperty(@"search_hash", Order = 7)]
         public string SearchHash { get; set; }
 
-        [JsonProperty("use_cwt_peak_actions", Order = 8)]
+        [JsonProperty(@"use_cwt_peak_actions", Order = 8)]
         public List<UseCwtPeakEntry> UseCwtPeakActions { get; set; }
 
         /// <summary>
@@ -113,19 +128,20 @@ namespace pwiz.Osprey.IO
         public static ReconciliationFile Load(string path)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", nameof(path));
+                throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (!File.Exists(path))
-                throw new FileNotFoundException("Reconciliation file not found: " + path, path);
+                throw new FileNotFoundException(string.Format(OspreyIOResources.ReconciliationFile_Load_Reconciliation_file_not_found__, path), path);
 
             string json = File.ReadAllText(path);
             var parsed = JsonConvert.DeserializeObject<ReconciliationFile>(json);
             if (parsed == null)
-                throw new InvalidDataException("Reconciliation file parsed as null: " + path);
+                throw new InvalidDataException(string.Format(OspreyIOResources.ReconciliationFile_Load_Reconciliation_file_parsed_as_null__, path));
             if (parsed.FormatVersion != CurrentFormatVersion)
             {
                 throw new InvalidDataException(string.Format(
-                    "Reconciliation file {0} has unsupported format_version {1} (expected {2})",
-                    path, parsed.FormatVersion, CurrentFormatVersion));
+                    OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
+                    path, parsed.FormatVersion, CurrentFormatVersion, KEY_FORMAT_VERSION,
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             // v2 envelopes must carry the planner's full join file_stems set;
             // a deserialized v2 file with file_stems missing or empty would
@@ -138,10 +154,9 @@ namespace pwiz.Osprey.IO
             if (parsed.FileStems == null || parsed.FileStems.Count == 0)
             {
                 throw new InvalidDataException(string.Format(
-                    "Reconciliation file {0} has format_version {1} but file_stems is missing " +
-                    "or empty; v{1} envelopes are required to carry the planner's full join " +
-                    "file set.",
-                    path, CurrentFormatVersion));
+                    OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_,
+                    path, CurrentFormatVersion, KEY_FORMAT_VERSION, KEY_FILE_STEMS,
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             // v3 required: the join-wide first-pass base_id set. A per-file HPC
             // worker MUST have this to compact to the same set as the in-memory
@@ -150,10 +165,9 @@ namespace pwiz.Osprey.IO
             if (parsed.FirstPassBaseIds == null)
             {
                 throw new InvalidDataException(string.Format(
-                    "Reconciliation file {0} has format_version {1} but first_pass_base_ids is " +
-                    "missing; v{1} envelopes are required to carry the join-wide first-pass " +
-                    "base_id set.",
-                    path, CurrentFormatVersion));
+                    OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_,
+                    path, CurrentFormatVersion, KEY_FORMAT_VERSION,
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             return parsed;
         }
@@ -169,38 +183,27 @@ namespace pwiz.Osprey.IO
         /// the <c>.tmp</c> next to the missing destination, recoverable
         /// by hand or by re-running.
         /// </summary>
-        public static void Save(string path, ReconciliationFile file)
+        public static void Save(string path, ReconciliationFile file, ArtifactStamp stamp)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", nameof(path));
+                throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (file == null)
                 throw new ArgumentNullException(nameof(file));
+            file.OspreyValidity = stamp?.ToString() ?? throw new ArgumentNullException(nameof(stamp));
 
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            var settings = new JsonSerializerSettings
-            {
-                Converters = { new RoundtripDoubleConverter() },
-            };
-            string json = JsonConvert.SerializeObject(file, Formatting.Indented, settings);
-            // Newtonsoft's Formatting.Indented emits CRLF on Windows by
-            // default; normalize to LF so cross-impl byte parity with the
-            // Rust side (which always emits LF via serde_json) holds. Also
-            // emit a trailing newline so the file ends with `}\n`,
-            // matching the explicit newline Rust appends after the
-            // serializer.
-            json = json.Replace("\r\n", "\n");
-            if (!json.EndsWith("\n", StringComparison.Ordinal))
-                json += "\n";
+            // LF line endings and a trailing newline, for byte parity with the Rust side.
+            string json = RoundtripDoubleConverter.SerializeIndented(file);
 
-            // Atomic write via FileSaver: a sibling temp file is
+            // Atomic write via SimpleFileSaver: a sibling temp file is
             // promoted to the destination on Commit; on exception, the
-            // using-block disposes FileSaver which deletes the temp
+            // using-block disposes SimpleFileSaver which deletes the temp
             // without touching the destination. See
-            // Osprey.Core.FileSaver for details.
-            using (var saver = new FileSaver(path))
+            // pwiz.Common.SystemUtil.SimpleFileSaver for details.
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();
@@ -215,12 +218,12 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string PathForInput(string inputPath)
         {
-            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
+            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
             // Route through ArtifactPaths so the reconciliation JSON follows the
             // scores parquet into --output-dir (default = the input's own dir),
             // shared by the straight-through writer and the resume reader.
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = stem + ".reconciliation.json";
+            string filename = stem + EXT;
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
     }
@@ -231,19 +234,19 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class UseCwtPeakEntry
     {
-        [JsonProperty("apex_rt", Order = 0)]
+        [JsonProperty(@"apex_rt", Order = 0)]
         public double ApexRt { get; set; }
 
-        [JsonProperty("candidate_idx", Order = 1)]
+        [JsonProperty(@"candidate_idx", Order = 1)]
         public uint CandidateIdx { get; set; }
 
-        [JsonProperty("end_rt", Order = 2)]
+        [JsonProperty(@"end_rt", Order = 2)]
         public double EndRt { get; set; }
 
-        [JsonProperty("entry_id", Order = 3)]
+        [JsonProperty(@"entry_id", Order = 3)]
         public uint EntryId { get; set; }
 
-        [JsonProperty("start_rt", Order = 4)]
+        [JsonProperty(@"start_rt", Order = 4)]
         public double StartRt { get; set; }
     }
 
@@ -253,13 +256,13 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class ForcedIntegrationEntry
     {
-        [JsonProperty("entry_id", Order = 0)]
+        [JsonProperty(@"entry_id", Order = 0)]
         public uint EntryId { get; set; }
 
-        [JsonProperty("expected_rt", Order = 1)]
+        [JsonProperty(@"expected_rt", Order = 1)]
         public double ExpectedRt { get; set; }
 
-        [JsonProperty("half_width", Order = 2)]
+        [JsonProperty(@"half_width", Order = 2)]
         public double HalfWidth { get; set; }
     }
 
@@ -268,22 +271,22 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class GapFillEntry
     {
-        [JsonProperty("charge", Order = 0)]
+        [JsonProperty(@"charge", Order = 0)]
         public byte Charge { get; set; }
 
-        [JsonProperty("decoy_entry_id", Order = 1)]
+        [JsonProperty(@"decoy_entry_id", Order = 1)]
         public uint DecoyEntryId { get; set; }
 
-        [JsonProperty("expected_rt", Order = 2)]
+        [JsonProperty(@"expected_rt", Order = 2)]
         public double ExpectedRt { get; set; }
 
-        [JsonProperty("half_width", Order = 3)]
+        [JsonProperty(@"half_width", Order = 3)]
         public double HalfWidth { get; set; }
 
-        [JsonProperty("modified_sequence", Order = 4)]
+        [JsonProperty(@"modified_sequence", Order = 4)]
         public string ModifiedSequence { get; set; }
 
-        [JsonProperty("target_entry_id", Order = 5)]
+        [JsonProperty(@"target_entry_id", Order = 5)]
         public uint TargetEntryId { get; set; }
     }
 
@@ -294,16 +297,16 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class RefinedRtCalibrationJson
     {
-        [JsonProperty("abs_residuals", Order = 0)]
+        [JsonProperty(@"abs_residuals", Order = 0)]
         public double[] AbsResiduals { get; set; }
 
-        [JsonProperty("fitted_rts", Order = 1)]
+        [JsonProperty(@"fitted_rts", Order = 1)]
         public double[] FittedRts { get; set; }
 
-        [JsonProperty("library_rts", Order = 2)]
+        [JsonProperty(@"library_rts", Order = 2)]
         public double[] LibraryRts { get; set; }
 
-        [JsonProperty("residual_sd", Order = 3)]
+        [JsonProperty(@"residual_sd", Order = 3)]
         public double ResidualSd { get; set; }
     }
 }

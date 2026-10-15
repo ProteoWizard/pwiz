@@ -22,6 +22,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using pwiz.Common.Pipeline;
 
 namespace pwiz.Osprey.Core
 {
@@ -54,6 +55,9 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class OspreyVersion
     {
+        /// <summary>The environment variable that pins <see cref="Current"/>.</summary>
+        public const string ENV_OVERRIDE = @"OSPREY_VERSION_OVERRIDE";
+
         /// <summary>
         /// OSPREY_VERSION_OVERRIDE: pins the logical version to a fixed string,
         /// regardless of the assembly version. Set only by the bit-parity
@@ -88,9 +92,28 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static string DisplayVersion => FormatDisplay(InformationalVersion);
 
+        /// <summary>
+        /// The stamp a writer embeds in an artifact it is producing now: <paramref name="task"/>
+        /// and <paramref name="key"/> under this build's <see cref="Current"/>.
+        /// </summary>
+        public static ArtifactStamp Stamp(string task, string key)
+        {
+            return new ArtifactStamp(task, Current, key);
+        }
+
+        /// <summary>
+        /// True when <paramref name="stamp"/> says its artifact was written by <paramref name="task"/>,
+        /// by this build (<see cref="Current"/>), with <paramref name="key"/> - the only case in
+        /// which a run may reuse it instead of recomputing it.
+        /// </summary>
+        public static bool IsCurrent(this ArtifactStamp stamp, string task, string key)
+        {
+            return stamp.IsCurrent(task, Current, key);
+        }
+
         private static string ResolveVersion()
         {
-            string overrideValue = Environment.GetEnvironmentVariable(@"OSPREY_VERSION_OVERRIDE");
+            string overrideValue = Environment.GetEnvironmentVariable(ENV_OVERRIDE);
             if (!string.IsNullOrEmpty(overrideValue))
                 return overrideValue;
             // The assembly version carries the Skyline-scheme YEAR.ORDINAL.BRANCH.DOY
@@ -104,7 +127,7 @@ namespace pwiz.Osprey.Core
             // Honor the bit-parity pin so --version and provenance stay
             // deterministic under the regression harness (the override string
             // carries no hash; DisplayVersion then renders it as-is).
-            string overrideValue = Environment.GetEnvironmentVariable(@"OSPREY_VERSION_OVERRIDE");
+            string overrideValue = Environment.GetEnvironmentVariable(ENV_OVERRIDE);
             if (!string.IsNullOrEmpty(overrideValue))
                 return overrideValue;
             var attr = typeof(OspreyVersion).Assembly

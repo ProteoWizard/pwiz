@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
+    <value>峰强度 blob 大小无效：应为 {0} 或 {1} 字节，实际为 {2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
+    <value>峰质荷比 blob 大小无效：{0} 字节（不是 8 的倍数）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
+    <value>BiblioSpec 库无效：未找到 {0} 表。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_" xml:space="preserve">
+    <value>库中的蛋白质编号带有 Carafe 添加的每肽段“{4}”后缀（例如“{2}”-&gt;“{3}”）；去除后缀后，{0:N0} 个编号对应到 {1:N0} 个蛋白质。否则，每个肽段都会被计为一个单独的蛋白质。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ColumnIndices_RequireColumn_Missing_required_column___0_" xml:space="preserve">
+    <value>缺少必需列：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_" xml:space="preserve">
+    <value>诱饵配对清单为空。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
+    <value>诱饵配对清单缺少必需列（需要 {1}、{2} 和 {3}）。找到：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
+    <value>正在解析 {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DiannTsvLoader_ParseReader_Building_library_precursors" xml:space="preserve">
+    <value>正在构建库母离子</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_" xml:space="preserve">
+    <value>库文件为空：没有标题行。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
+    <value>正在加载库缓存（{0:N0} 个母离子）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryCacheStatus_SaveCache_Writing_library_cache" xml:space="preserve">
+    <value>正在写入库缓存</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
+    <value>库缓存已损坏（未知的中性丢失标签 {0}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
+    <value>正在合并重复的库母离子</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_manifest_disagree___0__library_precursors_are_" xml:space="preserve">
+    <value>库与其诱饵配对清单不一致：按蛋白质编号有 {0:N0} 个库母离子是诱饵，但清单 {1} 将其序列列为目标。当库将诱饵与相同的真实目标合并为一行时会出现这种情况。请重新生成库，使每一行只属于其中一种。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precursor_IDs_to_more_than_one_decoy__Each_decoy_" xml:space="preserve">
+    <value>库诱饵配对将 {0:N0} 个库母离子 ID 分配给了多个诱饵。每个诱饵必须与不同的目标配对。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__" xml:space="preserve">
+    <value>库母离子 ID {0}：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
+    <value>无法加载库缓存：{0}。改为读取库文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
+    <value>保存库缓存失败：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
+    <value>库缓存“{0}”由不同版本的源库构建；将忽略该过期缓存并从源库重新构建。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
+    <value>已加载 {0:N0} 个库母离子</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
+    <value>已从缓存“{1}”加载 {0:N0} 个库母离子</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
+    <value>正在从 {0} 加载谱图库…</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
+    <value>已将库缓存（{0:N0} 个母离子）保存到“{1}”</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
+    <value>不支持的库格式：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__" xml:space="preserve">
+    <value>已将 {1:N0} 个库诱饵中的 {0:N0} 个与其目标配对（{2:F1}%，来自库缓存）。{3:N0} 个诱饵和 {4:N0} 个目标没有配对对象。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
+    <value>已将 {1:N0} 个库诱饵中的 {0:N0} 个与其目标配对（{2:F1}%）：{3:N0} 个来自配对清单，{4:N0} 个按氨基酸组成配对。{5:N0} 个诱饵和 {6:N0} 个目标没有配对对象。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_" xml:space="preserve">
+    <value>库母离子 {0}（{1}）没有碎片峰。没有碎片的母离子用于 BiblioSpec MS1 特征查找，不能用于 DIA 搜索。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_" xml:space="preserve">
+    <value>读取诱饵配对清单 {0} 失败：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_" xml:space="preserve">
+    <value>通过蛋白质编号前缀 {0} 识别库诱饵</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_" xml:space="preserve">
+    <value>正在从 {0} 加载诱饵配对清单</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___" xml:space="preserve">
+    <value>只有 {0:F1}% 的库诱饵能与目标配对（至少需要 {1:F0}%），因此 FDR 估计将不可靠。请提供“{2}”，或为库诱饵赋予其目标的蛋白质编号并加上前缀 {3} 之一，或省略“{4}”以便 Osprey 生成自己的诱饵。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_by_amino_acid_composition__no_manifest_provided__" xml:space="preserve">
+    <value>正在按氨基酸组成将库诱饵与目标配对（未提供清单）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Replaced_the_protein_accessions_of__0__library_precursors_with_the_source_protein_" xml:space="preserve">
+    <value>已将 {0:N0} 个库母离子的蛋白质编号替换为配对清单中的源蛋白质编号</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_The_pairing_manifest_marked__0__more_library_precursors_as_decoys__their_protein_" xml:space="preserve">
+    <value>配对清单另将 {0:N0} 个库母离子标记为诱饵（其蛋白质编号没有诱饵前缀）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys___decoys_in_library_was_given__but_no_library_precursor_has_a_protein_accession_starting_" xml:space="preserve">
+    <value>已指定“{1}”，但没有库母离子的蛋白质编号以诱饵前缀 {0} 之一开头。请检查库中是否包含带有这些前缀之一的诱饵，或省略“{1}”以便 Osprey 生成自己的诱饵。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="LibraryValidation_ValidatePeptideLength_Library_peptide___0___has__1__residues__the_minimum_supported_length_is__2___Peptides_" xml:space="preserve">
+    <value>库肽段“{0}”有 {1} 个残基；支持的最小长度为 {2}。这么短的肽段特异性不足以进行鉴定，按惯例不纳入谱图库。请使用更长的最小长度重新构建库。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_" xml:space="preserve">
+    <value>{0} 未记录评分时使用的搜索设置，因此无法重用。请重新对该文件评分（{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_" xml:space="preserve">
+    <value>{0} 未记录是由哪个 Osprey 构建版本写入的，因此无法重用。请使用此构建版本重新对该文件评分（{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__" xml:space="preserve">
+    <value>{0} 未记录评分时所用的谱图库，因此无法重用。请重新对该文件评分（{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_" xml:space="preserve">
+    <value>{0} 评分时所用的谱图库与“{3}”指定的谱图库不同（库哈希 {1}；本次运行 {2}）。请使用此库重新对该文件评分（{4}），或传入评分时所用的库。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_" xml:space="preserve">
+    <value>{0} 由 Osprey {1} 评分，与此构建版本（{2}）不兼容。请使用此构建版本重新对该文件评分（{3}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_" xml:space="preserve">
+    <value>{0} 由 Osprey 的另一个每日构建版本评分（{1}；当前为 {2}）。请使用此构建版本重新对该文件评分（{3}），或使用评分时的构建版本运行此任务。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_" xml:space="preserve">
+    <value>{0} 评分时所用的搜索设置与本次运行不同（设置哈希 {1}；本次运行 {2}）。请使用这些设置重新对该文件评分（{3}），或使用评分时的设置。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_" xml:space="preserve">
+    <value>{0} 由当前构建版本无法识别的 Osprey 构建版本写入（{1}；当前为 {2}），因此无法重用。请使用此构建版本重新对该文件评分（{3}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__" xml:space="preserve">
+    <value>文件已损坏：存储的值列表长度为 {0:N0} 字节，不是 {1} 的倍数。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_" xml:space="preserve">
+    <value>{0}：行组 {1} 中存储的候选峰类型异常（{2}）。该文件已损坏，或由其他版本的 Osprey 写入。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
+    <value>{0} 已损坏：行组 {5} 的第 {1} 行（{3} {2}）的电荷为 0，这不是可能的母离子电荷。请删除该文件并重新运行“{4}”以重写该文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
+    <value>得分文件“{0}”已损坏：行组 {1} 没有可读取的 {2} 列，因此无法确定其行顺序。请删除该文件并重新对文件评分。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_" xml:space="preserve">
+    <value>{0}：一个重新评分的母离子候选峰引用了第 {1:N0} 行，超出了得分文件的末尾（{2:N0} 行），因此未写入。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup_Could_not_read_the_scores_file__0____1_" xml:space="preserve">
+    <value>无法读取得分文件 {0}：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes" xml:space="preserve">
+    <value>“{2}”需要“{3}”写入的已协调得分文件，但 {0} 不是（{4} =“{1}”）。请先运行“{3}”。如果该文件由更新版本的 Osprey 写入，请使用该版本。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>正在写入 {0:N0} 个母离子候选峰</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ParquetScoreCache_static_Writing_precursor_candidate_peaks" xml:space="preserve">
+    <value>正在写入母离子候选峰</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__" xml:space="preserve">
+    <value>该文件不是 Osprey 中间文件：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_" xml:space="preserve">
+    <value>该中间文件属于另一轮 FDR（第 {0} 轮，应为第 {1} 轮）：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_" xml:space="preserve">
+    <value>中间文件已损坏（{0:N0} 字节的记录不是 {1} 字节记录的整数倍）：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_" xml:space="preserve">
+    <value>中间文件已损坏（在第 {0:N0} 条记录处被截断）：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___" xml:space="preserve">
+    <value>中间文件已损坏（文件头被截断）：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_" xml:space="preserve">
+    <value>中间文件已损坏（只有 {0:N0} 字节）：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__" xml:space="preserve">
+    <value>该中间文件由不同版本的 Osprey 写入（格式 {0}，应为 {1}）：{2}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
+    <value>读取中间文件“{0}”时中途失败，已读取 {1:N0} 条记录。运行在此停止，而不是使用该文件的部分值继续运行。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
+    <value>协调文件 {0} 的 {2} 为 {1}，但不包含第一轮母离子集合。请删除此分析的 {3} 文件，然后重新运行第一轮。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
+    <value>协调文件 {0} 的 {2} 为 {1}，但未列出其涵盖的输入文件（{3}）。请删除此分析的 {4} 文件，然后重新运行第一轮。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">
+    <value>协调文件 {0} 的 {3} {1} 不受支持（应为 {2}）。请删除此分析的 {4} 文件，然后重新运行第一轮。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file_not_found__" xml:space="preserve">
+    <value>未找到协调文件：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file_parsed_as_null__" xml:space="preserve">
+    <value>协调文件为空或无效：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RoundtripDoubleConverter_ReadJson_A_number_in_the_JSON_file_has_no_value_" xml:space="preserve">
+    <value>JSON 文件中的一个数字没有值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RoundtripDoubleConverter_ReadJson_Expected_a_number_in_the_JSON_file__but_found__0__" xml:space="preserve">
+    <value>JSON 文件中应为数字，但找到的是 {0}。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="RoundtripDoubleConverter_WriteJson_Cannot_write__0__to_a_JSON_file__only_finite_numbers_can_be_stored_" xml:space="preserve">
+    <value>无法将 {0} 写入 JSON 文件：只能存储有限数值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_no_file_exists_at_that_path" xml:space="preserve">
+    <value>该路径下不存在文件</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_cache_was_refused_for_an_unrecorded_reason" xml:space="preserve">
+    <value>缓存因未记录的原因被拒绝</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_cache_was_written_without_a_usable_source_fingerprint__so_it_can_never_be_validated_" xml:space="preserve">
+    <value>写入缓存时没有可用的源指纹，因此永远无法根据其源文件进行验证</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_is_not_a_spectra_cache__wrong_magic_bytes_" xml:space="preserve">
+    <value>该文件不是谱图缓存（魔数字节错误）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_is_truncated___it_is_too_short_to_hold_a_cache_header" xml:space="preserve">
+    <value>该文件已被截断 - 太短，无法容纳缓存头</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_was_written_in_an_older_spectra_cache_format_and_must_be_rebuilt" xml:space="preserve">
+    <value>该文件以较旧的谱图缓存格式写入，必须重新构建</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_source_file_cannot_be_measured__so_the_cache_cannot_be_checked_for_staleness" xml:space="preserve">
+    <value>无法测量源文件，因此无法检查缓存是否过期</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCacheException_Describe_the_source_file_s_size_or_timestamp_has_changed_since_the_cache_was_written__so_the_cache_" xml:space="preserve">
+    <value>自写入缓存以来，源文件的大小或时间戳已更改，因此缓存已过期</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_LoadSpectraCache_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
+    <value>谱图缓存已损坏：记录不在其索引所指的位置（应在字节 {0}，实际在 {1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_ReadDoubleArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>谱图缓存已损坏：在记录中间结束。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_ReadFloatArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>谱图缓存已损坏：在记录中间结束。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_ReadIndex_The_spectra_cache_is_damaged__it_is_too_small_to_hold_its_footer__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>谱图缓存已损坏：太小，无法容纳其文件尾。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraCache_SaveSpectraCache_Writing_spectra_cache" xml:space="preserve">
+    <value>正在写入谱图缓存</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
+    <value>谱图缓存已损坏：记录不在其索引所指的位置（应在字节 {0}，实际在 {1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_" xml:space="preserve">
+    <value>谱图索引 {0} 没有有效的分离窗口下限偏移（cvParam {1} 缺失或不为正）。Osprey 需要真实的分离窗口才能处理 DIA 数据。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_" xml:space="preserve">
+    <value>谱图索引 {0} 没有有效的分离窗口上限偏移（cvParam {1} 缺失或不为正）。Osprey 需要真实的分离窗口才能处理 DIA 数据。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumBuilder_EnsureSorted_NaN_m_z_at_index__0__of_spectrum_index__1___n_peaks__2____cannot_sort_or_fragment_match_a_" xml:space="preserve">
+    <value>谱图索引 {1}（{2:N0} 个峰）的索引 {0} 处质荷比为 NaN；无法对格式错误的质心数组进行排序或碎片匹配。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_" xml:space="preserve">
+    <value>无法读取“{0}”：ProteoWizard 没有针对此格式的供应商峰拣选，而 Osprey 对质心化峰评分。请使用 {1} 将该文件转换为 mzML 并读取转换后的文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_" xml:space="preserve">
+    <value>无法读取“{0}”：此 Osprey 构建版本不支持供应商仪器。请在 {2} 上使用 {1} 重新构建，或使用“{3}”重新构建。否则，请使用 {4} 将该文件转换为 mzML 并读取转换后的文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Reading__0_" xml:space="preserve">
+    <value>正在读取 {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

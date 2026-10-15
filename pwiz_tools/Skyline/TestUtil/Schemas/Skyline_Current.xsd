@@ -522,6 +522,7 @@
           <xs:attribute name="product_res_mz" type="xs:double"/>
           <xs:attribute name="precursor_isotopes" type="full_scan_precursor_isotope_type"/>
           <xs:attribute name="precursor_isotope_filter" type="xs:double"/>
+          <xs:attribute name="include_minus_one_precursor" type="xs:boolean"/>
           <xs:attribute name="precursor_mass_analyzer" type="full_scan_mass_analyzer_type"/>
           <xs:attribute name="precursor_res" type="xs:double"/>
           <xs:attribute name="precursor_res_mz" type="xs:double"/>

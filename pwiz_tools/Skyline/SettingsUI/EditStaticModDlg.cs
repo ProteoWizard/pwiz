@@ -165,9 +165,9 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         Formula = string.Empty;
                         _formulaBox.MonoMass = (modification.MonoisotopicMass.HasValue ?
-                            modification.MonoisotopicMass.Value: (double?)null);
+                            modification.MonoisotopicMass.Value: null);
                         _formulaBox.AverageMass = (modification.AverageMass.HasValue ?
-                            modification.AverageMass.Value: (double?)null);
+                            modification.AverageMass.Value: null);
                         // Force the label atom check boxes to show, if any are checked
                         if (modification.LabelAtoms != LabelAtoms.None)
                             cbChemicalFormula.Checked = false;
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.SettingsUI
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(_editing ? (Control) textName : comboMod, out name))
+            if (!helper.ValidateNameTextBox(_editing ? textName : comboMod, out name))
                 return;
 
             // Allow updating the original modification
@@ -298,7 +298,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if(!ModNameAvailable(name))
                 {
-                    helper.ShowTextBoxError(_editing ? (Control)textName : comboMod, 
+                    helper.ShowTextBoxError(_editing ? textName : comboMod, 
                         SettingsUIResources.EditStaticModDlg_OkDialog_The_modification__0__already_exists, name);
                     return;
                 }

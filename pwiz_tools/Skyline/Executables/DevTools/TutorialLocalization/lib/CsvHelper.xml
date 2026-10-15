@@ -7097,6 +7097,20 @@
             <param name="memberMapData">The <see cref="T:CsvHelper.Configuration.MemberMapData"/> for the member being created.</param>
             <returns>The object created from the string.</returns>
         </member>
+        <member name="T:CsvHelper.TypeConversion.DateOnlyConverter">
+            <summary>
+            Converts a <see cref="T:System.DateOnly"/> to and from a <see cref="T:System.String"/>.
+            </summary>
+        </member>
+        <member name="M:CsvHelper.TypeConversion.DateOnlyConverter.ConvertFromString(System.String,CsvHelper.IReaderRow,CsvHelper.Configuration.MemberMapData)">
+            <summary>
+            Converts the string to an object.
+            </summary>
+            <param name="text">The string to convert to an object.</param>
+            <param name="row">The <see cref="T:CsvHelper.IReaderRow"/> for the current record.</param>
+            <param name="memberMapData">The <see cref="T:CsvHelper.Configuration.MemberMapData"/> for the member being created.</param>
+            <returns>The object created from the string.</returns>
+        </member>
         <member name="T:CsvHelper.TypeConversion.DateTimeConverter">
             <summary>
             Converts a <see cref="T:System.DateTime"/> to and from a <see cref="T:System.String"/>.
@@ -7532,6 +7546,20 @@
             </summary>
         </member>
         <member name="M:CsvHelper.TypeConversion.StringConverter.ConvertFromString(System.String,CsvHelper.IReaderRow,CsvHelper.Configuration.MemberMapData)">
+            <summary>
+            Converts the string to an object.
+            </summary>
+            <param name="text">The string to convert to an object.</param>
+            <param name="row">The <see cref="T:CsvHelper.IReaderRow"/> for the current record.</param>
+            <param name="memberMapData">The <see cref="T:CsvHelper.Configuration.MemberMapData"/> for the member being created.</param>
+            <returns>The object created from the string.</returns>
+        </member>
+        <member name="T:CsvHelper.TypeConversion.TimeOnlyConverter">
+            <summary>
+            Converts a <see cref="T:System.TimeOnly"/> to and from a <see cref="T:System.String"/>.
+            </summary>
+        </member>
+        <member name="M:CsvHelper.TypeConversion.TimeOnlyConverter.ConvertFromString(System.String,CsvHelper.IReaderRow,CsvHelper.Configuration.MemberMapData)">
             <summary>
             Converts the string to an object.
             </summary>

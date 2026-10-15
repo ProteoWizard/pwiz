@@ -96,6 +96,12 @@ function Expand-ZipNoOverwrite {
     Extract a zip into a destination, leaving any already-present file untouched
     (DoNotOverwrite). New files are written; existing ones are skipped. This is
     what makes a partially-staged tree safe to re-extract.
+
+    There is deliberately NO overwrite mode. A zip that supersedes an earlier
+    version of the same payload is extracted into its OWN version-named folder
+    (see LibraryUrl in regression.ps1) rather than over the older one, so nothing
+    in this repo needs to replace files in place -- and an older checkout that
+    shares the tree keeps working.
     #>
     param([string]$ZipPath, [string]$DestFolder)
 
@@ -127,6 +133,49 @@ function Expand-ZipNoOverwrite {
     } finally {
         $zip.Dispose()
     }
+}
+
+function Get-ZipEntryMismatches {
+    <#
+    Paths under $DestFolder that EXIST but do not match their entry in $ZipPath,
+    compared on uncompressed length and last-write time. Absent files are NOT
+    reported -- absence is what the ordinary skip-if-present extraction already
+    handles; this reports files whose CONTENT is not what the zip says it is.
+
+    Why this is needed at all: the LibraryUrl acquisition shipped 2026-08-19
+    extracted a separately-published library OVER the bundle's extraction point.
+    Every library version ships the same three entry names, so the files left
+    behind record nothing about which version they are, and a checkout that
+    resolves them through the bundle searches the wrong library while reporting
+    success. Comparing against the bundle's own nested zip -- already on disk --
+    is what makes that state detectable without re-downloading anything.
+
+    Length and last-write time rather than a content hash: both come from the
+    zip's central directory and the filesystem, so the check is O(entries)
+    instead of a multi-GB read, and ExtractToFile stamps the entry's timestamp
+    onto the file it writes, which makes the pair a version signature. Zip
+    timestamps have 2-second granularity, hence the tolerance.
+    #>
+    param([string]$ZipPath, [string]$DestFolder)
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $mismatched = @()
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
+    try {
+        foreach ($entry in $zip.Entries) {
+            if ($entry.FullName.EndsWith('/')) { continue }
+            $destPath = Join-Path $DestFolder $entry.FullName
+            if (-not (Test-Path $destPath)) { continue }
+            $file = Get-Item $destPath
+            $skew = [Math]::Abs(($file.LastWriteTime - $entry.LastWriteTime.LocalDateTime).TotalSeconds)
+            if ($file.Length -ne $entry.Length -or $skew -gt 2) {
+                $mismatched += $destPath
+            }
+        }
+    } finally {
+        $zip.Dispose()
+    }
+    return $mismatched
 }
 
 function Get-RegressionData {
@@ -173,4 +222,73 @@ function Get-RegressionData {
     }
     & $Log ("data ready: {0}" -f $t.ExtractedRoot)
     return $t.ExtractedRoot
+}
+
+<#
+.SYNOPSIS
+    Invalidate FirstPassFDR + the blib so a re-run resumes (the rehydrate
+    paths fire) rather than recomputing from spectra.
+
+.DESCRIPTION
+    Shared by regression.ps1 (mode 2) and the ai-side cumulative-coverage
+    harness so there is ONE definition of what "resume" invalidates. Every
+    artifact carries its validity stamp inside itself, so invalidating a task
+    means removing its products: FirstPassFDR's are every '*.1st-pass.*' file
+    (per-run score sidecars, model, stratum, the experiment sidecar and the
+    retained base ids) and every '*.reconciliation.json'; SecondPassFDR's is
+    output.blib. PerFileScoring's and PerFileRescoring's products stay, so
+    those tasks must report cache hits while the two joins re-run.
+
+    Deleting nothing is treated as a hard failure: if the artifact names ever
+    drift, this throws instead of yielding a green "resume" leg that resumed
+    nothing.
+
+.PARAMETER WorkDir
+    The straight-through run directory to invalidate in place.
+#>
+function Invoke-ResumeInvalidation {
+    param([Parameter(Mandatory=$true)][string]$WorkDir)
+
+    $targets = Get-ChildItem -Path $WorkDir -File | Where-Object {
+        $_.Name -like '*.1st-pass.*' -or $_.Name -like '*.reconciliation.json' -or
+        $_.Name -eq 'output.blib'
+    }
+    if (-not $targets) {
+        throw (("Invoke-ResumeInvalidation matched no files in '{0}'. The resume leg " +
+                "would not have resumed. Expected FirstPassFDR's '*.1st-pass.*' and " +
+                "'*.reconciliation.json' products and SecondPassFDR's 'output.blib'; " +
+                "check those artifact names have not changed.") -f $WorkDir)
+    }
+    $targets | Remove-Item -Force
+}
+
+<#
+.SYNOPSIS
+    Whether the Osprey binary sidecar at -Path (the OSPRY* family: .fdr_scores.bin,
+    .fdr_decoys.bin, ...) was written by -Task, read from the validity stamp the file
+    carries after its records.
+
+.DESCRIPTION
+    The stamp's byte length is the u32 at header bytes [24..28], and the stamp is the
+    file's last that-many bytes: 'osprey-validity/1;task=<Task>;version=...;key=...'.
+    A file too short to hold a header, or with no stamp, is $false.
+#>
+function Test-ProducedBy {
+    param([Parameter(Mandatory=$true)][string]$Path,
+          [Parameter(Mandatory=$true)][string]$Task)
+
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        if ($stream.Length -lt 32) { return $false }
+        $header = New-Object byte[] 32
+        if ($stream.Read($header, 0, 32) -ne 32) { return $false }
+        $stampLength = [BitConverter]::ToUInt32($header, 24)
+        if ($stampLength -eq 0 -or $stampLength -gt ($stream.Length - 32)) { return $false }
+        $stamp = New-Object byte[] $stampLength
+        [void]$stream.Seek(-[long]$stampLength, [System.IO.SeekOrigin]::End)
+        if ($stream.Read($stamp, 0, $stampLength) -ne $stampLength) { return $false }
+        return [System.Text.Encoding]::UTF8.GetString($stamp).StartsWith("osprey-validity/1;task=$Task;")
+    } finally {
+        $stream.Dispose()
+    }
 }

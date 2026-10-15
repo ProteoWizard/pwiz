@@ -994,7 +994,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 public double? GetRetentionTime(Target sequence)
                 {
-                    return _dictPeptideRetentionTime.TryGetValue(sequence, out var time) ? (double?) time : null;
+                    return _dictPeptideRetentionTime.TryGetValue(sequence, out var time) ? time : null;
                 }
 
                 public TimeSource? GetTimeSource(Target sequence)
@@ -1176,7 +1176,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 public double? GetRetentionTime(Target sequence)
                 {
-                    return _dictSequenceToPeptide.TryGetValue(sequence, out var peptide) ? (double?) peptide.Irt : null;
+                    return _dictSequenceToPeptide.TryGetValue(sequence, out var peptide) ? peptide.Irt : null;
                 }
 
                 public TimeSource? GetTimeSource(Target sequence)

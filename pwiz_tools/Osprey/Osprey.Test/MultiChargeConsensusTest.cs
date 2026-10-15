@@ -22,9 +22,11 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.Reconciliation;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -77,6 +79,55 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(20.0, targets[0].Apex, 1e-9);
             Assert.AreEqual(19.5, targets[0].Start, 1e-9);
             Assert.AreEqual(20.5, targets[0].End, 1e-9);
+        }
+
+        /// <summary>
+        /// Cross-impl determinism for shared peak boundaries: when two charge states
+        /// of one peptide in a file are BOTH gap-filled at run q=1.0 (a tie) with
+        /// DIFFERENT windows, the shared (modseq, file) boundary must resolve to the
+        /// LOWEST-CHARGE window regardless of entry order. Otherwise C# (in-memory
+        /// per-file entry order) and Rust (parquet row order) keep different charges,
+        /// diverging the blib RetentionTimes start/end (the Astral transfer-compete
+        /// 20-row divergence). Rust build_shared_boundaries_from_plan applies the
+        /// identical (lower run_qvalue, then lower charge) rule.
+        /// </summary>
+        [TestMethod]
+        public void TestSharedBoundariesTieBrokenByLowestCharge()
+        {
+            const string seq = "SVDEVFDEVVQIFDK";
+
+            FdrEntry Mk(byte charge, double start, double end) => new FdrEntry
+            {
+                ModifiedSequence = seq, Charge = charge,
+                RunPrecursorQvalue = 1.0, RunPeptideQvalue = 1.0,
+                ApexRt = (start + end) / 2.0, StartRt = start, EndRt = end
+            };
+
+            foreach (var swap in new[] { false, true })
+            {
+                var z2 = Mk(2, 22.925, 23.850); // wide window
+                var z3 = Mk(3, 23.665, 23.854); // narrow window
+                var list = swap
+                    ? new List<FdrEntry> { z3, z2 }
+                    : new List<FdrEntry> { z2, z3 };
+                // The records CollectPassingEntries hands the builder, in the per-file order
+                // it produces them - which is the order the tie-break must be immune to.
+                var passingEntries = list
+                    .Select(e => new PassingObservation(
+                        "file1", e.ModifiedSequence, e.Charge,
+                        e.EffectiveRunQvalue(FdrLevel.Both), e.ExperimentPrecursorQvalue,
+                        e.ApexRt, e.StartRt, e.EndRt))
+                    .ToList();
+
+                var shared = SecondPassFdrTask.BuildSharedBoundaries(passingEntries);
+
+                Assert.IsTrue(shared.TryGetValue((seq, "file1"), out var b),
+                    "shared boundary must exist for the peptide/file");
+                Assert.AreEqual(22.925, b[1], 1e-9,
+                    "lowest charge (z=2) start must win regardless of order (swap=" + swap + ")");
+                Assert.AreEqual(23.850, b[2], 1e-9,
+                    "lowest charge (z=2) end must win regardless of order (swap=" + swap + ")");
+            }
         }
 
         /// <summary>

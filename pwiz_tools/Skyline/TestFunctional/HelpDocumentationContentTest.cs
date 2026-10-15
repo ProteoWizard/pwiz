@@ -108,7 +108,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void ForEachLanguage(Action action)
         {
-            foreach (var language in new []{ "en", "ja", "zh-CHS" })
+            foreach (var language in new []{ "en", "ja", "zh-Hans" })
             {
                 var cultureInfo = CultureInfo.GetCultureInfo(language);
                 Assert.IsNotNull(cultureInfo);

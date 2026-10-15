@@ -63,6 +63,7 @@ namespace pwiz.Skyline.Properties
     //  The PropertyChanged event is raised after a setting's value is changed.
     //  The SettingsLoaded event is raised after the setting values are loaded.
     //  The SettingsSaving event is raised before the setting values are saved.
+    [SettingsProvider(typeof(PortableSettingsProvider))]
     public sealed partial class Settings
     {
         /// <devdoc>
@@ -127,6 +128,26 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
+        /// The provider that reads and writes the user scoped settings. Point its
+        /// <see cref="PortableSettingsProvider.ConfigFilePath"/> at another file to read or
+        /// write the settings of another installation.
+        /// </summary>
+        public PortableSettingsProvider PortableProvider
+        {
+            get { return Providers.OfType<PortableSettingsProvider>().First(); }
+        }
+
+        /// <summary>
+        /// Path of the file that user scoped settings are read from and written to, which is
+        /// what Tools > Options > Miscellaneous shows the user. Asks the provider rather than
+        /// recomputing the path, so this cannot drift away from where the settings really are.
+        /// </summary>
+        public string SettingsFilePath
+        {
+            get { return PortableProvider.ConfigFilePath; }
+        }
+
+        /// <summary>
         /// Clears internal cache of original serialized settings values and resets all settings to their default value.
         /// </summary>
         public new void Reset()
@@ -135,6 +156,20 @@ namespace pwiz.Skyline.Properties
             {
                 _originalSerializedValues.Clear();
                 base.Reset();
+            }
+        }
+
+        /// <summary>
+        /// Drops every cached value so that the next read comes from the settings file, including
+        /// the values this instance changed. <see cref="ReloadAndMerge"/> is the alternative
+        /// that keeps those.
+        /// </summary>
+        public new void Reload()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reload();
             }
         }
 
@@ -155,11 +190,63 @@ namespace pwiz.Skyline.Properties
                         modifiedValues.Add(new KeyValuePair<string, object>(propertyName, currentValue));
                     }
                 }
-                _originalSerializedValues.Clear();
                 Reload();
                 foreach (var pair in modifiedValues)
                 {
                     this[pair.Key] = pair.Value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Settings belonging to this installation, which no other settings file has a say in.
+        /// </summary>
+        private static readonly ISet<string> UNMERGED_SETTINGS = new HashSet<string>
+        {
+            nameof(InstallationId),
+            nameof(CheckedForSettingsToImport)
+        };
+
+        /// <summary>
+        /// Brings across what changed in <paramref name="sourceSettings"/> since it was the same
+        /// as <paramref name="baseSettings"/>. A setting changed only in the source takes the
+        /// source's value. One changed here as well keeps its value here, unless its value can be
+        /// merged part by part; see <see cref="IMergeable"/>.
+        /// </summary>
+        public void MergeChanges(Settings baseSettings, Settings sourceSettings)
+        {
+            lock (this)
+            {
+                foreach (SettingsProperty property in Properties)
+                {
+                    if (property.Attributes[typeof(UserScopedSettingAttribute)] == null ||
+                        UNMERGED_SETTINGS.Contains(property.Name))
+                    {
+                        continue;
+                    }
+                    // The property rather than the indexer, since some properties supply their
+                    // defaults themselves when nothing was saved.
+                    var propertyInfo = typeof(Settings).GetProperty(property.Name);
+                    if (propertyInfo == null)
+                        continue;
+                    object baseValue, sourceValue;
+                    try
+                    {
+                        baseValue = propertyInfo.GetValue(baseSettings);
+                        sourceValue = propertyInfo.GetValue(sourceSettings);
+                    }
+                    catch (Exception)
+                    {
+                        continue;   // Unreadable in one of the files, so nothing to go by
+                    }
+                    var baseSerialized = GetSerializedValue(property.Name, baseValue);
+                    if (Equals(baseSerialized, GetSerializedValue(property.Name, sourceValue)))
+                        continue;
+                    var localValue = propertyInfo.GetValue(this);
+                    if (localValue is IMergeable mergeable)
+                        this[property.Name] = mergeable.ThreeWayMerge(baseValue, sourceValue);
+                    else if (Equals(baseSerialized, GetSerializedValue(property.Name, localValue)))
+                        this[property.Name] = sourceValue;
                 }
             }
         }
@@ -197,9 +284,9 @@ namespace pwiz.Skyline.Properties
             get
             {
                 return LockMassParameters.Create(
-                    LockMassPositive == 0 ? (double?) null : LockMassPositive,
-                    LockMassNegative == 0 ? (double?) null : LockMassNegative,
-                    LockMassTolerance == 0 ? (double?) null : LockMassTolerance);
+                    LockMassPositive == 0 ? null : LockMassPositive,
+                    LockMassNegative == 0 ? null : LockMassNegative,
+                    LockMassTolerance == 0 ? null : LockMassTolerance);
             }
             set
             {
@@ -1244,6 +1331,26 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
+        public DiannSearchSettingsPresetList DiannSearchSettingsPresets
+        {
+            get
+            {
+                var list = (DiannSearchSettingsPresetList)this[@"DiannSearchSettingsPresets"];
+                if (list == null)
+                {
+                    list = new DiannSearchSettingsPresetList();
+                    list.AddDefaults();
+                    DiannSearchSettingsPresets = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"DiannSearchSettingsPresets"] = value;
+            }
+        }
+
+        [UserScopedSetting]
         public RemoteAccountList RemoteAccountList
         {
             get 
@@ -1673,6 +1780,13 @@ namespace pwiz.Skyline.Properties
     [LlmName("Search Tools")]
     public sealed class SearchToolList : SettingsList<SearchTool>
     {
+        // SearchToolList is a process-wide singleton (Settings.Default.SearchToolList) whose
+        // FileAlreadyDownloaded check mutates it as a side effect. On net8 the DDA import wizard
+        // can reach it from both the UI thread and the functional-test thread at once, corrupting
+        // the underlying Dictionary (e.g. "an item with the same key Java has already been added").
+        // Serialize all keyed access on this lock.
+        private readonly object _sync = new object();
+
         public override IEnumerable<SearchTool> GetDefaults(int revisionIndex)
         {
             yield break;
@@ -1704,21 +1818,78 @@ namespace pwiz.Skyline.Properties
             return listCopy;
         }
 
-        public bool ContainsKey(SearchToolType toolType) => ContainsKey(toolType.ToString());
-        public SearchTool this[SearchToolType toolType] => this[toolType.ToString()];
+        public bool ContainsKey(SearchToolType toolType)
+        {
+            lock (_sync)
+            {
+                return ContainsKey(toolType.ToString());
+            }
+        }
+
+        public SearchTool this[SearchToolType toolType]
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return this[toolType.ToString()];
+                }
+            }
+        }
 
         public string GetToolPathOrDefault(SearchToolType toolType, string defaultPath)
         {
-            if (ContainsKey(toolType.ToString()))
-                return this[toolType.ToString()].Path;
-            return defaultPath;
+            lock (_sync)
+            {
+                if (ContainsKey(toolType.ToString()))
+                    return this[toolType.ToString()].Path;
+                return defaultPath;
+            }
         }
 
         public string GetToolArgsOrDefault(SearchToolType toolType, string defaultArgs)
         {
-            if (ContainsKey(toolType.ToString()))
-                return this[toolType.ToString()].ExtraCommandlineArgs;
-            return defaultArgs;
+            lock (_sync)
+            {
+                if (ContainsKey(toolType.ToString()))
+                    return this[toolType.ToString()].ExtraCommandlineArgs;
+                return defaultArgs;
+            }
+        }
+
+        // Serialize the MappedList mutators: RemoveExisting + _dict.Add inside InsertItem are not
+        // atomic across threads, so two threads passing the external ContainsKey guard can both
+        // reach _dict.Add. lock is reentrant, so the locked keyed accessors above remain safe.
+        protected override void InsertItem(int index, SearchTool item)
+        {
+            lock (_sync)
+            {
+                base.InsertItem(index, item);
+            }
+        }
+
+        protected override void RemoveItem(int index)
+        {
+            lock (_sync)
+            {
+                base.RemoveItem(index);
+            }
+        }
+
+        protected override void SetItem(int index, SearchTool item)
+        {
+            lock (_sync)
+            {
+                base.SetItem(index, item);
+            }
+        }
+
+        protected override void ClearItems()
+        {
+            lock (_sync)
+            {
+                base.ClearItems();
+            }
         }
     }
 
@@ -1743,7 +1914,9 @@ namespace pwiz.Skyline.Properties
                 enzymeName: DEFAULT_ENZYME_NAME,
                 maxMissedCleavages: 0);
 
-            // Engine-specific presets, sorted alphabetically
+            // Engine-specific presets, sorted alphabetically. DIA-NN presets live in
+            // their own list (DiannSearchSettingsPresetList) so the peptide-search wizard
+            // and the DIA-NN search wizard each see only what's applicable.
             foreach (var preset in CometSearchEngine.GetDefaultPresets()
                          .Concat(MsFraggerSearchEngine.GetDefaultPresets())
                          .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
@@ -1757,6 +1930,26 @@ namespace pwiz.Skyline.Properties
 
         public override Type SerialType => typeof(SearchSettingsPresetList);
         public override ICollection<SearchSettingsPreset> CreateEmptyList() => new SearchSettingsPresetList();
+        public override string FileExtension => @".skysp";
+    }
+
+
+    public sealed class DiannSearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
+    {
+        public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
+        {
+            foreach (var preset in DiannHelpers.GetDefaultPresets()
+                         .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
+                yield return preset;
+        }
+
+        public override int ExcludeDefaults => GetDefaults(RevisionIndexCurrent).Count();
+
+        public override string Title => PropertiesResources.SearchSettingsPresetList_Title_Edit_Settings_Presets;
+        public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
+
+        public override Type SerialType => typeof(DiannSearchSettingsPresetList);
+        public override ICollection<SearchSettingsPreset> CreateEmptyList() => new DiannSearchSettingsPresetList();
         public override string FileExtension => @".skysp";
     }
 
@@ -2537,7 +2730,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var calc in defaultCalculators)
                     Remove(calc);
-                foreach (var calc in defaultCalculators.Reverse())
+                foreach (var calc in Enumerable.Reverse(defaultCalculators))
                     Insert(0, calc);
             }
         }
@@ -2698,7 +2891,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var library in defaultLibraries)
                     Remove(library);
-                foreach (var library in defaultLibraries.Reverse())
+                foreach (var library in Enumerable.Reverse(defaultLibraries))
                     Insert(0, library);
             }
         }
@@ -2754,7 +2947,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var scoringModel in defaultScoringModels)
                     Remove(scoringModel);
-                foreach (var scoringModel in defaultScoringModels.Reverse())
+                foreach (var scoringModel in Enumerable.Reverse(defaultScoringModels))
                     Insert(0, scoringModel);
             }
         }

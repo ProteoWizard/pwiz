@@ -93,12 +93,12 @@ namespace pwiz.Osprey.ML
                     }
                 });
                 threads[t].IsBackground = true;
-                threads[t].Name = "OspreyParallel";
+                threads[t].Name = @"OspreyParallel";
                 threads[t].Start();
             }
             foreach (var th in threads) th.Join();
             if (firstException != null)
-                throw new AggregateException("Exception in OspreyParallel.For", firstException);
+                throw new AggregateException(@"Exception in OspreyParallel.For", firstException);
         }
     }
 
@@ -133,7 +133,7 @@ namespace pwiz.Osprey.ML
         public double[] TrainData;
         public double[] TestData;
 
-        // Pooled buffers for PercolatorFdr.CountPassing's two per-call
+        // Pooled buffers for PercolatorQValues.CountPassing's two per-call
         // arrays (allIndices: 0..n-1; qValues: per-winner). Sized to
         // initialN at scratch construction; EnsureCountPassingCapacity
         // grows on rare oversize requests.
@@ -309,6 +309,24 @@ namespace pwiz.Osprey.ML
         public int NumFeatures { get { return _means.Length; } }
 
         /// <summary>
+        /// Reconstruct a standardizer from persisted means/stds -- e.g. reloading a
+        /// frozen 1st-pass model in a distributed SecondPassFDR node that did not
+        /// train pass 1 in-process. The arrays are exactly what <see cref="Means"/> and
+        /// <see cref="Stds"/> return, so a scorer built from the reloaded model
+        /// standardizes bit-identically to the in-process original.
+        /// </summary>
+        public static FeatureStandardizer FromMeansStds(double[] means, double[] stds)
+        {
+            if (means == null)
+                throw new ArgumentNullException(nameof(means));
+            if (stds == null)
+                throw new ArgumentNullException(nameof(stds));
+            if (means.Length != stds.Length)
+                throw new ArgumentException(@"means and stds must have the same length");
+            return new FeatureStandardizer(means, stds);
+        }
+
+        /// <summary>
         /// Compute mean and std for each feature column.
         /// </summary>
         public static FeatureStandardizer Fit(Matrix features)
@@ -439,7 +457,7 @@ namespace pwiz.Osprey.ML
             SvmTrainScratch scratch)
         {
             if (features.Rows != labels.Length)
-                throw new ArgumentException("Feature rows must match label count");
+                throw new ArgumentException(@"Feature rows must match label count");
 
             int n = features.Rows;
             int p = features.Cols;

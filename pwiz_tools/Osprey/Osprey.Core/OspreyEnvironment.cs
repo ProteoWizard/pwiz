@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -19,6 +19,9 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -26,9 +29,17 @@ namespace pwiz.Osprey.Core
     /// Central access point for OSPREY_* environment variables that control
     /// production behavior (throttling, fast-iteration early exits, algorithm
     /// variants). A separate OspreyDiagnostics class covers the diagnostic-dump
-    /// env vars. Values are read once at process start and cached as readonly
-    /// static fields so callers never reach for
-    /// <see cref="Environment.GetEnvironmentVariable(string)"/> inline.
+    /// env vars. Callers never reach for
+    /// <see cref="Environment.GetEnvironmentVariable(string)"/> inline; every read goes
+    /// through <see cref="GetVariable"/>.
+    ///
+    /// <para>Some values are read once at process start into readonly static fields; a value
+    /// a command-line test must vary is a property that re-reads the variable on every
+    /// access, so <see cref="OverrideVariables"/> can change it for one in-process
+    /// <c>Program.RunCommand</c> - the same fix Skyline uses for a resource string captured
+    /// in a static. Which is which is this class's business, and either may change. So a
+    /// caller must not assume a read is free: read the value once, outside any loop, and pass
+    /// the result down as a plain argument rather than reaching back here per row.</para>
     ///
     /// Lives in Osprey.Core so every project below the main pipeline
     /// (FDR, Chromatography, Scoring, ML, IO) can read it without
@@ -38,6 +49,102 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class OspreyEnvironment
     {
+        // Variables a test has overridden (OverrideVariables); null in production.
+        private static IReadOnlyDictionary<string, string> _overrides;
+
+        // How the platform compares environment variable names: case-insensitively on Windows,
+        // exactly elsewhere. The registry and the scan must agree with it, or a Linux node would
+        // accept 'osprey_log_memory' here and then never read it as OSPREY_LOG_MEMORY.
+        private static readonly StringComparison VariableNameComparison =
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        private static readonly StringComparer VariableNameComparer =
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+        /// <summary>
+        /// Every OSPREY_* variable this build reads, wherever it reads it - here, in
+        /// OspreyDiagnostics / OspreyFileDiagnostics, FdrDiagnostics, OspreyVersion and the
+        /// scoring and IO layers. <see cref="UnrecognizedVariables"/> treats any other set
+        /// OSPREY_* name as an error, as an unrecognized command-line argument is.
+        ///
+        /// <para>One list, kept in step with the readers by
+        /// <c>CodeInspectionTest.TestOspreyVariablesAreRegistered</c>: a literal
+        /// <c>@"OSPREY_..."</c> in production code that is missing here fails it, and so does a
+        /// name here that nothing reads any more. Retiring a variable is therefore deleting its
+        /// reader and its line here; the startup check then refuses it with every other name
+        /// this build does not know. That replaced a per-variable refusal for each retired
+        /// switch (OSPREY_STAGE7_STREAM, OSPREY_STAGE6_STREAM_SURVIVORS, OSPREY_FDR_PROJECTION,
+        /// OSPREY_DUMP_PERCOLATOR / _ONLY), which grew by one hand-written check per
+        /// retirement and missed every misspelling.</para>
+        ///
+        /// <para>Names only Rust osprey reads (e.g. OSPREY_TRACE_PEPTIDE, OSPREY_DUMP_RESCORED)
+        /// are deliberately absent: this build would not honor them, so a run that sets one
+        /// would not do what its caller asked. A cross-implementation harness sets them for the
+        /// Rust process only.</para>
+        /// </summary>
+        public static readonly ISet<string> KnownVariables = new HashSet<string>(VariableNameComparer)
+        {
+            @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
+            @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
+            @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
+            @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
+            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
+            @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
+            @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
+            @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
+            @"OSPREY_DUMP_COASSIGN_ROWS", @"OSPREY_DUMP_CONSENSUS", @"OSPREY_DUMP_CWT_PATH",
+            @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
+            @"OSPREY_DUMP_LOESS_FIT", @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
+            @"OSPREY_DUMP_MS2_CAL_ERRORS", @"OSPREY_DUMP_PERC_INPUT", @"OSPREY_DUMP_PREDICT_RT",
+            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_REFIT", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
+            @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
+            @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
+            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
+            @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
+            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
+            @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST", @"OSPREY_LOESS_FIT_ONLY",
+            @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
+            @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
+            @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
+            @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
+            @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_REFIT_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
+            @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
+            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
+            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
+            @"OSPREY_VERSION_OVERRIDE"
+        };
+
+        /// <summary>
+        /// The OSPREY_* variables set to a non-empty value in this process - its environment, or
+        /// a test's <see cref="OverrideVariables"/> - that are not in <see cref="KnownVariables"/>,
+        /// sorted. An empty value reads as unset, as it does everywhere else in this class: a
+        /// cleared <c>export</c> or a blanked CI parameter is not a request for anything.
+        /// </summary>
+        public static IReadOnlyList<string> UnrecognizedVariables()
+        {
+            const string prefix = @"OSPREY_";
+            var names = new SortedSet<string>(VariableNameComparer);
+            foreach (string name in Environment.GetEnvironmentVariables().Keys)
+            {
+                if (name.StartsWith(prefix, VariableNameComparison))
+                    names.Add(name);
+            }
+            if (_overrides != null)
+            {
+                foreach (string name in _overrides.Keys)
+                {
+                    if (name.StartsWith(prefix, VariableNameComparison))
+                        names.Add(name);
+                }
+            }
+            return names.Where(name => !KnownVariables.Contains(name) && !string.IsNullOrEmpty(GetVariable(name)))
+                .ToList();
+        }
+
         /// <summary>
         /// OSPREY_MAX_PARALLEL_FILES: legacy back-compat cap on concurrent file
         /// processing, superseded by the <c>--parallel-files</c> CLI argument
@@ -53,6 +160,68 @@ namespace pwiz.Osprey.Core
         /// (Astral HRAM) where three large working sets exceed a 64 GB budget.
         /// </summary>
         public static readonly int MaxParallelFiles = ParseIntOrZero(@"OSPREY_MAX_PARALLEL_FILES");
+
+        /// <summary>
+        /// OSPREY_FDR_FILE_LANES: forces how many files first-pass FDR works on at once,
+        /// bypassing <see cref="FdrLaneResolver"/>'s thread and memory limits (clamped to the
+        /// file count only). For measuring the lane curve, and for a test that needs a
+        /// one-lane oracle; 0 / unset lets the resolver choose.
+        /// </summary>
+        public static int FdrFileLanes => ParseIntOrZero(@"OSPREY_FDR_FILE_LANES");
+
+        /// <summary>
+        /// OSPREY_BLOCK_READ_MB: score parquets are read in planned spans - the column chunks a
+        /// reader touches in each row group, read together - and FDR score sidecars in blocks of
+        /// this many MB, serving the reader's smaller reads from memory. Default 4. A cold parquet
+        /// walk is otherwise many small column-chunk reads, one seek each on a spinning disk.
+        /// <c>0</c> reads directly, the pre-#4765 path, kept only for parity testing (see the
+        /// parity-path retirement catalogue). Larger values are clamped to
+        /// <see cref="MAX_BLOCK_READ_MB"/>.
+        /// </summary>
+        public static readonly int BlockReadMb = ClampBlockReadMb(ParseIntOrNull(@"OSPREY_BLOCK_READ_MB") ?? 4);
+
+        /// <summary>The largest <see cref="BlockReadMb"/>: a block is one array.</summary>
+        public const int MAX_BLOCK_READ_MB = 1024;
+
+        /// <summary>
+        /// A <see cref="BlockReadMb"/> setting made safe: 0 (off) for zero or less, otherwise
+        /// at most <see cref="MAX_BLOCK_READ_MB"/>.
+        /// </summary>
+        public static int ClampBlockReadMb(int blockMb)
+        {
+            return blockMb <= 0 ? 0 : Math.Min(blockMb, MAX_BLOCK_READ_MB);
+        }
+
+        /// <summary>
+        /// OSPREY_BLOCK_READ_GATE: with <see cref="BlockReadMb"/>, only one thread in the process
+        /// reads from disk at a time, so concurrent file lanes take turns at the disk instead of
+        /// interleaving their reads, and decode concurrently. On by default; <c>0</c> turns it off.
+        /// </summary>
+        public static readonly bool BlockReadGate = IsNotZero(@"OSPREY_BLOCK_READ_GATE");
+
+        /// <summary>
+        /// OSPREY_STUB_IDENTITY: where the first-pass FDR walks take each score row's charge,
+        /// decoy flag and peptide. Default 1: from the library entry the row's entry_id names,
+        /// which skips decoding three columns (two of them strings) from every row; a row group
+        /// with an id the library lacks reads them from the file. <c>0</c> always reads them from
+        /// the file, the pre-#4765 path kept only for parity testing; <c>2</c> reads both and
+        /// stops at the first row where they differ.
+        /// </summary>
+        public static readonly int StubIdentity = ParseIntOrNull(@"OSPREY_STUB_IDENTITY") ?? 1;
+
+        /// <summary>
+        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="SimpleFileSaver"/>. Every
+        /// durable write, diagnostic dumps included, goes through <c>SimpleFileSaver</c>, which
+        /// normally deletes its sibling temp file when an exception unwinds before
+        /// <c>Commit()</c> - the real path then holds the previous content or nothing,
+        /// never a partial write (see <c>SimpleFileSaver</c>'s own doc comment). Set this to
+        /// inspect what a write got through before it was abandoned: on an uncommitted
+        /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,
+        /// its normal <c>~SK</c>-prefixed name) instead of deleted. It never touches the
+        /// real path, so presence-proves-completeness still holds for every consumer;
+        /// only a developer who knows to look for the temp sees the partial content.
+        /// </summary>
+        public static bool KeepFailedWrites { get; set; } = IsSetAndNotZero(@"OSPREY_KEEP_FAILED_WRITES");
 
         /// <summary>
         /// OSPREY_MAX_SCORING_WINDOWS: limits main-search isolation windows
@@ -78,6 +247,84 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
 
+        /// <summary>
+        /// Attribute the model-diagnostics co-assignment fold's allocation by call site and
+        /// report the totals when it finishes. Diagnostic only; it changes nothing the run
+        /// produces.
+        /// </summary>
+        public static readonly bool LogCoAssignmentAllocation = IsSet(@"OSPREY_LOG_COASSIGN_ALLOC");
+
+        /// <summary>
+        /// OSPREY_MDIAG_COASSIGN_ONLY=1: on <c>--task ModelDiagnostics</c>, skip the per-run fold
+        /// and build ONLY the peak co-assignment panel.
+        ///
+        /// <para>A measurement harness, not a product. On the 446-run CHS cohort the task takes
+        /// 63 minutes, of which the per-run fold is 54 and this panel is 8; skipping the fold
+        /// turns a one-hour iteration into about ten minutes, which is what makes questions
+        /// about the panel's memory answerable in a morning rather than a night.</para>
+        ///
+        /// <para>The report it leaves has every OTHER section empty, so it is written with no
+        /// validity key. An unstamped diagnostics product is refused by the render rather than
+        /// trusted, and the next real run regenerates it - which is what keeps a harness run
+        /// from being mistaken for, or overwriting, an answer.</para>
+        /// </summary>
+        public static readonly bool CoAssignmentPanelOnly = IsSet(@"OSPREY_MDIAG_COASSIGN_ONLY");
+
+        /// <summary>
+        /// OSPREY_LIBRARY_LOAD_ONLY=1: load the spectral library, report what that cost, and
+        /// exit 0 before decoys, scoring or anything else.
+        ///
+        /// <para>A measurement harness, like <see cref="CoAssignmentPanelOnly"/>. The library
+        /// load is the one phase every <c>--task</c> leg performs and each performs
+        /// DIFFERENTLY - <c>PerFileScoring</c> reads every fragment, <c>FirstPassFDR</c> reads
+        /// none (<c>OmitFragments</c>), <c>SecondPassFDR</c> reads only the retained set
+        /// (issue #4650) - so it is the one phase where the three can be compared directly.
+        /// Without this the comparison means running the legs themselves, which is hours on a
+        /// 446-run cohort and swamps a 10-second difference in noise.</para>
+        ///
+        /// <para>Exits BEFORE decoy handling deliberately. Decoy generation is its own cost
+        /// (~45 s on Astral at one file) and belongs to a different question; including it
+        /// would report the load as whatever the decoy arm happens to do on that leg.</para>
+        ///
+        /// <para>Writes NOTHING, so it cannot be mistaken for a run or overwrite one.</para>
+        /// </summary>
+        public static readonly bool LibraryLoadOnly = IsSet(@"OSPREY_LIBRARY_LOAD_ONLY");
+
+        /// <summary>
+        /// OSPREY_LOG_MEMORY=1: emit the post-GC <c>[MEM ...]</c> probes. Each one forces a
+        /// blocking <c>GC.Collect()/WaitForPendingFinalizers()/GC.Collect()</c> so the number it
+        /// reports is a true live set rather than a heap with uncollected garbage in it.
+        ///
+        /// <para><see cref="IsSetAndNotZero"/>, NOT <see cref="IsSet"/>, and the difference was
+        /// not academic. The dataset runners write <c>OSPREY_LOG_MEMORY=0</c> to mean OFF
+        /// (<c>OspreyDatasetRun.psm1</c>), and the previous <c>!IsNullOrEmpty</c> test read
+        /// <c>"0"</c> as SET - so every run through a runner had the probes on while its banner
+        /// said "memprobe : off ... no forced GCs". On the 446-run CHS cohort that is one forced
+        /// gen2 collection per file in the diagnostics fold, which flattens the very allocation
+        /// curve the fold is measured by: the measurement was changing what it measured, in the
+        /// phase whose flatness is the claim. Timings taken through a runner include that cost.</para>
+        /// </summary>
+        public static readonly bool LogMemory = IsSetAndNotZero(@"OSPREY_LOG_MEMORY");
+
+        /// <summary>
+        /// OSPREY_CAL_MEDIANPOLISH=1: add median-polish cosine (the dominant full-search
+        /// Percolator feature) as a 5th calibration-LDA feature, computed over the
+        /// peak-cropped calibration XICs. Experimental lever for raising the calibration
+        /// peak-selection yield; default OFF keeps the calibration output byte-identical
+        /// and perf-neutral (the feature is neither computed nor scored when unset).
+        /// </summary>
+        public static readonly bool CalMedianPolishFeature = IsSetAndNotZero(@"OSPREY_CAL_MEDIANPOLISH");
+
+        /// <summary>
+        /// OSPREY_CAL_SAMPLE_SIZE: override the calibration library sample size (targets
+        /// sampled per attempt). Default 0 = use the configured CalibrationSampleSize
+        /// (100K). Experimental lever for testing whether a larger sample surfaces
+        /// proportionally more near-zero-FDR calibration anchors on rich files. Re-read on
+        /// each access (once per file), so an in-process test can drive the sampling path on
+        /// a library smaller than the default sample.
+        /// </summary>
+        public static int CalSampleSizeOverride => ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
+
         // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
         // was retired in favor of the --task PerFileScoring CLI flag. See the HPC
         // scoring split work in AnalysisPipeline.Run. ExitAfterCalibration
@@ -90,7 +337,7 @@ namespace pwiz.Osprey.Core
         /// feature-parity bisection (isolates downstream feature divergence
         /// from calibration drift).
         /// </summary>
-        public static readonly string LoadCalibrationPath = Environment.GetEnvironmentVariable(@"OSPREY_LOAD_CALIBRATION");
+        public static readonly string LoadCalibrationPath = GetVariable(@"OSPREY_LOAD_CALIBRATION");
 
         /// <summary>
         /// OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT: when a unit test is run under
@@ -101,7 +348,7 @@ namespace pwiz.Osprey.Core
         /// production. The harness verifies cross-impl byte parity once both
         /// sides have written their copy.
         /// </summary>
-        public static readonly string CrossImplFdrSidecarOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT");
+        public static readonly string CrossImplFdrSidecarOut = GetVariable(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT");
 
         /// <summary>
         /// OSPREY_CROSS_IMPL_RECONCILIATION_OUT: same idea as
@@ -109,87 +356,916 @@ namespace pwiz.Osprey.Core
         /// .reconciliation.json boundary file. Test-only hook; never set
         /// in production.
         /// </summary>
-        public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
+        public static readonly string CrossImplReconciliationOut = GetVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
         /// <summary>
-        /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
-        /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
-        /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
-        /// resident across first-pass Percolator + protein FDR + the sidecar write
-        /// + compaction. <c>FirstJoinTask</c> materializes the projection from the
-        /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
-        /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
-        /// the just-written 1st-pass sidecar after compaction.
-        ///
-        /// DEFAULT ON: Osprey cannot process real (large) file counts without this --
-        /// the legacy resident path OOMs -- so streaming is the production default and
-        /// byte-identical to the legacy path (Stellar regression mode1/2/3). Set
-        /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
-        /// path as a transitional A/B / byte-identity oracle; that path (and this flag)
-        /// are slated for removal once model-diagnostics + FDRBench stream from the
-        /// persisted per-file scores. A settable property (not a readonly field) so
-        /// unit tests can A/B both paths.
+        /// DIAGNOSTIC. <c>OSPREY_DROP_BETWEEN_TASKS=1</c> makes each task release every byproduct
+        /// but the library when it finishes, so the next task reloads what it needs from disk -
+        /// the dataflow an HPC chain gets for free from process boundaries. Default OFF; the
+        /// experiment reverts as a unit. See <c>PipelineContext.DropAllButLibrary</c>.
         /// </summary>
-        public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
+        public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
 
-        /// <summary>The default <see cref="Pass2QValue"/> mode: retrain the 2nd-pass
-        /// Percolator SVM and recompute a target/decoy null on the reconciled + compacted
-        /// reported pool. Current (PR #4395) behavior; preserves Rust parity.</summary>
-        public const string PASS2_QVALUE_PERCOLATOR = @"percolator";
+        /// <summary>
+        /// DIAGNOSTIC. Calibration and the Stage 6 re-score read a run's spectra cache one isolation
+        /// window block at a time (<c>SpectraWindowIndex.LoadWindowSerialRead</c>), because both are
+        /// often the first read of a cache that is no longer in the file cache. Default ON;
+        /// <c>OSPREY_SERIAL_WINDOW_READS=0</c> makes those two read in parallel as they did before,
+        /// the A/B arm for timing. Output is the same either way. A training export made later reads
+        /// serially regardless.
+        /// </summary>
+        public static bool SerialWindowReads { get; set; } = IsNotZero(@"OSPREY_SERIAL_WINDOW_READS");
+
+        /// <summary>
+        /// DIAGNOSTIC. <c>OSPREY_SERIAL_READ_SCOPE=process</c> makes the serial window reads take
+        /// turns across every file in the process instead of within each file. Under
+        /// --parallel-files the per-file default lets that many files' reads compete for one disk.
+        /// It covers only those block reads, not mzML parsing, cache writes or parallel window reads.
+        /// </summary>
+        public static bool SerialReadsProcessWide { get; set; } =
+            string.Equals(GetVariable(@"OSPREY_SERIAL_READ_SCOPE"), @"process", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// The log line naming the window-read switches when either is set, so a timing run records
+        /// which arm it was; null at the defaults, leaving a default run's log unchanged.
+        /// </summary>
+        public static string DescribeWindowReads()
+        {
+            if (SerialWindowReads && !SerialReadsProcessWide)
+                return null;
+            return string.Format(@"Window reads (DIAGNOSTIC): calibration and Stage 6 {0}; serial read lock {1}",
+                SerialWindowReads ? @"serial" : @"parallel (OSPREY_SERIAL_WINDOW_READS=0)",
+                SerialReadsProcessWide ? @"process-wide (OSPREY_SERIAL_READ_SCOPE=process)" : @"per file");
+        }
+
+        /// <summary>
+        /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
+        /// entry that can no longer be scored or written - i.e. everything outside the
+        /// compaction survivors and the gap-fill candidates. The identity fields
+        /// (<c>ModifiedSequence</c> / <c>ProteinIds</c> / m/z / RT) are KEPT on every entry.
+        ///
+        /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
+        /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
+        /// keep the whole library resident as the A/B byte-identity oracle.
+        ///
+        /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
+        /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
+        /// entries. Few files is the MAXIMUM-saving case rather than a scaled-down one - the
+        /// library is fixed while the retained set grows with file count - so expect a smaller
+        /// (still large) saving at 82. Only the FRAGMENTS are freed, never a whole entry, and
+        /// the in-repo figure for the fragment share alone is ~3.2 GB at SEA-AD scale; do not
+        /// read a saving here as recovering the library's total footprint.</para>
+        ///
+        /// <para>Why fragments and not whole entries: <c>ProteinFdr.BuildProteinParsimony</c>
+        /// and <c>FirstPassFdrTask.BuildProteinCompactStratum</c> both walk the ENTIRE library
+        /// after Stage 5, including entries already judged false. They read only the identity
+        /// fields, never the spectra - so dropping entries would silently move protein FDR,
+        /// while dropping fragments cannot. The blib write is safe for a separate reason:
+        /// <c>BlibOutputWriter.PrepareSpectra</c> reads fragments only for
+        /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
+        /// blib-written is a SUBSET of what is retained here.</para>
+        ///
+        /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> rewrites every
+        /// output. The suffix is still required - the release is a Run-only side
+        /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
+        /// and report a memory profile it never computed - but the escape hatch is not cheap.
+        /// The suffix itself lives with the release
+        /// (<c>LibraryFragmentRelease.ValidityKeySuffix</c>), keyed on whether the release
+        /// actually RAN rather than on this flag alone.</para>
+        ///
+        /// <para>A settable property (not a readonly field) so unit tests can A/B both arms.</para>
+        /// </summary>
+        public static bool ReleaseLibraryFragments { get; set; } =
+            IsNotZero(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS");
+
+        /// <summary>
+        /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
+        /// row per CWT candidate peak of every precursor (targets AND decoys) scored in the
+        /// first-pass main search to a per-input-file TSV
+        /// (<c>&lt;work-dir&gt;\&lt;inputStem&gt;.pick_candidates.tsv</c>). The row carries the
+        /// exact raw rank terms the picker computes (coelution, ln_intensity, rt_penalty,
+        /// median_polish) plus the candidate bounds and whether it was the chosen peak, so a
+        /// downstream trainer can learn a linear pick model (see <see cref="PickLdaModelPath"/>)
+        /// on precisely those values. Default OFF: no per-candidate median polish is computed and
+        /// no file is written, so the hot loop is byte-identical and pays nothing when unset.
+        /// </summary>
+        public static readonly bool PickDumpCandidates = IsSetAndNotZero(@"OSPREY_PICK_DUMP_CANDIDATES");
+
+        /// <summary>
+        /// OSPREY_PICK_LDA_MODEL: path to a JSON file with a frozen linear pick model. When set
+        /// and the file exists, the CWT candidate rank score is REPLACED by
+        ///   rank = w0*z(coelution) + w1*z(ln_intensity) + w2*z(rt_penalty) + w3*z(median_polish)
+        /// where z(x_i) = (x_i - mean[i]) / scale[i], using the same four raw terms the dump
+        /// (<see cref="PickDumpCandidates"/>) captures. The argmax selection and IEEE-754
+        /// total-order tie-break are unchanged. Overrides the resolution-keyed default model.
+        /// Loaded and cached once by <c>PickLdaModel</c>. JSON schema:
+        ///   { "features": ["coelution","ln_intensity","rt_penalty","median_polish"],
+        ///     "weights": [w0,w1,w2,w3], "means": [m0,m1,m2,m3], "scales": [s0,s1,s2,s3] }
+        /// </summary>
+        public static readonly string PickLdaModelPath = GetVariable(@"OSPREY_PICK_LDA_MODEL");
+
+        /// <summary>
+        /// OSPREY_PICK_LDA: use the learned resolution-keyed linear peak-pick model (Stellar
+        /// for unit, Astral for HRAM). DEFAULT ON; set OSPREY_PICK_LDA=0 for the legacy pure
+        /// product-form pick (coelution * rt_penalty * ln_intensity, no median-polish factor).
+        /// Precedence in the picker:
+        ///   1. OSPREY_PICK_LDA_MODEL set -> that model (test override);
+        ///   2. else OSPREY_PICK_LDA != 0 (default) -> the hardcoded resolution-keyed model;
+        ///   3. else (OSPREY_PICK_LDA=0) -> the legacy product pick.
+        ///
+        /// The default moved to the learned model with the #4484 golden re-baseline. An
+        /// additive rank over standardized terms is the same direction Skyline's
+        /// LegacyScoringModel took, and it is unlikely that a three-way product of terms whose
+        /// combination in log space was never established is the end state. Measured effect on
+        /// the discovery set is SMALL and its sign is not stable per cohort (seven A/B cells
+        /// spanning -3.5% to +1.8% at matched true FDP), so do NOT expect a sensitivity gain
+        /// from this and do NOT read a single validation run as evidence either way - the pick
+        /// relocates ~44% of contested peaks and moves discoveries by about 1%. The =0 opt-out
+        /// is kept precisely so the two stay comparable.
+        /// </summary>
+        public static readonly bool PickLda = IsNotZero(@"OSPREY_PICK_LDA");
+
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_PREFILTER: evaluate the first-pass signal prefilter for all of a
+        /// window's candidates at once, scan by scan, so each spectrum is visited once while its
+        /// arrays are in cache. DEFAULT ON; set OSPREY_SCAN_MAJOR_PREFILTER=0 for the original
+        /// candidate-by-candidate loop, the A/B arm for timing. Output is the same either way:
+        /// the prefilter verdict is a pure function of the candidate, its scan range and the
+        /// spectra.
+        /// </summary>
+        public static readonly bool ScanMajorPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_PREFILTER");
+
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_XIC: extract the fragment XICs of the candidates that pass the
+        /// scan-major prefilter scan by scan too, a block of candidates at a time, instead of
+        /// one candidate's whole scan range after another. DEFAULT ON (takes effect only with
+        /// <see cref="ScanMajorPrefilter"/>); set OSPREY_SCAN_MAJOR_XIC=0 for the
+        /// candidate-by-candidate extraction, the A/B arm for timing. Output is the same either
+        /// way: each XIC value comes from the same peak lookup in the same spectrum.
+        /// </summary>
+        public static readonly bool ScanMajorXic = IsNotZero(@"OSPREY_SCAN_MAJOR_XIC");
+
+        /// <summary>
+        /// OSPREY_SCAN_MAJOR_CAL_PREFILTER: evaluate the calibration top-6 fragment prefilter
+        /// for all of a window's calibration entries at once, scan by scan, so each spectrum is
+        /// visited once while its arrays are in cache. DEFAULT ON; set
+        /// OSPREY_SCAN_MAJOR_CAL_PREFILTER=0 for the original entry-by-entry loop, the A/B arm
+        /// for timing. Output is the same either way: each entry gets the same candidate spectra
+        /// in the same order.
+        /// </summary>
+        public static readonly bool ScanMajorCalPrefilter = IsNotZero(@"OSPREY_SCAN_MAJOR_CAL_PREFILTER");
+
+        /// <summary>
+        /// The log line naming the OSPREY_SCAN_MAJOR_* switches set to 0, so a timing run records
+        /// which arm it was; null at the defaults, leaving a default run's log unchanged.
+        /// </summary>
+        public static string DescribeScanMajorSwitches()
+        {
+            var off = new List<string>();
+            if (!ScanMajorPrefilter)
+                off.Add(@"OSPREY_SCAN_MAJOR_PREFILTER=0");
+            if (!ScanMajorXic)
+                off.Add(@"OSPREY_SCAN_MAJOR_XIC=0");
+            if (!ScanMajorCalPrefilter)
+                off.Add(@"OSPREY_SCAN_MAJOR_CAL_PREFILTER=0");
+            if (off.Count == 0)
+                return null;
+            return string.Format(@"Scan-major passes (DIAGNOSTIC): candidate-major for {0}",
+                string.Join(@", ", off));
+        }
+
+        /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
+        /// sweep script can name both arms explicitly rather than unsetting the variable for
+        /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and
+        /// <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> spell their defaults.</summary>
+        public const string FDR_MODEL_SVM = @"svm";
+
+        /// <summary>The <see cref="FdrModel"/> value that selects gradient-boosted trees.</summary>
+        public const string FDR_MODEL_GBDT = @"gbdt";
+
+        /// <summary>
+        /// OSPREY_FDR_MODEL: the classifier first-pass Percolator trains. Unset, empty or
+        /// <see cref="FDR_MODEL_SVM"/> selects the linear SVM (the default);
+        /// <see cref="FDR_MODEL_GBDT"/> selects gradient-boosted trees. Case-insensitive and
+        /// trimmed, like the other OSPREY_* selectors. An unrecognized value is a startup ERROR
+        /// (<see cref="FdrModelError"/>), never a fallback: a run that asked for trees and
+        /// silently trained the SVM is the #4491 failure over again.
+        ///
+        /// <para>GBDT is EXPERIMENTAL and is not expected to improve results with the current
+        /// features, which were chosen for the linear SVM. It exists so that features which do
+        /// not work well with a linear SVM - some were removed for that reason - can be
+        /// evaluated when they are added. It has to keep working.</para>
+        ///
+        /// <para>An environment variable rather than a command-line argument because it is a
+        /// developer lever, not a product setting: it replaced <c>--fdr-method</c>, which was
+        /// removed with no alias (#4543). Read once at process start and carried in-process as
+        /// <see cref="OspreyConfig.FdrClassifier"/>, which the command-line parse sets from it; a test
+        /// that runs the whole pipeline sets this instead, as it sets <see cref="MeanBestN"/>. The
+        /// trees and every <c>OSPREY_GBT_*</c> setting key the FirstPassFDR, PerFileRescoring
+        /// and SecondPassFDR validity keys (<c>PercolatorEngine.GbdtValidityKeySuffix</c>); the
+        /// SVM adds nothing to them.</para>
+        /// </summary>
+        public static FdrClassifier FdrModel { get; internal set; } =
+            ParseFdrModel(Environment.GetEnvironmentVariable(@"OSPREY_FDR_MODEL")) ?? FdrClassifier.LinearSvm;
+
+        /// <summary>The startup error for an unrecognized OSPREY_FDR_MODEL, or null when the
+        /// value is usable. Program startup ABORTS on it, like
+        /// <see cref="Pass2QValueUnrecognized"/>, and at startup rather than at Stage 5 so a
+        /// typo costs seconds instead of Stages 1-4.</summary>
+        public static readonly string FdrModelError =
+            DescribeUnrecognizedFdrModel(Environment.GetEnvironmentVariable(@"OSPREY_FDR_MODEL"));
+
+        /// <summary>
+        /// The classifier an OSPREY_FDR_MODEL value selects, or null when the value is not
+        /// recognized. Unset, empty and whitespace select the linear SVM, as they select the
+        /// default for every other OSPREY_* selector. Public so the parse can be tested; the
+        /// environment itself is read once, into <see cref="FdrModel"/>.
+        /// </summary>
+        public static FdrClassifier? ParseFdrModel(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return FdrClassifier.LinearSvm;
+            string v = raw.Trim().ToLowerInvariant();
+            if (v == FDR_MODEL_SVM)
+                return FdrClassifier.LinearSvm;
+            if (v == FDR_MODEL_GBDT)
+                return FdrClassifier.Gbdt;
+            return null;
+        }
+
+        /// <summary>
+        /// The operator-actionable error for an OSPREY_FDR_MODEL value
+        /// <see cref="ParseFdrModel"/> does not recognize, or null when it does. Names the
+        /// value as given, so a shell-quoted or misspelled value is not mistaken for an unset one.
+        /// </summary>
+        public static string DescribeUnrecognizedFdrModel(string raw)
+        {
+            if (ParseFdrModel(raw).HasValue)
+                return null;
+            return string.Format(
+                @"OSPREY_FDR_MODEL='{0}' is not a recognized classifier. Recognized: '{1}' (the " +
+                @"linear SVM, also the default when the variable is unset) and '{2}' " +
+                @"(gradient-boosted trees, experimental). Unset it for the default.",
+                raw, FDR_MODEL_SVM, FDR_MODEL_GBDT);
+        }
+
+        /// <summary>
+        /// The run-log line naming the classifier when it is NOT the default, or null for the
+        /// linear SVM, whose log is unchanged. Logged at startup rather than at Stage 5 because
+        /// FirstPassFDR does not run on a resume or on <c>--task SecondPassFDR</c>, and those
+        /// runs score with the model too.
+        /// </summary>
+        public static string DescribeFdrModel(FdrClassifier fdrClassifier)
+        {
+            if (fdrClassifier != FdrClassifier.Gbdt)
+                return null;
+            return string.Format(
+                @"FDR model: {0} (EXPERIMENTAL, OSPREY_FDR_MODEL) - gradient-boosted trees " +
+                @"replace the linear SVM in first-pass Percolator", FDR_MODEL_GBDT);
+        }
+
+        /// <summary>
+        /// Semi-supervised training iterations for <c>OSPREY_FDR_MODEL=gbdt</c>
+        /// (OSPREY_GBT_MAX_ITERATIONS); 0/unset uses <see cref="GBT_MAX_ITERATIONS_DEFAULT"/>.
+        /// Tree-only: the linear SVM keeps its own fixed 10 and is untouched by this.
+        ///
+        /// Exists because the two classifiers converge at very different rates. On Stellar
+        /// the SVM plateaus by iteration 4 and early-stops, while the trees were still
+        /// improving monotonically (0.7 -> 1.2% of training targets at 1% FDR) when they
+        /// hit the shared cap of 10 -- i.e. the cap was binding on the trees, so their
+        /// reported discrimination may understate the model rather than measure it. Raising
+        /// it costs nothing when it is not binding: the existing
+        /// stop-after-2-non-improving-iterations rule still ends training on convergence.
+        /// </summary>
+        public static readonly int GbtMaxIterations = ResolveGbtMaxIterations();
+
+        /// <summary>Default for <see cref="GbtMaxIterations"/>. Well above the SVM's 10 so
+        /// convergence (not the cap) ends tree training, while still bounding a pathological
+        /// run: each iteration retrains the full ensemble on the &lt;= MaxTrainSize subsample.</summary>
+        public const int GBT_MAX_ITERATIONS_DEFAULT = 30;
+
+        private static int ResolveGbtMaxIterations()
+        {
+            int v = ParseIntOrZero(@"OSPREY_GBT_MAX_ITERATIONS");
+            return v > 0 ? v : GBT_MAX_ITERATIONS_DEFAULT;
+        }
+
+        /// <summary>Optional overrides for the gradient-boosted-trees hyper-parameters
+        /// (<c>OSPREY_FDR_MODEL=gbdt</c>), so a regularization / capacity sweep runs from
+        /// env vars without a recompile per setting. Each is null when its var is unset,
+        /// leaving the validated <c>GbtParams</c> default in place; applied in
+        /// <c>BuildProjectionPercolatorConfig</c>. Tree-only -- the linear SVM ignores them.
+        ///   OSPREY_GBT_GAMMA            min split gain to keep a split   (default 0, off)
+        ///   OSPREY_GBT_LAMBDA           L2 leaf-weight penalty           (default 1)
+        ///   OSPREY_GBT_ALPHA            L1 leaf-weight penalty           (default 0, off)
+        ///   OSPREY_GBT_MAX_DEPTH        tree depth                       (default 6)
+        ///   OSPREY_GBT_N_TREES          boosting rounds per model        (default 200)
+        ///   OSPREY_GBT_MIN_CHILD_WEIGHT min summed child hessian         (default 1)
+        ///   OSPREY_GBT_LEARNING_RATE    shrinkage                        (default 0.1)
+        ///   OSPREY_GBT_SUBSAMPLE        row subsample per tree           (default 0.8)
+        ///   OSPREY_GBT_COLSAMPLE        feature subsample per tree       (default 0.8)
+        /// The chosen values are echoed to the run log (the "Gradient-boosted trees: ..."
+        /// line) so each sweep point records exactly what it ran with.</summary>
+        public static readonly double? GbtGamma = ParseDoubleOrNull(@"OSPREY_GBT_GAMMA");
+        public static readonly double? GbtRegLambda = ParseDoubleOrNull(@"OSPREY_GBT_LAMBDA");
+        public static readonly double? GbtRegAlpha = ParseDoubleOrNull(@"OSPREY_GBT_ALPHA");
+        public static readonly int? GbtMaxDepth = ParseIntOrNull(@"OSPREY_GBT_MAX_DEPTH");
+        public static readonly int? GbtNTrees = ParseIntOrNull(@"OSPREY_GBT_N_TREES");
+        public static readonly double? GbtMinChildWeight = ParseDoubleOrNull(@"OSPREY_GBT_MIN_CHILD_WEIGHT");
+        public static readonly double? GbtLearningRate = ParseDoubleOrNull(@"OSPREY_GBT_LEARNING_RATE");
+        public static readonly double? GbtSubsample = ParseDoubleOrNull(@"OSPREY_GBT_SUBSAMPLE");
+        public static readonly double? GbtColSample = ParseDoubleOrNull(@"OSPREY_GBT_COLSAMPLE");
+
+        /// <summary>Optional override for <c>PercolatorConfig.MaxTrainSize</c> -- the
+        /// Percolator-3.0 peptide-grouped training-subsample cap (default 300000). Set via
+        /// OSPREY_MAX_TRAIN_SIZE. Raising it feeds the classifier more real rows (the cap is
+        /// binding when the deduped population exceeds it) at the cost of memory + training
+        /// time. Null when unset -- keeps the 300k default.</summary>
+        public static readonly int? MaxTrainSizeOverride = ParseIntOrNull(@"OSPREY_MAX_TRAIN_SIZE");
+
+        /// <summary>
+        /// The default first-pass SVM C-selection tolerance: the grid search keeps the most
+        /// regularized C whose inner-CV passing count is within this fraction of the best
+        /// (see <c>PercolatorConfig.CSelectionTolerance</c>).
+        /// </summary>
+        public const double DEFAULT_SVM_C_SELECTION_TOLERANCE = 0.01;
+
+        /// <summary>OSPREY_SVM_C_TOLERANCE exactly as set, or null when unset: an override for
+        /// <see cref="DEFAULT_SVM_C_SELECTION_TOLERANCE"/>, a number in [0, 1). 0 restores the
+        /// strict maximum (the pre-#4703 rule), for A/B work. Rust has used the same 1% default
+        /// since maccoss/osprey#69, with no opt-out.</summary>
+        public static readonly string SvmCSelectionToleranceSetting =
+            Environment.GetEnvironmentVariable(@"OSPREY_SVM_C_TOLERANCE");
+
+        /// <summary>True when OSPREY_SVM_C_TOLERANCE is set to anything but a number in [0, 1)
+        /// (<c>0,01</c>, <c>1%</c>, a quoted <c>"0"</c> from cmd.exe's <c>set</c>). Program
+        /// startup ABORTS on this rather than falling back: the fallback would train under the
+        /// default rule and key its directories as the default, so a parity or A/B arm would
+        /// report the default arm's numbers under its own name.</summary>
+        public static readonly bool SvmCSelectionToleranceUnrecognized =
+            !string.IsNullOrEmpty(SvmCSelectionToleranceSetting) &&
+            !ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting).HasValue;
+
+        /// <summary>The first-pass SVM C-selection tolerance in effect.</summary>
+        public static readonly double SvmCSelectionTolerance =
+            ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
+
+        /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
+        /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --
+        /// instead of by its best observation across all runs. ON by default; setting the variable
+        /// to 0 restores the historical cross-run maximum for A/B work.
+        ///
+        /// The two halves are both load-carrying. Pass 1 is PRE-COMPACTION, so a precursor has
+        /// several candidate-peak rows per run; drawing per ROW rather than per RUN would weight a
+        /// run by how many candidates it produced AND leave a random candidate as the training row,
+        /// which measured -17.4% identifications on 3-file Stellar.
+        ///
+        /// Why the default moved: the cross-run maximum makes every training row an extreme value
+        /// over however many files were batched together, so the training population drifts away
+        /// from the per-run population the model is then applied to, and it drifts further as the
+        /// batch grows (mean coelution_sum 1.19 at one file vs 5.75 at 82, against 1.18 in the
+        /// scored population). Sampling one run trains on ordinary per-run observations at the
+        /// same row count and the same memory, and at 82 SEA-AD files it is worth +24.7%
+        /// discoveries at matched true FDP -- enough that it removed a library deficit previously
+        /// read as a property of the library.
+        ///
+        /// The escape hatch is INVERTED deliberately. Every script written while this was an
+        /// experiment sets the variable to 1, and <see cref="IsNotZero"/> reads that as the
+        /// shipped behaviour rather than silently reverting those scripts to the old sampling.
+        ///
+        /// Honored by EVERY selection path. That is a requirement of being the default rather
+        /// than a lever: while it was opt-in the paths that could not honor it aborted, which is
+        /// a defensible experiment guard and an indefensible shipped behaviour.</summary>
+        public static readonly bool TrainPickRun = IsNotZero(@"OSPREY_TRAIN_PICK_RUN");
+
+        /// <summary>Inner-fold count for the GBDT's held-out iteration selection
+        /// (OSPREY_GBT_INNER_FOLDS, default 5 -> hold out 20% of each training fold to pick
+        /// the boosting iteration honestly). A value &lt;= 1 turns held-out selection OFF and
+        /// reverts to IN-SAMPLE selection (fit = validate = all training rows) -- the
+        /// pre-held-out, validated behavior. Exposed so a regularization sweep or an
+        /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
+        public static readonly int GbtInnerFolds = ParseIntOrNull(@"OSPREY_GBT_INNER_FOLDS") ?? 5;
+
+        /// <summary>Threads pwiz-sharp uses to decode mzML binary arrays
+        /// (OSPREY_MZML_DECODE_THREADS, default 8). The library ships this OFF (1, decode
+        /// inline on the read thread) because a host processing several FILES at once should
+        /// not also go wide underneath its own parallelism. Osprey is the other shape: it
+        /// funnels reads through a one-permit gate, so the read phase has the machine to
+        /// itself. Measured on a 5.99 GB Astral mzML, 1 thread takes 83.4s and 8 takes 54.6s,
+        /// after which the curve is flat -- 16, 24 and 32 all land within a second of 8,
+        /// because the floor is the XML parse, which stays serial. Past the knee extra threads
+        /// only add memory pressure, so this does NOT scale off core count or --threads.
+        /// Set to 1 to A/B against the serial decode without a rebuild.</summary>
+        public static readonly int MzmlDecodeThreads = ParseIntOrNull(@"OSPREY_MZML_DECODE_THREADS") ?? 8;
 
         /// <summary>The <see cref="Pass2QValue"/> confidence-transfer mode: do NOT retrain
         /// or re-estimate a null; score each reconciled peak with the frozen 1st-pass model
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
         public const string PASS2_QVALUE_TRANSFER = @"transfer";
 
+        /// <summary>The <see cref="Pass2QValue"/> protein-anchored constrained mode: the FROZEN
+        /// 1st-pass model (no retrain), with the target-decoy competition CONSTRAINED to the
+        /// peptides of proteins
+        /// detected in the 1st pass -- included as target+decoy PAIRS so the stratum's null
+        /// stays fair. Removing off-stratum decoys from the null lowers q for stratum
+        /// members (reduced multiple testing / independent filtering; Bourgon 2010), which
+        /// recovers marginal peptides of already-detected proteins. Honest because the
+        /// protein-membership filter is ~independent of a peptide's own decoy score (a
+        /// protein is detected via its OTHER peptides) and the stratum keeps its paired
+        /// decoys. The frozen model avoids the two-pass retrain's over-separation.</summary>
+        public const string PASS2_QVALUE_PROTEIN_COMPACT = @"protein-compact";
+
+        /// <summary>The <see cref="ExperimentAgg"/> default: each precursor/peptide keeps its
+        /// single BEST (max) observation across runs before the experiment-wide target/decoy
+        /// competition. The shipped behavior; the committed golden is byte-identical here.</summary>
+        public const string EXPERIMENT_AGG_MAX = @"max";
+
+        /// <summary>Prefix of the <see cref="ExperimentAgg"/> reproducibility mode value
+        /// OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt; (e.g. mean-best-2, mean-best-3, mean-best-4): the
+        /// experiment-wide PRECURSOR score becomes the mean of its best-N per-run scores (runs beyond
+        /// the detected count are filled with the decoy-median floor; see the OSPREY_MEANBEST2_FLOOR_*
+        /// A/B toggles), rolled up by MAX to PEPTIDE. Not to protein: protein FDR ranks groups by the
+        /// max RAW per-peptide SVM score and never reads this aggregate, so mean(best-N) reaches
+        /// protein results only through which peptides clear the experiment-q gate. Larger N rewards
+        /// detection in more runs (drives toward the &gt;=N-run reproducibility frontier). Symmetric
+        /// for decoys, so the null stays honest - the honest sensitivity lever for #4484 vs. the
+        /// target-conditioned transfer-compete/protein-compact. N is read from the flag value and
+        /// bounded by <see cref="MEAN_BEST_N_MAX"/>; a future command argument may pick N
+        /// intelligently from the run count.</summary>
+        public const string EXPERIMENT_AGG_MEAN_BEST_PREFIX = @"mean-best-";
+
+        /// <summary>Largest accepted N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;. Two unbounded
+        /// failures motivate a cap rather than trust: <c>mean-best-1000000</c> allocates an
+        /// N-wide accumulator per (base_id, side) - gigabytes, an out-of-memory abort seconds
+        /// into Stage 5 - and any N above the run count leaves EVERY unit floor-filled, which
+        /// saturates the statistic (for N &gt;= the largest observation count the aggregate is
+        /// <c>(S - L*floor)/N + floor</c>, whose ranking no longer depends on N at all) while
+        /// still being recorded by the operator as a distinct A/B arm. 64 is far above any
+        /// plausible reproducibility frontier for a DIA experiment and well inside both
+        /// failures. Values above it are rejected as unrecognized, so
+        /// <see cref="ExperimentAggUnrecognized"/> warns instead of the run silently
+        /// proceeding on the max default.</summary>
+        public const int MEAN_BEST_N_MAX = 64;
+
         /// <summary>
-        /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
+        /// OSPREY_PASS2_QVALUE: selects how the SecondPassFDR 2nd pass assigns the reported
         /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
         /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
         /// only the q-value step changes.
-        ///   <see cref="PASS2_QVALUE_PERCOLATOR"/> (default): retrain Percolator + recompute
-        ///     a target/decoy null on the reconciled + compacted pool. Preserves the
-        ///     always-on Rust 2nd pass. Compaction has already stripped most decoys from
-        ///     that pool, so the null is decoy-depleted and the retrained q anti-conservative.
-        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: score each reconciled peak with the FROZEN
-        ///     1st-pass model and read its q from the FULL pre-compaction 1st-pass
-        ///     score-&gt;q table (co-monotonic confidence transfer; Rost 2016 TRIC). No
-        ///     retrain, no reduced-pool null. Restores calibration while keeping the
-        ///     re-scoring ID gain.
-        /// Unset or unrecognized normalizes to the parity-preserving default. Read once at
-        /// process start. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+        ///   <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> (default): frozen 1st-pass model, with
+        ///     the target-decoy competition constrained to the protein stratum.
+        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
+        ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
+        ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
+        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time, in
+        ///     PerFileRescoring like the default (#4665). No retrain, no reduced-pool null.
+        ///     Restores calibration while keeping the re-scoring ID gain.
+        ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
+        ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
+        ///     pool. Re-adding a resident pool for it is the #4446 regression.
+        /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
+        /// <see cref="Pass2QValueUnrecognized"/>). Re-read on each access, so a command-line
+        /// test can set it (<see cref="OverrideVariables"/>).
         ///
-        /// LIMITATION (experimental mode): use a FRESH <c>--output-dir</c> per mode. The
-        /// per-file 2nd-pass sidecar (.2nd-pass.fdr_scores.bin) is not tagged with the mode,
-        /// so resuming a run in an output dir written under a different mode would reuse the
-        /// other mode's cached q-values. The Part-B work tags the sidecar validity with the
-        /// mode; until then, do not switch modes within one output dir.
+        /// SECOND-PASS RETRAINING IS GONE, and these two modes are what remain. The former
+        /// default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and recompute a
+        /// target/decoy null on the reconciled + COMPACTED pool - was REMOVED, not merely
+        /// demoted. Compaction strips most decoys from that pool, so the retrained null is thin
+        /// and the reported q anti-conservative: 1.57% true FDP at a nominal 1% on Stellar
+        /// libdecoy entrapment (vs 0.92% for the 1st-pass q), and ~9% on an 82-file SEA-AD set.
+        /// The <c>OSPREY_PROTEIN_COMPACT_RETRAIN</c> A/B toggle that reached it followed. So did
+        /// <c>transfer-compete</c>, for a related but distinct reason: its competition ran over a
+        /// TARGET-CONDITIONED subset - survivors chosen by target per-run q, decoys admitted only
+        /// by base_id pairing - which strips decoys that WON the 1st-pass competition and so
+        /// improves pass-2 q with no added evidence. Measured 1.96% true FDP at a nominal 1% on
+        /// 82-file SEA-AD against 1.53% for the default, with fewer ids: dominated on both axes.
+        /// See issues #4484 (closed) and #4581 (open, the same bias in the surviving default), and
+        /// docs/12-second-pass-fdr.md, "Why a second-pass null is a problem".
+        ///
+        /// The consequence worth naming, because it simplifies everything downstream: THERE IS
+        /// NO SECOND-PASS MODEL. The linear model the 1st-pass SVM trained is the model for
+        /// pass 2, unchanged - only the score DISTRIBUTIONS differ, because pass 2 runs on a
+        /// subset. Anything that used to ask a retrained pass-2 model for its weights can read
+        /// the frozen ones instead.
+        ///
+        /// Switching modes within one output directory is now SAFE: the mode participates in
+        /// the resume validity key through <see cref="Pass2QValueValidityKeySuffix()"/>, so a
+        /// re-run under a different mode invalidates the previous mode's outputs instead of
+        /// adopting its cached q-values. That retires the standing "use a FRESH --output-dir
+        /// per mode" limitation, which became far more than an experimental-mode caveat once
+        /// this variable acquired a non-percolator default.
         /// </summary>
-        public static readonly string Pass2QValue = NormalizePass2QValue(
-            Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
+        public static string Pass2QValue => NormalizePass2QValue(Pass2QValueSetting);
 
-        /// <summary>True when OSPREY_PASS2_QVALUE was set to a value that is neither
-        /// <see cref="PASS2_QVALUE_PERCOLATOR"/> nor <see cref="PASS2_QVALUE_TRANSFER"/> and
-        /// was therefore normalized to the default. The consuming site logs a one-line
-        /// warning so a typo does not silently pick the default.</summary>
-        public static readonly bool Pass2QValueUnrecognized = IsUnrecognizedPass2QValue(
-            Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
+        /// <summary>OSPREY_PASS2_QVALUE exactly as set, for a message that must quote what the
+        /// user typed. Null when unset.</summary>
+        public static string Pass2QValueSetting => GetVariable(@"OSPREY_PASS2_QVALUE");
+
+        /// <summary>True when OSPREY_PASS2_QVALUE was set to a value that is not one of the
+        /// recognized modes. Program startup ABORTS on this rather than falling back: silently
+        /// substituting the default would report numbers the caller did not ask for, and the
+        /// removed <c>percolator</c> token in particular is one that existing sweep scripts
+        /// still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
+        /// instead of after Stage 1-5.</summary>
+        public static bool Pass2QValueUnrecognized => IsUnrecognizedPass2QValue(Pass2QValueSetting);
 
         /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model
         /// confidence-transfer path (OSPREY_PASS2_QVALUE=transfer).</summary>
-        public static readonly bool Pass2TransferQ =
+        public static bool Pass2TransferQ =>
             string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
+
+        /// <summary>True when <see cref="Pass2QValue"/> selects the protein-anchored
+        /// constrained competition (OSPREY_PASS2_QVALUE=protein-compact).</summary>
+        public static bool Pass2ProteinCompact =>
+            string.Equals(Pass2QValue, PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
+
+        /// <summary>
+        /// OSPREY_PASS2_VERIFY_WORKER: re-run the per-file second-pass competition inside Stage 7
+        /// and assert it against the answer the rescore worker wrote (issue #4486). A TEST
+        /// INSTRUMENT, off by default.
+        ///
+        /// <para><b>Why it is not always on.</b> The recompute re-reads each file's 1st-pass
+        /// sidecar and re-runs the frozen rescore - measured at 82 files as 9.2 GB of re-reads
+        /// against the 2.8 GB the join actually needs, inside an 860.8 s Stage 7. That is
+        /// precisely the cost #4486 exists to remove, so leaving it on would hide the whole gain
+        /// behind a check of the code that produces it.</para>
+        ///
+        /// <para><b>What it is and is not.</b> Both sides call the SAME
+        /// <c>StreamingFdr.CompeteOneFile</c>, so this verifies that the worker's inputs and the
+        /// transmission of its answer agree - it cannot see a defect INSIDE that function, where
+        /// both sides would be wrong together. It is also blind to the artifact's POPULATION: a
+        /// gap-fill never competes, so dropping one changes no competition map, which is why 594
+        /// dropped records once passed this check and surfaced only in a diagnostics golden. The
+        /// population and order are covered instead by
+        /// <c>Pass2FdrSidecar.AssertSidecarDescribesPool</c>, which is cheap and always on.</para>
+        ///
+        /// <para>Deliberately NOT in any validity key: it changes no output, so including it
+        /// would invalidate every cached artifact the moment it was flipped, turning a
+        /// diagnostic into a re-run.</para>
+        ///
+        /// <para>Re-read on each access rather than fixed at class load, so an in-process test
+        /// can switch it per command line with <see cref="OverrideVariables"/>.</para>
+        /// </summary>
+        public static bool Pass2VerifyWorker =>
+            IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
+
+        /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
+        /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default
+        /// max mode; otherwise in [2, <see cref="MEAN_BEST_N_MAX"/>]. A value outside that range,
+        /// or unrecognized, falls back to max (and sets <see cref="ExperimentAggUnrecognized"/>).
+        ///
+        /// Initialized from the environment at process start, exactly as before; a settable
+        /// property only so unit tests can exercise the mean(best-N) arm at all. It is the SINGLE
+        /// source of truth - <see cref="ExperimentAgg"/> and <see cref="ExperimentAggMeanBest"/>
+        /// are computed from it rather than snapshotted, so a test that pins N cannot leave the
+        /// three disagreeing (the failure mode that made <c>MeanBestFloorOverspecified</c> a
+        /// computed property too). Nothing in the pipeline writes it.</summary>
+        public static int MeanBestN { get; set; } = ParseMeanBestN(
+            GetVariable(@"OSPREY_EXPERIMENT_AGG"));
+
+        /// <summary>OSPREY_EXPERIMENT_AGG: how the 1st-pass EXPERIMENT-wide precursor/peptide
+        /// score aggregates a unit's per-run observations before the target/decoy competition.
+        /// <see cref="EXPERIMENT_AGG_MAX"/> (default, byte-identical golden) or
+        /// <see cref="EXPERIMENT_AGG_MEAN_BEST_PREFIX"/>&lt;N&gt;. The normalized spelling of
+        /// <see cref="MeanBestN"/> - this is the form persisted as pass-1 provenance and appended
+        /// to the cache validity key, so it must never disagree with the N actually used.</summary>
+        public static string ExperimentAgg =>
+            MeanBestN >= 2
+                ? EXPERIMENT_AGG_MEAN_BEST_PREFIX +
+                  MeanBestN.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : EXPERIMENT_AGG_MAX;
+
+        /// <summary>True when <see cref="MeanBestN"/> selects a mean(best-N) reproducibility score
+        /// (OSPREY_EXPERIMENT_AGG=mean-best-N, N&gt;=2).</summary>
+        public static bool ExperimentAggMeanBest => MeanBestN >= 2;
+
+        /// <summary>True when OSPREY_EXPERIMENT_AGG was set to something that is neither
+        /// <see cref="EXPERIMENT_AGG_MAX"/> nor a well-formed
+        /// <see cref="EXPERIMENT_AGG_MEAN_BEST_PREFIX"/>&lt;N&gt; with N&gt;=2, and was therefore
+        /// normalized to the max default. The consuming site logs a one-line warning, mirroring
+        /// <see cref="Pass2QValueUnrecognized"/>. This matters more here than for most flags: the
+        /// whole point of this one is A/B measurement, so a typo (mean-best-1, meanbest2) that
+        /// silently ran the DEFAULT would be recorded by the operator as a mean(best-N) result and
+        /// would corrupt the comparison rather than fail it.</summary>
+        public static readonly bool ExperimentAggUnrecognized = IsUnrecognizedExperimentAgg(
+            GetVariable(@"OSPREY_EXPERIMENT_AGG"));
+
+        /// <summary>OSPREY_MEANBEST2_FLOOR_MEAN: A/B toggle to use the decoy MEAN instead of the
+        /// default decoy MEDIAN as the missing-run floor. Off by default. Applies at every N
+        /// despite the MEANBEST2 name, which predates the best-2 -> best-N generalization.
+        /// TAKES PRECEDENCE over <see cref="MeanBest2FloorPercentile"/>; setting both is a
+        /// configuration error and is refused rather than silently resolved.
+        /// A settable property (not a readonly field) so unit tests can pin the floor instead of
+        /// inheriting whatever the operator exported for a floor sweep - the aggregation tests
+        /// assert exact floor-dependent values, so an ambient variable would fail them.</summary>
+        public static bool MeanBest2FloorMean { get; set; } =
+            IsSetAndNotZero(@"OSPREY_MEANBEST2_FLOOR_MEAN");
+
+        /// <summary>OSPREY_MEANBEST2_FLOOR_PCT: A/B override to use a low PERCENTILE (0-100) of the
+        /// decoy score distribution as the missing-run floor instead of the median center - a
+        /// harder reproducibility cut. Null (unset) selects the median default. Applies at every N
+        /// (see the MEANBEST2 naming note above). Settable for the same test reason.</summary>
+        public static double? MeanBest2FloorPercentile { get; set; } =
+            ParseDoubleOrNull(@"OSPREY_MEANBEST2_FLOOR_PCT");
+
+        /// <summary>True when BOTH floor overrides are set. They are not composable -
+        /// <see cref="MeanBest2FloorMean"/> would silently win and the percentile would never be
+        /// consulted, so an operator sweeping OSPREY_MEANBEST2_FLOOR_PCT with a stale
+        /// OSPREY_MEANBEST2_FLOOR_MEAN=1 still exported would log a percentile arm while measuring
+        /// the mean. The consuming site refuses the combination.</summary>
+        /// Computed, not snapshotted: the two toggles above are settable properties (so tests can
+        /// pin the floor), and a readonly field capturing the raw environment at type load would
+        /// disagree with them in both directions.
+        public static bool MeanBestFloorOverspecified =>
+            MeanBest2FloorMean && MeanBest2FloorPercentile.HasValue;
+
+        /// <summary>
+        /// One line naming the experiment-wide aggregation this process will actually use,
+        /// including the missing-run floor arm. Logged unconditionally in the startup settings
+        /// block - a POSITIVE statement, not only a warning - because the dominant real failure
+        /// of an environment-variable flag is that the variable never reached the process
+        /// (Start-Process without the parent environment, an HPC job spec, a scheduled launch,
+        /// a service account). Unset is indistinguishable from a typo'd-then-normalized value in
+        /// the output itself, so without this line an operator records a DEFAULT run as a
+        /// mean(best-N) result and the A/B is silently corrupted rather than failed. Mirrors the
+        /// positive "mode active" line OSPREY_PASS2_QVALUE prints.
+        /// </summary>
+        public static string DescribeExperimentAgg()
+        {
+            if (!ExperimentAggMeanBest)
+            {
+                return string.Format(OspreyCoreResources.OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_,
+                    EXPERIMENT_AGG_MAX);
+            }
+            return string.Format(
+                @"Experiment aggregation: {0} ACTIVE - experiment-wide precursor score is the mean " +
+                @"of its best {1} per-run scores; missing-run floor = {2}",
+                ExperimentAgg, MeanBestN, DescribeMeanBestFloor());
+        }
+
+        /// <summary>
+        /// Validate the OSPREY_EXPERIMENT_AGG family against each other and against the run's
+        /// file count. Returns null when the settings are usable, or an operator-actionable
+        /// message when they are not. Shared by the startup check
+        /// (<c>Program.ValidateArgs</c>, before any I/O) and the Stage-5 consuming site, so a
+        /// resumed or single-task run that skips one still hits the other and both say the same
+        /// thing. Every check is gated on the aggregation being ENGAGED: with
+        /// OSPREY_EXPERIMENT_AGG unset none of these variables is read, so refusing an ordinary
+        /// run over a floor sweep the operator merely left exported would break the default path.
+        /// </summary>
+        /// <param name="fileCount">Number of runs (input files) this analysis will aggregate
+        /// across, or 0 when the caller does not know it yet.</param>
+        public static string ValidateExperimentAggSettings(int fileCount)
+        {
+            if (!ExperimentAggMeanBest)
+                return null;
+            if (MeanBestFloorOverspecified)
+            {
+                return @"OSPREY_MEANBEST2_FLOOR_MEAN and OSPREY_MEANBEST2_FLOOR_PCT are both set. " +
+                       @"They are not composable: FLOOR_MEAN wins and the percentile is never " +
+                       @"consulted, so a sweep would record a percentile arm while measuring the " +
+                       @"decoy mean. Set exactly one.";
+            }
+            // Validated ONCE here rather than where the floor is computed: the streaming
+            // estimator reaches its percentile only at the END of Stage 5, hours into a large
+            // run, and the resident twin silently clamps the same value - so a mid-run refusal
+            // would both come too late to be actionable and disagree with the other path.
+            double? pct = MeanBest2FloorPercentile;
+            if (pct.HasValue && (double.IsNaN(pct.Value) || pct.Value < 0.0 || pct.Value > 100.0))
+            {
+                return string.Format(
+                    @"OSPREY_MEANBEST2_FLOOR_PCT={0} is outside the valid range [0, 100]. It names a " +
+                    @"percentile of the decoy score distribution to use as the missing-run floor.",
+                    pct.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            if (fileCount > 0 && MeanBestN > fileCount)
+            {
+                return string.Format(
+                    @"OSPREY_EXPERIMENT_AGG={0} averages the best {1} per-run scores, but this " +
+                    @"analysis has only {2} run(s). Every unit would be floor-filled for the " +
+                    @"missing {3}, which saturates the statistic - for any N at or above the " +
+                    @"largest observation count the ranking, and therefore every q-value, is " +
+                    @"identical - so the arm would be recorded as distinct while measuring the " +
+                    @"same thing. Use N <= {2}.",
+                    ExperimentAgg, MeanBestN, fileCount, MeanBestN - fileCount);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the experiment-wide
+        /// aggregation, or the EMPTY string when the aggregation is not engaged.
+        ///
+        /// Empty by default and not merely "the default arm's value": <see cref="ExperimentAgg"/>
+        /// normalizes an unset variable to the constant "max", so appending unconditionally would
+        /// change the key of every DEFAULT run and invalidate every output directory produced
+        /// before this suffix existed - re-running Stage 5 FDR, protein FDR and compaction (hours
+        /// at 82 files) to reproduce byte-identical output. That exact regression shipped once and
+        /// the byte-identity gate could not see it, because the gate always uses fresh directories.
+        ///
+        /// One helper rather than three copies: the suffix must be IDENTICAL across
+        /// <c>FirstPassFdrTask</c>, <c>PerFileRescoreTask</c> and <c>SecondPassFdrTask</c>. When only the
+        /// first had it, a flipped arm re-ran Stage 5 while the downstream reconciled parquets,
+        /// 2nd-pass sidecars and .blib were reused from the OTHER arm - a self-inconsistent output
+        /// set that no single task's key could have caught.
+        /// </summary>
+        public static string ExperimentAggValidityKeySuffix()
+        {
+            if (!ExperimentAggMeanBest)
+                return string.Empty;
+            return @";expagg=" + ExperimentAgg
+                   + @";floormean=" + MeanBest2FloorMean
+                   + @";floorpct=" + (MeanBest2FloorPercentile?.ToString(
+                       System.Globalization.CultureInfo.InvariantCulture) ?? @"none");
+        }
+
+        /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the peak-pick
+        /// model - which is every task from per-file scoring onward, because the pick decides
+        /// WHICH peak each precursor's row describes.
+        ///
+        /// UNCONDITIONAL, unlike <see cref="ExperimentAggValidityKeySuffix"/>, and that
+        /// difference is the point. The aggregation suffix is empty for its default arm because
+        /// that arm's output never changed; this arm's DID. The default moved from the
+        /// product-form pick to the learned model (<see cref="PickLda"/>), so "emits nothing"
+        /// already describes every output directory written before the flip. Emitting nothing
+        /// for the new default too would make a post-flip key EQUAL a pre-flip key, and the
+        /// resume driver would adopt product-form parquets as though the learned model had
+        /// produced them.
+        ///
+        /// The one-time cost is real: every output directory written before this shipped is
+        /// invalidated, so a warm re-run or a <c>-LinkFrom</c> adoption re-runs Stage 1-4. That
+        /// is the correct outcome, not a regression - those artifacts were picked by a
+        /// different model, and reusing them reports one model's peaks under the other's name.
+        ///
+        /// The arm can also be passed explicitly, because the environment is read once into a
+        /// static and cannot be flipped at run time - a test would otherwise be able to assert
+        /// only whichever arm the test process happens to be running under.
+        /// </summary>
+        public static string PickValidityKeySuffix()
+        {
+            return PickValidityKeySuffix(PickLda, PickLdaModelPath);
+        }
+
+        /// <summary>
+        /// <see cref="PickValidityKeySuffix()"/> for an explicitly supplied arm. The model PATH
+        /// participates as well as the on/off flag: <see cref="PickLdaModelPath"/> overrides the
+        /// resolution-keyed default outright, so two runs can differ in nothing else.
+        /// </summary>
+        public static string PickValidityKeySuffix(bool pickLda, string pickModelPath)
+        {
+            return @";pick=" + (pickLda ? @"lda" : @"product")
+                   + @";pickmodel=" + (string.IsNullOrEmpty(pickModelPath) ? @"none" : pickModelPath);
+        }
+
+        /// <summary>
+        /// The cache-invalidation suffix for any task whose output depends on the 2nd-pass
+        /// q-value mode. UNCONDITIONAL for the same reason as
+        /// <see cref="PickValidityKeySuffix()"/>: the default moved from the removed
+        /// <c>percolator</c> retrain to <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/>, so an empty
+        /// suffix would let a run adopt the other mode's cached q-values.
+        ///
+        /// This is the tagging the <see cref="Pass2QValue"/> remarks used to defer, and it
+        /// retires the "use a FRESH --output-dir per mode" limitation they carried.
+        /// </summary>
+        public static string Pass2QValueValidityKeySuffix()
+        {
+            return Pass2QValueValidityKeySuffix(Pass2QValue);
+        }
+
+        /// <summary>
+        /// <see cref="Pass2QValueValidityKeySuffix()"/> for an explicitly supplied mode, in the
+        /// normalized form <see cref="Pass2QValue"/> holds.
+        /// </summary>
+        public static string Pass2QValueValidityKeySuffix(string normalizedPass2QValue)
+        {
+            return @";pass2=" + normalizedPass2QValue;
+        }
+
+        /// <summary>
+        /// Validity-key suffix for the first-pass TRAINING levers
+        /// (<see cref="TrainPickRun"/>, <see cref="MaxTrainSizeOverride"/>,
+        /// <see cref="SvmCSelectionTolerance"/>). Each changes the model trained and therefore
+        /// every score, q and count downstream, so a directory written under one setting must not
+        /// be adopted under another.
+        ///
+        /// Without this a re-run under a changed setting reports "FirstPassFDR:skipping (outputs
+        /// valid)" in seconds and hands back the PREVIOUS setting's numbers - which reads exactly
+        /// like a change that had no effect, the most expensive possible failure for an A/B.
+        ///
+        /// The levers are keyed differently ON PURPOSE, and the difference is the same one
+        /// <see cref="PickValidityKeySuffix()"/> draws. <see cref="TrainPickRun"/> is a FLIPPED
+        /// DEFAULT, so it is emitted for every arm including the new default: "emits nothing"
+        /// already describes every directory written before the flip, and an empty new default
+        /// would make a post-flip key EQUAL a pre-flip one, letting a resume or a
+        /// <c>-LinkFrom</c> adopt maximum-trained scores as though the reservoir had produced
+        /// them. <see cref="MaxTrainSizeOverride"/> is a plain knob whose default never moved,
+        /// so it stays silent for the default and keys only when set. The C-selection tolerance
+        /// is a flipped default too (the grid search used to keep the strict maximum), so it is
+        /// emitted for every arm.
+        ///
+        /// The one-time cost of the unconditional terms is real and is the correct outcome: every
+        /// FirstPassFDR-and-later directory written before each of them shipped is invalidated.
+        /// PerFileScoring (Stages 1-4) carries no training suffix, so a <c>-LinkFrom</c> still
+        /// adopts the expensive extraction artifacts and only the FDR tail re-runs.
+        /// </summary>
+        public static string TrainSampleValidityKeySuffix()
+        {
+            return TrainSampleValidityKeySuffix(TrainPickRun, MaxTrainSizeOverride, SvmCSelectionTolerance);
+        }
+
+        /// <summary>
+        /// <see cref="TrainSampleValidityKeySuffix()"/> for explicitly supplied settings, so the
+        /// arms can be compared without mutating process-wide state the environment reads once.
+        /// </summary>
+        public static string TrainSampleValidityKeySuffix(bool trainPickRun, int? maxTrainSizeOverride, double cSelectionTolerance)
+        {
+            string suffix = @";trainpick=" + (trainPickRun ? @"run" : @"max");
+            if (maxTrainSizeOverride.HasValue)
+            {
+                suffix += @";maxtrain=" +
+                          maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", System.Globalization.CultureInfo.InvariantCulture);
+            return suffix;
+        }
+
+        /// <summary>
+        /// True when <paramref name="normalizedAgg"/> names a mean(best-N) arm. Takes the arm as
+        /// an ARGUMENT rather than reading <see cref="ExperimentAggMeanBest"/> so a consumer can
+        /// ask about an arm RECORDED BY ANOTHER PROCESS - a distributed <c>--task SecondPassFDR</c>
+        /// SecondPassFDR node reloads the 1st-pass model from disk and must gate on the arm that trained
+        /// it, not on its own environment. Expects the normalized form
+        /// (<see cref="ExperimentAgg"/>) as persisted alongside the model.
+        /// </summary>
+        public static bool IsMeanBestArm(string normalizedAgg)
+        {
+            return !string.IsNullOrEmpty(normalizedAgg) &&
+                   normalizedAgg.StartsWith(EXPERIMENT_AGG_MEAN_BEST_PREFIX, StringComparison.Ordinal);
+        }
+
+        /// <summary>The missing-run floor arm in words, for
+        /// <see cref="DescribeExperimentAgg"/>.</summary>
+        private static string DescribeMeanBestFloor()
+        {
+            if (MeanBest2FloorMean)
+                return @"decoy MEAN (OSPREY_MEANBEST2_FLOOR_MEAN)";
+            double? pct = MeanBest2FloorPercentile;
+            if (pct.HasValue)
+            {
+                return string.Format(@"decoy {0} percentile (OSPREY_MEANBEST2_FLOOR_PCT)",
+                    pct.Value.ToString(@"0.###", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            return @"decoy MEDIAN (default)";
+        }
+
+        // Parse N from OSPREY_EXPERIMENT_AGG=mean-best-<N>. Returns 0 (the max default) when unset,
+        // not a mean-best-<N> value, or N outside [2, MEAN_BEST_N_MAX] - and 0 makes
+        // IsUnrecognizedExperimentAgg true, so an out-of-range N warns rather than silently
+        // running the default.
+        private static int ParseMeanBestN(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return 0;
+            string v = raw.Trim().ToLowerInvariant();
+            if (!v.StartsWith(EXPERIMENT_AGG_MEAN_BEST_PREFIX, StringComparison.Ordinal))
+                return 0;
+            string tail = v.Substring(EXPERIMENT_AGG_MEAN_BEST_PREFIX.Length);
+            // NumberStyles.None, not Integer: Integer also accepts a leading sign and surrounding
+            // whitespace, so "mean-best-+3" and "mean-best- 3" parsed as 3 - two spellings of the
+            // same arm that an A/B log could not tell apart from the canonical one.
+            return int.TryParse(tail, System.Globalization.NumberStyles.None,
+                       System.Globalization.CultureInfo.InvariantCulture, out int n) &&
+                   n >= 2 && n <= MEAN_BEST_N_MAX
+                ? n
+                : 0;
+        }
+
+        // A set-but-unusable OSPREY_EXPERIMENT_AGG: anything that is neither the max default nor a
+        // well-formed mean-best-<N> with N >= 2. Unset / whitespace is NOT unrecognized - that is
+        // simply the default. Mirrors IsUnrecognizedPass2QValue.
+        private static bool IsUnrecognizedExperimentAgg(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return false;
+            return !string.Equals(raw.Trim(), EXPERIMENT_AGG_MAX, StringComparison.OrdinalIgnoreCase) &&
+                   ParseMeanBestN(raw) == 0;
+        }
 
         private static string NormalizePass2QValue(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
-                return PASS2_QVALUE_PERCOLATOR;
+                return PASS2_QVALUE_PROTEIN_COMPACT;
             string v = raw.Trim().ToLowerInvariant();
             if (v == PASS2_QVALUE_TRANSFER)
                 return PASS2_QVALUE_TRANSFER;
-            // Fall back to the parity-preserving default on any unrecognized token; the
-            // consuming site (Pass2FdrSidecar) warns so a typo is visible in the log.
-            return PASS2_QVALUE_PERCOLATOR;
+            if (v == PASS2_QVALUE_PROTEIN_COMPACT)
+                return PASS2_QVALUE_PROTEIN_COMPACT;
+            // An unrecognized token normalizes to the default only so the other statics are
+            // well-formed; the run does not get here, because Program aborts at startup on
+            // IsUnrecognizedPass2QValue.
+            return PASS2_QVALUE_PROTEIN_COMPACT;
         }
 
         private static bool IsUnrecognizedPass2QValue(string raw)
@@ -197,31 +1273,116 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrWhiteSpace(raw))
                 return false;
             string v = raw.Trim().ToLowerInvariant();
-            return v != PASS2_QVALUE_PERCOLATOR && v != PASS2_QVALUE_TRANSFER;
+            return v != PASS2_QVALUE_TRANSFER && v != PASS2_QVALUE_PROTEIN_COMPACT;
+        }
+
+        /// <summary>
+        /// Replace the named variables with <paramref name="values"/> until the returned object
+        /// is disposed; a null value reads as unset. Every other variable still reads the
+        /// process environment. Only the values that re-read on each access see the override -
+        /// a readonly field was fixed when the class loaded.
+        /// </summary>
+        internal static IDisposable OverrideVariables(IReadOnlyDictionary<string, string> values)
+        {
+            var restorer = new OverridesRestorer(_overrides);
+            _overrides = values;
+            return restorer;
+        }
+
+        /// <summary>
+        /// Every read of an environment variable in this class, so a test can override it.
+        /// </summary>
+        private static string GetVariable(string name)
+        {
+            if (_overrides != null && _overrides.TryGetValue(name, out string value))
+                return value;
+            return Environment.GetEnvironmentVariable(name);
+        }
+
+        private sealed class OverridesRestorer : IDisposable
+        {
+            private readonly IReadOnlyDictionary<string, string> _saved;
+
+            public OverridesRestorer(IReadOnlyDictionary<string, string> saved)
+            {
+                _saved = saved;
+            }
+
+            public void Dispose()
+            {
+                _overrides = _saved;
+            }
         }
 
         private static int ParseIntOrZero(string name)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = GetVariable(name);
             if (string.IsNullOrEmpty(v))
                 return 0;
             int.TryParse(v, out int result);
             return result;
         }
 
+        /// <summary>Env int override, or null when unset/unparseable -- lets a consumer keep
+        /// its own default rather than collapsing an unset var to 0 (as ParseIntOrZero does).</summary>
+        private static int? ParseIntOrNull(string name)
+        {
+            string v = GetVariable(name);
+            if (string.IsNullOrEmpty(v))
+                return null;
+            return int.TryParse(v, out int result) ? result : null;
+        }
+
+        /// <summary>Env double override (invariant culture, so "0.5" parses regardless of
+        /// locale), or null when unset/unparseable.</summary>
+        private static double? ParseDoubleOrNull(string name)
+        {
+            string v = GetVariable(name);
+            if (string.IsNullOrEmpty(v))
+                return null;
+            return double.TryParse(v, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out double result)
+                ? result : null;
+        }
+
+        /// <summary>
+        /// An OSPREY_SVM_C_TOLERANCE value as a number in [0, 1) (invariant culture), or null when
+        /// it is unset, unparseable or out of range - the null that
+        /// <see cref="SvmCSelectionToleranceUnrecognized"/> reports for a set variable. Internal so
+        /// a test can pin what is accepted.
+        /// </summary>
+        internal static double? ParseSvmCSelectionTolerance(string raw)
+        {
+            if (string.IsNullOrEmpty(raw) ||
+                !double.TryParse(raw, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out double tolerance) ||
+                !(tolerance >= 0 && tolerance < 1))
+            {
+                return null;
+            }
+            // -0 passes the range check but formats as "-0" in the validity key on .NET Core, so
+            // it would key apart from the 0 it selects.
+            return tolerance == 0 ? 0 : tolerance;
+        }
+
         private static bool IsSet(string name)
         {
-            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name));
+            return !string.IsNullOrEmpty(GetVariable(name));
         }
 
         private static bool IsNotZero(string name)
         {
-            return Environment.GetEnvironmentVariable(name) != @"0";
+            return GetVariable(name) != @"0";
         }
 
-        private static bool IsSetAndNotZero(string name)
+        /// <summary>
+        /// Set to anything but <c>0</c>. Internal rather than private so a test can pin the
+        /// distinction from <see cref="IsSet"/>: the runners write <c>=0</c> to mean off, and a
+        /// flag that reaches for <see cref="IsSet"/> turns ON for it (issue #4673).
+        /// </summary>
+        internal static bool IsSetAndNotZero(string name)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = GetVariable(name);
             return !string.IsNullOrEmpty(v) && v != @"0";
         }
     }

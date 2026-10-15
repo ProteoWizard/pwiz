@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -35,6 +36,9 @@ namespace pwiz.Osprey.Core
         /// <summary>Input mzML file paths.</summary>
         public List<string> InputFiles { get; set; } = new List<string>();
 
+        /// <summary>At least one input was named on the command line.</summary>
+        public bool HasInputFiles => InputFiles != null && InputFiles.Count > 0;
+
         /// <summary>Spectral library source.</summary>
         public LibrarySource LibrarySource { get; set; }
 
@@ -43,6 +47,12 @@ namespace pwiz.Osprey.Core
 
         /// <summary>Optional: TSV report output path.</summary>
         public string OutputReport { get; set; }
+
+        /// <summary>
+        /// Optional: write the loaded spectral library to this path as a .blib, with fragment ion
+        /// annotations, and exit without searching. No input files are needed.
+        /// </summary>
+        public string ExportLibraryBlib { get; set; }
 
         /// <summary>
         /// Optional: write an FDRBench-compatible input TSV to this path. Includes every reported
@@ -75,7 +85,7 @@ namespace pwiz.Osprey.Core
         /// <c>3</c> (both) emits both in one run; because a single <see cref="OutputFdrBench"/>
         /// path is given, each pass is written with a <c>.pass1</c> / <c>.pass2</c> stem suffix so
         /// they do not overwrite each other (see <c>FdrBenchInputWriter.PathForPass</c>). Pass 1
-        /// is emitted from the first-join stage before compaction; pass 2 from the merge node
+        /// is emitted from the FirstPassFDR stage before compaction; pass 2 from SecondPassFDR
         /// after rescoring.
         /// </summary>
         public int FdrBenchPass { get; set; } = FDRBENCH_PASS_2;
@@ -149,6 +159,16 @@ namespace pwiz.Osprey.Core
         public bool DecoysInLibrary { get; set; }
 
         /// <summary>
+        /// Whether the library supplies its own decoys, so the load must mark and pair them and
+        /// Osprey generates none: <see cref="DecoysInLibrary"/>, or its synonym
+        /// <see cref="DecoyMethod.FromLibrary"/>. Treating the two as one is what fixed
+        /// library-decoy mode silently falling through to Reverse generation. The one
+        /// definition: the load, scoring and the argument checks all ask it here, so they
+        /// cannot disagree about which searches generate.
+        /// </summary>
+        public bool LibrarySuppliesDecoys => DecoysInLibrary || DecoyMethod == DecoyMethod.FromLibrary;
+
+        /// <summary>
         /// Protein-accession prefixes that identify decoys when the
         /// library already contains them (case-insensitive). Default
         /// covers the three common conventions: Osprey's own
@@ -184,8 +204,35 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string DecoyPairingManifestPath { get; set; }
 
-        /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
-        public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
+        /// <summary>The classifier first-pass Percolator trains: the linear SVM (default) or
+        /// gradient-boosted trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the
+        /// command line is parsed; nothing else reads OSPREY_FDR_MODEL.</summary>
+        public FdrClassifier FdrClassifier { get; set; } = FdrClassifier.LinearSvm;
+
+        /// <summary>
+        /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
+        /// end of the run: one row per target protein group with its member accessions
+        /// (how the proteins were grouped), the unique (representative) and shared
+        /// peptides supporting it, the group q-value, and whether it passes protein FDR.
+        /// ON by default -- it is the user-facing answer to "which proteins did you
+        /// detect, and on what evidence"; the former <c>cs_stage7_protein_fdr.tsv</c> is a
+        /// counts-only cross-impl diagnostic, not this. There is no CLI switch to turn it
+        /// off (only <c>--diagnostics-only</c> or an absent <c>-o</c> skips it). Additive
+        /// (a new file), so byte-parity gates that compare the blib + Stage-7 dump are
+        /// unaffected.
+        /// </summary>
+        public bool WriteProteinReport { get; set; } = true;
+
+        /// <summary>
+        /// Write the summary report (<c>&lt;output&gt;.stats.tsv</c>): one row per replicate
+        /// with its precursors, peptides, and protein groups passing FDR, plus a final
+        /// experiment-level row. Modeled on DIA-NN's per-run <c>stats.tsv</c>, with the
+        /// per-replicate protein count computed by an INDEPENDENT run-level protein FDR
+        /// (its own parsimony + picked-protein FDR on that replicate) so it is a true
+        /// per-run number, not a slice of the experiment set. ON by default, with no CLI
+        /// switch to turn it off. Additive, so byte-parity gates are unaffected.
+        /// </summary>
+        public bool WriteSummaryReport { get; set; } = true;
 
         /// <summary>Write PIN files for external tools.</summary>
         public bool WritePin { get; set; }
@@ -228,9 +275,10 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
-        /// --perf-stats: emit the machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for
-        /// the perf tools (Test-PerfGate.ps1, Measure-Pipeline.ps1). Off by default so the
-        /// human log stays clean. Runtime-only.
+        /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
+        /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
+        /// tools and regression.ps1 read. Off by default so the human log stays clean.
+        /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
 
@@ -244,8 +292,21 @@ namespace pwiz.Osprey.Core
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
+        /// <summary>
+        /// The optional training export (<c>--training-export</c>), a PerFileRescoring output.
+        /// Off by default, and in no identity hash: off, it is not declared at all.
+        /// </summary>
+        public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
+
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Demultiplex overlapping-window DIA into its narrow bins before searching
+        /// (<c>--demux</c>). Enters the search hash only when enabled, so existing
+        /// caches and goldens are unaffected while it is off.
+        /// </summary>
+        public DemuxMode DemuxMode { get; set; } = DemuxMode.off;
 
         /// <summary>
         /// Protein-level FDR threshold. Optional on the command line
@@ -301,58 +362,149 @@ namespace pwiz.Osprey.Core
         public FileParallelism FileParallelism { get; set; } = FileParallelism.Sequential;
 
         /// <summary>
-        /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
-        /// include only the per-file fan-out, not the join. Set by both
-        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
-        /// concrete behavior depends on the input type. With <c>-i</c> mzML it
-        /// is the Stage 1-4 worker — each input produces a
-        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
-        /// <see cref="InputScores"/> it is the Stage 6 rescore worker. The two
-        /// are told apart by input type (see <see cref="SelectedTask"/>).
+        /// One stage's own across-files request, set by <c>--parallel-files-caching</c>,
+        /// <c>--parallel-files-scoring</c> or <c>--parallel-files-rescoring</c>; null when that
+        /// flag is absent and the stage shares <see cref="FileParallelism"/>. Like it, never part
+        /// of any identity / cache hash.
         /// </summary>
-        public bool NoJoin { get; set; }
+        public FileParallelism? CachingFileParallelism { get; set; }
+
+        /// <inheritdoc cref="CachingFileParallelism"/>
+        public FileParallelism? ScoringFileParallelism { get; set; }
+
+        /// <inheritdoc cref="CachingFileParallelism"/>
+        public FileParallelism? RescoringFileParallelism { get; set; }
 
         /// <summary>
-        /// HPC scoring split: when set (non-null, non-empty), skip Stages 1-4
-        /// entirely and load these per-file scoring caches as the starting
-        /// point for Stage 5+. Set by <c>--input-scores</c>. When set,
-        /// <see cref="InputFiles"/> is ignored.
+        /// The across-files request one stage runs under: its own flag when given, otherwise
+        /// the shared <c>--parallel-files</c> (which is the sequential default when absent).
+        /// <paramref name="argName"/> names the argument that decided, for the log line that
+        /// reports the stage's count.
         /// </summary>
-        public List<string> InputScores { get; set; }
+        public FileParallelism GetFileParallelism(FileStage stage, out string argName)
+        {
+            FileParallelism? stageRequest;
+            switch (stage)
+            {
+                case FileStage.Caching:
+                    stageRequest = CachingFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_CACHING;
+                    break;
+                case FileStage.Scoring:
+                    stageRequest = ScoringFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_SCORING;
+                    break;
+                case FileStage.Rescoring:
+                    stageRequest = RescoringFileParallelism;
+                    argName = OspreyArgNames.PARALLEL_FILES_RESCORING;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(stage), stage, null);
+            }
+            if (stageRequest.HasValue)
+                return stageRequest.Value;
+            argName = OspreyArgNames.PARALLEL_FILES;
+            return FileParallelism;
+        }
 
         /// <summary>
         /// HPC: when true, exit after Stage 5 + reconciliation planning,
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
         /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
-        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>.
+        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>. A behavior flag the
+        /// first-pass task's own arms read (planning ends the run; no survivor loader is
+        /// built) - not a membership flag: which stages run is <see cref="Includes"/>.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
-        /// HPC: when true, every <c>--input-scores</c> parquet must carry
+        /// HPC: when true, every run's reconciled parquet must carry
         /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
         /// by <c>--task SecondPassFDR</c>; the post-Stage-6 (reconciled)
         /// entry point. Stages 1-6 are skipped: the pipeline loads
         /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
         /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
         /// protein parsimony + picked-protein FDR, blib output). Mirrors
-        /// Rust's <c>config.expect_reconciled_input</c>.
+        /// Rust's <c>config.expect_reconciled_input</c>. A behavior flag (the strict
+        /// reconciled-footer gate lives below the task library and reads it here) - not a
+        /// membership flag: which stages run is <see cref="Includes"/>.
         /// </summary>
         public bool ExpectReconciledInput { get; set; }
 
         /// <summary>
-        /// The single pipeline task selected by <c>--task &lt;Name&gt;</c> on the
-        /// CLI, or null for the full pipeline (no <c>--task</c>). The three
-        /// membership flags above (<see cref="NoJoin"/>,
-        /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>)
-        /// are derived from this and drive each task's <c>IsIncluded</c>; this
-        /// property additionally lets argument validation enforce the
-        /// task&#8596;input-type contract (e.g. PerFileScoring takes mzML,
-        /// PerFileRescore takes <see cref="InputScores"/>) and name the task the
-        /// user actually typed in error messages.
+        /// The single task selected by <c>--task &lt;Name&gt;</c> on the CLI, or null for
+        /// the full pipeline (no <c>--task</c>). Set only through <see cref="SelectTask"/>,
+        /// together with the <see cref="Pipeline"/> it runs and the flags it implies, so the
+        /// CLI path cannot set one without the others or leave a previous selection's behind.
+        /// The instance is the task itself - the same one the pipeline runs - so a task can
+        /// ask whether it IS the selection by reference, and what it is is answered by the
+        /// task through <see cref="ISelectableTask"/> rather than by a switch over its name.
+        /// It has no input-KIND contract to enforce: every task takes the same data files,
+        /// and the second seam that said "you handed me parquets, so Stage 1-4 is done" has
+        /// retired.
         /// </summary>
-        public HpcTask? SelectedTask { get; set; }
+        public ISelectableTask SelectedTask { get; private set; }
+
+        /// <summary>
+        /// The stages this run walks, in execution order: the pipeline the selection was
+        /// resolved against, or the canonical pipeline when nothing is selected. Null until
+        /// <see cref="SelectTask"/> is called, which a bare config in a unit test never does;
+        /// every reader treats that as "no selection, the full pipeline". Position questions -
+        /// does this run start after per-file scoring, does it run the final join - are
+        /// answered from this list and the selection, never by a task describing where it
+        /// sits.
+        /// </summary>
+        public IReadOnlyList<ISelectableTask> Pipeline { get; private set; }
+
+        /// <summary>
+        /// Select the task a run executes - or null for the full pipeline - together with the
+        /// stages it runs, and let it set the flags it implies. The one place the selection,
+        /// its pipeline and its flags are written together: the flags a selection derives are
+        /// cleared first, so they hold exactly what this task sets and nothing a previous
+        /// selection left. <see cref="ModelDiagnostics"/> is not among them -
+        /// <c>--model-diagnostics</c> sets it on its own.
+        /// </summary>
+        public void SelectTask(ISelectableTask task, IReadOnlyList<ISelectableTask> pipeline)
+        {
+            if (task != null && pipeline == null)
+                throw new ArgumentNullException(nameof(pipeline), @"A selected task must come with the pipeline it runs.");
+            StopAfterStage5 = false;
+            ExpectReconciledInput = false;
+            DiagnosticsOnly = false;
+            SelectedTask = task;
+            Pipeline = pipeline;
+            task?.ApplySelection(this);
+        }
+
+        /// <summary>
+        /// Whether <paramref name="stage"/> is included in this run's driver loop - the one
+        /// membership rule. Every stage is when nothing is selected. A selected task that is a
+        /// stage of the pipeline it runs (an HPC node: one node = one task) is included alone,
+        /// and the stages before it materialize on demand from their artifacts on disk. A
+        /// selected task that is NOT a stage of the pipeline it runs is a selector that runs
+        /// all of it - the diagnostics render - and every stage is included. Replaces the
+        /// three membership flags (<c>NoJoin</c>, and the two above read as membership) that
+        /// each stage's own predicate used to combine, which encoded one fan-out and one
+        /// join over a pipeline that has two of each.
+        /// </summary>
+        public bool Includes(ISelectableTask stage)
+        {
+            if (SelectedTask == null || ReferenceEquals(SelectedTask, stage))
+                return true;
+            return !Pipeline.Contains(SelectedTask);
+        }
+
+        /// <summary>
+        /// True under <c>--task ModelDiagnostics</c>: recompute the pass-2 view and write ONLY
+        /// the report, suppressing the .blib, the protein/summary reports and the 2nd-pass FDR
+        /// sidecars. The point is to be able to re-judge a diagnostics change on a completed
+        /// large cohort without disturbing - or waiting for - the results it already produced.
+        /// Every suppressed artifact is one this run would otherwise REWRITE with the same
+        /// content it already holds, so skipping them costs nothing but the write. Set by
+        /// that task's <see cref="ISelectableTask.ApplySelection"/>, like its two siblings.
+        /// </summary>
+        public bool DiagnosticsOnly { get; set; }
 
         /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
@@ -381,19 +533,6 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
-    /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
-    /// (one HPC node = one task). The names are the stable CLI contract and
-    /// match each task's <c>OspreyTask.Name</c>.
-    /// </summary>
-    public enum HpcTask
-    {
-        PerFileScoring,
-        FirstJoin,
-        PerFileRescore,
-        MergeNode
-    }
-
-    /// <summary>
     /// Method used to generate decoy sequences.
     /// Maps to osprey-core/src/types.rs DecoyMethod.
     /// </summary>
@@ -402,6 +541,31 @@ namespace pwiz.Osprey.Core
         Reverse,
         Shuffle,
         FromLibrary
+    }
+
+    /// <summary>
+    /// The user-facing name of a <see cref="DecoyMethod"/>, as it reads in "Generating {0}
+    /// decoys". Skyline's <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class DecoyMethodExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_reverse_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_shuffled_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_library_supplied
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this DecoyMethod val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
     }
 
     /// <summary>
@@ -416,14 +580,56 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
-    /// Statistical method for FDR estimation.
-    /// Maps to osprey-core/src/types.rs FdrMethod.
+    /// The user-facing name of an <see cref="FdrLevel"/>, as it reads in "at 1.0% experiment-level
+    /// {0} FDR". Skyline's <c>GetLocalizedString</c> pattern.
     /// </summary>
-    public enum FdrMethod
+    public static class FdrLevelExtension
     {
-        Percolator,
-        Mokapot,
-        Simple
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_peptide,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor_and_peptide
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this FdrLevel val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
+
+    /// <summary>
+    /// The classifier the semi-supervised Percolator framework trains for FDR estimation.
+    /// Both values run the same framework - best-per-precursor dedup, peptide-grouped CV
+    /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
+    /// projection / streaming plumbing around all of it - and differ ONLY in the model
+    /// trained per fold. Selected by the OSPREY_FDR_MODEL environment variable
+    /// (<see cref="OspreyEnvironment.FdrModel"/>), not by a command-line argument.
+    ///
+    /// <para>"Percolator" names that framework, not a classifier, so no value here is called
+    /// Percolator. The framework is also not the original Percolator tool: it cross-validates
+    /// during the SVM training iterations and assigns q-values by target-decoy competition
+    /// rather than Storey-Tibshirani. The linear SVM is the classifier the original tool used,
+    /// and it is the default and the production path.</para>
+    ///
+    /// <para>Rust's FdrMethod (osprey-core/src/config.rs) is Percolator, Mokapot and Simple,
+    /// and has no trees. Osprey dropped the other two: Mokapot was never reachable here, and
+    /// the simple target-decoy competition was removed (#4543).</para>
+    /// </summary>
+    public enum FdrClassifier
+    {
+        /// <summary>The linear SVM, the default and the production classifier.</summary>
+        LinearSvm,
+        /// <summary>Gradient-boosted decision trees in place of the linear SVM; implemented by
+        /// Osprey.ML GradientBoostedTrees. EXPERIMENTAL, selected by
+        /// <c>OSPREY_FDR_MODEL=gbdt</c>.</summary>
+        Gbdt
     }
 
     /// <summary>
@@ -438,6 +644,32 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The user-facing name of a <see cref="ResolutionMode"/>, echoing the <c>--resolution</c>
+    /// values rather than the enum identifier. Skyline's <c>GetLocalizedString</c> pattern, so the
+    /// move to resource strings replaces only the array contents.
+    /// </summary>
+    public static class ResolutionModeExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_auto,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_unit,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_HRAM
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this ResolutionMode val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
+
+    /// <summary>
     /// How shared peptides are handled during protein inference.
     /// Maps to osprey-core/src/types.rs SharedPeptideMode.
     /// </summary>
@@ -446,5 +678,21 @@ namespace pwiz.Osprey.Core
         All,
         Razor,
         Unique
+    }
+
+    /// <summary>
+    /// Whether overlapping-window (staggered) DIA is demultiplexed before searching.
+    /// Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum DemuxMode
+    {
+        /// <summary>Search spectra as acquired. The default while demux is validated.</summary>
+        off,
+
+        /// <summary>
+        /// Detect the isolation scheme and demultiplex it when it overlaps; a
+        /// non-overlapping run is searched as acquired.
+        /// </summary>
+        auto,
     }
 }

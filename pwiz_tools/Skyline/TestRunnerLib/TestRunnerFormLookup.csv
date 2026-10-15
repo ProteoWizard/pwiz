@@ -85,6 +85,11 @@ EditServerDlg,TestAccessServer
 EditSpectrumFilterDlg,TestEditSpectrumFilter
 EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
+DiannSearchDlg.DataFilesPage,TestDiannSearch
+DiannSearchDlg.FastaPage,TestDiannSearch
+DiannSearchDlg.ModificationsPage,TestDiannSearch
+DiannSearchDlg.SearchSettingsPage,TestDiannSearch
+DiannSearchDlg.RunPage,TestDiannSearch
 EmptyProteinsDlg,TestImportPeptideSearch
 EncyclopeDiaSearchDlg.FastaPage,TestEncyclopeDiaSearchTutorial
 EncyclopeDiaSearchDlg.KoinaPage,TestEncyclopeDiaSearchTutorial
@@ -133,6 +138,7 @@ ImportPeptideSearchDlg.ConverterSettingsPage,TestDiaSearchVariableWindows
 ImportPeptideSearchDlg.DDASearchSettingsPage,TestDdaSearch
 ImportPeptideSearchDlg.DDASearchPage,TestDdaSearch
 MsFraggerDownloadDlg,TestDdaSearchMsFragger
+DiannDownloadDlg,TestDiannSearch
 ImportResultsDlg,TestRetentionTimeAlignment
 ImportResultsNameDlg,TestOptimization
 ImportResultsLockMassDlg,WatersLockmassPerfTest
@@ -214,6 +220,7 @@ ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
 ShareResultsFilesDlg,TestDocumentSharing
 SkylineWindow,*
+SlowLoadingForm,*
 SpectrumGridForm,TestSpectrumGrid
 SpectrumChartPropertyDlg,TestMs1Tutorial
 SpectrumLibraryInfoDlg,TestManageLibraryRuns
@@ -231,6 +238,7 @@ ToolOptionsUI.LanguageTab,TestAccessServer
 ToolOptionsUI.MiscellaneousTab,TestAccessServer
 ToolOptionsUI.DisplayTab,TestAccessServer
 ToolOptionsUI.KoinaTab,TestAccessServer
+ImportSettingsDlg,TestImportSettings
 ToolStoreDlg,TestToolStore
 ToolUpdatesDlg,TestToolUpdates
 TransitionSettingsUI.FilterTab,TestMethodEditTutorial

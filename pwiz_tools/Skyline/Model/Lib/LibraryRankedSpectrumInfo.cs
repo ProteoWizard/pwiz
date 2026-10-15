@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
@@ -186,7 +187,10 @@ namespace pwiz.Skyline.Model.Lib
 
             public RankedMI ChangeMatchedIons(IEnumerable<MatchedFragmentIon> matchedIons)
             {
-                return ChangeProp(ImClone(this), im => im.MatchedIons = ImmutableList.ValueOf(matchedIons));
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.MatchedIons = ImmutableList.ValueOf(matchedIons);
+                });
             }
 
             private bool Equals(RankedMI other)

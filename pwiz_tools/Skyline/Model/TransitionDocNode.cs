@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Model
         {
             return GetAverageResultValue(chromInfo =>
                 chromInfo.OptimizationStep != 0 ?
-                    (float?)null : GetPeakCountRatio(chromInfo, integrateAll));
+                    null : GetPeakCountRatio(chromInfo, integrateAll));
         }
 
         private static float GetPeakCountRatio(TransitionChromInfo chromInfo, bool integrateAll)
@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
-                                                              ? (float?) null
+                                                              ? null
                                                               : chromInfo.Area);
             }
         }

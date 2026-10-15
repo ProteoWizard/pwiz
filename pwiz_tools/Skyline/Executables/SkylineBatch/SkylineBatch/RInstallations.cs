@@ -32,21 +32,18 @@ namespace SkylineBatch
         private const string RegistryLocationR = @"SOFTWARE\R-core\R";
 
         /// <summary>
-        /// Test seam: Set mock R versions for testing without requiring actual R installation.
-        /// Set to non-null dictionary to bypass system R detection.
+        /// Test seam: mock R versions for testing without an R installation on the machine.
+        /// Used only as a fallback, when real detection finds nothing - see FindRDirectory.
         /// </summary>
         public static Dictionary<string, string> TestRVersions { get; set; }
 
         public static bool FindRDirectory()
         {
-            // Test seam: Use mock R versions if set (bypasses system R detection for testing)
-            if (TestRVersions != null)
-            {
-                Settings.Default.RVersions = TestRVersions;
-                return TestRVersions.Count > 0;
-            }
-
+            // Initialize unconditionally. AddRDirectory dereferences RDirs without a null check,
+            // so any early return that skipped this made every test that registers an R directory
+            // of its own fail with a NullReferenceException.
             if (Settings.Default.RDirs == null) Settings.Default.RDirs = new List<string>();
+
             if (Settings.Default.RDirs.Count == 0)
             {
                 // Try 64-bit registry first (most common for R installations)
@@ -64,6 +61,16 @@ namespace SkylineBatch
             }
 
             Settings.Default.RVersions = GetRInstallationDict(Settings.Default.RDirs);
+
+            // Test seam: mock versions are a FALLBACK, applied only when real detection turned up
+            // nothing. Letting them short-circuit the search instead was wrong in both directions:
+            // it skipped the RDirs initialization above, and it kept answering after a functional
+            // test had registered its own R tree through AddRDirectory, overwriting the versions
+            // that test had just installed. That surfaced as configurations importing as invalid
+            // and the run stopping on a Configuration dialog with nothing to dismiss it.
+            if (Settings.Default.RVersions.Count == 0 && TestRVersions != null)
+                Settings.Default.RVersions = TestRVersions;
+
             return Settings.Default.RVersions.Count > 0;
         }
 
