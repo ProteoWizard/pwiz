@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -51,12 +52,17 @@ namespace pwiz.CarafeSharp.Proteome
                 proteins.Add(JavaText.StripTerminalAsterisks(record.Sequence));
             }
             var peptides = new HashSet<string>(StringComparer.Ordinal);
-            foreach (string protein in proteins)
+            using (var progress = new ProgressReporter(@"Digesting proteins", proteins.Count))
             {
-                foreach (string peptide in digester.Digest(protein))
+                int digested = 0;
+                foreach (string protein in proteins)
                 {
-                    if (peptide.IndexOf('X') < 0)
-                        peptides.Add(peptide);
+                    foreach (string peptide in digester.Digest(protein))
+                    {
+                        if (peptide.IndexOf('X') < 0)
+                            peptides.Add(peptide);
+                    }
+                    progress.Report(++digested);
                 }
             }
             log?.Invoke(string.Format(@"Protein sequences:{0}, total unique peptide sequences:{1}", records, peptides.Count));

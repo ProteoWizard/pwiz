@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
 
@@ -33,7 +34,7 @@ namespace pwiz.Osprey.Test
     /// Pins <see cref="PipelineContext"/>'s byproduct cache + registry-driven
     /// lazy materialization. Focuses on the failure-surfacing contract: a
     /// consumer's <see cref="PipelineContext.Get{TInfo}"/> drives the registered
-    /// producer's <see cref="OspreyTask.Rehydrate"/>, and -- unlike the driver
+    /// producer's <see cref="OspreyTask.Rehydrate(PipelineContext)"/>, and -- unlike the driver
     /// loop, which inspects Run's bool -- must not silently swallow a failed
     /// rehydrate. The discriminator is the requested exit code: a genuine
     /// failure (ExitCode != 0) throws; a success-but-stop (ExitCode == 0, whose

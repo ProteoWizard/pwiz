@@ -27,7 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using pwiz.CarafeSharp.Core;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -97,14 +97,14 @@ namespace pwiz.CarafeSharp.Proteome
             // whole build finished: an earlier build's FASTA is removed before the new manifest takes
             // its final name, and the new FASTA is moved there last. A FASTA that cannot be removed
             // stops the build with the earlier FASTA and manifest both as they were.
-            var fasta = new PartialFile(_settings.OutputFasta);
-            var manifest = _settings.Manifest != null ? new PartialFile(_settings.Manifest) : null;
+            var fasta = new SimpleFileSaver(_settings.OutputFasta);
+            var manifest = _settings.Manifest != null ? new SimpleFileSaver(_settings.Manifest) : null;
             try
             {
-                WriteFasta(kept, result, fasta.PartialPath);
+                WriteFasta(kept, result, fasta.SafeName);
                 if (manifest != null)
                 {
-                    WriteManifest(kept, manifest.PartialPath);
+                    WriteManifest(kept, manifest.SafeName);
                     if (File.Exists(_settings.OutputFasta))
                         File.Delete(_settings.OutputFasta);
                     manifest.Commit();
@@ -115,11 +115,11 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 try
                 {
-                    fasta.Discard();
+                    fasta.Dispose();
                 }
                 finally
                 {
-                    manifest?.Discard();
+                    manifest?.Dispose();
                 }
             }
             return result;
@@ -162,8 +162,7 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 string fastaPath = Path.GetFullPath(_settings.OutputFasta);
                 string manifestPath = Path.GetFullPath(_settings.Manifest);
-                if (SamePath(fastaPath, manifestPath) || SamePath(fastaPath + PartialFile.SUFFIX, manifestPath) ||
-                    SamePath(fastaPath, manifestPath + PartialFile.SUFFIX))
+                if (SamePath(fastaPath, manifestPath))
                 {
                     throw new ArgumentException(string.Format(@"the FASTA and the manifest must be separate files: {0}, {1}",
                         _settings.OutputFasta, _settings.Manifest));

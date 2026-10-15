@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -93,7 +94,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static void SaveCache(string path, List<LibraryEntry> entries, string libraryHash)
         {
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var w = new BinaryWriter(stream))

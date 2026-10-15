@@ -1036,9 +1036,6 @@
   <data name="ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__" xml:space="preserve">
     <value>Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks</value>
   </data>
-  <data name="RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___" xml:space="preserve">
-    <value>The {0} step could not reload its results from the intermediate files (exit code {1}).</value>
-  </data>
   <data name="RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_" xml:space="preserve">
     <value>Cannot tell which input file the scores file {0} belongs to from its name.</value>
   </data>

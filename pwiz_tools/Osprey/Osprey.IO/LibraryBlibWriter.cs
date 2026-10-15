@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -69,7 +70,7 @@ namespace pwiz.Osprey.IO
             // No prefixes given: the ones a search recognizes by default.
             var prefixes = decoyPrefixes ?? new OspreyConfig().DecoyPrefixes;
             string decoyPrefix = prefixes.FirstOrDefault(p => !string.IsNullOrEmpty(p)) ?? DEFAULT_DECOY_PREFIX;
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var writer = new BlibWriter(saver.SafeName))
                 {
