@@ -885,6 +885,42 @@ Please consider using the fine-tuning method provided by Carafe for building thi
 
 Would you like to continue building this predicted library?</value>
   </data>
+  <data name="NoteColor_BLACK_Black" xml:space="preserve">
+    <value>Black</value>
+  </data>
+  <data name="NoteColor_BLUE_Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="NoteColor_BRIGHT_BLUE_Bright_Blue" xml:space="preserve">
+    <value>Bright Blue</value>
+  </data>
+  <data name="NoteColor_BRIGHT_GREEN_Bright_Green" xml:space="preserve">
+    <value>Bright Green</value>
+  </data>
+  <data name="NoteColor_BROWN_Brown" xml:space="preserve">
+    <value>Brown</value>
+  </data>
+  <data name="NoteColor_DARK_YELLOW_Dark_Yellow" xml:space="preserve">
+    <value>Dark Yellow</value>
+  </data>
+  <data name="NoteColor_GREEN_Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="NoteColor_ORANGE_RED_Orange_Red" xml:space="preserve">
+    <value>Orange Red</value>
+  </data>
+  <data name="NoteColor_PINK_Pink" xml:space="preserve">
+    <value>Pink</value>
+  </data>
+  <data name="NoteColor_PlaceholderNote_Flagged" xml:space="preserve">
+    <value>Flagged</value>
+  </data>
+  <data name="NoteColor_PropertyFormatter_ParseValue__0__is_not_a_valid_note_color__Valid_colors_are___1_" xml:space="preserve">
+    <value>"{0}" is not a valid note color. Valid colors are: {1}</value>
+  </data>
+  <data name="NoteColor_PURPLE_Purple" xml:space="preserve">
+    <value>Purple</value>
+  </data>
   <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
     <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don't have the necessary permissions and ask them to run the following script:
 

@@ -190,6 +190,11 @@ namespace pwiz.SkylineTestFunctional
                 {
                     annotations = annotations.ChangeNote("Note" + _counter++);
                 }
+                if (IsTargetsTreeTarget(annotationTarget))
+                {
+                    var noteColors = NoteColor.ListNoteColors();
+                    annotations = annotations.ChangeNoteColor(noteColors[_counter++ % noteColors.Count]);
+                }
                 annotations =
                     annotations.ChangeAnnotation("Number", (_counter++* .1).ToString(CultureInfo.InvariantCulture));
                 if (0 != (_elementCount & 2))
@@ -200,6 +205,14 @@ namespace pwiz.SkylineTestFunctional
                 annotations = annotations.ChangeAnnotation(GetAnnotationTargetName(annotationTarget),
                     annotationTarget + ":" + _counter++);
                 return annotations;
+            }
+
+            private static bool IsTargetsTreeTarget(AnnotationDef.AnnotationTarget annotationTarget)
+            {
+                return annotationTarget == AnnotationDef.AnnotationTarget.protein ||
+                       annotationTarget == AnnotationDef.AnnotationTarget.peptide ||
+                       annotationTarget == AnnotationDef.AnnotationTarget.precursor ||
+                       annotationTarget == AnnotationDef.AnnotationTarget.transition;
             }
 
             private string GetAnnotationTargetName(AnnotationDef.AnnotationTarget annotationTarget)

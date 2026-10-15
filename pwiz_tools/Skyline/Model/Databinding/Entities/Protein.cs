@@ -183,6 +183,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 docNode => (PeptideGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));
             }
         }
+
+        [ProteomicDisplayName("ProteinNoteColor")]
+        [InvariantDisplayName("MoleculeListNoteColor")]
+        [Importable(Formatter = typeof(NoteColor.PropertyFormatter))]
+        public NoteColor NoteColor
+        {
+            get { return DocNode.Annotations.NoteColor; }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(NoteColor), value),
+                    docNode => (PeptideGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNoteColor(value)));
+            }
+        }
         public override string ToString()
         {
             return Name; // TODO nicksh this needs to agree with Targets view in Document Grid (By Name, By Accession etc)

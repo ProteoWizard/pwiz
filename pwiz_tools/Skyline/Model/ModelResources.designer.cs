@@ -1387,6 +1387,114 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Black.
+        /// </summary>
+        public static string NoteColor_BLACK_Black {
+            get {
+                return ResourceManager.GetString("NoteColor_BLACK_Black", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Blue.
+        /// </summary>
+        public static string NoteColor_BLUE_Blue {
+            get {
+                return ResourceManager.GetString("NoteColor_BLUE_Blue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bright Blue.
+        /// </summary>
+        public static string NoteColor_BRIGHT_BLUE_Bright_Blue {
+            get {
+                return ResourceManager.GetString("NoteColor_BRIGHT_BLUE_Bright_Blue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bright Green.
+        /// </summary>
+        public static string NoteColor_BRIGHT_GREEN_Bright_Green {
+            get {
+                return ResourceManager.GetString("NoteColor_BRIGHT_GREEN_Bright_Green", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Brown.
+        /// </summary>
+        public static string NoteColor_BROWN_Brown {
+            get {
+                return ResourceManager.GetString("NoteColor_BROWN_Brown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dark Yellow.
+        /// </summary>
+        public static string NoteColor_DARK_YELLOW_Dark_Yellow {
+            get {
+                return ResourceManager.GetString("NoteColor_DARK_YELLOW_Dark_Yellow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Green.
+        /// </summary>
+        public static string NoteColor_GREEN_Green {
+            get {
+                return ResourceManager.GetString("NoteColor_GREEN_Green", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Orange Red.
+        /// </summary>
+        public static string NoteColor_ORANGE_RED_Orange_Red {
+            get {
+                return ResourceManager.GetString("NoteColor_ORANGE_RED_Orange_Red", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pink.
+        /// </summary>
+        public static string NoteColor_PINK_Pink {
+            get {
+                return ResourceManager.GetString("NoteColor_PINK_Pink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Flagged.
+        /// </summary>
+        public static string NoteColor_PlaceholderNote_Flagged {
+            get {
+                return ResourceManager.GetString("NoteColor_PlaceholderNote_Flagged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to "{0}" is not a valid note color. Valid colors are: {1}.
+        /// </summary>
+        public static string NoteColor_PropertyFormatter_ParseValue__0__is_not_a_valid_note_color__Valid_colors_are___1_ {
+            get {
+                return ResourceManager.GetString("NoteColor_PropertyFormatter_ParseValue__0__is_not_a_valid_note_color__Valid_colors_are___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Purple.
+        /// </summary>
+        public static string NoteColor_PURPLE_Purple {
+            get {
+                return ResourceManager.GetString("NoteColor_PURPLE_Purple", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
         ///
         ///{0}

@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Databinding
 #pragma warning disable CS0612 //"XXX is obsolete"
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
 #pragma warning restore CS0612
-                   type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) ||
+                   type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) || type == typeof(NoteColor) ||
                    type == typeof(NormalizationMethod) || type == typeof(RegressionFit) ||
                    type == typeof(AuditLogRow.AuditLogRowText) || type == typeof(AuditLogRow.AuditLogRowId);
         }

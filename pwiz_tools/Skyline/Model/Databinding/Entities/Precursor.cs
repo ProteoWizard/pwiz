@@ -488,6 +488,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [InvariantDisplayName("PrecursorNoteColor")]
+        [Importable(Formatter = typeof(NoteColor.PropertyFormatter))]
+        public NoteColor NoteColor
+        {
+            get { return DocNode.Annotations.NoteColor; }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(NoteColor), value),
+                    docNode => (TransitionGroupDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNoteColor(value)));
+            }
+        }
+
         public string LibraryName
         {
             get { return DocNode.HasLibInfo ? DocNode.LibInfo.LibraryName : null; }

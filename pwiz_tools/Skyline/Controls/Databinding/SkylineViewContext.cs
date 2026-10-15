@@ -697,6 +697,7 @@ namespace pwiz.Skyline.Controls.Databinding
             { typeof(ListItem), typeof(ListLookupDataGridViewColumn) },
             { typeof(SampleType), typeof(SampleTypeDataGridViewColumn) },
             { typeof(StandardType), typeof(StandardTypeDataGridViewColumn) },
+            { typeof(NoteColor), typeof(NoteColorDataGridViewColumn) },
             
             // Marker types for properties with generic types (like string, bool)
             { typeof(SurrogateStandardName), typeof(SurrogateStandardDataGridViewColumn) },

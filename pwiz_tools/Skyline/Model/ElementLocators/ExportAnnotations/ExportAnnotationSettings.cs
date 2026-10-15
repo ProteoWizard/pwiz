@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                     .Select(handler => handler.Name))
                 .ChangeAnnotationNames(
                     document.Settings.DataSettings.AnnotationDefs.Select(annotationDef => annotationDef.Name))
-                .ChangePropertyNames(new[] {@"Note"});
+                .ChangePropertyNames(new[] {@"Note", @"NoteColor"});
         }
 
         public static string[] GetAllAnnotationNames(ImmutableList<AnnotationDef> annotationDefs, List<ElementHandler> selectedHandlers)

@@ -299,6 +299,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             set { ChangeDocNode(EditColumnDescription(nameof(Note), value),
                 docNode=>(TransitionDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNote(value)));}
         }
+
+        [InvariantDisplayName("TransitionNoteColor")]
+        [Importable(Formatter = typeof(NoteColor.PropertyFormatter))]
+        public NoteColor NoteColor
+        {
+            get { return DocNode.Annotations.NoteColor; }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(NoteColor), value),
+                    docNode => (TransitionDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNoteColor(value)));
+            }
+        }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? LibraryRank
         {

@@ -2523,6 +2523,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The color of the note flag shown on the molecule list in the Targets tree.
+        /// </summary>
+        public static string MoleculeListNoteColor {
+            get {
+                return ResourceManager.GetString("MoleculeListNoteColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Molecule List Result.
         /// </summary>
         public static string MoleculeListResult {
@@ -2573,6 +2582,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MoleculeNote {
             get {
                 return ResourceManager.GetString("MoleculeNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The color of the note flag shown on the molecule in the Targets tree.
+        /// </summary>
+        public static string MoleculeNoteColor {
+            get {
+                return ResourceManager.GetString("MoleculeNoteColor", resourceCulture);
             }
         }
         
@@ -2998,6 +3016,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The color of the note flag shown on the peptide in the Targets tree.
+        /// </summary>
+        public static string PeptideNoteColor {
+            get {
+                return ResourceManager.GetString("PeptideNoteColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide Peak Found Ratio.
         /// </summary>
         public static string PeptidePeakFoundRatio {
@@ -3302,6 +3329,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PrecursorNote {
             get {
                 return ResourceManager.GetString("PrecursorNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The color of the note flag shown on the precursor in the Targets tree.
+        /// </summary>
+        public static string PrecursorNoteColor {
+            get {
+                return ResourceManager.GetString("PrecursorNoteColor", resourceCulture);
             }
         }
         
@@ -3616,6 +3652,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ProteinNote {
             get {
                 return ResourceManager.GetString("ProteinNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The color of the note flag shown on the protein in the Targets tree.
+        /// </summary>
+        public static string ProteinNoteColor {
+            get {
+                return ResourceManager.GetString("ProteinNoteColor", resourceCulture);
             }
         }
         
@@ -4616,6 +4661,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string TransitionNote {
             get {
                 return ResourceManager.GetString("TransitionNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The color of the note flag shown on the transition in the Targets tree.
+        /// </summary>
+        public static string TransitionNoteColor {
+            get {
+                return ResourceManager.GetString("TransitionNoteColor", resourceCulture);
             }
         }
         

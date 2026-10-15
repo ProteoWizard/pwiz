@@ -374,6 +374,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        [ProteomicDisplayName("PeptideNoteColor")]
+        [InvariantDisplayName("MoleculeNoteColor")]
+        [Importable(Formatter = typeof(NoteColor.PropertyFormatter))]
+        public NoteColor NoteColor
+        {
+            get { return DocNode.Annotations.NoteColor; }
+            set
+            {
+                ChangeDocNode(EditColumnDescription(nameof(NoteColor), value),
+                    docNode => (PeptideDocNode) docNode.ChangeAnnotations(docNode.Annotations.ChangeNoteColor(value)));
+            }
+        }
+
         private RetentionTimeRegression GetRetentionTimeRegression()
         {
             return SrmDocument.Settings.PeptideSettings.Prediction.RetentionTime;

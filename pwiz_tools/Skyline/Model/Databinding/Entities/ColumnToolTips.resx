@@ -966,6 +966,9 @@ Unavailable when missing data impacts comparisons between replicates.</value>
   <data name="MoleculeListNote">
     <value>A free text note associated with the molecule list.</value>
   </data>
+  <data name="MoleculeListNoteColor">
+    <value>The color of the note flag shown on the molecule list in the Targets tree</value>
+  </data>
   <data name="MoleculeListResult">
     <value>Molecule List Result</value>
   </data>
@@ -984,6 +987,9 @@ Unavailable when missing data impacts comparisons between replicates.</value>
   </data>
   <data name="MoleculeNote">
     <value>A free text note associated with the molecule.</value>
+  </data>
+  <data name="MoleculeNoteColor">
+    <value>The color of the note flag shown on the molecule in the Targets tree</value>
   </data>
   <data name="MoleculePeakFoundRatio">
     <value>Molecule Peak Found Ratio</value>
@@ -1138,6 +1144,9 @@ modification delta masses (e.g. AC[+57]GR).</value>
     <value>A free text note associated with the peptide by clicking Edit Note on the
 Edit menu</value>
   </data>
+  <data name="PeptideNoteColor">
+    <value>The color of the note flag shown on the peptide in the Targets tree</value>
+  </data>
   <data name="PeptidePeakFoundRatio">
     <value>Peptide Peak Found Ratio</value>
   </data>
@@ -1249,6 +1258,9 @@ Unavailable when missing data impacts comparisons between replicates.</value>
   <data name="PrecursorNote">
     <value>A free text note associated with a precursor by clicking Edit Note on
 the Edit menu</value>
+  </data>
+  <data name="PrecursorNoteColor">
+    <value>The color of the note flag shown on the precursor in the Targets tree</value>
   </data>
   <data name="PrecursorPeakFoundRatio">
     <value>The ratio of transitions for which a peak was measured to the
@@ -1367,6 +1379,9 @@ conjunction with the accession number)</value>
   <data name="ProteinNote">
     <value>A free text note associated with the protein by clicking Edit Note on the
 Edit menu</value>
+  </data>
+  <data name="ProteinNoteColor">
+    <value>The color of the note flag shown on the protein in the Targets tree</value>
   </data>
   <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
@@ -1722,6 +1737,9 @@ particular precursor</value>
   <data name="TransitionNote">
     <value>A free text note associated with the transition by clicking Edit Note on
 the Edit menu</value>
+  </data>
+  <data name="TransitionNoteColor">
+    <value>The color of the note flag shown on the transition in the Targets tree</value>
   </data>
   <data name="TransitionReplicateNote">
     <value>A free text note associated with a result set of the transition

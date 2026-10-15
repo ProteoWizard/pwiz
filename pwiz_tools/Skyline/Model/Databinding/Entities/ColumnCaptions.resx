@@ -915,6 +915,9 @@
   <data name="MoleculeListNote">
     <value>Molecule List Note</value>
   </data>
+  <data name="MoleculeListNoteColor">
+    <value>Molecule List Note Color</value>
+  </data>
   <data name="MoleculeListResult">
     <value>Molecule List Result</value>
   </data>
@@ -932,6 +935,9 @@
   </data>
   <data name="MoleculeNote">
     <value>Molecule Note</value>
+  </data>
+  <data name="MoleculeNoteColor">
+    <value>Molecule Note Color</value>
   </data>
   <data name="MoleculePeakFoundRatio">
     <value>Molecule Peak Found Ratio</value>
@@ -1068,6 +1074,9 @@
   <data name="PeptideNote">
     <value>Peptide Note</value>
   </data>
+  <data name="PeptideNoteColor">
+    <value>Peptide Note Color</value>
+  </data>
   <data name="PeptidePeakFoundRatio">
     <value>Peptide Peak Found Ratio</value>
   </data>
@@ -1167,6 +1176,9 @@
   <data name="PrecursorNote">
     <value>Precursor Note</value>
   </data>
+  <data name="PrecursorNoteColor">
+    <value>Precursor Note Color</value>
+  </data>
   <data name="PrecursorPeakFoundRatio">
     <value>Precursor Peak Found Ratio</value>
   </data>
@@ -1265,6 +1277,9 @@
   </data>
   <data name="ProteinNote">
     <value>Protein Note</value>
+  </data>
+  <data name="ProteinNoteColor">
+    <value>Protein Note Color</value>
   </data>
   <data name="ProteinPreferredName">
     <value>Protein Preferred Name</value>
@@ -1589,6 +1604,9 @@
   </data>
   <data name="TransitionNote">
     <value>Transition Note</value>
+  </data>
+  <data name="TransitionNoteColor">
+    <value>Transition Note Color</value>
   </data>
   <data name="TransitionReplicateNote">
     <value>Transition Replicate Note</value>

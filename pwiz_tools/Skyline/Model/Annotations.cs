@@ -192,6 +192,32 @@ namespace pwiz.Skyline.Model
             return new Annotations(note, _annotations, ColorIndex);
         }
 
+        /// <summary>
+        /// The color of the flag drawn in the Targets tree, or null if no flag is drawn.
+        /// </summary>
+        public NoteColor NoteColor
+        {
+            get { return IsEmpty ? null : NoteColor.FromIndex(ColorIndex); }
+        }
+
+        /// <summary>
+        /// Changes the flag color. A node with no note is given <see cref="Model.NoteColor.PlaceholderNote"/>
+        /// so that the flag gets drawn, and removing the color removes that note again.
+        /// </summary>
+        public Annotations ChangeNoteColor(NoteColor noteColor)
+        {
+            if (Equals(noteColor, NoteColor))
+            {
+                return this;
+            }
+            if (noteColor == null)
+            {
+                var note = NoteColor.IsPlaceholderNote(Note) ? null : Note;
+                return new Annotations(note, _annotations, EMPTY.ColorIndex);
+            }
+            return new Annotations(IsEmpty ? NoteColor.PlaceholderNote : Note, _annotations, noteColor.Index);
+        }
+
         public Annotations ChangeAnnotation(string name, string value)
         {
             var newAnnotations = (_annotations != null ?
