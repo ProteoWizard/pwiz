@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(SAGE_SETTINGS, new Setting("min_ion_index", 2, 0));
             AddAdditionalSetting(SAGE_SETTINGS, new Setting("min_peaks", 15, 0));
             AddAdditionalSetting(SAGE_SETTINGS, new Setting("max_peaks", 150, 0));
-            AddAdditionalSetting(SAGE_SETTINGS, new Setting("min_matched_peaks", 6, 0));
+            AddAdditionalSetting(SAGE_SETTINGS, new Setting("min_matched_peaks", 4, 0));
             AddAdditionalSetting(SAGE_SETTINGS, new Setting("report_psms", 1, 1, 10));
             AddAdditionalSetting(SAGE_SETTINGS, new Setting("isotope_error_min", -1, -8, 0));
             AddAdditionalSetting(SAGE_SETTINGS, new Setting("isotope_error_max", 3, 0, 8));
