@@ -87,5 +87,9 @@ public sealed class Mz5ReaderAdapter : IReader
             throw;
         }
         conn.Dispose(); // release adapter's initial hold; lists keep it alive
+
+        // mz5 round-trips both the fileContent declaration and the per-spectrum terms, so the same
+        // run must not keep its calibration spectra here and lose them as mzML
+        MzmlReaderAdapter.ApplyIgnoreCalibrationScans(result, config);
     }
 }
