@@ -33,7 +33,7 @@ namespace pwiz.Common.Colors
         {
             double minValue = MinValue;
             double maxValue = MaxValue;
-            foreach (var value in values.OfType<object>().Select(ToDouble).OfType<double>())
+            foreach (var value in values.OfType<object>().Select(ToDouble).OfType<double>().Where(double.IsFinite))
             {
                 minValue = Math.Min(minValue, value);
                 maxValue = Math.Max(maxValue, value);
@@ -46,13 +46,13 @@ namespace pwiz.Common.Colors
         public Color? GetColor(object value)
         {
             var doubleValue = ToDouble(value);
-            if (!doubleValue.HasValue)
+            if (!doubleValue.HasValue || double.IsNaN(doubleValue.Value))
             {
                 return null;
             }
 
             int lightness;
-            double maxAbsValue = Math.Max(MaxValue, MinValue);
+            double maxAbsValue = Math.Max(Math.Abs(MaxValue), Math.Abs(MinValue));
             if (Math.Abs(doubleValue.Value) < maxAbsValue)
             {
                 lightness = (int)((maxAbsValue - Math.Abs(doubleValue.Value)) * (255 / maxAbsValue));
