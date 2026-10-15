@@ -24,6 +24,8 @@ using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -46,7 +48,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// <summary>
         /// The pass-1 <see cref="ModelDiagnosticsData"/>, written by FirstPassFdrTask when its
         /// score pass ends. An experiment-wide PRODUCT in the doc-00 sense: committed through
-        /// <see cref="FileSaver"/> so presence proves completeness (P8), written once and never
+        /// <see cref="SimpleFileSaver"/> so presence proves completeness (P8), written once and never
         /// revisited (P11), and stamped with FirstPassFDR's own validity key (P9).
         ///
         /// <para>It used to be a hand-off that SecondPassFdrTask DELETED once consumed, which is
@@ -458,7 +460,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
             // Atomic write (temp + rename) so an interrupted run can't leave a truncated report.
-            using (var saver = new FileSaver(outPath))
+            using (var saver = new SimpleFileSaver(outPath))
             {
                 File.WriteAllText(saver.SafeName, html);
                 saver.Commit();
@@ -558,7 +560,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         private static ArtifactStamp ProductStamp(string taskName, string validityKey)
         {
-            return string.IsNullOrEmpty(validityKey) ? null : ArtifactStamp.ForCurrentBuild(taskName, validityKey);
+            return string.IsNullOrEmpty(validityKey) ? null : OspreyVersion.Stamp(taskName, validityKey);
         }
 
         /// <summary>
@@ -582,7 +584,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     ? @"{" + property + @"}"
                     : @"{" + property + @"," + json.Substring(1);
             }
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();

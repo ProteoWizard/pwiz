@@ -1,8 +1,8 @@
 # 21. User-Facing Text (C#)
 
 > Applies to every `LogInfo` / `LogWarning` / `LogError` line, every `ProgressReporter`
-> label, and every CLI error. Corresponds to `Osprey.Core/OspreyOutput.cs` (the one
-> output seam) and the `[TASK]` markers parsed by `perfviz.py` and `regression.ps1`.
+> label, and every CLI error. Corresponds to `CommandOutput` in CommonUtil (the one
+> output seam; `OspreyOutput` holds Osprey's gates on it) and the `[TASK]` markers parsed by `perfviz.py` and `regression.ps1`.
 
 The log is the only UI Osprey has. Its reader is a mass spectrometrist running a search,
 not the developer who named the classes, and many of the words in the code came from

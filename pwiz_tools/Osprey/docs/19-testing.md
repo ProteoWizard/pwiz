@@ -75,8 +75,8 @@ Additional C# test files with no direct Rust analog cover port-specific
 infrastructure: `ProgramTests.cs` (CLI `--task` argument validation — see
 15-hpc-scoring-split.md),
 `ByproductContextTest.cs`, `DiagnosticsTest.cs`, `ModelDiagnosticsDataTest.cs`
-(the `--model-diagnostics` HTML report), `FileSaverTest.cs` (the safe
-copy-and-verify NAS-write pattern), `DecoyPairingManifestTest.cs` and
+(the `--model-diagnostics` HTML report), `SimpleFileSaverTest.cs` in `Skyline/CommonTest` (the shared
+sibling-temp atomic write), `DecoyPairingManifestTest.cs` and
 `EntrapmentPairingTest.cs` (decoy/entrapment pairing — see 01-decoy-generation.md).
 
 ## 3. Parity-locked tests and the "translation-proof" register

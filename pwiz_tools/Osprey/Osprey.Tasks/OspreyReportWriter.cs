@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 
@@ -98,8 +99,8 @@ namespace pwiz.Osprey.Tasks
         // The reports are additive: nothing downstream reads them, and the blib has not been
         // written yet when they run. So a write failure is a warning naming the path, not a
         // pipeline abort. The common case is the previous run's report still open in Excel,
-        // which makes FileSaver.Commit throw IOException on the replace; Commit deliberately
-        // lets that propagate so the caller can log it. FileSaver's disposal drops the temp.
+        // which makes SimpleFileSaver.Commit throw IOException on the replace; Commit deliberately
+        // lets that propagate so the caller can log it. SimpleFileSaver's disposal drops the temp.
         // label is the machine token on the [COUNT] line; displayName is the localized name
         // the warning uses.
         private static void TryWriteReport(string label, string displayName, string path,
@@ -373,12 +374,12 @@ namespace pwiz.Osprey.Tasks
 
         // Both reports are the same file shape: a tab-joined header, tab-joined rows, "\n"
         // newlines and UTF-8 without BOM (the StreamWriter default). The file is staged and
-        // committed through FileSaver so a kill mid-write leaves the previous report or none,
+        // committed through SimpleFileSaver so a kill mid-write leaves the previous report or none,
         // never a truncated one (P8). Rows stream through; the report is never built as one
         // string.
         private static void WriteTsv(string path, string[] header, IEnumerable<string[]> rows)
         {
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var w = new StreamWriter(saver.SafeName, false))
                 {

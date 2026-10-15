@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.IO
 {
@@ -34,7 +35,7 @@ namespace pwiz.CarafeSharp.IO
     /// </summary>
     public sealed class OspreyTrainingExport
     {
-        public const string FILE_SUFFIX = @".training.parquet";
+        public const string FILE_SUFFIX = OspreyTrainingExportFile.SUFFIX;
 
         /// <summary>The format Osprey writes (<c>osprey.training_export.format_version</c>).</summary>
         public const string FORMAT_VERSION = @"2";

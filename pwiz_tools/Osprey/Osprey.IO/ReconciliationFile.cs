@@ -25,7 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using pwiz.Osprey.Core;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.IO
 {
@@ -197,12 +198,12 @@ namespace pwiz.Osprey.IO
             // LF line endings and a trailing newline, for byte parity with the Rust side.
             string json = RoundtripDoubleConverter.SerializeIndented(file);
 
-            // Atomic write via FileSaver: a sibling temp file is
+            // Atomic write via SimpleFileSaver: a sibling temp file is
             // promoted to the destination on Commit; on exception, the
-            // using-block disposes FileSaver which deletes the temp
+            // using-block disposes SimpleFileSaver which deletes the temp
             // without touching the destination. See
-            // Osprey.Core.FileSaver for details.
-            using (var saver = new FileSaver(path))
+            // pwiz.Common.SystemUtil.SimpleFileSaver for details.
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();

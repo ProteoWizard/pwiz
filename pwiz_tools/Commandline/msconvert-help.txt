@@ -8,15 +8,13 @@ Options:
   -o [ --outdir ] arg (=.)           : set output directory ('.' for current directory)
   -c [ --config ] arg                : configuration file (optionName=value)
   --outfile arg                      : Override the name of output file.
-  -e [ --ext ] arg                   : set extension for output files [mzML|mzXML|mgf|txt|mz5|mzMLb]
+  -e [ --ext ] arg                   : set extension for output files [mzML|mzXML|mgf|mzMLb]
   --mzML                             : write mzML format [default]
   --mzXML                            : write mzXML format
-  --mz5                              : write mz5 format
   --mzMLb                            : write mzMLb format
   --mzMLbChunkSize arg (=1048576)    : mzMLb dataset chunk size in bytes
   --mzMLbCompressionLevel arg (=4)   : mzMLb GZIP compression level (0-9)
   --mgf                              : write Mascot generic format
-  --text                             : write ProteoWizard internal text format
   --ms1                              : write MS1 format
   --bms1                             : write BMS1 format
   --cms1                             : write CMS1 format

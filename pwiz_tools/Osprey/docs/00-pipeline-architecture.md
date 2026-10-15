@@ -468,7 +468,7 @@ test has to leave the state an interruption actually leaves, not a tidier one.
 
 ### Write discipline: what makes a file trustworthy
 
-**P8. Every durable artifact commits through `FileSaver`, so presence proves
+**P8. Every durable artifact commits through `SimpleFileSaver`, so presence proves
 completeness.** The writer stages into a sibling temp file in the same directory and
 promotes it with an in-volume rename; a crash mid-write leaves the previous content or
 no file, never a half-written one. Every consumer in the pipeline relies on this: a
@@ -479,7 +479,7 @@ durable artifact that does not appear there is a defect.
 
 **"Durable artifact" is not narrowed to what the pipeline reads back.** The Stage-7
 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on) commit
-through `FileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7 leaves the
+through `SimpleFileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7 leaves the
 previous run's report or none, never a half-written one. Because nothing downstream reads
 them and the blib has not been written yet when they run, a report that cannot be written
 - the previous run's copy still open in Excel is the common case, which makes the
@@ -499,10 +499,10 @@ a downstream task consumes.
 showing how far processing got before a crash.** `FdrDiagnostics.CoAssignRowDump`'s row
 stream and `OspreyFileDiagnostics`'s four held-open streams (`cs_stage6_mp_inputs.tsv`,
 `cs_stage6_predict_rt.tsv` - unreachable today, no live caller - `cs_stage6_cwt_path.tsv`,
-`cs_stage6_calibration.tsv`) write directly to their final path, not through `FileSaver`.
+`cs_stage6_calibration.tsv`) write directly to their final path, not through `SimpleFileSaver`.
 Each streams rows across a long loop - a multi-file cohort walk, a per-scan rescore loop -
 specifically so a bisection session can see whatever got through before an exception
-ended it; discarding that on a throw, `FileSaver`'s whole point for a downstream reader,
+ended it; discarding that on a throw, `SimpleFileSaver`'s whole point for a downstream reader,
 would throw away the one thing these dumps exist to preserve. A session that turned on
 the dump's own env var and hit a crash should not also need to know a second flag
 (`KeepFailedWrites`, below) exists to recover what was written - these dumps just leave it
@@ -510,13 +510,13 @@ at their documented name unconditionally. `CoAssignRowDump` additionally needs t
 unique sequence number per rebuild (a directory can hold both a straight-through Stage 7
 run and a later `--task ModelDiagnostics` regeneration), which `FileMode.CreateNew` on the
 real path gives it directly - no separate reservation step, unlike the workaround
-`FileSaver`'s deferred-existence-until-`Commit` would otherwise require. The four
+`SimpleFileSaver`'s deferred-existence-until-`Commit` would otherwise require. The four
 `OspreyFileDiagnostics` streams still register `CloseAll` against process exit, but only
 to flush each writer's OS-buffered tail before `Environment.Exit` returns - not to commit
 anything, since the rows are already at their final path as they are written.
 
 This differs from `PeakDataExtractor`'s search-XIC dump, which DOES commit through
-`FileSaver` despite also accumulating across calls: two independent call sites write the
+`SimpleFileSaver` despite also accumulating across calls: two independent call sites write the
 same `cs_search_xic_entry_<id>.txt` for one candidate, so the hazard there is a
 lost-update race between writers, not a crash discarding partial rows - the
 read-existing/write-whole/commit pattern under `DiagnosticFileLock` is what keeps one
@@ -529,7 +529,7 @@ because the failure being guarded against is different.
 **One exemption is structural rather than a gap: the `--log-file` stream**
 (`CommandStatusWriter` over `config.LogFilePath` in `Program.cs`). It is written
 incrementally for the life of the run specifically so it can be tailed while the run is
-still going - `ai/CLAUDE.md` directs sessions to use it for exactly that. `FileSaver`'s
+still going - `ai/CLAUDE.md` directs sessions to use it for exactly that. `SimpleFileSaver`'s
 model makes the real path invisible until `Commit()` at the very end, which would break
 live tailing and leave nothing at all after a crash, the opposite of what a log is for.
 `ArtifactPaths.ProbeWritable`'s zero-byte, self-deleting writability check is not a
@@ -537,11 +537,11 @@ content write in the first place, so the P8 contract does not apply to it.
 
 For forensic inspection of what an ARTIFACT-shaped write got through before an exception
 abandoned it - without weakening the guarantee for every normal reader - set
-`OspreyEnvironment.KeepFailedWrites` (`OSPREY_KEEP_FAILED_WRITES`): `FileSaver.Dispose()`
+`OspreyEnvironment.KeepFailedWrites` (`OSPREY_KEEP_FAILED_WRITES`): `SimpleFileSaver.Dispose()`
 leaves an uncommitted temp in place instead of deleting it. It never touches the real
 path, so presence still proves completeness there; only a developer who knows to look
 for the temp sees the partial write. It has no effect on the log-shaped dumps above, which
-need no such flag because they never wrapped the write in `FileSaver` to begin with.
+need no such flag because they never wrapped the write in `SimpleFileSaver` to begin with.
 [14-intermediate-files](14-intermediate-files.md) enumerates every writer.
 
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
@@ -552,7 +552,7 @@ set as the run now asking?"** Those are orthogonal questions with orthogonal mec
 existence answers completeness, the stamp answers membership.
 
 The answer to the second question is a validity stamp - (task, Osprey version, key) - that
-every durable artifact carries **inside itself**, written in the same `FileSaver` commit as
+every durable artifact carries **inside itself**, written in the same `SimpleFileSaver` commit as
 its content. So the stamp cannot outlive its artifact, cannot drift from it, and cannot be
 re-certified onto a stale file by a later process: replacing the content replaces the stamp,
 and a file that exists has exactly the stamp its writer gave it. `PerFileResumeDriver.IsCurrent`
@@ -615,7 +615,7 @@ disk - and P8's guarantee that presence proves completeness has no counterpart f
 absence.
 
 **P14. When a phase writes several files for one run, "done" is one predicate over all of
-them.** `FileSaver` makes each individual write atomic; it says nothing about a *set* of
+them.** `SimpleFileSaver` makes each individual write atomic; it says nothing about a *set* of
 writes. This used to be answered by an ordering discipline - the file whose presence gates
 downstream reuse lands last, which is why `PerFileRescoring` writes
 `<stem>.2nd-pass.fdr_decoys.bin` before `<stem>.2nd-pass.fdr_scores.bin` - and the
@@ -928,7 +928,7 @@ deducible from the scope taxonomy alone.
 
 **Validity stamps live inside the artifact, one per artifact.** Each durable product
 carries one stamp, `osprey-validity/1;task=<Task>;version=<OspreyVersion.Current>;key=<validity key>`,
-written in the same `FileSaver` commit as its content: a parquet footer entry, the first
+written in the same `SimpleFileSaver` commit as its content: a parquet footer entry, the first
 property of a JSON document, the opening comment of the HTML report, a row of the blib's
 metadata table, or a trailer after a binary sidecar's records (the bytes are
 [14-intermediate-files](14-intermediate-files.md), section 8). Reuse requires the stamp to

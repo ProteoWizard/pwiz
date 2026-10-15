@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 

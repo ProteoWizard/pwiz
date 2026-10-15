@@ -2856,6 +2856,8 @@ namespace pwiz.SkylineTestUtil
                 BeginAuditLogging();
                 RunTest();
                 EndAuditLogging();
+                // After the audit log is finished, so a record mode run can also record tutorial audit logs
+                CheckRecordMode();
             }
             catch (Exception x)
             {
@@ -2970,8 +2972,6 @@ namespace pwiz.SkylineTestUtil
             ForceSystemEventsLeak();
 
             DoTest();
-
-            CheckRecordMode();
 
             if (null != SkylineWindow)
             {

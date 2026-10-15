@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -556,7 +557,7 @@ namespace pwiz.Osprey.FDR
             // Section sub-header (default human log): the actual (possibly subsampled)
             // training-set size the per-iteration percent lines below are computed against.
             // subN / subTargets are the post-subsample counts computed above.
-            OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+            CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                 OspreyFDRResources.PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_,
                 config.NFolds, subN, subTargets));
 
@@ -606,7 +607,7 @@ namespace pwiz.Osprey.FDR
                 // The tree counterpart of the C report below: the knobs that actually
                 // bound this model's capacity, so the fold scores above have context.
                 var gp = config.GbtParams;
-                OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                     OspreyFDRResources.PercolatorTrainer_TrainFoldModels_Gradient_boosted_trees___0__trees__max_depth__1__learning_rate__2__subsample__3__colsample__4_,
                     gp.NTrees, gp.MaxDepth, gp.LearningRate, gp.Subsample, gp.ColSample,
                     gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight));
@@ -619,12 +620,12 @@ namespace pwiz.Osprey.FDR
                 // from a log-scale sweep grid; report the grid, the selection rule (it is part
                 // of the validity key, so a resumed run was trained under the same one) and
                 // each fold's pick.
-                OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                     OspreyFDRResources.PercolatorTrainer_TrainFoldModels_SVM_regularization_C__swept_over__0___chosen_by_cross_validation_per_fold__,
                     FormatCGrid(config.CValues), DescribeCSelection(config.CSelectionTolerance)));
                 for (int fold = 0; fold < config.NFolds; fold++)
                 {
-                    OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(2) + string.Format(
+                    CommandOutput.Out.WriteLine(TextUtil.GetIndentation(2) + string.Format(
                         OspreyFDRResources.PercolatorTrainer_TrainFoldModels_fold__0___1___C____2_,
                         fold + 1, config.NFolds, FormatC(foldBestC[fold])));
                 }
@@ -696,7 +697,7 @@ namespace pwiz.Osprey.FDR
                         foreach (var r in reports)
                         {
                             double foldPct = r.Targets > 0 ? 100.0 * r.Passing / r.Targets : 0.0;
-                            OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                            CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                                 OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_fold__0___1___iteration__2__of__3____4__of__5__targets___6____at__7__FDR_,
                                 r.Fold + 1, _nFolds, iteration + 1, _maxIterations,
                                 r.Passing, r.Targets, foldPct, _trainFdr));
@@ -711,7 +712,7 @@ namespace pwiz.Osprey.FDR
                         sumTargets += r.Targets;
                     }
                     double pct = sumTargets > 0 ? 100.0 * sumPassing / sumTargets : 0.0;
-                    OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                    CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                         OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_iteration__0__of__1____2____of_training_targets_at__3__FDR_,
                         iteration + 1, _maxIterations, pct, _trainFdr));
                 }
