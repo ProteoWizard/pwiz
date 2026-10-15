@@ -20,9 +20,19 @@
     `dotnet build SkylineBuild.proj` (which restores first) restores all of them in one pass too.
     This file deliberately imports nothing else: no Microsoft.Common targets, and so no
     Directory.Build.props/targets.
+
+    -p:SkylineBuildProjects=<list> builds a subset instead (tc-perftests.bat builds Skyline,
+    TestPerf, TestTutorial and TestRunner). Separate the paths with %3B, not ';': on the
+    command line a raw ';' ends the property. The property is removed again before the
+    projects are built, so it does not become a global property of every project.
   -->
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(SkylineBuildProjects)' != ''">
+    <!-- Unescape, or the %3B separators stay escaped and the list is read as one path. -->
+    <SkylineBuildProject Include="$([MSBuild]::Unescape('$(SkylineBuildProjects)'))" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SkylineBuildProjects)' == ''">
     <SkylineBuildProject Include="Skyline.csproj" />
     <SkylineBuildProject Include="CommonTest\CommonTest.csproj" />
     <SkylineBuildProject Include="Test\Test.csproj" />
@@ -43,7 +53,15 @@
   <Import Project="$(MSBuildToolsPath)\NuGet.targets" />
 
   <Target Name="Build">
-    <MSBuild Projects="@(SkylineBuildProject)" Targets="Build" BuildInParallel="true" />
+    <MSBuild Projects="@(SkylineBuildProject)" Targets="Build" BuildInParallel="true"
+             RemoveProperties="SkylineBuildProjects" />
   </Target>
+
+  <Target Name="Clean">
+    <MSBuild Projects="@(SkylineBuildProject)" Targets="Clean" BuildInParallel="true"
+             RemoveProperties="SkylineBuildProjects" />
+  </Target>
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
 
 </Project>

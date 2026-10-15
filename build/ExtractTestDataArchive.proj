@@ -15,15 +15,15 @@
     normalizes both paths and strips the caller's own global properties, so every caller asks
     for the same instance.
 
-    The stamp lives here, under build\obj, one per archive rather than one per consuming
-    project: whichever project extracts an archive first marks it done for all of them.
-    clean.bat's `git clean -X` removes it along with the extracted fixtures.
+    The stamp lives here, under build\obj, one per archive and destination rather than one per
+    consuming project: whichever project extracts an archive first marks it done for all of
+    them. clean.bat's `git clean -X` removes it along with the extracted fixtures.
 
     See ExtractTestData.targets for why this uses the checked-in bsdtar and why -k matters.
   -->
 
   <PropertyGroup>
-    <_ExtractStamp>$(MSBuildThisFileDirectory)obj\extracted\$([System.IO.Path]::GetFileName('$(Archive)')).$([MSBuild]::StableStringHash('$(Archive)')).extracted</_ExtractStamp>
+    <_ExtractStamp>$(MSBuildThisFileDirectory)obj\extracted\$([System.IO.Path]::GetFileName('$(Archive)')).$([MSBuild]::StableStringHash('$(Archive)|$(Parent)')).extracted</_ExtractStamp>
   </PropertyGroup>
 
   <!-- An archive a checkout does not carry is not an error; skip it rather than failing the

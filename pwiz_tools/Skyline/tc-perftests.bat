@@ -112,7 +112,10 @@ REM # Skyline.csproj pulls in every ProjectReference (BiblioSpec, CommonMsData,
 REM # ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp vendor + BiblioSpec
 REM # tool projects, ...). TestPerf/TestTutorial add the two suites (and copy
 REM # TestUtil/TestFunctional into their own output). TestRunner is the harness.
-set BUILD_TARGET=Skyline.csproj TestPerf\TestPerf.csproj TestTutorial\TestTutorial.csproj TestRunner\TestRunner.csproj
+REM # SkylineBuild.proj builds them in one MSBuild session, the way build.bat builds
+REM # the full set; the list is %%3B-separated, see SkylineBuild.proj.
+set BUILD_TARGET=SkylineBuild.proj
+set BUILD_PROJECTS=Skyline.csproj%%3BTestPerf\TestPerf.csproj%%3BTestTutorial\TestTutorial.csproj%%3BTestRunner\TestRunner.csproj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
@@ -130,11 +133,10 @@ if %EXIT% NEQ 0 (
     set ERROR_TEXT=
 )
 
-for %%P in (%BUILD_TARGET%) do call :restore_one "%%~P"
-if %EXIT% NEQ 0 goto error
-
-for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
-if %EXIT% NEQ 0 goto error
+REM # Restore and build in one dotnet build. No -f - see SkylineBuild.proj.
+echo ##teamcity[progressMessage 'dotnet build %BUILD_TARGET% (%CONFIG%)']
+dotnet build "%BUILD_TARGET%" -nologo %MSBUILD_PROPS% -p:SkylineBuildProjects=%BUILD_PROJECTS%
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %BUILD_TARGET% failed" & goto error)
 
 REM # ------------------------------------------------------------------------
 REM # Stage step. Merge Skyline + TestRunner + TestPerf + TestTutorial into one
@@ -199,18 +201,6 @@ if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error
 :tests_done
 popd
 exit /b 0
-
-:restore_one
-echo ##teamcity[progressMessage 'dotnet restore %~1']
-dotnet restore "%~1" %MSBUILD_PROPS%
-if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet restore %~1 failed")
-goto :eof
-
-:build_one
-echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
-dotnet build "%~1" -f net10.0-windows --no-restore -nologo %MSBUILD_PROPS%
-if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
-goto :eof
 
 REM # Stage one project into %STAGE_DIR%. The first call (STAGE_FIRST=1) bundles the
 REM # portable .NET runtime; the rest pass -NoRuntime to skip re-staging it.

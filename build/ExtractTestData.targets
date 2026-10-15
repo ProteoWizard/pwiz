@@ -48,10 +48,17 @@
           Condition="'@(VendorTestArchives)' != ''">
     <!-- Callers spell the same archive differently (TestData\..\..\..\pwiz\... and
          $(PwizRoot)\data\...), and global properties are compared as text, so normalize both
-         paths to full paths or the requests would not be recognized as the same one. -->
+         paths to full paths or the requests would not be recognized as the same one. No
+         trailing separator on Parent either: it would escape the closing quote of tar's -C
+         argument. -->
     <ItemGroup>
-      <_VendorTestArchiveRequest Include="@(VendorTestArchives->'%(FullPath)')">
-        <ExtractProperties>Archive=%(FullPath);Parent=$([System.IO.Path]::GetFullPath('%(Parent)'))</ExtractProperties>
+      <_VendorTestArchiveRequest Include="@(VendorTestArchives->'%(FullPath)')" />
+      <!-- No Parent means the archive's own folder, which is where every archive extracts. -->
+      <_VendorTestArchiveRequest Condition="'%(Parent)' == ''">
+        <Parent>%(RootDir)%(Directory)</Parent>
+      </_VendorTestArchiveRequest>
+      <_VendorTestArchiveRequest>
+        <ExtractProperties>Archive=%(FullPath);Parent=$([System.IO.Path]::GetFullPath('%(Parent)').TrimEnd('\').TrimEnd('/'))</ExtractProperties>
       </_VendorTestArchiveRequest>
     </ItemGroup>
     <!-- RemoveProperties drops the caller's own global properties, which the MSBuild task
