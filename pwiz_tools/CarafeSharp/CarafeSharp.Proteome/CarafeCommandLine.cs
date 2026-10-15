@@ -217,6 +217,14 @@ namespace pwiz.CarafeSharp.Proteome
             ARG_SE, ARG_FDR, ARG_COR, ARG_N_ION_MIN, ARG_C_ION_MIN, ARG_NF, ARG_MIN_N, ARG_VALID, ARG_NO_MASKING, ARG_SEED,
             ARG_RT_ALIGN, ARG_RT_SELECT);
 
+        // --- Output (CarafeSharp's, as Osprey's --log-file / --timestamp / --memstamp) --------
+        public static readonly CarafeArgument ARG_LOG_FILE = Value(@"log_file", @"<path>");
+        public static readonly CarafeArgument ARG_TIMESTAMP = Flag(@"timestamp");
+        public static readonly CarafeArgument ARG_MEMSTAMP = Flag(@"memstamp");
+
+        private static readonly CarafeArgumentGroup GROUP_OUTPUT = new CarafeArgumentGroup(() => @"Output", true,
+            ARG_LOG_FILE, ARG_TIMESTAMP, ARG_MEMSTAMP);
+
         // --- Carafe options accepted for compatibility -------------------------------------
         // The rest of Carafe 2.2.0's options, so CarafeSharp accepts exactly what Carafe's GUI
         // passes. Most are ignored, as Carafe ignores them in these modes; a few are checked
@@ -288,6 +296,7 @@ namespace pwiz.CarafeSharp.Proteome
                     GROUP_LIBRARY,
                     GROUP_MODELS,
                     GROUP_TRAINING,
+                    GROUP_OUTPUT,
                     GROUP_COMPATIBILITY,
                     new ParaUsageBlock(@"OTHER FORMS ACCEPTED: a value may follow its option (--db x.fasta) or be joined to it " +
                                        @"(--db=x.fasta), and every option is also accepted with Carafe's single dash (-db x.fasta, " +
@@ -354,6 +363,15 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>Warnings Carafe prints for audit switches.</summary>
         public IList<string> Warnings { get; } = new List<string>();
 
+        /// <summary>The file every line of output and error goes to (<c>-log_file</c>), or null for the console.</summary>
+        public string LogFile { get; private set; }
+
+        /// <summary>Prefix each line with the time (<c>-timestamp</c>).</summary>
+        public bool TimeStamp { get; private set; }
+
+        /// <summary>Prefix each line with the managed and private memory in use (<c>-memstamp</c>).</summary>
+        public bool MemStamp { get; private set; }
+
         /// <summary>The help format <c>-h</c> was given (ascii, unicode, sections, html or a section name), or null for the default.</summary>
         public string HelpFormat { get; private set; }
 
@@ -373,6 +391,11 @@ namespace pwiz.CarafeSharp.Proteome
             }
             if (Has(@"printPTM"))
                 throw new ArgumentException(@"-printPTM is not supported by CarafeSharp");
+            // Output options, read in every mode (CarafeSharp's, as Osprey's --log-file / --timestamp / --memstamp).
+            if (TryGet(@"log_file", out string logFile))
+                LogFile = logFile;
+            TimeStamp = Has(@"timestamp");
+            MemStamp = Has(@"memstamp");
 
             var digest = new DigestSettings { ClipNTermMethionine = Has(@"clip_n_m") };
             var modifications = new ModificationSettings();

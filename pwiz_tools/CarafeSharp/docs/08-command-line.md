@@ -95,7 +95,9 @@ The help's last section lists them. Each is accepted so a Carafe command line ru
 ## CarafeSharp's own options
 
 Beyond Carafe's: `-pretrained`, `-model`, `-model_info`, `-activation`, `-analyzer`,
-`-rt_model`, `-rt_align`, `-rt_select` and `-rt_reference`. Their semantics are in
+`-rt_model`, `-rt_align`, `-rt_select` and `-rt_reference`, and the output options every mode
+reads, `-log_file`, `-timestamp` and `-memstamp` (Osprey's `--log-file`, `--timestamp` and
+`--memstamp`). Their semantics are in
 `01-model-spec.md`, `06-saved-models.md` and `07-chronologer.md`; the help has the one-line
 version of each.
 

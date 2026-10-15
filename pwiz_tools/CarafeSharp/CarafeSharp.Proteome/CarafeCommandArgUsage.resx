@@ -265,6 +265,15 @@
   <data name="_rt_select" xml:space="preserve">
     <value>With aligned runs, the retention time a peptide form trains on: its best run, or the runs' median. CarafeSharp only.</value>
   </data>
+  <data name="_log_file" xml:space="preserve">
+    <value>Write every line of output and error to this file instead of the console. CarafeSharp only, any mode.</value>
+  </data>
+  <data name="_timestamp" xml:space="preserve">
+    <value>Prefix each line with the time. CarafeSharp only.</value>
+  </data>
+  <data name="_memstamp" xml:space="preserve">
+    <value>Prefix each line with the managed and private memory in use. CarafeSharp only.</value>
+  </data>
   <data name="_itol" xml:space="preserve">
     <value>Carafe's XIC extraction settings (--itol, --itolu, --sg, --min_mz, --rf, --rf_rt_win, --rt_win_offset) are Osprey's to decide: the matches, XICs and peak boundaries come from its training export, so each is reported and ignored.</value>
   </data>

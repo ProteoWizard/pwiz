@@ -49,7 +49,7 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>
         /// Carafe 2.2.0 (origin/main) AIGear's options, plus CarafeSharp's own (-pretrained,
         /// -model, -model_info, -activation, -analyzer, -rt_model, -rt_align, -rt_select,
-        /// -rt_reference). The declarations must cover exactly these, so a Carafe command line
+        /// -rt_reference, -log_file, -timestamp, -memstamp). The declarations must cover exactly these, so a Carafe command line
         /// is accepted whole and nothing is declared that neither tool knows.
         /// </summary>
         private const string CARAFE_OPTIONS =
@@ -65,7 +65,8 @@ namespace pwiz.CarafeSharp.Test
             @"rt_select rt_reference " +
             @"printPTM nm cs ez skyline valid use_all_peaks I2L clip_n_m rf xic export_mgf " +
             @"no_masking no_similarity_gate ignore_pairing_errors entrapment no_decoys mz_filter " +
-            @"y1 fast ccs torch_compile help";
+            @"y1 fast ccs torch_compile help " +
+            @"log_file timestamp memstamp";
 
         [TestMethod]
         public void TestEveryArgIsGroupedAndDescribed()

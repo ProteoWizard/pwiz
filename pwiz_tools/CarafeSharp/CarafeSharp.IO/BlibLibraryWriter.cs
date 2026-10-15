@@ -30,6 +30,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using pwiz.CarafeSharp.Core;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.IO
 {
@@ -68,6 +70,7 @@ namespace pwiz.CarafeSharp.IO
         /// </summary>
         public const int MAX_PEAKS_PER_INSERT = 100;
 
+
         private const int SOURCE_FILE_ID = 1;
 
         /// <summary>BiblioSpec's ScoreTypes rows, as Osprey writes them.</summary>
@@ -104,7 +107,8 @@ namespace pwiz.CarafeSharp.IO
         /// <summary>The IonMobilityTypes id of timsTOF 1/K0, which <c>-ccs</c> writes.</summary>
         public const int ION_MOBILITY_TYPE_INVERSE_K0 = 2;
 
-        private readonly PartialFile _file;
+        private readonly SimpleFileSaver _file;
+        private readonly ArtifactStamp _stamp;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         // The INSERT of n annotation rows at index n, prepared when first needed.
         private readonly AnnotationInsert[] _insertAnnotations = new AnnotationInsert[MAX_PEAKS_PER_INSERT + 1];
@@ -120,15 +124,19 @@ namespace pwiz.CarafeSharp.IO
         /// <summary>
         /// Starts the library that <see cref="Complete"/> writes to <paramref name="path"/>, with
         /// one source file named <paramref name="sourceFileName"/> (Carafe uses the library file
-        /// name without its extension). It is written to a <see cref="PartialFile"/>, so until
-        /// then any library already at <paramref name="path"/> is left as it is.
+        /// name without its extension). It is written to a <see cref="SimpleFileSaver"/> temp, so until
+        /// then any library already at <paramref name="path"/> is left as it is. With
+        /// <paramref name="stamp"/>, the library records it (<see cref="ArtifactStamp.BLIB_TABLE"/>, the
+        /// slot Osprey's blib writer uses, which Skyline ignores) in the
+        /// same commit as its content, so a resume check can tell whether to reuse it.
         /// </summary>
-        public BlibLibraryWriter(string path, string sourceFileName)
+        public BlibLibraryWriter(string path, string sourceFileName, ArtifactStamp stamp = null)
         {
-            _file = new PartialFile(path);
+            _file = new SimpleFileSaver(path);
+            _stamp = stamp;
             try
             {
-                var connectionString = new SQLiteConnectionStringBuilder { DataSource = _file.PartialPath, Version = 3 };
+                var connectionString = new SQLiteConnectionStringBuilder { DataSource = _file.SafeName, Version = 3 };
                 _connection = new SQLiteConnection(connectionString.ToString());
                 _connection.Open();
                 Execute(@"PRAGMA synchronous=OFF");
@@ -280,7 +288,7 @@ namespace pwiz.CarafeSharp.IO
         public void Dispose()
         {
             CloseConnection();
-            _file.Discard();
+            _file.Dispose();
         }
 
         private void CloseConnection()
@@ -381,12 +389,22 @@ namespace pwiz.CarafeSharp.IO
                     @"SpectrumSourceID INTEGER, ionMobility REAL, collisionalCrossSectionSqA REAL, " +
                     @"ionMobilityHighEnergyOffset REAL, ionMobilityType TINYINT, retentionTime REAL, startTime REAL, " +
                     @"endTime REAL, score REAL, bestSpectrum INTEGER)");
+            if (_stamp != null)
+            {
+                Execute(ArtifactStamp.BLIB_TABLE_DDL);
+                using (var insert = new SQLiteCommand(ArtifactStamp.BLIB_INSERT_SQL, _connection))
+                {
+                    insert.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
+                    insert.Parameters.AddWithValue(@"@value", _stamp.ToString());
+                    insert.ExecuteNonQuery();
+                }
+            }
 
             using (var transaction = _connection.BeginTransaction())
             {
                 using (var info = new SQLiteCommand(@"INSERT INTO LibInfo VALUES (@lsid, @time, 0, @major, @minor)", _connection))
                 {
-                    info.Parameters.AddWithValue(@"@lsid", @"urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:" + Path.GetFileName(_file.FinalPath));
+                    info.Parameters.AddWithValue(@"@lsid", @"urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:" + Path.GetFileName(_file.RealName));
                     // ctime() format, as BiblioSpec and Carafe write it.
                     info.Parameters.AddWithValue(@"@time", DateTime.Now.ToString(@"ddd MMM dd HH:mm:ss yyyy", CultureInfo.InvariantCulture));
                     info.Parameters.AddWithValue(@"@major", MAJOR_VERSION);

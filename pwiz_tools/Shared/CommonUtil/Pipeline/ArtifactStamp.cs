@@ -22,27 +22,30 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.Common.SystemUtil;
 
-namespace pwiz.Osprey.Core
+namespace pwiz.Common.Pipeline
 {
     /// <summary>
     /// The validity record every durable pipeline artifact carries INSIDE itself: which task
-    /// wrote it, under which Osprey version, and with which validity key. An artifact is
+    /// wrote it, under which build version, and with which validity key. Written for Osprey
+    /// and shared by every tool on the <see cref="PipelineTask"/> contract; the serialized
+    /// form keeps its original name. An artifact is
     /// reusable by a later run exactly when it exists and its stamp
     /// <see cref="IsCurrent">is current</see> for the task and key that run would write.
     ///
     /// <para>The stamp lives in the artifact, not beside it, because every artifact commits
-    /// through <see cref="FileSaver"/> (presence proves completeness) and is written once: a
+    /// through <see cref="SimpleFileSaver"/> (presence proves completeness) and is written once: a
     /// stamp written into the same atomic commit cannot drift from the content it describes,
     /// cannot outlive it, and cannot be re-certified onto a stale file by a later process.
     /// Each format stores the same one-line text (<see cref="ToString"/>) in its own slot -
     /// a parquet footer entry (<see cref="PARQUET_KEY"/>), the first property of a JSON
     /// document (<see cref="JSON_PROPERTY"/>), the opening comment of an HTML page
     /// (<see cref="ToHtmlComment"/>), a blib metadata row, or the trailer of a binary sidecar
-    /// (<see cref="BinarySidecarStamp"/>).</para>
+    /// (Osprey's <c>BinarySidecarStamp</c>).</para>
     ///
     /// <para>A different version is never current: an artifact written by another build is
-    /// recomputed. <c>OSPREY_VERSION_OVERRIDE</c> (see <see cref="OspreyVersion.Current"/>)
+    /// recomputed. <c>OSPREY_VERSION_OVERRIDE</c> (Osprey's pin on its version)
     /// is the deliberate developer override for reusing artifacts across builds.</para>
     /// </summary>
     public sealed class ArtifactStamp
@@ -55,6 +58,18 @@ namespace pwiz.Osprey.Core
 
         /// <summary>Name of the property that holds the stamp, written FIRST in a JSON artifact.</summary>
         public const string JSON_PROPERTY = @"osprey_validity";
+        /// <summary>
+        /// The key/value table a SQLite (blib) artifact records the stamp in, under
+        /// <see cref="PARQUET_KEY"/>. One definition for every writer and reader (Osprey's blib
+        /// writer, CarafeSharp's library writer), so the slot cannot drift between the tools.
+        /// </summary>
+        public const string BLIB_TABLE = @"OspreyMetadata";
+        /// <summary>DDL for <see cref="BLIB_TABLE"/>.</summary>
+        public const string BLIB_TABLE_DDL = @"CREATE TABLE OspreyMetadata (Key TEXT PRIMARY KEY, Value TEXT)";
+        /// <summary>Reads a value from <see cref="BLIB_TABLE"/>; bind <c>@key</c> (the stamp is under <see cref="PARQUET_KEY"/>).</summary>
+        public const string BLIB_SELECT_SQL = @"SELECT Value FROM OspreyMetadata WHERE Key = @key";
+        /// <summary>Records a key and value in <see cref="BLIB_TABLE"/>; bind <c>@key</c> and <c>@value</c>.</summary>
+        public const string BLIB_INSERT_SQL = @"INSERT OR REPLACE INTO OspreyMetadata (Key, Value) VALUES (@key, @value)";
 
         private const string TASK_FIELD = @"task=";
         private const string VERSION_FIELD = @"version=";
@@ -80,15 +95,6 @@ namespace pwiz.Osprey.Core
             Task = task;
             Version = version;
             Key = key ?? throw new ArgumentNullException(nameof(key));
-        }
-
-        /// <summary>
-        /// The stamp a writer embeds in an artifact it is producing now: this build's
-        /// <see cref="OspreyVersion.Current"/>.
-        /// </summary>
-        public static ArtifactStamp ForCurrentBuild(string task, string key)
-        {
-            return new ArtifactStamp(task, OspreyVersion.Current, key);
         }
 
         /// <summary>
@@ -162,21 +168,21 @@ namespace pwiz.Osprey.Core
         /// <summary>Name of the task that wrote the artifact.</summary>
         public string Task { get; }
 
-        /// <summary><see cref="OspreyVersion.Current"/> of the build that wrote the artifact.</summary>
+        /// <summary>The version of the build that wrote the artifact (a host's, e.g. Osprey's <c>OspreyVersion.Current</c>).</summary>
         public string Version { get; }
 
         /// <summary>The writing task's validity key for this artifact.</summary>
         public string Key { get; }
 
         /// <summary>
-        /// True when this stamp says the artifact was written by <paramref name="task"/>, by this
-        /// build (<see cref="OspreyVersion.Current"/>), with <paramref name="key"/> - the only
-        /// case in which a run may reuse it instead of recomputing it.
+        /// True when this stamp says the artifact was written by <paramref name="task"/>, by the
+        /// build whose version is <paramref name="version"/>, with <paramref name="key"/> - the
+        /// only case in which a run may reuse it instead of recomputing it.
         /// </summary>
-        public bool IsCurrent(string task, string key)
+        public bool IsCurrent(string task, string version, string key)
         {
             return string.Equals(Task, task, StringComparison.Ordinal) &&
-                   string.Equals(Version, OspreyVersion.Current, StringComparison.Ordinal) &&
+                   string.Equals(Version, version, StringComparison.Ordinal) &&
                    string.Equals(Key, key, StringComparison.Ordinal);
         }
 

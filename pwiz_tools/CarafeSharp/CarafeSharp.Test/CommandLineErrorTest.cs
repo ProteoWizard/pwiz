@@ -24,11 +24,13 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.CommonResources;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.Common.SystemUtil;
 using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
@@ -181,14 +183,7 @@ namespace pwiz.CarafeSharp.Test
             // another program since the run began is the same), the run fails and the library is
             // saved beside it as "name (2)", the .blib and the TSV with one number, which the error
             // names; no partial file is left, and what was there before is unchanged.
-            string models = Path.Combine(_folder, @"models");
-            Directory.CreateDirectory(models);
-            manual_seed(3);
-            using (var ms2 = new ModelMs2Bert())
-                StateDict.WriteSafetensors(ms2, Path.Combine(models, ModelFiles.MS2_SAFETENSORS));
-            using (var rt = new ModelRtLstmCnn())
-                StateDict.WriteSafetensors(rt, Path.Combine(models, ModelFiles.RT_SAFETENSORS));
-            File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), "{\"ms2\":{\"use_finetuned_for_prediction\":true}}");
+            string models = WriteRandomModels();
             string libraryFolder = Path.Combine(_folder, @"library");
             string blocker = Path.Combine(libraryFolder, BlibLibraryWriter.FILE_NAME);
             Directory.CreateDirectory(blocker);
@@ -212,8 +207,9 @@ namespace pwiz.CarafeSharp.Test
             if (OperatingSystem.IsWindows())
             {
                 // A library open in another program fails the run before any work, leaving the folder as it was.
+                // (With a changed setting: the same command would be skipped, its stamped library being current.)
                 using (new FileStream(blocker, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    (code, _, error) = Run(predict);
+                    (code, _, error) = Run(predict.Concat(new[] { @"-nce", @"29" }).ToArray());
                 Assert.AreEqual(1, code, error);
                 StringAssert.Contains(error, blocker + @" cannot be replaced");
                 CollectionAssert.AreEquivalent(written, Directory.GetFileSystemEntries(libraryFolder));
@@ -235,8 +231,99 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(0, code, error);
             string droppedLine = Lines(output).Single(l => l.StartsWith(@"Pairs: dropped ", StringComparison.Ordinal));
             Assert.IsTrue(int.Parse(droppedLine.Split(' ')[2]) > 0, droppedLine);
+            // Progress (the shared ProgressReporter) lands in the same stream as the log lines.
+            StringAssert.Contains(output, string.Format(MessageResources.ProgressReporter_ProgressReporter__0____, @"Digesting proteins"));
             AssertDecoyPairs(Path.Combine(wholeFolder, BlibLibraryWriter.FILE_NAME));
             AssertPairsWhole(Path.Combine(wholeFolder, BlibLibraryWriter.FILE_NAME), manifest);
+        }
+
+        [TestMethod]
+        public void TestOutputAndErrors()
+        {
+            // -log_file takes every line, stamped by -timestamp, and the console streams stay empty.
+            string log = Path.Combine(_folder, @"run.log");
+            string missingModel = Path.Combine(_folder, @"missing.carafemodel");
+            var (code, output, error) = Run(@"-model_info", missingModel, @"-log_file", log, @"-timestamp");
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
+            Assert.AreEqual(string.Empty, output);
+            Assert.AreEqual(string.Empty, error);
+            var logLines = Lines(File.ReadAllText(log));
+            Assert.AreEqual(1, logLines.Length, string.Join(Environment.NewLine, logLines));
+            Assert.IsTrue(logLines[0].StartsWith(@"[", StringComparison.Ordinal), logLines[0]);
+            Assert.IsTrue(CommandStatusWriter.IsErrorLine(logLines[0]), logLines[0]);
+            StringAssert.Contains(logLines[0], missingModel);
+            // A log file that cannot be opened is itself reported, on the console.
+            (code, _, error) = Run(@"-model_info", missingModel, @"-log_file", _folder);
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
+            Assert.IsTrue(CommandStatusWriter.IsErrorLine(Lines(error)[0]), error);
+            // A usage error is an error line too, before the usage.
+            (code, _, error) = Run(@"-bogus");
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, code);
+            Assert.IsTrue(CommandStatusWriter.IsErrorLine(Lines(error)[0]), error);
+
+            // What a failure reports: a user-actionable exception is its message (and its root
+            // cause, when it has one); a programming defect is the whole exception, type and stack.
+            Assert.AreEqual(@"gone", Program.DescribeFailure(new FileNotFoundException(@"gone")));
+            Assert.AreEqual(@"bad value", Program.DescribeFailure(new ArgumentException(@"bad value")));
+            string withCause = Program.DescribeFailure(new InvalidDataException(@"outer", new FormatException(@"inner")));
+            Assert.IsTrue(withCause.StartsWith(@"outer", StringComparison.Ordinal), withCause);
+            StringAssert.Contains(withCause, @"inner");
+            Assert.AreEqual(@"on a worker", Program.DescribeFailure(new AggregateException(new IOException(@"on a worker"))));
+            string defect = Program.DescribeFailure(new InvalidOperationException(@"defect"));
+            StringAssert.Contains(defect, nameof(InvalidOperationException));
+            StringAssert.Contains(defect, @"defect");
+
+            // The exit code and the log agree: an error line under a success code is "ran with errors".
+            Assert.AreEqual(Program.EXIT_CODE_RAN_WITH_ERRORS, Program.ReconcileExitCode(Program.EXIT_CODE_SUCCESS, true));
+            Assert.AreEqual(Program.EXIT_CODE_SUCCESS, Program.ReconcileExitCode(Program.EXIT_CODE_SUCCESS, false));
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, Program.ReconcileExitCode(Program.EXIT_CODE_FAILURE_TO_START, true));
+        }
+
+        /// <summary>
+        /// A task whose stamped outputs are current is skipped, as Osprey's are: a second
+        /// prediction of the same library says so and leaves the .blib untouched, and a changed
+        /// setting predicts again.
+        /// </summary>
+        [TestMethod]
+        public void TestResumeSkipsCurrentOutputs()
+        {
+            string proteins = WriteText(@"proteins.fasta", PROTEINS);
+            string models = WriteRandomModels();
+            string libraryFolder = Path.Combine(_folder, @"library");
+            var predict = new[] { @"-db", proteins, @"-o", libraryFolder, @"-model_dir", models, @"-lf_type", @"blib",
+                @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
+            var (code, output, error) = Run(predict);
+            Assert.AreEqual(0, code, error);
+            string blib = Path.Combine(libraryFolder, BlibLibraryWriter.FILE_NAME);
+            var stamp = CarafeStamps.Read(blib);
+            Assert.IsNotNull(stamp, @"the predicted library carries no stamp");
+            Assert.AreEqual(PredictLibraryTask.TASK_NAME, stamp.Task);
+            Assert.AreEqual(CarafeContext.BuildVersion, stamp.Version);
+            string skipped = string.Format(MessageResources.PipelineDriver_OnSkipped__0___skipping__its_outputs_are_current_, PredictLibraryTask.TASK_NAME);
+            Assert.IsFalse(output.Contains(skipped), output);
+            var written = File.GetLastWriteTimeUtc(blib);
+
+            // The same command again: skipped, the library untouched.
+            (code, output, error) = Run(predict);
+            Assert.AreEqual(0, code, error);
+            StringAssert.Contains(output, skipped);
+            Assert.AreEqual(written, File.GetLastWriteTimeUtc(blib));
+
+            // A setting the library depends on changed: predicted again.
+            (code, output, error) = Run(predict.Concat(new[] { @"-nce", @"28" }).ToArray());
+            Assert.AreEqual(0, code, error);
+            Assert.IsFalse(output.Contains(skipped), output);
+            Assert.AreNotEqual(stamp.Key, CarafeStamps.Read(blib).Key);
+
+            // A TSV-only prediction declares no output, so it always runs.
+            string tsvFolder = Path.Combine(_folder, @"tsv");
+            var predictTsv = new[] { @"-db", proteins, @"-o", tsvFolder, @"-model_dir", models, @"-lf_type", @"DIA-NN",
+                @"-rt_max", @"30", @"-lf_min_n_frag", @"1", @"-device", @"cpu" };
+            (code, _, error) = Run(predictTsv);
+            Assert.AreEqual(0, code, error);
+            (code, output, error) = Run(predictTsv);
+            Assert.AreEqual(0, code, error);
+            Assert.IsFalse(output.Contains(string.Format(MessageResources.PipelineDriver_OnSkipped__0___skipping__its_outputs_are_current_, PredictLibraryTask.TASK_NAME)), output);
         }
 
         [TestMethod]
@@ -244,17 +331,16 @@ namespace pwiz.CarafeSharp.Test
         {
             string proteins = WriteText(@"proteins.fasta", PROTEINS);
             string built = Path.Combine(_folder, @"built.fasta");
-            // A manifest path that is a folder, or that shares the FASTA's file or temporary file, is
-            // refused before anything is written.
+            // A manifest path that is a folder, or that is the FASTA's own file, is refused before
+            // anything is written.
             string manifest = Path.Combine(_folder, @"manifest.tsv");
             Directory.CreateDirectory(manifest);
-            foreach (string badManifest in new[] { manifest, built, built + PartialFile.SUFFIX })
+            foreach (string badManifest in new[] { manifest, built })
             {
                 var (badCode, _, badError) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", badManifest);
                 Assert.AreEqual(1, badCode, badError);
                 Assert.IsFalse(File.Exists(built), @"The failed build left " + built);
-                Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
-                Assert.IsFalse(File.Exists(badManifest + PartialFile.SUFFIX));
+                AssertNoTempFiles();
             }
 
             string goodManifest = Path.Combine(_folder, @"good-manifest.tsv");
@@ -278,8 +364,7 @@ namespace pwiz.CarafeSharp.Test
                 }
                 CollectionAssert.AreEqual(fastaBefore, File.ReadAllBytes(built));
                 CollectionAssert.AreEqual(manifestBefore, File.ReadAllBytes(goodManifest));
-                Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
-                Assert.IsFalse(File.Exists(goodManifest + PartialFile.SUFFIX));
+                AssertNoTempFiles();
             }
 
             // A reconciliation whose output cannot take its name leaves no partial manifest either.
@@ -288,7 +373,13 @@ namespace pwiz.CarafeSharp.Test
             Directory.CreateDirectory(reconciled);
             (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", goodManifest, @"-predicted_library", library);
             Assert.AreEqual(1, code, error);
-            Assert.IsFalse(File.Exists(reconciled + PartialFile.SUFFIX));
+            AssertNoTempFiles();
+        }
+
+        /// <summary>No temporary file of a failed or finished write is left in the test folder.</summary>
+        private void AssertNoTempFiles()
+        {
+            Assert.AreEqual(0, Directory.GetFiles(_folder, SimpleFileSaver.TEMP_PREFIX + @"*").Length);
         }
 
         /// <summary>
@@ -412,6 +503,20 @@ namespace pwiz.CarafeSharp.Test
         private static string[] Lines(string text)
         {
             return text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Where(l => l.Trim().Length > 0).ToArray();
+        }
+
+        /// <summary>A folder of random MS2 and RT models in Carafe's layout, for a prediction that needs no real model.</summary>
+        private string WriteRandomModels()
+        {
+            string models = Path.Combine(_folder, @"models");
+            Directory.CreateDirectory(models);
+            manual_seed(3);
+            using (var ms2 = new ModelMs2Bert())
+                StateDict.WriteSafetensors(ms2, Path.Combine(models, ModelFiles.MS2_SAFETENSORS));
+            using (var rt = new ModelRtLstmCnn())
+                StateDict.WriteSafetensors(rt, Path.Combine(models, ModelFiles.RT_SAFETENSORS));
+            File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), "{\"ms2\":{\"use_finetuned_for_prediction\":true}}");
+            return models;
         }
 
         private string WriteText(string name, string text)

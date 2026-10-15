@@ -104,6 +104,13 @@ code { font-family: Consolas,'Courier New',monospace; }
 <tr><td><nobr>--rt_align</nobr> &lt;none | kde&gt;</td><td>How the training runs&#39; retention times are aligned before the RT model is <nobr>fine-tuned</nobr>: kde (default; each run&#39;s minutes mapped onto Chronologer&#39;s hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe&#39;s one rt_max). CarafeSharp only.</td></tr>
 <tr><td><nobr>--rt_select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median. CarafeSharp only.</td></tr>
 </table>
+<div class="RowType">Output</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--log_file</nobr>&nbsp;&lt;path&gt;</td><td>Write every line of output and error to this file instead of the console. CarafeSharp only, any mode.</td></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>Prefix each line with the time. CarafeSharp only.</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>Prefix each line with the managed and private memory in use. CarafeSharp only.</td></tr>
+</table>
 <div class="RowType">Carafe options accepted for compatibility</div>
 <p>Carafe 2.2.0 options these modes do not read. Each is accepted so a Carafe command line runs unchanged; one that CarafeSharp cannot honor is refused, and the rest are ignored, as Carafe ignores them.</p>
 <table>
