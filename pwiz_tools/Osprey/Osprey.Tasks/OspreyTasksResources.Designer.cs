@@ -1199,36 +1199,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to resolve first-pass protein q-values for {0}: {1}.
-        /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_pro" +
-                        "tein_q_values_for__0____1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Resolving first-pass protein q-values for {0:N0} files.
-        /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_v" +
-                        "alues_for__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Resolving first-pass protein q-values for 1 file.
-        /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_v" +
-                        "alues_for_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cannot locate the first-pass intermediate files for &apos;{0}&apos;..
         /// </summary>
         public static string FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_first_pass_intermediate_files_for___0___ {
@@ -3103,16 +3073,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1_" +
                         "_from__0____2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The {0} step could not reload its results from the intermediate files (exit code {1})..
-        /// </summary>
-        public static string RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___ {
-            get {
-                return ResourceManager.GetString("RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_inter" +
-                        "mediate_files__exit_code__1___", resourceCulture);
             }
         }
         

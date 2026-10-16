@@ -41,8 +41,8 @@ REM the test data, the full Stellar fine-tune against its golden, and the chaine
 REM reuses the Osprey build above. They run even when Osprey's regression failed.
 setlocal
 pwsh -NoProfile -File "%~dp0regression-parallel.ps1" -TeamCity -Dataset All
-set OSPREY_EXIT=%ERRORLEVEL%
+set OSPREYDEV_EXIT=%ERRORLEVEL%
 pwsh -NoProfile -File "%~dp0..\CarafeSharp\tcregression.ps1" -TeamCity
 set CARAFESHARP_EXIT=%ERRORLEVEL%
-if %OSPREY_EXIT% NEQ 0 exit /b %OSPREY_EXIT%
+if %OSPREYDEV_EXIT% NEQ 0 exit /b %OSPREYDEV_EXIT%
 exit /b %CARAFESHARP_EXIT%

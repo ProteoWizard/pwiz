@@ -26,7 +26,8 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using pwiz.CarafeSharp.Core;
+using pwiz.CarafeSharp.Contracts;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -71,15 +72,15 @@ namespace pwiz.CarafeSharp.Proteome
             }
 
             // Written under a temporary name, so a failed run leaves no manifest that looks complete.
-            var output = new PartialFile(manifestOut);
+            var output = new SimpleFileSaver(manifestOut);
             try
             {
-                WriteReconciled(groups, librarySequences, output.PartialPath, result);
+                WriteReconciled(groups, librarySequences, output.SafeName, result);
                 output.Commit();
             }
             finally
             {
-                output.Discard();
+                output.Dispose();
             }
 
             log?.WriteLine(string.Format(CultureInfo.InvariantCulture,
@@ -94,16 +95,16 @@ namespace pwiz.CarafeSharp.Proteome
             return result;
         }
 
-        private static void WriteReconciled(List<List<ManifestRow>> groups, HashSet<string> librarySequences, string path,
+        private static void WriteReconciled(List<List<PairingManifestRow>> groups, HashSet<string> librarySequences, string path,
             PairingReconciliationResult result)
         {
             using (var writer = EntrapmentFastaBuilder.CreateWriter(path))
             {
-                writer.Write(EntrapmentFastaBuilder.MANIFEST_HEADER + "\n");
+                PairingManifest.WriteHeader(writer);
                 int newPairIndex = 0;
                 foreach (var group in groups)
                 {
-                    var target = group.Find(row => row.PeptideType == EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET);
+                    var target = group.Find(row => row.Kind == PeptideKind.Target);
                     if (target == null || !librarySequences.Contains(Normalize(target.Sequence)))
                     {
                         result.GroupsDropped++;
@@ -111,13 +112,13 @@ namespace pwiz.CarafeSharp.Proteome
                         continue;
                     }
                     bool decoyKept = false;
-                    var keptRows = new List<ManifestRow>(group.Count);
+                    var keptRows = new List<PairingManifestRow>(group.Count);
                     foreach (var row in group)
                     {
                         if (librarySequences.Contains(Normalize(row.Sequence)))
                         {
                             keptRows.Add(row);
-                            if (row.PeptideType == EntrapmentFastaBuilder.PEPTIDE_TYPE_DECOY)
+                            if (row.Kind == PeptideKind.Decoy)
                                 decoyKept = true;
                         }
                         else
@@ -127,8 +128,11 @@ namespace pwiz.CarafeSharp.Proteome
                     }
                     foreach (var row in keptRows)
                     {
-                        writer.Write(row.Sequence + "\t" + row.Decoy + "\t" + row.Proteins + "\t" + row.PeptideType + "\t" +
-                                     newPairIndex.ToString(CultureInfo.InvariantCulture) + "\n");
+                        // The row's cells as they were read, under the new pair index.
+                        PairingManifest.WriteRow(writer, row.Sequence,
+                            row.DecoyText ?? (row.IsDecoy ? PairingManifest.DECOY_YES : PairingManifest.DECOY_NO),
+                            row.ProteinsText ?? string.Join(PairingManifest.PROTEIN_SEPARATOR.ToString(), row.Proteins),
+                            row.KindText, newPairIndex);
                         result.RowsKept++;
                     }
                     if (!decoyKept)
@@ -145,48 +149,24 @@ namespace pwiz.CarafeSharp.Proteome
             return sequence == null ? string.Empty : JavaText.ToUpper(JavaText.Trim(sequence)).Replace('I', 'L');
         }
 
-        /// <summary>Manifest rows grouped by peptide_pair_index, groups in first-seen order.</summary>
-        private static List<List<ManifestRow>> ReadManifestGroups(string manifestIn, PairingReconciliationResult result)
+        /// <summary>
+        /// Manifest rows grouped by peptide_pair_index, groups in first-seen order. The strict
+        /// read fails loudly on a malformed row rather than silently dropping a peptide or group.
+        /// </summary>
+        private static List<List<PairingManifestRow>> ReadManifestGroups(string manifestIn, PairingReconciliationResult result)
         {
-            var groups = new List<List<ManifestRow>>();
-            var groupByIndex = new Dictionary<string, List<ManifestRow>>();
-            using (var reader = new StreamReader(manifestIn, UTF8_NO_BOM, false))
+            var groups = new List<List<PairingManifestRow>>();
+            var groupByIndex = new Dictionary<int, List<PairingManifestRow>>();
+            foreach (var row in PairingManifest.Read(manifestIn, true, out _))
             {
-                string headerLine = reader.ReadLine();
-                if (headerLine == null)
-                    throw new IOException(@"empty manifest: " + manifestIn);
-                string[] header = headerLine.Split('\t');
-                int iSeq = ColumnIndex(header, @"sequence", manifestIn);
-                int iDecoy = ColumnIndex(header, @"decoy", manifestIn);
-                int iProteins = ColumnIndex(header, @"proteins", manifestIn);
-                int iType = ColumnIndex(header, @"peptide_type", manifestIn);
-                int iPair = ColumnIndex(header, @"peptide_pair_index", manifestIn);
-                // Columns are found by name, so any of them could be the last field.
-                int maxIndex = Math.Max(Math.Max(Math.Max(iSeq, iDecoy), Math.Max(iProteins, iType)), iPair);
-                int lineNo = 1;
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                result.RowsIn++;
+                if (!groupByIndex.TryGetValue(row.PairIndex, out var group))
                 {
-                    lineNo++;
-                    if (line.Length == 0)
-                        continue;
-                    string[] c = line.Split('\t');
-                    if (c.Length <= maxIndex)
-                    {
-                        // Fail loudly rather than silently dropping a peptide or group.
-                        throw new IOException(string.Format(CultureInfo.InvariantCulture,
-                            @"malformed manifest {0} at line {1}: expected at least {2} tab-separated columns, found {3}",
-                            manifestIn, lineNo, maxIndex + 1, c.Length));
-                    }
-                    result.RowsIn++;
-                    if (!groupByIndex.TryGetValue(c[iPair], out var group))
-                    {
-                        group = new List<ManifestRow>();
-                        groupByIndex.Add(c[iPair], group);
-                        groups.Add(group);
-                    }
-                    group.Add(new ManifestRow(c[iSeq], c[iDecoy], c[iProteins], c[iType]));
+                    group = new List<PairingManifestRow>();
+                    groupByIndex.Add(row.PairIndex, group);
+                    groups.Add(group);
                 }
+                group.Add(row);
             }
             return groups;
         }
@@ -265,23 +245,6 @@ namespace pwiz.CarafeSharp.Proteome
                     return i;
             }
             throw new IOException(@"column '" + name + @"' not found in " + file);
-        }
-
-        /// <summary>One manifest row's raw column values.</summary>
-        private sealed class ManifestRow
-        {
-            public ManifestRow(string sequence, string decoy, string proteins, string peptideType)
-            {
-                Sequence = sequence;
-                Decoy = decoy;
-                Proteins = proteins;
-                PeptideType = peptideType;
-            }
-
-            public string Sequence { get; }
-            public string Decoy { get; }
-            public string Proteins { get; }
-            public string PeptideType { get; }
         }
     }
 }

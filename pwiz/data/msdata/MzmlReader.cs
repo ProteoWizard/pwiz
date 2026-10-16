@@ -968,15 +968,21 @@ public sealed class MzmlReader
         }
 
         if (arr.HasCVParam(CVID.MS_zlib_compression)) cfg.Compression = BinaryCompression.Zlib;
+        else if (arr.HasCVParam(CVID.MS_zstd_compression)) cfg.Compression = BinaryCompression.Zstd;
+        else if (arr.HasCVParam(CVID.MS_byte_shuffled_zstd_compression)) cfg.Compression = BinaryCompression.ByteShuffleZstd;
+        else if (arr.HasCVParam(CVID.MS_dictionary_encoded_zstd_compression)) cfg.Compression = BinaryCompression.DictZstd;
         else if (arr.HasCVParam(CVID.MS_no_compression)) cfg.Compression = BinaryCompression.None;
 
         // Truncation + prediction CVs (mzMLb-only in cpp). Each implies zlib compression in
-        // its name, so encountering one also sets cfg.Compression = Zlib. cpp IO.cpp:2375-2380
-        // does the same.
+        // its name, so encountering one also sets cfg.Compression = Zlib, as cpp IO.cpp:2375-2380
+        // does - unless the array names a zstd compression outright, which says more than an
+        // implication does.
         if (arr.HasCVParam(CVID.MS_truncation__linear_prediction_and_zlib_compression))
-        { cfg.Prediction = BinaryPrediction.Linear; cfg.Compression = BinaryCompression.Zlib; }
+            cfg.Prediction = BinaryPrediction.Linear;
         else if (arr.HasCVParam(CVID.MS_truncation__delta_prediction_and_zlib_compression))
-        { cfg.Prediction = BinaryPrediction.Delta; cfg.Compression = BinaryCompression.Zlib; }
+            cfg.Prediction = BinaryPrediction.Delta;
+        if (cfg.Prediction != BinaryPrediction.None && !cfg.Compression.IsZstd())
+            cfg.Compression = BinaryCompression.Zlib;
 
         // Numpress: each algorithm has a standalone CV and a "followed by zlib" variant. The
         // zlib variant implies Compression = Zlib (the numpress bytes themselves are zlib-compressed).
@@ -992,6 +998,19 @@ public sealed class MzmlReader
         { cfg.Numpress = BinaryNumpress.Slof; cfg.Compression = BinaryCompression.None; }
         else if (arr.HasCVParam(CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zlib_compression))
         { cfg.Numpress = BinaryNumpress.Slof; cfg.Compression = BinaryCompression.Zlib; }
+        else if (arr.HasCVParam(CVID.MS_MS_Numpress_linear_prediction_compression_followed_by_zstd_compression))
+        { cfg.Numpress = BinaryNumpress.Linear; cfg.Compression = BinaryCompression.Zstd; }
+        else if (arr.HasCVParam(CVID.MS_MS_Numpress_positive_integer_compression_followed_by_zstd_compression))
+        { cfg.Numpress = BinaryNumpress.Pic; cfg.Compression = BinaryCompression.Zstd; }
+        else if (arr.HasCVParam(CVID.MS_MS_Numpress_short_logged_float_compression_followed_by_zstd_compression))
+        { cfg.Numpress = BinaryNumpress.Slof; cfg.Compression = BinaryCompression.Zstd; }
+
+        // Byte shuffling and dictionary encoding work on whole values; numpress output is not
+        // made of them. cpp IO.cpp's HandlerBinaryDataArray rejects the combination too.
+        if (cfg.Numpress != BinaryNumpress.None && cfg.Compression.IsValueWise())
+        {
+            throw new InvalidDataException($"binaryDataArray combines {cfg.Compression} compression with numpress, which is not a valid encoding.");
+        }
     }
 
     // ---------- chromatogramList ----------

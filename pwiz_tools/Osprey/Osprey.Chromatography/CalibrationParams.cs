@@ -24,7 +24,7 @@
 using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using pwiz.Osprey.Core;
+using pwiz.Common.Pipeline;
 
 namespace pwiz.Osprey.Chromatography
 {

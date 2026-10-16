@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -57,18 +58,20 @@ namespace pwiz.Osprey.FDR
         private const int LANE1_RUN_Q = 5;
         private const int LANE1_FLOORS = 6;
         private const int LANE1_FLUSH = 7;
-        private const int PASS1_LANE_BUCKETS = 8;
+        private const int LANE1_SINK = 8;
+        private const int PASS1_LANE_BUCKETS = 9;
         private const int ORDER1_COMPETITION = 0;
         private const int PASS1_ORDER_BUCKETS = 1;
-        private const int LANE2_WALK = 0;
-        private const int LANE2_SIDECAR = 1;
-        private const int LANE2_RESCORE = 2;
-        private const int LANE2_LOOKUPS = 3;
-        private const int LANE2_PREPARE = 4;
-        private const int PASS2_LANE_BUCKETS = 5;
-        private const int ORDER2_SINK = 0;
-        private const int ORDER2_PREPARED = 1;
-        private const int PASS2_ORDER_BUCKETS = 2;
+        // The --model-diagnostics row walk, the one caller left that needs every row's
+        // experiment-scope values.
+        private const int FOLD_WALK = 0;
+        private const int FOLD_SIDECAR = 1;
+        private const int FOLD_RESCORE = 2;
+        private const int FOLD_LOOKUPS = 3;
+        private const int FOLD_PREPARE = 4;
+        private const int FOLD_LANE_BUCKETS = 5;
+        private const int FOLD_ORDER_MERGE = 0;
+        private const int FOLD_ORDER_BUCKETS = 1;
 
         /// <summary>
         /// Projection-native population scoring (issue #4355 step (b) increment iii): apply
@@ -567,7 +570,7 @@ namespace pwiz.Osprey.FDR
             PercolatorConfig percConfig,
             IOspreyLog log,
             string passLabel,
-            IFdrOutputSink sink,
+            IFdrFirstPassSink sink,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null,
             CompletedScoreStreamer tryStreamCompletedScores = null,
@@ -934,15 +937,17 @@ namespace pwiz.Osprey.FDR
             // captures it, and --verbose, which prints it. With neither, the per-row vectors
             // it is summed from are not kept.
             bool keepLinearVectors = captureContributions != null || OspreyOutput.Verbose;
+            // Every distinct entry_id pass 1 sees, with what the experiment scope needs to know
+            // about it. O(distinct entries) - 6.2 M on the 446-run cohort - and the peptide
+            // strings are the ones the rows already share.
+            var entries = new EntryFactsByEntryId();
             int nonEmptyFiles = 0;
             int g1 = 0;
             // Pass-1 cost attribution on the [PATH] channel. The lane buckets are SUMMED over the
             // lanes - thread time, not wall time - so they say where the work is, and they add up to
             // more than the pass when lanes overlap. The in-order buckets and the wall clock are
-            // single-threaded and say what the pass actually waits on. The run-q bucket is the one
-            // pass 2 no longer pays: this pass calls the SAME per-file sort on the SAME rows, so it
-            // measures directly what reading the q-values off the sidecar saves. Every timer reads
-            // the clock once per FILE, never per row.
+            // single-threaded and say what the pass actually waits on. Every timer reads the clock
+            // once per FILE, never per row.
             var lane1 = new LaneCost(PASS1_LANE_BUCKETS);
             var order1 = new LaneCost(PASS1_ORDER_BUCKETS);
             var wall1 = Stopwatch.StartNew();
@@ -950,7 +955,7 @@ namespace pwiz.Osprey.FDR
             // above, reading as a second Percolator pass. The score heading below marks the step.
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
-            // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
+            // Progress is log-only (CommandOutput.Out), so the FDR output stays byte-identical.
             using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n))
             {
                 // On a lane: everything about one file that no other file can see.
@@ -1013,6 +1018,9 @@ namespace pwiz.Osprey.FDR
                             fileFloorByPeptide, entryIds[r], peptides[r], labels[r], runBoth);
                     }
                     clampFloors.Merge(fileFloorByEntryId, fileFloorByPeptide);
+                    // Merged from the lane, like the floors, and for the same reason: one map of
+                    // millions of random keys, filled from every row of the cohort.
+                    entries.MergeFile(f, entryIds, peptides, labels, runPrecFile, runPeptFile);
                     t = lane1.Stop(LANE1_FLOORS, t);
 
                     // This file's run-scope output is COMPLETE here - score, run precursor q and run
@@ -1022,12 +1030,18 @@ namespace pwiz.Osprey.FDR
                     // FileRunScopeSink). Skipped when the scores came off an existing sidecar: that
                     // file is already written, and rewriting an artifact a validity marker attests
                     // would replace it with a copy the marker no longer describes.
+                    double[] apexRts = rows.ApexRts.ToArray();
                     if (scoredHere)
                     {
                         flushFileRunScope?.Invoke(fileName, f, count, entryIds, file.Scores,
-                            runPrecFile, runPeptFile, rows.ApexRts.ToArray());
+                            runPrecFile, runPeptFile, apexRts);
                     }
-                    lane1.Stop(LANE1_FLUSH, t);
+                    t = lane1.Stop(LANE1_FLUSH, t);
+                    // The sink's run-scope share - the passing tallies - reads only these values,
+                    // so it is done here rather than after the experiment barrier.
+                    file.RunScope = sink.PrepareRunScope(f, new FdrRunScopeRows(entryIds, labels,
+                        rows.Charges, peptides, file.Scores, runPrecFile, runPeptFile, apexRts));
+                    lane1.Stop(LANE1_SINK, t);
                     return file;
                 }
 
@@ -1046,6 +1060,7 @@ namespace pwiz.Osprey.FDR
                     bool merge = file.Competition != null && g1 == firstOrdinal[f];
                     if (merge)
                         streamingQ.MergeFile(file.Competition);
+                    sink.AcceptRunScope(f, file.RunScope);
                     for (int r = 0; r < count; r++)
                     {
                         bool isDecoy = rows.IsDecoys[r];
@@ -1066,14 +1081,12 @@ namespace pwiz.Osprey.FDR
                 OrderedFileLanes.Run(nFiles, fileLanes, ScoreFile, ApplyScoredFile);
             }
             wall1.Stop();
-            // "run-q" here is the per-file sort pass 2 stopped doing. Read it against pass 2's
-            // own "run-q recompute" line below: this one is what that one used to cost.
             log.LogInfo(LogTag.PATH,
-                @"{0} pass 1 cost over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, feature load {6:F1}s, score {7:F1}s, competition {8:F1}s, run-q sort {9:F1}s, clamp floors {10:F1}s, sidecar write {11:F1}s; in order competition merge + contribution sums {12:F1}s",
+                @"{0} pass 1 cost over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, feature load {6:F1}s, score {7:F1}s, competition {8:F1}s, run-q sort {9:F1}s, clamp floors + entry facts {10:F1}s, sidecar write {11:F1}s, run-scope tallies {12:F1}s; in order competition merge + contribution sums {13:F1}s",
                 passLabel, n, LanesUsed(fileLanes, nFiles), wall1.Elapsed.TotalSeconds,
                 lane1.Seconds(LANE1_WALK), lane1.Seconds(LANE1_SIDECAR), lane1.Seconds(LANE1_FEATURES),
                 lane1.Seconds(LANE1_SCORE), lane1.Seconds(LANE1_COMPETITION), lane1.Seconds(LANE1_RUN_Q), lane1.Seconds(LANE1_FLOORS),
-                lane1.Seconds(LANE1_FLUSH), order1.Seconds(ORDER1_COMPETITION));
+                lane1.Seconds(LANE1_FLUSH), lane1.Seconds(LANE1_SINK), order1.Seconds(ORDER1_COMPETITION));
             LogBlockReads(log, passLabel, @"pass 1");
 
             var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig);
@@ -1095,57 +1108,98 @@ namespace pwiz.Osprey.FDR
             var expAggByEntryId = streamingQ.BuildExperimentAggregateScoreMap();
             streamingQ.Release();
 
-            // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
-            // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
-            // is not silent; byte-identical q-values and sink output.
-            // Every map the q-values are looked up in is final by now and only read, so a lane
-            // computes a whole file's five q-values; only the sink needs file order. Same [PATH]
-            // treatment as pass 1: lane buckets summed over lanes, per-file clock reads only.
-            var lane2 = new LaneCost(PASS2_LANE_BUCKETS);
-            // A sink that can do its order-free per-row work a file at a time does it on the lane
-            // that produced the file, leaving only the order-dependent rest in sequence.
-            var laneSink = sink as IFdrFileLaneSink;
-            var order2 = new LaneCost(PASS2_ORDER_BUCKETS);
-            var wall2 = Stopwatch.StartNew();
-            int gEmit = 0;
-            using (var emitProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n))
+            var experimentScope = new ExperimentScope(isSingleFile, expPrecByWinnerId, expPeptByPeptide,
+                clampFloors, pepByEntryId, expAggByEntryId);
+
+            // ---- Experiment scope: one set of values per distinct entry ----
+            // Every input to an entry's four experiment-scope values is a property of the entry,
+            // so they are computed once per entry from the facts pass 1 kept, not once per row from
+            // a second walk of every row. That walk re-read every parquet and sidecar of the
+            // cohort to hand the sink each value again for every run the entry appears in, and its
+            // other products - the passing tallies and the sidecar records - were pass 1's by
+            // then. Ascending entry_id, the order the experiment sidecar is written in.
+            var wallEntries = Stopwatch.StartNew();
+            uint[] entryIdsSeen = entries.SortedEntryIds();
+            foreach (uint entryId in entryIdsSeen)
             {
-                Pass2File AssignFile(int f)
+                var facts = entries[entryId];
+                // On a single-file run the experiment q IS the run q, and this entry's rows have
+                // several - the disagreement FdrExperimentAccumulator used to refuse.
+                if (isSingleFile && facts.RunQDisagrees)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"entry_id {0} has more than one row in its run, with different run q-values, " +
+                        @"so it has no single experiment q-value.", entryId));
+                }
+                experimentScope.Resolve(entryId, facts.Peptide, facts.IsDecoy, facts.RunPrecursorQ, facts.RunPeptideQ,
+                    out double ep, out double epe, out double pep, out double ea);
+                sink.AcceptExperimentEntry(entryId, facts.Peptide, ea, ep, epe, pep);
+            }
+            entries.Release();
+            wallEntries.Stop();
+            log.LogInfo(LogTag.PATH, @"{0} experiment scope over {1} distinct entries: {2:F1}s",
+                passLabel, entryIdsSeen.Length, wallEntries.Elapsed.TotalSeconds);
+
+            if (sink.FoldsRowExperimentValues)
+            {
+                FoldRowExperimentValues(fileNames, streamFileRows, loadFileFeatures, rowCounts, sink,
+                    experimentScope, tryStreamCompletedScores, gbtModels, avgWeights, avgBias, standardizer,
+                    nFeatures, percConfig.NThreads, fileLanes, log, passLabel, n);
+            }
+            sink.Finish(log);
+            return false;
+        }
+
+        /// <summary>
+        /// The <c>--model-diagnostics</c> row walk: every row again, with both scopes' values
+        /// joined, for the sink's per-row fold. The report needs each row's experiment q-values,
+        /// so this is the one consumer that still pays a second walk of every row - and only when
+        /// the report was asked for.
+        ///
+        /// <para>Each file's scores and run q-values come back off the sidecar pass 1 wrote. A file
+        /// with no sidecar - no <paramref name="tryStreamCompletedScores"/>, or one that refuses
+        /// it - is re-read and re-scored here exactly as pass 1 scored it.</para>
+        /// </summary>
+        private static void FoldRowExperimentValues(IReadOnlyList<string> fileNames,
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures, int[] rowCounts, IFdrFirstPassSink sink,
+            ExperimentScope experimentScope, CompletedScoreStreamer tryStreamCompletedScores,
+            IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
+            FeatureStandardizer standardizer, int nFeatures, int nThreads, int fileLanes, IOspreyLog log,
+            string passLabel, int n)
+        {
+            int nFiles = fileNames.Count;
+            var lane = new LaneCost(FOLD_LANE_BUCKETS);
+            var order = new LaneCost(FOLD_ORDER_BUCKETS);
+            var wall = Stopwatch.StartNew();
+            int gFolded = 0;
+            using (var foldProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n))
+            {
+                // On a lane: the file's rows, its five q-values and the sink's order-free fold.
+                FoldFile PrepareFile(int f)
                 {
                     string fileName = fileNames[f];
                     long t = Stopwatch.GetTimestamp();
-                    // Still asks, though on this path nothing consumes it: the value goes to
-                    // sink.Accept, and FdrStoringSink writes a record from it whenever it owns the
-                    // write. It never does here - pass 1 marks every file it writes and the resume
-                    // gate marks the rest - but that is an invariant maintained in another file, and
-                    // the cost of being wrong is a fabricated retention time in a persisted artifact
-                    // that no reader could distinguish from a measured one.
                     // Without coelution_sum: only the rescore below uses it, and only for a file
                     // with no sidecar, which re-reads its rows with the column. It is the one
                     // walk column among the features, so leaving it out saves a disk read per
                     // row group.
-                    RowBuffer rows = ReadFileRows(streamFileRows, fileName,
-                        StubColumns.ApexRt | StubColumns.SkipCoelutionSum, rowCounts[f]);
-                    t = lane2.Stop(LANE2_WALK, t);
+                    RowBuffer rows = ReadFileRows(streamFileRows, fileName, StubColumns.SkipCoelutionSum, rowCounts[f]);
+                    t = lane.Stop(FOLD_WALK, t);
                     int count = rows.Count;
-                    // Pass 1's run q-values, read back off the sidecar with the scores. Recomputing
-                    // them would sort this file again to arrive at the same numbers: they are a
-                    // function of these same scores, and pass 1 computed and wrote all three
-                    // together.
                     double[] scores = TryLoadCompletedScores(
                         tryStreamCompletedScores, fileName, count, rows.EntryIds,
                         out double[] runPrecFile, out double[] runPeptFile);
-                    t = lane2.Stop(LANE2_SIDECAR, t);
-                    // Only a file with no sidecar is scored and sorted here, which is also the only
-                    // file whose scores are computed in this pass. Keyed on the scores, which
-                    // TryLoadCompletedScores returns null exactly when it returns no q-values.
+                    t = lane.Stop(FOLD_SIDECAR, t);
+                    // Keyed on the scores, which TryLoadCompletedScores returns null exactly when
+                    // it returns no q-values.
                     if (scores == null)
                     {
-                        rows = ReadFileRows(streamFileRows, fileName, StubColumns.ApexRt, rowCounts[f]);
+                        rows = ReadFileRows(streamFileRows, fileName, StubColumns.Core, rowCounts[f]);
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         scores = new double[count];
                         if (ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
-                                standardizer, nFeatures, percConfig.NThreads, scores) == null)
+                                standardizer, nFeatures, nThreads, scores) == null)
                         {
                             var featureBuf = new double[nFeatures];
                             for (int r = 0; r < count; r++)
@@ -1157,75 +1211,45 @@ namespace pwiz.Osprey.FDR
                         PercolatorQValues.ComputePerFileRunQvalues(
                             scores, rows.IsDecoys.ToArray(), rows.EntryIds.ToArray(), rows.Peptides.ToArray(),
                             0, count, out runPrecFile, out runPeptFile);
-                        t = lane2.Stop(LANE2_RESCORE, t);
+                        t = lane.Stop(FOLD_RESCORE, t);
                     }
-                    var file = new Pass2File(rows, scores, runPrecFile, runPeptFile);
+                    var expPrec = new double[count];
+                    var expPept = new double[count];
+                    var peps = new double[count];
                     for (int r = 0; r < count; r++)
                     {
-                        uint entryId = rows.EntryIds[r];
-                        double ep = isSingleFile
-                            ? runPrecFile[r]
-                            : (expPrecByWinnerId.TryGetValue(entryId, out double epv) ? epv : 1.0);
-                        if (clampFloors.TryGetByEntryId(entryId, out double floorPrec) && floorPrec > ep)
-                            ep = floorPrec;
-
-                        string pept = rows.Peptides[r];
-                        double epe = isSingleFile
-                            ? runPeptFile[r]
-                            : (expPeptByPeptide.TryGetValue(pept, out double epev) ? epev : 1.0);
-                        if (!string.IsNullOrEmpty(pept) &&
-                            clampFloors.TryGetByPeptide((pept, rows.IsDecoys[r]), out double floorPept) && floorPept > epe)
-                            epe = floorPept;
-
-                        file.ExperimentPrecursorQ[r] = ep;
-                        file.ExperimentPeptideQ[r] = epe;
-                        file.Pep[r] = pepByEntryId.TryGetValue(entryId, out double pv) ? pv : 1.0;
-                        file.ExperimentAggregate[r] = expAggByEntryId.TryGetValue(entryId, out double eav)
-                            ? eav : scores[r];
+                        experimentScope.Resolve(rows.EntryIds[r], rows.Peptides[r], rows.IsDecoys[r],
+                            runPrecFile[r], runPeptFile[r], out expPrec[r], out expPept[r], out peps[r], out _);
                     }
-                    t = lane2.Stop(LANE2_LOOKUPS, t);
-                    if (laneSink != null)
-                        file.Prepared = laneSink.PrepareFile(f, file.ToFileRows());
-                    lane2.Stop(LANE2_PREPARE, t);
+                    t = lane.Stop(FOLD_LOOKUPS, t);
+                    var fileRows = new FdrFileRows(rows.EntryIds, rows.IsDecoys, rows.Charges, rows.Peptides, scores,
+                        runPrecFile, runPeptFile, expPrec, expPept, peps);
+                    var file = new FoldFile(count, sink.PrepareRowFold(f, fileRows));
+                    lane.Stop(FOLD_PREPARE, t);
                     return file;
                 }
 
-                // On this thread, in file order: the sink, which tallies, folds the diagnostics
-                // accumulator and collapses the experiment records in the order rows arrive.
-                void EmitFile(int f, Pass2File file)
+                // On this thread, in file order: the fold's order-dependent merge.
+                void MergeFile(int f, FoldFile file)
                 {
                     long t = Stopwatch.GetTimestamp();
-                    if (laneSink != null)
-                        laneSink.AcceptPrepared(f, file.Prepared);
-                    t = order2.Stop(ORDER2_PREPARED, t);
-                    RowBuffer rows = file.Rows;
-                    int count = rows.Count;
-                    for (int r = 0; r < count; r++)
-                    {
-                        sink.Accept(f, r, rows.EntryIds[r], rows.IsDecoys[r], rows.Charges[r], rows.Peptides[r],
-                            file.Scores[r], file.ExperimentAggregate[r], rows.ApexRts[r],
-                            new FdrQValues(file.RunPrecursorQ[r], file.RunPeptideQ[r],
-                                file.ExperimentPrecursorQ[r], file.ExperimentPeptideQ[r], file.Pep[r]));
-                    }
+                    sink.AcceptRowFold(f, file.Prepared);
                     // Once per file: a report per row is a lock taken 4 million times a file on
                     // the one thread every other lane is waiting on.
-                    gEmit += count;
-                    emitProgress.Report(gEmit);
-                    order2.Stop(ORDER2_SINK, t);
+                    gFolded += file.Count;
+                    foldProgress.Report(gFolded);
+                    order.Stop(FOLD_ORDER_MERGE, t);
                 }
 
-                OrderedFileLanes.Run(nFiles, fileLanes, AssignFile, EmitFile);
+                OrderedFileLanes.Run(nFiles, fileLanes, PrepareFile, MergeFile);
             }
-            wall2.Stop();
+            wall.Stop();
             log.LogInfo(LogTag.PATH,
-                @"{0} pass 2 cost over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, rescore + run-q recompute {6:F1}s, q-value lookups {7:F1}s, sink preparation {8:F1}s; in order prepared-file merge {9:F1}s, sink {10:F1}s",
-                passLabel, n, LanesUsed(fileLanes, nFiles), wall2.Elapsed.TotalSeconds,
-                lane2.Seconds(LANE2_WALK), lane2.Seconds(LANE2_SIDECAR), lane2.Seconds(LANE2_RESCORE),
-                lane2.Seconds(LANE2_LOOKUPS), lane2.Seconds(LANE2_PREPARE), order2.Seconds(ORDER2_PREPARED),
-                order2.Seconds(ORDER2_SINK));
-            LogBlockReads(log, passLabel, @"pass 2");
-            sink.Finish(log);
-            return false;
+                @"{0} diagnostics row walk over {1} rows, {2} lane(s): wall {3:F1}s; lanes (summed) parquet walk {4:F1}s, sidecar load {5:F1}s, rescore + run-q recompute {6:F1}s, q-value lookups {7:F1}s, fold preparation {8:F1}s; in order fold merge {9:F1}s",
+                passLabel, n, LanesUsed(fileLanes, nFiles), wall.Elapsed.TotalSeconds,
+                lane.Seconds(FOLD_WALK), lane.Seconds(FOLD_SIDECAR), lane.Seconds(FOLD_RESCORE),
+                lane.Seconds(FOLD_LOOKUPS), lane.Seconds(FOLD_PREPARE), order.Seconds(FOLD_ORDER_MERGE));
+            LogBlockReads(log, passLabel, @"diagnostics row walk");
         }
 
         /// <summary>
@@ -1530,45 +1554,233 @@ namespace pwiz.Osprey.FDR
             public FeatureContributions.Accumulator Histograms;
             // This file's share of the competition, or null when the consumer adds its rows.
             public StreamingFdr.StreamingFirstPassQ.FileReduction Competition;
+            // What IFdrFirstPassSink.PrepareRunScope returned for this file.
+            public object RunScope;
         }
 
         /// <summary>
-        /// What a pass-2 lane hands the in-order sink for one file: every value
-        /// <see cref="IFdrOutputSink.Accept"/> takes, computed on the lane.
+        /// What the experiment scope needs to know about one distinct entry_id: its peptide and
+        /// side, for the peptide q-value and its floor, and its run q-values in the file it was
+        /// taken from, which ARE the experiment q-values on a single-file run.
         /// </summary>
-        private sealed class Pass2File
+        private readonly struct EntryFacts
         {
-            public Pass2File(RowBuffer rows, double[] scores, double[] runPrecursorQ, double[] runPeptideQ)
+            public EntryFacts(int fileIdx, string peptide, bool isDecoy, double runPrecursorQ, double runPeptideQ,
+                bool runQDisagrees = false)
             {
-                Rows = rows;
-                Scores = scores;
+                FileIdx = fileIdx;
+                Peptide = peptide;
+                IsDecoy = isDecoy;
                 RunPrecursorQ = runPrecursorQ;
                 RunPeptideQ = runPeptideQ;
-                int count = rows.Count;
-                ExperimentPrecursorQ = new double[count];
-                ExperimentPeptideQ = new double[count];
-                Pep = new double[count];
-                ExperimentAggregate = new double[count];
+                RunQDisagrees = runQDisagrees;
             }
 
-            public RowBuffer Rows { get; }
-            public double[] Scores { get; }
-            public double[] RunPrecursorQ { get; }
-            public double[] RunPeptideQ { get; }
-            public double[] ExperimentPrecursorQ { get; }
-            public double[] ExperimentPeptideQ { get; }
-            public double[] Pep { get; }
-            public double[] ExperimentAggregate { get; }
+            public int FileIdx { get; }
+            public string Peptide { get; }
+            public bool IsDecoy { get; }
+            public double RunPrecursorQ { get; }
+            public double RunPeptideQ { get; }
 
-            /// <summary>What <see cref="IFdrFileLaneSink.PrepareFile"/> returned for this file, if the
-            /// sink prepares files.</summary>
-            public object Prepared { get; set; }
+            /// <summary>
+            /// The entry has more than one row in <see cref="FileIdx"/> and their run q-values
+            /// differ, so on a single-file run it has no one experiment q-value. A cohort parquet
+            /// holds one row per entry per run; a multi-candidate file does not.
+            /// </summary>
+            public bool RunQDisagrees { get; }
 
-            public FdrFileRows ToFileRows()
+            public EntryFacts WithRunQDisagreement()
             {
-                return new FdrFileRows(Rows.EntryIds, Rows.IsDecoys, Rows.Charges, Rows.Peptides, Scores,
-                    RunPrecursorQ, RunPeptideQ, ExperimentPrecursorQ, ExperimentPeptideQ, Pep);
+                return new EntryFacts(FileIdx, Peptide, IsDecoy, RunPrecursorQ, RunPeptideQ, true);
             }
+        }
+
+        /// <summary>
+        /// The distinct entry_ids of the streaming first pass, each with its
+        /// <see cref="EntryFacts"/>, merged from several file lanes at once. Every value used off
+        /// the facts on a multi-file run is a property of the entry, so any file's facts would do;
+        /// the LOWEST file index is kept so the result does not depend on which lane finished
+        /// first. Sharded and batch-locked exactly as
+        /// <see cref="PercolatorQValues.ExperimentQClampFloors"/> is, for the reason given there.
+        ///
+        /// <para>The per-row walk this replaced fed every row to <c>FdrExperimentAccumulator</c>,
+        /// which throws when two observations of an entry disagree. The merge keeps that check
+        /// where it still means something: an entry_id whose rows carry a different peptide or
+        /// side is refused here, in the file that shows it, and rows of one file that disagree on
+        /// run q are marked, because that is only an error on a single-file run.</para>
+        /// </summary>
+        private sealed class EntryFactsByEntryId
+        {
+            private readonly Dictionary<uint, EntryFacts>[] _shards =
+                new Dictionary<uint, EntryFacts>[PercolatorQValues.ExperimentQClampFloors.SHARD_COUNT];
+
+            public EntryFactsByEntryId()
+            {
+                for (int s = 0; s < _shards.Length; s++)
+                    _shards[s] = new Dictionary<uint, EntryFacts>();
+            }
+
+            /// <summary>Folds in one file's rows; safe to call from several lanes at once.</summary>
+            public void MergeFile(int fileIdx, uint[] entryIds, string[] peptides, bool[] isDecoys,
+                double[] runPrecursorQ, double[] runPeptideQ)
+            {
+                var batches = new List<int>[_shards.Length];
+                for (int r = 0; r < entryIds.Length; r++)
+                {
+                    // Every experiment-scope map keys an entry by its base_id and side, and the
+                    // side IS the entry_id's decoy bit, so a row whose flag disagrees would find no
+                    // aggregate score after the barrier. Refused here, in the file that has it,
+                    // rather than after the whole pass.
+                    if (((entryIds[r] & LibraryEntry.DECOY_ID_BIT) != 0) != isDecoys[r])
+                    {
+                        throw new InvalidOperationException(string.Format(
+                            @"entry_id {0} has decoy flag {1}, which disagrees with its decoy bit.",
+                            entryIds[r], isDecoys[r]));
+                    }
+                    int s = PercolatorQValues.ExperimentQClampFloors.ShardIndex(entryIds[r]);
+                    (batches[s] ?? (batches[s] = new List<int>())).Add(r);
+                }
+                for (int s = 0; s < _shards.Length; s++)
+                {
+                    var batch = batches[s];
+                    if (batch == null)
+                        continue;
+                    var shard = _shards[s];
+                    lock (shard)
+                    {
+                        foreach (int r in batch)
+                        {
+                            uint entryId = entryIds[r];
+                            if (shard.TryGetValue(entryId, out var cur))
+                            {
+                                if (cur.IsDecoy != isDecoys[r] || !string.Equals(cur.Peptide, peptides[r], StringComparison.Ordinal))
+                                {
+                                    throw new InvalidOperationException(string.Format(
+                                        @"entry_id {0} is [{1}] (decoy {2}) in one run and [{3}] (decoy {4}) in another; " +
+                                        @"an entry_id names one precursor in every run.",
+                                        entryId, cur.Peptide, cur.IsDecoy, peptides[r], isDecoys[r]));
+                                }
+                                if (cur.FileIdx == fileIdx)
+                                {
+                                    if (!cur.RunQDisagrees &&
+                                        (!cur.RunPrecursorQ.Equals(runPrecursorQ[r]) || !cur.RunPeptideQ.Equals(runPeptideQ[r])))
+                                    {
+                                        shard[entryId] = cur.WithRunQDisagreement();
+                                    }
+                                    continue;
+                                }
+                                if (cur.FileIdx < fileIdx)
+                                    continue;
+                            }
+                            shard[entryId] = new EntryFacts(fileIdx, peptides[r], isDecoys[r],
+                                runPrecursorQ[r], runPeptideQ[r]);
+                        }
+                    }
+                }
+            }
+
+            /// <summary>Every entry_id merged, ascending - the order the experiment sidecar is
+            /// written in, and the order a resumed run reads its records back in.</summary>
+            public uint[] SortedEntryIds()
+            {
+                int count = 0;
+                foreach (var shard in _shards)
+                    count += shard.Count;
+                var ids = new uint[count];
+                int i = 0;
+                foreach (var shard in _shards)
+                {
+                    shard.Keys.CopyTo(ids, i);
+                    i += shard.Count;
+                }
+                Array.Sort(ids); // Array.Sort OK: distinct uint keys (each shard is a dictionary, and an id hashes to one shard), so no two elements tie
+                return ids;
+            }
+
+            public EntryFacts this[uint entryId] =>
+                _shards[PercolatorQValues.ExperimentQClampFloors.ShardIndex(entryId)][entryId];
+
+            /// <summary>Drops every entry once the experiment scope has been resolved.</summary>
+            public void Release()
+            {
+                for (int s = 0; s < _shards.Length; s++)
+                    _shards[s] = new Dictionary<uint, EntryFacts>();
+            }
+        }
+
+        /// <summary>
+        /// The finished experiment-scope maps, and the one rule that turns them into an entry's
+        /// four experiment-scope values. Shared by the per-entry loop and the diagnostics row walk
+        /// so the two cannot disagree. Every input is a property of the entry - its id, its
+        /// peptide and side - except the run q-values, which are read only on a single-file run,
+        /// where an entry has exactly one row.
+        /// </summary>
+        private sealed class ExperimentScope
+        {
+            private readonly bool _isSingleFile;
+            private readonly Dictionary<uint, double> _precursorQByWinnerId;
+            private readonly Dictionary<string, double> _peptideQByPeptide;
+            private readonly PercolatorQValues.ExperimentQClampFloors _clampFloors;
+            private readonly Dictionary<uint, double> _pepByWinnerId;
+            private readonly Dictionary<uint, double> _aggregateByEntryId;
+
+            public ExperimentScope(bool isSingleFile, Dictionary<uint, double> precursorQByWinnerId,
+                Dictionary<string, double> peptideQByPeptide, PercolatorQValues.ExperimentQClampFloors clampFloors,
+                Dictionary<uint, double> pepByWinnerId, Dictionary<uint, double> aggregateByEntryId)
+            {
+                _isSingleFile = isSingleFile;
+                _precursorQByWinnerId = precursorQByWinnerId;
+                _peptideQByPeptide = peptideQByPeptide;
+                _clampFloors = clampFloors;
+                _pepByWinnerId = pepByWinnerId;
+                _aggregateByEntryId = aggregateByEntryId;
+            }
+
+            public void Resolve(uint entryId, string peptide, bool isDecoy, double runPrecursorQ, double runPeptideQ,
+                out double precursorQ, out double peptideQ, out double pep, out double aggregateScore)
+            {
+                precursorQ = _isSingleFile
+                    ? runPrecursorQ
+                    : (_precursorQByWinnerId.TryGetValue(entryId, out double epv) ? epv : 1.0);
+                if (_clampFloors.TryGetByEntryId(entryId, out double floorPrec) && floorPrec > precursorQ)
+                    precursorQ = floorPrec;
+
+                peptideQ = _isSingleFile
+                    ? runPeptideQ
+                    : (_peptideQByPeptide.TryGetValue(peptide, out double epev) ? epev : 1.0);
+                if (!string.IsNullOrEmpty(peptide) &&
+                    _clampFloors.TryGetByPeptide((peptide, isDecoy), out double floorPept) && floorPept > peptideQ)
+                    peptideQ = floorPept;
+
+                pep = _pepByWinnerId.TryGetValue(entryId, out double pv) ? pv : 1.0;
+
+                // Every row pass 1 adds keys its (base_id, side) best, and a base_id plus its side
+                // IS the entry_id, so a miss means a row whose decoy flag disagrees with its
+                // entry_id's decoy bit. The per-row walk this replaced fell back to that row's own
+                // score, which is not a property of the entry; refuse instead.
+                if (!_aggregateByEntryId.TryGetValue(entryId, out aggregateScore))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Experiment aggregate score missing for entry_id {0} (decoy flag {1}): " +
+                        @"its decoy flag disagrees with its entry_id.", entryId, isDecoy));
+                }
+            }
+        }
+
+        /// <summary>
+        /// What a diagnostics-walk lane hands the in-order merge for one file: its row count and
+        /// what <see cref="IFdrFirstPassSink.PrepareRowFold"/> returned for it.
+        /// </summary>
+        private sealed class FoldFile
+        {
+            public FoldFile(int count, object prepared)
+            {
+                Count = count;
+                Prepared = prepared;
+            }
+
+            public int Count { get; }
+            public object Prepared { get; }
         }
 
         /// <summary>

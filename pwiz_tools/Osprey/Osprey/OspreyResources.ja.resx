@@ -300,6 +300,10 @@
     <value>HPC分割（1ノード = 1つの{0}）：上記の{0}を参照してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_to_its_option___0___and_a_file_that_exists_may_be_given_without__1__" xml:space="preserve">
+    <value>受け付けるその他の形式：値はオプションに「=」でつなげて指定することもでき（{0}）、存在するファイルは{1}なしで指定できます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_" xml:space="preserve">
     <value>Osprey - ペプチド中心のDIA解析</value>
     <comment>Needs Review:New resource</comment>

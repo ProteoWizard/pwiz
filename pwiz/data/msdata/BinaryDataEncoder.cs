@@ -30,6 +30,31 @@ public enum BinaryCompression
     None,
     /// <summary>zlib format (deflate + zlib header + adler32). mzML's <c>MS:1000574</c>.</summary>
     Zlib,
+    /// <summary>Zstandard (<c>MS:1003780</c>). Combines with numpress.</summary>
+    Zstd,
+    /// <summary>Byte shuffle followed by Zstandard (<c>MS:1003781</c>). Does not combine with numpress.</summary>
+    ByteShuffleZstd,
+    /// <summary>Dictionary encoding followed by Zstandard (<c>MS:1003782</c>). Does not combine with numpress.</summary>
+    DictZstd,
+}
+
+/// <summary>Properties of <see cref="BinaryCompression"/> values that more than one reader or
+/// writer has to agree on.</summary>
+public static class BinaryCompressionExtensions
+{
+    /// <summary>True for the three Zstandard codecs, whose payload is little-endian whatever
+    /// byte order the config asks for.</summary>
+    public static bool IsZstd(this BinaryCompression compression) =>
+        compression is BinaryCompression.Zstd or BinaryCompression.ByteShuffleZstd or BinaryCompression.DictZstd;
+
+    /// <summary>
+    /// True for the codecs that transform whole values (byte shuffling, dictionary encoding)
+    /// rather than an opaque byte stream. They cannot follow numpress, whose output is not made
+    /// of values, nor apply in mzMLb, where HDF5 stores the values as typed datasets; cpp
+    /// rejects both combinations.
+    /// </summary>
+    public static bool IsValueWise(this BinaryCompression compression) =>
+        compression is BinaryCompression.ByteShuffleZstd or BinaryCompression.DictZstd;
 }
 
 /// <summary>Lossy "numpress" numerical compressions. See <see cref="MsNumpress"/> for algorithm details.</summary>
@@ -160,7 +185,7 @@ public enum BinaryPrediction
 /// Port of pwiz::msdata::BinaryDataEncoder.
 /// </summary>
 /// <remarks>
-/// Pipeline (encode): <c>double[] → optional numpress → little-endian bytes (32 or 64 bit) → optional zlib → base64 → string</c>.
+/// Pipeline (encode): <c>double[] -> optional numpress -> little-endian bytes (32 or 64 bit) -> optional zlib or zstd (see <see cref="ZstdCodec"/>) -> base64 -> string</c>.
 /// Pipeline (decode): inverse.
 /// Numpress compression variants (Linear/Pic/Slof) are stubs — <see cref="BinaryNumpress"/> handling
 /// throws <see cref="NotImplementedException"/>. File the follow-up task to finish.
@@ -206,14 +231,13 @@ public sealed class BinaryDataEncoder
     /// </summary>
     public byte[] EncodeToBytes(ReadOnlySpan<double> data, out BinaryNumpress actualNumpress)
     {
+        ThrowIfNumpressWithShuffleOrDict();
         actualNumpress = _config.Numpress;
         byte[] bytes;
         switch (_config.Numpress)
         {
             case BinaryNumpress.None:
-                bytes = _config.Precision == BinaryPrecision.Bits64
-                    ? WriteDoubles64(data, _config.ByteOrder)
-                    : WriteDoubles32(data, _config.ByteOrder);
+                bytes = EncodeRaw(data);
                 break;
             case BinaryNumpress.Linear:
                 bytes = MsNumpress.EncodeLinear(data.ToArray(), _config.NumpressFixedPoint);
@@ -246,13 +270,32 @@ public sealed class BinaryDataEncoder
             default:
                 throw new InvalidOperationException($"Unsupported numpress: {_config.Numpress}");
         }
-        return Compress(bytes);
+        return Compress(bytes, DoubleValueSize);
     }
 
     private byte[] EncodeRaw(ReadOnlySpan<double> data) =>
         _config.Precision == BinaryPrecision.Bits64
-            ? WriteDoubles64(data, _config.ByteOrder)
-            : WriteDoubles32(data, _config.ByteOrder);
+            ? WriteDoubles64(data, StoredByteOrder)
+            : WriteDoubles32(data, StoredByteOrder);
+
+    /// <summary>
+    /// Byte order of the uncompressed values. The zstd codecs define their payload as
+    /// little-endian, so cpp skips its endian swap for them and the configured order applies
+    /// only to no compression and zlib.
+    /// </summary>
+    private BinaryByteOrder StoredByteOrder => _config.Compression.IsZstd() ? BinaryByteOrder.LittleEndian : _config.ByteOrder;
+
+    /// <summary>Width of one value in a doubles array, which byte shuffling and dictionary
+    /// encoding work in.</summary>
+    private int DoubleValueSize => _config.Precision == BinaryPrecision.Bits64 ? 8 : 4;
+
+    private void ThrowIfNumpressWithShuffleOrDict()
+    {
+        if (_config.Numpress != BinaryNumpress.None && _config.Compression.IsValueWise())
+        {
+            throw new InvalidOperationException($"{_config.Compression} compression cannot be combined with numpress ({_config.Numpress}).");
+        }
+    }
 
     /// <summary>Relative-error tolerance check mirroring pwiz BinaryDataEncoder.cpp.</summary>
     private static bool WithinTolerance(ReadOnlySpan<double> original, ReadOnlySpan<double> decoded, double tolerance)
@@ -290,8 +333,8 @@ public sealed class BinaryDataEncoder
         if (_config.Numpress != BinaryNumpress.None)
             throw new NotImplementedException("Numpress encoding of int64 is not defined. Use doubles for numpress.");
 
-        byte[] bytes = WriteInt64(data, _config.ByteOrder);
-        bytes = Compress(bytes);
+        byte[] bytes = WriteInt64(data, StoredByteOrder);
+        bytes = Compress(bytes, 8);
         binaryByteCount = bytes.Length;
         return Convert.ToBase64String(bytes);
     }
@@ -324,13 +367,14 @@ public sealed class BinaryDataEncoder
 
     private double[] DecodeDoublesFromBytes(byte[] bytes)
     {
-        bytes = Decompress(bytes);
+        ThrowIfNumpressWithShuffleOrDict();
+        bytes = Decompress(bytes, DoubleValueSize);
 
         return _config.Numpress switch
         {
             BinaryNumpress.None => _config.Precision == BinaryPrecision.Bits64
-                ? ReadDoubles64(bytes, _config.ByteOrder)
-                : ReadDoubles32(bytes, _config.ByteOrder),
+                ? ReadDoubles64(bytes, StoredByteOrder)
+                : ReadDoubles32(bytes, StoredByteOrder),
             BinaryNumpress.Linear => MsNumpress.DecodeLinear(bytes),
             BinaryNumpress.Pic => MsNumpress.DecodePic(bytes),
             BinaryNumpress.Slof => MsNumpress.DecodeSlof(bytes),
@@ -360,8 +404,8 @@ public sealed class BinaryDataEncoder
         if (_config.Numpress != BinaryNumpress.None)
             throw new NotImplementedException("Numpress decoding of int64 is not defined.");
 
-        bytes = Decompress(bytes);
-        return ReadInt64(bytes, _config.ByteOrder);
+        bytes = Decompress(bytes, 8);
+        return ReadInt64(bytes, StoredByteOrder);
     }
 
     /// <summary>
@@ -374,10 +418,9 @@ public sealed class BinaryDataEncoder
         byte[] bytes = Convert.FromBase64String(encoded);
         if (_config.Numpress != BinaryNumpress.None)
             throw new NotImplementedException("Numpress decoding of integer arrays is not defined.");
-        bytes = Decompress(bytes);
         if (_config.Precision == BinaryPrecision.Bits32)
-            return ReadInt32AsInt64(bytes, _config.ByteOrder);
-        return ReadInt64(bytes, _config.ByteOrder);
+            return ReadInt32AsInt64(Decompress(bytes, 4), StoredByteOrder);
+        return ReadInt64(Decompress(bytes, 8), StoredByteOrder);
     }
 
     private static long[] ReadInt32AsInt64(byte[] bytes, BinaryByteOrder order)
@@ -515,17 +558,25 @@ public sealed class BinaryDataEncoder
 
     // ---------- compression ----------
 
-    private byte[] Compress(byte[] raw) => _config.Compression switch
+    /// <summary>Compresses <paramref name="raw"/>, an array of <paramref name="valueSize"/>-byte
+    /// values (or numpress output, which only plain zlib / zstd see).</summary>
+    private byte[] Compress(byte[] raw, int valueSize) => _config.Compression switch
     {
         BinaryCompression.None => raw,
         BinaryCompression.Zlib => ZlibCompress(raw),
+        BinaryCompression.Zstd => ZstdCodec.Compress(raw),
+        BinaryCompression.ByteShuffleZstd => ZstdCodec.ByteShuffleCompress(raw, valueSize),
+        BinaryCompression.DictZstd => ZstdCodec.DictCompress(raw, valueSize),
         _ => throw new InvalidOperationException($"Unsupported compression: {_config.Compression}"),
     };
 
-    private byte[] Decompress(byte[] compressed) => _config.Compression switch
+    private byte[] Decompress(byte[] compressed, int valueSize) => _config.Compression switch
     {
         BinaryCompression.None => compressed,
         BinaryCompression.Zlib => ZlibDecompress(compressed),
+        BinaryCompression.Zstd => ZstdCodec.Decompress(compressed),
+        BinaryCompression.ByteShuffleZstd => ZstdCodec.ByteShuffleDecompress(compressed, valueSize),
+        BinaryCompression.DictZstd => ZstdCodec.DictDecompress(compressed, valueSize),
         _ => throw new InvalidOperationException($"Unsupported compression: {_config.Compression}"),
     };
 

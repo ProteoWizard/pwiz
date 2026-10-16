@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -178,7 +179,7 @@ namespace pwiz.Osprey.FDR
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             IOspreyLog log,
-            IFdrOutputSink sink,
+            IFdrFirstPassSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
@@ -613,7 +614,7 @@ namespace pwiz.Osprey.FDR
         ///
         /// The run floor is the entry's best (min) <em>combined</em> run q-value
         /// (<see cref="FdrLevel.Both"/> = max(precursor, peptide)), matching the blib ID line
-        /// and <c>OspreyRunScores.RunQValue</c> (both <c>EffectiveRunQvalue(Both)</c>): so
+        /// and <c>RetentionTimes.score</c> (both <c>EffectiveRunQvalue(Both)</c>): so
         /// "reported =&gt; some run passes at BOTH the precursor and peptide granularity",
         /// which is the exact invariant a Skyline ID line represents. Both floors key on the
         /// target/decoy-specific identity (never the shared base_id / bare sequence -- a target

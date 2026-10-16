@@ -26,11 +26,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
+using pwiz.Common.Pipeline;
 
 namespace pwiz.CarafeSharp
 {
@@ -60,6 +61,9 @@ namespace pwiz.CarafeSharp
         }
 
         public FineTuneResult Result { get; private set; }
+
+        /// <summary>The validity stamp the model file and the library record, or null for none (a run outside a task).</summary>
+        public ArtifactStamp Stamp { get; set; }
 
         /// <summary>Changes the fine-tuning options before the run; for tests.</summary>
         internal Action<FineTuneOptions> ConfigureFineTune { get; set; }
@@ -92,10 +96,10 @@ namespace pwiz.CarafeSharp
             var selection = TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles);
             foreach (string warning in selection.Warnings)
                 Log(warning);
-            var exports = new List<OspreyTrainingExport>(selection.Exports.Count);
+            var exports = new List<TrainingExport>(selection.Exports.Count);
             foreach (string path in selection.Exports)
             {
-                var export = OspreyTrainingExport.Read(path);
+                var export = TrainingExport.Read(path);
                 Log(string.Format(CultureInfo.InvariantCulture, @"Training export {0}: {1} precursors, rt_max {2}, NCE {3}, instrument {4}, run q from pass {5}",
                     path, export.Records.Count, export.RtMax, export.DominantCollisionEnergy?.ToString(CultureInfo.InvariantCulture) ?? @"unknown",
                     export.InstrumentModel ?? @"unknown", export.RunQPass ?? @"unknown"));
@@ -194,7 +198,7 @@ namespace pwiz.CarafeSharp
             bool ms2Held = ms2File != null && CarafeModelDirectory.IsSafetensors(ms2File);
             var saved = CarafeModelFile.Write(modelFile, trained, _settings.TrainingType, pretrained?.Sha256, _settings.Ms2Model,
                 BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition, baseModel,
-                BuildMs2Origin(fineTune, baseModel, ms2Held), BuildRtOrigin(fineTune, baseModel, rtModel));
+                BuildMs2Origin(fineTune, baseModel, ms2Held), BuildRtOrigin(fineTune, baseModel, rtModel), Stamp);
             Log(@"Saved the fine-tuned model " + modelFile + @": " + saved.Describe());
 
             if (_settings.Library != null)
@@ -202,7 +206,7 @@ namespace pwiz.CarafeSharp
                 // The models this run wrote, not checkpoints an earlier Carafe run left in -o.
                 _settings.Library.OutputDirectory = _settings.OutputDirectory;
                 _settings.Library.PreferSafetensors = true;
-                new LibraryGenerator(_settings.Library, _log, pretrained).Run();
+                new LibraryGenerator(_settings.Library, _log, pretrained) { Stamp = Stamp }.Run();
             }
         }
 
@@ -218,7 +222,7 @@ namespace pwiz.CarafeSharp
         /// by a fraction of a Th; prediction does not read it. The library fragment range and
         /// count, which Carafe never sets, keep JMeta's defaults.
         /// </summary>
-        internal static IReadOnlyList<CarafeRunMeta> BuildRunMeta(IReadOnlyList<OspreyTrainingExport> exports,
+        internal static IReadOnlyList<CarafeRunMeta> BuildRunMeta(IReadOnlyList<TrainingExport> exports,
             IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options, OspreyTrainingSet trainingSet)
         {
             var runs = new List<CarafeRunMeta>();
@@ -249,7 +253,7 @@ namespace pwiz.CarafeSharp
         /// models: the settings, the training data's size, charges, peptide lengths and
         /// modifications, and each run's acquisition from its export footer.
         /// </summary>
-        internal static CarafeModelTraining BuildTrainingDescription(IReadOnlyList<OspreyTrainingExport> exports,
+        internal static CarafeModelTraining BuildTrainingDescription(IReadOnlyList<TrainingExport> exports,
             IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options, OspreyTrainingSet trainingSet,
             TrainingSettings settings)
         {
@@ -263,9 +267,9 @@ namespace pwiz.CarafeSharp
                 var scanWindow = export.Ms2ScanWindow;
                 runs.Add(new CarafeModelTrainingRun
                 {
-                    Run = Footer(export, @"osprey.file_name") ?? stem,
+                    Run = Footer(export, TrainingExportKeys.FILE_NAME) ?? stem,
                     MsFile = runPaths.TryGetValue(stem, out string path) ? path : stem,
-                    InstrumentVendor = Footer(export, @"osprey.instrument_vendor"),
+                    InstrumentVendor = Footer(export, TrainingExportKeys.INSTRUMENT_VENDOR),
                     InstrumentModel = export.InstrumentModel,
                     Instrument = settings.Instrument ?? OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
                     Activation = OspreyTrainingSet.GetActivation(export, options.Activation),
@@ -276,21 +280,21 @@ namespace pwiz.CarafeSharp
                     CollisionEnergies = export.CollisionEnergies,
                     CollisionEnergyUnit = trainingSet.GetCollisionEnergy(export).Unit,
                     Ms2MassAnalyzers = export.Ms2MassAnalyzers,
-                    RtMin = FooterNumber(export, @"osprey.rt_min"),
-                    RtMax = FooterNumber(export, @"osprey.rt_max"),
-                    IsolationMzMin = FooterNumber(export, @"osprey.isolation_mz_min"),
-                    IsolationMzMax = FooterNumber(export, @"osprey.isolation_mz_max"),
+                    RtMin = FooterNumber(export, TrainingExportKeys.RT_MIN),
+                    RtMax = FooterNumber(export, TrainingExportKeys.RT_MAX),
+                    IsolationMzMin = FooterNumber(export, TrainingExportKeys.ISOLATION_MZ_MIN),
+                    IsolationMzMax = FooterNumber(export, TrainingExportKeys.ISOLATION_MZ_MAX),
                     Ms2MzMin = scanWindow?.Lower,
                     Ms2MzMax = scanWindow?.Upper,
-                    FragmentTolerance = FooterNumber(export, @"osprey.fragment_tolerance"),
-                    FragmentToleranceUnit = Footer(export, @"osprey.fragment_tolerance_unit"),
+                    FragmentTolerance = FooterNumber(export, TrainingExportKeys.FRAGMENT_TOLERANCE),
+                    FragmentToleranceUnit = Footer(export, TrainingExportKeys.FRAGMENT_TOLERANCE_UNIT),
                     Precursors = export.Records.Count,
-                    PrecursorCharges = export.Records.GroupBy(r => r.Charge).ToDictionary(g => g.Key, g => g.Count()),
+                    PrecursorCharges = export.Records.GroupBy(r => (int)r.Charge).ToDictionary(g => g.Key, g => g.Count()),
                     RunQPass = export.RunQPass,
-                    MaxQ = FooterNumber(export, @"osprey.training_export.max_q"),
-                    OspreyVersion = Footer(export, @"osprey.version"),
-                    SearchHash = Footer(export, OspreyTrainingExport.SEARCH_HASH_KEY),
-                    LibraryHash = Footer(export, OspreyTrainingExport.LIBRARY_HASH_KEY),
+                    MaxQ = FooterNumber(export, TrainingExportKeys.MAX_Q),
+                    OspreyVersion = Footer(export, TrainingExportKeys.VERSION),
+                    SearchHash = Footer(export, TrainingExportKeys.SEARCH_HASH),
+                    LibraryHash = Footer(export, TrainingExportKeys.LIBRARY_HASH),
                 });
             }
             return new CarafeModelTraining
@@ -315,7 +319,7 @@ namespace pwiz.CarafeSharp
         /// energy is in eV is calibrated on its spectra by the MS2 model the fine-tune starts
         /// from, loaded only when such a run needs it.
         /// </summary>
-        private OspreyTrainingSet BuildTrainingSet(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options,
+        private OspreyTrainingSet BuildTrainingSet(IReadOnlyList<TrainingExport> exports, OspreyTrainingSetOptions options,
             FineTuneOptions fineTune, PretrainedModels pretrained)
         {
             Ms2Model startModel = null;
@@ -471,12 +475,12 @@ namespace pwiz.CarafeSharp
             return new CarafeModelOrigin { Model = rtModel.ToString(), Version = version, Start = start };
         }
 
-        private static string Footer(OspreyTrainingExport export, string key)
+        private static string Footer(TrainingExport export, string key)
         {
             return export.Metadata.TryGetValue(key, out string value) && !string.IsNullOrEmpty(value) ? value : null;
         }
 
-        private static double? FooterNumber(OspreyTrainingExport export, string key)
+        private static double? FooterNumber(TrainingExport export, string key)
         {
             string text = Footer(export, key);
             return text != null && double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double value) ? value : null;

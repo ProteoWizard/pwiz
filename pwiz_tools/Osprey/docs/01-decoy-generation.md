@@ -272,12 +272,20 @@ Marking is idempotent (`LibraryDecoyMarker.cs`). The log breaks the count down:
 `Library-decoy mode: N flagged (X via Decoy column, Y via protein-accession prefix)`
 (`PerFileScoringTask.cs`).
 
-### Step 2: target-decoy pairing (hybrid manifest + composition fallback)
+### Step 2: target-decoy pairing (a blib's own table; for a TSV, manifest + composition fallback)
 
 `LibraryLoader.TryFinishSuppliedDecoys` (`Osprey.IO/LibraryLoader.cs`) pairs each decoy
 with a target
 so their `base_id`s match — required for SVM competition, LDA calibration, and CV
 fold grouping (see 07-fdr-control.md, 16-determinism.md).
+
+A **`.blib` pairs from its `DecoyPairs` table** and nothing else (`Osprey.IO/BlibDecoyPairs.cs`,
+decision of 2026-10-15; see [24](24-library-contract.md), "Osprey, pairing a blib's decoys"): the
+table's `IsDecoy` is authoritative over the accession prefixes, and each `PairID` names the
+target and the decoy at one charge. A blib searched with its own decoys but without the table is
+refused at load. The rows are read by RefSpectra id before the deduplicator renumbers the
+entries and carried by entry object into the pairing. The two stages below are the **TSV**
+library's, which has no table to carry its pairing.
 
 First, a **hard guard**: if there are no library decoys at all,
 the load returns that fault as `error` and the caller exits with code 1
