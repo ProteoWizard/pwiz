@@ -1341,7 +1341,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Deduplicated by (modseq, charge) keeping the best
         /// <c>EffectiveRunQvalue(Both)</c>, matching Rust pipeline.rs:6133-6138. The blib's
-        /// RefSpectra / OspreyRunScores / OspreyPeakBoundaries all source from this best run,
+        /// RefSpectra row (its apex, bounds and bestSpectrum flag) sources from this best run,
         /// so the cross-impl best-file choice must match exactly - which is why the walk order
         /// is the pool's own and the comparison is strictly less-than, exactly as the second
         /// pass over the passing list was.</para>
@@ -1393,8 +1393,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         // Best (min) experiment_precursor_qvalue per (modseq, charge) across all
-        // files — the value Rust writes into RefSpectra.score and
-        // OspreyExperimentScores.ExperimentQValue (pipeline.rs:4670-4683 + 4795).
+        // files - the value written into RefSpectra.score (Rust pipeline.rs:4670-4683 + 4795).
         private static Dictionary<(string, byte), double> BuildBestExpPrecursorQ(
             List<PassingObservation> passingEntries)
         {

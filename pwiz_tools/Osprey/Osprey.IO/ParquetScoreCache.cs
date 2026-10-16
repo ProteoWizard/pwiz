@@ -1166,10 +1166,9 @@ namespace pwiz.Osprey.IO
         /// Load only the columns needed for FDR stubs from a Parquet cache.
         /// Reads: entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt,
         /// fragment_coelution_sum, bounds_area, modified_sequence.
-        /// Sets parquet_index = row index. <c>bounds_area</c> feeds the
-        /// .blib's <c>OspreyPeakBoundaries.IntegratedArea</c> column at
-        /// Stage 7 - without it, the stage-7 .blib write emits zero for
-        /// every IntegratedArea row and silently diverges from Rust.
+        /// Sets parquet_index = row index. <c>bounds_area</c> feeds the training export
+        /// (<c>TrainingEvidence</c>); the blib no longer carries it, since the <c>Osprey*</c>
+        /// tables were dropped (2026-10-15).
         /// </summary>
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path)
         {

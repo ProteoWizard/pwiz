@@ -40,7 +40,7 @@ namespace pwiz.Osprey.Tasks
     /// Orchestrates the BiblioSpecLite <c>.blib</c> output emission for the SecondPassFDR
     /// node (Stage 9): source-file IDs, a parallel zlib pre-compress pass, the
     /// sequential per-best-precursor RefSpectra + modifications + protein +
-    /// RetentionTimes + Osprey extension-table emission, then metadata and
+    /// RetentionTimes emission, then metadata and
     /// finalize. Drives <see cref="OspreyBlibWriter"/> (the SQLite layer, through the one
     /// .blib writer in BiblioSpec.IO); this type owns only the per-spectrum row composition.
     ///
@@ -92,7 +92,7 @@ namespace pwiz.Osprey.Tasks
                 var refIdByPrecursor = EmitSpectrumRows(
                     writer, blibEntries, spectra,
                     sourceFileIds, bestExpPrecursorQ, sharedBounds,
-                    precursorFacts, fileNames.Count);
+                    precursorFacts);
 
                 WriteRetentionTimesFileMajor(writer, passingEntries, refIdByPrecursor,
                     precursorFacts, bestByPrecursor, sourceFileIds, sharedBounds,
@@ -253,9 +253,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         // Sequential per-best-precursor emission: one RefSpectra row (plus its
-        // modifications / protein mappings / Osprey extension
-        // rows) for each prepared spectrum, in iteration order so row IDs stay
-        // deterministic.
+        // modifications / protein mappings) for each prepared spectrum, in iteration
+        // order so row IDs stay deterministic.
         private static Dictionary<(string, byte), long> EmitSpectrumRows(
             OspreyBlibWriter writer,
             List<KeyValuePair<string, FdrEntry>> blibEntries,
@@ -263,12 +262,11 @@ namespace pwiz.Osprey.Tasks
             Dictionary<string, long> sourceFileIds,
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
-            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,
-            int perFileEntriesCount)
+            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts)
         {
             var refIdByPrecursor = new Dictionary<(string, byte), long>(blibEntries.Count);
-            // Reported for the same reason as the pre-compress pass above: this emits five row
-            // families per spectrum into SQLite and ran silent inside the same 47 s gap.
+            // Reported for the same reason as the pre-compress pass above: this emits several
+            // row families per spectrum into SQLite and ran silent inside the same 47 s gap.
             using (var progress = new ProgressReporter(
                        string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
                        blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -288,16 +286,14 @@ namespace pwiz.Osprey.Tasks
 
                     // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value (min
                     // across all observations of this (modseq, charge)). Mirrors
-                    // Rust pipeline.rs:4670-4683 / 4795. Same value feeds
-                    // OspreyExperimentScores.ExperimentQValue below.
+                    // Rust pipeline.rs:4670-4683 / 4795.
                     var lookupKey = (entry.ModifiedSequence, entry.Charge);
                     double scoreQvalue;
                     if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
                         scoreQvalue = entry.ExperimentPrecursorQvalue;
 
                     // nRunsDetected -> RefSpectra.copies (Rust pipeline.rs:6179
-                    // passes n_runs_detected = group.len()). Reused by
-                    // OspreyExperimentScores below.
+                    // passes n_runs_detected = group.len()).
                     int nRunsDetected = 1;
                     if (precursorFacts.TryGetValue(lookupKey, out var facts) && facts.NRuns > 0)
                         nRunsDetected = facts.NRuns;
@@ -324,39 +320,23 @@ namespace pwiz.Osprey.Tasks
                         scoreQvalue, fileId, nRunsDetected);
 
                     refIdByPrecursor[lookupKey] = refId;
-
-                    // Osprey extension tables - one row per RefSpectra each,
-                    // mirroring Rust pipeline.rs:6255-6272. Best-run-only for
-                    // OspreyPeakBoundaries + OspreyRunScores; experiment-level for
-                    // OspreyExperimentScores. The 0.0 fields are the same "not yet
-                    // plumbed through Stage 7 plan entries" placeholders Rust writes.
-                    writer.AddPeakBoundaries(refId, fileName,
-                        sharedStart, sharedEnd, sharedApex,
-                        0.0, // ApexIntensity - matches Rust's apex_coefficient placeholder
-                        entry.BoundsArea);
-                    writer.AddRunScores(refId, fileName,
-                        entry.EffectiveRunQvalue(FdrLevel.Both),
-                        0.0, // DiscriminantScore - matches Rust's dot_product placeholder
-                        0.0); // PosteriorErrorProb - matches Rust's PEP placeholder
-                    writer.AddExperimentScores(refId,
-                        scoreQvalue, // Same value as RefSpectra.score
-                        nRunsDetected,
-                        perFileEntriesCount);
                 }
             }
             return refIdByPrecursor;
         }
 
-        // Add metadata. OspreyMetadata key set must match Rust's
-        // write_blib_from_plan (pipeline.rs:6078-6081) byte-for-byte.
+        // The LibMetadata rows: the values Rust's write_blib_from_plan (pipeline.rs:6078-6081)
+        // records, under Osprey's namespaced keys, plus the command line that made the library.
         private static void WriteMetadata(OspreyBlibWriter writer, OspreyConfig config)
         {
-            writer.AddMetadata(@"osprey_version", OspreyVersion.Current);
-            writer.AddMetadata(@"search_mode", @"coelution");
-            writer.AddMetadata(@"run_fdr",
+            writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, OspreyVersion.Current);
+            writer.AddMetadata(OspreyBlibWriter.KEY_SEARCH_MODE, @"coelution");
+            writer.AddMetadata(OspreyBlibWriter.KEY_RUN_FDR,
                 config.RunFdr.ToString(CultureInfo.InvariantCulture));
-            writer.AddMetadata(@"experiment_fdr",
+            writer.AddMetadata(OspreyBlibWriter.KEY_EXPERIMENT_FDR,
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
+            if (config.CommandLine != null)
+                writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, config.CommandLine);
         }
 
         /// <summary>

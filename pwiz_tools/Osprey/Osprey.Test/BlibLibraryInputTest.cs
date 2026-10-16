@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -158,6 +159,12 @@ namespace pwiz.Osprey.Test
                 var refusal = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(config, null, null));
                 StringAssert.Contains(refusal.Message, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                 StringAssert.Contains(refusal.Message, @"KEDITCPEP");
+                // Searched with its own decoys, the same library is refused for pairing them in no
+                // DecoyPairs table: a blib pairs its decoys from the table or not at all.
+                var noTable = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(ContractConfig(withDecoys), null, null));
+                StringAssert.Contains(noTable.Message, string.Format(
+                    OspreyIOResources.LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pairing_each_decoy_with_its_target_,
+                    withDecoys, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
 
                 // A library claiming the Osprey library contract is checked before any repair and
                 // refused with every class of violation: a duplicate precursor, Carafe's per-peptide
@@ -178,7 +185,19 @@ namespace pwiz.Osprey.Test
                 }
                 string clean = Path.Combine(dir, @"contract-clean.blib");
                 WriteBlib(clean, peaks, true, new[] { (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1") });
-                Assert.AreEqual(2, LibraryLoader.Load(ContractConfig(clean), null, null).Count);
+                var cleanEntries = LibraryLoader.Load(ContractConfig(clean), null, null);
+                Assert.AreEqual(2, cleanEntries.Count);
+                // Paired from the table: the decoy's id is its target's with the decoy bit.
+                Assert.AreEqual(cleanEntries.Single(e => !e.IsDecoy).Id | LibraryEntry.DECOY_ID_BIT, cleanEntries.Single(e => e.IsDecoy).Id);
+
+                // Rule 6 from the table, with no manifest: a decoy whose pair has no target row.
+                string unpaired = Path.Combine(dir, @"contract-unpaired.blib");
+                WriteBlib(unpaired, peaks, true, new[] { (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1"), (@"KEDITCPEQ", @"DECOY_P2") },
+                    new[] { (0, false, 1), (1, true, 1), (2, true, 2) });
+                var unpairedViolation = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(ContractConfig(unpaired), null, null));
+                StringAssert.Contains(unpairedViolation.Message, LibraryContractViolationClass.UnpairedDecoy.ToString());
+                StringAssert.Contains(unpairedViolation.Message,
+                    string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__, @"KEDITCPEQ", 2, 2));
             }
             finally
             {
@@ -313,13 +332,24 @@ namespace pwiz.Osprey.Test
             {
                 Fragments = fragment, ProteinIds = new[] { @"rev_P12345" }, IsDecoy = true
             };
-            LibraryBlibWriter.Write(path, new[] { unresolved, plain, oneDecimal, columnDecoy, prefixedDecoy }, @"library.tsv");
+            // A decoy the load paired with plain (its id is plain's with the decoy bit) gets a
+            // DecoyPairs pair with it; the two unpaired decoys get no row.
+            var pairedDecoy = new LibraryEntry(2 | LibraryEntry.DECOY_ID_BIT, @"KEDITPEPK", @"KEDITPEPK", 2, 466.0, 10.0)
+            {
+                Fragments = fragment, ProteinIds = new[] { @"DECOY_P2" }, IsDecoy = true
+            };
+            LibraryBlibWriter.Write(path, new[] { unresolved, plain, oneDecimal, columnDecoy, prefixedDecoy, pairedDecoy }, @"library.tsv");
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'PEPTIDEK(UniMod:259)'"));
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'PEPTIDEK'"));
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'LIFAGK[+114.0]QLEDGR'"));
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'DECOY_P12345'"));
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'rev_P12345'"));
             Assert.AreEqual(0, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'P12345'"));
+            Assert.AreEqual(2, BlibComparer.CountWhere(path, @"DecoyPairs", @"PairID = 1 AND IsEntrapment = 0"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID",
+                @"r.peptideModSeq = 'PEPTIDEK' AND d.IsDecoy = 0 AND d.PairID = 1"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID",
+                @"r.peptideModSeq = 'KEDITPEPK' AND d.IsDecoy = 1 AND d.PairID = 1"));
         }
 
         /// <summary>The types <see cref="TestBlibLoaderTypesPeaksFromMz"/>'s six peaks take.</summary>
@@ -360,23 +390,51 @@ namespace pwiz.Osprey.Test
         /// modified sequence, each mapped to its <c>;</c>-separated proteins, claiming the Osprey
         /// library contract when <paramref name="libraryContract"/>.
         /// </summary>
-        private static void WriteBlib(string path, double[] peaks, bool libraryContract, (string ModSeq, string Protein)[] spectra)
+        private static void WriteBlib(string path, double[] peaks, bool libraryContract, (string ModSeq, string Protein)[] spectra,
+            (int Index, bool IsDecoy, int PairId)[] decoyPairs = null)
         {
             using (var writer = new OspreyBlibWriter(path))
             {
                 long fileId = writer.AddSourceFile(@"test.mzML", @"library.blib", 0.01);
-                foreach (var (modSeq, protein) in spectra)
+                var refIds = new long[spectra.Length];
+                for (int i = 0; i < spectra.Length; i++)
                 {
+                    var (modSeq, protein) = spectra[i];
                     string sequence = new string(StripBrackets(modSeq).Where(char.IsLetter).ToArray());
-                    writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
-                        peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0,
+                    refIds[i] = writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
+                        peaks, peaks.Select((_, i2) => 100f + i2).ToArray(), 0.01, fileId, 1, 0.0,
                         proteins: protein.Split(';'));
                 }
                 if (libraryContract)
                     writer.AddMetadata(LibraryContract.METADATA_KEY, LibraryContract.METADATA_VALUE);
+                // A contract library pairs its decoys in DecoyPairs, as CarafeSharp writes them;
+                // explicit rows override the pairing read from the accessions.
+                foreach (var (index, isDecoy, pairId) in decoyPairs ?? (libraryContract ? PairsByAccession(spectra) : Array.Empty<(int, bool, int)>()))
+                    writer.AddDecoyPair(refIds[index], isDecoy, false, pairId);
                 writer.Complete();
             }
             SQLiteConnection.ClearAllPools();
+        }
+
+        /// <summary>The DecoyPairs rows of <paramref name="spectra"/>: each <c>DECOY_</c> accession paired with the first spectrum of the accession it marks.</summary>
+        private static (int Index, bool IsDecoy, int PairId)[] PairsByAccession((string ModSeq, string Protein)[] spectra)
+        {
+            var rows = new List<(int, bool, int)>();
+            int pairId = 0;
+            for (int i = 0; i < spectra.Length; i++)
+            {
+                string accession = spectra[i].Protein.Split(';')[0];
+                if (!accession.StartsWith(@"DECOY_", StringComparison.Ordinal))
+                    continue;
+                string target = accession.Substring(@"DECOY_".Length);
+                int targetIndex = Array.FindIndex(spectra, s => s.Protein.Split(';')[0] == target);
+                if (targetIndex < 0)
+                    continue;
+                pairId++;
+                rows.Add((targetIndex, false, pairId));
+                rows.Add((i, true, pairId));
+            }
+            return rows.ToArray();
         }
 
         /// <summary>A search of <paramref name="library"/> with the decoys it supplies and no manifest.</summary>

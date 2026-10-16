@@ -337,6 +337,8 @@ namespace pwiz.CarafeSharp.Proteome
             var commandLine = new CarafeCommandLine();
             new CommandLineParser<CarafeCommandLine>(AllArguments).Parse(commandLine, args);
             commandLine.Interpret(args.Count);
+            if (commandLine.LibrarySettings != null)
+                commandLine.LibrarySettings.CommandLine = CommandLineText.Format(@"CarafeSharp", args);
             return commandLine;
         }
 
