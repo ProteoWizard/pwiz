@@ -11,21 +11,6 @@ RetentionTimes	retentionTime	942333.9817918265	2.292286859467	20.217495573283
 RetentionTimes	startTime	1081310.5370202689	2.076404061367	20.124279591
 RetentionTimes	endTime	1099118.349775057	2.337098851183	20.416527837667
 RetentionTimes	score	3481.2592248722176	8.127438231469441E-05	1
-OspreyRunScores	<rows>	31750		
-OspreyRunScores	RunQValue	23.248727804289135	8.127438231469441E-05	0.009975149627244408
-OspreyRunScores	DiscriminantScore	0	0	0
-OspreyRunScores	PosteriorErrorProb	0	0	0
-OspreyExperimentScores	<rows>	31750		
-OspreyExperimentScores	ExperimentQValue	44.41863346451936	9.175153683824204E-05	0.009996441396266702
-OspreyPeakBoundaries	<rows>	31750		
-OspreyPeakBoundaries	StartRT	360565.07241679356	2.08057824165	20.102799316383
-OspreyPeakBoundaries	EndRT	366433.3159862947	2.3549829811	20.407597427717
-OspreyPeakBoundaries	ApexRT	363315.78130358405	2.292317053383	20.195483387233
-OspreyPeakBoundaries	ApexIntensity	0	0	0
-OspreyPeakBoundaries	IntegratedArea	394250819.41285545	0	6464214.47692899
-OspreyCoefficients	<rows>	0		
-OspreyCoefficients	RT			
-OspreyCoefficients	Coefficient			
 RefSpectraProteins	<rows>	35321		
 Modifications	<rows>	6238		
 Modifications	mass	355699.8924319667	57.021464	57.021464

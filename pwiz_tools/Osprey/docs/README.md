@@ -45,7 +45,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 10 | [cross-run-reconciliation](10-cross-run-reconciliation.md) | Consensus RT, per-file LOESS refit, and the per-entry reconciliation plan (Keep / UseCwtPeak / ForcedIntegration). |
 | 11 | [boundary-overrides](11-boundary-overrides.md) | How the search accepts override boundaries so consensus and reconciliation targets re-score on the same window / XCorr path as the first pass. |
 | 12 | [second-pass-fdr](12-second-pass-fdr.md) | Stage-7 second-pass FDR and the frozen-model q-value modes — transfer-compete and protein-compact — selected by `OSPREY_PASS2_QVALUE`. |
-| 13 | [blib-output-schema](13-blib-output-schema.md) | BiblioSpec SQLite schema plus Osprey extension tables and the nullable `retentionTime` convention for Skyline ID lines. |
+| 13 | [blib-output-schema](13-blib-output-schema.md) | BiblioSpec SQLite schema plus the `OspreyMetadata` table and the nullable `retentionTime` convention for Skyline ID lines. |
 | 14 | [intermediate-files](14-intermediate-files.md) | On-disk caches / sidecars (calibration JSON, spectra cache, `.scores.parquet`, FDR sidecars), SHA-256 footer hashing, and the tiered memory architecture. |
 | 15 | [hpc-scoring-split](15-hpc-scoring-split.md) | The four `--task` workers, their input/output files, the ordering rules a chain must observe, and the embedded validity stamps that drive resume under HPC / NextFlow orchestration. |
 | 16 | [determinism](16-determinism.md) | Patterns that keep results bit-identical across runs: thread-order independence, float stability, cross-validation fold assignment. |

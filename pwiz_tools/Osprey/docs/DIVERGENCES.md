@@ -265,10 +265,10 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | `Modifications.position` is 1-based | 0-indexed | Converts 0→1-based on write; test asserts 4→5; byte-identical implies Rust also 1-based | `BlibWriter.cs:399-408`; `IOTest.cs:107-149` | minor |
 | STALE | Nullable-text columns empty strings, not NULL | 5 columns NULL | Empty-string literals | `BlibWriter.cs:127-131` | info |
 | STALE | RetentionTimes best-run ID-line fallback undocumented | RT NULL if run fails FDR | Fallback: lowest-q run still gets RT so every RefSpectra has an ID line | `BlibOutputWriter.cs:288-313` | minor |
-| STALE | Osprey extension score/intensity are 0.0 placeholders | DiscriminantScore/PEP/ApexIntensity real | 0.0 for all three (not plumbed; no Mokapot) | `BlibOutputWriter.cs:249-254` | minor |
+| INTENT | The four `Osprey*` tool tables are not written | OspreyPeakBoundaries, OspreyRunScores, OspreyExperimentScores, OspreyCoefficients beside the standard tables | Dropped 2026-10-15; every value they held is in RefSpectra / RetentionTimes; cross-impl blib comparison skips them | `OspreyBlibTables.cs` | minor |
 | STALE | OspreyMetadata key set differs | osprey_version, rt_calibration_enabled, run_fdr, fdr_method | osprey_version, search_mode=coelution, run_fdr, experiment_fdr | `BlibOutputWriter.cs:266-271` | minor |
 | INTENT | Native managed SQLite writer, not PWiz BiblioSpec | README frames as reusing PWiz BiblioSpec | Hand-rolled `System.Data.SQLite`, reuses only schema + Skyline Ionic.Zlib L6 convention (byte-identical to flate2) | `BlibWriter.cs:37,980-1008` | info |
-| INTENT | Extra schema columns/indices not in doc | Omits workflowType/probabilityType; 7 indices | Declares both columns, 3 extra indices for BiblioSpecLite/Skyline compat | `BlibWriter.cs:737,750,573-575` | info |
+| INTENT | Extra schema columns/index not in doc | Omits workflowType/probabilityType | Declares both columns and `idx_rettimes_refid` for BiblioSpecLite/Skyline compat | `BlibSchema.cs`; `BlibWriter.cs` | info |
 
 ### [14-intermediate-files.md](14-intermediate-files.md) — matches-with-notes
 

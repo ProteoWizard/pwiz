@@ -191,9 +191,8 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   (`Regression/README.md:56`) — machine-independent. Refresh only on an
   intentional reviewed change with `-CreateGolden` (`regression.ps1:48-50,483-488`).
   Golden tables under `osprey-regression.data/*/tables/` include RefSpectra,
-  RetentionTimes, Peak­Boundaries, Osprey{Run,Experiment}Scores,
-  OspreyCoefficients, Proteins, PeakDigest (per-spectrum SHA-256), and
-  OspreyMetadata.
+  RetentionTimes, RefSpectraProteins, Modifications, Proteins,
+  SpectrumSourceFiles, PeakDigest (per-spectrum SHA-256), and OspreyMetadata.
 - **mode 3 — HPC 4-task worker-chain self-consistency**
   (`regression.ps1:502-522`, `Invoke-HpcChain` at `regression.ps1:338`). Runs the
   distributed `--task` pipeline `PerFileScoring → FirstPassFDR → PerFileRescoring

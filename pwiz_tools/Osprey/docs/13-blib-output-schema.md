@@ -7,7 +7,7 @@ Osprey emits its final results as a **BiblioSpec (`.blib`)** SQLite database —
 Three layers are involved:
 
 - **`Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs`** — the SQLite layer: schema creation, prepared-statement inserts, zlib compression, the atomic temp-then-move, finalize. One instance == one `.blib` file. It writes one `BlibSpectrumRecord` per `RefSpectra` row and lets the writing tool add its own tables (`IBlibExtensionTables`).
-- **`Osprey.IO/OspreyBlibWriter.cs`** — Osprey's adapter over it: `OspreyBlibTables` (the five `Osprey*` tables below) and the column values Osprey has always written (score type 19, the spectrum ordinal as `SpecIDinFile`, zero rather than NULL for the ion mobility columns, the peptide text through `BlibPeptideText`).
+- **`Osprey.IO/OspreyBlibWriter.cs`** — Osprey's adapter over it: `OspreyBlibTables` (the `OspreyMetadata` table below) and the column values Osprey has always written (score type 19, the spectrum ordinal as `SpecIDinFile`, zero rather than NULL for the ion mobility columns, the peptide text through `BlibPeptideText`).
 - **`Osprey.Tasks/BlibOutputWriter.cs`** — the Stage 7 sequencer that composes rows from the passing-precursor lookup tables and drives `OspreyBlibWriter`. It is invoked once from `Osprey.Tasks/SecondPassFdrTask.cs` (the `SecondPassFDR` HPC worker — see 15-hpc-scoring-split.md).
 
 Reading back (for library input, and for round-trip tests) is `Osprey.IO/BlibLoader.cs`.
@@ -16,7 +16,7 @@ Reading back (for library input, and for round-trip tests) is `Osprey.IO/BlibLoa
 
 ## Overview
 
-The blib contains standard BiblioSpec tables (Skyline-compatible) plus five Osprey extension tables:
+The blib contains standard BiblioSpec tables (Skyline-compatible) plus one Osprey table:
 
 ```text
 Standard BiblioSpec tables (BlibSchema, created by BlibWriter.CreateSchema)
@@ -24,10 +24,11 @@ Standard BiblioSpec tables (BlibSchema, created by BlibWriter.CreateSchema)
   RefSpectra, RefSpectraPeaks, RefSpectraPeakAnnotations,
   Modifications, Proteins, RefSpectraProteins, RetentionTimes
 
-Osprey extension tables (OspreyBlibTables.CreateTables, in the same database before any row)
-  OspreyMetadata, OspreyPeakBoundaries, OspreyRunScores,
-  OspreyExperimentScores, OspreyCoefficients
+Osprey table (OspreyBlibTables.CreateTables, in the same database before any row)
+  OspreyMetadata
 ```
+
+Every per-spectrum value Osprey reports is in the standard tables: the experiment q-value is `RefSpectra.score`, the run count `RefSpectra.copies`, the best run's apex and bounds the `RefSpectra` retention-time columns, and each run's q-value and peak boundaries its `RetentionTimes` row. Rust osprey writes four more tables beside them (`OspreyPeakBoundaries`, `OspreyRunScores`, `OspreyExperimentScores`, `OspreyCoefficients`); Osprey stopped writing them on 2026-10-15 (see "The dropped `Osprey*` tables" below).
 
 The schema declares two columns the Rust doc's table listings omit: `SpectrumSourceFiles.workflowType TINYINT` and `ScoreTypes.probabilityType VARCHAR(128)`. Both exist for BiblioSpecLite compatibility with Skyline.
 
@@ -43,7 +44,7 @@ Stage 7 blib emission runs entirely inside `BlibOutputWriter.Write(...)`. The ga
 
 ### Step 2 — Schema + seed rows
 
-`BlibWriter.CreateSchema` creates the standard tables from `BlibSchema`, then `OspreyBlibTables.CreateTables` adds the five Osprey tables, then the seed rows:
+`BlibWriter.CreateSchema` creates the standard tables from `BlibSchema`, then `OspreyBlibTables.CreateTables` adds the `OspreyMetadata` table, then the seed rows:
 
 - **`LibInfo`**: one row, `libLSID = urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:<file name>` (the BiblioSpec LSID), `createTime` in ctime format, `numSpecs = 0` (updated at finalize), `majorVersion = 1`, `minorVersion` = `BlibSchema.CurrentMinorVersion` (11).
 - **`ScoreTypes`**: the full ProteoWizard BiblioSpec score-type enumeration, IDs 0-20. ID 1 = `PERCOLATOR QVALUE`, ID 14 = `MORPHEUS SCORE`, **ID 19 = `GENERIC Q-VALUE`** with `probabilityType = PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT`. Osprey stamps every spectrum with score type **19** (`BlibWriter.SCORE_TYPE_GENERIC_QVALUE`).
@@ -85,8 +86,7 @@ Compression detail (`BlibWriter.CompressMzs` / `CompressIntensities`): the share
   - `score = scoreQvalue`, the **experiment-precursor q-value** (min across observations, `bestExpPrecursorQ`, BlibOutputWriter.cs:190-193). This is a raw q-value (lower = better), consistent with score type 19 being a "probability the ID is incorrect". `scoreType = 19`.
 - **Modifications**: one `Modifications` row per modified residue, `position` converted from internal **0-based to 1-based** (`OspreyBlibWriter.ToBlibModifications`), `mass` the summed mass at that residue. Verified by `Osprey.Test/IOTest.cs` (`TestBlibModifications1Based`).
 - **Proteins**: the shared writer de-duplicates accessions through its accession cache, inserting `Proteins` + `RefSpectraProteins` rows.
-- **`WriteRetentionTimes`** (see Step 6).
-- **Osprey extension rows** (BlibOutputWriter.cs:247-258): `AddPeakBoundaries` (best-run start/end/apex + `IntegratedArea = entry.BoundsArea`, `ApexIntensity = 0.0` placeholder), `AddRunScores` (`RunQValue = EffectiveRunQvalue(Both)`, `DiscriminantScore`/`PosteriorErrorProb = 0.0` placeholders), `AddExperimentScores` (`ExperimentQValue = scoreQvalue`, `NRunsDetected`, `NRunsSearched = perFileEntries.Count`).
+- **`WriteRetentionTimes`** (see Step 6) carries each run's q-value and peak boundaries; there are no other per-spectrum rows.
 
 ### Step 6 — RetentionTimes: nullable retentionTime for Skyline ID lines
 
@@ -103,11 +103,11 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ### Step 8 — Complete
 
-`Complete()`: updates `LibInfo.numSpecs` to the `RefSpectra` count, creates the indexes - BiblioSpec's own (`BlibSchema.AllIndexStatements`), the shared writer's three per-spectrum ones on `RefSpectraProteins`, `Modifications` and `RetentionTimes`, and `OspreyBlibTables.CreateIndexes` (`idx_boundaries_refid`, `idx_runscores_refid`, `idx_expscores_refid`, `idx_coefficients_refid`) - then closes the connection and moves the temp over the final name (Step 1). The extension tables' prepared statements are disposed before the connection: System.Data.SQLite keeps the file open until every statement on a connection is finalized, so a statement outliving the close would make the move fail.
+`Complete()`: updates `LibInfo.numSpecs` to the `RefSpectra` count, creates the indexes - BiblioSpec's own (`BlibSchema.AllIndexStatements`) and the shared writer's three per-spectrum ones on `RefSpectraProteins`, `Modifications` and `RetentionTimes` (`OspreyMetadata` is keyed by its primary key and gets none) - then closes the connection and moves the temp over the final name (Step 1). The metadata table's prepared statement is disposed before the connection: System.Data.SQLite keeps the file open until every statement on a connection is finalized, so a statement outliving the close would make the move fail.
 
-### OspreyCoefficients (reserved, zero rows)
+### The dropped `Osprey*` tables
 
-`AddCoefficient` exists (`OspreyBlibTables`) but is never called from the pipeline (only `SecondPassFdrTask`/`BlibOutputWriter` drive the writer, and neither calls it). The `OspreyCoefficients` table is created and indexed but written with zero rows — the per-scan XIC time series is not plumbed through Stage 7. This matches the Rust doc's "(optional)" label.
+Until 2026-10-15 Osprey also wrote Rust osprey's four tool tables, one row per `RefSpectra` in `OspreyPeakBoundaries` (the best run's bounds and `IntegratedArea`), `OspreyRunScores` (the best run's q-value, with `DiscriminantScore` and `PosteriorErrorProb` as 0.0 placeholders) and `OspreyExperimentScores` (`RefSpectra.score` and `copies` again, plus the run count searched), and `OspreyCoefficients` created and indexed with no rows. They were dropped by decision: writing tool information to tables no reader supports is not to be encouraged, even where every reader ignores them, and every value they held that Skyline could use is already in `RefSpectra` and `RetentionTimes`. The regression golden (`Regression/BlibGolden.ps1`) and `Osprey.Test/BlibComparer` project the standard tables and `OspreyMetadata`; the cross-impl comparison with Rust (`ai/scripts/Osprey/Compare/Compare-Blib-Crossimpl.ps1`) no longer compares the four tables, an accepted divergence from Rust's output.
 
 ---
 
@@ -207,11 +207,11 @@ This stage has no dedicated feature flags; it always runs when a `-o/--output` b
 | `-l` / `--library <path>` | required | `Path.GetFileName` becomes `SpectrumSourceFiles.idFileName` (BlibOutputWriter.cs:107). |
 | `-i` / `--input <mzML...>` | required | one `SpectrumSourceFiles` row each; `fileName = <stem>.mzML` (BlibOutputWriter.cs:112). |
 | `--run-fdr <v>` | 0.01 | `config.RunFdr` — `cutoffScore` and the ID-line threshold for `RetentionTimes.retentionTime` NULL-vs-apex (BlibOutputWriter.cs:62,297). Written to `OspreyMetadata.run_fdr`. |
-| `--experiment-fdr <v>` | 0.01 | Written to `OspreyMetadata.experiment_fdr` (BlibOutputWriter.cs:270). Experiment q-value (via the FDR stage) becomes `RefSpectra.score` and `OspreyExperimentScores.ExperimentQValue`. |
+| `--experiment-fdr <v>` | 0.01 | Written to `OspreyMetadata.experiment_fdr` (BlibOutputWriter.cs:270). Experiment q-value (via the FDR stage) becomes `RefSpectra.score`. |
 | `--threads <count>` | all cores | `config.NThreads` — degree of parallelism for the fragment pre-compression pass (BlibOutputWriter.cs:82,131). Does not change output bytes. |
 | `--fdr-level {precursor\|peptide\|both}` | precursor | Governs which precursors pass upstream; within this stage `EffectiveRunQvalue(FdrLevel.Both)` is hard-coded for the ID-line decision regardless of the global level (BlibOutputWriter.cs:252,296,310). |
 
-There is no CLI switch to enable `OspreyCoefficients` output, to choose the score type, or to change the compression backend — all are fixed in code.
+There is no CLI switch to choose the score type or to change the compression backend — both are fixed in code.
 
 ---
 
@@ -226,11 +226,11 @@ There is no CLI switch to enable `OspreyCoefficients` output, to choose the scor
 - **[STALE-RUST-DOC] Modifications.position is 1-based, not 0-indexed** - Rust doc says `position` is a "0-indexed position in sequence"; C# converts internal 0-based positions to 1-based on write (and a standing test asserts it). Byte-identical `.blib` parity with Rust implies the Rust code also writes 1-based, so the doc is stale. Evidence: Osprey.IO/BlibWriter.cs:399-408; Osprey.Test/IOTest.cs:107-149. Severity: minor.
 - **[STALE-RUST-DOC] Nullable-text columns are written as empty strings, not NULL** - Rust doc says `moleculeName`/`chemicalFormula`/`precursorAdduct`/`inchiKey`/`otherKeys` are NULL; C# inserts empty-string literals. Evidence: Osprey.IO/BlibWriter.cs:127-131. Severity: info.
 - **[STALE-RUST-DOC] RetentionTimes best-run ID-line fallback is undocumented** - Rust doc says `retentionTime` is NULL for any run not passing run-level FDR; C# additionally guarantees at least one ID line per RefSpectra by populating `retentionTime` on the lowest-`run_qvalue` run when no run passes. Evidence: Osprey.Tasks/BlibOutputWriter.cs:288-313. Severity: minor.
-- **[STALE-RUST-DOC] Osprey extension score/intensity fields are 0.0 placeholders** - Rust doc labels `OspreyRunScores.DiscriminantScore` a "Mokapot discriminant score", `PosteriorErrorProb` a PEP, and `OspreyPeakBoundaries.ApexIntensity` an intensity; C# writes 0.0 for all three (not plumbed through Stage 7), and there is no Mokapot in the C# port. Evidence: Osprey.Tasks/BlibOutputWriter.cs:249-254. Severity: minor.
+- **[INTENTIONAL-CSHARP-DESIGN] The four `Osprey*` tool tables are not written** - Rust writes `OspreyPeakBoundaries`, `OspreyRunScores`, `OspreyExperimentScores` and `OspreyCoefficients` beside the standard tables; C# dropped them on 2026-10-15 (see "The dropped `Osprey*` tables"). The cross-impl blib comparison compares the standard tables and `OspreyMetadata` only. Evidence: Osprey.IO/OspreyBlibTables.cs. Severity: minor.
 - **[STALE-RUST-DOC] OspreyMetadata key set differs** - Rust doc lists keys `osprey_version`, `rt_calibration_enabled`, `run_fdr`, `fdr_method`; C# writes `osprey_version`, `search_mode`, `run_fdr`, `experiment_fdr`. Evidence: Osprey.Tasks/BlibOutputWriter.cs:266-271. Severity: minor.
 - **[INTENTIONAL-CSHARP-DESIGN] Native managed SQLite writer, not ProteoWizard BiblioSpec** - The README frames the C# blib output as "reusing ProteoWizard BiblioSpec infrastructure"; in fact `BlibWriter` is a hand-rolled `System.Data.SQLite` writer that reuses only the BiblioSpec *schema* and Skyline's `BlibData`/`UtilDB` byte conventions (Ionic.Zlib level 6), not the C++ BiblioSpec code. Rust's `flate2` (stock-zlib backend) and this Ionic.Zlib path produce byte-identical `RefSpectraPeaks` blobs. Evidence: Osprey.IO/BlibWriter.cs:37, 980-1008. Severity: info.
-- **[INTENTIONAL-CSHARP-DESIGN] Extra schema columns and indices not in the Rust doc tables** - C# declares `SpectrumSourceFiles.workflowType` and `ScoreTypes.probabilityType`, and creates three indices beyond the Rust doc's seven (`idx_expscores_refid`, `idx_coefficients_refid`, `idx_rettimes_refid`), for BiblioSpecLite/Skyline compatibility. Evidence: Osprey.IO/BlibWriter.cs:737,750, 573-575. Severity: info.
+- **[INTENTIONAL-CSHARP-DESIGN] Extra schema columns and an index not in the Rust doc tables** - C# declares `SpectrumSourceFiles.workflowType` and `ScoreTypes.probabilityType`, and creates `idx_rettimes_refid` beyond the Rust doc's indexes, for BiblioSpecLite/Skyline compatibility. Evidence: BiblioSpec.IO/BlibSchema.cs, BlibWriter.cs. Severity: info.
 
-Everything else matches the Rust doc: the standard + extension table set, `RefSpectraPeaks` storing library theoretical fragments (f64 m/z / f32 intensity, zlib-with-raw-fallback), the nullable-`retentionTime` ID-line semantics, one `RetentionTimes` row per detected run, `copies = nRunsDetected`, `OspreyCoefficients` emitted with zero rows, and the write→finalize→atomic-rename flow. No `PORT-ERROR` was found: the C# implementation is internally consistent and (per the standing `Compare-Blib-Crossimpl.ps1` gate referenced in BlibWriter.cs) byte-identical to the Rust output, so the schema-value differences above reflect a stale Rust doc rather than a behavioral defect.
+Everything else matches the Rust doc: the standard table set, `RefSpectraPeaks` storing library theoretical fragments (f64 m/z / f32 intensity, zlib-with-raw-fallback), the nullable-`retentionTime` ID-line semantics, one `RetentionTimes` row per detected run, `copies = nRunsDetected`, and the write→finalize→atomic-rename flow. No `PORT-ERROR` was found: the C# implementation is internally consistent and (per the standing `Compare-Blib-Crossimpl.ps1` gate referenced in BlibWriter.cs) byte-identical to the Rust output, so the schema-value differences above reflect a stale Rust doc rather than a behavioral defect.
 
-See also 07-fdr-control.md (source of the run/experiment q-values written here), 11-boundary-overrides.md (the reconciled peak boundaries in `RefSpectra`/`RetentionTimes`/`OspreyPeakBoundaries`), 10-cross-run-reconciliation.md (per-file boundary imputation), and 15-hpc-scoring-split.md (the `SecondPassFDR` worker that invokes this stage).
+See also 07-fdr-control.md (source of the run/experiment q-values written here), 11-boundary-overrides.md (the reconciled peak boundaries in `RefSpectra`/`RetentionTimes`), 10-cross-run-reconciliation.md (per-file boundary imputation), and 15-hpc-scoring-split.md (the `SecondPassFDR` worker that invokes this stage).

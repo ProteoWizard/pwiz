@@ -33,8 +33,8 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Osprey's rows of a <c>.blib</c>: a <see cref="BlibWriter"/>, the one writer every tool of
-    /// ours writes the format through, with <see cref="OspreyBlibTables"/> beside the standard
-    /// tables, and the column values Osprey's search output and <c>--export-library</c> have
+    /// ours writes the format through, with <see cref="OspreyBlibTables"/> (the metadata table)
+    /// beside the standard tables, and the column values Osprey's search output and <c>--export-library</c> have
     /// always written (Rust osprey's <c>blib.rs</c>): a <c>GENERIC Q-VALUE</c> score, the
     /// spectrum's ordinal as its id in file, zero rather than NULL for the ion mobility columns
     /// and the total ion current, the apex and bounds in the spectrum row, and the peptide text
@@ -131,35 +131,6 @@ namespace pwiz.Osprey.IO
         {
             _writer.AddRetentionTime(refId, sourceFileId, retentionTime, startTime, endTime, score, bestSpectrum,
                 0.0, 0.0, 0.0);
-        }
-
-        /// <summary>One <c>OspreyPeakBoundaries</c> row: a passing precursor's best run.</summary>
-        public void AddPeakBoundaries(long refId, string fileName,
-            double startRt, double endRt, double apexRt,
-            double apexIntensity, double integratedArea)
-        {
-            _tables.AddPeakBoundaries(refId, fileName, startRt, endRt, apexRt, apexIntensity, integratedArea);
-        }
-
-        /// <summary>One <c>OspreyRunScores</c> row: a passing precursor's best run.</summary>
-        public void AddRunScores(long refId, string fileName,
-            double runQValue, double discriminantScore, double posteriorErrorProb)
-        {
-            _tables.AddRunScores(refId, fileName, runQValue, discriminantScore, posteriorErrorProb);
-        }
-
-        /// <summary>One <c>OspreyExperimentScores</c> row per passing precursor.</summary>
-        public void AddExperimentScores(long refId,
-            double experimentQValue, int nRunsDetected, int nRunsSearched)
-        {
-            _tables.AddExperimentScores(refId, experimentQValue, nRunsDetected, nRunsSearched);
-        }
-
-        /// <summary>One <c>OspreyCoefficients</c> row: one scan of a peak's coefficient series.</summary>
-        public void AddCoefficient(long refId, string fileName,
-            uint scanNumber, double rt, double coefficient)
-        {
-            _tables.AddCoefficient(refId, fileName, scanNumber, rt, coefficient);
         }
 
         /// <summary>Adds or replaces an <c>OspreyMetadata</c> key-value row.</summary>

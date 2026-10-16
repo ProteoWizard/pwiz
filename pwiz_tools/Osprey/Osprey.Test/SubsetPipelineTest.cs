@@ -963,8 +963,6 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(precursors >= MIN_PRECURSORS, string.Format(@"{0} precursors reported", precursors));
             Assert.AreEqual(RUN_NAMES.Length, BlibComparer.CountRows(blib, @"SpectrumSourceFiles"));
             Assert.AreEqual(precursors * RUN_NAMES.Length, BlibComparer.CountRows(blib, @"RetentionTimes"));
-            Assert.AreEqual(precursors, BlibComparer.CountRows(blib, @"OspreyExperimentScores"));
-            Assert.IsTrue(BlibComparer.CountRows(blib, @"OspreyPeakBoundaries") >= precursors);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"Proteins") > 0);
 
             AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib, MIN_RECOVERED_FRACTION);

@@ -50,18 +50,6 @@ namespace pwiz.Osprey.Test
                 @"SELECT r.peptideModSeq, r.precursorCharge, s.fileName, t.retentionTime, t.startTime, t.endTime, " +
                 @"t.score, t.bestSpectrum FROM RetentionTimes t JOIN RefSpectra r ON t.RefSpectraID = r.id " +
                 @"JOIN SpectrumSourceFiles s ON t.SpectrumSourceID = s.id"),
-            new Projection(@"OspreyRunScores", 3,
-                @"SELECT r.peptideModSeq, r.precursorCharge, o.FileName, o.RunQValue, o.DiscriminantScore, " +
-                @"o.PosteriorErrorProb FROM OspreyRunScores o JOIN RefSpectra r ON o.RefSpectraID = r.id"),
-            new Projection(@"OspreyExperimentScores", 2,
-                @"SELECT r.peptideModSeq, r.precursorCharge, o.ExperimentQValue, o.NRunsDetected, o.NRunsSearched " +
-                @"FROM OspreyExperimentScores o JOIN RefSpectra r ON o.RefSpectraID = r.id"),
-            new Projection(@"OspreyPeakBoundaries", 3,
-                @"SELECT r.peptideModSeq, r.precursorCharge, o.FileName, o.StartRT, o.EndRT, o.ApexRT, " +
-                @"o.ApexIntensity, o.IntegratedArea FROM OspreyPeakBoundaries o JOIN RefSpectra r ON o.RefSpectraID = r.id"),
-            new Projection(@"OspreyCoefficients", 4,
-                @"SELECT r.peptideModSeq, r.precursorCharge, o.FileName, o.ScanNumber, o.RT, o.Coefficient " +
-                @"FROM OspreyCoefficients o JOIN RefSpectra r ON o.RefSpectraID = r.id"),
             new Projection(@"RefSpectraProteins", 3,
                 @"SELECT r.peptideModSeq, r.precursorCharge, p.accession FROM RefSpectraProteins rp " +
                 @"JOIN RefSpectra r ON rp.RefSpectraID = r.id JOIN Proteins p ON rp.ProteinID = p.id"),

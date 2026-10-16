@@ -89,54 +89,6 @@ JOIN SpectrumSourceFiles sf ON rt.SpectrumSourceID = sf.id
         Exact = @('bestSpectrum')
     },
     @{
-        Name = 'OspreyRunScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.RunQValue, s.DiscriminantScore, s.PosteriorErrorProb
-FROM OspreyRunScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('RunQValue', 'DiscriminantScore', 'PosteriorErrorProb')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyExperimentScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge,
-       s.ExperimentQValue, s.NRunsDetected, s.NRunsSearched
-FROM OspreyExperimentScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('ExperimentQValue')
-        Exact = @('NRunsDetected', 'NRunsSearched')
-    },
-    @{
-        Name = 'OspreyPeakBoundaries'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.StartRT, s.EndRT, s.ApexRT, s.ApexIntensity, s.IntegratedArea
-FROM OspreyPeakBoundaries s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('StartRT', 'EndRT', 'ApexRT', 'ApexIntensity', 'IntegratedArea')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyCoefficients'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName, s.ScanNumber,
-       s.RT, s.Coefficient
-FROM OspreyCoefficients s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName', 'ScanNumber')
-        Numeric = @('RT', 'Coefficient')
-        Exact = @()
-    },
-    @{
         Name = 'RefSpectraProteins'; Scope = 'Subset'
         Sql = @'
 SELECT r.peptideModSeq, r.precursorCharge, p.accession
