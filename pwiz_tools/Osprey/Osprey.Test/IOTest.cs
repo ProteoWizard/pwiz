@@ -4725,8 +4725,6 @@ namespace pwiz.Osprey.Test
                     new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                FileStems = new List<string> { "round_trip" },
-                FirstPassBaseIds = new[] { 3u, 100u, 101u, 200u, 201u },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -4739,7 +4737,6 @@ namespace pwiz.Osprey.Test
                         TargetEntryId = 3,
                     },
                 },
-                LibraryHash = "lib-hash-abc",
                 RefinedRtCalibration = new RefinedRtCalibrationJson
                 {
                     AbsResiduals = new[] { 0.01, 0.02, 0.015 },
@@ -4747,7 +4744,6 @@ namespace pwiz.Osprey.Test
                     LibraryRts   = new[] { 10.0, 20.0, 30.0 },
                     ResidualSd   = 0.123,
                 },
-                SearchHash = "search-hash-xyz",
                 UseCwtPeakActions = new List<UseCwtPeakEntry>
                 {
                     new UseCwtPeakEntry { ApexRt = 23.45, CandidateIdx = 1, EndRt = 23.80, EntryId = 100, StartRt = 23.10 },
@@ -4780,8 +4776,6 @@ namespace pwiz.Osprey.Test
                 var parsed = ReconciliationFile.Load(path);
 
                 Assert.AreEqual(file.FormatVersion, parsed.FormatVersion);
-                Assert.AreEqual(file.SearchHash, parsed.SearchHash);
-                Assert.AreEqual(file.LibraryHash, parsed.LibraryHash);
                 Assert.AreEqual(file.UseCwtPeakActions.Count, parsed.UseCwtPeakActions.Count);
                 Assert.AreEqual(file.ForcedIntegrationActions.Count, parsed.ForcedIntegrationActions.Count);
                 Assert.AreEqual(file.GapFillTargets.Count, parsed.GapFillTargets.Count);
@@ -4835,7 +4829,7 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(string.Format(
                         OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
                         path, 99, ReconciliationFile.CurrentFormatVersion, "format_version",
-                        FdrScoresSidecar.FIRST_PASS_FILE_PATTERN), ex.Message);
+                        "*" + ReconciliationFile.EXT), ex.Message);
                 }
             }
             finally
@@ -5031,8 +5025,15 @@ namespace pwiz.Osprey.Test
             ReconciliationFile.Save(reconciliation, new ReconciliationFile
             {
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
-                FileStems = new List<string> { "run" },
-                FirstPassBaseIds = Enumerable.Range(0, 200000).Select(i => (uint)i).ToArray(),
+                GapFillTargets = Enumerable.Range(0, 20000).Select(i => new GapFillEntry
+                {
+                    Charge = 2,
+                    DecoyEntryId = (uint)i | 0x80000000u,
+                    ExpectedRt = i * 0.01,
+                    HalfWidth = 0.1,
+                    ModifiedSequence = "PEPTIDE",
+                    TargetEntryId = (uint)i,
+                }).ToList(),
             }, stamp);
             Assert.IsTrue(new FileInfo(reconciliation).Length > 1024 * 1024);
             AssertStampRead(reconciliation, stamp);

@@ -832,27 +832,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not carry the first-pass precursor set. Delete this analysis&apos;s {3} files and run the first pass again..
-        /// </summary>
-        public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_ {
-            get {
-                return ResourceManager.GetString("ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_n" +
-                        "ot_carry_the_first_pass_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not list the input files it covers ({3}). Delete this analysis&apos;s {4} files and run the first pass again..
-        /// </summary>
-        public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_ {
-            get {
-                return ResourceManager.GetString("ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_n" +
-                        "ot_list_the_input_files_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis&apos;s {4} files and run the first pass again..
+        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis&apos;s {4} files and run the analysis again..
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_ {
             get {

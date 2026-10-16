@@ -29,6 +29,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -88,10 +89,10 @@ namespace pwiz.Osprey.Tasks
     /// hand-assembled the upstream hydration; Phase C collapsed that
     /// path so the canonical pipeline's membership rule (OspreyConfig.Includes) + the
     /// upstream tasks' lazy-rehydrate handle it. Run reads upstream state
-    /// as typed byproducts through <c>ctx.Get&lt;CompactedEntries&gt;()</c>,
-    /// <c>ctx.Get&lt;PlannedActionCount&gt;()</c>, etc. (a cache miss
-    /// materializes the producing task) - each run's actions, gap-fill and refined
-    /// calibration come from that run's own <c>reconciliation.json</c> - dispatches into
+    /// as typed byproducts through <c>ctx.Get&lt;CompactedEntries&gt;()</c>, etc. (a cache
+    /// miss materializes the producing task) - each run's actions, gap-fill and refined
+    /// calibration are planned here from that run's survivors and the analysis-wide
+    /// consensus, and written to its <c>reconciliation.json</c> - dispatches into
     /// <see cref="ExecuteRescore"/>, then runs the per-process
     /// diagnostic-writer close + cross-impl bisection dump. Reaches the
     /// scoring engine (RunCoelutionScoring via <see cref="ScoringPipeline"/>) directly
@@ -207,10 +208,12 @@ namespace pwiz.Osprey.Tasks
         {
             if (ctx.Config.InputFiles == null) yield break;
             foreach (var input in ctx.Config.InputFiles)
-            {
                 yield return FdrScoresSidecar.Pass1Path(input);
-                if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
-                    yield return ReconciliationFile.PathForInput(input);
+            if (ctx.Config.Reconciliation != null && ctx.Config.Reconciliation.Enabled)
+            {
+                string consensusPath = Stage6ConsensusFile.PathFor(ctx.Config);
+                if (!string.IsNullOrEmpty(consensusPath))
+                    yield return consensusPath;
             }
         }
 
@@ -228,6 +231,11 @@ namespace pwiz.Osprey.Tasks
             // fast per-file-skip its way back to the same answer.
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
+
+            // Each run's Stage 6 plan, written by this task as it plans the run just before
+            // rescoring it, under the stamp its reconciled parquet carries.
+            foreach (var input in ctx.Config.InputFiles)
+                yield return ReconciliationFile.PathForInput(input);
 
             // The training export (--training-export) is this task's product: it reads the
             // spectra, reconciled boundaries and run q-values this task holds or has just
@@ -528,10 +536,10 @@ namespace pwiz.Osprey.Tasks
 
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
-            // done upstream. State comes from either FirstPassFdrTask's
-            // planning block (in-process pipeline, DidPlan=true) or each
-            // run's own reconciliation.json through the per-run hydrate
-            // (worker and resume paths, DidPlan=false). A 2nd-pass FDR
+            // done upstream. State comes from FirstPassFdrTask's consensus:
+            // in-process (DidPlan=true) or from its consensus file on the
+            // worker and resume paths (DidPlan=false); either way each run is
+            // planned in the per-run hydrate. A 2nd-pass FDR
             // sidecar already on disk for any file is the signal that a
             // previous run COMPLETED Stage 7 here, so the rescore engine
             // has already produced the reconciled output; re-running it
@@ -612,8 +620,8 @@ namespace pwiz.Osprey.Tasks
 
             // The second source of "there is a plan to execute", alongside FirstPassFDR's
             // in-process planning (didPlan). When the rescore hydrates per run
-            // the plan is not held anywhere at this point - it is read from each run's own
-            // reconciliation.json inside its iteration - so the older signal is legitimately
+            // the plan is not held anywhere at this point - each run is planned inside its
+            // iteration, from the consensus file - so the older signal is legitimately
             // false and the gate below would self-gate a run that has every input it needs.
             //
             // That is not hypothetical: removing the experiment-wide bundle made this gate fire
@@ -711,13 +719,12 @@ namespace pwiz.Osprey.Tasks
                 joinFileStems = stems;
             }
 
-            // Each run's actions, gap-fill, consensus targets and refined calibration come from
-            // its own reconciliation.json through the per-run hydrate; FirstPassFDR publishes
-            // only the planned-action count, for the summary line. The whole-experiment planning
-            // maps that used to arrive here - order 13 GB at 446 runs - are no longer built.
+            // Each run is planned here, from its own survivors and the analysis-wide consensus,
+            // just before it is rescored (RunReconciliationPlanner), and its plan is written to
+            // its reconciliation.json. The whole-experiment planning maps that used to arrive
+            // here - order 13 GB at 446 runs - are not built anywhere.
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
-                ctx.Get<PlannedActionCount>().Value,
                 ctx.Get<PerFileCalibrations>().Value,
                 ctx.Get<PerFileParquetPaths>().Value,
                 ctx.Get<FullLibrary>().Value,
@@ -922,7 +929,6 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal RescoreStats ExecuteRescore(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            int totalReconciliation,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
@@ -954,7 +960,13 @@ namespace pwiz.Osprey.Tasks
                 JoinFileStems = joinFileStems,
             };
             inputs.Pass2Worker = CreatePass2Worker(config, ctx, Name, inputs.TaskValidityKey);
+            var runPlanner = CreateRunPlanner(perFileCalibrations, perFileParquetPaths, fullLibrary, config, ctx);
             inputs.HydrateRun = BuildPerRunHydrate(perFileParquetPaths, config, ctx);
+            var planStamp = OspreyVersion.Stamp(Name, inputs.TaskValidityKey);
+            var sequencePool = ctx.Get<SequencePool>().Value;
+            inputs.PlanRun = run => RescoreHydration.ApplyPlan(run,
+                PlanAndWriteRun(runPlanner, run.FileName, run.InputPath, run.Survivors, planStamp),
+                sequencePool);
 
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
             // rescore loop repopulates the heavy per-entry arrays) -- fires early,
@@ -1056,11 +1068,12 @@ namespace pwiz.Osprey.Tasks
             // between Stage 6 and Stage 7.
             inputs.Pass2Worker.LogSummary(ctx);
             inputs.Pass2Worker.Dispose();
+            runPlanner.LogSummary();
 
             return new RescoreStats
             {
                 TotalRescored = totalRescored,
-                TotalReconciliation = totalReconciliation,
+                TotalReconciliation = runPlanner.ActionCount,
                 TotalGapCwt = totalGapCwt,
                 TotalGapForced = totalGapForced,
             };
@@ -1192,6 +1205,15 @@ namespace pwiz.Osprey.Tasks
             /// <para>Called under <c>_survivorLoadLock</c>, so it need not be thread-safe.</para>
             /// </summary>
             public Func<string, RunRescoreInputs> HydrateRun;
+
+            /// <summary>
+            /// Plan ONE hydrated run from its survivors and the analysis-wide consensus, write its
+            /// <c>.reconciliation.json</c>, and apply the plan to it. Called from the file lanes
+            /// OUTSIDE <c>_survivorLoadLock</c> - planning holds only the run's survivors and its
+            /// CWT candidates, and serializing it would put the per-run planning this task took
+            /// over from the join back in a single file. Thread-safe.
+            /// </summary>
+            public Action<RunRescoreInputs> PlanRun;
         }
 
         /// <summary>
@@ -1265,6 +1287,18 @@ namespace pwiz.Osprey.Tasks
                 }
                 file.Value.Clear();
                 file.Value.AddRange(run.Survivors);
+            }
+            try
+            {
+                inputs.PlanRun(run);
+            }
+            catch (InvalidDataException ex)
+            {
+                // Reported, not thrown, for the reason the hydrate's failure is: the loop reports
+                // every bad run. The run is not rescored, so its entries are dropped here.
+                loadError = ex.Message;
+                file.Value.Clear();
+                return (0, 0, 0, false);
             }
             try
             {
@@ -1390,8 +1424,8 @@ namespace pwiz.Osprey.Tasks
                 out MzCalibrationResult ms1Cal,
                 out double? rtMadFromCalJson);
 
-            // Pick the RT calibration: refined (from Stage 6 planning's calibration refit, off
-            // this run's own envelope) wins; original first-pass falls back, which is this
+            // Pick the RT calibration: refined (from this run's Stage 6 plan, made in its
+            // hydrate) wins; original first-pass falls back, which is this
             // run's own .calibration.json.
             RTCalibration rtCal = run.RefinedCalibration;
             if (rtCal == null)
@@ -2057,9 +2091,57 @@ namespace pwiz.Osprey.Tasks
                 // per file (LoadJoinOnlyScoresForFile), one run at a time.
                 return RescoreHydration.HydrateOneRun(parquetPath, retainedBaseIds,
                     experimentRecords,
-                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool),
-                    sequencePool: sequencePool);
+                    (name, path) => ParquetScoreCache.LoadFdrStubsFromParquet(path, null, sequencePool));
             };
+        }
+
+        /// <summary>
+        /// The per-run planner: the analysis-wide consensus FirstPassFDR wrote, plus this task's
+        /// calibrations, isolation windows and library - the baseline of a fan-out task, bounded
+        /// by the library and the distinct peptides. The consensus is read when the first run
+        /// is planned, so a resume that finds every run done reads nothing. A consensus that
+        /// cannot be read fails that run with <see cref="InvalidDataException"/> naming the
+        /// file: planning without it would write plans with no reconciliation in them.
+        /// </summary>
+        private static RunReconciliationPlanner CreateRunPlanner(
+            IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            Func<Stage6Consensus> loadConsensus = config.Reconciliation.Enabled
+                ? () => Stage6ConsensusFile.Load(Stage6ConsensusFile.PathFor(config))
+                : () => null;
+            return new RunReconciliationPlanner(loadConsensus, perFileCalibrations,
+                ctx.Get<PerFileIsolationMz>().Value, fullLibrary, perFileParquetPaths, config, ctx);
+        }
+
+        /// <summary>
+        /// Plan one run and write its plan to its <c>.reconciliation.json</c>, stamped with the
+        /// stamp its reconciled parquet will carry, so the run's outputs are current together
+        /// (<see cref="IsFileRescored"/>). Written before the rescore that executes it, so a
+        /// kill mid-rescore leaves a plan whose parquet is missing - a run that is not done.
+        /// A write failure is reported as <see cref="InvalidDataException"/>, which the loop
+        /// collects per run.
+        /// </summary>
+        private static ReconciliationFile PlanAndWriteRun(RunReconciliationPlanner runPlanner,
+            string fileName, string syntheticInput, List<FdrEntry> survivors, ArtifactStamp stamp)
+        {
+            // Never reached under --task ModelDiagnostics, which writes nothing but its report:
+            // that task does not rescore (see willRescoreHere in RunRescore).
+            var plan = runPlanner.PlanRun(fileName, survivors);
+            try
+            {
+                ReconciliationFile.Save(ReconciliationFile.PathForInput(syntheticInput), plan, stamp);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_WriteReconciliationFile_Could_not_write_the_cross_run_reconciliation_file_for__0____1_,
+                    fileName, ex.Message), ex);
+            }
+            return plan;
         }
 
         /// <summary>

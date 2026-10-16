@@ -439,9 +439,6 @@
   <data name="FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files" xml:space="preserve">
     <value>Writing first-pass FDRBench input for {0:N0} files</value>
   </data>
-  <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_" xml:space="preserve">
-    <value>Could not locate the intermediate files for {0}, so its cross-run reconciliation file was not written.</value>
-  </data>
   <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_write_the_cross_run_reconciliation_file_for__0____1_" xml:space="preserve">
     <value>Could not write the cross-run reconciliation file for {0}: {1}</value>
   </data>
@@ -1009,9 +1006,6 @@
   <data name="RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report" xml:space="preserve">
     <value>Reading first-pass results for the model diagnostics report</value>
   </data>
-  <data name="RescoreHydration_LoadEnvelope_Failed_to_read__0____1_" xml:space="preserve">
-    <value>Failed to read {0}: {1}</value>
-  </data>
   <data name="RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_" xml:space="preserve">
     <value>{0} refers to precursor candidate {1}, which is not in the scores file for that run. The scores file changed after the first pass: delete this analysis's {2} files and run the first pass again.</value>
   </data>
@@ -1207,15 +1201,6 @@
   <data name="Stage6Planner_PlanFiles_Cross_run_reconciliation__skipped__because_there_is_only_one_file_" xml:space="preserve">
     <value>Cross-run reconciliation: skipped, because there is only one file.</value>
   </data>
-  <data name="Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_" xml:space="preserve">
-    <value>Multi-charge consensus planning (pass 2 of 2)</value>
-  </data>
-  <data name="Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files" xml:space="preserve">
-    <value>Reconciliation planning (pass 2 of 2) across {0:N0} files</value>
-  </data>
-  <data name="Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file" xml:space="preserve">
-    <value>Reconciliation planning (pass 2 of 2) for 1 file</value>
-  </data>
   <data name="Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__files_using_the_cross_run_consensus_" xml:space="preserve">
     <value>Refined the retention time calibration of {0:N0} of {1:N0} files using the cross-run consensus.</value>
   </data>
@@ -1224,15 +1209,6 @@
   </data>
   <data name="Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_will_be_re_scored_at_the_peak_boundaries_of_the_" xml:space="preserve">
     <value>Multi-charge consensus: {1:N0} charge states will be re-scored at the peak boundaries of the best charge state of the same peptide.</value>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_" xml:space="preserve">
-    <value>Multi-charge consensus planning (pass 1 of 2)</value>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files" xml:space="preserve">
-    <value>Reconciliation planning (pass 1 of 2) across {0:N0} files</value>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file" xml:space="preserve">
-    <value>Reconciliation planning (pass 1 of 2) for 1 file</value>
   </data>
   <data name="PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance" xml:space="preserve">
     <value>Too few peaks of the library {3} are b or y ions within the fragment tolerance of {6} {7}: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Set a fragment tolerance that fits the library's m/z accuracy with {8} or {9}, or use a library that already contains decoys, with {5}.</value>
@@ -1335,5 +1311,23 @@
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_found_at__0_" xml:space="preserve">
     <value>no readable first-pass model file was found at {0}</value>
+  </data>
+  <data name="Stage6ConsensusFile_Load_Failed_to_read_the_cross_run_consensus__0____1_" xml:space="preserve">
+    <value>Failed to read the cross-run consensus {0}: {1}</value>
+  </data>
+  <data name="Stage6ConsensusFile_Load_the_file_is_incomplete_or_from_another_build" xml:space="preserve">
+    <value>the file is incomplete or was written by another Osprey build</value>
+  </data>
+  <data name="FirstPassFdrTask_WriteStage6Consensus_Failed_to_write_the_cross_run_consensus__0____1___The_next_task___2___plans_each_file_from_it_" xml:space="preserve">
+    <value>Failed to write the cross-run consensus {0}: {1}. The next task, {2}, plans each file from it.</value>
+  </data>
+  <data name="Stage6Planner_ScanFiles_Multi_charge_consensus_planning" xml:space="preserve">
+    <value>Multi-charge consensus planning</value>
+  </data>
+  <data name="Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file" xml:space="preserve">
+    <value>Cross-run consensus for 1 file</value>
+  </data>
+  <data name="Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files" xml:space="preserve">
+    <value>Cross-run consensus across {0:N0} files</value>
   </data>
 </root>

@@ -148,7 +148,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public static string PathFor(OspreyConfig config)
         {
-            return AnalysisPath(config, EXT_MODEL);
+            return ScoringTaskShared.AnalysisArtifactPath(config, EXT_MODEL);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public static string StratumPathFor(OspreyConfig config)
         {
-            return AnalysisPath(config, EXT_STRATUM);
+            return ScoringTaskShared.AnalysisArtifactPath(config, EXT_STRATUM);
         }
 
         /// <summary>
@@ -456,23 +456,6 @@ namespace pwiz.Osprey.Tasks
         private static string SerializeJson(object dto)
         {
             return RoundtripDoubleConverter.SerializeIndented(dto);
-        }
-
-        /// <summary>
-        /// <c>&lt;blib-stem&gt;&lt;ext&gt;</c> in the directory the analysis's per-run artifacts
-        /// resolve to, or null when there is no output blib or input to resolve it from.
-        /// </summary>
-        private static string AnalysisPath(OspreyConfig config, string ext)
-        {
-            string outputBlib = config?.OutputBlib;
-            string siblingPath = ScoringTaskShared.ArtifactSiblingPath(config);
-            if (string.IsNullOrEmpty(outputBlib) || string.IsNullOrEmpty(siblingPath))
-                return null;
-            string stem = Path.GetFileNameWithoutExtension(outputBlib);
-            if (string.IsNullOrEmpty(stem))
-                return null;
-            string parent = ArtifactPaths.ResolveOutputDir(siblingPath);
-            return string.IsNullOrEmpty(parent) ? stem + ext : Path.Combine(parent, stem + ext);
         }
     }
 }

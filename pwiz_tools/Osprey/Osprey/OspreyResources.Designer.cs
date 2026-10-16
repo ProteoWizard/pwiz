@@ -299,7 +299,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to writes beside each parquet: {0}, {1}.
+        ///   Looks up a localized string similar to writes beside each parquet: {0}; and once for the analysis: {1}.
         /// </summary>
         public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_ {
             get {

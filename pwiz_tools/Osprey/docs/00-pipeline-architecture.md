@@ -196,8 +196,9 @@ The pipeline is a fixed, four-element list, always in this order
 
 Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
-Stage 6 reconciliation plan. Stage 6 is the per-run rescore and gap-fill. Stage 7 is
-second-pass FDR, protein FDR, and the `.blib` write. The stage-to-document map is in
+cross-run half of Stage 6 planning - the consensus every run's plan is made from. Stage 6
+is each run's plan (calibration refit, reconciliation actions, gap-fill targets), then its
+rescore and gap-fill. Stage 7 is second-pass FDR, protein FDR, and the `.blib` write. The stage-to-document map is in
 [README.md](README.md); the task-name-to-class map is in
 [15-hpc-scoring-split](15-hpc-scoring-split.md).
 
@@ -298,8 +299,9 @@ This is the shape every fan-out task has, and the reason batch size is free. Tak
     for each run r in the batch:          PER-RUN WORKING SET
         load   r.scores.parquet               |
         load   r.1st-pass.fdr_scores.bin      |
-        load   r.reconciliation.json          |  O(entries in r)
-        load   r.calibration.json             |
+        load   r.calibration.json             |  O(entries in r)
+              ---- plan r ----                |
+        write  r.reconciliation.json          |
         load   r.spectra.bin (windowed)       |
               ---- rescore r ----             |
         write  r.scores-reconciled.parquet    |
@@ -331,8 +333,8 @@ and silently reintroduces the wall.
 ### Phase boundaries inside a task
 
 A task is not the unit of persistence. `FirstPassFDR` alone passes through model
-training, a scoring pass over every run, the experiment-wide barrier, a second pass,
-protein FDR, and Stage 6 planning - and it writes its products at the end of the phase
+training, a scoring pass over every run, the experiment-wide barrier, protein FDR, and
+the cross-run consensus for Stage 6 planning - and it writes its products at the end of the phase
 that computes them, not at the end of the task.
 
 This matters for two reasons. It bounds crash exposure to a single in-flight file
@@ -809,9 +811,10 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
-| `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
+| `<stem>.reconciliation.json` | per-run product | `PerFileRescoring` (the run's Stage 6 plan, written just before it is rescored) | `SecondPassFDR` (gap-fill entry ids) | with the run, from the rescore node to `SecondPassFDR` |
+| `<blib-stem>.1st-pass.consensus.json` | experiment product | `FirstPassFDR` (end of the consensus pass) | `PerFileRescoring` (every run's plan) | **every node** running `PerFileRescoring` |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
-| `<blib-stem>.1st-pass.retained_base_ids.bin` | experiment product | `FirstPassFDR` (end of Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR`, `FirstPassFDR` and `PerFileScoring` (resume) | **every node** |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | experiment product | `FirstPassFDR` (end of the consensus pass) | `PerFileRescoring`, `SecondPassFDR`, `FirstPassFDR` and `PerFileScoring` (resume) | **every node** |
 | `<blib-stem>.1st-pass.model.json` | experiment product | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR`, `FirstPassFDR` (resume) | **every node** |
 | `<blib-stem>.1st-pass.stratum.json` | experiment product, protein-compact only | `FirstPassFDR` (first-pass protein FDR) | as the model, paired with it by stamp | **every node** |
 | `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
@@ -911,14 +914,16 @@ gets that coverage. It is read behind a `File.Exists`, so an orchestrator that l
 behind does not get an error: gap-fill filtering silently changes. That is the P13-shaped
 hazard this document warns about, in the contract itself.
 
-**A cohort-wide union cannot ride in a per-run envelope, for an ordering reason.** Each
-`<stem>.reconciliation.json` is written the instant that run's planning finishes, so the
-planned actions of runs planned *later* do not exist yet and cannot be in it. Any fact that
-is a union over all runs is therefore only knowable after the last run is planned, which
-means it belongs in an artifact written at the end of planning - not replicated into
-envelopes that were each sealed too early to hold it. This is why "just add it to the
-per-run file" is not an available answer for that class of fact, and the reason is not
-deducible from the scope taxonomy alone.
+**A per-run plan is a per-run product, and nothing cross-run rides in it.** Each run's
+`<stem>.reconciliation.json` holds that run's actions, gap-fill targets and refined
+calibration, written by `PerFileRescoring` the moment it plans the run and under the stamp
+the run's reconciled parquet will carry, so the plan is part of the run's "done" predicate
+(P14). Everything a plan reads from outside its run - the consensus retention times and the
+two sets of precursors that passed somewhere in the experiment - is computed once by
+`FirstPassFDR` and written once, as `<blib-stem>.1st-pass.consensus.json`. The plans used to
+be made in `FirstPassFDR` too, a second pass over every run in the one node every HPC run
+waits for: 42 minutes of it on the 446-run CHS cohort, for work that reads one run at a
+time.
 
 **Validity stamps live inside the artifact, one per artifact.** Each durable product
 carries one stamp, `osprey-validity/1;task=<Task>;version=<OspreyVersion.Current>;key=<validity key>`,
@@ -1194,16 +1199,21 @@ Each rescore node needs its own runs' artifacts plus the experiment-wide set:
 Per run, for each run in the node's batch:
 - `<stem>.scores.parquet`
 - `<stem>.1st-pass.fdr_scores.bin`
-- `<stem>.reconciliation.json`
 - `<stem>.calibration.json`
 - `<stem>.spectra.bin`, with no data file beside it
 
+No `<stem>.reconciliation.json`: the node plans each of its runs from the consensus below
+and writes the run's plan itself.
+
 Experiment-wide, to **every** node:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
+- `<blib-stem>.1st-pass.consensus.json` - the cross-run consensus every run's plan is made
+  from. Its absence is fatal: planning a run without it would write a plan with no
+  reconciliation in it.
 - `<blib-stem>.1st-pass.retained_base_ids.bin` - the join-wide compaction set, written when
-  Stage 6 planning ends. It is what makes this list one a single-run node can actually run
-  on: without it a node would rebuild the union from every run's `reconciliation.json`,
-  which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
+  the consensus pass ends. It is what makes this list one a single-run node can actually run
+  on: without it a node would have to survey every run to rebuild the set, which is the
+  O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
   rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`. Stage 7's
   library-fragment release reads the same file (#4650); it used to fold every run's final
   pool to rebuild the set instead, which is the identical O(runs) pre-pass in different
@@ -1235,7 +1245,9 @@ Per run, for **every** run in the cohort:
 - `<stem>.scores-reconciled.parquet`
 - `<stem>.2nd-pass.fdr_scores.bin`, and under protein-compact `<stem>.2nd-pass.fdr_decoys.bin`
   - the pass-2 worker's answer, which this task folds and never recomputes
-- `<stem>.reconciliation.json` - read here for the gap-fill entry ids on the Stage-7 fold
+- `<stem>.reconciliation.json` - written by the rescore node, read here for the gap-fill
+  entry ids on the Stage-7 fold. Part of the worker's answer: a run whose plan is missing or
+  carries another stamp than its reconciled parquet is refused, like a missing 2nd-pass file
 - `<stem>.calibration.json` - isolation-window coverage, so a node with no mzML still has it
 
 Experiment-wide:

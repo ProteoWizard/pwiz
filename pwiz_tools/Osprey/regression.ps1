@@ -1813,8 +1813,8 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $d1 'phase1.log') (Join-Path $chainLogDir "phase1_$stem.log") -Force
     }
 
-    # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes the
-    # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. No
+    # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes each run's
+    # <stem>.1st-pass.fdr_scores.bin and the analysis-wide output.1st-pass.* files. No
     # input file is staged; the task derives sidecar paths from the -i names alone.
     $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
     New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
@@ -1853,7 +1853,9 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")  (Join-Path $ph3 "$s.scores.parquet")
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph3 "$s.calibration.json")
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
-        Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
+        # The cross-run consensus every worker plans its run from. The run's
+        # reconciliation.json is written by the worker itself, so none is shipped.
+        Copy-Item (Join-Path $ph2 'output.1st-pass.consensus.json') (Join-Path $ph3 'output.1st-pass.consensus.json')
         # The analysis-wide 1st-pass model (frozen 2nd-pass modes) must ride the same
         # phase2 -> phase3 -> phase4 relay as the other experiment-wide files: $ph2 is
         # deleted below (before SecondPassFDR), so SecondPassFDR can only reach it
@@ -1876,7 +1878,7 @@ function Invoke-HpcChain {
         if (Test-Path $ph2exp) { Copy-Item $ph2exp (Join-Path $ph3 'output.1st-pass.fdr_experiment.bin') }
         # The analysis-wide RETAINED BASE_ID summary rides the same relay, for the same reason
         # and one step further: it is what lets this worker compact its single run without
-        # reading every other run's reconciliation.json. FirstPassFDR writes it when planning
+        # surveying every other run. FirstPassFDR writes it when the consensus pass
         # ends. Unlike the files above this one is NOT guarded with Test-Path - a worker that
         # cannot see it fails rather than silently compacting to a per-run subset, so a missing
         # copy here must surface as that failure and not as a skipped hop.

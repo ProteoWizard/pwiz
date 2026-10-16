@@ -106,7 +106,7 @@ Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution uni
 
 # join 1 - one process over ALL runs (pass a sorted list so the order is deterministic)
 Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json
+#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin; and once for the analysis: out.1st-pass.*
 
 # split 2 - one process per file (the scores parquet and its intermediate files together)
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01

@@ -33,9 +33,10 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v8**, 32-byte header + 36-byte records + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8) |
 | `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v8**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary **v2** (v2 adds the validity stamp trailer) | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
-| `<stem>.reconciliation.json` | run | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
+| `<stem>.reconciliation.json` | run | JSON (Newtonsoft) v4 | `Osprey.IO/ReconciliationFile.cs` | The run's Stage 6 plan, written by `PerFileRescoring` as it plans the run: actions, gap-fill targets, refined RT calibration (section 5) |
+| `<blib-stem>.1st-pass.consensus.json` | exp | JSON | `Osprey.Tasks/Stage6ConsensusFile.cs` | The cross-run consensus every run's plan reads: consensus RTs and the two passing sets (section 5a) |
 | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v3**, 32-byte header + 44-byte records + validity stamp trailer | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
-| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v2**, 32-byte header + 4-byte records + validity stamp trailer | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v2**, 32-byte header + 4-byte records + validity stamp trailer | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending - the distinct base_ids of every run's first-pass survivors. Written once when the consensus pass ends. (It used to add each planned action target's base_id, which never added one: every action targets a survivor.) Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
 | `<blib-stem>.1st-pass.model.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB). Written whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row. **Name** from the output blib, **directory** from `ResolveOutputDir`, like the experiment sidecar. Until 2026-10 it was copied identically beside every run as `<stem>.1st-pass.model.json` |
 | `<blib-stem>.1st-pass.stratum.json` | exp | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides, ascending. Absent under every mode but protein-compact. A SECOND file rather than a member of the model file because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadForAnalysis` merges the two on read when their stamps match. Until 2026-10 it was copied beside every run: 82 x 9.6 MB = 790 MB on the SEA-AD cohort |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
@@ -78,6 +79,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `RetainedBaseIdSidecar` | `<blib-stem>.1st-pass.retained_base_ids.bin` |
 | `Pass2CompetitionDecoys` | `<stem>.2nd-pass.fdr_decoys.bin` |
 | `ReconciliationFile` | `<stem>.reconciliation.json` |
+| `Stage6ConsensusFile` | `<blib-stem>.1st-pass.consensus.json` |
 | `FirstPassModelIO` (2 sites) | `<blib-stem>.1st-pass.model.json`, `<blib-stem>.1st-pass.stratum.json` |
 | `BlibOutputWriter` | `<output>.blib` |
 | `TrainingExportWriter` | `<stem>.training.parquet` |
@@ -98,7 +100,7 @@ path instead:
 
 | Writer | Artifact(s) |
 |---|---|
-| `OspreyFileDiagnostics` (18 one-shot methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage6_consensus.tsv`, `cs_stage6_refit.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage6_loess_fit.tsv`, `cs_stage7_detected_peptides.txt`, and the held-open streams below |
+| `OspreyFileDiagnostics` (16 one-shot methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage6_consensus.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage7_detected_peptides.txt`, and the held-open streams below |
 | `OspreyFileDiagnostics` held-open streams (4, **log-shaped**: written directly at their final path, no `SimpleFileSaver`; `CloseXDump` flushes the writer's buffered tail, not a commit; `CloseAll` runs every one of them on process exit for the same reason) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv` (unreachable today, no live caller), `cs_stage6_cwt_path.tsv`, `cs_stage6_calibration.tsv` |
 | `FdrDiagnostics.CoAssignRowDump` (rows: **log-shaped**, written directly via `FileMode.CreateNew`, no `SimpleFileSaver`; cutoffs: ordinary artifact) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
 | `FdrDiagnostics` (2 more) | `cs_stage7_winners.tsv`, `cs_best_peptide_scores.tsv` |
@@ -534,58 +536,53 @@ input; deleting it forces re-running the Stage 5 join.
 
 ---
 
-## 5. Reconciliation boundary file (`<stem>.reconciliation.json`)
+## 5. Per-run Stage 6 plan (`<stem>.reconciliation.json`)
 
-**C# source**: `Osprey.IO/ReconciliationFile.cs`. Path: `PathForInput`
-(`ReconciliationFile.cs:216`) via `ArtifactPaths.ResolveOutputDir`.
+**C# source**: `Osprey.IO/ReconciliationFile.cs`. Path: `PathForInput` via
+`ArtifactPaths.ResolveOutputDir`. Written by `PerFileRescoring`
+(`PerFileRescoreTask.PlanAndWriteRun`) as it plans the run, just before rescoring it, under
+the stamp the run's reconciled parquet carries; read by `SecondPassFDR` for the run's gap-fill
+entry ids. The plan itself is made by `RunReconciliationPlanner` from the run's survivors and
+the analysis-wide `<blib-stem>.1st-pass.consensus.json` (section 5a).
 
-Per-file JSON written at the tail of Stage 5 and consumed by the Stage 6 per-file rescore
-worker. Together with the `<stem>.1st-pass.fdr_scores.bin` sidecar it is the Stage 5 → Stage 6
-boundary pair.
+### Schema and version (v4)
 
-### Cross-impl byte parity
-
-Field declaration order is **alphabetical at every nesting level** via explicit `[JsonProperty(...
-Order = N)]` attributes (`ReconciliationFile.cs:77`+), matching Rust's `serde_json`
-alphabetical emission. Every `double` is routed through `RoundtripDoubleConverter`
-(`ReconciliationFile.cs:185`, registered in the serializer settings) — the C# counterpart to
-Rust's canonical fixed-point f64 formatter — sidestepping the Newtonsoft-`R`/Grisu vs.
-Rust-`ryu` disagreement on small values. `Save` normalizes CRLF→LF and appends a trailing
-newline (`ReconciliationFile.cs:194`) so the bytes match serde_json's LF output.
-
-One C#-only exception: the envelope's FIRST property is `osprey_validity`, the validity stamp
-(Section 8), which Rust does not write and which sits outside the alphabetical order so a
-resume can read it from the head of a ~25 MB file. A cross-impl byte comparison must drop
-that property first.
-
-### Schema and version (v3, larger than the Rust doc's v1)
-
-The C# `CurrentFormatVersion = 3` (`ReconciliationFile.cs:75`) and the envelope carries two
-fields **absent from the Rust doc's v1 example**:
-
-- `file_stems` (v2, `ReconciliationFile.cs:77`): the join-wide file set, so a per-file Stage 6
-  worker can compute the reconciliation parameter hash the `--task SecondPassFDR` node
-  expects (hash is over all joined files, not the worker's single parquet).
-- `first_pass_base_ids` (v3, `ReconciliationFile.cs:84`): the join-wide set of base_ids that
-  survived first-pass compaction, sorted ascending. A per-file worker uses it to compact to
-  exactly the in-memory pipeline's set instead of a per-file subset.
-
-The remaining fields match the Rust doc: `forced_integration_actions`
+`CurrentFormatVersion = 4`. Fields, in order: `osprey_validity` (the validity stamp, first so a
+resume reads it from the head of the file), then alphabetically `forced_integration_actions`
 (`ForcedIntegrationEntry`), `format_version`, `gap_fill_targets` (`GapFillEntry`),
-`library_hash`, `refined_rt_calibration` (`RefinedRtCalibrationJson` — LOESS
-`abs_residuals`/`fitted_rts`/`library_rts`/`residual_sd`, reconstructed on the worker via
-`RTCalibration.FromModelParams`), `search_hash`, and `use_cwt_peak_actions`
-(`UseCwtPeakEntry`). As in Rust, `Keep` actions are not persisted and actions are split into two
-homogeneous arrays to avoid a discriminator field.
+`refined_rt_calibration` (`RefinedRtCalibrationJson` - LOESS
+`abs_residuals`/`fitted_rts`/`library_rts`/`residual_sd`, reconstructed via
+`RTCalibration.FromModelParams`), and `use_cwt_peak_actions` (`UseCwtPeakEntry`). As in Rust,
+`Keep` actions are not persisted and actions are split into two homogeneous arrays to avoid a
+discriminator field. Every `double` goes through `RoundtripDoubleConverter`; `Save` writes LF
+and a trailing newline.
+
+v4 removed four fields v2/v3 carried - `file_stems`, `first_pass_base_ids`, `library_hash`,
+`search_hash`. Each was identical in every run's file and nothing read it: the base_ids are
+the analysis-wide retained summary, and the embedded stamp covers search and library identity.
+On the 82-run SEA-AD cohort `first_pass_base_ids` alone was ~466 MB of identical copies.
+
+### Cross-impl comparison
+
+Rust still writes v3 with those four fields and no stamp. A cross-impl comparison parses both
+files and drops `osprey_validity`, `file_stems`, `first_pass_base_ids`, `library_hash`,
+`search_hash` and `format_version` before comparing; the rest - every action, gap-fill target
+and calibration value - is still expected to agree exactly.
 
 ### Validation
 
-`Load` (`ReconciliationFile.cs:113`) rejects a missing file, malformed JSON, any
-`format_version != 3` (`ReconciliationFile.cs:124`), a missing/empty `file_stems`
-(`ReconciliationFile.cs:138`), and a missing `first_pass_base_ids`
-(`ReconciliationFile.cs:150`) — all fail loudly to prevent a per-file worker from silently
-computing a single-file hash for a multi-file join. The C# comments note the Rust
-`reconciliation_io.rs` carries the matching fields to keep cross-impl byte parity.
+`Load` rejects a missing file, malformed JSON, and any `format_version` other than 4.
+
+## 5a. Cross-run consensus (`<blib-stem>.1st-pass.consensus.json`)
+
+**C# source**: `Osprey.Tasks/Stage6ConsensusFile.cs`. Written once by `FirstPassFDR` when its
+consensus pass ends; read by every `PerFileRescoring` node before its run loop. JSON, one line,
+stamp first: `SchemaVersion` (1), `Consensus` (`PeptideConsensusRT` list: targets then decoys,
+each ordinal by modified sequence), and the two passing sets as parallel arrays sorted
+ascending - `PassingBaseIds`/`PassingBaseIdCharges` and
+`PassingSequences`/`PassingSequenceCharges`. Doubles round-trip bit-exactly. O(distinct
+peptides): on the 446-run CHS cohort the consensus is ~111 K peptides. A missing or unreadable
+file fails the rescore, naming the file.
 
 For the full HPC orchestration story see 15-hpc-scoring-split.md.
 

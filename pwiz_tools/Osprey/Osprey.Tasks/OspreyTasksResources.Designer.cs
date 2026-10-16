@@ -1268,16 +1268,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not locate the intermediate files for {0}, so its cross-run reconciliation file was not written..
-        /// </summary>
-        public static string FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_" +
-                        "for__0___so_its_cross_run_reconciliation_file_was_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not write the cross-run reconciliation file for {0}: {1}.
         /// </summary>
         public static string FirstPassFdrTask_WriteReconciliationFile_Could_not_write_the_cross_run_reconciliation_file_for__0____1_ {
@@ -1324,6 +1314,16 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_WriteRetainedBaseIdSummary_Wrote_the_list_of_kept_precursor_cand" +
                         "idates___1__target_decoy_pairs_in_1_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to write the cross-run consensus {0}: {1}. The next task, {2}, plans each file from it..
+        /// </summary>
+        public static string FirstPassFdrTask_WriteStage6Consensus_Failed_to_write_the_cross_run_consensus__0____1___The_next_task___2___plans_each_file_from_it_ {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_WriteStage6Consensus_Failed_to_write_the_cross_run_consensus__0_" +
+                        "___1___The_next_task___2___plans_each_file_from_it_", resourceCulture);
             }
         }
         
@@ -3085,15 +3085,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to read {0}: {1}.
-        /// </summary>
-        public static string RescoreHydration_LoadEnvelope_Failed_to_read__0____1_ {
-            get {
-                return ResourceManager.GetString("RescoreHydration_LoadEnvelope_Failed_to_read__0____1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} refers to precursor candidate {1}, which is not in the scores file for that run. The scores file changed after the first pass: delete this analysis&apos;s {2} files and run the first pass again..
         /// </summary>
         public static string RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_ {
@@ -3759,6 +3750,24 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to read the cross-run consensus {0}: {1}.
+        /// </summary>
+        public static string Stage6ConsensusFile_Load_Failed_to_read_the_cross_run_consensus__0____1_ {
+            get {
+                return ResourceManager.GetString("Stage6ConsensusFile_Load_Failed_to_read_the_cross_run_consensus__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the file is incomplete or was written by another Osprey build.
+        /// </summary>
+        public static string Stage6ConsensusFile_Load_the_file_is_incomplete_or_from_another_build {
+            get {
+                return ResourceManager.GetString("Stage6ConsensusFile_Load_the_file_is_incomplete_or_from_another_build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cross-run consensus retention times computed for {0:N0} target and {1:N0} decoy peptides..
         /// </summary>
         public static string Stage6Planner_BuildConsensus_Cross_run_consensus_retention_times_computed_for__0__target_and__1__decoy_peptides_ {
@@ -3799,39 +3808,30 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multi-charge consensus planning (pass 2 of 2).
-        /// </summary>
-        public static string Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_ {
-            get {
-                return ResourceManager.GetString("Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 2 of 2) across {0:N0} files.
-        /// </summary>
-        public static string Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files {
-            get {
-                return ResourceManager.GetString("Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 2 of 2) for 1 file.
-        /// </summary>
-        public static string Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file {
-            get {
-                return ResourceManager.GetString("Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Refined the retention time calibration of {0:N0} of {1:N0} files using the cross-run consensus..
         /// </summary>
         public static string Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__files_using_the_cross_run_consensus_ {
             get {
                 return ResourceManager.GetString("Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__file" +
                         "s_using_the_cross_run_consensus_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cross-run consensus across {0:N0} files.
+        /// </summary>
+        public static string Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files {
+            get {
+                return ResourceManager.GetString("Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cross-run consensus for 1 file.
+        /// </summary>
+        public static string Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file {
+            get {
+                return ResourceManager.GetString("Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file", resourceCulture);
             }
         }
         
@@ -3856,29 +3856,11 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multi-charge consensus planning (pass 1 of 2).
+        ///   Looks up a localized string similar to Multi-charge consensus planning.
         /// </summary>
-        public static string Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_ {
+        public static string Stage6Planner_ScanFiles_Multi_charge_consensus_planning {
             get {
-                return ResourceManager.GetString("Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 1 of 2) across {0:N0} files.
-        /// </summary>
-        public static string Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files {
-            get {
-                return ResourceManager.GetString("Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 1 of 2) for 1 file.
-        /// </summary>
-        public static string Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file {
-            get {
-                return ResourceManager.GetString("Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file", resourceCulture);
+                return ResourceManager.GetString("Stage6Planner_ScanFiles_Multi_charge_consensus_planning", resourceCulture);
             }
         }
         

@@ -77,8 +77,6 @@ namespace pwiz.Osprey
         bool DumpCwtPath { get; }
         bool DumpConsensus { get; }
         bool ConsensusOnly { get; }
-        bool DumpRefit { get; }
-        bool RefitOnly { get; }
         bool DumpCalibration { get; }
         bool CalibrationOnly { get; }
         bool DumpInvPredict { get; }
@@ -88,8 +86,6 @@ namespace pwiz.Osprey
         bool DumpStage7ProteinFdr { get; }
         bool Stage7ProteinFdrOnly { get; }
         bool DumpDetectedPeptides { get; }
-        bool DumpLoessFit { get; }
-        bool LoessFitOnly { get; }
         bool CalWindowsCollecting { get; }
 
         uint? DiagXicEntryId { get; }
@@ -190,9 +186,6 @@ namespace pwiz.Osprey
 
         void WriteStage6ConsensusDump(IReadOnlyList<PeptideConsensusRT> consensus);
 
-        void WriteStage6RefitDump(
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations);
-
         void WriteStage6CalibrationDump(
             string fileName, double[] libraryRts, double[] fittedValues);
 
@@ -205,9 +198,6 @@ namespace pwiz.Osprey
         void WriteStage7ProteinFdrDump(
             ProteinParsimonyResult parsimony,
             ProteinFdrResult fdrResult);
-
-        void WriteStage6LoessFitDump(
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations);
 
         void WriteStage7DetectedPeptidesDump(HashSet<string> detectedPeptides);
     }

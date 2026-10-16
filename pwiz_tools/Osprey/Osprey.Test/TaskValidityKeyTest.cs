@@ -242,7 +242,13 @@ namespace pwiz.Osprey.Test
                     @"decoys stamped by a run under another key are not this run's worker answer");
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
-                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
+                // The run's plan is part of the same answer: the worker writes it, under the same
+                // stamp, just before the rescore it describes.
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"a worker answer without the run's reconciliation plan is not complete");
+                ReconciliationFile.Save(ReconciliationFile.PathForInput(runA),
+                    new ReconciliationFile { FormatVersion = ReconciliationFile.CurrentFormatVersion }, workerStamp);
+                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp, decoys and plan make the second pass the one read");
                 Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
                 Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
                 current = RunKey(runA);

@@ -224,16 +224,6 @@ namespace pwiz.Osprey
         public bool ConsensusOnly { get; } = IsOne(@"OSPREY_CONSENSUS_ONLY");
 
         /// <summary>
-        /// OSPREY_DUMP_REFIT: dump per-file refined-calibration statistics
-        /// produced by CalibrationRefit (cs_stage6_refit.tsv) for cross-impl
-        /// parity.
-        /// </summary>
-        public bool DumpRefit { get; } = IsOne(@"OSPREY_DUMP_REFIT");
-
-        /// <summary>OSPREY_REFIT_ONLY: exit after cs_stage6_refit.tsv dump.</summary>
-        public bool RefitOnly { get; } = IsOne(@"OSPREY_REFIT_ONLY");
-
-        /// <summary>
         /// OSPREY_DUMP_CALIBRATION: dump the loaded calibration JSON
         /// arrays (library_rts + fitted_values) for each file to
         /// cs_stage6_calibration.tsv as the C# join-only path loads
@@ -304,19 +294,6 @@ namespace pwiz.Osprey
         public bool DumpDetectedPeptides { get; } = IsOne(@"OSPREY_DUMP_DETECTED_PEPTIDES");
 
         /// <summary>
-        /// OSPREY_DUMP_LOESS_FIT: dump the per-point LOESS fit state of the
-        /// Stage 6 refit RTCalibration to cs_stage6_loess_fit.tsv. Used to
-        /// bisect the refit ULP divergence: if (library_rt, fitted_value,
-        /// abs_residual) match cross-impl, the divergence is in the
-        /// stats computation (R²/SD/MAD). If fitted_value diverges, the
-        /// LOESS smoother arithmetic itself differs.
-        /// </summary>
-        public bool DumpLoessFit { get; } = IsOne(@"OSPREY_DUMP_LOESS_FIT");
-
-        /// <summary>OSPREY_LOESS_FIT_ONLY: exit after cs_stage6_loess_fit.tsv dump.</summary>
-        public bool LoessFitOnly { get; } = IsOne(@"OSPREY_LOESS_FIT_ONLY");
-
-        /// <summary>
         /// OSPREY_DIAG_XIC_ENTRY_ID: the entry ID to dump chromatogram for
         /// during calibration scoring. null = no dump.
         /// </summary>
@@ -359,11 +336,10 @@ namespace pwiz.Osprey
             DumpPercInput || PercInputOnly || DumpSubsample || SubsampleOnly ||
             DumpSvmWeights || SvmWeightsOnly ||
             DumpMpInputs || DumpPredictRt || DumpCwtPath || DumpConsensus ||
-            ConsensusOnly || DumpRefit ||
-            RefitOnly || DumpCalibration ||
+            ConsensusOnly || DumpCalibration ||
             CalibrationOnly || DumpInvPredict || InvPredictOnly || DumpProteinFdr ||
             ProteinFdrOnly || DumpStage7ProteinFdr || Stage7ProteinFdrOnly ||
-            DumpDetectedPeptides || DumpLoessFit || LoessFitOnly ||
+            DumpDetectedPeptides ||
             DiagXicEntryId.HasValue || DiagSearchEntryIds != null || DiagMpScan.HasValue;
 
         /// <summary>
@@ -1588,42 +1564,6 @@ namespace pwiz.Osprey
             Log.LogInfo(string.Format(@"Wrote Stage 6 consensus dump: {0} ({1} rows)", path, consensus.Count));
         }
 
-        /// <summary>
-        /// Dump per-file refined-calibration statistics to
-        /// cs_stage6_refit.tsv. Mirrors Rust dump_stage6_refit. Columns:
-        /// file_name, n_points, r_squared, residual_sd, mad. Files where the
-        /// refit failed (insufficient points) are absent. Rows sorted by
-        /// file_name for stable diff.
-        /// </summary>
-        public void WriteStage6RefitDump(
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations)
-        {
-            const string path = @"cs_stage6_refit.tsv";
-
-            var fileNames = new List<string>(refinedCalibrations.Keys);
-            fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-
-            using (var saver = new SimpleFileSaver(path))
-            {
-                using (var sw = new StreamWriter(saver.SafeName))
-                {
-                    sw.NewLine = TextUtil.LF;
-                    sw.WriteLine(new[] { @"file_name", @"n_points", @"r_squared", @"residual_sd", @"mad" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var fileName in fileNames)
-                    {
-                        var stats = refinedCalibrations[fileName].Stats();
-                        sw.Write(fileName);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(stats.NPoints.ToString(CultureInfo.InvariantCulture));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(stats.RSquared));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(stats.ResidualSD));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stats.MAD));
-                    }
-                }
-                saver.Commit();
-            }
-            Log.LogInfo(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
-        }
-
         // ----- Stage 6 calibration arrays (cross-impl bisection) -----
 
         // Held open across calls, like _mpInputsWriter/_cwtPathWriter above: one call per
@@ -1936,55 +1876,6 @@ namespace pwiz.Osprey
             public double BestPeptideScore;
             public double GroupQvalue;
             public bool IsTargetWinner;
-        }
-
-        /// <summary>
-        /// Dump the per-point LOESS fit state of every refit RTCalibration
-        /// to cs_stage6_loess_fit.tsv. Mirrors Rust dump_stage6_loess_fit.
-        /// One row per (file_name, idx) into the refit's library_rts +
-        /// fitted_values + abs_residuals arrays. Rows sorted by
-        /// (file_name, idx) for stable diff. The refit dump captures
-        /// scalar stats (R²/SD/MAD); this dump captures the LOESS curve
-        /// itself so a stats-vs-smoother bisection is possible.
-        /// </summary>
-        public void WriteStage6LoessFitDump(
-            IReadOnlyDictionary<string, RTCalibration> refinedCalibrations)
-        {
-            const string path = @"cs_stage6_loess_fit.tsv";
-
-            var fileNames = new List<string>(refinedCalibrations.Keys);
-            fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-
-            int totalRows = 0;
-            using (var saver = new SimpleFileSaver(path))
-            {
-                using (var sw = new StreamWriter(saver.SafeName))
-                {
-                    sw.NewLine = TextUtil.LF;
-                    sw.WriteLine(new[] { @"file_name", @"idx", @"library_rt", @"fitted_value", @"abs_residual" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var fileName in fileNames)
-                    {
-                        var cal = refinedCalibrations[fileName];
-                        var libRts = cal.LibraryRts;
-                        var fitted = cal.FittedValues;
-                        var residuals = cal.AbsResiduals;
-                        int n = Math.Min(libRts.Length, Math.Min(fitted.Length, residuals.Length));
-                        for (int i = 0; i < n; i++)
-                        {
-                            sw.Write(fileName);
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(i.ToString(CultureInfo.InvariantCulture));
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(libRts[i]));
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(fitted[i]));
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(residuals[i]));
-                        }
-                        totalRows += n;
-                    }
-                }
-                saver.Commit();
-            }
-            Log.LogInfo(string.Format(
-                @"Wrote Stage 6 LOESS fit dump: {0} ({1} rows across {2} files)",
-                path, totalRows, fileNames.Count));
         }
 
         /// <summary>

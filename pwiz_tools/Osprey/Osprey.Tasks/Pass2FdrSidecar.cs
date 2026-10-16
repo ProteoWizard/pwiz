@@ -475,6 +475,11 @@ namespace pwiz.Osprey.Tasks
         /// <para>The decoys exist only where a competition produced them. The transfer competes
         /// nothing and writes none, so requiring them there would leave every transfer run
         /// permanently unanswered.</para>
+        ///
+        /// <para>The run's <c>.reconciliation.json</c> is one of the set: PerFileRescoring plans
+        /// the run and writes that plan just before rescoring it, under the same stamp, and
+        /// SecondPassFDR reads the run's gap-fill entry ids from it. A plan left by an earlier
+        /// run, or a kill between the plan and the parquet, leaves a run that is not done.</para>
         /// </summary>
         internal static bool HasWorkerStamp(string inputFile)
         {
@@ -486,6 +491,8 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
             if (!IsSameStamp(FdrScoresSidecar.ReadStamp(FdrScoresSidecar.Pass2Path(inputFile), FdrScoresSidecar.Pass.SecondPass), reconciled))
+                return false;
+            if (!IsSameStamp(ArtifactStamp.TryReadJsonHead(ReconciliationFile.PathForInput(inputFile)), reconciled))
                 return false;
             return !OspreyEnvironment.Pass2ProteinCompact ||
                    IsSameStamp(Pass2CompetitionDecoys.ReadStamp(Pass2CompetitionDecoys.PathFor(inputFile)), reconciled);
@@ -643,10 +650,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// This file's GAP-FILL entry ids, from the <c>gap_fill_targets</c> the join node already
-        /// persists in its <c>.reconciliation.json</c>. Empty when the envelope is absent or
-        /// unreadable, which is the correct degrade: a file with no envelope had no gap-fill
-        /// planned for it.
+        /// This file's GAP-FILL entry ids, from the <c>gap_fill_targets</c> in the run's
+        /// <c>.reconciliation.json</c>, which PerFileRescoring wrote when it planned the run.
+        /// Throws when the plan cannot be read. It used to fold every record instead, which was
+        /// a safe default only while another task always wrote the plan; the plan is now one of
+        /// the run's own outputs (<see cref="HasWorkerStamp"/>), so a missing one is a run that is
+        /// not finished.
         ///
         /// <para><b>Why the sidecar cannot answer this itself.</b> A gap-filled peak is a POOL
         /// member that never COMPETED - the per-file competition takes its population from the
@@ -659,29 +668,16 @@ namespace pwiz.Osprey.Tasks
         /// <para>It is read from the envelope rather than from the reconciled parquet's
         /// <c>score_index</c> + <c>osprey.scores_row_count</c> footer - the other discriminator
         /// Phase 1 left for exactly this question - because this list is ~200 entries against a
-        /// 311K-row column read, and because the envelope is already the artifact whose join-wide
-        /// hash this stage validates against.</para>
+        /// 311K-row column read.</para>
         /// </summary>
         private static HashSet<uint> LoadGapFillEntryIds(string inputFile)
         {
             var ids = new HashSet<uint>();
-            try
+            var plan = ReconciliationFile.Load(ReconciliationFile.PathForInput(inputFile));
+            if (plan.GapFillTargets != null)
             {
-                string reconPath = ReconciliationFile.PathForInput(inputFile);
-                if (!File.Exists(reconPath))
-                    return ids;
-                var envelope = ReconciliationFile.Load(reconPath);
-                if (envelope?.GapFillTargets == null)
-                    return ids;
-                foreach (var g in envelope.GapFillTargets)
+                foreach (var g in plan.GapFillTargets)
                     ids.Add(g.TargetEntryId);
-            }
-            catch (Exception)
-            {
-                // An unreadable envelope leaves the set empty, which reproduces the pre-#4486
-                // behaviour of folding every record. The competition assert downstream is what
-                // turns that into a visible failure rather than a silent one.
-                return ids;
             }
             return ids;
         }
@@ -1917,8 +1913,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para><b>The invariant this protects.</b> The per-run 2nd-pass sidecar is the only
         /// thing a separate experiment-wide node receives about a run. Its population is not the
-        /// writer's to choose: the join node fixes it, distributing each file's
-        /// <c>.reconciliation.json</c> from the traversal of the whole population, and
+        /// writer's to choose: the join node fixes it, writing the cross-run consensus from the
+        /// traversal of the whole population that each run's plan is made from, and
         /// <c>ReconciledParquetWriter</c> stamps the parquet Stage 6 derives from it with the
         /// join-wide reconciliation hash. Every node emitting the same rows is what makes an
         /// HPC split equal a single-machine run. Nothing checked it.</para>
