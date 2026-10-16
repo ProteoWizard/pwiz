@@ -1873,19 +1873,14 @@ namespace pwiz.Osprey.Tasks
 
             // Stage 5: first-pass Percolator over the projection. Same SVM, same
             // dispatch, same q-values -- only the resident buffer differs. The lean
-            // struct no longer stores the q-value outputs (issue #4355 struct-shrink
-            // S0/S1); a StoringSink keeps ONLY {RunPeptideQ, RunProteinQ} resident (48 B)
-            // that protein FDR + compaction read, and streams the other four q-values to
-            // the phase-1 partial sidecar as it goes.
+            // struct stores no q-value outputs (issue #4355 struct-shrink S0/S1): the score
+            // pass writes each file's .1st-pass.fdr_scores.bin as it finishes the file, and
+            // the experiment-scope values go once per entry to the experiment accumulator.
             //
-            // Two-phase 1st-pass sidecar (issue #4355 struct-shrink S1). Phase 1: the
-            // StoringSink writes each file's PARTIAL .1st-pass.fdr_scores.bin during the
-            // score pass (experiment_protein_qvalue = 1.0 placeholder), so the four streamed
-            // q-values are never held resident. This flush resolves the per-file sidecar
-            // path the same way the pre-S1 single-phase write did, so the survivor reload
-            // and the Stage 6 worker read identical bytes; it returns a per-file failure
-            // count the sink accumulates (sink.PartialWriteFailures) for the
-            // StopAfterStage5 gate. Phase 2 patches [52..60] after protein FDR (below).
+            // This flush resolves the per-file sidecar path the same way the pre-S1
+            // single-phase write did, so the survivor reload and the Stage 6 worker read
+            // identical bytes; it returns a per-file failure count for the StopAfterStage5
+            // gate.
             // Hoisted: the sidecar stamp below is written once per file inside the score pass, and
             // recomputing the key per file would hash the search + library identity 446 times.
             string sidecarValidityKey = ValidityKey(ctx);
@@ -2028,8 +2023,8 @@ namespace pwiz.Osprey.Tasks
             // and is on disk. Re-running it is not a safety margin, it is 20 of this task's 29
             // minutes at 86 files spent reproducing artifacts byte-for-byte:
             //
-            //   pass 1 builds the experiment competition, whose result IS the experiment sidecar;
-            //   pass 2 emits the per-file sidecars, which are what the gate above just matched;
+            //   the score pass builds the experiment competition, whose result IS the experiment
+            //   sidecar, and writes the per-file sidecars, which are what the gate above just matched;
             //   protein FDR's q-values are read back out of the experiment sidecar by the gate;
             //   model diagnostics is a report.
             //
@@ -2112,26 +2107,19 @@ namespace pwiz.Osprey.Tasks
             }
 
             var experiment = new FdrExperimentAccumulator();
-            var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
-                experiment, mdiagAccumulator);
+            var sink = new FdrFirstPassSink(projections, config, @"First-pass", experiment, mdiagAccumulator);
 
             // Which files' 1st-pass sidecars are on disk. Seeded with the ones an earlier run
-            // left, and GROWN by pass 1 as it writes each file it scores - which is what lets
-            // pass 2 read every score back instead of reloading features and repeating the dot
-            // product for all of them. An adopted file is marked on the sink for the same reason
-            // a freshly written one is: its sidecar exists, so the sink must not write it again.
-            // Read and grown from the score pass's file lanes at once, so every access holds its
-            // lock.
+            // left, and GROWN by pass 1 as it writes each file it scores - which is what lets the
+            // --model-diagnostics row walk read every score back instead of reloading features and
+            // repeating the dot product for all of them. Read and grown from the score pass's file
+            // lanes at once, so every access holds its lock.
             var scoresOnDisk = new HashSet<string>(resumableFiles, StringComparer.Ordinal);
-            for (int f = 0; f < projections.PerFile.Count; f++)
-            {
-                if (resumableFiles.Contains(projections.PerFile[f].Key))
-                    sink.MarkSidecarWritten(f);
-            }
 
-            // Pass 1 hands each file's finished run-scope output straight to the sidecar writer.
-            // Nothing about it is provisional: the score and both run q-values are final the
-            // moment that file's rows have been walked, and no later phase revises them.
+            // Pass 1 hands each file's finished run-scope output straight to the sidecar writer -
+            // the only writer of this file on this path, empty files included. Nothing about it is
+            // provisional: the score and both run q-values are final the moment that file's rows
+            // have been walked, and no later phase revises them.
             int pass1WriteFailures = 0;
             FileRunScopeSink flushFileRunScope =
                 (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
@@ -2140,10 +2128,6 @@ namespace pwiz.Osprey.Tasks
                     for (int r = 0; r < rowCount; r++)
                         records.Add(new FdrScoreRecord(
                             entryIds[r], scores[r], runPrecQ[r], runPeptQ[r], apexRts[r]));
-                    // Marked before the result is known: a failed write must not be retried by
-                    // the sink either, because FdrScoresSidecar registers the path on the way in
-                    // and would refuse the second attempt as a double write.
-                    sink.MarkSidecarWritten(fileIndex);
                     int failures = FlushPartialSidecar(fileName, records);
                     if (failures == 0)
                     {
@@ -2151,9 +2135,9 @@ namespace pwiz.Osprey.Tasks
                             scoresOnDisk.Add(fileName);
                         return;
                     }
-                    // Fatal HERE, naming the write that failed. Since the sink can no longer
-                    // write this file either, continuing produces a run that walks every
-                    // remaining row and then dies an hour later in the compaction gate saying
+                    // Fatal HERE, naming the write that failed. Nothing else writes this file,
+                    // so continuing produces a run that scores every remaining file and then
+                    // dies an hour later in the compaction gate saying
                     // the sidecar could not be READ - blaming a missing artifact instead of the
                     // write that never happened.
                     Interlocked.Add(ref pass1WriteFailures, failures);
@@ -2181,12 +2165,11 @@ namespace pwiz.Osprey.Tasks
             Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
                 (fileName, columns, onRow) =>
                     ParquetScoreCache.ReadFdrStubScalars(perFileParquetPaths[fileName], onRow, columns, stubIdentity);
-            // Feeds the scorer a file's scores off its 1st-pass sidecar so the pass does not
-            // load that file's feature vectors or re-run the dot product. Consulted by BOTH
-            // passes, and the set grows during pass 1 - so on a cold run this is what stops
-            // pass 2 recomputing all 446 files' scores 82 minutes after pass 1 computed
-            // them. Returns false for a file whose sidecar is not on disk, which scores
-            // normally.
+            // Feeds the scorer a file's scores off its 1st-pass sidecar so it does not load that
+            // file's feature vectors or re-run the dot product: the score pass for a resumed
+            // file, and the --model-diagnostics row walk for every file, since the set grows as
+            // the score pass writes each one. Returns false for a file whose sidecar is not on
+            // disk, which scores normally.
             CompletedScoreStreamer tryStreamCompletedScores =
                 (fileName, onRecord) =>
                 {
@@ -2230,10 +2213,9 @@ namespace pwiz.Osprey.Tasks
                 config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
                 pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes);
-            // Says whether the pass-1 write actually engaged. Without it a run in which
-            // flushFileRunScope never fired would look identical from the outside - the
-            // sink would have written the same sidecars from pass 2, and the output would
-            // be byte-identical - so the log is the only place the distinction is visible.
+            // How many files' 1st-pass sidecars are on disk after the score pass - written by it
+            // or adopted from an earlier run. flushFileRunScope is the only writer of these files
+            // on this path, so a shortfall here is a file the compaction gate will fail to read.
             ctx.LogVerbose(CountText.Format(projections.PerFile.Count,
                 OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of_the_file_were_saved_while_training_and_read_back__so_its_,
                 OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of__1__of__0__files_were_saved_while_training_and_read_back__so_,
@@ -2290,14 +2272,12 @@ namespace pwiz.Osprey.Tasks
             // The Stage-6 diagnostic dump reads the returned artifacts. Runs unconditionally (not gated
             // on --protein-fdr), matching Rust where config.protein_fdr is a plain f64
             // (default 0.01), gated only on !can_skip_fdr.
-            int patchFailures = 0;
             if (projections.TotalRows > 0)
             {
                 ctx.LogInfo(string.Empty);
                 var swProt = Stopwatch.StartNew();
                 var proteinResult = RunFirstPassProteinFdrStreaming(
-                    projections, perFileParquetPaths, fullLibrary, config, ctx, experiment,
-                    out patchFailures);
+                    projections, perFileParquetPaths, fullLibrary, config, ctx, sink);
                 if (proteinResult == null)
                     return null;  // streaming sidecar / parquet read fault; ExitCode already set
                 if (ctx.Diagnostics?.DumpProteinFdr ?? false)
@@ -2328,11 +2308,9 @@ namespace pwiz.Osprey.Tasks
             int experimentFailures = WriteExperimentSidecar(
                 experiment, FdrScoresSidecar.Pass.FirstPass, config, ctx);
 
-            // Combine the per-file write failures the sink accumulated during the score pass
-            // with the protein-q resolve failures and the experiment write for the
-            // StopAfterStage5 boundary gate.
-            int sidecarFailures =
-                sink.PartialWriteFailures + pass1WriteFailures + patchFailures + experimentFailures;
+            // Combine the per-file write failures of the score pass with the experiment write for
+            // the StopAfterStage5 boundary gate.
+            int sidecarFailures = pass1WriteFailures + experimentFailures;
             if (sidecarFailures > 0 && config.StopAfterStage5)
             {
                 LogIntermediateWriteFailures(ctx, sidecarFailures, projections.PerFile.Count);
@@ -2645,7 +2623,7 @@ namespace pwiz.Osprey.Tasks
         /// rows.
         /// </summary>
         private void LogFirstPassResultsProjection(
-            FdrProjectionSet projections, FdrStoringSink sink,
+            FdrProjectionSet projections, FdrFirstPassSink sink,
             OspreyConfig config, PipelineContext ctx)
         {
             // Read the per-file passing-target counts the sink accumulated during the
@@ -2687,13 +2665,12 @@ namespace pwiz.Osprey.Tasks
         /// run_peptide_qvalue keyed by entry_id) joined with the parquet scalars (the modseq
         /// PeptideById was interned from + IsDecoy) into a pure
         /// <see cref="FirstPassProteinFdrAccumulator"/>, which runs the identical parsimony +
-        /// picked-protein FDR. Pass 2 patches each file's <c>experiment_protein_qvalue</c>
-        /// <c>[52..60]</c> from the reducer's peptide -> q map (folding the resident
-        /// <c>PropagateProteinQvalues</c> + the old phase-2 patch into one streaming pass).
+        /// picked-protein FDR. Each entry's <c>experiment_protein_qvalue</c> is then set from
+        /// the reducer's peptide -> q map by the peptide the score pass kept for it
+        /// (<see cref="FdrFirstPassSink.ApplyProteinQvalues"/>).
         /// Returns <c>null</c> (ExitCode set) on any sidecar / parquet read fault -- the task
         /// just wrote these files, so a read failure is a genuine fault (the survivor reload
-        /// below would fail on the same file). <paramref name="patchFailures"/> counts files
-        /// whose experiment_protein_qvalue patch failed, for the StopAfterStage5 boundary gate.
+        /// below would fail on the same file).
         /// </summary>
         private FirstPassProteinFdrResult RunFirstPassProteinFdrStreaming(
             FdrProjectionSet projections,
@@ -2701,12 +2678,9 @@ namespace pwiz.Osprey.Tasks
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx,
-            FdrExperimentAccumulator experiment,
-            out int patchFailures)
+            FdrFirstPassSink sink)
         {
-            patchFailures = 0;
-
-            // Pass 1: detected-peptide + best-score reductions, streamed per file in
+            // Detected-peptide + best-score reductions, streamed per file in
             // projection order (the reductions are order-independent, but streaming in the
             // resident path's file/row order keeps the best-scores insertion order identical).
             // Each file is reduced on its own lane and merged here in file order, which
@@ -2746,73 +2720,14 @@ namespace pwiz.Osprey.Tasks
             var result = accumulator.Finish(fullLibrary, config);
             ProteinFdrEngine.LogFirstPassSummary(result, config, ctx);
 
-            // Pass 2: resolve each entry's experiment_protein_qvalue from peptide -> q into the
+            // Resolve each entry's experiment_protein_qvalue from peptide -> q into the
             // experiment-scope map, which is written once beside the blib after this returns.
-            // The modseq must be the one the pass-1 PeptideQvalues keys were built from. Both
-            // come from the same source per row group - the library entry the entry_id names
-            // when the library holds every id (OSPREY_STUB_IDENTITY=1), the parquet otherwise -
-            // and the library entry is exactly the peptide the file was written with, so the
-            // peptide -> q lookup matches either way.
-            //
-            // Before the v5 scope split this loop REWROTE every file's sidecar to push the
-            // value back in - 52.3 GB of serial, un-parallelizable rewrite at 257 files, in the
-            // stage that is already the bottleneck, to store one number per run of a value that
-            // is the same in every run. It now finishes an in-memory map instead, and the
-            // per-file sidecars written by the score pass are never reopened (issue #4486).
-            //
-            // A lane reads a file's rows and resolves each one's protein q against the finished
-            // (read-only) peptide map; the experiment map is updated here, in file order. The
-            // file reduces to one value per entry - the LAST row's, which is the one a row-by-row
-            // update would leave - so applying it is the same assignment, fewer times.
-            var peptideQvalues = result.ProteinFdr.PeptideQvalues;
-            int proteinResolveFiles = 0;
-            int resolveFailures = 0;
-            using (var resolveProgress = new ProgressReporter(CountText.Format(projections.PerFile.Count,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file,
-                       OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files), projections.PerFile.Count))
-            {
-                OrderedFileLanes.Run(projections.PerFile.Count, ctx.RunPlan.FirstPassFdrLanes, f =>
-                {
-                    string parquetPath = perFileParquetPaths[projections.PerFile[f].Key];  // present: pass 1 read it
-                    var qByEntryId = new Dictionary<uint, double>();
-                    try
-                    {
-                        ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                            (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
-                            {
-                                double q;
-                                // Normalize a present-but-null modseq to "" so the lookup matches the
-                                // pass-1 PeptideQvalues keys (the accumulator normalizes the same way);
-                                // a null Dictionary key would otherwise throw. See TryStreamFirstPassFileScores.
-                                if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
-                                    q = 1.0;
-                                qByEntryId[entryId] = q;
-                            },
-                            StubColumns.Core | StubColumns.SkipCoelutionSum, stubIdentity);
-                        return (Resolved: qByEntryId, Error: null);
-                    }
-                    catch (Exception ex) when (!(ex is OutOfMemoryException))
-                    {
-                        // The rows resolved before the failure still apply, as they did when the
-                        // update ran row by row. Out of memory is not a file's fault and must stop
-                        // the run, not become a warning.
-                        return (Resolved: qByEntryId, Error: ex.Message);
-                    }
-                }, (f, file) =>
-                {
-                    resolveProgress.Report(++proteinResolveFiles);
-                    foreach (var kv in file.Resolved)
-                        experiment.SetProteinQvalue(kv.Key, kv.Value);
-                    if (file.Error != null)
-                    {
-                        ctx.LogWarning(string.Format(
-                            OspreyTasksResources.FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_,
-                            projections.PerFile[f].Key, file.Error));
-                        resolveFailures++;
-                    }
-                });
-            }
-            patchFailures = resolveFailures;
+            // The peptide is the one the score pass read off the entry's rows - the same walk,
+            // with the same identity source, that the PeptideQvalues keys above were built from -
+            // so the lookup matches whichever source OSPREY_STUB_IDENTITY selects. Before the v5
+            // scope split this rewrote every file's sidecar (issue #4486); after it, it re-read
+            // every file's parquet just to recover those peptides.
+            sink.ApplyProteinQvalues(result.ProteinFdr.PeptideQvalues);
             return result;
         }
 

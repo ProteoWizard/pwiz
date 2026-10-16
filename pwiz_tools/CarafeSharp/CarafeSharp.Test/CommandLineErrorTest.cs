@@ -24,6 +24,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.CommonResources;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
@@ -137,7 +138,7 @@ namespace pwiz.CarafeSharp.Test
             string missingZip = Path.Combine(_folder, @"missing.zip");
             // Training checks the library FASTA, the start model and the pretrained models before
             // it creates the output folder or reads an export.
-            string export = Path.Combine(_folder, @"run" + OspreyTrainingExport.FILE_SUFFIX);
+            string export = Path.Combine(_folder, @"run" + TrainingExportParquet.EXT);
             AssertRunError(output, @"-i", export, @"-o", output, @"-db", missingFasta);
             AssertRunError(output, @"-i", export, @"-o", output, @"-ms2_model", Path.Combine(_folder, @"missing.pt"));
             AssertRunError(output, @"-i", export, @"-o", output, @"-pretrained", missingZip);
@@ -149,7 +150,7 @@ namespace pwiz.CarafeSharp.Test
             AssertRunError(built, @"-build_entrapment_fasta", built, @"-db", missingFasta);
 
             // A failure with a cause reports both: a .blib library that is not a database.
-            string manifest = WriteText(@"manifest.tsv", EntrapmentFastaBuilder.MANIFEST_HEADER + "\nPEPTIDEK\tNo\tP1\ttarget\t0\n");
+            string manifest = WriteText(@"manifest.tsv", PairingManifest.HEADER + "\nPEPTIDEK\tNo\tP1\ttarget\t0\n");
             string notBlib = WriteText(@"library.blib", @"not a database");
             string reconciled = Path.Combine(_folder, @"reconciled.tsv");
             var (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", manifest, @"-predicted_library", notBlib);

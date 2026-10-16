@@ -275,6 +275,13 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
+        /// The command line this run was given, as one line of text, recorded in the library it
+        /// writes (<c>LibMetadata</c>, key <c>osprey.command</c>) so the library carries how it
+        /// was made. Null (a config built in code) records nothing. Runtime-only.
+        /// </summary>
+        public string CommandLine { get; set; }
+
+        /// <summary>
         /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
         /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
         /// tools and regression.ps1 read. Off by default so the human log stays clean.

@@ -327,11 +327,11 @@ $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 
 # Bit-parity version pin. The build stamps a daily Skyline-scheme version
 # (YEAR.ORDINAL.BRANCH.DOY) that changes every day, but the committed blib golden
-# compares the osprey_version metadata cell exactly. Pin OspreyVersion.Current to
+# compares the osprey.version metadata cell exactly. Pin OspreyVersion.Current to
 # a canonical constant for every Osprey invocation in this run (the env var
 # is inherited by the child processes), so the stamp is deterministic and the
 # golden stays green without the comparator skipping the field. Must match the
-# osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
+# osprey.version value committed in osprey-regression.data/*/tables/LibMetadata.tsv.
 $env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
 
 # Turn ON the per-file second-pass verifier for this gate (issue #4486). Stage 7 recomputes each

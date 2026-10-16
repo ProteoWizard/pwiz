@@ -537,18 +537,6 @@
     <value>{0:N0}個のファイルの第1パスタンパク質FDRを計算中</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_" xml:space="preserve">
-    <value>{0}の第1パスタンパク質Q値の決定に失敗しました：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第1パスタンパク質Q値を決定中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第1パスタンパク質Q値を決定中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>モデル診断：第1パスはすでに完了しているため、レポートは第1パス中間ファイルから構築されます。再実行は行いません。</value>
     <comment>Needs Review:New resource</comment>

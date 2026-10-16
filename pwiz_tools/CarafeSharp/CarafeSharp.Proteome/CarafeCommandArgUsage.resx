@@ -205,6 +205,9 @@
   <data name="_pairing_manifest" xml:space="preserve">
     <value>The pairing manifest of --build_entrapment_fasta: the library then carries Carafe's DecoyPairs table, every pair written whole or not at all.</value>
   </data>
+  <data name="_library_contract" xml:space="preserve">
+    <value>Check the library against the Osprey library contract (one row per precursor, clean accessions, decoys and entrapment marked, the manifest authoritative, pairs whole) before predicting and after writing, refuse or discard it on a violation, and mark the .blib as meeting the contract so Osprey checks it at load instead of repairing it. Needs --lf_type blib and --pairing_manifest, and a FASTA built without Carafe's per-peptide accession suffix.</value>
+  </data>
   <data name="_rt_reference" xml:space="preserve">
     <value>With a model trained with --rt_align kde, the training run whose minutes the library takes; else the model's, and iRT for a model of runs on different gradients. CarafeSharp only.</value>
   </data>

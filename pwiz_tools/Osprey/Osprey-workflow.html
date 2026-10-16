@@ -836,15 +836,18 @@
     sequential path is what fits under WSL.
   </p>
   <p>
-    <strong>BLIB writer:</strong> Osprey's <code>BlibWriter</code>
-    uses DotNetZip / Ionic.Zlib level 6 (the same library Skyline's
+    <strong>BLIB writer:</strong> Osprey writes its library through
+    the one shared writer, <code>Shared/BiblioSpec/BiblioSpec.IO</code>
+    (<code>BlibWriter</code>), which CarafeSharp's predicted libraries
+    go through too; <code>OspreyBlibWriter</code> adds Osprey's own
+    tables and column values. It uses DotNetZip / Ionic.Zlib level 6
+    (the same library Skyline's
     <code>Util/Extensions/UtilDB.Compress</code> has used since 2009).
-    The Osprey side switched its <code>flate2</code> backend from
+    The Rust side switched its <code>flate2</code> backend from
     pure-Rust <code>miniz_oxide</code> to vendored stock zlib so both
     sides emit identical Ionic.Zlib-compatible deflate output. Future
-    work: pull Skyline's <code>Model/Lib/BlibData</code> out to
-    <code>Shared/BiblioSpec</code> so Osprey and Skyline share a
-    single C# BLIB writer.
+    work: the BiblioSpec port's <code>BlibMaker</code> and Skyline's
+    <code>Model/Lib/BlibData</code> onto the same writer.
   </p>
   <p>
     <strong>Source-line audit (per-module, executable code only;

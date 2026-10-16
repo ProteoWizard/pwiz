@@ -204,7 +204,7 @@
   <ItemGroup>
     <!-- Shared dep tree - all multi-targeted in the same session as this csproj.
          Each follows the same net472/net10.0-windows split internally. -->
-    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\Shared\Common\Common.csproj" />

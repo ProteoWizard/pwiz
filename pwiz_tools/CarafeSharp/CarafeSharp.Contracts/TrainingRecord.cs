@@ -1,7 +1,7 @@
 /*
  * Original author: Michael MacCoss <maccoss .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -18,20 +18,28 @@
  * limitations under the License.
  */
 
-namespace pwiz.Osprey.Core
+namespace pwiz.CarafeSharp.Contracts
 {
     /// <summary>
     /// One row of <c>&lt;stem&gt;.training.parquet</c>: an identified target precursor in one
-    /// run, its final peak, and the per-ion evidence for every slot of its b/y ladder
-    /// (<see cref="FragmentLadder"/> slot order). The schema - names, types, units and the
-    /// meaning of every NaN - is docs/22-training-export.md, which is the contract a consumer
-    /// reads; this type is its in-memory form, shared by the evidence code (Osprey.Scoring)
-    /// and the writer (Osprey.IO).
+    /// run, its final peak, and the per-ion evidence for every slot of its b/y ladder. The
+    /// schema - names, types, units and the meaning of every NaN - is Osprey's
+    /// docs/22-training-export.md, the contract a consumer reads; this type is its in-memory
+    /// form, shared by the evidence code that fills it (Osprey.Scoring), the writer
+    /// (<see cref="TrainingExportParquet"/>) and the consumer that trains on it
+    /// (CarafeSharp.Training). Property names follow the column names.
     ///
-    /// <para>Per-ion arrays all have <see cref="NSlots"/> elements. A slot that is not
-    /// applicable (fragment charge above <c>min(precursor charge, 2)</c>) carries NaN in every
-    /// float array and 0 in every integer array, and no <see cref="TrainingIonFlags.APPLICABLE"/>
+    /// <para>Per-ion arrays all have <see cref="NSlots"/> = <c>4 * (L - 1)</c> elements for a
+    /// peptide of <c>L</c> residues, in AlphaPeptDeep's order: <c>slot = p * 4 + t</c>, t = b1+,
+    /// b2+, y1+, y2+; position p holds b(p+1) and y(L-1-p). A slot that is not applicable
+    /// (fragment charge above <c>min(precursor charge, 2)</c>) carries NaN in every float
+    /// array and 0 in every integer array, and no <see cref="TrainingIonFlags.APPLICABLE"/>
     /// bit.</para>
+    ///
+    /// <para>Modifications: <see cref="ModPositions"/> are 0-based residue positions. An
+    /// N-terminal modification and one of the first residue both sit at position 0
+    /// (<c>(UniMod:1)M(UniMod:35)</c>), listed separately and in that order, so only the
+    /// first modification at position 0 can be the terminal one.</para>
     /// </summary>
     public sealed class TrainingRecord
     {
@@ -44,6 +52,7 @@ namespace pwiz.Osprey.Core
         public string ModifiedSequence { get; set; }
         public int[] ModPositions { get; set; }
         public double[] ModMasses { get; set; }
+        /// <summary>UniMod id of each modification, -1 when the library did not give one.</summary>
         public int[] ModUnimodIds { get; set; }
         public byte Charge { get; set; }
         public double PrecursorMz { get; set; }
@@ -81,6 +90,7 @@ namespace pwiz.Osprey.Core
         public double MpOverall { get; set; }
         public double MpCosine { get; set; }
         public bool MpCosineParity { get; set; }
+        /// <summary>Median absolute residual of the core fit, ln units; NaN without a fit.</summary>
         public double MpResidualMad { get; set; }
         public int MpNCore { get; set; }
         public int MpNFragmentsUsed { get; set; }
@@ -93,7 +103,9 @@ namespace pwiz.Osprey.Core
         public int DdcNeighborCount { get; set; }
 
         // ---- Per ion (NSlots each) -------------------------------------------------------
+        /// <summary>Theoretical m/z of each slot, NaN when not applicable.</summary>
         public double[] IonMz { get; set; }
+        /// <summary>Bits of <see cref="TrainingIonFlags"/> per slot.</summary>
         public byte[] IonFlags { get; set; }
         public float[] ApexIntensity { get; set; }
         public float[] ApexMzError { get; set; }
@@ -113,6 +125,7 @@ namespace pwiz.Osprey.Core
         public float[] PolishRelIntensity { get; set; }
         public byte[] SharedApexN { get; set; }
         public byte[] SharedCoeluteN { get; set; }
+        /// <summary>Lowest run q among the claimants sharing each ion, NaN when none.</summary>
         public float[] MinClaimantQ { get; set; }
 
         // ---- Optional XIC matrix (--training-export-xics) --------------------------------
@@ -124,6 +137,12 @@ namespace pwiz.Osprey.Core
         /// (<c>[slot * NPeakScans + scan]</c>), or null when not written.
         /// </summary>
         public float[] XicIntensities { get; set; }
+
+        /// <summary>True when <paramref name="slot"/> carries the <paramref name="flag"/> bit.</summary>
+        public bool Has(int slot, byte flag)
+        {
+            return (IonFlags[slot] & flag) != 0;
+        }
     }
 
     /// <summary>

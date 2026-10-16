@@ -430,15 +430,6 @@
   <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files" xml:space="preserve">
     <value>Computing first-pass protein FDR for {0:N0} files</value>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_" xml:space="preserve">
-    <value>Failed to resolve first-pass protein q-values for {0}: {1}</value>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file" xml:space="preserve">
-    <value>Resolving first-pass protein q-values for 1 file</value>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files" xml:space="preserve">
-    <value>Resolving first-pass protein q-values for {0:N0} files</value>
-  </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>Model diagnostics: the first pass is already complete, so its report is built from the first-pass intermediate files. Nothing is re-run.</value>
   </data>

@@ -33,9 +33,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// first-pass FDR row into the SAME reduced structures the batch <see cref="Build"/>
         /// derives from the resident pool, WITHOUT ever holding the full pre-compaction
         /// <see cref="FdrEntry"/> pool resident. Fed one row at a time in nested (file, row)
-        /// order by a pre-compaction row source - the projection score-pass sink
-        /// (<c>FdrProjectionSinkBase.Accept</c>) as first-pass Percolator scores each row, or the
-        /// diagnostics-only fold over each run's parquet and first-pass sidecar;
+        /// order by a pre-compaction row source - the first-pass score's diagnostics row walk
+        /// (<c>FdrFirstPassSink.PrepareRowFold</c>), or the diagnostics-only fold over each run's
+        /// parquet and first-pass sidecar;
         /// <see cref="Build"/> then runs the identical downstream builders over the accumulated
         /// reductions.
         ///
