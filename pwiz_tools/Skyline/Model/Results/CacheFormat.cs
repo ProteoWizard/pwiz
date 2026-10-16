@@ -44,12 +44,17 @@ namespace pwiz.Skyline.Model.Results
         Seventeen = 17, // Adds optimization step to ChromTransition
         Eighteen = 18, // Add Spectrum Class Filter to ChromGroupHeaderInfo
         Nineteen = 19, // Add max peak score to ChromGroupHeaderInfo
-        CURRENT = Nineteen,
+        Twenty = 20, // Add per-time-point observed ion mobility and CCS to chromatograms, and a block of per-peak observed IM/CCS
+        CURRENT = Twenty,
     }
-    
+
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct CacheHeaderStruct
     {
+        // Version 20 fields after this point
+        public int numObservedPeakValues;
+        public long locationObservedPeakValues;
+        // Version 12 fields after this point
         public int chromPeakSize;
         public int chromTransitionSize;
         public int chromGroupHeaderSize;
@@ -76,9 +81,13 @@ namespace pwiz.Skyline.Model.Results
 
         public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
         {
-            if (cacheFormatVersion >= WithStructSizes)
+            if (cacheFormatVersion >= WithObservedPeakValues)
             {
                 return Marshal.SizeOf<CacheHeaderStruct>();
+            }
+            if (cacheFormatVersion >= WithStructSizes)
+            {
+                return Marshal.SizeOf<CacheHeaderStruct>() - (int) Marshal.OffsetOf<CacheHeaderStruct>(@"chromPeakSize");
             }
             if (cacheFormatVersion >= CacheFormatVersion.Nine)
             {
@@ -121,6 +130,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public const CacheFormatVersion WithStructSizes = CacheFormatVersion.Twelve;
+        public const CacheFormatVersion WithObservedPeakValues = CacheFormatVersion.Twenty;
 
         public CacheHeaderStruct(CacheFormat cacheFormat) : this()
         {
@@ -149,6 +159,11 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             }
 
+            if (numObservedPeakValues < 0 || locationObservedPeakValues < 0 || locationObservedPeakValues > cacheFileSize)
+            {
+                return true;
+            }
+
             return false;
         }
     }
@@ -167,7 +182,7 @@ namespace pwiz.Skyline.Model.Results
             VersionRequired = GetVersionRequired(CacheFormatVersion.CURRENT),
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
-            ChromPeakSize = Marshal.SizeOf<ChromPeak>(),
+            ChromPeakSize = ChromPeak.GetStructSize(CacheFormatVersion.CURRENT),
             ChromTransitionSize = Marshal.SizeOf<ChromTransition>()
         };
 
@@ -299,6 +314,14 @@ namespace pwiz.Skyline.Model.Results
         public IItemSerializer<ChromPeak> ChromPeakSerializer()
         {
             return ChromPeak.StructSerializer(ChromPeakSize);
+        }
+
+        /// <summary>
+        /// True if this format stores the observed IM/CCS of peaks, in a block separate from the peaks.
+        /// </summary>
+        public bool HasObservedPeakValues
+        {
+            get { return FormatVersion >= CacheHeaderStruct.WithObservedPeakValues; }
         }
     }
 }

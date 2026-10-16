@@ -928,6 +928,29 @@ namespace pwiz.SkylineTestUtil
             return documentGrid;
         }
 
+        /// <summary>
+        /// Rescores all results through Manage Results, picking peaks again from the cached chromatograms.
+        /// </summary>
+        public void RescoreResults()
+        {
+            var docBefore = SkylineWindow.Document;
+            var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+            RunDlg<RescoreResultsDlg>(manageResultsDlg.Rescore, dlg => dlg.Rescore(false));
+            WaitForDocumentChangeLoaded(docBefore);
+            WaitForClosedForm<AllChromatogramsGraph>();
+        }
+
+        /// <summary>
+        /// Every transition result's observed ion mobility and observed CCS, in document order.
+        /// </summary>
+        public static IList<Tuple<float?, float?>> GetObservedIonMobilityValues(SrmDocument doc)
+        {
+            return doc.MoleculeTransitions.Where(transition => transition.Results != null)
+                .SelectMany(transition => transition.Results.SelectMany(chromInfos => chromInfos))
+                .Select(chromInfo => Tuple.Create(chromInfo.ObservedIonMobility, chromInfo.ObservedCcs))
+                .ToList();
+        }
+
         public static void SetIonMobilityResolvingPowerUI(TransitionSettingsUI transitionSettingsUi, double rp)
         {
             RunUI(() =>

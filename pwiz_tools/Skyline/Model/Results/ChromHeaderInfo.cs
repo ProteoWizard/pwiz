@@ -170,7 +170,8 @@ namespace pwiz.Skyline.Model.Results
             raw_chromatograms = 0x20,
             dda_acquisition_method = 0x40,
             extracted_qc_trace = 0x80,
-            has_max_peak_score = 0x100
+            has_max_peak_score = 0x100,
+            has_observed_peak_values = 0x200
         }
 
         /// <summary>
@@ -344,6 +345,23 @@ namespace pwiz.Skyline.Model.Results
         public bool HasSimScanIds { get { return (Flags & FlagValues.has_sim_scan_ids) != 0; } }
         public bool HasRawChromatograms { get { return (Flags & FlagValues.raw_chromatograms) != 0; } }
         public bool IsDda { get { return (Flags & FlagValues.dda_acquisition_method) != 0; } }
+
+        /// <summary>
+        /// True when the peaks of this group have observed IM/CCS values, which are stored in a
+        /// separate block of the cache (see <see cref="ChromatogramCache.RawData.LocationObservedPeakValues"/>)
+        /// so that the fixed size <see cref="ChromPeak"/> on disk carries nothing for non-IM data.
+        /// </summary>
+        public bool HasObservedPeakValues { get { return (Flags & FlagValues.has_observed_peak_values) != 0; } }
+
+        public ChromGroupHeaderInfo ChangeHasObservedPeakValues(bool hasObservedPeakValues)
+        {
+            var headerInfo = this;
+            if (hasObservedPeakValues)
+                headerInfo._flagBits |= FlagValues.has_observed_peak_values;
+            else
+                headerInfo._flagBits &= ~FlagValues.has_observed_peak_values;
+            return headerInfo;
+        }
 
         public float? StartTime { get { return _startTime >= 0 ? _startTime : null; }  } // For SRM data with same precursor but different RT interval
         public float? EndTime { get { return _endTime >= 0 ? _endTime : null; } } // For SRM data with same precursor but different RT interval
@@ -996,6 +1014,8 @@ namespace pwiz.Skyline.Model.Results
         private readonly float _skewness;
         private readonly float _kurtosis;
         private readonly float _shapeCorrelation;
+        private float _observedIonMobility;
+        private float _observedCcs;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1007,9 +1027,10 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
-            has_peak_shape = 0x0080,
+            has_peak_shape =        0x0080,
+            observed_ion_mobility_known = 0x0100,
+            observed_ccs_known =    0x0200,
 
-            // This is the last available flag
             mass_error_known =      0x8000,
         }
 
@@ -1043,6 +1064,9 @@ namespace pwiz.Skyline.Model.Results
             _backgroundArea = backgroundArea;
             _height = height;
             _fwhm = fwhm;
+            _observedIonMobility = 0;
+            _observedCcs = 0;
+            flagValues &= ~(FlagValues.observed_ion_mobility_known | FlagValues.observed_ccs_known);
             if (massError.HasValue)
             {
                 flagValues |= FlagValues.mass_error_known;
@@ -1138,12 +1162,14 @@ namespace pwiz.Skyline.Model.Results
             }
 
             _massError = 0;
+            _observedIonMobility = 0;
+            _observedCcs = 0;
             if (massErrors != null)
             {
-                // Mass error is mean of mass errors in the peak, weighted by intensity
+                // Mass error is an intensity-weighted mean across the peak (m/z is a
+                // linearly-averageable coordinate).
                 double massError = 0;
                 double totalIntensity = 0;
-                // Subtract background intensity to reduce noise contribution to this mean value
                 double backgroundIntensity = Math.Min(intensities[peak.StartIndex], intensities[peak.EndIndex]);
                 for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
                 {
@@ -1151,16 +1177,29 @@ namespace pwiz.Skyline.Model.Results
                     if (intensity <= 0)
                         continue;
 
-                    double massErrorLocal = massErrors[i];
                     totalIntensity += intensity;
-                    massError += (massErrorLocal - massError)*intensity/totalIntensity;
+                    massError += (massErrors[i] - massError) * intensity / totalIntensity;
                 }
-                // Only if intensity exceded the background at least once
                 if (totalIntensity > 0)
                 {
                     _flagValues |= FlagValues.mass_error_known;
                     _massError = To10x(massError);
                 }
+            }
+            // Observed IM and CCS, unlike mass error, are read at the peak apex (see
+            // ApexObservedIonMobility) - IM is only meaningfully observable where the peak
+            // has signal, and IM units (e.g. 1/K0) are not linearly averageable.
+            GetApexObservedValues(timeIntensities, intensities, peak.StartIndex, peak.EndIndex,
+                out var apexIonMobility, out var apexCcs);
+            if (apexIonMobility.HasValue)
+            {
+                _flagValues |= FlagValues.observed_ion_mobility_known;
+                _observedIonMobility = apexIonMobility.Value;
+            }
+            if (apexCcs.HasValue)
+            {
+                _flagValues |= FlagValues.observed_ccs_known;
+                _observedCcs = apexCcs.Value;
             }
             if (rawTimes != null)
             {
@@ -1197,6 +1236,65 @@ namespace pwiz.Skyline.Model.Results
             {
                 _flagValues &= ~FlagValues.has_peak_shape;
             }
+        }
+
+        /// <summary>
+        /// Observed ion mobility for a peak is read at its apex - the maximum-intensity scan
+        /// in [mz, RT] space - because ion mobility is only meaningfully observable where the
+        /// peak actually has signal. To stay robust against gap/interpolated scans, the apex
+        /// is chosen among scans that carry a valid observed IM (a positive value; 0 and NaN
+        /// mark "no measurement"), so a gap at the literal maximum-intensity scan can't
+        /// suppress an otherwise-measurable IM. Only scans with signal qualify, since
+        /// interpolation copies a neighbor's IM onto the zero-intensity points it fills in.
+        /// Returns null when the peak carries no measurable IM anywhere (e.g. the source isn't
+        /// really IM data, or the peak has no signal), so the caller reports "unknown" rather
+        /// than fabricating a value. A single scan's IM is returned without averaging, since
+        /// IM units (e.g. 1/K0) are not linearly averageable.
+        /// </summary>
+        internal static float? ApexObservedIonMobility(IReadOnlyList<float> intensities,
+            IReadOnlyList<float> observedIonMobilities, int startIndex, int endIndex)
+        {
+            int apexIndex = ApexObservedIonMobilityIndex(intensities, observedIonMobilities, startIndex, endIndex);
+            return apexIndex >= 0 ? observedIonMobilities[apexIndex] : null;
+        }
+
+        /// <summary>
+        /// The observed IM and observed CCS at the peak apex chosen by
+        /// <see cref="ApexObservedIonMobility"/>. The CCS is the one converted from the IM of the
+        /// same point, or null when that point has none.
+        /// </summary>
+        private static void GetApexObservedValues(TimeIntensities timeIntensities, IReadOnlyList<float> intensities,
+            int startIndex, int endIndex, out float? observedIonMobility, out float? observedCcs)
+        {
+            observedIonMobility = observedCcs = null;
+            var observedIonMobilities = timeIntensities.ObservedIonMobilities;
+            if (observedIonMobilities == null)
+                return;
+            int apexIndex = ApexObservedIonMobilityIndex(intensities, observedIonMobilities, startIndex, endIndex);
+            if (apexIndex < 0)
+                return;
+            observedIonMobility = observedIonMobilities[apexIndex];
+            var observedCcsList = timeIntensities.ObservedCcs;
+            if (observedCcsList != null && apexIndex < observedCcsList.Count && observedCcsList[apexIndex] > 0)
+                observedCcs = observedCcsList[apexIndex];
+        }
+
+        private static int ApexObservedIonMobilityIndex(IReadOnlyList<float> intensities,
+            IReadOnlyList<float> observedIonMobilities, int startIndex, int endIndex)
+        {
+            int apexIndex = -1;
+            float apexIntensity = 0; // Strictly greater below, so zero-intensity scans never qualify
+            int count = Math.Min(intensities.Count, observedIonMobilities.Count);
+            for (int i = Math.Max(0, startIndex); i <= endIndex && i < count; i++)
+            {
+                var im = observedIonMobilities[i];
+                if (im > 0 && intensities[i] > apexIntensity) // im > 0 excludes 0/NaN "no measurement" scans
+                {
+                    apexIntensity = intensities[i];
+                    apexIndex = i;
+                }
+            }
+            return apexIndex;
         }
 
         public float RetentionTime { get { return _retentionTime; } }
@@ -1272,6 +1370,65 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        // Observed ion mobility at the peak apex (see ApexObservedIonMobility), in raw IM units
+        // matching IonMobilityFilter.IonMobility.Units. Computed during peak construction.
+        public float? ObservedIonMobility
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.observed_ion_mobility_known) == 0)
+                    return null;
+                return _observedIonMobility;
+            }
+        }
+
+        // Observed collision cross section in sq Angstroms. Set only when the source
+        // data file is a vendor format that exposes an IM-CCS conversion (a vendor-supplied
+        // black box); open formats like mzML and mz5 do not, so this stays null for them.
+        // Read at the same apex point as ObservedIonMobility, from the per-point CCS the
+        // conversion produced at import (see TimeIntensities.ObservedCcs).
+        public float? ObservedCcs
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.observed_ccs_known) == 0)
+                    return null;
+                return _observedCcs;
+            }
+        }
+
+        public ChromPeak WithObservedIonMobility(float? observedIonMobility)
+        {
+            var copy = this;
+            if (observedIonMobility.HasValue)
+            {
+                copy._flagValues |= FlagValues.observed_ion_mobility_known;
+                copy._observedIonMobility = observedIonMobility.Value;
+            }
+            else
+            {
+                copy._flagValues &= ~FlagValues.observed_ion_mobility_known;
+                copy._observedIonMobility = 0;
+            }
+            return copy;
+        }
+
+        public ChromPeak WithObservedCcs(double? observedCcs)
+        {
+            var copy = this;
+            if (observedCcs.HasValue)
+            {
+                copy._flagValues |= FlagValues.observed_ccs_known;
+                copy._observedCcs = (float)observedCcs.Value;
+            }
+            else
+            {
+                copy._flagValues &= ~FlagValues.observed_ccs_known;
+                copy._observedCcs = 0;
+            }
+            return copy;
+        }
+
         public PeakShapeValues? PeakShapeValues
         {
             get
@@ -1317,16 +1474,122 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 36;
             }
+            // The observed IM/CCS fields at the end of the struct are never written as part of
+            // the peak. From v20 they go in a separate block written only for groups that have
+            // them (see ChromatogramCache.RawData.LocationObservedPeakValues).
             return 52;
         }
 
-        public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
+        public static IItemSerializer<ChromPeak> StructSerializer(int chromPeakSize)
         {
-            return new StructSerializer<ChromPeak>
+            if (chromPeakSize >= SizeOf)
             {
-                ItemSizeOnDisk = chromPeakSize,
-                DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
-            };
+                return new StructSerializer<ChromPeak>
+                {
+                    ItemSizeOnDisk = chromPeakSize,
+                    DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
+                };
+            }
+            return new PrefixSerializer(chromPeakSize);
+        }
+
+        /// <summary>
+        /// Reads and writes peaks whose size on disk is a prefix of the in-memory struct. The observed
+        /// IM/CCS flag bits are cleared in both directions, because the values they describe are not
+        /// in the prefix: a reader sets them again only from the observed peak values block.
+        /// </summary>
+        private class PrefixSerializer : IItemSerializer<ChromPeak>
+        {
+            private const FlagValues OBSERVED_FLAGS = FlagValues.observed_ion_mobility_known | FlagValues.observed_ccs_known;
+
+            private readonly int _sizeOnDisk;
+
+            public PrefixSerializer(int sizeOnDisk)
+            {
+                _sizeOnDisk = sizeOnDisk;
+            }
+
+            public unsafe ChromPeak[] ReadArray(Stream stream, int count)
+            {
+                var bytes = new byte[count * _sizeOnDisk];
+                int bytesRead = 0;
+                while (bytesRead < bytes.Length)
+                {
+                    int read = stream.Read(bytes, bytesRead, bytes.Length - bytesRead);
+                    if (read <= 0)
+                        throw new InvalidDataException();
+                    bytesRead += read;
+                }
+                var peaks = new ChromPeak[count];
+                fixed (byte* source = bytes)
+                fixed (ChromPeak* target = peaks)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        Buffer.MemoryCopy(source + i * _sizeOnDisk, target + i, sizeof(ChromPeak), _sizeOnDisk);
+                        target[i]._flagValues &= ~OBSERVED_FLAGS;
+                    }
+                }
+                return peaks;
+            }
+
+            public unsafe void WriteItems(Stream stream, IEnumerable<ChromPeak> items)
+            {
+                var peaks = items as IList<ChromPeak> ?? items.ToList();
+                var bytes = new byte[peaks.Count * _sizeOnDisk];
+                fixed (byte* target = bytes)
+                {
+                    for (int i = 0; i < peaks.Count; i++)
+                    {
+                        var peak = peaks[i];
+                        peak._flagValues &= ~OBSERVED_FLAGS;
+                        Buffer.MemoryCopy(&peak, target + i * _sizeOnDisk, _sizeOnDisk, _sizeOnDisk);
+                    }
+                }
+                stream.Write(bytes, 0, bytes.Length);
+            }
+        }
+
+        /// <summary>
+        /// Number of floats each peak takes in the observed peak values block of the cache.
+        /// </summary>
+        public const int OBSERVED_VALUES_PER_PEAK = 2;
+
+        public bool HasObservedValues
+        {
+            get { return (_flagValues & (FlagValues.observed_ion_mobility_known | FlagValues.observed_ccs_known)) != 0; }
+        }
+
+        /// <summary>
+        /// Returns the observed IM and CCS of each peak, in order, as they are stored in the observed
+        /// peak values block of the cache. A value that is not known is stored as NaN.
+        /// </summary>
+        public static float[] GetObservedValues(IList<ChromPeak> peaks)
+        {
+            var values = new float[peaks.Count * OBSERVED_VALUES_PER_PEAK];
+            for (int i = 0; i < peaks.Count; i++)
+            {
+                values[i * OBSERVED_VALUES_PER_PEAK] = peaks[i].ObservedIonMobility ?? float.NaN;
+                values[i * OBSERVED_VALUES_PER_PEAK + 1] = peaks[i].ObservedCcs ?? float.NaN;
+            }
+            return values;
+        }
+
+        /// <summary>
+        /// Sets the observed IM and CCS of each peak from values read from the observed peak
+        /// values block of the cache (see <see cref="GetObservedValues"/>).
+        /// </summary>
+        public static void SetObservedValues(IList<ChromPeak> peaks, IList<float> values)
+        {
+            Assume.AreEqual(peaks.Count * OBSERVED_VALUES_PER_PEAK, values.Count);
+            for (int i = 0; i < peaks.Count; i++)
+            {
+                float observedIonMobility = values[i * OBSERVED_VALUES_PER_PEAK];
+                float observedCcs = values[i * OBSERVED_VALUES_PER_PEAK + 1];
+                peaks[i] = peaks[i]
+                    .WithObservedIonMobility(float.IsNaN(observedIonMobility) ? null : observedIonMobility)
+                    .WithObservedCcs(float.IsNaN(observedCcs) ? null : observedCcs);
+            }
         }
 
         public static ChromPeak IntegrateWithoutBackground(TimeIntensities timeIntensities, float startTime,
@@ -1493,8 +1756,11 @@ namespace pwiz.Skyline.Model.Results
                     (float)peakShapeStatistics.Kurtosis, correlation);
             }
 
+            GetApexObservedValues(timeIntensities, timeIntensities.Intensities, startIndex, endIndex,
+                out var observedIonMobility, out var observedCcs);
+
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
-                pointsAcrossPeak, peakShapeValues);
+                pointsAcrossPeak, peakShapeValues).WithObservedIonMobility(observedIonMobility).WithObservedCcs(observedCcs);
         }
 
         #region Fast file I/O

@@ -120,6 +120,13 @@ namespace pwiz.Skyline.Model.Results
 
                     _peakCount += rawData.NumPeaks;
                     rawData.TransferPeaks(inStream, CacheFormat, 0, rawData.NumPeaks, _fsPeaks.FileStream);
+                    // Appended in the same order as the peaks, which is all that locates them
+                    if (rawData.NumObservedPeakValues > 0)
+                    {
+                        inStream.Seek(rawData.LocationObservedPeakValues, SeekOrigin.Begin);
+                        inStream.TransferBytes(_fsObservedPeakValues.FileStream,
+                            (long) rawData.NumObservedPeakValues * sizeof(float));
+                    }
                     _listTransitions.AddRange(rawData.ChromTransitions);
                     // Initialize the score types the first time through
                     if (_scoreTypesCount == -1)

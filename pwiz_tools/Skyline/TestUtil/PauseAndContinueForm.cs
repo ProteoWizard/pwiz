@@ -230,19 +230,41 @@ namespace pwiz.SkylineTestUtil
                 if (string.IsNullOrEmpty(_description))
                     _description = "Show screenshot";
             }
+            else
+            {
+                // Restore the default (no-link) visibility, in case this form instance was
+                // previously shown with a link - otherwise the description would be assigned
+                // to the still-hidden lblDescription.
+                lblDescription.Visible = true;
+                lblDescriptionLink.Visible = false;
+            }
             if (!string.IsNullOrEmpty(_description))
             {
-                if (string.IsNullOrEmpty(_linkUrl))
-                {
-                    lblDescription.Text = _description;
-                    toolTip1.SetToolTip(lblDescription, _description);
-                }
-                else
-                {
-                    lblDescriptionLink.Text = _description;
-                    toolTip1.SetToolTip(lblDescriptionLink, _description);
+                // Wrap and grow to fit. PauseTest messages can be multi-paragraph
+                // manual-inspection instructions; AutoEllipsis at the designer's
+                // fixed 205-wide ClientSize otherwise truncates them.
+                Label activeLabel = string.IsNullOrEmpty(_linkUrl)
+                    ? lblDescription
+                    : lblDescriptionLink;
+                const int maxWidth = 600;
+                int prevBottom = activeLabel.Bottom;
+                int prevRight = activeLabel.Right;
+                activeLabel.AutoEllipsis = false;
+                activeLabel.MaximumSize = new Size(maxWidth, 0);
+                activeLabel.Text = _description;
+                toolTip1.SetToolTip(activeLabel, _description);
+                if (!string.IsNullOrEmpty(_linkUrl))
                     lblDescriptionLink.TabStop = false;
+                int deltaH = activeLabel.Bottom - prevBottom;
+                int deltaW = activeLabel.Right - prevRight;
+                if (deltaH > 0)
+                {
+                    btnContinue.Top += deltaH;
+                    btnPreview.Top += deltaH;
+                    Height += deltaH;
                 }
+                if (deltaW > 0)
+                    Width += deltaW;
             }
             else
             {
