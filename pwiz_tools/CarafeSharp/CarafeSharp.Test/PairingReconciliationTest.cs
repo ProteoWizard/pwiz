@@ -24,6 +24,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Proteome;
 
 namespace pwiz.CarafeSharp.Test
@@ -180,8 +181,8 @@ namespace pwiz.CarafeSharp.Test
 
             // An empty file has no rows; a short row, a non-integer pair index or a missing column is an error.
             Assert.AreEqual(0, DecoyPairPlanner.ReadManifest(WriteLines(@"empty.tsv")).Count);
-            AssertIoError(() => DecoyPairPlanner.ReadManifest(WriteLines(@"short.tsv", EntrapmentFastaBuilder.MANIFEST_HEADER, "PEPTIDEK\tNo\tP1")));
-            AssertIoError(() => DecoyPairPlanner.ReadManifest(WriteLines(@"index.tsv", EntrapmentFastaBuilder.MANIFEST_HEADER,
+            AssertIoError(() => DecoyPairPlanner.ReadManifest(WriteLines(@"short.tsv", PairingManifest.HEADER, "PEPTIDEK\tNo\tP1")));
+            AssertIoError(() => DecoyPairPlanner.ReadManifest(WriteLines(@"index.tsv", PairingManifest.HEADER,
                 "PEPTIDEK\tNo\tP1\ttarget\tone")));
             AssertIoError(() => DecoyPairPlanner.ReadManifest(WriteLines(@"column.tsv", "sequence\tdecoy\tproteins\tpeptide_type")));
         }
@@ -189,7 +190,7 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestReconcilerRefusals()
         {
-            string manifest = WriteLines(@"manifest.tsv", EntrapmentFastaBuilder.MANIFEST_HEADER,
+            string manifest = WriteLines(@"manifest.tsv", PairingManifest.HEADER,
                 "PEPTIDEK\tNo\tP1\ttarget\t0", "EDITPEPK\tYes\tdecoy_P1\tdecoy\t0",
                 "SAMPLERK\tNo\tP2\ttarget\t1", "REMPLASK\tYes\tdecoy_P2\tdecoy\t1");
             string output = Path.Combine(_folder, @"out", @"reconciled.tsv");
@@ -209,7 +210,7 @@ namespace pwiz.CarafeSharp.Test
 
             // Each malformed input stops the run before anything is written.
             AssertRefused(WriteLines(@"empty_manifest.tsv"), library);
-            AssertRefused(WriteLines(@"short_manifest.tsv", EntrapmentFastaBuilder.MANIFEST_HEADER, "PEPTIDEK\tNo\tP1\ttarget"), library);
+            AssertRefused(WriteLines(@"short_manifest.tsv", PairingManifest.HEADER, "PEPTIDEK\tNo\tP1\ttarget"), library);
             AssertRefused(WriteLines(@"column_manifest.tsv", "sequence\tdecoy\tproteins\tpeptide_type"), library);
             AssertRefused(manifest, null);
             AssertRefused(manifest, WriteLines(@"empty_library.tsv"));
@@ -221,17 +222,32 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsInstanceOfType(e.InnerException, typeof(SQLiteException));
         }
 
-        private IOException AssertRefused(string manifest, string library)
+        /// <summary>
+        /// The run is refused before anything is written: a malformed manifest by the shared
+        /// reader (<see cref="InvalidDataException"/>), a bad library by the reconciler
+        /// (<see cref="IOException"/>).
+        /// </summary>
+        private Exception AssertRefused(string manifest, string library)
         {
             string output = Path.Combine(_folder, @"refused_" + Guid.NewGuid().ToString(@"N") + @".tsv");
-            var e = Assert.ThrowsException<IOException>(() => PairingManifestReconciler.Run(manifest, library, output));
+            Exception refusal = null;
+            try
+            {
+                PairingManifestReconciler.Run(manifest, library, output);
+            }
+            catch (Exception e) when (e is IOException || e is InvalidDataException)
+            {
+                refusal = e;
+            }
+            Assert.IsNotNull(refusal, @"expected the run to be refused: " + (library ?? manifest));
             Assert.IsFalse(File.Exists(output), library ?? manifest);
-            return e;
+            return refusal;
         }
 
+        /// <summary>A malformed manifest is refused by the shared reader.</summary>
         private static void AssertIoError(Action action)
         {
-            Assert.ThrowsException<IOException>(action);
+            Assert.ThrowsException<InvalidDataException>(action);
         }
 
         private string WriteLines(string name, params string[] lines)

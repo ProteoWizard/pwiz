@@ -40,9 +40,9 @@ namespace pwiz.Osprey.Tasks
     /// Orchestrates the BiblioSpecLite <c>.blib</c> output emission for the SecondPassFDR
     /// node (Stage 9): source-file IDs, a parallel zlib pre-compress pass, the
     /// sequential per-best-precursor RefSpectra + modifications + protein +
-    /// RetentionTimes + Osprey extension-table emission, then metadata and
-    /// finalize. Drives the low-level <see cref="BlibWriter"/> (the SQLite layer);
-    /// this type owns only the per-spectrum row composition.
+    /// RetentionTimes emission, then metadata and
+    /// finalize. Drives <see cref="OspreyBlibWriter"/> (the SQLite layer, through the one
+    /// .blib writer in BiblioSpec.IO); this type owns only the per-spectrum row composition.
     ///
     /// Extracted verbatim from <c>SecondPassFdrTask.WriteBlibOutput</c> as pure code
     /// motion so <see cref="Write"/> reads as a sequencer; behavior (and therefore
@@ -67,64 +67,45 @@ namespace pwiz.Osprey.Tasks
             ArtifactStamp stamp)
         {
             double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
-            // Write the blib to a SimpleFileSaver sibling temp, then atomically rename it into
-            // place. This is safe with BlibWriter's WAL journaling ONLY because
-            // FinalizeDatabase() runs PRAGMA wal_checkpoint(TRUNCATE) + journal_mode=DELETE
-            // (BlibWriter.cs:577-578): by the time the inner using disposes BlibWriter -- which
-            // disposes every prepared command before closing the connection, releasing the OS
-            // handle -- the WAL has been merged back and the -wal/-shm sidecars are gone, so
-            // saver.Commit() renames a single self-contained file (no orphaned WAL, no
-            // sharing-violation on the still-open handle). Keep FinalizeDatabase() as the last
-            // BlibWriter call before the connection closes; reordering or dropping it would
-            // leave sidecar files that the rename would not carry.
-            using (var saver = new SimpleFileSaver(config.OutputBlib))
+            // The writer writes a temp beside the output and Complete moves it over the final
+            // name, so a run that stops short leaves any library already there as it was.
+            using (var writer = OpenBlibWriter(config.OutputBlib))
             {
-                using (var writer = OpenBlibWriter(saver.SafeName, config.OutputBlib))
-                {
-                    writer.BeginBatch();
+                writer.BeginBatch();
 
-                    var sourceFileIds = CreateSourceFiles(writer, config, fileNames, fdrThreshold);
+                var sourceFileIds = CreateSourceFiles(writer, config, fileNames, fdrThreshold);
 
-                    var blibEntries = bestByPrecursor.Values.ToList();
-                    var spectra = PrepareSpectra(blibEntries, libraryById, config.NThreads);
+                var blibEntries = bestByPrecursor.Values.ToList();
+                var spectra = PrepareSpectra(blibEntries, libraryById, config.NThreads);
 
-                    // TWO passes, and the split is the point. The first writes one row per
-                    // precursor and hands back the RefSpectra ids; the second walks the
-                    // passing entries in their own file-major order and writes each one's
-                    // RetentionTimes row against those ids.
-                    //
-                    // It used to be one precursor-major pass, which had to reach every file's
-                    // row for a precursor at once - the O(observations) index that made the
-                    // blib phase the last consumer needing a whole-run view (#4486). Row
-                    // ORDER in the table changes; nothing reads it. Compare-BlibGolden keys
-                    // RetentionTimes on (peptideModSeq, precursorCharge, fileName), and the
-                    // self-consistency legs go through Compare-BlibFull, table-based too.
-                    var refIdByPrecursor = EmitSpectrumRows(
-                        writer, blibEntries, spectra,
-                        sourceFileIds, bestExpPrecursorQ, sharedBounds,
-                        precursorFacts, fileNames.Count);
+                // TWO passes, and the split is the point. The first writes one row per
+                // precursor and hands back the RefSpectra ids; the second walks the
+                // passing entries in their own file-major order and writes each one's
+                // RetentionTimes row against those ids.
+                //
+                // It used to be one precursor-major pass, which had to reach every file's
+                // row for a precursor at once - the O(observations) index that made the
+                // blib phase the last consumer needing a whole-run view (#4486). Row
+                // ORDER in the table changes; nothing reads it. Compare-BlibGolden keys
+                // RetentionTimes on (peptideModSeq, precursorCharge, fileName), and the
+                // self-consistency legs go through Compare-BlibFull, table-based too.
+                var refIdByPrecursor = EmitSpectrumRows(
+                    writer, blibEntries, spectra,
+                    sourceFileIds, bestExpPrecursorQ, sharedBounds,
+                    precursorFacts);
 
-                    WriteRetentionTimesFileMajor(writer, passingEntries, refIdByPrecursor,
-                        precursorFacts, bestByPrecursor, sourceFileIds, sharedBounds,
-                        fdrThreshold);
+                WriteRetentionTimesFileMajor(writer, passingEntries, refIdByPrecursor,
+                    precursorFacts, bestByPrecursor, sourceFileIds, sharedBounds,
+                    fdrThreshold);
 
-                    writer.Commit();
+                writer.CommitBatch();
 
-                    WriteMetadata(writer, config);
-                    // The blib carries its own validity record, so SecondPassFDR's resume check
-                    // reads it from the library rather than from a file beside it.
-                    writer.AddStamp(stamp);
+                WriteMetadata(writer, config);
+                // The blib carries its own validity record, so SecondPassFDR's resume check
+                // reads it from the library rather than from a file beside it.
+                writer.AddStamp(stamp);
 
-                    writer.FinalizeDatabase();
-                }
-                try
-                {
-                    saver.Commit();
-                }
-                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
-                {
-                    throw new BlibOutputException(config.OutputBlib, ex);
-                }
+                CompleteBlib(writer, config.OutputBlib);
             }
         }
 
@@ -139,13 +120,30 @@ namespace pwiz.Osprey.Tasks
         /// bug in this build, not a locked file - reporting it as one would send the user
         /// looking for a program that does not exist.</para>
         /// </summary>
-        private static BlibWriter OpenBlibWriter(string tempPath, string outputPath)
+        private static OspreyBlibWriter OpenBlibWriter(string outputPath)
         {
             try
             {
-                return new BlibWriter(tempPath);
+                return new OspreyBlibWriter(outputPath);
             }
             catch (Exception ex) when (IsFileAccessFailure(ex))
+            {
+                throw new BlibOutputException(outputPath, ex);
+            }
+        }
+
+        /// <summary>
+        /// Complete the library and move it over the output. A failure to put it in place (the
+        /// output is open in another program, or the folder became unwritable) is reported as a
+        /// <see cref="BlibOutputException"/> naming the output, as a failure to open it is.
+        /// </summary>
+        private static void CompleteBlib(OspreyBlibWriter writer, string outputPath)
+        {
+            try
+            {
+                writer.Complete();
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 throw new BlibOutputException(outputPath, ex);
             }
@@ -190,7 +188,7 @@ namespace pwiz.Osprey.Tasks
         // pipeline.rs:6110 + blib.rs:435). The library file is the "ID
         // source"; the mzML file is the spectrum source.
         private static Dictionary<string, long> CreateSourceFiles(
-            BlibWriter writer, OspreyConfig config,
+            OspreyBlibWriter writer, OspreyConfig config,
             IReadOnlyList<string> fileNames, double fdrThreshold)
         {
             string libraryIdName = Path.GetFileName(config.LibrarySource.Path);
@@ -255,22 +253,20 @@ namespace pwiz.Osprey.Tasks
         }
 
         // Sequential per-best-precursor emission: one RefSpectra row (plus its
-        // modifications / protein mappings / Osprey extension
-        // rows) for each prepared spectrum, in iteration order so row IDs stay
-        // deterministic.
+        // modifications / protein mappings) for each prepared spectrum, in iteration
+        // order so row IDs stay deterministic.
         private static Dictionary<(string, byte), long> EmitSpectrumRows(
-            BlibWriter writer,
+            OspreyBlibWriter writer,
             List<KeyValuePair<string, FdrEntry>> blibEntries,
             BlibSpectrum[] spectra,
             Dictionary<string, long> sourceFileIds,
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
-            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,
-            int perFileEntriesCount)
+            Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts)
         {
             var refIdByPrecursor = new Dictionary<(string, byte), long>(blibEntries.Count);
-            // Reported for the same reason as the pre-compress pass above: this emits five row
-            // families per spectrum into SQLite and ran silent inside the same 47 s gap.
+            // Reported for the same reason as the pre-compress pass above: this emits several
+            // row families per spectrum into SQLite and ran silent inside the same 47 s gap.
             using (var progress = new ProgressReporter(
                        string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
                        blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -290,16 +286,14 @@ namespace pwiz.Osprey.Tasks
 
                     // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value (min
                     // across all observations of this (modseq, charge)). Mirrors
-                    // Rust pipeline.rs:4670-4683 / 4795. Same value feeds
-                    // OspreyExperimentScores.ExperimentQValue below.
+                    // Rust pipeline.rs:4670-4683 / 4795.
                     var lookupKey = (entry.ModifiedSequence, entry.Charge);
                     double scoreQvalue;
                     if (!bestExpPrecursorQ.TryGetValue(lookupKey, out scoreQvalue))
                         scoreQvalue = entry.ExperimentPrecursorQvalue;
 
                     // nRunsDetected -> RefSpectra.copies (Rust pipeline.rs:6179
-                    // passes n_runs_detected = group.len()). Reused by
-                    // OspreyExperimentScores below.
+                    // passes n_runs_detected = group.len()).
                     int nRunsDetected = 1;
                     if (precursorFacts.TryGetValue(lookupKey, out var facts) && facts.NRuns > 0)
                         nRunsDetected = facts.NRuns;
@@ -326,39 +320,23 @@ namespace pwiz.Osprey.Tasks
                         scoreQvalue, fileId, nRunsDetected);
 
                     refIdByPrecursor[lookupKey] = refId;
-
-                    // Osprey extension tables - one row per RefSpectra each,
-                    // mirroring Rust pipeline.rs:6255-6272. Best-run-only for
-                    // OspreyPeakBoundaries + OspreyRunScores; experiment-level for
-                    // OspreyExperimentScores. The 0.0 fields are the same "not yet
-                    // plumbed through Stage 7 plan entries" placeholders Rust writes.
-                    writer.AddPeakBoundaries(refId, fileName,
-                        sharedStart, sharedEnd, sharedApex,
-                        0.0, // ApexIntensity - matches Rust's apex_coefficient placeholder
-                        entry.BoundsArea);
-                    writer.AddRunScores(refId, fileName,
-                        entry.EffectiveRunQvalue(FdrLevel.Both),
-                        0.0, // DiscriminantScore - matches Rust's dot_product placeholder
-                        0.0); // PosteriorErrorProb - matches Rust's PEP placeholder
-                    writer.AddExperimentScores(refId,
-                        scoreQvalue, // Same value as RefSpectra.score
-                        nRunsDetected,
-                        perFileEntriesCount);
                 }
             }
             return refIdByPrecursor;
         }
 
-        // Add metadata. OspreyMetadata key set must match Rust's
-        // write_blib_from_plan (pipeline.rs:6078-6081) byte-for-byte.
-        private static void WriteMetadata(BlibWriter writer, OspreyConfig config)
+        // The LibMetadata rows: the values Rust's write_blib_from_plan (pipeline.rs:6078-6081)
+        // records, under Osprey's namespaced keys, plus the command line that made the library.
+        private static void WriteMetadata(OspreyBlibWriter writer, OspreyConfig config)
         {
-            writer.AddMetadata(@"osprey_version", OspreyVersion.Current);
-            writer.AddMetadata(@"search_mode", @"coelution");
-            writer.AddMetadata(@"run_fdr",
+            writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, OspreyVersion.Current);
+            writer.AddMetadata(OspreyBlibWriter.KEY_SEARCH_MODE, @"coelution");
+            writer.AddMetadata(OspreyBlibWriter.KEY_RUN_FDR,
                 config.RunFdr.ToString(CultureInfo.InvariantCulture));
-            writer.AddMetadata(@"experiment_fdr",
+            writer.AddMetadata(OspreyBlibWriter.KEY_EXPERIMENT_FDR,
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
+            if (config.CommandLine != null)
+                writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, config.CommandLine);
         }
 
         /// <summary>
@@ -386,7 +364,7 @@ namespace pwiz.Osprey.Tasks
         /// the row, and neither survives a per-row view without being folded first.</para>
         /// </summary>
         private static void WriteRetentionTimesFileMajor(
-            BlibWriter writer,
+            OspreyBlibWriter writer,
             List<PassingObservation> passingEntries,
             Dictionary<(string, byte), long> refIdByPrecursor,
             Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,

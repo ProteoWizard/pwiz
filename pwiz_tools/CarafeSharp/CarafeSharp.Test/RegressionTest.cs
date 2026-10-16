@@ -29,6 +29,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
@@ -305,8 +306,8 @@ namespace pwiz.CarafeSharp.Test
             string fasta = Path.Combine(inputs, @"library_subset_peptides.fasta");
             string pairing = Path.Combine(inputs, @"library_subset_pairing.tsv");
             string exportFolder = Path.Combine(inputs, @"stellar");
-            string export = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).Single();
-            string runFile = Path.GetFileName(export).Substring(0, Path.GetFileName(export).Length - OspreyTrainingExport.FILE_SUFFIX.Length) + @".raw";
+            string export = Directory.GetFiles(exportFolder, @"*" + TrainingExportParquet.EXT).Single();
+            string runFile = Path.GetFileName(export).Substring(0, Path.GetFileName(export).Length - TrainingExportParquet.EXT.Length) + @".raw";
             var args = new List<string>
             {
                 @"-db", fasta, @"-i", exportFolder, @"-ms", Path.Combine(exportFolder, runFile), @"-o", Path.Combine(runFolder, OUTPUT_FOLDER),
@@ -493,12 +494,12 @@ namespace pwiz.CarafeSharp.Test
                 }
             }
 
-            var exports = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).OrderBy(p => p, StringComparer.Ordinal).ToList();
+            var exports = Directory.GetFiles(exportFolder, @"*" + TrainingExportParquet.EXT).OrderBy(p => p, StringComparer.Ordinal).ToList();
             Check(exports.Count == runs, @"training exports: {0} for {1} runs", exports.Count, runs);
             long exported = 0;
             foreach (string path in exports)
             {
-                var export = OspreyTrainingExport.Read(path);
+                var export = TrainingExport.Read(path);
                 exported += export.Records.Count;
                 string name = Path.GetFileName(path);
                 Check(export.Records.Count >= CHAINED_MIN_EXPORTED, @"{0}: {1} precursors (at least {2})", name, export.Records.Count, CHAINED_MIN_EXPORTED);

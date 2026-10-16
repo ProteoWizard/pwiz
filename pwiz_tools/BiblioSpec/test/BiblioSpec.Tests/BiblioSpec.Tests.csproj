@@ -14,6 +14,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BiblioSpec\BiblioSpec.csproj" />
+    <!-- Test-only: the Shared BiblioSpec DLL that Osprey and CarafeSharp write .blib files
+         through carries its own copy of the schema, and BlibSchemaIdentity holds the two
+         copies identical. The port itself does not reference the Shared project. -->
+    <ProjectReference Include="..\..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
   </ItemGroup>
 
   <!-- The 4 CLI tools (BlibBuild / BlibFilter / BlibSearch / BlibToMs2) are

@@ -192,8 +192,22 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary><c>-pairing_manifest</c>: adds a DecoyPairs table to a .blib.</summary>
         public string PairingManifest { get; set; }
 
+        /// <summary>
+        /// <c>-library_contract</c>: check the library against the Osprey library contract before
+        /// predicting and after writing, refuse or discard on a violation, and mark the .blib as
+        /// meeting it. Needs a .blib output and the pairing manifest.
+        /// </summary>
+        public bool LibraryContract { get; set; }
+
         /// <summary><c>-pretrained</c> (CarafeSharp only): the AlphaPeptDeep pretrained_models.zip.</summary>
         public string PretrainedModels { get; set; }
+
+        /// <summary>
+        /// The command line this run was given, as one line of text, recorded in the .blib it
+        /// writes (<c>LibMetadata</c>, key <c>carafe.command</c>) so the library carries how it
+        /// was made. Null (settings built in code) records nothing.
+        /// </summary>
+        public string CommandLine { get; set; }
 
         /// <summary>
         /// <c>-rt_model</c> (CarafeSharp only), or null when it is not given: then the model folder's or saved

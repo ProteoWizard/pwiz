@@ -43,7 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\..\Shared\Common\Common.csproj" />

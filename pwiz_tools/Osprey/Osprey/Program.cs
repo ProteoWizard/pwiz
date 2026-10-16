@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -702,7 +703,7 @@ namespace pwiz.Osprey
             try
             {
                 written = LibraryBlibWriter.Write(path, library, config.LibrarySource.Path, config.NThreads,
-                    config.DecoyPrefixes);
+                    config.DecoyPrefixes, config.CommandLine);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Data.Common.DbException)
             {
