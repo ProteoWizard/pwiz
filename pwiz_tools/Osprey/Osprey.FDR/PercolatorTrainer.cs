@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -113,7 +114,7 @@ namespace pwiz.Osprey.FDR
             //     N times, which would inflate apparent target/decoy separation and
             //     cause the SVM to learn file-specific noise rather than peptide
             //     discriminating features. Mirrors the streaming Percolator path's
-            //     dedup step (RunPercolatorStreaming); the Rust direct path
+            //     dedup step; the Rust direct path
             //     historically omitted this step, but on multi-file inputs sized
             //     below the streaming threshold (Stellar 3-file at 393k entries)
             //     the omission produced a statistically incorrect training set
@@ -358,7 +359,7 @@ namespace pwiz.Osprey.FDR
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
             // each experiment q up to the entry's best (min-over-runs) combined run q, so an
             // experiment-level q is never more confident than the entry's best single run.
-            // Identical floors to PercolatorEngine.ClampExperimentQToBestRun, over the flat
+            // Identical floors to PercolatorEngine.AccumulateExperimentQFloors, over the flat
             // score-pass arrays (no resident FdrEntry buffer). Covers the direct dispatch.
             PercolatorQValues.ClampExperimentQToBestRunFlat(
                 entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
@@ -370,7 +371,7 @@ namespace pwiz.Osprey.FDR
             // model it decomposes -- a pure read of stdFeatures + foldWeights that
             // never perturbs finalScores / q-values (serial in row/index order).
             // The table characterizes the AVERAGED model -- the same object the
-            // production streaming path (ScorePopulationAndComputeFdr) actually
+            // production streaming path actually
             // scores with -- not the per-entry CV ensemble that produced
             // finalScores on this test / small-input standalone path.
             // Null on the gradient-boosted-trees path: the report decomposes a score
@@ -556,7 +557,7 @@ namespace pwiz.Osprey.FDR
             // Section sub-header (default human log): the actual (possibly subsampled)
             // training-set size the per-iteration percent lines below are computed against.
             // subN / subTargets are the post-subsample counts computed above.
-            OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+            CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                 OspreyFDRResources.PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_,
                 config.NFolds, subN, subTargets));
 
@@ -606,7 +607,7 @@ namespace pwiz.Osprey.FDR
                 // The tree counterpart of the C report below: the knobs that actually
                 // bound this model's capacity, so the fold scores above have context.
                 var gp = config.GbtParams;
-                OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                     OspreyFDRResources.PercolatorTrainer_TrainFoldModels_Gradient_boosted_trees___0__trees__max_depth__1__learning_rate__2__subsample__3__colsample__4_,
                     gp.NTrees, gp.MaxDepth, gp.LearningRate, gp.Subsample, gp.ColSample,
                     gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight));
@@ -619,12 +620,12 @@ namespace pwiz.Osprey.FDR
                 // from a log-scale sweep grid; report the grid, the selection rule (it is part
                 // of the validity key, so a resumed run was trained under the same one) and
                 // each fold's pick.
-                OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                     OspreyFDRResources.PercolatorTrainer_TrainFoldModels_SVM_regularization_C__swept_over__0___chosen_by_cross_validation_per_fold__,
                     FormatCGrid(config.CValues), DescribeCSelection(config.CSelectionTolerance)));
                 for (int fold = 0; fold < config.NFolds; fold++)
                 {
-                    OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(2) + string.Format(
+                    CommandOutput.Out.WriteLine(TextUtil.GetIndentation(2) + string.Format(
                         OspreyFDRResources.PercolatorTrainer_TrainFoldModels_fold__0___1___C____2_,
                         fold + 1, config.NFolds, FormatC(foldBestC[fold])));
                 }
@@ -696,7 +697,7 @@ namespace pwiz.Osprey.FDR
                         foreach (var r in reports)
                         {
                             double foldPct = r.Targets > 0 ? 100.0 * r.Passing / r.Targets : 0.0;
-                            OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                            CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                                 OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_fold__0___1___iteration__2__of__3____4__of__5__targets___6____at__7__FDR_,
                                 r.Fold + 1, _nFolds, iteration + 1, _maxIterations,
                                 r.Passing, r.Targets, foldPct, _trainFdr));
@@ -711,7 +712,7 @@ namespace pwiz.Osprey.FDR
                         sumTargets += r.Targets;
                     }
                     double pct = sumTargets > 0 ? 100.0 * sumPassing / sumTargets : 0.0;
-                    OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
+                    CommandOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                         OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_iteration__0__of__1____2____of_training_targets_at__3__FDR_,
                         iteration + 1, _maxIterations, pct, _trainFdr));
                 }

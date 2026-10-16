@@ -30,16 +30,17 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// Thin wrapper around JetBrains.Profiler.Api so the Osprey main-
-    /// search stage can be profiled on its own without the calibration
-    /// noise. Matches the pattern in
+    /// Thin wrapper around JetBrains.Profiler.Api so Osprey's per-file
+    /// scoring can be profiled without the once-per-process library load and
+    /// decoy generation. Matches the pattern in
     /// <c>Skyline/TestRunnerLib/MemoryProfiler.cs</c>: the JetBrains call is
     /// isolated in a non-inlineable method so a missing assembly fails the
     /// try/catch instead of tripping JIT of the caller.
     ///
-    /// Usage (from AnalysisPipeline):
+    /// Usage (from PerFileScoringTask.Run, around the per-file loop: each
+    /// file's spectra load, calibration, main search and parquet write):
     ///   ProfilerHooks.StartMeasure();
-    ///   ...  Parallel.ForEach main search  ...
+    ///   ...  per-file loop  ...
     ///   ProfilerHooks.SaveAndStopMeasure();
     ///
     /// When the binary is launched with <c>dottrace attach ... --profiling-
@@ -77,9 +78,9 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Stop collecting data, flush the snapshot, detach. Intended to
-        /// bracket Stage 4 so the .dtp snapshot contains only the main-
-        /// search hot paths.
+        /// Stop collecting data, flush the snapshot, detach. Closes the
+        /// bracket opened by <see cref="StartMeasure"/>, so the .dtp snapshot
+        /// contains only the per-file scoring hot paths.
         /// </summary>
         public static void SaveAndStopMeasure()
         {

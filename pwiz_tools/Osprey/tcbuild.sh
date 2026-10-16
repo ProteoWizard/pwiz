@@ -69,6 +69,12 @@ echo "##teamcity[progressMessage 'Osprey build.ps1']"
 pwsh -NoProfile -File "$SCRIPT_DIR/build.ps1" -TeamCity -Coverage -Configuration Release \
     || fail "build.ps1 failed" $?
 
+# CarafeSharp has no config of its own; see tcbuild.bat. Its build.sh would repeat the
+# bootstrap above, so its build.ps1 is called directly.
+echo "##teamcity[progressMessage 'CarafeSharp build.ps1']"
+pwsh -NoProfile -File "$SCRIPT_DIR/../CarafeSharp/build.ps1" -TeamCity \
+    || fail "CarafeSharp build.ps1 failed" $?
+
 echo "##teamcity[progressMessage 'Osprey package.ps1 (linux-x64)']"
 pwsh -NoProfile -File "$SCRIPT_DIR/package.ps1" -TeamCity -Rid linux-x64 \
     || fail "package.ps1 failed" $?

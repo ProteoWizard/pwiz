@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -132,17 +133,6 @@ namespace pwiz.Osprey
         public bool LoessInputOnly { get; } = IsOne(@"OSPREY_LOESS_INPUT_ONLY");
 
         /// <summary>
-        /// OSPREY_DUMP_PERCOLATOR: dump per-precursor Stage 5 state
-        /// (score, pep, 4 q-values) after first-pass Percolator FDR
-        /// completes and before first-pass protein FDR / compaction.
-        /// Cross-impl parity gate (cs_stage5_percolator.tsv).
-        /// </summary>
-        public bool DumpPercolator { get; } = IsOne(@"OSPREY_DUMP_PERCOLATOR");
-
-        /// <summary>OSPREY_PERCOLATOR_ONLY: exit after cs_stage5_percolator.tsv dump.</summary>
-        public bool PercolatorOnly { get; } = IsOne(@"OSPREY_PERCOLATOR_ONLY");
-
-        /// <summary>
         /// OSPREY_DUMP_STANDARDIZER: dump the fitted Stage 5 feature standardizer
         /// (mean/scale per feature) right after FeatureStandardizer.FitTransform.
         /// </summary>
@@ -177,20 +167,6 @@ namespace pwiz.Osprey
 
         /// <summary>OSPREY_SVM_WEIGHTS_ONLY: exit after the SVM-weights dump.</summary>
         public bool SvmWeightsOnly { get; } = IsOne(@"OSPREY_SVM_WEIGHTS_ONLY");
-
-        /// <summary>
-        /// OSPREY_DUMP_RESCORED: dump per-precursor state AFTER the
-        /// per-file Stage 6 rescore loop completes (consensus +
-        /// reconciliation overlay, plus gap-fill stubs once Phase 2
-        /// lands). Same column shape as DumpPercolator so
-        /// Compare-Percolator.ps1 reuses for the diff. Output:
-        /// cs_stage6_rescored.tsv. Mirrors Rust's
-        /// dump_stage6_rescored / OSPREY_DUMP_RESCORED gate.
-        /// </summary>
-        public bool DumpRescored { get; } = IsOne(@"OSPREY_DUMP_RESCORED");
-
-        /// <summary>OSPREY_RESCORED_ONLY: exit after cs_stage6_rescored.tsv dump.</summary>
-        public bool RescoredOnly { get; } = IsOne(@"OSPREY_RESCORED_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_MP_INPUTS: bisection-grade diagnostic that dumps
@@ -248,15 +224,6 @@ namespace pwiz.Osprey
         public bool ConsensusOnly { get; } = IsOne(@"OSPREY_CONSENSUS_ONLY");
 
         /// <summary>
-        /// OSPREY_DUMP_MULTICHARGE: dump the per-file multi-charge consensus
-        /// rescore targets (cs_stage6_multicharge.tsv) for cross-impl parity.
-        /// </summary>
-        public bool DumpMulticharge { get; } = IsOne(@"OSPREY_DUMP_MULTICHARGE");
-
-        /// <summary>OSPREY_MULTICHARGE_ONLY: exit after cs_stage6_multicharge.tsv dump.</summary>
-        public bool MultichargeOnly { get; } = IsOne(@"OSPREY_MULTICHARGE_ONLY");
-
-        /// <summary>
         /// OSPREY_DUMP_REFIT: dump per-file refined-calibration statistics
         /// produced by CalibrationRefit (cs_stage6_refit.tsv) for cross-impl
         /// parity.
@@ -265,19 +232,6 @@ namespace pwiz.Osprey
 
         /// <summary>OSPREY_REFIT_ONLY: exit after cs_stage6_refit.tsv dump.</summary>
         public bool RefitOnly { get; } = IsOne(@"OSPREY_REFIT_ONLY");
-
-        /// <summary>
-        /// OSPREY_DUMP_RECONCILIATION: dump the per-(file, entry)
-        /// ReconcileAction map produced by ReconciliationPlanner.Plan
-        /// to cs_stage6_reconciliation.tsv. Mirrors the action variant
-        /// + apex/start/end/half_width fields the Rust dump emits, so
-        /// cross-impl parity at the planning step can be checked
-        /// independently of the per-file rescoring that follows.
-        /// </summary>
-        public bool DumpReconciliation { get; } = IsOne(@"OSPREY_DUMP_RECONCILIATION");
-
-        /// <summary>OSPREY_RECONCILIATION_ONLY: exit after cs_stage6_reconciliation.tsv dump.</summary>
-        public bool ReconciliationOnly { get; } = IsOne(@"OSPREY_RECONCILIATION_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_CALIBRATION: dump the loaded calibration JSON
@@ -401,12 +355,12 @@ namespace pwiz.Osprey
             DumpCalSample || CalSampleOnly || DumpCalWindows || CalWindowsOnly ||
             DumpCalMatch || CalMatchOnly || DumpMs2CalErrors || Ms2CalErrorsOnly ||
             DumpLdaScores || LdaScoresOnly || DumpLoessInput || LoessInputOnly ||
-            DumpPercolator || PercolatorOnly || DumpStandardizer || StandardizerOnly ||
+            DumpStandardizer || StandardizerOnly ||
             DumpPercInput || PercInputOnly || DumpSubsample || SubsampleOnly ||
-            DumpSvmWeights || SvmWeightsOnly || DumpRescored || RescoredOnly ||
+            DumpSvmWeights || SvmWeightsOnly ||
             DumpMpInputs || DumpPredictRt || DumpCwtPath || DumpConsensus ||
-            ConsensusOnly || DumpMulticharge || MultichargeOnly || DumpRefit ||
-            RefitOnly || DumpReconciliation || ReconciliationOnly || DumpCalibration ||
+            ConsensusOnly || DumpRefit ||
+            RefitOnly || DumpCalibration ||
             CalibrationOnly || DumpInvPredict || InvPredictOnly || DumpProteinFdr ||
             ProteinFdrOnly || DumpStage7ProteinFdr || Stage7ProteinFdrOnly ||
             DumpDetectedPeptides || DumpLoessFit || LoessFitOnly ||
@@ -495,7 +449,7 @@ namespace pwiz.Osprey
                 }.ToDsvLine(TextUtil.SEPARATOR_TSV));
             }
             tuples.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            using (var saver = new FileSaver(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -525,7 +479,7 @@ namespace pwiz.Osprey
             int nOccupied, int perCell, ulong seed,
             List<int>[,] grid)
         {
-            using (var saver = new FileSaver(@"cs_cal_scalars.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_scalars.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -546,7 +500,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            using (var saver = new FileSaver(@"cs_cal_grid.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_grid.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -631,7 +585,7 @@ namespace pwiz.Osprey
                 return;
             var rows = new List<string>(s_calWindowRows);
             rows.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            using (var saver = new FileSaver(@"cs_cal_windows.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_windows.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -669,7 +623,7 @@ namespace pwiz.Osprey
 
             int nMatched = 0, nUnmatched = 0;
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -764,7 +718,7 @@ namespace pwiz.Osprey
             var inv = CultureInfo.InvariantCulture;
             int nRows = 0;
             int nMatches = 0;
-            using (var saver = new FileSaver(@"cs_ms2_cal_errors.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_ms2_cal_errors.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -803,7 +757,7 @@ namespace pwiz.Osprey
         {
             var sortedByEntry = matchArray.OrderBy(m => m.EntryId).ToArray();
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_lda_scores.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_lda_scores.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -846,7 +800,7 @@ namespace pwiz.Osprey
                 return a.Value.CompareTo(b.Value);
             });
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_loess_input.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_loess_input.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -885,7 +839,7 @@ namespace pwiz.Osprey
             MzCalibrationResult ms2Cal)
         {
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_cal_summary.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_cal_summary.txt"))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {
@@ -952,11 +906,11 @@ namespace pwiz.Osprey
             string diagXicPath = @"cs_xic_entry_" + entry.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
             // Two file-threads can both match ShouldDumpCalXicFor for the same entry before
-            // either reaches Environment.Exit below; the lock keeps their FileSaver commits
+            // either reaches Environment.Exit below; the lock keeps their SimpleFileSaver commits
             // from racing (see WriteSearchXicDump for the same reasoning at higher volume).
             lock (DiagnosticFileLock.For(diagXicPath))
             {
-            using (var saver = new FileSaver(diagXicPath))
+            using (var saver = new SimpleFileSaver(diagXicPath))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
                 {
@@ -1080,12 +1034,12 @@ namespace pwiz.Osprey
             string dumpPath = @"cs_search_xic_entry_" + candidate.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
             // Shares DiagnosticFileLock.For(dumpPath) with PeakDataExtractor's own append to
-            // this SAME path later in one candidate's scoring - two independent FileSaver
+            // this SAME path later in one candidate's scoring - two independent SimpleFileSaver
             // commits to one file, uncoordinated, would otherwise let whichever Commit lands
             // last silently win (or interleave foreign content on a read-existing rewrite).
             lock (DiagnosticFileLock.For(dumpPath))
             {
-            using (var saver = new FileSaver(dumpPath))
+            using (var saver = new SimpleFileSaver(dumpPath))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
                 {
@@ -1192,7 +1146,7 @@ namespace pwiz.Osprey
             IReadOnlyList<KeyValuePair<int, double[]>> peakXics)
         {
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(@"cs_mp_diag.txt"))
+            using (var saver = new SimpleFileSaver(@"cs_mp_diag.txt"))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
                 {
@@ -1249,7 +1203,7 @@ namespace pwiz.Osprey
         // writer open across calls amortizes the OS-level append cost
         // over millions of rows (peak_xics fires once per scoring call,
         // each row is small -- per-call open/close would dominate).
-        // Written directly at its final path, not through FileSaver: this
+        // Written directly at its final path, not through SimpleFileSaver: this
         // is a log, and seeing however far the rescore loop got before a
         // throw is more useful than an all-or-nothing file.
         private StreamWriter _mpInputsWriter;
@@ -1336,7 +1290,7 @@ namespace pwiz.Osprey
         // workflow handles the duplicates the predict-call site can
         // produce (same entry_id scored across multiple windows) with
         // post-hoc `sort -u`.
-        // Written directly at its final path, not through FileSaver: this is a
+        // Written directly at its final path, not through SimpleFileSaver: this is a
         // log, and seeing however far the rescore loop got before a throw is
         // more useful than an all-or-nothing file.
         private StreamWriter _predictRtWriter;
@@ -1420,7 +1374,7 @@ namespace pwiz.Osprey
         // Lazy-opened on first WriteCwtPathRow call. Threaded scoring
         // serializes only on the file write itself; the row-build
         // happens lock-free.
-        // Written directly at its final path, not through FileSaver: this is a
+        // Written directly at its final path, not through SimpleFileSaver: this is a
         // log, and seeing however far scoring got before a throw is more
         // useful than an all-or-nothing file.
         private StreamWriter _cwtPathWriter;
@@ -1594,140 +1548,6 @@ namespace pwiz.Osprey
             return set.Count > 0 ? set : null;
         }
 
-        /// <summary>
-        /// Dump per-precursor Stage 5 (first-pass Percolator FDR) state to
-        /// cs_stage5_percolator.tsv, mirroring Rust's rust_stage5_percolator.tsv.
-        /// All four q-values plus score and pep are populated on every FdrEntry
-        /// at this point (before compaction or first-pass protein FDR), so the
-        /// cross-impl diff sees both targets and decoys.
-        ///
-        /// Columns: file_name, entry_id, charge, modified_sequence, is_decoy,
-        /// score, pep, run_precursor_q, run_peptide_q, experiment_precursor_q,
-        /// experiment_peptide_q. Rows sorted by (file_name, entry_id) for
-        /// stable human inspection; Compare-Percolator.ps1 hash-joins on the
-        /// composite key and is sort-order-agnostic. Floats use G17 (17-digit
-        /// roundtrippable) to avoid .NET Framework's historical "R"-format
-        /// roundtrip bugs.
-        /// </summary>
-        public void WriteStage5PercolatorDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
-        {
-            const string path = @"cs_stage5_percolator.tsv";
-            var inv = CultureInfo.InvariantCulture;
-
-            var rows = new List<KeyValuePair<string, FdrEntry>>();
-            foreach (var kvp in perFileEntries)
-            {
-                string fileName = kvp.Key;
-                foreach (var e in kvp.Value)
-                    rows.Add(new KeyValuePair<string, FdrEntry>(fileName, e));
-            }
-            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            {
-                int cmp = string.CompareOrdinal(a.Key, b.Key);
-                if (cmp != 0) return cmp;
-                return a.Value.EntryId.CompareTo(b.Value.EntryId);
-            });
-
-            using (var saver = new FileSaver(path))
-            {
-                using (var sw = new StreamWriter(saver.SafeName))
-                {
-                    sw.NewLine = TextUtil.LF;
-                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"charge", @"modified_sequence", @"is_decoy", @"score", @"pep", @"run_precursor_q", @"run_peptide_q", @"experiment_protein_q", @"experiment_precursor_q", @"experiment_peptide_q" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var row in rows)
-                    {
-                        var e = row.Value;
-                        sw.Write(row.Key);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.EntryId.ToString(inv));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.Charge.ToString(inv));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.ModifiedSequence ?? string.Empty);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.IsDecoy.ToLowerText());
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
-                    }
-                }
-                saver.Commit();
-            }
-            Log.LogInfo(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
-        }
-
-        /// <summary>
-        /// Dump per-precursor state AFTER the Stage 6 per-file rescore
-        /// loop completes (consensus + reconciliation overlay applied,
-        /// gap-fill stubs appended once Phase 2 lands). Same columns as
-        /// <see cref="WriteStage5PercolatorDump"/> + same sort + same
-        /// G17 / FormatF64Roundtrip formatting so Compare-Percolator.ps1
-        /// can be reused for the diff. Output: cs_stage6_rescored.tsv,
-        /// matching Rust's rust_stage6_rescored.tsv from
-        /// dump_stage6_rescored.
-        ///
-        /// This is the high-level Phase 1 byte-parity gate: if it
-        /// passes, the boundary-overrides rescore + (eventual) gap-fill
-        /// outputs match Rust's. If it fails, drill into the
-        /// fine-grained OSPREY_DUMP_MP_INPUTS / OSPREY_DUMP_PREDICT_RT
-        /// ladder to localize the divergence (those mirrors are tracked
-        /// for the pre-PR cleanup).
-        /// </summary>
-        public void WriteStage6RescoredDump(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
-        {
-            const string path = @"cs_stage6_rescored.tsv";
-            var inv = CultureInfo.InvariantCulture;
-
-            var rows = new List<KeyValuePair<string, FdrEntry>>();
-            foreach (var kvp in perFileEntries)
-            {
-                string fileName = kvp.Key;
-                foreach (var e in kvp.Value)
-                    rows.Add(new KeyValuePair<string, FdrEntry>(fileName, e));
-            }
-            // OrderBy/ThenBy is STABLE — preserves insertion order for ties.
-            // Required because gap-fill (Phase 2) appends new stubs with
-            // no ParquetIndex alongside an existing
-            // post-compaction stub for the same (file_name, EntryId)
-            // (e.g., decoy paired with a target that already passed
-            // first-pass FDR). Stable sort keeps the hydrated stub first
-            // and the gap-fill stub second, matching Rust's
-            // Vec::sort_by behavior. List<T>.Sort is UNSTABLE and would
-            // shuffle the dup pair non-deterministically across runs.
-            rows = rows
-                .OrderBy(r => r.Key, StringComparer.Ordinal)
-                .ThenBy(r => r.Value.EntryId)
-                .ToList();
-
-            using (var saver = new FileSaver(path))
-            {
-                using (var sw = new StreamWriter(saver.SafeName))
-                {
-                    sw.NewLine = TextUtil.LF;
-                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"charge", @"modified_sequence", @"is_decoy", @"score", @"pep", @"run_precursor_q", @"run_peptide_q", @"experiment_protein_q", @"experiment_precursor_q", @"experiment_peptide_q" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var row in rows)
-                    {
-                        var e = row.Value;
-                        sw.Write(row.Key);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.EntryId.ToString(inv));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.Charge.ToString(inv));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.ModifiedSequence ?? string.Empty);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.IsDecoy.ToLowerText());
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Score));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.Pep));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPrecursorQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.RunPeptideQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentProteinQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(e.ExperimentPrecursorQvalue));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(e.ExperimentPeptideQvalue));
-                    }
-                }
-                saver.Commit();
-            }
-            Log.LogInfo(string.Format(@"Wrote Stage 6 rescored dump: {0} ({1} rows)", path, rows.Count));
-        }
-
         // ---- Stage 6 planning dumps ----
 
         /// <summary>
@@ -1744,7 +1564,7 @@ namespace pwiz.Osprey
         {
             const string path = @"cs_stage6_consensus.tsv";
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1769,67 +1589,6 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// Dump the per-file multi-charge consensus rescore targets to
-        /// cs_stage6_multicharge.tsv. Mirrors Rust dump_stage6_multicharge.
-        /// Columns: file_name, entry_id, consensus_apex, consensus_start,
-        /// consensus_end. Rows sorted by (file_name, entry_id) for stable
-        /// diff. The dump uses the stable library entry id (FdrEntry.EntryId)
-        /// instead of the per-file Vec position, so cross-impl comparison is
-        /// invariant to whether the implementation has compacted the
-        /// per-file FdrEntry list before computing multi-charge consensus.
-        /// </summary>
-        public void WriteStage6MultichargeDump(
-            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> perFileTargets)
-        {
-            const string path = @"cs_stage6_multicharge.tsv";
-
-            // Resolve Index -> EntryId via the matching per-file entries list.
-            var entriesByFile = new Dictionary<string, IReadOnlyList<FdrEntry>>(StringComparer.Ordinal);
-            foreach (var kvp in perFileEntries)
-                entriesByFile[kvp.Key] = kvp.Value;
-
-            var rows = new List<(string FileName, uint EntryId, double Apex, double Start, double End)>();
-            foreach (var kvp in perFileTargets)
-            {
-                IReadOnlyList<FdrEntry> entries;
-                if (!entriesByFile.TryGetValue(kvp.Key, out entries))
-                    continue;
-                foreach (var t in kvp.Value)
-                {
-                    if (t.Index < 0 || t.Index >= entries.Count)
-                        continue;
-                    rows.Add((kvp.Key, entries[t.Index].EntryId, t.Apex, t.Start, t.End));
-                }
-            }
-            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            {
-                int cmp = string.CompareOrdinal(a.FileName, b.FileName);
-                if (cmp != 0) return cmp;
-                return a.EntryId.CompareTo(b.EntryId);
-            });
-
-            using (var saver = new FileSaver(path))
-            {
-                using (var sw = new StreamWriter(saver.SafeName))
-                {
-                    sw.NewLine = TextUtil.LF;
-                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"consensus_apex", @"consensus_start", @"consensus_end" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var r in rows)
-                    {
-                        sw.Write(r.FileName);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(r.EntryId.ToString(CultureInfo.InvariantCulture));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.Apex));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(r.Start));
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(r.End));
-                    }
-                }
-                saver.Commit();
-            }
-            Log.LogInfo(string.Format(@"Wrote Stage 6 multi-charge dump: {0} ({1} rows)", path, rows.Count));
-        }
-
-        /// <summary>
         /// Dump per-file refined-calibration statistics to
         /// cs_stage6_refit.tsv. Mirrors Rust dump_stage6_refit. Columns:
         /// file_name, n_points, r_squared, residual_sd, mad. Files where the
@@ -1844,7 +1603,7 @@ namespace pwiz.Osprey
             var fileNames = new List<string>(refinedCalibrations.Keys);
             fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -1865,98 +1624,6 @@ namespace pwiz.Osprey
             Log.LogInfo(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
         }
 
-        /// <summary>
-        /// Dump the per-(file, entry) <see cref="ReconcileAction"/> map
-        /// produced by <c>ReconciliationPlanner.Plan</c> to
-        /// <c>cs_stage6_reconciliation.tsv</c>. Used for cross-impl parity
-        /// of the planner output -- pairs with the Rust
-        /// <c>dump_stage6_reconciliation</c> helper. Columns:
-        /// <c>file_name, entry_id, action, apex_or_expected_rt, start_rt,
-        /// end_rt, half_width, candidate_index</c>. Cells that don't
-        /// apply to a given action stay empty. Rows are sorted by
-        /// <c>(file_name, entry_id)</c> for stable diffing.
-        /// </summary>
-        public void WriteStage6ReconciliationDump(
-            IReadOnlyDictionary<(string File, int Index), ReconcileAction> actions,
-            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries)
-        {
-            const string path = @"cs_stage6_reconciliation.tsv";
-
-            // Build (file, entryId, action) rows. The planner's key is
-            // (file, list-index); we resolve back to the entry_id via
-            // perFileEntries so the dump is sortable by entry_id and
-            // joinable with other dumps that key off entry_id.
-            var perFileEntriesMap = new Dictionary<string, IReadOnlyList<FdrEntry>>(
-                perFileEntries.Count);
-            foreach (var kvp in perFileEntries)
-                perFileEntriesMap[kvp.Key] = kvp.Value;
-
-            var rows = new List<(string FileName, uint EntryId, ReconcileAction Action)>(
-                actions.Count);
-            foreach (var kvp in actions)
-            {
-                IReadOnlyList<FdrEntry> entries;
-                if (!perFileEntriesMap.TryGetValue(kvp.Key.File, out entries))
-                    continue;
-                if (kvp.Key.Index < 0 || kvp.Key.Index >= entries.Count)
-                    continue;
-                rows.Add((kvp.Key.File, entries[kvp.Key.Index].EntryId, kvp.Value));
-            }
-            rows.Sort((a, b) => // Array.Sort OK: diagnostic dump only, not parity-sensitive
-            {
-                int cmp = string.CompareOrdinal(a.FileName, b.FileName);
-                if (cmp != 0) return cmp;
-                return a.EntryId.CompareTo(b.EntryId);
-            });
-
-            using (var saver = new FileSaver(path))
-            {
-                using (var sw = new StreamWriter(saver.SafeName))
-                {
-                    sw.NewLine = TextUtil.LF;
-                    sw.WriteLine(new[] { @"file_name", @"entry_id", @"action", @"apex_or_expected_rt", @"start_rt", @"end_rt", @"half_width", @"candidate_index" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var row in rows)
-                    {
-                        sw.Write(row.FileName);
-                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(row.EntryId.ToString(CultureInfo.InvariantCulture));
-                        sw.Write(TextUtil.SEPARATOR_TSV);
-                        var useCwt = row.Action as ReconcileAction.UseCwtPeak;
-                        var forced = row.Action as ReconcileAction.ForcedIntegration;
-                        if (useCwt != null)
-                        {
-                            sw.Write(@"use_cwt_peak");
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.ApexRt));
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.StartRt));
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(useCwt.EndRt));
-                            sw.Write(TextUtil.SEPARATOR_TSV); // half_width empty
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(useCwt.CandidateIndex.ToString(CultureInfo.InvariantCulture));
-                        }
-                        else if (forced != null)
-                        {
-                            sw.Write(@"forced_integration");
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(forced.ExpectedRt));
-                            sw.Write(TextUtil.SEPARATOR_TSV); // start_rt empty
-                            sw.Write(TextUtil.SEPARATOR_TSV); // end_rt empty
-                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(forced.HalfWidth));
-                            sw.WriteLine(TextUtil.SEPARATOR_TSV); // candidate_index empty
-                        }
-                        else
-                        {
-                            // Defensive: planner shouldn't return Keep, but emit
-                            // a row anyway so a future regression is visible.
-                            sw.WriteLine(new[]
-                            {
-                                @"keep", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty
-                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                        }
-                    }
-                }
-                saver.Commit();
-            }
-            Log.LogInfo(string.Format(@"Wrote Stage 6 reconciliation dump: {0} ({1} rows)",
-                path, rows.Count));
-        }
-
         // ----- Stage 6 calibration arrays (cross-impl bisection) -----
 
         // Held open across calls, like _mpInputsWriter/_cwtPathWriter above: one call per
@@ -1965,7 +1632,7 @@ namespace pwiz.Osprey
         // production scale this task type runs at, not bounded to a small bisection run.
         // Flushed in CloseStage6CalibrationDump, which CloseAll (below) calls, so a
         // normal Environment.Exit still flushes its buffered tail. Written directly
-        // at its final path, not through FileSaver: this is a log, and seeing however
+        // at its final path, not through SimpleFileSaver: this is a log, and seeing however
         // far the rescore loop got before a throw is more useful than an
         // all-or-nothing file.
         private StreamWriter _stage6CalibrationWriter;
@@ -2078,7 +1745,7 @@ namespace pwiz.Osprey
                 return a.LibraryRt.CompareTo(b.LibraryRt);
             });
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -2137,7 +1804,7 @@ namespace pwiz.Osprey
                 return string.CompareOrdinal(a.Key, b.Key);
             });
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -2238,7 +1905,7 @@ namespace pwiz.Osprey
                 return string.CompareOrdinal(a.Accessions, b.Accessions);
             });
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -2289,7 +1956,7 @@ namespace pwiz.Osprey
             fileNames.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
 
             int totalRows = 0;
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -2333,7 +2000,7 @@ namespace pwiz.Osprey
             sorted.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only, not parity-sensitive
             // Force LF (not File.WriteAllLines' OS newline) so this cross-impl
             // bisection artifact stays byte-stable across platforms.
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var w = new StreamWriter(saver.SafeName))
                 {

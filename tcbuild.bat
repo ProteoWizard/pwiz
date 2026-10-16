@@ -58,12 +58,13 @@ REM #     PowerShell module (Repair-WinGetPackageManager), then install Inno
 REM #     Setup via winget.
 REM # If any step fails, the script exits non-zero. We log a TC warning and
 REM # continue — build.bat handles the missing-ISCC case by skipping the
-REM # installer build, and Installer.Tests then skips Inconclusive. So the
-REM # worst case is "no installer coverage on this build," not "build fails."
+REM # installer build, which a no-vendor build never does anyway, and the
+REM # installer check after build.bat fails a vendor build that ends up with
+REM # no installers.
 echo ##teamcity[progressMessage 'Ensure-InnoSetup.ps1 ^(idempotent; bootstraps winget if missing^)']
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\installer\Ensure-InnoSetup.ps1"
 if ERRORLEVEL 1 (
-    echo ##teamcity[message text='Ensure-InnoSetup.ps1 failed; installer build and Installer.Tests will be skipped' status='WARNING']
+    echo ##teamcity[message text='Ensure-InnoSetup.ps1 failed; a vendor build will fail its installer check' status='WARNING']
 )
 
 REM # Clean before build: the agent checkout is persistent (TC cleans only
@@ -111,6 +112,19 @@ echo ##teamcity[progressMessage 'build.bat %* --with-vendor-sdks']
 call "%SCRIPT_DIR%\build.bat" %* --with-vendor-sdks
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
+
+REM # Every installer, on every branch. build.bat only warns when Inno Setup is missing,
+REM # so a developer without it can still build, but a vendor build here is the one
+REM # whose installers get published - Core Windows x86_64 uploads them to the download
+REM # page and the container installs one - and a partial set would replace a working
+REM # download list. The names carry the version build.ps1 wrote, so leftovers from an
+REM # earlier build cannot pass (clean.bat removes them above anyway).
+set IAGREE=0
+for %%A in (%*) do if /i "%%~A"=="--i-agree-to-the-vendor-licenses" set IAGREE=1
+if %IAGREE%==1 (
+    call :check_installers
+    if !EXIT! NEQ 0 goto error
+)
 
 REM # ------------------------------------------------------------------------
 REM # MsData.NativeAot end-to-end (Native AOT publish + C++ CTest).
@@ -241,6 +255,22 @@ if not "%DIRTY_SIZE%"=="0" (
 popd
 popd
 exit /b 0
+
+:check_installers
+set "PKG_DIR=%SCRIPT_DIR%\scripts\installer\build"
+if not exist "%PKG_DIR%\installer-version.txt" (
+    set EXIT=1
+    set "ERROR_TEXT=No installers were built: scripts\installer\build\installer-version.txt is missing"
+    goto :eof
+)
+set /p PKG_VERSION=<"%PKG_DIR%\installer-version.txt"
+for %%N in (ProteoWizard-Setup ProteoWizard-NoNetRuntime-Setup ProteoWizard-WithVendorSdks-Setup) do (
+    if not exist "%PKG_DIR%\%%N-%PKG_VERSION%.exe" (
+        set EXIT=1
+        set "ERROR_TEXT=Installer %%N-%PKG_VERSION%.exe was not built"
+    )
+)
+goto :eof
 
 :error
 echo ##teamcity[message text='%ERROR_TEXT%' status='ERROR']

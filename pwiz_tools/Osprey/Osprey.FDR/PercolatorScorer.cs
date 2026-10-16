@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -42,7 +43,7 @@ namespace pwiz.Osprey.FDR
     /// than private.
     ///
     /// These entry points still compute q-values as well as scores, as their names
-    /// say (<see cref="ScorePopulationAndComputeFdr"/>). That conflation is
+    /// say (<see cref="ScoreProjectionAndComputeFdrInPlace"/>). That conflation is
     /// pre-existing; separating it is what the FDR extraction that follows does.
     /// </summary>
     public static class PercolatorScorer
@@ -71,217 +72,16 @@ namespace pwiz.Osprey.FDR
         private const int PASS2_ORDER_BUCKETS = 2;
 
         /// <summary>
-        /// Streaming-path continuation: given the <paramref name="trainResults"/>
-        /// returned by <see cref="PercolatorTrainer.RunPercolator"/> with <c>TrainOnly = true</c>
-        /// on a pre-dedup + subsampled training set, apply the averaged fold
-        /// model + standardizer to score ALL entries in the population, fit
-        /// PEP on the global target-decoy competition winners, and compute
-        /// per-run / experiment precursor + peptide q-values on that flat
-        /// score array. Mirrors phases 4-5 of Rust's streaming
-        /// <c>run_percolator_fdr</c> (pipeline.rs:4460-4800).
-        ///
-        /// The returned <see cref="PercolatorResults"/> has one
-        /// <see cref="PercolatorResult"/> per input entry (sorted in the
-        /// same order) plus the training model carried through from
-        /// <paramref name="trainResults"/>.
-        /// </summary>
-        public static PercolatorResults ScorePopulationAndComputeFdr(
-            IList<PercolatorEntry> entries,
-            PercolatorResults trainResults,
-            PercolatorConfig config,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
-            bool applyExperimentAgg = true)
-        {
-            int n = entries.Count;
-            if (n == 0)
-            {
-                return new PercolatorResults
-                {
-                    Entries = new List<PercolatorResult>(),
-                    FoldWeights = trainResults.FoldWeights,
-                    FoldBiases = trainResults.FoldBiases,
-                    FoldGbtModels = trainResults.FoldGbtModels,
-                    Standardizer = trainResults.Standardizer,
-                    IterationsPerFold = trainResults.IterationsPerFold
-                };
-            }
-
-            // Trees or linear weights -- whichever this run trained. Null gbtModels
-            // selects the linear path below, exactly as on the projection score pass.
-            var gbtModels = ResolveGbtModels(trainResults);
-            int nModels = gbtModels != null ? gbtModels.Count : trainResults.FoldWeights.Count;
-            if (nModels == 0)
-                throw new InvalidOperationException(
-                    @"ScorePopulationAndComputeFdr: trainResults contains no fold models");
-            // Feature width comes from the trained model, not from entries[0]:
-            // on the streaming path (issue #4355 Phase 4) the stubs carry no
-            // resident Features vector to measure. A tree ensemble exposes no weight
-            // vector to measure either, so read the width off the standardizer that
-            // was fit on the same training matrix.
-            int nFeatures = gbtModels != null
-                ? trainResults.Standardizer.NumFeatures
-                : trainResults.FoldWeights[0].Length;
-
-            // Average fold weights + biases. Matches Rust streaming:
-            //   avg_weights[j] = mean_f(fold_weights[f][j])
-            //   avg_bias       = mean_f(fold_biases[f])
-            // Trees are averaged per-score at scoring time instead (see AverageGbtScore).
-            double[] avgWeights = null;
-            double avgBias = 0.0;
-            if (gbtModels == null)
-            {
-                avgWeights = new double[nFeatures];
-                for (int f = 0; f < nModels; f++)
-                {
-                    double[] foldW = trainResults.FoldWeights[f];
-                    for (int j = 0; j < nFeatures; j++)
-                        avgWeights[j] += foldW[j];
-                    avgBias += trainResults.FoldBiases[f];
-                }
-                double nModelsD = nModels;
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] /= nModelsD;
-                avgBias /= nModelsD;
-            }
-
-            // Apply standardizer + averaged SVM model to every entry.
-            // Serial (not parallel) so float accumulation order stays
-            // deterministic for byte-for-byte cross-impl parity.
-            var standardizer = trainResults.Standardizer;
-            var finalScores = new double[n];
-            var labels = new bool[n];
-            var entryIds = new uint[n];
-            var peptides = new string[n];
-            var fileNames = new string[n];
-            var featureBuf = new double[nFeatures];
-            // Accumulate per-feature target/decoy sums over the full standardized
-            // population for the feature-contribution report below. Reporting only;
-            // serial in row/index order (no PLINQ) so the printed numbers are stable
-            // and this never perturbs finalScores.
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
-            // The row is standardized either way here, so a tree model's report costs only the
-            // binning - still taken only when the report asked for it, as on the other paths.
-            bool accumulate = gbtModels == null || AccumulatesTreeFeatures(gbtModels, config);
-            if (loadFileFeatures == null)
-            {
-                // Resident-feature path: each stub already carries its vector
-                // (the 2nd-pass reload, or any caller that pre-populates
-                // Features). Read it in place. Unchanged from the original loop.
-                for (int i = 0; i < n; i++)
-                {
-                    var entry = entries[i];
-                    labels[i] = entry.IsDecoy;
-                    entryIds[i] = entry.EntryId;
-                    peptides[i] = entry.Peptide;
-                    fileNames[i] = entry.FileName;
-
-                    Array.Copy(entry.Features, 0, featureBuf, 0, nFeatures);
-                    standardizer.TransformSlice(featureBuf);
-                    finalScores[i] = ScoreStandardizedRow(gbtModels, avgWeights, avgBias, featureBuf);
-
-                    if (accumulate)
-                        contribAcc.Add(featureBuf, entry.IsDecoy);
-                }
-            }
-            else
-            {
-                // Streaming score pass (issue #4355 Phase 4): the stubs carry no
-                // feature vector. Fill the scalar arrays first, then reload
-                // features one file at a time -- never holding more than a single
-                // file's rows resident. The per-entry math (bias first, then the
-                // averaged-weight dot product in feature order) is identical to
-                // the resident path above; only the feature SOURCE moves off the
-                // O(N) buffer, so finalScores are byte-for-byte the same.
-                for (int i = 0; i < n; i++)
-                {
-                    var entry = entries[i];
-                    labels[i] = entry.IsDecoy;
-                    entryIds[i] = entry.EntryId;
-                    peptides[i] = entry.Peptide;
-                    fileNames[i] = entry.FileName;
-                }
-                var indicesByFile = GroupIndicesByFileName(entries);
-                foreach (var kvp in indicesByFile)
-                {
-                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                    foreach (int i in kvp.Value)
-                    {
-                        var entry = entries[i];
-                        double[] featRow = ResolveFeatureRow(
-                            rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures);
-                        Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
-                        standardizer.TransformSlice(featureBuf);
-                        finalScores[i] = ScoreStandardizedRow(gbtModels, avgWeights, avgBias, featureBuf);
-
-                        if (accumulate)
-                            contribAcc.Add(featureBuf, entry.IsDecoy);
-                    }
-                }
-            }
-
-            var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config);
-
-            // Competition + PEP + per-run / experiment q-values over the flat score
-            // arrays. Extracted verbatim into StreamingFdr.ComputeStreamingCompetitionQvalues
-            // (issue #4355 step (b) increment iii) so the projection-native score
-            // pass (ScoreProjectionAndComputeFdrInPlace) drives the byte-identical
-            // math from a single source of truth instead of a divergent copy -- the
-            // parity-locked ordering (base_id-sorted PEP, per-file q-value grouping)
-            // therefore cannot drift between the two buffer shapes.
-            double[] peps, runPrecursorQvalues, runPeptideQvalues,
-                     expPrecursorQvalues, expPeptideQvalues;
-            StreamingFdr.ComputeStreamingCompetitionQvalues(
-                finalScores, labels, entryIds, peptides, fileNames,
-                out peps, out runPrecursorQvalues, out runPeptideQvalues,
-                out expPrecursorQvalues, out expPeptideQvalues, applyExperimentAgg);
-
-            // The score the experiment competitions above ranked each entry on (sidecar v4,
-            // issue #4522), from the same effScores selection they used.
-            var expAggByEntryId = PercolatorQValues.ComputeExperimentAggregateScoreMap(
-                finalScores, labels, entryIds, applyExperimentAgg);
-
-            var results = new List<PercolatorResult>(n);
-            for (int i = 0; i < n; i++)
-            {
-                results.Add(new PercolatorResult
-                {
-                    Score = finalScores[i],
-                    RunPrecursorQvalue = runPrecursorQvalues[i],
-                    RunPeptideQvalue = runPeptideQvalues[i],
-                    ExperimentPrecursorQvalue = expPrecursorQvalues[i],
-                    ExperimentPeptideQvalue = expPeptideQvalues[i],
-                    Pep = peps[i],
-                    ExperimentAggregateScore = expAggByEntryId.TryGetValue(entryIds[i], out double eav)
-                        ? eav : finalScores[i]
-                });
-            }
-
-            return new PercolatorResults
-            {
-                Entries = results,
-                FoldWeights = trainResults.FoldWeights,
-                FoldBiases = trainResults.FoldBiases,
-                FoldGbtModels = trainResults.FoldGbtModels,
-                Standardizer = standardizer,
-                IterationsPerFold = trainResults.IterationsPerFold,
-                FeatureContributions = contributions
-            };
-        }
-
-        /// <summary>
-        /// Projection-native counterpart of <see cref="ScorePopulationAndComputeFdr"/>
-        /// (issue #4355 step (b) increment iii): apply the trained averaged model to
-        /// every projection row by streaming its file's parquet features, then run the
-        /// competition + q-value math and write the Score + five q-values STRAIGHT
-        /// BACK onto the <see cref="FdrProjection"/> rows -- collapsing the transient
-        /// SVM stack that <see cref="ScorePopulationAndComputeFdr"/> holds resident
-        /// (the full-population <see cref="PercolatorEntry"/> list AND the
-        /// <see cref="PercolatorResult"/> list) into the flat working arrays the
-        /// parity-locked math already needs. Only WHERE THE DATA LIVES changes: the
-        /// per-entry scoring loop (bias first, then the averaged-weight dot product in
-        /// feature order) and the q-value math
-        /// (<see cref="StreamingFdr.ComputeStreamingCompetitionQvalues"/>) are byte-for-byte those
-        /// of the <see cref="PercolatorEntry"/> path.
+        /// Projection-native population scoring (issue #4355 step (b) increment iii): apply
+        /// the trained averaged model to every projection row by streaming its file's parquet
+        /// features, then run the competition + q-value math and write the Score + five
+        /// q-values STRAIGHT BACK onto the <see cref="FdrProjection"/> rows, in the flat
+        /// working arrays the parity-locked math already needs rather than a full-population
+        /// <see cref="PercolatorEntry"/> list and <see cref="PercolatorResult"/> list. The
+        /// per-entry scoring loop (bias first, then the averaged-weight dot product in feature
+        /// order) and the q-value math
+        /// (<see cref="StreamingFdr.ComputeStreamingCompetitionQvalues"/>) are the ones the
+        /// removed <see cref="PercolatorEntry"/>-list scorer used.
         ///
         /// The caller passes the flat <paramref name="labels"/> / <paramref name="entryIds"/>
         /// / <paramref name="peptides"/> arrays it already built (in nested file/row order)
@@ -328,7 +128,7 @@ namespace pwiz.Osprey.FDR
                 ? trainResults.Standardizer.NumFeatures
                 : trainResults.FoldWeights[0].Length;
 
-            // Average fold weights + biases (identical to ScorePopulationAndComputeFdr);
+            // Average fold weights + biases;
             // the tree path averages per-score at scoring time instead.
             double[] avgWeights = null;
             double avgBias = 0.0;
@@ -1151,7 +951,7 @@ namespace pwiz.Osprey.FDR
             // above, reading as a second Percolator pass. The score heading below marks the step.
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
-            // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
+            // Progress is log-only (CommandOutput.Out), so the FDR output stays byte-identical.
             using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n))
             {
                 // On a lane: everything about one file that no other file can see.
@@ -1829,8 +1629,7 @@ namespace pwiz.Osprey.FDR
         /// Resolve one entry's 21-feature vector from a file's freshly loaded
         /// parquet rows by <see cref="PercolatorEntry.ParquetIndex"/>. Falls back
         /// to the basic feature vector (built from the resident coelution_sum) when
-        /// the index is out of range -- the same fallback the pre-streaming
-        /// <c>PercolatorEntryBuilder</c> applied to entries without a loadable row
+        /// the index is out of range - the fallback for entries without a loadable row
         /// (e.g. a stub/parquet mismatch, or a <c>uint.MaxValue</c> appended
         /// entry). The returned array is the live parquet row (not a copy); callers
         /// that retain it beyond the current file's scope must clone.
@@ -1842,7 +1641,66 @@ namespace pwiz.Osprey.FDR
             int idx = (int)parquetIndex;
             if (rows != null && idx >= 0 && idx < rows.Count)
                 return rows[idx];
-            return PercolatorEntryBuilder.BuildBasicFeatures(coelutionSum, numFeatures);
+            return BuildBasicFeatures(coelutionSum, numFeatures);
+        }
+
+        /// <summary>
+        /// Build a minimal PIN feature vector from an entry's coelution_sum.
+        /// Used as a fallback ONLY when the full 21-feature vector is unavailable
+        /// (e.g. stubs loaded from a Parquet cache without features, or a streaming
+        /// entry whose parquet row cannot be resolved). In normal operation the
+        /// 21-feature vector is computed during coelution scoring in
+        /// <c>CoelutionScorer</c> and stored on the entry; its only caller is
+        /// <see cref="ResolveFeatureRow"/>.
+        /// </summary>
+        private static double[] BuildBasicFeatures(double coelutionSum, int numFeatures)
+        {
+            double[] features = new double[numFeatures];
+
+            // 0: coelution_sum
+            features[0] = coelutionSum;
+            // 1: coelution_max (approximate as coelution_sum for basic version)
+            features[1] = coelutionSum * 0.5;
+            // 2: n_coeluting_fragments
+            features[2] = 3.0;
+            // 3: peak_apex
+            features[3] = 0.0;
+            // 4: peak_area
+            features[4] = 0.0;
+            // 5: peak_sharpness
+            features[5] = 0.0;
+            // 6: xcorr
+            features[6] = 0.0;
+            // 7: consecutive_ions
+            features[7] = 0.0;
+            // 8: explained_intensity
+            features[8] = 0.0;
+            // 9: mass_accuracy_mean
+            features[9] = 0.0;
+            // 10: abs_mass_accuracy_mean
+            features[10] = 0.0;
+            // 11: rt_deviation
+            features[11] = 0.0;
+            // 12: abs_rt_deviation
+            features[12] = 0.0;
+            // 13: ms1_precursor_coelution
+            features[13] = 0.0;
+            // 14: ms1_isotope_cosine
+            features[14] = 0.0;
+            // 15: median_polish_cosine
+            features[15] = 0.0;
+            // 16: median_polish_residual_ratio
+            features[16] = 0.0;
+            // 17: sg_weighted_xcorr
+            features[17] = 0.0;
+            // 18: sg_weighted_cosine
+            features[18] = 0.0;
+            // 19: median_polish_min_fragment_r2
+            features[19] = 0.0;
+            // 20: median_polish_residual_correlation
+            features[20] = 0.0;
+
+            return features;
         }
 
         /// <summary>
@@ -1872,10 +1730,9 @@ namespace pwiz.Osprey.FDR
         /// The single place a standardized feature row becomes a score on the
         /// full-population passes, for both classifiers: the averaged tree margin when
         /// <paramref name="gbtModels"/> is non-null, otherwise the averaged-weights dot
-        /// product. Keeping both here is what lets the resident
-        /// (<see cref="ScorePopulationAndComputeFdr"/>) and projection
-        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) score passes stay a
-        /// single shared implementation across the two methods. Internal rather than
+        /// product. Keeping both here is what lets the projection
+        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) and streamed first-pass score
+        /// passes stay a single shared implementation. Internal rather than
         /// private so <see cref="FrozenModelScorer"/> -- the 2nd-pass transfer paths'
         /// view of a trained model -- applies it identically.
         /// </summary>

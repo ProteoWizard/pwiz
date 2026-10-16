@@ -151,16 +151,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to record that task {0} completed {1}: {2}. A resume will redo this step..
-        /// </summary>
-        public static string AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_ {
-            get {
-                return ResourceManager.GetString("AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1___" +
-                        "_2___A_resume_will_redo_this_step_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Applies To.
         /// </summary>
         public static string OspreyArgUsageProvider_AppliesToHeader_Applies_To {
@@ -551,6 +541,16 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to OTHER FORMS ACCEPTED: a value may also be joined to its option ({0}), and a file that exists may be given without {1}..
+        /// </summary>
+        public static string OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_to_its_option___0___and_a_file_that_exists_may_be_given_without__1__ {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_t" +
+                        "o_its_option___0___and_a_file_that_exists_may_be_given_without__1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Osprey - Peptide-centric DIA analysis.
         /// </summary>
         public static string OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_ {
@@ -668,6 +668,15 @@ namespace pwiz.Osprey {
         public static string Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__ {
             get {
                 return ResourceManager.GetString("Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input file not found, and its demultiplexed spectra cache cannot stand in for it: {0} ({1}). It can be rebuilt only from the source file; restore it..
+        /// </summary>
+        public static string Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_", resourceCulture);
             }
         }
         
@@ -961,21 +970,21 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}: this analysis was written by Osprey {1} and this build is {2}, so building the missing part of the report would re-run the analysis. Set {3}={1} to build it from the analysis as written..
+        /// </summary>
+        public static string Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_this_build_is__2___so_building_the_missing_ {
+            get {
+                return ResourceManager.GetString("Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_" +
+                        "this_build_is__2___so_building_the_missing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}, {1} and {2} apply only with {3}..
         /// </summary>
         public static string Program_TrainingExportError__0____1__and__2__apply_only_with__3__ {
             get {
                 return ResourceManager.GetString("Program_TrainingExportError__0____1__and__2__apply_only_with__3__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} cannot run with {1}: that mode computes the run q-values in {2}, after the per-run export is written. Leave out {0}, or run without {1}..
-        /// </summary>
-        public static string Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_ {
-            get {
-                return ResourceManager.GetString("Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q" +
-                        "_values_in__2__after_the_per_run_export_", resourceCulture);
             }
         }
         

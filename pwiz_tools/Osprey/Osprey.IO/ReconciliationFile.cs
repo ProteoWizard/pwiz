@@ -25,7 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using pwiz.Osprey.Core;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.IO
 {
@@ -80,6 +81,14 @@ namespace pwiz.Osprey.IO
         private const string KEY_FILE_STEMS = @"file_stems";
         private const string KEY_FORMAT_VERSION = @"format_version";
 
+        /// <summary>
+        /// The writing task's <see cref="ArtifactStamp"/>, serialized FIRST so a resume check
+        /// reads it without parsing the rest of a multi-megabyte document
+        /// (<see cref="ArtifactStamp.TryReadJsonHead"/>). Set by <see cref="Save"/>.
+        /// </summary>
+        [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+        public string OspreyValidity { get; set; }
+
         [JsonProperty(KEY_FILE_STEMS, Order = 0)]
         public List<string> FileStems { get; set; }
 
@@ -132,7 +141,7 @@ namespace pwiz.Osprey.IO
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
                     path, parsed.FormatVersion, CurrentFormatVersion, KEY_FORMAT_VERSION,
-                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             // v2 envelopes must carry the planner's full join file_stems set;
             // a deserialized v2 file with file_stems missing or empty would
@@ -147,7 +156,7 @@ namespace pwiz.Osprey.IO
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_,
                     path, CurrentFormatVersion, KEY_FORMAT_VERSION, KEY_FILE_STEMS,
-                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             // v3 required: the join-wide first-pass base_id set. A per-file HPC
             // worker MUST have this to compact to the same set as the in-memory
@@ -158,7 +167,7 @@ namespace pwiz.Osprey.IO
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_,
                     path, CurrentFormatVersion, KEY_FORMAT_VERSION,
-                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
+                    FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             return parsed;
         }
@@ -174,12 +183,13 @@ namespace pwiz.Osprey.IO
         /// the <c>.tmp</c> next to the missing destination, recoverable
         /// by hand or by re-running.
         /// </summary>
-        public static void Save(string path, ReconciliationFile file)
+        public static void Save(string path, ReconciliationFile file, ArtifactStamp stamp)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (file == null)
                 throw new ArgumentNullException(nameof(file));
+            file.OspreyValidity = stamp?.ToString() ?? throw new ArgumentNullException(nameof(stamp));
 
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
@@ -188,12 +198,12 @@ namespace pwiz.Osprey.IO
             // LF line endings and a trailing newline, for byte parity with the Rust side.
             string json = RoundtripDoubleConverter.SerializeIndented(file);
 
-            // Atomic write via FileSaver: a sibling temp file is
+            // Atomic write via SimpleFileSaver: a sibling temp file is
             // promoted to the destination on Commit; on exception, the
-            // using-block disposes FileSaver which deletes the temp
+            // using-block disposes SimpleFileSaver which deletes the temp
             // without touching the destination. See
-            // Osprey.Core.FileSaver for details.
-            using (var saver = new FileSaver(path))
+            // pwiz.Common.SystemUtil.SimpleFileSaver for details.
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();

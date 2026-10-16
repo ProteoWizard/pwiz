@@ -45,6 +45,8 @@ namespace pwiz.Common.CommandLine
         string ValueOutOfRangeDoubleMessage(string argText, double value, double minVal, double maxVal);
         string ValueInvalidDateMessage(string argText, string value);
         string ValueInvalidPathMessage(string argText, string value);
+        /// <summary>The error for a token spelled like an option that names no argument, as typed.</summary>
+        string UnknownArgumentMessage(string argText);
     }
 
     /// <summary>
@@ -61,6 +63,14 @@ namespace pwiz.Common.CommandLine
         // Usage rendering format identifiers (also surfaced to users via Skyline's --help values).
         public const string FORMAT_ASCII = "ascii";
         public const string FORMAT_NO_BORDERS = "no-borders";
+
+        /// <summary>
+        /// The grammar <see cref="CommandLineParser{TContext}"/> parses with and
+        /// <see cref="ArgumentBase.ArgumentText"/> spells arguments with. Defaults to
+        /// <see cref="CommandLineGrammar.STRICT"/>, Skyline's; Osprey and CarafeSharp install
+        /// theirs in the static constructor that declares their arguments.
+        /// </summary>
+        public static CommandLineGrammar Grammar { get; set; } = CommandLineGrammar.STRICT;
 
         /// <summary>
         /// Separator between an argument and its value, both in the usage help
@@ -132,6 +142,7 @@ namespace pwiz.Common.CommandLine
             public string ValueOutOfRangeDoubleMessage(string argText, double value, double minVal, double maxVal) { throw NotInstalled(); }
             public string ValueInvalidDateMessage(string argText, string value) { throw NotInstalled(); }
             public string ValueInvalidPathMessage(string argText, string value) { throw NotInstalled(); }
+            public string UnknownArgumentMessage(string argText) { throw NotInstalled(); }
         }
     }
 }

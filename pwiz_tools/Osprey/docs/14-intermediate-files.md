@@ -7,7 +7,7 @@ tool, and — where cross-impl byte parity matters (spectra cache, scores parque
 sidecars, reconciliation JSON) — it writes them byte-for-byte identically so a cache produced
 by one implementation is consumable by the other. This document describes each artifact as the
 C# code actually writes and reads it, the SHA-256 hashing that gates cache reuse, and the two
-resume mechanisms the port adds (a per-task `.osprey.task` validity sidecar and the
+resume mechanisms the port adds (a validity stamp embedded in every artifact, and the
 `.scores-reconciled.parquet` split output) that have no exact Rust doc counterpart.
 
 > **Scope, ownership, and who may read what** live in
@@ -26,20 +26,20 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
+| `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v7**, 32-byte header + 36-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it |
-| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v7**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
-| `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary v1 | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
+| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v8**, 32-byte header + 36-byte records + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8) |
+| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v8**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary **v2** (v2 adds the validity stamp trailer) | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
-| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
-| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v1**, 32-byte header + 4-byte records | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
+| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v3**, 32-byte header + 44-byte records + validity stamp trailer | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v2**, 32-byte header + 4-byte records + validity stamp trailer | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x3: one of them the streamed Stage 7 join, one the training export's library load on its export-only arm, which retains fragments for these ids alone and loads everything without the file) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
 | `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (normalization plus weights and biases, a few hundred KB, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`, about 3.4 MB). Serialized once and written identically beside every run whenever FirstPassFDR trains a model; not rewritten when it adopts the one on disk. The protein-compact stratum is NOT in it - see the next row |
 | `<stem>.1st-pass.stratum.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides. Absent under every mode but protein-compact. A SECOND file rather than a member of the model sidecar because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadFromAny` merges the two on read, and still falls back to a pre-split model sidecar's embedded copy |
-| `<output>.<TaskName>.osprey.task` | its artifact's | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
-| `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
-| `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `Osprey.IO/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
+| `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/OspreyBlibWriter.cs` over `Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
+| `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v2 | `CarafeSharp.Contracts/TrainingExportParquet.cs` | `--training-export` only: `PerFileRescoring`'s per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 9) |
 
 All artifact paths resolve their directory through `ArtifactPaths`
 (`Osprey.IO/ArtifactPaths.cs`), so `--output-dir` / `--cache-dir` / `--work-dir`
@@ -51,9 +51,9 @@ redirection applies uniformly to every artifact.
 
 **Moved.** Where artifacts are written (`--work-dir` / `--output-dir` / `--cache-dir` and the
 `ArtifactPaths` resolution behind them) and why every writer commits atomically through
-`FileSaver` are architecture, not format, and are now stated once in
+`SimpleFileSaver` are architecture, not format, and are now stated once in
 [00-pipeline-architecture.md](00-pipeline-architecture.md) - see "Directory resolution" and
-principle P8. The one-line summary: a `FileSaver` stages into a sibling temp file in the same
+principle P8. The one-line summary: a `SimpleFileSaver` stages into a sibling temp file in the same
 directory and promotes it with an in-volume rename, so a crash leaves either the previous
 content or no file, and **presence proves completeness** for every artifact in this document.
 
@@ -61,7 +61,7 @@ The C# realization is Rust's "safe NAS file writes / `copy_and_verify`" pattern.
 temp is a sibling, the promote is an in-volume rename rather than a local-temp -> NAS
 cross-volume copy, which sidesteps the truncation risk `copy_and_verify` guards against.
 
-### `FileSaver` call sites
+### `SimpleFileSaver` call sites
 
 P8 is only as good as this list being complete, so it lives here, with the formats. Every
 durable artifact writer in the tree, as of this document's last verification:
@@ -69,7 +69,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | Writer | Artifact |
 |---|---|
 | `CalibrationIO` | `<stem>.calibration.json` |
-| `SpectraCache` | `<stem>.spectra.bin` |
+| `SpectraCache` | `<stem>.spectra.bin`, `<stem>.demux.spectra.bin` |
 | `LibraryCache` | `<library-leaf>.libcache` |
 | `ParquetScoreCache` (2 sites) | `<stem>.scores.parquet`, `<stem>.scores-reconciled.parquet` |
 | `FdrScoresSidecar` | `<stem>.{1st,2nd}-pass.fdr_scores.bin` |
@@ -78,13 +78,16 @@ durable artifact writer in the tree, as of this document's last verification:
 | `Pass2CompetitionDecoys` | `<stem>.2nd-pass.fdr_decoys.bin` |
 | `ReconciliationFile` | `<stem>.reconciliation.json` |
 | `FirstPassModelIO` (2 sites) | `<stem>.1st-pass.model.json`, `<stem>.1st-pass.stratum.json` |
-| `TaskValiditySidecar` | `<output>.<TaskName>.osprey.task` |
 | `BlibOutputWriter` | `<output>.blib` |
-| `TrainingExportParquet` | `<stem>.training.parquet` |
+| `TrainingExportWriter` | `<stem>.training.parquet` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
 | `PerFileScoringTask.WriteFeatureDump` | `--write-pin`'s `<stem>.cs_features.tsv` |
+
+There is no separate validity-record writer. Each pipeline product in this table embeds its
+validity stamp (section 8) in the same commit as its content, so the stamp is exactly as
+atomic as the file.
 
 Most `-d` diagnostic dumps commit the same way as a durable artifact, though nothing in
 the pipeline reads any of them back - see P8 in
@@ -94,24 +97,24 @@ path instead:
 
 | Writer | Artifact(s) |
 |---|---|
-| `OspreyFileDiagnostics` (24 one-shot methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage5_percolator.tsv`, `cs_stage6_rescored.tsv`, `cs_stage6_consensus.tsv`, `cs_stage6_multicharge.tsv`, `cs_stage6_refit.tsv`, `cs_stage6_reconciliation.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage6_loess_fit.tsv`, `cs_stage7_detected_peptides.txt`, and the held-open streams below |
-| `OspreyFileDiagnostics` held-open streams (4, **log-shaped**: written directly at their final path, no `FileSaver`; `CloseXDump` flushes the writer's buffered tail, not a commit; `CloseAll` runs every one of them on process exit for the same reason) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv` (unreachable today, no live caller), `cs_stage6_cwt_path.tsv`, `cs_stage6_calibration.tsv` |
-| `FdrDiagnostics.CoAssignRowDump` (rows: **log-shaped**, written directly via `FileMode.CreateNew`, no `FileSaver`; cutoffs: ordinary artifact) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
+| `OspreyFileDiagnostics` (18 one-shot methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage6_consensus.tsv`, `cs_stage6_refit.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage6_loess_fit.tsv`, `cs_stage7_detected_peptides.txt`, and the held-open streams below |
+| `OspreyFileDiagnostics` held-open streams (4, **log-shaped**: written directly at their final path, no `SimpleFileSaver`; `CloseXDump` flushes the writer's buffered tail, not a commit; `CloseAll` runs every one of them on process exit for the same reason) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv` (unreachable today, no live caller), `cs_stage6_cwt_path.tsv`, `cs_stage6_calibration.tsv` |
+| `FdrDiagnostics.CoAssignRowDump` (rows: **log-shaped**, written directly via `FileMode.CreateNew`, no `SimpleFileSaver`; cutoffs: ordinary artifact) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
 | `FdrDiagnostics` (2 more) | `cs_stage7_winners.tsv`, `cs_best_peptide_scores.tsv` |
 | `PercolatorDiagnosticsDump` (4 sites) | `cs_stage5_standardizer.tsv`, `cs_stage5_perc_input.tsv`, `cs_stage5_subsample.tsv`, `cs_stage5_svm_weights.tsv` |
 | `PickCandidateDump.Flush` | `OSPREY_PICK_DUMP_CANDIDATES`'s caller-named path |
-| `PeakDataExtractor` (search-XIC append, read-existing + rewrite through a fresh `FileSaver` per call - a concurrent-writer hazard, not a partial-progress one, so this one stays an artifact; see P8) | `cs_search_xic_entry_<id>.txt` |
+| `PeakDataExtractor` (search-XIC append, read-existing + rewrite through a fresh `SimpleFileSaver` per call - a concurrent-writer hazard, not a partial-progress one, so this one stays an artifact; see P8) | `cs_search_xic_entry_<id>.txt` |
 
 `cs_search_xic_entry_<id>.txt` and `cs_xic_entry_<id>.txt` have two independent writers each
 (`OspreyFileDiagnostics.WriteSearchXicDump`/`WriteCalXicEntryDumpAndExit` write the file once;
 `PeakDataExtractor`'s search-XIC dump appends to the first one later in the same candidate's
 scoring), and under `--parallel-files` the same library entry can be scored on more than one
 file-thread. `DiagnosticFileLock.For(path)` (`Osprey.Core`) is the shared, per-path lock every
-writer of these two files takes, so independent `FileSaver` commits to one path never race -
+writer of these two files takes, so independent `SimpleFileSaver` commits to one path never race -
 process-local only; it does not protect a real multi-node HPC fan-out sharing one output
 directory, which is not a concern for dumps that are opt-in for a single interactive session.
 
-**A new durable artifact that does not commit through `FileSaver` is a defect**, because
+**A new durable artifact that does not commit through `SimpleFileSaver` is a defect**, because
 every reader - a pipeline task or a developer doing bisection - treats presence as proof
 of completeness. **Exempt**: the streaming CLI log (`--log-file`, written for the life of
 the run so it can be tailed while still running - see P8), the five log-shaped dumps
@@ -119,10 +122,10 @@ marked above (`CoAssignRowDump`'s rows and the four `OspreyFileDiagnostics` held
 streams - a partial file is the useful outcome for these, not a hazard to guard against),
 and test fixtures. Forensic inspection of an abandoned ARTIFACT-shaped write (any writer
 above not marked log-shaped, on an exception) is `OspreyEnvironment.KeepFailedWrites`
-(`OSPREY_KEEP_FAILED_WRITES`), not a bypass of `FileSaver` - it leaves the temp in place
+(`OSPREY_KEEP_FAILED_WRITES`), not a bypass of `SimpleFileSaver` - it leaves the temp in place
 instead of deleting it, under its own name, so presence at the real path still proves
 completeness for every ordinary reader. It has no effect on the log-shaped dumps, which
-never wrap the write in `FileSaver` to begin with.
+never wrap the write in `SimpleFileSaver` to begin with.
 
 ---
 
@@ -156,12 +159,13 @@ filter, `PerFileScoringTask.cs:1758`).
   `OspreyEnvironment.LoadCalibrationPath`), an explicit cross-impl bisection hook that loads a
   named JSON instead of computing. When it is unset and RT calibration is enabled, calibration
   is always recomputed and re-saved.
-- Reuse-across-runs is instead handled one level up, at the *task* level, by the
-  `.osprey.task` validity sidecar (Section 8) whose key already folds the search + library
-  hashes: if that key matches, the whole `PerFileScoringTask` is skipped and no calibration
-  runs at all; if it does not, the task re-runs and rewrites the calibration JSON. Net effect
-  matches Rust (stale parameters ⇒ recalibrate) but the trigger is the task sidecar, not a
-  `search_hash` embedded in the calibration file.
+- Reuse-across-runs is instead decided by the validity stamp the file carries as its FIRST
+  property, `osprey_validity` (Section 8), whose key already folds the search + library
+  hashes. `PerFileScoring` treats a run as done only when this file AND its
+  `.scores.parquet` both carry a current stamp (`PerFileScoringTask.IsFileCurrent`); then no
+  calibration runs at all. Otherwise the run is recomputed and the calibration JSON
+  rewritten. Net effect matches Rust (stale parameters => recalibrate) but the trigger is the
+  embedded validity stamp, not a `search_hash` embedded in the calibration file.
 
 ---
 
@@ -227,6 +231,51 @@ nothing to re-parse, and the fingerprint check that would have caught a mismatch
 skipped precisely because there is nothing left to compare against. So validate the caches
 against their sources — magic, version, fingerprint, and that the index offset agrees with
 `n_ms2` — **before** deleting either, and treat the caches as data from then on.
+
+### Demultiplexed spectra cache (`<stem>.demux.spectra.bin`)
+
+**C# source**: `Osprey.IO/SpectraCache.cs` (format), `Osprey.Tasks/DemuxCache.cs` (descriptor,
+open, start-up check). Path: `SpectraCache.GetDemuxCachePath` = `<stem>.demux.spectra.bin` in
+`ArtifactPaths.ResolveCacheDir(inputFile)`, beside the `.spectra.bin`. Written only with
+`--demux auto`, and only for a run ProteoWizard detects as multiplexed. Osprey-only; Rust has no
+counterpart. How it is built and searched is in [23-demultiplexing.md](23-demultiplexing.md);
+this section is its bytes.
+
+`SaveSpectraCache` writes it with the same VERSION 4 layout, given a non-null descriptor:
+
+```
+[magic:             8 bytes  "OSPRDMX\0"]
+[version:           uint32   = 4]
+[source_size:       uint64   as above]
+[source_mtime:      int64    as above]
+[n_ms2:             uint32   demultiplexed MS2 records]
+[n_ms1:             uint32]
+[descriptor_length: uint32   bytes; above 64 KiB is refused as a truncated header]
+[descriptor:        UTF-8, no terminator, e.g. "pwiz-demux/1;massError=10Ppm;interpolateRT=True;..."]
+[MS2 records, grouped by window]
+[MS1 records, acquisition order]
+[index: n_ms2 x 40 bytes, acquisition order: record_offset:i64, iso_center:f64,
+        iso_lower_offset:f64, iso_upper_offset:f64, retention_time:f64]
+[footer: ms1_section_offset:i64, index_offset:i64]
+```
+
+Everything after the header is addressed by the absolute offsets in the index and footer, so
+`LoadSpectraCache` and `SpectraWindowIndex` decode it unchanged. Each MS2 record is one demux
+window of one acquired spectrum: it keeps its parent's scan number and retention time, and its
+isolation window is the demux window. `TryReadHeader` refuses it with `DemuxSettingsChanged`
+when it is read where a plain cache is expected, when a plain cache is read where a
+demultiplexed one is expected, or when its descriptor differs (ordinal comparison) from
+`DemuxCache.Descriptor` of the current settings. It records the **source** file's fingerprint,
+so a missing source is handled as above.
+
+**Rebuildable only from the source.** Unlike the `.spectra.bin`, a stale demultiplexed cache
+cannot be rebuilt once the source is gone: the start-up check (`DemuxCache.Check`, header only)
+reports it as an error before any task runs.
+
+`SpectraWindowIndex.IsolationWindows` lists every distinct window of either kind of cache, each
+as its first record's window, sorted by center. It used to stop at the first repeated key (the
+first cycle), which drops the top bin of a demultiplexed run, because that bin first appears
+after the cycle repeats.
 
 ---
 
@@ -301,6 +350,7 @@ Every scores parquet carries footer key-value metadata. For a Stage 4 write
 | `osprey.search_hash` | SHA-256 hex | `SearchIdentity.SearchParameterHash()` |
 | `osprey.library_hash` | SHA-256 hex | `SearchIdentity.LibraryIdentityHash()` |
 | `osprey.reconciled` | `"false"` | literal |
+| `osprey.validity` | the artifact's validity stamp (C# only; Section 8) | `ArtifactStamp` |
 
 The Stage 6 reconciled rewrite (`ReconciledParquetWriter.BuildReconciliationMetadata`,
 `ReconciledParquetWriter.cs:192`) sets `osprey.reconciled = "true"` and adds
@@ -343,10 +393,10 @@ re-scores. The C# port has no such enum (the only reference is a stray comment a
 - The HPC `--task` entry points call `ValidateScoresParquetGroup`, which **hard-fails with an
   error** on any hash/version mismatch rather than silently deleting and re-scoring — a cache
   whose compatibility cannot be verified is refused, not quietly discarded.
-- The in-process straight-through pipeline decides skip-vs-recompute per task via the
-  `.osprey.task` validity sidecar (Section 8), whose key folds the same search + library hashes.
-  A key mismatch re-runs the task and overwrites the parquet (net behavior matches Rust's
-  "stale ⇒ re-score", via a different mechanism).
+- The in-process straight-through pipeline decides skip-vs-recompute via the
+  `osprey.validity` footer stamp (Section 8), whose key folds the same search + library hashes.
+  A stale stamp re-runs the work and overwrites the parquet (net behavior matches Rust's
+  "stale => re-score", via a different mechanism).
 
 ### Reconciled output is a separate file, not an in-place overwrite
 
@@ -380,11 +430,12 @@ second-pass FDR. Carries the SVM discriminant plus every q-value needed for down
 and protein-FDR-aware compaction.
 
 > **STALE - do not implement a reader from the layout below.** It documents v4: a 68-byte
-> record carrying the experiment-scope columns. The current format is **v7 with 36-byte
+> record carrying the experiment-scope columns. The current format is **v8 with 36-byte
 > records** (`FdrScoresSidecar.FormatVersion`, `RecordLength`), holding entry_id, SVM
 > score, run precursor q, run peptide q and the detection apex RT - the experiment columns moved to
 > `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` at v5 (issue #4486). The header is still
-> 32 bytes. Re-verifying and rewriting this subsection against `WriteRecord` is tracked as
+> 32 bytes; since v8 its bytes [24..28] hold the length of the validity stamp that follows
+> the records (Section 8). Re-verifying and rewriting this subsection against `WriteRecord` is tracked as
 > follow-up work; it was not rewritten in the PR that added this warning because that PR
 > changed no code and could not test a reader.
 
@@ -501,6 +552,11 @@ Rust's canonical fixed-point f64 formatter — sidestepping the Newtonsoft-`R`/G
 Rust-`ryu` disagreement on small values. `Save` normalizes CRLF→LF and appends a trailing
 newline (`ReconciliationFile.cs:194`) so the bytes match serde_json's LF output.
 
+One C#-only exception: the envelope's FIRST property is `osprey_validity`, the validity stamp
+(Section 8), which Rust does not write and which sits outside the alphabetical order so a
+resume can read it from the head of a ~25 MB file. A cross-impl byte comparison must drop
+that property first.
+
 ### Schema and version (v3, larger than the Rust doc's v1)
 
 The C# `CurrentFormatVersion = 3` (`ReconciliationFile.cs:75`) and the envelope carries two
@@ -536,8 +592,9 @@ For the full HPC orchestration story see 15-hpc-scoring-split.md.
 
 ## 6. BiblioSpec output (`<output>.blib`)
 
-Final SQLite output; see 13-blib-output-schema.md. The C# port reuses ProteoWizard BiblioSpec
-infrastructure where possible (`Osprey.IO/BlibWriter.cs`).
+Final SQLite output; see 13-blib-output-schema.md. Written through the one .blib writer every
+tool of ours shares (`Shared/BiblioSpec/BiblioSpec.IO/BlibWriter.cs`), with Osprey's tables and
+column values added by `Osprey.IO/OspreyBlibWriter.cs`.
 
 ---
 
@@ -555,41 +612,90 @@ folds library identity into the parquet metadata check.)
 
 ---
 
-## 8. Task validity sidecar (`<output>.<TaskName>.osprey.task`) — C# addition
+## 8. Embedded validity stamp - C# addition
 
-**C# source**: `Osprey.Tasks/TaskValiditySidecar.cs`. This artifact has **no Rust doc
-counterpart**; it is the resume-on-restart mechanism the C# port adds.
+**C# source**: `Shared/CommonUtil/Pipeline/ArtifactStamp.cs` (the stamp), `Osprey.Core/BinarySidecarStamp.cs`
+(its place in the binary sidecars), `Osprey.IO/ArtifactValidity.cs` (`ReadStamp(path)`, the
+one reader, which dispatches on the file-name ending). This has **no Rust doc counterpart**;
+it is the resume-on-restart mechanism the C# port adds.
 
-For each produced output, a small hand-rolled JSON file is written next to it at
-`<output>.<TaskName>.osprey.task` (`TaskValiditySidecar.PathFor`, `TaskValiditySidecar.cs:80`).
-It records the producing task, the Osprey version, a `validity_key`, and the input paths
-(`TaskValiditySidecar.cs:98`). Example:
+Every durable pipeline artifact carries its own validity stamp, written in the **same
+`SimpleFileSaver` commit** as its content. The stamp is three fields - the producing task, the
+Osprey version (`OspreyVersion.Current`) and the validity key - serialized as one line:
 
-```json
-{
-  "task": "PerFileScoring",
-  "version": "26.6.0",
-  "validity_key": "search=abc...;library=def...",
-  "inputs": ["/path/to/file.mzML", "/path/to/library.tsv"]
-}
+```
+osprey-validity/1;task=PerFileScoring;version=26.1.1.280;key=search=abc...;library=def...
 ```
 
-The base `validity_key` is
-`search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm
-(`OspreyTask.ValidityKey`); tasks with extra state append to it - `FirstPassFdrTask` adds six
-further components; the full composition, with the defect each entry prevents, is under
-"What a validity key is made of" below. 00 owns the *rule* those entries serve (P15: an
-under-inclusive key is the dangerous direction); this document owns what they are.
+The key comes last because it contains `;` and `=` itself. Where the line lives depends on the
+artifact's format:
 
-Mechanics: `IsValid` (`TaskValiditySidecar.cs`) compares the recorded `validity_key` against
-the current one and returns `false` for a missing, malformed, or mismatched sidecar ("can't
-tell => re-run", the conservative answer). Note it compares the key **only** - the `version`
-field is provenance, and build-compatibility is enforced separately by the parquet footer
-check in section 3. The task-name in the filename disambiguates per-task records for tasks
-that once shared an output path. `Delete` clears a sidecar before its output is recomputed - at Run start for the two joins, per run for the two fan-out tasks - so a crash
-mid-write cannot leave a stale "valid" marker. Callers reach these through
-`PerFileResumeDriver` (`IsCurrent` / `ClearStale` / `Stamp`), which additionally requires the
-output file itself to exist - a sidecar can outlive its output.
+| Family | Artifacts | Where the stamp is |
+|---|---|---|
+| Parquet | `.scores.parquet`, `.scores-reconciled.parquet`, `.training.parquet` | footer key/value `osprey.validity`, read from the footer alone |
+| OSPRY binary sidecars | `.{1st,2nd}-pass.fdr_scores.bin` (v8), `.2nd-pass.fdr_decoys.bin` (v2), `.fdr_experiment.bin` (v3), `.1st-pass.retained_base_ids.bin` (v2) | UTF-8 trailer after the records; header bytes [24..28] hold its byte length (u32). Records keep their fixed offsets, and the exact-length check becomes `32 + count * recordLength + stampLength` |
+| JSON | `.calibration.json`, `.reconciliation.json`, `.1st-pass.model.json`, `.1st-pass.stratum.json`, the model-diagnostics data JSONs | FIRST property, `osprey_validity`; `ArtifactStamp.TryReadJsonHead` reads only the first 64 KB, because `reconciliation.json` is ~25 MB per run |
+| HTML | `<output>.model-diagnostics.html` | an opening `<!--osprey-validity/1;...-->` comment before the DOCTYPE |
+| blib | `<output>.blib` | `OspreyMetadata` row with Key `osprey.validity` (`BlibWriter.AddStamp` / `ReadStamp`) |
+
+`.spectra.bin` and the library cache were already self-validating from their headers
+(sections 2 and 7) and carry no stamp.
+
+The HTML report carries the stamp of the newest product it renders: the pass-1 product's
+stamp when `FirstPassFDR` renders it, the pass-2 product's when `SecondPassFDR` does, and under
+`--task ModelDiagnostics` a copy of the stamp of the product it re-rendered from.
+
+The base validity key is
+`search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm
+(`OspreyTask.ValidityKey`); tasks with extra state append to it; the full composition, with
+the defect each entry prevents, is under "What a validity key is made of" below. 00 owns the
+*rule* those entries serve (P15: an under-inclusive key is the dangerous direction); this
+document owns what they are.
+
+Mechanics: `ArtifactStamp.IsCurrent(task, key)` requires the task to be equal, the version to
+equal `OspreyVersion.Current`, and the key to be equal. A missing file, a file with no stamp,
+or an unreadable one is not current ("can't tell => re-run", the conservative answer).
+**A version change always invalidates**: an artifact written by another build is never
+current, and `OSPREY_VERSION_OVERRIDE` is the deliberate developer escape hatch for reusing
+artifacts across builds. Callers reach this through `PerFileResumeDriver.IsCurrent(path, task,
+key)` and `PipelineContext.CanRehydrate`. Nothing is cleared before a recompute and nothing is
+stamped after one: a stale artifact is simply overwritten, its new stamp with it, and the
+driver writes nothing, so it cannot certify a stale file as current.
+
+The per-file tasks ask ONE question per input file over all of that file's outputs:
+`PerFileScoring` requires `.calibration.json` and `.scores.parquet` both current
+(`PerFileScoringTask.IsFileCurrent`); `PerFileRescoring` is done for a run when its reconciled
+parquet is current and its `.2nd-pass.fdr_scores.bin` - with `.2nd-pass.fdr_decoys.bin` under
+protein-compact - carries the same `PerFileRescoring` stamp (`IsFileRescored`), for every run
+whether or not Stage 6 had work for it (#4665). A kill between
+two writes leaves one output stale or missing, so the file recomputes. `FirstPassFDR` keeps
+progressive per-file completion: each per-file product carries its stamp from the moment it
+lands, so a stopped run resumes in proportion to the files it finished. `FirstPassFDR` also
+declares `<blib-stem>.1st-pass.retained_base_ids.bin` as an output; it was once deliberately
+left undeclared, because declaring it would have invalidated every finished directory, which
+version invalidation makes moot.
+
+Cross-task "is this run answered" reads the same stamp. `Pass2FdrSidecar.HasWorkerStamp` is true
+when a run's 2nd-pass binaries carry the stamp of the reconciled parquet beside them, naming
+`PerFileRescoring` and this build's version; `SecondPassFDR` refuses a run for which it is not.
+It deliberately does not compare against a key recomputed in the reading process, because `PerFileRescoring`'s key carries a leg-dependent
+`LibraryFragmentRelease` suffix in A/B configurations (see 00, "Rows that are not what they
+look like").
+
+**A stamp is provenance, not content.** Comparators that judge whether two runs produced the
+same answer ignore it: the blib comparisons (`BlibComparer` in Osprey.Test and
+`Regression/BlibGolden.ps1`) exclude the `osprey.validity` metadata row, and the training-export
+reproducibility tests hash the file with the stamp bytes blanked - the export's per-run key
+names its inputs' file identities (name + size + mtime), which differ between two directories
+that wrote identical inputs at different times.
+
+**History.** The stamp used to be a separate `<output>.<TaskName>.osprey.task` JSON file beside
+each artifact (`TaskValiditySidecar`, now deleted). It could outlive its output, so every check
+had to test existence and the key separately; the driver re-stamped every declared output that
+merely existed after a task returned, so each task had to clear stale records before
+recomputing; it recorded `version` but never compared it; and it carried an `inputs` list that
+nothing read. Old directories holding only those files read as stale and recompute - they were
+written by another build anyway.
 
 
 ### What a validity key is made of
@@ -651,9 +757,11 @@ The version stamped into each artifact follows the Skyline scheme
 `YEAR.ORDINAL.BRANCH.DOY`, with the full informational form carrying the git short hash
 (`26.1.1.182-b2373f9f9c`, plus `-dirty` for a modified tree) so a binary is always
 traceable to its source commit. Reuse requires an exact match on all four numeric
-components; a difference in release line or daily build aborts reuse with a hard error
-rather than a warning, because a cache from a different build may carry different scoring
-and a logged warning is easily missed while the run still completes and looks valid.
+components, because a cache from a different build may carry different scoring. In an
+artifact's validity stamp (section 8) a mismatch makes the artifact stale, so it is
+recomputed; where a scores parquet's footer is checked directly (section 3) a difference in
+release line or daily build is a hard error rather than a warning, because a logged warning
+is easily missed while the run still completes and looks valid.
 
 
 The rule these serve - why an under-inclusive key is the dangerous
@@ -669,15 +777,17 @@ HPC relay lists - see 00.
 
 ## 9. Training export parquet (`<stem>.training.parquet`)
 
-**C# source**: `Osprey.IO/TrainingExportParquet.cs`; written by `PerFileRescoreTask` through
-`TrainingExportWriter`. Path: `TrainingExportParquet.PathFor` = `<stem>.training.parquet` in
-`ArtifactPaths.ResolveOutputDir(inputFile)`. Written only under `--training-export`, and never
+**C# source**: `pwiz_tools/CarafeSharp/CarafeSharp.Contracts/TrainingExportParquet.cs`, the
+assembly Osprey and CarafeSharp share (the record `TrainingRecord`, the footer keys
+`TrainingExportKeys`, one writer and one reader); written by `PerFileRescoreTask` through
+`Osprey.Tasks/TrainingExportWriter`. Path: `TrainingExportWriter.PathFor` = `<stem>.training.parquet`
+in `ArtifactPaths.ResolveOutputDir(inputFile)`. Written only under `--training-export`, and never
 by a diagnostics-only render.
 
 ZSTD parquet, row groups of 20,000 rows, per-ion arrays as little-endian typed `byte[]` blobs
 with no length prefix and a NULL cell for an empty array - the same convention as the scores
-parquet's blobs, and the same encoders (`ParquetBlobCodec`, moved out of `ParquetScoreCache`
-unchanged). A run with nothing to export gets a zero-row file with its footer. The schema, the
+parquet's blobs, and the same encoders (`ParquetBlobCodec`, in the same shared assembly, which
+`ParquetScoreCache` also uses). A run with nothing to export gets a zero-row file with its footer. The schema, the
 slot order and every footer key are [22-training-export](22-training-export.md), which is the
 contract; `TrainingExportParquetTest` fails when the writer emits a column that document does not
 name (it checks names only - not types, and not a documented column the writer lacks). Footer
@@ -694,13 +804,14 @@ run:
   whose sources were deleted after staging (the supported way to halve a large cohort's disk),
   this file is not an intermediate at all — it is the data, and deleting it loses the run.
   Prune caches only where the source is still on disk.
+- `<stem>.demux.spectra.bin` — the same rule: recreated by reading the source with
+  `--demux auto`, and only then. It is never derived from the `.spectra.bin`.
 - `<stem>.scores.parquet` / `<stem>.scores-reconciled.parquet` — recreated by re-scoring.
 - `<stem>.{1st,2nd}-pass.fdr_scores.bin` — first-pass required by the Stage 6 worker; deleting
   forces a Stage 5 re-join.
 - `<stem>.reconciliation.json` — deleting forces a Stage 5 re-join.
 - `<stem>.calibration.json` — small; worth keeping across runs with the same LC-MS setup, but in
-  C# recalibration is triggered by the task sidecar, not by this file's presence.
-- `<output>.<TaskName>.osprey.task` — deleting forces the task to re-run.
+  C# recalibration is triggered by the validity stamp inside it, not by its presence alone.
 - `<stem>.training.parquet` - recreated by `--training-export` (or `--task TrainingExport`)
   alone: on a finished analysis `PerFileRescoring` writes the missing exports and re-scores
   nothing.
@@ -731,17 +842,18 @@ written or reused. Defaults from `Osprey/OspreyCommandArgs.cs` + `Osprey.Core/Os
 | `OSPREY_EXIT_AFTER_CALIBRATION` (env) | unset | Exits after Stage 3, having written `.calibration.json` |
 | `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` (env) | unset | Test hook for FDR sidecar byte-parity harness |
 
-The `.osprey.task` validity sidecar is written unconditionally (not behind a flag); it is the
-default resume mechanism.
+The embedded validity stamp is written unconditionally (not behind a flag); it is the
+default resume mechanism. `OSPREY_VERSION_OVERRIDE` pins the version it records, the one
+deliberate way to reuse artifacts across builds.
 
 ---
 
 ## Divergences from the Rust documentation
 
-- **[INTENTIONAL-CSHARP-DESIGN] Safe writes use `FileSaver` sibling-temp rename, not
+- **[INTENTIONAL-CSHARP-DESIGN] Safe writes use `SimpleFileSaver` sibling-temp rename, not
   `copy_and_verify`** - Rust doc says all cache writers write to a local temp then
   `copy_and_verify` to the final (NAS) destination; C# stages through a *same-directory* sibling
-  temp and `File.Move`s it into place. Evidence: `Osprey.Core/FileSaver.cs:68,92`; callers e.g.
+  temp and `File.Move`s it into place. Evidence: `Shared/CommonUtil/SystemUtil/SimpleFileSaver.cs`; callers e.g.
   `ParquetScoreCache.cs:265`, `SpectraCache.cs:85`. Same crash-safety guarantee; in-volume
   rename rather than cross-volume copy. Severity: info.
 
@@ -750,14 +862,17 @@ default resume mechanism.
   Stale }` and, on `Stale`, deletes the cache and re-scores from scratch. C# has no such enum;
   `ValidateScoresParquetGroup` returns a descriptive error and aborts the `--task` run on any
   version/hash mismatch, while the in-process pipeline decides skip-vs-recompute via the
-  `.osprey.task` sidecar. Evidence: `ParquetScoreCache.cs:1190,1256`;
+  embedded validity stamp. Evidence: `ParquetScoreCache.cs:1190,1256`;
   `ReconciledParquetWriter.cs:180` (comment only). Severity: minor.
 
-- **[INTENTIONAL-CSHARP-DESIGN] `.osprey.task` validity sidecar (resume mechanism) has no Rust
-  doc counterpart** - The C# port adds a per-(output, task) JSON sidecar keyed on the search +
-  library (+ reconciliation) hashes to drive resume-on-restart; Rust infers reuse from parquet
-  footer hashes. Evidence: `Osprey.Tasks/TaskValiditySidecar.cs`; `Osprey.Tasks/OspreyTask.cs:173`.
-  Severity: info.
+- **[INTENTIONAL-CSHARP-DESIGN] Embedded validity stamp (resume mechanism) has no Rust doc
+  counterpart** - The C# port embeds a (task, version, key) stamp in every artifact, keyed on
+  the search + library (+ reconciliation) hashes, to drive resume-on-restart; Rust infers reuse
+  from parquet footer hashes. The stamp adds fields Rust does not write - the `osprey.validity`
+  parquet footer entry, the `osprey_validity` first property of `.calibration.json` and
+  `.reconciliation.json`, and the blib `OspreyMetadata` row `osprey.validity` - which
+  cross-impl comparisons must ignore. Evidence: `Shared/CommonUtil/Pipeline/ArtifactStamp.cs`;
+  `Osprey.IO/ArtifactValidity.cs`. Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Reconciled parquet is a separate `.scores-reconciled.parquet`,
   not an in-place overwrite** - Rust doc's model rewrites `.scores.parquet` in place during Stage
@@ -790,10 +905,10 @@ default resume mechanism.
   `.calibration.json`** - Rust doc: the calibration file is reused when its `search_hash`
   matches and deleted+recomputed when it is stale. C# never writes `search_hash` into the
   calibration JSON (the field exists for schema parity but is unset), and reuse is instead the
-  task-level `.osprey.task` sidecar decision; the only direct-load path is the
+  embedded validity stamp's decision (`osprey_validity`); the only direct-load path is the
   `OSPREY_LOAD_CALIBRATION` bisection hook. Evidence: `PerFileScoringTask.cs:1702` (metadata
   built without `SearchHash`), `CalibrationParams.cs:125`, `CalibrationIO.cs:42`. Net recalibrate-
-  on-stale behavior is preserved via the sidecar. Severity: minor.
+  on-stale behavior is preserved via the stamp. Severity: minor.
 
 - **[UNVERIFIED] Mokapot / Python calibration report tooling** - The Rust doc references
   `python scripts/evaluate_calibration.py` for calibration visualization. The C# port has no

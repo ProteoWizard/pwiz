@@ -117,6 +117,7 @@ public sealed class MzMlbReaderAdapter : IReader
                     source: filename,
                     decodeThreads: config?.MzmlDecodeThreads ?? 1);
                 conn = null!; // ownership transferred to SpectrumList_Mzml
+                MzmlReaderAdapter.ApplyIgnoreCalibrationScans(result, config);
                 return;
             }
 
@@ -127,6 +128,7 @@ public sealed class MzMlbReaderAdapter : IReader
             var parsed = reader.Read(stream);
             MzmlReaderAdapter.CopyInto(parsed, result);
             MSDataFile.FillInCommonMetadata(filename, result);
+            MzmlReaderAdapter.ApplyIgnoreCalibrationScans(result, config);
         }
         finally
         {

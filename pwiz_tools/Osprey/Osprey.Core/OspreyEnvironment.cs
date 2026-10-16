@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.Core
 {
@@ -50,6 +51,99 @@ namespace pwiz.Osprey.Core
     {
         // Variables a test has overridden (OverrideVariables); null in production.
         private static IReadOnlyDictionary<string, string> _overrides;
+
+        // How the platform compares environment variable names: case-insensitively on Windows,
+        // exactly elsewhere. The registry and the scan must agree with it, or a Linux node would
+        // accept 'osprey_log_memory' here and then never read it as OSPREY_LOG_MEMORY.
+        private static readonly StringComparison VariableNameComparison =
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        private static readonly StringComparer VariableNameComparer =
+            OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+        /// <summary>
+        /// Every OSPREY_* variable this build reads, wherever it reads it - here, in
+        /// OspreyDiagnostics / OspreyFileDiagnostics, FdrDiagnostics, OspreyVersion and the
+        /// scoring and IO layers. <see cref="UnrecognizedVariables"/> treats any other set
+        /// OSPREY_* name as an error, as an unrecognized command-line argument is.
+        ///
+        /// <para>One list, kept in step with the readers by
+        /// <c>CodeInspectionTest.TestOspreyVariablesAreRegistered</c>: a literal
+        /// <c>@"OSPREY_..."</c> in production code that is missing here fails it, and so does a
+        /// name here that nothing reads any more. Retiring a variable is therefore deleting its
+        /// reader and its line here; the startup check then refuses it with every other name
+        /// this build does not know. That replaced a per-variable refusal for each retired
+        /// switch (OSPREY_STAGE7_STREAM, OSPREY_STAGE6_STREAM_SURVIVORS, OSPREY_FDR_PROJECTION,
+        /// OSPREY_DUMP_PERCOLATOR / _ONLY), which grew by one hand-written check per
+        /// retirement and missed every misspelling.</para>
+        ///
+        /// <para>Names only Rust osprey reads (e.g. OSPREY_TRACE_PEPTIDE, OSPREY_DUMP_RESCORED)
+        /// are deliberately absent: this build would not honor them, so a run that sets one
+        /// would not do what its caller asked. A cross-implementation harness sets them for the
+        /// Rust process only.</para>
+        /// </summary>
+        public static readonly ISet<string> KnownVariables = new HashSet<string>(VariableNameComparer)
+        {
+            @"OSPREY_BLOCK_READ_GATE", @"OSPREY_BLOCK_READ_MB",
+            @"OSPREY_CALIBRATION_ONLY", @"OSPREY_CAL_MATCH_ONLY", @"OSPREY_CAL_MEDIANPOLISH",
+            @"OSPREY_CAL_SAMPLE_ONLY", @"OSPREY_CAL_SAMPLE_SIZE", @"OSPREY_CAL_WINDOWS_ONLY",
+            @"OSPREY_CONSENSUS_ONLY", @"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT",
+            @"OSPREY_CROSS_IMPL_RECONCILIATION_OUT", @"OSPREY_DIAG_MP_SCAN", @"OSPREY_DIAG_SEARCH_ENTRY_IDS",
+            @"OSPREY_DIAG_XCORR_SCAN", @"OSPREY_DIAG_XIC_ENTRY_ID", @"OSPREY_DIAG_XIC_PASS",
+            @"OSPREY_DROP_BETWEEN_TASKS", @"OSPREY_DUMP_BEST_PEPTIDE_SCORES", @"OSPREY_DUMP_CALIBRATION",
+            @"OSPREY_DUMP_CAL_MATCH", @"OSPREY_DUMP_CAL_SAMPLE", @"OSPREY_DUMP_CAL_WINDOWS",
+            @"OSPREY_DUMP_COASSIGN_ROWS", @"OSPREY_DUMP_CONSENSUS", @"OSPREY_DUMP_CWT_PATH",
+            @"OSPREY_DUMP_DETECTED_PEPTIDES", @"OSPREY_DUMP_INV_PREDICT", @"OSPREY_DUMP_LDA_SCORES",
+            @"OSPREY_DUMP_LOESS_FIT", @"OSPREY_DUMP_LOESS_INPUT", @"OSPREY_DUMP_MP_INPUTS",
+            @"OSPREY_DUMP_MS2_CAL_ERRORS", @"OSPREY_DUMP_PERC_INPUT", @"OSPREY_DUMP_PREDICT_RT",
+            @"OSPREY_DUMP_PROTEIN_FDR", @"OSPREY_DUMP_REFIT", @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
+            @"OSPREY_DUMP_STAGE7_WINNERS", @"OSPREY_DUMP_STANDARDIZER", @"OSPREY_DUMP_SUBSAMPLE",
+            @"OSPREY_DUMP_SVM_WEIGHTS", @"OSPREY_EXIT_AFTER_CALIBRATION", @"OSPREY_EXPERIMENT_AGG",
+            @"OSPREY_FDR_FILE_LANES", @"OSPREY_FDR_MODEL", @"OSPREY_GBT_ALPHA", @"OSPREY_GBT_COLSAMPLE",
+            @"OSPREY_GBT_GAMMA", @"OSPREY_GBT_INNER_FOLDS", @"OSPREY_GBT_LAMBDA", @"OSPREY_GBT_LEARNING_RATE",
+            @"OSPREY_GBT_MAX_DEPTH", @"OSPREY_GBT_MAX_ITERATIONS", @"OSPREY_GBT_MIN_CHILD_WEIGHT",
+            @"OSPREY_GBT_N_TREES", @"OSPREY_GBT_SUBSAMPLE", @"OSPREY_INV_PREDICT_ONLY",
+            @"OSPREY_KEEP_FAILED_WRITES", @"OSPREY_LDA_SCORES_ONLY", @"OSPREY_LIBRARY_LOAD_ONLY",
+            @"OSPREY_LOAD_CALIBRATION", @"OSPREY_LOESS_CLASSICAL_ROBUST", @"OSPREY_LOESS_FIT_ONLY",
+            @"OSPREY_LOESS_INPUT_ONLY", @"OSPREY_LOG_COASSIGN_ALLOC", @"OSPREY_LOG_MEMORY",
+            @"OSPREY_MAX_PARALLEL_FILES", @"OSPREY_MAX_SCORING_WINDOWS", @"OSPREY_MAX_TRAIN_SIZE",
+            @"OSPREY_MDIAG_COASSIGN_ONLY", @"OSPREY_MEANBEST2_FLOOR_MEAN", @"OSPREY_MEANBEST2_FLOOR_PCT",
+            @"OSPREY_MS2_CAL_ERRORS_ONLY", @"OSPREY_MZML_DECODE_THREADS", @"OSPREY_PARQUET_WRITE_THREADS",
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_PASS2_VERIFY_WORKER", @"OSPREY_PERC_INPUT_ONLY",
+            @"OSPREY_PICK_DUMP_CANDIDATES", @"OSPREY_PICK_LDA", @"OSPREY_PICK_LDA_MODEL",
+            @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_REFIT_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
+            @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
+            @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
+            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
+            @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
+            @"OSPREY_VERSION_OVERRIDE"
+        };
+
+        /// <summary>
+        /// The OSPREY_* variables set to a non-empty value in this process - its environment, or
+        /// a test's <see cref="OverrideVariables"/> - that are not in <see cref="KnownVariables"/>,
+        /// sorted. An empty value reads as unset, as it does everywhere else in this class: a
+        /// cleared <c>export</c> or a blanked CI parameter is not a request for anything.
+        /// </summary>
+        public static IReadOnlyList<string> UnrecognizedVariables()
+        {
+            const string prefix = @"OSPREY_";
+            var names = new SortedSet<string>(VariableNameComparer);
+            foreach (string name in Environment.GetEnvironmentVariables().Keys)
+            {
+                if (name.StartsWith(prefix, VariableNameComparison))
+                    names.Add(name);
+            }
+            if (_overrides != null)
+            {
+                foreach (string name in _overrides.Keys)
+                {
+                    if (name.StartsWith(prefix, VariableNameComparison))
+                        names.Add(name);
+                }
+            }
+            return names.Where(name => !KnownVariables.Contains(name) && !string.IsNullOrEmpty(GetVariable(name)))
+                .ToList();
+        }
 
         /// <summary>
         /// OSPREY_MAX_PARALLEL_FILES: legacy back-compat cap on concurrent file
@@ -116,14 +210,14 @@ namespace pwiz.Osprey.Core
         public static readonly int StubIdentity = ParseIntOrNull(@"OSPREY_STUB_IDENTITY") ?? 1;
 
         /// <summary>
-        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
-        /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
+        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="SimpleFileSaver"/>. Every
+        /// durable write, diagnostic dumps included, goes through <c>SimpleFileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before
         /// <c>Commit()</c> - the real path then holds the previous content or nothing,
-        /// never a partial write (see <c>FileSaver</c>'s own doc comment). Set this to
+        /// never a partial write (see <c>SimpleFileSaver</c>'s own doc comment). Set this to
         /// inspect what a write got through before it was abandoned: on an uncommitted
         /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,
-        /// its normal <c>~OS</c>-prefixed name) instead of deleted. It never touches the
+        /// its normal <c>~SK</c>-prefixed name) instead of deleted. It never touches the
         /// real path, so presence-proves-completeness still holds for every consumer;
         /// only a developer who knows to look for the temp sees the partial content.
         /// </summary>
@@ -265,28 +359,6 @@ namespace pwiz.Osprey.Core
         public static readonly string CrossImplReconciliationOut = GetVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
         /// <summary>
-        /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
-        /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
-        /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
-        /// resident across first-pass Percolator + protein FDR + the sidecar write
-        /// + compaction. <c>FirstPassFdrTask</c> materializes the projection from the
-        /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
-        /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
-        /// the just-written 1st-pass sidecar after compaction.
-        ///
-        /// DEFAULT ON: Osprey cannot process real (large) file counts without this --
-        /// the legacy resident path OOMs -- so streaming is the production default and
-        /// byte-identical to the legacy path (Stellar regression mode1/2/3). Set
-        /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
-        /// path as a transitional A/B / byte-identity oracle. Model-diagnostics (#4505)
-        /// and FDRBench pass 1 (#4507) both stream from the persisted per-file scores
-        /// now, and the non-Percolator simple FDR method that also took the legacy path is
-        /// gone (#4543), so this oracle is the legacy path's only remaining user. A settable
-        /// property (not a readonly field) so unit tests can A/B both paths.
-        /// </summary>
-        public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
-
-        /// <summary>
         /// DIAGNOSTIC. <c>OSPREY_DROP_BETWEEN_TASKS=1</c> makes each task release every byproduct
         /// but the library when it finishes, so the next task reloads what it needs from disk -
         /// the dataflow an HPC chain gets for free from process boundaries. Default OFF; the
@@ -327,41 +399,6 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Stage 6 rebuilds each file's post-compaction survivors from that file's
-        /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
-        /// them again once its reconciled parquet is on disk - so the all-files survivor
-        /// buffer is not resident across the rescore loop.
-        ///
-        /// DEFAULT ON. That buffer is 88.9 M entries / 28 GB live at 163 files, held for
-        /// the 5.5 hours of Stage 6, and it grows super-linearly in file count because the
-        /// passing base_id set grows too (issue #4526). Set
-        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 to keep the resident buffer as the A/B
-        /// byte-identity oracle, the same role OSPREY_FDR_PROJECTION=0 plays for Stage 5.
-        /// A settable property (not a readonly field) so unit tests can A/B both paths.
-        /// </summary>
-        public static bool Stage6StreamSurvivors { get; set; } =
-            IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
-
-        // OSPREY_STAGE7_STREAM was removed here on 2026-09-10 and the streamed join is the ONLY
-        // arm. It kept the resident Stage-7 join as an A/B byte-identity oracle - the role
-        // OSPREY_STAGE6_STREAM_SURVIVORS=0 still plays for the Stage 6 handoff - and went once
-        // that A/B was banked: the resident arm passed the whole regression against the
-        // committed golden at 1e-9, and the diagnostics HTML matched the streamed arm byte for
-        // byte apart from generatedUtc. A second arm kept alive only to keep it matching is a
-        // standing test cost against a report that is expected to keep moving. The measurement
-        // that argues for the streamed join moved with the decision, to
-        // ScoringTaskShared.CanStreamStage7Join, rather than being deleted along with the
-        // switch that no longer makes it.
-        //
-        // The NAME is still read, at startup, for the only thing a removed spelling owes: a caller who
-        // still sets it is refused at startup (Program.cs) rather than handed the streamed arm's
-        // numbers under the resident arm's name. That is the "reporting one arm's numbers as
-        // another's" case the env-var doctrine makes strict. IsSet, not a null test: an EMPTY
-        // value (a cleared `export`, a blanked CI parameter) reads as unset everywhere else in
-        // this class, and refusing it here would be the one predicate that disagrees.
-        public static bool Stage7StreamRetiredSet => IsSet(@"OSPREY_STAGE7_STREAM");
-
-        /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
         /// entry that can no longer be scored or written - i.e. everything outside the
         /// compaction survivors and the gap-fill candidates. The identity fields
@@ -369,8 +406,7 @@ namespace pwiz.Osprey.Core
         ///
         /// DEFAULT ON. The library is held to the end of Stage 7 in order to write 37,078
         /// spectra out of 6,275,151 entries - 0.6%. Set OSPREY_RELEASE_LIBRARY_FRAGMENTS=0 to
-        /// keep the whole library resident as the A/B byte-identity oracle, the same role
-        /// OSPREY_STAGE6_STREAM_SURVIVORS=0 plays for the Stage 6 handoff.
+        /// keep the whole library resident as the A/B byte-identity oracle.
         ///
         /// <para>MEASURED, as an A/B on 4 SEA-AD files against the full 12.7 GB library: Stage 7
         /// peak working set 28.5 -&gt; 17.7 GB, a 10.8 GB (-38%) saving, releasing 87.0% of the
@@ -390,8 +426,8 @@ namespace pwiz.Osprey.Core
         /// blib-written is a SUBSET of what is retained here.</para>
         ///
         /// <para>Turning this OFF costs a full Stage-5 recompute rather than a resume, because
-        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> deletes its own
-        /// validity sidecars. The suffix is still required - the release is a Run-only side
+        /// the changed validity key fails <c>CanRehydrate</c> and <c>Run</c> rewrites every
+        /// output. The suffix is still required - the release is a Run-only side
         /// effect, so without it an in-place A/B would adopt the other arm's reconciled parquets
         /// and report a memory profile it never computed - but the escape hatch is not cheap.
         /// The suffix itself lives with the release
@@ -402,21 +438,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool ReleaseLibraryFragments { get; set; } =
             IsNotZero(@"OSPREY_RELEASE_LIBRARY_FRAGMENTS");
-
-        /// <summary>
-        /// Cache-validity suffix for the Stage 6 handoff arm. EMPTY on the streamed default,
-        /// so shipping this does not invalidate a single existing output directory; only the
-        /// resident opt-out adds a term.
-        ///
-        /// <para>Without it an in-place A/B of the two arms is not an A/B at all: the second
-        /// run finds the first run's reconciled parquets valid, skips Stage 6 entirely, and
-        /// reports a clean match it never computed. That is the exact failure mode the two arms
-        /// exist to detect, so leaving it out makes the oracle self-confirming.</para>
-        /// </summary>
-        public static string Stage6StreamSurvivorsValidityKeySuffix()
-        {
-            return Stage6StreamSurvivors ? string.Empty : @";stage6stream=0";
-        }
 
         /// <summary>
         /// OSPREY_PICK_DUMP_CANDIDATES: when set to a non-empty / non-zero value, dump one
@@ -797,13 +818,12 @@ namespace pwiz.Osprey.Core
         ///   <see cref="PASS2_QVALUE_TRANSFER"/>: carry the pass-1 q through and recompute ONLY
         ///     the per-run q of the peaks reconciliation MOVED, scoring each with the FROZEN
         ///     1st-pass model and mapping it through THAT FILE'S OWN on-disk
-        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time. No
-        ///     retrain, no reduced-pool null. Restores calibration while keeping the
-        ///     re-scoring ID gain.
+        ///     <c>.1st-pass.fdr_scores.bin</c> score-&gt;run-q table, one file at a time, in
+        ///     PerFileRescoring like the default (#4665). No retrain, no reduced-pool null.
+        ///     Restores calibration while keeping the re-scoring ID gain.
         ///     NOTE: the per-run-only redesign (#4438) REPLACED the earlier full pre-compaction
         ///     score-&gt;q table, which is why transfer no longer needs the O(files) resident
-        ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
-        ///     <c>ResidentPaths</c>.
+        ///     pool. Re-adding a resident pool for it is the #4446 regression.
         /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
         /// <see cref="Pass2QValueUnrecognized"/>). Re-read on each access, so a command-line
         /// test can set it (<see cref="OverrideVariables"/>).
@@ -889,88 +909,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool Pass2VerifyWorker =>
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
-
-        /// <summary>
-        /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=projection-off</c>. Legal values are
-        /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
-        /// that is not on that list, is refused no matter what this is set to.
-        ///
-        /// This REPLACES the former blanket <c>OSPREY_ALLOW_UNBOUNDED_MEMORY=1</c>, which granted
-        /// amnesty to every trigger at once. That is not a hypothetical failure: it let
-        /// <c>OSPREY_PASS2_QVALUE=transfer</c> silently regress back onto the resident pool for
-        /// ten days (#4438 removed the forcing, a #4446 merge artifact restored it), because
-        /// developers simply set the boolean and a re-broken memory bound looked like normal
-        /// operating procedure. A named token cannot do that: an unlisted path errors even with
-        /// this set, so the ONLY way to re-admit one is to add it to the committed list, which is
-        /// a reviewed diff that fails <c>ResidentPoolGuardTest</c>.
-        ///
-        /// <para>SEVERAL paths may be named, comma- or semicolon-separated, because a run can
-        /// legitimately trip more than one at once and a single-value variable made that run
-        /// impossible to perform at all. An operator running the Stage 6 handoff A/B on a
-        /// configuration that is already resident for its own reason needs
-        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> alongside that run's own token.
-        /// A LIST keeps the property that matters - every admitted path is still named
-        /// individually, so nothing rides along unnamed the way the blanket boolean allowed -
-        /// while a single value only ever prevented honest work.</para>
-        ///
-        /// Re-read on each access, like <see cref="Pass2QValue"/>. Intended for local testing. The standing
-        /// <c>regression.ps1</c> gate names NO token on any leg - #4536 removed the last one -
-        /// and an INHERITED value is cleared at startup unless a deliberate A/B switch needs it.
-        /// A resident path appearing anywhere in the gate fails CI rather than riding along on
-        /// an ambient allowance, and any token the gate is ever made to require has to carry an
-        /// open issue to remove it again.
-        /// </summary>
-        public static string AllowUnfixedResident =>
-            (GetVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
-
-        /// <summary>
-        /// True when <see cref="AllowUnfixedResident"/> names anything that is not a legal token,
-        /// so the guard can say "that value is not a known path" instead of printing the
-        /// same message it prints when the variable is unset. Without this, a typo
-        /// (<c>mdiag_full_resume</c>) or a shell-quoted value (cmd.exe stores the quotes) is
-        /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
-        /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
-        /// </summary>
-        public static bool AllowUnfixedResidentUnrecognized => UnrecognizedResidentTokens.Length > 0;
-
-        /// <summary>
-        /// Just the unrecognized tokens of <see cref="AllowUnfixedResident"/>, comma separated.
-        /// The warning names THESE rather than the whole value: the flag is a list and
-        /// <c>NamesResidentPath</c> tests each token independently, so a value pairing a retired
-        /// token with a live one still grants the live one. Empty when every token is known.
-        /// </summary>
-        public static string UnrecognizedResidentTokens =>
-            string.Join(@", ", SplitResidentTokens(AllowUnfixedResident).Where(
-                v => !ResidentPaths.KNOWN_UNFIXED.Any(
-                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase))));
-
-        /// <summary>
-        /// Whether <paramref name="allowValue"/> (an OSPREY_ALLOW_UNFIXED_RESIDENT setting) names
-        /// <paramref name="token"/>. Case-insensitive, matching how the rest of the CLI parses
-        /// tokens: the guard's message names the exact token to set, so rejecting the operator's
-        /// own value for capitalization would read as the guard ignoring what they just did.
-        /// </summary>
-        public static bool NamesResidentPath(string allowValue, string token)
-        {
-            return SplitResidentTokens(allowValue).Any(
-                v => string.Equals(v, token, StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <summary>
-        /// The individual tokens in an OSPREY_ALLOW_UNFIXED_RESIDENT setting. Comma and semicolon
-        /// both separate, and empty entries are dropped, so a trailing separator is not a typo
-        /// the operator has to hunt for.
-        /// </summary>
-        private static IEnumerable<string> SplitResidentTokens(string allowValue)
-        {
-            if (string.IsNullOrEmpty(allowValue))
-                return Array.Empty<string>();
-            return allowValue
-                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(v => v.Trim())
-                .Where(v => v.Length > 0);
-        }
 
         /// <summary>The N in OSPREY_EXPERIMENT_AGG=mean-best-&lt;N&gt;: how many top per-run scores are
         /// averaged (runs beyond the detected count filled with the decoy floor). 0 in the default

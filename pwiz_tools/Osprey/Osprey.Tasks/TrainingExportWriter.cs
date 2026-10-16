@@ -27,6 +27,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using pwiz.CarafeSharp.Contracts;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -57,8 +60,15 @@ namespace pwiz.Osprey.Tasks
         /// <summary>The name the reconciled-parquet footer check gives the export.</summary>
         private static readonly string RECONCILED_CONSUMER = OspreyArgNames.Text(OspreyArgNames.TRAINING_EXPORT);
 
-        /// <summary>Footer key naming the pass whose run q-values the export selected on.</summary>
-        public const string KEY_RUN_Q_PASS = @"osprey.training_export.run_q_pass";
+        /// <summary>
+        /// <c>&lt;stem&gt;.training.parquet</c> in the run's output directory
+        /// (<see cref="ArtifactPaths.ResolveOutputDir"/>), beside its other products.
+        /// </summary>
+        public static string PathFor(string inputFile)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + TrainingExportParquet.EXT;
+            return Path.Combine(ArtifactPaths.ResolveOutputDir(inputFile), fileName);
+        }
 
         /// <summary>
         /// One run: read its reconciled rows, run q-values, calibration and spectra; compute every
@@ -68,7 +78,8 @@ namespace pwiz.Osprey.Tasks
         /// loaded by the caller, or null to load them here.
         /// </summary>
         public static void ExportRun(string input, string output, IReadOnlyDictionary<uint, LibraryEntry> library,
-            PipelineContext ctx, int maxThreads, SpectraWindowIndex spectra = null, MzCalibrationResult ms2Cal = null)
+            PipelineContext ctx, int maxThreads, ArtifactStamp stamp,
+            SpectraWindowIndex spectra = null, MzCalibrationResult ms2Cal = null)
         {
             var sw = Stopwatch.StartNew();
             var config = ctx.Config;
@@ -86,9 +97,9 @@ namespace pwiz.Osprey.Tasks
             }
             // The footer check --task SecondPassFDR makes - this build's version, this search and
             // library, and a reconciled file - on every route, since an export written from disk
-            // has nothing else vouching for the file. Another build is named apart: every other
-            // stage skips by its validity key, which carries no build, so the generic "score the
-            // file again" remedy would only skip again.
+            // has nothing else vouching for the file. Another build is named apart, because its
+            // remedy differs: the file is current only for the build that wrote it, so the
+            // message names that build rather than a generic "score the file again".
             string otherBuild = OtherBuild(reconciledPath);
             if (otherBuild != null)
             {
@@ -111,7 +122,7 @@ namespace pwiz.Osprey.Tasks
             var searchConfig = config.ShallowClone();
             searchConfig.FragmentTolerance = new FragmentToleranceConfig { Tolerance = tolerance, Unit = toleranceUnit };
             ScoringPipeline.DoubleCountingTolerance(ms2Cal, config, out double ddcTolerance, out ToleranceUnit ddcUnit);
-            var index = spectra ?? ScoringTaskShared.LoadSpectraForRescore(input, stem, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, false);
+            var index = spectra ?? ScoringTaskShared.LoadSpectraForRescore(input, stem, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, false, ctx);
             double rtNeighborhood = ScoringPipeline.DoubleCountingRtNeighborhood(index.AllMs2Rts);
             var evidenceSettings = new TrainingEvidenceSettings
             {
@@ -161,9 +172,9 @@ namespace pwiz.Osprey.Tasks
             int nUnplaced = nToExport - records.Count;
 
             var source = SpectrumFileReader.TryReadSourceMetadata(input);
-            var metadata = BuildMetadata(config, stem, index, observed, source, runQPass, ms2Cal, tolerance,
-                toleranceUnit, ddcTolerance, ddcUnit, rtNeighborhood, maxQ, claimantQ, nParity, nFittedParity,
-                nFitted, records.Count);
+            var metadata = ParquetScoreCache.WithStamp(BuildMetadata(config, stem, index, observed, source,
+                runQPass, ms2Cal, tolerance, toleranceUnit, ddcTolerance, ddcUnit, rtNeighborhood, maxQ, claimantQ,
+                nParity, nFittedParity, nFitted, records.Count), stamp);
             TrainingExportParquet.Write(output, records, metadata, settings.WriteXics);
             sw.Stop();
 
@@ -389,16 +400,18 @@ namespace pwiz.Osprey.Tasks
             return @";recon=" + IdentityOrAbsent(ParquetScoreCache.GetReconciledScoresPath(input))
                 + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:") + IdentityOrAbsent(runQPath)
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
-                + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input));
+                + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
+                + DemuxSpectraIdentity(input);
         }
 
-        /// <summary>The artifacts one run's export reads.</summary>
-        public static IEnumerable<string> RunInputs(string input)
+        /// <summary>
+        /// The demultiplexed cache's identity when the run has one, which a --demux auto export
+        /// reads in place of the .spectra.bin; empty otherwise, so no other run's key changes.
+        /// </summary>
+        private static string DemuxSpectraIdentity(string input)
         {
-            yield return ParquetScoreCache.GetReconciledScoresPath(input);
-            yield return RunQPath(input, out _);
-            yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
-            yield return SpectraCache.GetCachePath(input);
+            string demuxPath = SpectraCache.GetDemuxCachePath(input);
+            return File.Exists(demuxPath) ? @";demuxspectra=" + IdentityOrAbsent(demuxPath) : string.Empty;
         }
 
         /// <summary>
@@ -409,18 +422,14 @@ namespace pwiz.Osprey.Tasks
         /// export. Deciding by who wrote the file, which never changes once it is written, makes
         /// an export written while re-scoring and one written later from disk agree.
         ///
-        /// <para>Who wrote it is the worker's stamp beside the sidecar (the test SecondPassFDR
-        /// folds by, <see cref="Pass2FdrSidecar.HasWorkerStamp"/>) AND the worker's decoys file,
-        /// which only the worker writes. The stamp alone is not proof: after a later
-        /// PerFileRescoring run the driver stamps every declared output that exists, including a
-        /// second-pass sidecar SecondPassFDR wrote, which would flip the export to that sidecar
-        /// on the next invocation of the same command. The driver stamps files; it never
-        /// creates one.</para>
+        /// <para>Who wrote it is the test SecondPassFDR folds by,
+        /// <see cref="Pass2FdrSidecar.HasWorkerStamp"/>: the sidecar AND the worker's decoys
+        /// file both carry the stamp of the reconciled parquet beside them. A worker sidecar
+        /// without its decoys is not the worker's complete answer.</para>
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {
-            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input) &&
-                               File.Exists(Pass2CompetitionDecoys.PathFor(input));
+            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input);
             pass = workerOwned ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass;
             return workerOwned ? FdrScoresSidecar.Pass2Path(input) : FdrScoresSidecar.Pass1Path(input);
         }
@@ -471,24 +480,8 @@ namespace pwiz.Osprey.Tasks
         {
             record.FileName = stem;
             var kind = EntrapmentLibraryClassifier.Classify(entry.ProteinIds);
-            record.IsEntrapment = kind == PeptideKind.PTarget || kind == PeptideKind.PDecoy;
-            record.PeptideKind = PeptideKindName(kind);
-        }
-
-        /// <summary>The FDRBench manifest spelling of a peptide kind.</summary>
-        private static string PeptideKindName(PeptideKind kind)
-        {
-            switch (kind)
-            {
-                case PeptideKind.PTarget:
-                    return @"p_target";
-                case PeptideKind.Decoy:
-                    return @"decoy";
-                case PeptideKind.PDecoy:
-                    return @"p_decoy";
-                default:
-                    return @"target";
-            }
+            record.IsEntrapment = PeptideKinds.IsEntrapment(kind);
+            record.PeptideKind = PeptideKinds.Name(kind);
         }
 
         private static Dictionary<string, string> BuildMetadata(OspreyConfig config, string stem,
@@ -504,40 +497,40 @@ namespace pwiz.Osprey.Tasks
             var measured = observedMzRanges.Where(r => r != null).ToList();
             var metadata = new Dictionary<string, string>
             {
-                [@"osprey.version"] = OspreyVersion.Current,
-                [@"osprey.search_hash"] = config.Identity.SearchParameterHash(),
-                [@"osprey.library_hash"] = config.Identity.LibraryIdentityHash(),
-                [@"osprey.file_name"] = stem,
-                [@"osprey.training_export.rows"] = nRows.ToString(ic),
-                [@"osprey.training_export.max_q"] = R(maxQ),
-                [@"osprey.training_export.claimant_q"] = R(claimantQ),
-                [KEY_RUN_Q_PASS] = runQPass == FdrScoresSidecar.Pass.SecondPass ? @"2" : @"1",
-                [@"osprey.training_export.xics"] = config.TrainingExport.WriteXics ? @"true" : @"false",
-                [@"osprey.training_export.slot_order"] = @"slot = p*4 + t; t: 0 b z1, 1 b z2, 2 y z1, 3 y z2; position p holds b(p+1) and y(L-1-p)",
-                [@"osprey.training_export.mp_cosine_parity"] = string.Format(ic, @"{0}/{1}", nParity, nRows),
-                [@"osprey.training_export.mp_cosine_parity_fitted"] = string.Format(ic, @"{0}/{1}", nFittedParity, nFitted),
-                [@"osprey.rt_min"] = rts.Count > 0 ? R(rts.Min()) : string.Empty,
-                [@"osprey.rt_max"] = rts.Count > 0 ? R(rts.Max()) : string.Empty,
-                [@"osprey.isolation_mz_min"] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Min(w => w.LowerBound)) : string.Empty,
-                [@"osprey.isolation_mz_max"] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Max(w => w.UpperBound)) : string.Empty,
-                [@"osprey.ms2_scan_window"] = measured.Count > 0
+                [TrainingExportKeys.VERSION] = OspreyVersion.Current,
+                [TrainingExportKeys.SEARCH_HASH] = config.Identity.SearchParameterHash(),
+                [TrainingExportKeys.LIBRARY_HASH] = config.Identity.LibraryIdentityHash(),
+                [TrainingExportKeys.FILE_NAME] = stem,
+                [TrainingExportKeys.ROWS] = nRows.ToString(ic),
+                [TrainingExportKeys.MAX_Q] = R(maxQ),
+                [TrainingExportKeys.CLAIMANT_Q] = R(claimantQ),
+                [TrainingExportKeys.RUN_Q_PASS] = runQPass == FdrScoresSidecar.Pass.SecondPass ? @"2" : @"1",
+                [TrainingExportKeys.XICS] = config.TrainingExport.WriteXics ? @"true" : @"false",
+                [TrainingExportKeys.SLOT_ORDER] = @"slot = p*4 + t; t: 0 b z1, 1 b z2, 2 y z1, 3 y z2; position p holds b(p+1) and y(L-1-p)",
+                [TrainingExportKeys.MP_COSINE_PARITY] = string.Format(ic, @"{0}/{1}", nParity, nRows),
+                [TrainingExportKeys.MP_COSINE_PARITY_FITTED] = string.Format(ic, @"{0}/{1}", nFittedParity, nFitted),
+                [TrainingExportKeys.RT_MIN] = rts.Count > 0 ? R(rts.Min()) : string.Empty,
+                [TrainingExportKeys.RT_MAX] = rts.Count > 0 ? R(rts.Max()) : string.Empty,
+                [TrainingExportKeys.ISOLATION_MZ_MIN] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Min(w => w.LowerBound)) : string.Empty,
+                [TrainingExportKeys.ISOLATION_MZ_MAX] = index.IsolationWindows.Count > 0 ? R(index.IsolationWindows.Max(w => w.UpperBound)) : string.Empty,
+                [TrainingExportKeys.MS2_SCAN_WINDOW] = measured.Count > 0
                     ? string.Format(ic, @"{0},{1}", R(measured.Min(r => r[0])), R(measured.Max(r => r[1])))
                     : string.Empty,
-                [@"osprey.fragment_tolerance"] = R(tolerance),
-                [@"osprey.fragment_tolerance_unit"] = Unit(toleranceUnit),
-                [@"osprey.ms2_calibration.calibrated"] = ms2Cal.Calibrated ? @"true" : @"false",
-                [@"osprey.ms2_calibration.mean"] = R(ms2Cal.Mean),
-                [@"osprey.ms2_calibration.sd"] = R(ms2Cal.SD),
-                [@"osprey.ms2_calibration.unit"] = ms2Cal.Unit ?? string.Empty,
-                [@"osprey.ddc.tolerance"] = R(ddcTolerance),
-                [@"osprey.ddc.tolerance_unit"] = Unit(ddcUnit),
-                [@"osprey.ddc.rt_neighborhood"] = R(rtNeighborhood),
-                [@"osprey.instrument_vendor"] = source?.InstrumentVendor ?? string.Empty,
-                [@"osprey.instrument_model"] = source?.InstrumentModel ?? string.Empty,
-                [@"osprey.source_ms2_sampled"] = (source?.NMs2Sampled ?? 0).ToString(ic),
-                [@"osprey.dissociation_methods"] = source != null ? JsonConvert.SerializeObject(source.DissociationMethods) : string.Empty,
-                [@"osprey.collision_energies"] = source != null ? JsonConvert.SerializeObject(source.CollisionEnergies) : string.Empty,
-                [@"osprey.ms2_mass_analyzers"] = source != null ? JsonConvert.SerializeObject(source.MassAnalyzers) : string.Empty,
+                [TrainingExportKeys.FRAGMENT_TOLERANCE] = R(tolerance),
+                [TrainingExportKeys.FRAGMENT_TOLERANCE_UNIT] = Unit(toleranceUnit),
+                [TrainingExportKeys.MS2_CALIBRATION_CALIBRATED] = ms2Cal.Calibrated ? @"true" : @"false",
+                [TrainingExportKeys.MS2_CALIBRATION_MEAN] = R(ms2Cal.Mean),
+                [TrainingExportKeys.MS2_CALIBRATION_SD] = R(ms2Cal.SD),
+                [TrainingExportKeys.MS2_CALIBRATION_UNIT] = ms2Cal.Unit ?? string.Empty,
+                [TrainingExportKeys.DDC_TOLERANCE] = R(ddcTolerance),
+                [TrainingExportKeys.DDC_TOLERANCE_UNIT] = Unit(ddcUnit),
+                [TrainingExportKeys.DDC_RT_NEIGHBORHOOD] = R(rtNeighborhood),
+                [TrainingExportKeys.INSTRUMENT_VENDOR] = source?.InstrumentVendor ?? string.Empty,
+                [TrainingExportKeys.INSTRUMENT_MODEL] = source?.InstrumentModel ?? string.Empty,
+                [TrainingExportKeys.SOURCE_MS2_SAMPLED] = (source?.NMs2Sampled ?? 0).ToString(ic),
+                [TrainingExportKeys.DISSOCIATION_METHODS] = source != null ? JsonConvert.SerializeObject(source.DissociationMethods) : string.Empty,
+                [TrainingExportKeys.COLLISION_ENERGIES] = source != null ? JsonConvert.SerializeObject(source.CollisionEnergies) : string.Empty,
+                [TrainingExportKeys.MS2_MASS_ANALYZERS] = source != null ? JsonConvert.SerializeObject(source.MassAnalyzers) : string.Empty,
             };
             return metadata;
         }

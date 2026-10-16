@@ -154,6 +154,20 @@ public class MainLogicTest
         }
     }
 
+    /// <summary>mz5 (read-only) and the pwiz text format have no writer. A <c>--mz5</c> or
+    /// <c>--text</c> left in an old command line must fail with an explanation, not be queued as
+    /// an input file.</summary>
+    [TestMethod]
+    public void ParseCommandLine_UnsupportedOutputFormatsAreRejected()
+    {
+        var logic = new MainLogic(new ProgressForm.JobInfo(), new Map<string, int>(), calculateSHA1Mutex: new object());
+        foreach (var flag in new[] { "--mz5", "--text" })
+        {
+            var e = Assert.ThrowsException<Exception>(() => logic.ParseCommandLine(_tempDir, flag + "|input.mzML"), flag);
+            StringAssert.Contains(e.Message, "no longer supported", flag);
+        }
+    }
+
     /// <summary>mzML→MGF: GUI and CLI should emit the same byte stream (MGF is line-oriented
     /// text; no XML re-shuffling between the two paths).</summary>
     [TestMethod]
@@ -167,6 +181,7 @@ public class MainLogicTest
                         "MGF byte streams differ between CLI and GUI");
     }
 
+#if !NO_VENDOR_SUPPORT
     /// <summary>A multi-sample WIFF converts to one file per sample, each named for its run.</summary>
     [TestMethod]
     public void Wiff_ConvertsEverySample()
@@ -189,4 +204,5 @@ public class MainLogicTest
         var expected = Enumerable.Range(1, 10).Select(i => $"Enolase_repeats_AQv1.4.2-20070918_En_{i:00}.mzML");
         CollectionAssert.AreEquivalent(expected.ToArray(), Directory.GetFiles(outDir).Select(Path.GetFileName).ToArray());
     }
+#endif
 }

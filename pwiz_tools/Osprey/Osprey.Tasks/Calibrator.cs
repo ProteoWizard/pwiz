@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -122,6 +123,25 @@ namespace pwiz.Osprey.Tasks
             // gate below leaves them unset, so a default run pays nothing).
             public CalibrationMatch[] DiagnosticMatches;
             public CalibrationTrainingReport DiagnosticReport;
+        }
+
+        /// <summary>
+        /// Per-thread state of the calibration window loop: its scorer, and the block buffer
+        /// that <see cref="SpectraWindowIndex.LoadWindowSerialRead(int, ref byte[])"/> reuses
+        /// from one window to the next. Both become garbage when the loop ends, so the read
+        /// blocks are not held through the main search the way a shared pool's would be.
+        /// </summary>
+        private class CalibrationWorker
+        {
+            // A field, not a property: the loop passes it by ref to LoadWindowSerialRead.
+            public byte[] ReadBuffer;
+
+            public CalibrationWorker(SpectralScorer scorer)
+            {
+                Scorer = scorer;
+            }
+
+            public SpectralScorer Scorer { get; }
         }
 
         /// <summary>
@@ -1580,8 +1600,8 @@ namespace pwiz.Osprey.Tasks
                     {
                         MaxDegreeOfParallelism = config.NThreads
                     },
-                    () => resolution.CreateScorer(),
-                    (kvp, loopState, localScorer) =>
+                    () => new CalibrationWorker(resolution.CreateScorer()),
+                    (kvp, loopState, worker) =>
                     {
                         // Load, RT-sort, and preprocess this window's spectra so the XCorr cache
                         // aligns with the RT-sorted spectra order used for scoring. One block read
@@ -1589,7 +1609,7 @@ namespace pwiz.Osprey.Tasks
                         // that already existed, which on a spinning disk parallel LoadWindow calls
                         // make seek between threads. Later passes find it warm and pay ~0.5 s.
                         var windowSpectra = serialReads
-                            ? windowIndex.LoadWindowSerialRead(kvp.Key)
+                            ? windowIndex.LoadWindowSerialRead(kvp.Key, ref worker.ReadBuffer)
                             : windowIndex.LoadWindow(kvp.Key);
                         windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: calibration RT-only sort tie behaviour
                         // s_calXcorrScorer is shared across the window-parallel bodies here, so
@@ -1621,7 +1641,7 @@ namespace pwiz.Osprey.Tasks
                                 var match = ScoreResolvedCalibrationEntry(
                                     entry, expectedRts[e], candidateIndices?[e - blockStart], windowSpectra,
                                     windowPreprocessed, ms1Spectra, context, rtSlope, rtIntercept, tolerance,
-                                    calibrationModel, localScorer,
+                                    calibrationModel, worker.Scorer,
                                     out double entrySnr, out double entryLibRt, out double entryMeasuredRt);
                                 if (match != null)
                                 {
@@ -1633,9 +1653,9 @@ namespace pwiz.Osprey.Tasks
                             }
                         }
                         progress.Report(Interlocked.Increment(ref windowsDone));
-                        return localScorer;
+                        return worker;
                     },
-                    localScorer => { });
+                    worker => { });
             }
             swScoring.Stop();
             _ctx.LogInfo(LogTag.TIMING, @"Calibration pass {0} scoring: {1:F2}s ({2} matches)",

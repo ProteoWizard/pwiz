@@ -199,6 +199,17 @@ for %%r in ("%SCRIPT_DIR%\pwiz" "%SCRIPT_DIR%\scripts\installer" "%SCRIPT_DIR%\p
 )
 if not defined TEST_TARGET (set "ERROR_TEXT=test discovery found no *.Tests.csproj under pwiz, scripts/installer or the pwiz_tools projects" & set EXIT=1 & goto error)
 
+REM # A no-vendor build compiled only msconvert above (Pwiz.sln also holds the vendor-gated
+REM # suites), but the test step runs every discovered suite with --no-build, so build each
+REM # one here; otherwise every suite fails with "The test source file ... was not found".
+if %IAGREE%==0 (
+    for %%p in (%TEST_TARGET%) do (
+        echo ##teamcity[progressMessage 'dotnet build %%~np ^(%CONFIG%, vendor=0^)']
+        dotnet build "%%p" -nologo %MSBUILD_PROPS%
+        if !ERRORLEVEL! NEQ 0 (set EXIT=1 & set "ERROR_TEXT=dotnet build %%~np failed" & goto error)
+    )
+)
+
 REM # Test step: scripts\Run-Tests-Parallel.ps1 spawns one parallel
 REM # `dotnet test <project>` job per csproj, each redirected to its own log
 REM # file. After every job finishes, the script concatenates per-project logs

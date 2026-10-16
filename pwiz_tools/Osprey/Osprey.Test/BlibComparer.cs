@@ -71,7 +71,12 @@ namespace pwiz.Osprey.Test
             new Projection(@"Proteins", 1, @"SELECT accession FROM Proteins"),
             new Projection(@"SpectrumSourceFiles", 1,
                 @"SELECT fileName, idFileName, cutoffScore, workflowType FROM SpectrumSourceFiles"),
-            new Projection(@"OspreyMetadata", 1, @"SELECT Key, Value FROM OspreyMetadata"),
+            // Without the validity stamp (ArtifactStamp.PARQUET_KEY, spelled out because the
+            // regression harness compiles this file alone): it records which task, build and key
+            // wrote the library, which two searches of the same thing may legitimately differ in
+            // (the library hash, for one library in two formats). Every other row is compared.
+            new Projection(@"OspreyMetadata", 1,
+                @"SELECT Key, Value FROM OspreyMetadata WHERE Key <> 'osprey.validity'"),
             new Projection(@"RefSpectraPeaks", 2,
                 @"SELECT r.peptideModSeq, r.precursorCharge, p.peakMZ, p.peakIntensity FROM RefSpectraPeaks p " +
                 @"JOIN RefSpectra r ON p.RefSpectraID = r.id")

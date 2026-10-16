@@ -56,13 +56,9 @@ namespace pwiz.Osprey
             @"OSPREY_DUMP_MS2_CAL_ERRORS",
             @"OSPREY_DUMP_LDA_SCORES",
             @"OSPREY_DUMP_LOESS_INPUT",
-            @"OSPREY_DUMP_PERCOLATOR",
-            @"OSPREY_DUMP_RESCORED",
             @"OSPREY_DUMP_CWT_PATH",
             @"OSPREY_DUMP_CONSENSUS",
-            @"OSPREY_DUMP_MULTICHARGE",
             @"OSPREY_DUMP_REFIT",
-            @"OSPREY_DUMP_RECONCILIATION",
             @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_INV_PREDICT",
             @"OSPREY_DUMP_PROTEIN_FDR",
@@ -98,7 +94,7 @@ namespace pwiz.Osprey
             {
                 // Guarantees CloseAll runs on a normal Environment.Exit, not just a return
                 // from Main - the held-open dump writers (cs_stage6_mp_inputs.tsv and
-                // siblings) commit through FileSaver, so without this an early *_ONLY exit
+                // siblings) commit through SimpleFileSaver, so without this an early *_ONLY exit
                 // (there are two dozen call sites) would leave their content sitting in an
                 // uncommitted temp forever rather than at the real path a developer expects.
                 // Does not run on a hard crash (AccessViolationException, a killed process) -

@@ -37,6 +37,7 @@ a { color: #1565c0; }
 <tr><td><nobr>--fragment-tolerance</nobr>&nbsp;&lt;value&gt;</td><td>Fragment m/z tolerance (default: 10)</td></tr>
 <tr><td><nobr>--fragment-unit</nobr> &lt;ppm | mz&gt;</td><td>Fragment tolerance unit (default: ppm)</td></tr>
 <tr><td><nobr>--no-prefilter</nobr></td><td>Disable coelution signal <nobr>pre-filter</nobr></td></tr>
+<tr><td><nobr>--demux</nobr> &lt;off | auto&gt;</td><td>Demultiplex <nobr>overlapping-window</nobr> (staggered) DIA to its narrow bins before searching (default: off)</td></tr>
 </table>
 <div class="RowType">FDR &amp; Protein Inference</div>
 <table>
@@ -69,8 +70,11 @@ a { color: #1565c0; }
 <div class="RowType">Performance</div>
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
-<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from <nobr>--threads</nobr>.</td></tr>
-<tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td><nobr>Per-file</nobr> <nobr>main-search</nobr> threads (INNER; default: all cores), divided across files run concurrently by <nobr>--parallel-files</nobr></td></tr>
+<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>Input files run concurrently by each <nobr>per-file</nobr> stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from <nobr>--threads</nobr>.</td></tr>
+<tr><td><nobr>--parallel-files-caching</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>--task</nobr> SpectraCache caches concurrently, overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time.</td></tr>
+<tr><td><nobr>--parallel-files-scoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files scored concurrently (PerFileScoring), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
+<tr><td><nobr>--parallel-files-rescoring</nobr>&nbsp;[&lt;N&gt;]</td><td>Files <nobr>re-scored</nobr> concurrently (PerFileRescoring, and the <nobr>second-pass</nobr> <nobr>per-file</nobr> phases), overriding <nobr>--parallel-files</nobr> for that stage only, in the same forms.</td></tr>
+<tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td><nobr>Per-file</nobr> <nobr>main-search</nobr> threads (INNER; default: all cores), divided across the files a scoring or <nobr>re-scoring</nobr> stage runs concurrently (<nobr>--parallel-files</nobr> or its <nobr>per-stage</nobr> forms)</td></tr>
 </table>
 <div class="RowType">Distributed / HPC</div>
 <table>
@@ -91,10 +95,10 @@ a { color: #1565c0; }
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>Write developer diagnostic dump files, for comparison with the Rust implementation</td></tr>
 <tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model, FDR calibration, and <nobr>single-peak</nobr> <nobr>multiple-ID</nobr> <nobr>co-assignment</nobr></td></tr>
-<tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>Show version</td></tr>
 </table>
-<p>EXAMPLES:</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC SPLIT (one node = one --task): see --task above.</p><div class="RowType">Distributed execution (HPC)</div>
+<p>EXAMPLES:</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC SPLIT (one node = one --task): see --task above.</p><p>OTHER FORMS ACCEPTED: a value may also be joined to its option (--output=results.blib), and a file that exists may be given without -i.</p><div class="RowType">Distributed execution (HPC)</div>
 <p>Run with no <code>--task</code> for the whole pipeline in one process. For distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out boundaries into four single-task workers - one node = one <code>--task</code>: <code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; <code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search options to every task; the parquet integrity check rejects inputs whose search/library hash does not match.</p>
 <pre>
 # split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)

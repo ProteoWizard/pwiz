@@ -60,7 +60,7 @@ several), porting the Rust crate's inline tests. The correspondence is direct:
 | `Osprey.IO` | `IOTest.cs` (64), `DiannDecoyColumnTest.cs`, `CwtCandidateCodecTest.cs` (9), `CwtCandidateLoaderTest.cs` | `osprey-io` (26) |
 | `Osprey.Chromatography` | `ChromatographyTest.cs` (13), `CalibrationTest.cs` (20), `PeakDetectorTest.cs` (9) | `osprey-chromatography` (66) |
 | `Osprey.Scoring` | `ScoringTest.cs` (40), `OspreyFeatureCalculatorsTest.cs` (9), `FragmentSelectionTest.cs` (11), `IsotopeDistributionTest.cs` | `osprey-scoring` (70) |
-| `Osprey.FDR` | `FdrTest.cs` (45), `FdrControllerTest.cs`, `ReconciliationTest.cs` (46), `MultiChargeConsensusTest.cs`, `Pass2FdrSidecarTest.cs`, `PercolatorEntryBuilderTest.cs`, `ReconciledParquetWriterTest.cs`, `GapFillTargetIdentifierTest.cs`, `MedianPolishMetricsTest.cs` | `osprey-fdr` (41) |
+| `Osprey.FDR` | `FdrTest.cs` (45), `FdrControllerTest.cs`, `ReconciliationTest.cs` (46), `MultiChargeConsensusTest.cs`, `Pass2FdrSidecarTest.cs`, `PercolatorFeatureFallbackTest.cs`, `ReconciledParquetWriterTest.cs`, `GapFillTargetIdentifierTest.cs`, `MedianPolishMetricsTest.cs` | `osprey-fdr` (41) |
 | `Osprey.ML` | `MLTest.cs` (42) | `osprey-ml` (30) |
 | `Osprey` (CLI) + `Osprey.Tasks` | `ProgramTests.cs` (62), `OspreyCommandArgsTests.cs` (6), `PipelineMembershipTest.cs`, `PerFileResumeDriverTest.cs`, `FileParallelismResolverTests.cs`, `MultiProgressReporterTest.cs`, `ArtifactPathsTest.cs` | `osprey` (main, 26–41) |
 
@@ -75,8 +75,8 @@ Additional C# test files with no direct Rust analog cover port-specific
 infrastructure: `ProgramTests.cs` (CLI `--task` argument validation — see
 15-hpc-scoring-split.md),
 `ByproductContextTest.cs`, `DiagnosticsTest.cs`, `ModelDiagnosticsDataTest.cs`
-(the `--model-diagnostics` HTML report), `FileSaverTest.cs` (the safe
-copy-and-verify NAS-write pattern), `DecoyPairingManifestTest.cs` and
+(the `--model-diagnostics` HTML report), `SimpleFileSaverTest.cs` in `Skyline/CommonTest` (the shared
+sibling-temp atomic write), `DecoyPairingManifestTest.cs` and
 `EntrapmentPairingTest.cs` (decoy/entrapment pairing — see 01-decoy-generation.md).
 
 ## 3. Parity-locked tests and the "translation-proof" register

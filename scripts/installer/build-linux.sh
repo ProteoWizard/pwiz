@@ -132,6 +132,16 @@ package() {
         return 1
     fi
 
+    # Vendor EULAs, beside the binaries as build.ps1 stages them, for the vendors whose formats
+    # the Linux build reads (the SDKs themselves are fetched on first use, like on Windows).
+    local v
+    for v in Thermo Bruker Waters; do
+        if ! cp "$PWIZ_SHARP/pwiz/data/vendor_readers/$v/EULA.$v.txt" "$stage/"; then
+            echo "    FAILED: missing pwiz/data/vendor_readers/$v/EULA.$v.txt" >&2
+            return 1
+        fi
+    done
+
     chmod +x "$stage/msconvert"
     local tarball="$OUT_DIR/$name.tar.gz"
     rm -f "$tarball"

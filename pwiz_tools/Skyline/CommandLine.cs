@@ -1599,11 +1599,15 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
                 using var fileStream = File.OpenRead(skylineFile);
-                using var progressStream = new ProgressStream(fileStream);
+                // The hash is computed under the read-ahead stream, so it happens on the reading
+                // thread as each block comes off the disk instead of on the thread parsing the XML
+                using var hashingStream = new HashingStream(fileStream, true);
+                // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+                using var sequentialReadStream = new SequentialReadStream(hashingStream, true);
+                using var progressStream = new ProgressStream(sequentialReadStream);
                 progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
-                using var hashingStream = new HashingStream(progressStream, true);
                 // Wrap stream in XmlReader so that BaseUri is known
-                var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8), 
+                var reader = XmlReader.Create(new StreamReader(progressStream, Encoding.UTF8),
                     new XmlReaderSettings { IgnoreWhitespace = true }, 
                     skylineFile);  
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
@@ -1612,6 +1616,9 @@ namespace pwiz.Skyline
                 if (_doc == null)
                     return false;
 
+                // The parser can stop before the end of the file, and the reading thread may still be hashing.
+                // Reading to the end waits for that thread to hash the last block.
+                sequentialReadStream.CopyTo(Stream.Null);
                 var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
