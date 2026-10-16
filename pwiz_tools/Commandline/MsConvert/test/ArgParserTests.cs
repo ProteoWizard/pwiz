@@ -1,3 +1,4 @@
+using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Encoding;
 using Pwiz.Tools.MsConvert;
@@ -144,6 +145,50 @@ public class ArgParserTests
         // Default keeps the tight console cadence; a host with a slow progress sink raises it.
         Assert.AreEqual(100, Invoke("in.mzML").VerboseProgressPeriod);
         Assert.AreEqual(2500, Invoke("in.mzML", "--verboseProgressPeriod", "2500").VerboseProgressPeriod);
+    }
+
+    [TestMethod]
+    public void Zstd_SwitchesMatchCpp()
+    {
+        // --zstd replaces zlib everywhere, including the zlib numpress stacks on its arrays, in
+        // whichever order the switches come.
+        foreach (var args in new[] { new[] { "in.mzML", "--zstd", "--numpressLinear" }, new[] { "in.mzML", "--numpressLinear", "-z", "--zstd" } })
+        {
+            var encoder = Invoke(args).WriteConfig.EncoderConfig;
+            Assert.AreEqual(BinaryCompression.Zstd, encoder.Compression, string.Join(" ", args));
+            Assert.AreEqual(BinaryCompression.Zstd, encoder.CompressionOverrides[CVID.MS_m_z_array], string.Join(" ", args));
+        }
+
+        // --mzShuffleZstd shuffles m/z and time and leaves the rest on zlib.
+        var shuffle = Invoke("in.mzML", "--mzShuffleZstd").WriteConfig.EncoderConfig;
+        Assert.AreEqual(BinaryCompression.Zlib, shuffle.Compression);
+        Assert.AreEqual(BinaryCompression.ByteShuffleZstd, shuffle.CompressionOverrides[CVID.MS_m_z_array]);
+        Assert.AreEqual(BinaryCompression.ByteShuffleZstd, shuffle.CompressionOverrides[CVID.MS_time_array]);
+
+        // --dictZstd wins over --mzShuffleZstd for m/z and adds the ion-mobility arrays.
+        var dict = Invoke("in.mzML", "--dictZstd", "--mzShuffleZstd").WriteConfig.EncoderConfig;
+        Assert.AreEqual(BinaryCompression.DictZstd, dict.CompressionOverrides[CVID.MS_m_z_array]);
+        Assert.AreEqual(BinaryCompression.ByteShuffleZstd, dict.CompressionOverrides[CVID.MS_time_array]);
+        Assert.AreEqual(BinaryCompression.DictZstd, dict.CompressionOverrides[CVID.MS_mean_inverse_reduced_ion_mobility_array]);
+        Assert.AreEqual(BinaryCompression.DictZstd, dict.CompressionOverrides[CVID.MS_raw_ion_mobility_drift_time_array]);
+
+        // From a config file too.
+        string tmp = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllLines(tmp, new[] { "zstd", "dictZstd" });
+            var fromFile = Invoke("in.mzML", "-c", tmp, "--numpressSlof").WriteConfig.EncoderConfig;
+            Assert.AreEqual(BinaryCompression.Zstd, fromFile.Compression);
+            Assert.AreEqual(BinaryCompression.DictZstd, fromFile.CompressionOverrides[CVID.MS_m_z_array]);
+            Assert.AreEqual(BinaryCompression.Zstd, fromFile.CompressionOverrides[CVID.MS_intensity_array]);
+        }
+        finally { File.Delete(tmp); }
+
+        // Shuffle and dictionary encoding cannot follow numpress on the same array, and mzMLb
+        // has no bytes to apply them to.
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--mzShuffleZstd", "--numpressLinear"), "shuffle + numpress");
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "-n", "--dictZstd"), "dict + numpress");
+        Assert.ThrowsException<ArgumentException>(() => Invoke("in.mzML", "--mzMLb", "--dictZstd"), "dict + mzMLb");
     }
 
     [TestMethod]

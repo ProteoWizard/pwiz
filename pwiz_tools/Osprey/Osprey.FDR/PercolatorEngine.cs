@@ -179,7 +179,7 @@ namespace pwiz.Osprey.FDR
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             IOspreyLog log,
-            IFdrOutputSink sink,
+            IFdrFirstPassSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
