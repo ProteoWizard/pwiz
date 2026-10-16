@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Proteome;
 
 namespace pwiz.CarafeSharp.Test
@@ -206,9 +207,9 @@ namespace pwiz.CarafeSharp.Test
             var pairs = new Dictionary<string, int> { { @"TARGETK", 0 }, { @"ENTRAPK", 0 }, { @"MTARGETR", 1 }, { @"MENTRAPR", 1 }, { @"LONEK", 2 } };
             var types = new Dictionary<string, string>
             {
-                { @"TARGETK", EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET }, { @"ENTRAPK", EntrapmentFastaBuilder.PEPTIDE_TYPE_P_TARGET },
-                { @"MTARGETR", EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET }, { @"MENTRAPR", EntrapmentFastaBuilder.PEPTIDE_TYPE_P_TARGET },
-                { @"LONEK", EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET },
+                { @"TARGETK", PairingManifest.KIND_TARGET }, { @"ENTRAPK", PairingManifest.KIND_P_TARGET },
+                { @"MTARGETR", PairingManifest.KIND_TARGET }, { @"MENTRAPR", PairingManifest.KIND_P_TARGET },
+                { @"LONEK", PairingManifest.KIND_TARGET },
             };
             Assert.AreEqual(0, EntrapmentPairingValidator.ValidateLibraryAgainstManifest(
                 new[] { @"ENTRAPK", @"ENTRAPR" }, new[] { @"TARGETK", @"TARGETR", @"LONEK" }, pairs, types).Count);
@@ -322,7 +323,7 @@ namespace pwiz.CarafeSharp.Test
                 @">db2|ACC5_pep00001|ACC5", @"MSTNPKPQRKTKRNTNRRPQDVKFPGGGQIVGGVYLLPRRGPRLGVRATRKTSERSQPR",
             }, ReadLfLines(Path.Combine(folder, @"peptides.fasta")));
             var manifest = ReadLfLines(Path.Combine(folder, @"pairing.tsv"));
-            Assert.AreEqual(EntrapmentFastaBuilder.MANIFEST_HEADER, manifest[0]);
+            Assert.AreEqual(PairingManifest.HEADER, manifest[0]);
             Assert.AreEqual("K\tNo\tsp|P10010|SINGLE_HUMAN\ttarget\t1", manifest[2]);
             Assert.AreEqual(10, manifest.Length);
         }
@@ -377,13 +378,13 @@ namespace pwiz.CarafeSharp.Test
                 string sequence = fields[0];
                 string type = fields[3];
                 int pair = int.Parse(fields[4]);
-                if (pair >= 12 || (pair == 3 && type == EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET) ||
-                    (pair == 5 && type == EntrapmentFastaBuilder.PEPTIDE_TYPE_DECOY) ||
-                    (pair == 7 && type == EntrapmentFastaBuilder.PEPTIDE_TYPE_P_DECOY))
+                if (pair >= 12 || (pair == 3 && type == PairingManifest.KIND_TARGET) ||
+                    (pair == 5 && type == PairingManifest.KIND_DECOY) ||
+                    (pair == 7 && type == PairingManifest.KIND_P_DECOY))
                 {
                     continue;
                 }
-                if (pair == 9 && type == EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET)
+                if (pair == 9 && type == PairingManifest.KIND_TARGET)
                     sequence = sequence.ToLowerInvariant().Replace('l', 'i');
                 sequences.Add(sequence);
             }

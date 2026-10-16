@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -30,7 +31,7 @@ namespace pwiz.Osprey.IO
     /// <summary>
     /// A library precursor in the form a blib stores it: the <c>RefSpectra</c> identity, the
     /// compressed peaks, the <c>Modifications</c> and protein rows. The one place a <see cref="LibraryEntry"/> becomes blib rows, shared by the search
-    /// output and <see cref="LibraryBlibWriter"/>; <see cref="BlibWriter.AddSpectrum(BlibSpectrum, double, double, double, double, long, int)"/>
+    /// output and <see cref="LibraryBlibWriter"/>; <see cref="OspreyBlibWriter.AddSpectrum(BlibSpectrum, double, double, double, double, long, int)"/>
     /// writes it. Built from the entry alone, so it can be prepared on any thread while the
     /// SQLite inserts stay on one.
     ///
@@ -92,7 +93,7 @@ namespace pwiz.Osprey.IO
             // its own text, with the UniMod ids the writer knows converted to masses.
             string modifiedSequence = CountModificationTokens(entry.ModifiedSequence) == (entry.Modifications?.Count ?? 0)
                 ? FormatModifiedSequence(entry.Sequence, byResidue)
-                : BlibWriter.ConvertUnimodToMass(BlibWriter.StripFlankingChars(entry.ModifiedSequence));
+                : BlibPeptideText.ConvertUnimodToMass(BlibPeptideText.StripFlankingChars(entry.ModifiedSequence));
             return new BlibSpectrum(entry,
                 modifiedSequence,
                 byResidue.Select(pair => new Modification { Position = pair.Key, MassDelta = pair.Value }).ToArray(),

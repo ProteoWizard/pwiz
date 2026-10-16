@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
@@ -58,10 +59,12 @@ namespace pwiz.Osprey.IO
         /// file there only once the new one is complete. <paramref name="librarySource"/> names the
         /// library the entries were loaded from, recorded as the spectrum source.
         /// <paramref name="decoyPrefixes"/> are the accession prefixes that mark a library decoy
-        /// (a search's defaults when none are given). Returns the number of spectra written.
+        /// (a search's defaults when none are given), and <paramref name="commandLine"/> the
+        /// command that made the library, recorded in its metadata when given. Returns the
+        /// number of spectra written.
         /// </summary>
         public static int Write(string path, IReadOnlyList<LibraryEntry> entries, string librarySource,
-            int nThreads = 0, IList<string> decoyPrefixes = null)
+            int nThreads = 0, IList<string> decoyPrefixes = null, string commandLine = null)
         {
             var parallelOptions = new ParallelOptions
             {
@@ -70,44 +73,45 @@ namespace pwiz.Osprey.IO
             // No prefixes given: the ones a search recognizes by default.
             var prefixes = decoyPrefixes ?? new OspreyConfig().DecoyPrefixes;
             string decoyPrefix = prefixes.FirstOrDefault(p => !string.IsNullOrEmpty(p)) ?? DEFAULT_DECOY_PREFIX;
-            using (var saver = new SimpleFileSaver(path))
+            using (var writer = new OspreyBlibWriter(path))
             {
-                using (var writer = new BlibWriter(saver.SafeName))
+                writer.BeginBatch();
+                string sourceName = Path.GetFileName(librarySource);
+                long fileId = writer.AddSourceFile(Path.GetFullPath(librarySource), sourceName, 0.0);
+                var block = new BlibSpectrum[BLOCK_SIZE];
+                var refIds = new long[entries.Count];
+                using (var progress = new ProgressReporter(
+                           string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
+                               entries.Count, path),
+                           entries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                 {
-                    writer.BeginBatch();
-                    string sourceName = Path.GetFileName(librarySource);
-                    long fileId = writer.AddSourceFile(Path.GetFullPath(librarySource), sourceName, 0.0);
-                    var block = new BlibSpectrum[BLOCK_SIZE];
-                    using (var progress = new ProgressReporter(
-                               string.Format(OspreyIOResources.LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_,
-                                   entries.Count, path),
-                               entries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
+                    for (int start = 0; start < entries.Count; start += BLOCK_SIZE)
                     {
-                        for (int start = 0; start < entries.Count; start += BLOCK_SIZE)
+                        int count = Math.Min(BLOCK_SIZE, entries.Count - start);
+                        int blockStart = start;
+                        Parallel.For(0, count, parallelOptions, i =>
                         {
-                            int count = Math.Min(BLOCK_SIZE, entries.Count - start);
-                            int blockStart = start;
-                            Parallel.For(0, count, parallelOptions, i =>
-                            {
-                                var entry = entries[blockStart + i];
-                                block[i] = BlibSpectrum.FromLibraryEntry(entry,
-                                    DecoyAccessions(entry, prefixes, decoyPrefix));
-                            });
-                            for (int i = 0; i < count; i++)
-                            {
-                                double rt = entries[start + i].RetentionTime;
-                                long refId = writer.AddSpectrum(block[i], rt, rt, rt, 0.0, fileId, 1);
-                                writer.AddRetentionTime(refId, fileId, rt, null, null, 0.0, true);
-                            }
-                            progress.Report(start + count);
+                            var entry = entries[blockStart + i];
+                            block[i] = BlibSpectrum.FromLibraryEntry(entry,
+                                DecoyAccessions(entry, prefixes, decoyPrefix));
+                        });
+                        for (int i = 0; i < count; i++)
+                        {
+                            double rt = entries[start + i].RetentionTime;
+                            long refId = writer.AddSpectrum(block[i], rt, rt, rt, 0.0, fileId, 1);
+                            writer.AddRetentionTime(refId, fileId, rt, null, null, 0.0, true);
+                            refIds[start + i] = refId;
                         }
+                        progress.Report(start + count);
                     }
-                    writer.Commit();
-                    writer.AddMetadata(@"osprey_version", OspreyVersion.Current);
-                    writer.AddMetadata(@"library_source", sourceName);
-                    writer.FinalizeDatabase();
                 }
-                saver.Commit();
+                WriteDecoyPairs(writer, entries, refIds);
+                writer.CommitBatch();
+                writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, OspreyVersion.Current);
+                writer.AddMetadata(OspreyBlibWriter.KEY_LIBRARY_SOURCE, sourceName);
+                if (commandLine != null)
+                    writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, commandLine);
+                writer.Complete();
             }
             return entries.Count;
         }
@@ -124,6 +128,44 @@ namespace pwiz.Osprey.IO
             if (entry.ProteinIds == null || entry.ProteinIds.Count == 0)
                 return new[] { decoyPrefix + entry.Sequence };
             return entry.ProteinIds.Select(accession => decoyPrefix + accession).ToArray();
+        }
+
+        /// <summary>
+        /// The <c>DecoyPairs</c> rows of a library that supplies its decoys: one pair per decoy
+        /// whose target is in the library (the load paired it, so its id is the target's with
+        /// the decoy bit), numbered in target order, with the entrapment partition marked from
+        /// the accessions. Written so the exported blib searches back with its own decoys, which
+        /// a blib without the table cannot. A library of generated or unpaired decoys writes none.
+        /// </summary>
+        private static void WriteDecoyPairs(OspreyBlibWriter writer, IReadOnlyList<LibraryEntry> entries, long[] refIds)
+        {
+            var targetIndexById = new Dictionary<uint, int>();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (!entries[i].IsDecoy)
+                    targetIndexById[entries[i].Id] = i;
+            }
+            int pairId = 0;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var decoy = entries[i];
+                if (!decoy.IsDecoy || (decoy.Id & LibraryEntry.DECOY_ID_BIT) == 0 ||
+                    !targetIndexById.TryGetValue(decoy.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex))
+                {
+                    continue;
+                }
+                pairId++;
+                bool entrapment = IsEntrapment(entries[targetIndex]);
+                writer.AddDecoyPair(refIds[targetIndex], false, entrapment, pairId);
+                writer.AddDecoyPair(refIds[i], true, entrapment, pairId);
+            }
+        }
+
+        /// <summary>An entrapment target or decoy, by the accession marker the pairing manifest spells.</summary>
+        private static bool IsEntrapment(LibraryEntry entry)
+        {
+            return entry.ProteinIds != null &&
+                   entry.ProteinIds.Any(p => p != null && p.IndexOf(LibraryContract.ENTRAPMENT_MARKER, StringComparison.Ordinal) >= 0);
         }
     }
 }

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- BiblioSpec.IO: the .blib file format as a DLL every tool imports - the schema (BlibSchema,
+       the one definition with its version history), the neutral spectrum record and the one
+       BlibWriter that Osprey's search output and CarafeSharp's predicted libraries are written
+       through, with a hook for a host's own tables in the same transaction. The .blib format is
+       this lab's own file type, so no project of ours writes it from scratch: a new writer is a
+       new set of quirks for every reader to absorb, and this project is where the one writer
+       lives (the BiblioSpec port's BlibMaker and Skyline's NHibernate BlibDb are the two still
+       to come onto it). Plain net10.0, not
+       net10.0-windows: Osprey and CarafeSharp run on Linux, and nothing here needs a window. No
+       process wrapper: the BlibBuild / BlibFilter runners Skyline uses are the sibling
+       BiblioSpecUtil project. Depends on CommonUtil (the atomic file writer), System.Data.SQLite
+       and Ionic.Zlib (PROdotnetzip, whose deflate bytes are stock zlib's, as Skyline's own writer
+       and Rust osprey's produce), at the versions Skyline, Osprey and CarafeSharp already carry. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>pwiz.BiblioSpec.IO</RootNamespace>
+    <AssemblyName>BiblioSpec.IO</AssemblyName>
+    <Company>University of Washington</Company>
+    <Product>BiblioSpec</Product>
+    <Copyright>Copyright (c) University of Washington 2026</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CommonUtil\CommonUtil.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 1.0.119 to match Skyline, Osprey, CarafeSharp and pwiz-sharp (a lower version here is an
+         NU1605 downgrade error). -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <!-- Ionic.Zlib for the stock-zlib peak blobs, as Skyline, Osprey and CarafeSharp write them. -->
+    <PackageReference Include="PROdotnetzip" Version="1.20.0" />
+  </ItemGroup>
+
+</Project>
