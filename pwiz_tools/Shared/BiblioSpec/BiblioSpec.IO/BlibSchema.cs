@@ -7,11 +7,10 @@
 // remain byte-for-byte identical to cpp because Skyline's schema-doc generator and
 // downstream BlibUtil readers compare against these literals.
 //
-// A copy of pwiz_tools/BiblioSpec/src/BiblioSpec/BlibSchema.cs, the port's own, which
-// BlibMaker still writes with; the port's BlibSchemaIdentity test holds the two identical
-// member by member, so the port takes no dependency on this project until BlibMaker itself
-// writes through BlibWriter. The small-molecule columns here are the port's
-// SmallMolMetadata.SqlColumns. Osprey and CarafeSharp write through this copy.
+// The one definition of the schema: the BiblioSpec port's BlibMaker (BlibBuild, BlibFilter),
+// Osprey and CarafeSharp all write through BlibWriter with it, and the port's
+// SmallMolMetadata.SqlColumns are the small-molecule columns here. Until 2026-10-16 the port
+// kept its own copy, held identical by a test, so that it took no dependency on this project.
 
 using System;
 using System.Collections.Generic;
@@ -250,6 +249,49 @@ namespace pwiz.BiblioSpec.IO
             "bestSpectrum INTEGER, " +
             "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )";
 
+        // --- seed rows -----------------------------------------------------------------------------
+
+        /// <summary>
+        /// BiblioSpec's <c>ScoreTypes</c> rows, in id order: the score's name and how to read it
+        /// (<c>PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT</c>, <c>..._INCORRECT</c> or
+        /// <c>NOT_A_PROBABILITY_VALUE</c>). The id is the port's <c>PsmScoreType</c> ordinal and
+        /// <c>RefSpectra.scoreType</c>. cpp BlibUtils.cpp:37 and BlibMaker.cpp:441-446.
+        /// </summary>
+        public static readonly (string ScoreType, string ProbabilityType)[] ScoreTypes =
+        {
+            ("UNKNOWN", "NOT_A_PROBABILITY_VALUE"),
+            ("PERCOLATOR QVALUE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PEPTIDE PROPHET SOMETHING", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("SPECTRUM MILL", "NOT_A_PROBABILITY_VALUE"),
+            ("IDPICKER FDR", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MASCOT IONS SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("TANDEM EXPECTATION VALUE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PROTEIN PILOT CONFIDENCE", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("SCAFFOLD SOMETHING", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("WATERS MSE PEPTIDE SCORE", "NOT_A_PROBABILITY_VALUE"),
+            ("OMSSA EXPECTATION SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PROTEIN PROSPECTOR EXPECTATION SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("SEQUEST XCORR", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MAXQUANT SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MORPHEUS SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("MSGF+ SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PEAKS CONFIDENCE SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("BYONIC SCORE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("PEPTIDE SHAKER CONFIDENCE", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+            ("GENERIC Q-VALUE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT"),
+            ("HARDKLOR IDOTP", "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT"),
+        };
+
+        /// <summary>
+        /// BiblioSpec's <c>IonMobilityTypes</c> rows, in id order; the id is the port's
+        /// <c>IonMobilityType</c> ordinal and <c>RefSpectra.ionMobilityType</c>. cpp
+        /// BlibUtils.cpp and BlibMaker.cpp:456-460.
+        /// </summary>
+        public static readonly string[] IonMobilityTypes =
+        {
+            "none", "driftTime(msec)", "inverseK0(Vsec/cm^2)", "compensation(V)",
+        };
+
         // --- index statements (emitted at COMMIT, see cpp BlibMaker::commit) ---------------------
 
         /// <summary>cpp BlibMaker.cpp:312.</summary>
@@ -295,7 +337,8 @@ namespace pwiz.BiblioSpec.IO
             "IsEntrapment INTEGER NOT NULL, PairID INTEGER NOT NULL, Method TEXT)";
 
         /// <summary>The index a reader walking <c>DecoyPairs</c> by pair needs.</summary>
-        public const string CreateIdxDecoyPairsPairId = "CREATE INDEX idx_DecoyPairs_PairID ON DecoyPairs(PairID)";
+        public const string IdxDecoyPairsPairIdName = "idx_DecoyPairs_PairID";
+        public const string CreateIdxDecoyPairsPairId = "CREATE INDEX " + IdxDecoyPairsPairIdName + " ON DecoyPairs(PairID)";
 
         /// <summary>
         /// All CREATE TABLE statements that <c>BlibMaker.CreateTables</c> emits, in the

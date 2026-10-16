@@ -52,6 +52,8 @@ public static class Program
         {
             builder.ParseCommandArgs(argv);
             builder.Init();
+            // The library carries how it was made, as every library a tool of ours writes does.
+            builder.RecordCommandLine("BlibBuild", BlibBuilder.CommandMetadataKey, args);
 
             var success = builder.BuildLibrary();
 
