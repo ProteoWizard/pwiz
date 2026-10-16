@@ -32,6 +32,10 @@ public sealed class OboTerm
     /// <summary>Other relations (name → (prefix, id)).</summary>
     public List<RelationEntry> Relations { get; } = new();
 
+    /// <summary>The <c>has_value_type</c> relationship target (e.g. "xsd:float");
+    /// empty for terms that carry no value (flags such as "zoom scan").</summary>
+    public string ValueType { get; set; } = string.Empty;
+
     /// <summary>Property-value annotations.</summary>
     public List<KeyValuePair<string, string>> PropertyValues { get; } = new();
 
@@ -243,6 +247,11 @@ public static class OboParser
         if (space <= 0) return;
         string relName = body[..space].Trim();
         string target = body[(space + 1)..].Trim();
+
+        // Most has_value_type targets name an xsd primitive, which is not a term and is skipped
+        // below; a few name a CV term (the MS list_of_* types) and are kept in both places.
+        if (relName == "has_value_type")
+            term.ValueType = target;
 
         if (!TryParseId(target, out string targetPrefix, out uint targetId))
             return; // non-numeric target (e.g. NCIT:C25330) — skip

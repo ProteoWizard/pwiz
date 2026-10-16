@@ -66,6 +66,7 @@ public sealed class CVTermInfo
         Name = src.Name;
         Def = src.Def;
         IsObsolete = src.IsObsolete;
+        ValueType = src.ValueType;
         ParentsIsA = src.ParentsIsA;
         ParentsPartOf = src.ParentsPartOf;
         OtherRelations = src.OtherRelations;
@@ -85,6 +86,10 @@ public sealed class CVTermInfo
 
     /// <summary>True iff this term is marked obsolete in the source ontology.</summary>
     public bool IsObsolete { get; set; }
+
+    /// <summary>The type of the value the term carries (e.g. "xsd:float");
+    /// empty for terms that carry no value (flags such as "zoom scan").</summary>
+    public string ValueType { get; set; } = string.Empty;
 
     /// <summary>Direct "is_a" parents.</summary>
     public IReadOnlyList<CVID> ParentsIsA { get; set; } = Array.Empty<CVID>();
@@ -363,6 +368,7 @@ public static class CvLookup
             Name = term.Name,
             Def = term.Def,
             IsObsolete = term.IsObsolete,
+            ValueType = term.ValueType,
             ParentsIsA = isA,
             ParentsPartOf = partOf,
             ExactSynonyms = term.ExactSynonyms.Count == 0

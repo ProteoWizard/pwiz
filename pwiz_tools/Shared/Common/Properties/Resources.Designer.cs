@@ -853,7 +853,7 @@ namespace pwiz.Common.Properties {
                 return ResourceManager.GetString("FilterOperations_Is_Not_Blank", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Starts With.
         /// </summary>

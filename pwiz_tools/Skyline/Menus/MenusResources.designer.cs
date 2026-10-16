@@ -113,6 +113,15 @@ namespace pwiz.Skyline.Menus {
                 return ResourceManager.GetString("EditMenu_ChangeSpectrumFilter_Change_spectrum_filter", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Looking for spectrum parameters in the data files.
+        /// </summary>
+        public static string EditMenu_EditSpectrumFilter_Looking_for_spectrum_parameters_in_the_data_files {
+            get {
+                return ResourceManager.GetString("EditMenu_EditSpectrumFilter_Looking_for_spectrum_parameters_in_the_data_files", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Adding spectrum filter to {0}.
