@@ -21,18 +21,26 @@
     This file deliberately imports nothing else: no Microsoft.Common targets, and so no
     Directory.Build.props/targets.
 
-    -p:SkylineBuildProjects=<list> builds a subset instead (tc-perftests.bat builds Skyline,
-    TestPerf, TestTutorial and TestRunner). Separate the paths with %3B, not ';': on the
-    command line a raw ';' ends the property. The property is removed again before the
-    projects are built, so it does not become a global property of every project.
+    -p:SkylineBuildSet picks which projects to build:
+      All  (default) everything above - build.bat
+      Perf Skyline, TestPerf, TestTutorial and TestRunner - tc-perftests.bat
+    A named set rather than a project list on the command line, which would need its ';'
+    separators escaped. The property is removed again before the projects are built, so it
+    does not become a global property of every project.
   -->
 
-  <ItemGroup Condition="'$(SkylineBuildProjects)' != ''">
-    <!-- Unescape, or the %3B separators stay escaped and the list is read as one path. -->
-    <SkylineBuildProject Include="$([MSBuild]::Unescape('$(SkylineBuildProjects)'))" />
+  <PropertyGroup>
+    <SkylineBuildSet Condition="'$(SkylineBuildSet)' == ''">All</SkylineBuildSet>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(SkylineBuildSet)' == 'Perf'">
+    <SkylineBuildProject Include="Skyline.csproj" />
+    <SkylineBuildProject Include="TestPerf\TestPerf.csproj" />
+    <SkylineBuildProject Include="TestTutorial\TestTutorial.csproj" />
+    <SkylineBuildProject Include="TestRunner\TestRunner.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(SkylineBuildProjects)' == ''">
+  <ItemGroup Condition="'$(SkylineBuildSet)' == 'All'">
     <SkylineBuildProject Include="Skyline.csproj" />
     <SkylineBuildProject Include="CommonTest\CommonTest.csproj" />
     <SkylineBuildProject Include="Test\Test.csproj" />
@@ -52,14 +60,20 @@
 
   <Import Project="$(MSBuildToolsPath)\NuGet.targets" />
 
-  <Target Name="Build">
+  <Target Name="Build" DependsOnTargets="_CheckSkylineBuildSet">
     <MSBuild Projects="@(SkylineBuildProject)" Targets="Build" BuildInParallel="true"
-             RemoveProperties="SkylineBuildProjects" />
+             RemoveProperties="SkylineBuildSet" />
   </Target>
 
-  <Target Name="Clean">
+  <Target Name="Clean" DependsOnTargets="_CheckSkylineBuildSet">
     <MSBuild Projects="@(SkylineBuildProject)" Targets="Clean" BuildInParallel="true"
-             RemoveProperties="SkylineBuildProjects" />
+             RemoveProperties="SkylineBuildSet" />
+  </Target>
+
+  <!-- A misspelled set would otherwise build nothing and report success. -->
+  <Target Name="_CheckSkylineBuildSet">
+    <Error Condition="'@(SkylineBuildProject)' == ''"
+           Text="Unknown SkylineBuildSet '$(SkylineBuildSet)'. Use All or Perf." />
   </Target>
 
   <Target Name="Rebuild" DependsOnTargets="Clean;Build" />

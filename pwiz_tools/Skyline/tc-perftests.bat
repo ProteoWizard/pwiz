@@ -98,7 +98,9 @@ if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     goto error
 )
 
-set MSBUILD_PROPS=-p:Configuration=%CONFIG%
+REM # x64, as build.bat builds it, so the perf and tutorial tests run against the same binaries
+REM # as the per-commit tests and the shipped build, not an AnyCPU copy under bin\<Config>.
+set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 
@@ -113,9 +115,8 @@ REM # ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp vendor + BiblioS
 REM # tool projects, ...). TestPerf/TestTutorial add the two suites (and copy
 REM # TestUtil/TestFunctional into their own output). TestRunner is the harness.
 REM # SkylineBuild.proj builds them in one MSBuild session, the way build.bat builds
-REM # the full set; the list is %%3B-separated, see SkylineBuild.proj.
+REM # the full set; its Perf set is this list.
 set BUILD_TARGET=SkylineBuild.proj
-set BUILD_PROJECTS=Skyline.csproj%%3BTestPerf\TestPerf.csproj%%3BTestTutorial\TestTutorial.csproj%%3BTestRunner\TestRunner.csproj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
@@ -135,7 +136,7 @@ if %EXIT% NEQ 0 (
 
 REM # Restore and build in one dotnet build. No -f - see SkylineBuild.proj.
 echo ##teamcity[progressMessage 'dotnet build %BUILD_TARGET% (%CONFIG%)']
-dotnet build "%BUILD_TARGET%" -nologo %MSBUILD_PROPS% -p:SkylineBuildProjects=%BUILD_PROJECTS%
+dotnet build "%BUILD_TARGET%" -nologo %MSBUILD_PROPS% -p:SkylineBuildSet=Perf
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %BUILD_TARGET% failed" & goto error)
 
 REM # ------------------------------------------------------------------------
