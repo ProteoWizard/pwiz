@@ -317,18 +317,6 @@
     <value>{0}Percolatorの結果：ターゲット{1:N0}個、デコイ{2:N0}個が{3:P1} FDRを通過</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___" xml:space="preserve">
-    <value>「{0}」について、検出数が2以上のタンパク質由来のプリカーサー候補を保存できませんでした：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_" xml:space="preserve">
-    <value>1個のファイルについて、検出数が2以上のタンパク質由来のプリカーサー候補を保存しました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_" xml:space="preserve">
-    <value>{0:N0}個のファイルについて、検出数が2以上のタンパク質由来のプリカーサー候補を保存しました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_BuildCalibrationData_Calibration_report___0__of__1__files_have_no_calibration_diagnostics_and_are_left_out_of_" xml:space="preserve">
     <value>校正レポート：{1:N0}個のファイルのうち{0:N0}個には校正診断がないため、レポートから除外されます：[{2}]</value>
     <comment>Needs Review:New resource</comment>
@@ -413,20 +401,8 @@
     <value>モデル診断：{0}はこの解析に対して古いため、レポートを構築するために第1パスを再実行します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_" xml:space="preserve">
-    <value>「{0}」の第1パスモデルを保存できませんでした：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
     <value>トレーニング済みの第1パスモデルを{0}に保存しました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs" xml:space="preserve">
-    <value>トレーニング済みの第1パスモデルを{0}と、他の{1:N0}個の各入力用に保存しました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input" xml:space="preserve">
-    <value>トレーニング済みの第1パスモデルを{0}と、もう1つの入力用に保存しました</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
@@ -507,14 +483,6 @@
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_" xml:space="preserve">
     <value>最新：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found" xml:space="preserve">
-    <value>第1パスのペプチドが2個以上のタンパク質由来のプリカーサーのリスト（{0}）が、入力の{1}ファイルの横に見つかりませんでした</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___" xml:space="preserve">
-    <value>読み取り可能な第1パスモデルファイル（{0}）が、入力の{1}ファイルの横に見つかりませんでした</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">

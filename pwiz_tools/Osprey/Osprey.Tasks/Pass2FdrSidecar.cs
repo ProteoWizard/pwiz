@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Tasks
             }
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.Pass2QValue));
 
-            EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
+            EnsureFrozenFirstPassPublished(ctx);
 
             if (perFileParquetPaths.Count == 0 || config.InputFiles == null)
                 return;
@@ -176,7 +176,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Publish the trained 1st-pass model - and, under protein-compact, the stratum that
-        /// rides in the same sidecar - from disk when this process did not train it.
+        /// pairs with it - from the analysis's files when this process did not train it.
         ///
         /// <para>Needed by every entry point that reads frozen 1st-pass state without having
         /// run the first pass: a distributed <c>--task SecondPassFDR</c> node, any resume that
@@ -191,12 +191,11 @@ namespace pwiz.Osprey.Tasks
         /// carried is published - an empty one would silently constrain the competition to
         /// nothing, which is worse than the honest absence.</para>
         /// </summary>
-        internal static void EnsureFrozenFirstPassPublished(
-            PipelineContext ctx, IReadOnlyDictionary<string, string> perFileParquetPaths)
+        internal static void EnsureFrozenFirstPassPublished(PipelineContext ctx)
         {
             if (ctx.TryGet<FirstPassPercolatorModel>(out _))
                 return;
-            var reloaded = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+            var reloaded = FirstPassModelIO.LoadForAnalysis(ctx.Config);
             if (reloaded == null)
                 return;
             // ExperimentAgg is what the TRAINING process ran under (null on a sidecar
@@ -1887,8 +1886,8 @@ namespace pwiz.Osprey.Tasks
         /// <para>Explicitly parameterized rather than reading enclosing state, because this is
         /// per-FILE work that belongs to the rescore worker: the run-level competition is
         /// computable from one file alone, and every input here is either that file's own
-        /// sidecar / parquet or a whole-run constant that already rides the per-file
-        /// <c>.1st-pass.model.json</c> relay (the frozen model and the protein stratum). Stage 7
+        /// sidecar / parquet or a whole-run constant that already rides the analysis-wide
+        /// <c>.1st-pass.model.json</c> / <c>.1st-pass.stratum.json</c> relay. Stage 7
         /// calls it today; moving the call to <c>PerFileRescoreTask</c> is then a call-site
         /// change rather than a rewrite, which is what stops Stage 7 having to open a 1st-pass
         /// sidecar at all (issue #4486).</para>

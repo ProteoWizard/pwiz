@@ -822,7 +822,7 @@ namespace pwiz.Osprey.FDR
             // Training exists to score entries; when every entry's score is already on disk
             // there is nothing for a model to do, and loading the training subset's feature
             // vectors is the single most expensive thing left - 21 minutes at 446 files, spent
-            // to reproduce a model that was already persisted per file as .1st-pass.model.json.
+            // to reproduce a model that was already persisted as the analysis's .1st-pass.model.json.
             if (pretrainedModel == null)
             {
                 // Each file fills only its own subset entries, so the files need no ordering. The

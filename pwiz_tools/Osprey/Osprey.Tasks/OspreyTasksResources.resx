@@ -262,15 +262,6 @@
   <data name="FdrProjectionSinkBase_Finish__0__Percolator_results___1__targets___2__decoys_pass__3__FDR" xml:space="preserve">
     <value>{0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR</value>
   </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___" xml:space="preserve">
-    <value>Could not save the precursor candidates from proteins with 2 or more detections for '{0}': {1}</value>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_" xml:space="preserve">
-    <value>Saved the precursor candidates from proteins with 2 or more detections for 1 file.</value>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_" xml:space="preserve">
-    <value>Saved the precursor candidates from proteins with 2 or more detections for {0:N0} files.</value>
-  </data>
   <data name="FirstPassFdrTask_BuildCalibrationData_Calibration_report___0__of__1__files_have_no_calibration_diagnostics_and_are_left_out_of_" xml:space="preserve">
     <value>Calibration report: {0:N0} of {1:N0} files have no calibration diagnostics and are left out of it: [{2}]</value>
   </data>
@@ -334,17 +325,8 @@
   <data name="FirstPassFdrTask_OnlyDiagnosticsProductOutstanding_Model_diagnostics___0__is_out_of_date_for_this_analysis__so_the_first_pass_is_re_run_to_" xml:space="preserve">
     <value>Model diagnostics: {0} is out of date for this analysis, so the first pass is re-run to build the report.</value>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_" xml:space="preserve">
-    <value>Could not save the first-pass model for '{0}': {1}</value>
-  </data>
   <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
     <value>Saved the trained first-pass model to {0}</value>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs" xml:space="preserve">
-    <value>Saved the trained first-pass model to {0} and for each of the other {1:N0} inputs</value>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input" xml:space="preserve">
-    <value>Saved the trained first-pass model to {0} and for the other input</value>
   </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
     <value>Cross-run reconciliation planning</value>
@@ -405,12 +387,6 @@
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_" xml:space="preserve">
     <value>up to date: {0}</value>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found" xml:space="preserve">
-    <value>no list of precursors from proteins with 2 or more first-pass peptides ({0}) was found beside the inputs' {1} files</value>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___" xml:space="preserve">
-    <value>no readable first-pass model file ({0}) was found beside the inputs' {1} files</value>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___0___is_not_up_to_date" xml:space="preserve">
     <value>the first-pass model file ({0}) is not up to date</value>
@@ -1344,5 +1320,20 @@
   </data>
   <data name="ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired" xml:space="preserve">
     <value>{0} was acquired with overlapping isolation windows and is searched as acquired, so a precursor can be scored in more than one window. Use {1} auto to demultiplex it.</value>
+  </data>
+  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0____1_" xml:space="preserve">
+    <value>Could not save the precursor candidates from proteins with 2 or more detections to {0}: {1}</value>
+  </data>
+  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0_" xml:space="preserve">
+    <value>Saved the precursor candidates from proteins with 2 or more detections to {0}</value>
+  </data>
+  <data name="FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0____1_" xml:space="preserve">
+    <value>Could not save the first-pass model to {0}: {1}</value>
+  </data>
+  <data name="FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides_was_found_at__0_" xml:space="preserve">
+    <value>no list of precursors from proteins with 2 or more first-pass peptides was found at {0}</value>
+  </data>
+  <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_found_at__0_" xml:space="preserve">
+    <value>no readable first-pass model file was found at {0}</value>
   </data>
 </root>

@@ -634,32 +634,22 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not save the precursor candidates from proteins with 2 or more detections for &apos;{0}&apos;: {1}.
+        ///   Looks up a localized string similar to Could not save the precursor candidates from proteins with 2 or more detections to {0}: {1}.
         /// </summary>
-        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___ {
+        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0____1_ {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precurso" +
-                        "r_candidates_from_proteins_with_2_or_more_detections_for___0___", resourceCulture);
+                        "r_candidates_from_proteins_with_2_or_more_detections_to__0____1_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved the precursor candidates from proteins with 2 or more detections for {0:N0} files..
+        ///   Looks up a localized string similar to Saved the precursor candidates from proteins with 2 or more detections to {0}.
         /// </summary>
-        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_ {
+        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0_ {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candida" +
-                        "tes_from_proteins_with_2_or_more_detections_for__0__files_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Saved the precursor candidates from proteins with 2 or more detections for 1 file..
-        /// </summary>
-        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candida" +
-                        "tes_from_proteins_with_2_or_more_detections_for_1_file_", resourceCulture);
+                        "tes_from_proteins_with_2_or_more_detections_to__0_", resourceCulture);
             }
         }
         
@@ -873,12 +863,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not save the first-pass model for &apos;{0}&apos;: {1}.
+        ///   Looks up a localized string similar to Could not save the first-pass model to {0}: {1}.
         /// </summary>
-        public static string FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_ {
+        public static string FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0____1_ {
             get {
-                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___" +
-                        "0_____1_", resourceCulture);
+                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0_" +
+                        "___1_", resourceCulture);
             }
         }
         
@@ -888,26 +878,6 @@ namespace pwiz.Osprey.Tasks {
         public static string FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_ {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Saved the trained first-pass model to {0} and for each of the other {1:N0} inputs.
-        /// </summary>
-        public static string FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__" +
-                        "and_for_each_of_the_other__1__inputs", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Saved the trained first-pass model to {0} and for the other input.
-        /// </summary>
-        public static string FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__" +
-                        "and_for_the_other_input", resourceCulture);
             }
         }
         
@@ -1039,22 +1009,22 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to no list of precursors from proteins with 2 or more first-pass peptides ({0}) was found beside the inputs&apos; {1} files.
+        ///   Looks up a localized string similar to no list of precursors from proteins with 2 or more first-pass peptides was found at {0}.
         /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found {
+        public static string FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides_was_found_at__0_ {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_" +
-                        "2_or_more_first_pass_peptides___0___was_found", resourceCulture);
+                        "2_or_more_first_pass_peptides_was_found_at__0_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to no readable first-pass model file ({0}) was found beside the inputs&apos; {1} files.
+        ///   Looks up a localized string similar to no readable first-pass model file was found at {0}.
         /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___ {
+        public static string FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_found_at__0_ {
             get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_p" +
-                        "ass_model_json__was_found_beside_the_inputs___", resourceCulture);
+                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_fou" +
+                        "nd_at__0_", resourceCulture);
             }
         }
         

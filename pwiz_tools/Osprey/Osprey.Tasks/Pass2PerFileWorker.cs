@@ -38,7 +38,7 @@ namespace pwiz.Osprey.Tasks
     ///
     /// <para>One file's run-level competition is computable from that file alone: its own
     /// 1st-pass sidecar, its own reconciled parquet, and three whole-run constants that already
-    /// ride the per-file <c>.1st-pass.model.json</c> relay. Stage 7 was doing it only because
+    /// ride the analysis-wide <c>.1st-pass.model.json</c> relay. Stage 7 was doing it only because
     /// that is where the code happened to live, and paying for it by holding every file's
     /// survivors resident and re-opening 52.3 GB of 1st-pass sidecars at 257 files.</para>
     ///

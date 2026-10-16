@@ -356,25 +356,29 @@ tier, and an artifact that fits neither is a design error rather than a special 
 Scope is a statement about *content* - whose data is in the file - and it is what the
 memory model in P5 and P6 is built on.
 
-The converse of the replication below is the shape to watch for: **a per-run artifact
-carrying an analysis-wide payload.** `<stem>.reconciliation.json` does this today - every
-one of its N copies restates the same join-wide `first_pass_base_ids` array, which at 446
-runs is 2.79 GB of pure duplication inside 10.7 GB of envelopes that a fan-out worker then
-has to parse to rebuild a union it could have been handed. Replication is only benign when
-the payload is fixed in size, as the frozen model is; when it scales with the experiment
-it belongs in one experiment-wide artifact, and the fan-out reads that instead. This is the
-P6 startup rule seen from the writer's side. Fixed is not the same as small: the linear
-model is a few hundred KB, but a tree model under `OSPREY_FDR_MODEL=gbdt` is about 3.4 MB per
-copy, 1.5 GB across 446 runs, so the writer serializes it once and writes that text beside
-every run, and `LoadFromAny` parses one copy rather than each in turn.
+**Scope decides the name, with no exceptions: experiment-wide content is written ONCE, as
+`<blib-stem>.<ext>`, and never under a run stem.** A `<stem>.<ext>` file whose bytes are
+the same for every run is a defect, however small the payload. The orchestrator ships one
+analysis-named file to every node that needs it, as it already does for
+`<blib-stem>.1st-pass.fdr_experiment.bin`; a copy per run buys a fan-out node nothing it
+could not get from that one file, and it costs disk, relay volume and a directory that
+reads as N times more output than the analysis produced.
 
-Scope is not the same question as naming, and the two must not be conflated. Most
-per-run content is named for its run stem and most experiment-wide content is named for
-the analysis, but an experiment-wide payload small enough to duplicate may be
-*replicated* under every run stem so a fan-out node can find it by the one derivation it
-already knows. `<stem>.1st-pass.model.json` is exactly that: identical bytes beside
-every run, any one copy authoritative. It is experiment-wide content, and the memory
-model counts it as baseline, whatever its name says.
+This used to be a sanctioned exception, and the cost is why it is not one now. The frozen
+first-pass model and the protein-compact stratum were written beside every run so a node
+could find them "by the one derivation it already knows". On the 82-run SEA-AD cohort that
+was 82 identical copies of each, 790 MB of them stratum (about 4 GB at 446 runs). They are
+`<blib-stem>.1st-pass.model.json` and `<blib-stem>.1st-pass.stratum.json` now.
+`SubsetPipelineTest` enforces the whole-file form of the rule: after a straight-through
+multi-run analysis no `<stem>.*` suffix may be byte-identical across every run.
+
+That test cannot see the subtler shape, so it falls to review: **a per-run artifact
+carrying an analysis-wide payload.** `<stem>.reconciliation.json` did this - every one of
+its N copies restated the same join-wide `first_pass_base_ids` array, which at 446 runs is
+2.79 GB of pure duplication inside 10.7 GB of envelopes that a fan-out worker then had to
+parse to rebuild a union it could have been handed. Whatever the size, the payload belongs
+in one experiment-wide artifact and the fan-out reads that instead. This is the P6 startup
+rule seen from the writer's side.
 
 **P2. A per-run iteration reads only its own run's artifacts plus experiment-wide
 summaries written by an earlier phase, and builds nothing spanning runs.** This is the
@@ -807,7 +811,9 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
-| `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | experiment product | `FirstPassFDR` (end of Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR`, `FirstPassFDR` and `PerFileScoring` (resume) | **every node** |
+| `<blib-stem>.1st-pass.model.json` | experiment product | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR`, `FirstPassFDR` (resume) | **every node** |
+| `<blib-stem>.1st-pass.stratum.json` | experiment product, protein-compact only | `FirstPassFDR` (first-pass protein FDR) | as the model, paired with it by stamp | **every node** |
 | `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product, protein-compact only | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
@@ -864,25 +870,13 @@ to stage the raw data, build the caches, and delete the sources - and after that
 file is the only copy of the run, and deleting it loses the run. Prune spectra caches
 only where the source is still on disk.
 
-**`<stem>.1st-pass.model.json` is experiment-wide content under a per-run name.** The
-trained first-pass Percolator model is identical for every run, and a `SecondPassFDR` or
-`PerFileRescoring` node running a frozen pass-2 mode needs it. Writing it once under the
-analysis name would force every fan-out node to learn a second path convention; writing
-it beside each run's other sidecars means a node finds it by the same stem derivation it
-already uses. `LoadFromAny` takes the first copy that exists, because the copies are
-identical.
-
-**The protein-compact stratum rides inside `<stem>.1st-pass.model.json`** as an optional
-field, present only under `OSPREY_PASS2_QVALUE=protein-compact`. The mode needs both the
-frozen model and the stratum, and a node holding one without the other can do nothing, so
-one artifact meant one relay hop and one reload site.
-
-> **In flight** - this is changing, and P12 is why: training does not compute the stratum,
-> first-pass protein FDR does, so the column belongs in a file written by that phase.
-> `.1st-pass.stratum.json` is a separate artifact on
-> `Skyline/work/20260901_osprey_firstpass_resume` and is staged as its own relay hop by
-> `regression.ps1`. When that branch lands, this becomes a fourth experiment-wide artifact
-> that must relay with the other three.
+**The model and the protein-compact stratum are two files, because two phases compute
+them (P12).** Training produces `<blib-stem>.1st-pass.model.json`; first-pass protein FDR
+produces `<blib-stem>.1st-pass.stratum.json`, present only under
+`OSPREY_PASS2_QVALUE=protein-compact`. The mode needs both, and a node holding one without
+the other can do nothing, so they relay together. `FirstPassModelIO.LoadForAnalysis` pairs
+them only when their embedded stamps match, so a stratum left by an earlier run under
+another key is never published with this run's model.
 
 **`<stem>.2nd-pass.fdr_scores.bin` has one writer, in every pass-2 mode.** `PerFileRescoring`'s
 pass-2 per-run worker writes it for every run - the protein-compact competition and the
@@ -940,10 +934,8 @@ those files read as stale and recompute; they were written by another build anyw
 
 ### Where blib-named experiment-wide artifacts live
 
-This rule governs `fdr_experiment.bin` for both passes. It does **not** govern
-`<stem>.1st-pass.model.json`, which is the replicated exception described above: that one
-takes its name from the run stem and its directory from that run's own parquet, precisely
-so a fan-out node can find it without knowing this rule.
+This rule governs every experiment-wide artifact: `fdr_experiment.bin` for both passes,
+`retained_base_ids.bin`, `model.json` and `stratum.json`.
 
 A blib-named artifact takes its **name** from the output blib and its **directory**
 from the same resolution the per-run sidecars use - `ArtifactPaths.ResolveOutputDir` off
@@ -971,14 +963,14 @@ default:
 - `<blib-stem>.1st-pass.fdr_experiment.bin` carries the experiment-scope q-values every
   downstream pass reads. A `PerFileRescoring` or `SecondPassFDR` node without it cannot
   reconstruct them, because they are a function of all runs.
-- `<stem>.1st-pass.model.json` carries the frozen model, and under `protein-compact` the
-  stratum with it. A distributed `SecondPassFDR` node that never trained pass 1 has no
-  other source for either.
+- `<blib-stem>.1st-pass.model.json` carries the frozen model, and under `protein-compact`
+  `<blib-stem>.1st-pass.stratum.json` carries the stratum. A distributed `SecondPassFDR`
+  node that never trained pass 1 has no other source for either.
 
-Ship both to every node running either task. **Their failure behaviour differs, and only
+Ship them to every node running either task. **Their failure behaviour differs, and only
 one of them fails safely:**
 
-- A missing `<stem>.1st-pass.model.json` under an explicitly requested frozen pass-2 mode
+- A missing `<blib-stem>.1st-pass.model.json` under an explicitly requested frozen pass-2 mode
   aborts with a `ConfigError` rather than degrading to the anti-conservative retrain
   (see [12-second-pass-fdr](12-second-pass-fdr.md), "Fail-fast"). That is the behaviour to
   copy.
@@ -1217,11 +1209,11 @@ Experiment-wide, to **every** node:
   pool to rebuild the set instead, which is the identical O(runs) pre-pass in different
   clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
   625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
-- `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
+- `<blib-stem>.1st-pass.model.json` - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
-- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum, split out of
-  the model sidecar because a different phase produces it (P7)
+- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum, a separate file because
+  a different phase produces it (P7)
 
 This is the boundary where a missing experiment-wide file does the most damage, because
 the node can often proceed without it and produce a plausible wrong answer rather than
@@ -1248,8 +1240,8 @@ Per run, for **every** run in the cohort:
 
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
-- `<stem>.1st-pass.model.json` (any one copy)
-- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum. The default
+- `<blib-stem>.1st-pass.model.json`
+- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum. The default
   pass-2 mode reloads both this and the model here when neither was published in-process,
   which is every distributed `SecondPassFDR` node
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
@@ -1313,7 +1305,7 @@ the text says so rather than describing the current shape as though it were the 
 
 2. ~~**Two experiment-wide artifacts arrive with the fan-out fix.**~~ **LANDED** in
    [#4633](https://github.com/ProteoWizard/pwiz/pull/4633) (`c4921f3d6c`, 2026-09-06).
-   `<blib-stem>.1st-pass.retained_base_ids.bin` and `<stem>.1st-pass.stratum.json` are both
+   `<blib-stem>.1st-pass.retained_base_ids.bin` and the stratum file are both
    written by `FirstPassFDR` at the end of the phase that computes them, and both are now
    carried in the Boundary 2 -> 3 and 3 -> 4 lists above. The count of experiment-wide
    artifacts that must relay together is four.

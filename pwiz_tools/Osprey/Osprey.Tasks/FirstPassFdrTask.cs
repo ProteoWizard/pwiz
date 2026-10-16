@@ -1764,41 +1764,29 @@ namespace pwiz.Osprey.Tasks
         /// <para>Best-effort, like the model: nothing downstream requires the file, and a
         /// resume that cannot find it recomputes.</para></summary>
         private void BuildAndPublishProteinCompactStratum(
-            FirstPassProteinFdrResult result, List<LibraryEntry> fullLibrary,
-            IReadOnlyDictionary<string, string> perFileParquetPaths, string validityKey,
+            FirstPassProteinFdrResult result, List<LibraryEntry> fullLibrary, string validityKey,
             PipelineContext ctx)
         {
             _proteinCompactStratum = BuildProteinCompactStratum(result, fullLibrary, ctx.LogInfo);
             ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
-            if (perFileParquetPaths == null)
+            // One analysis-wide file: the stratum is experiment-wide content.
+            string path = FirstPassModelIO.StratumPathFor(ctx.Config);
+            if (path == null)
                 return;
-            // Sorted and serialized ONCE. The copies are byte-identical, and at 446 files a
-            // ~0.9 M-id stratum re-rendered per file is several GB of writes for nothing.
-            string stratumJson = FirstPassModelIO.SerializeStratum(_proteinCompactStratum,
-                OspreyVersion.Stamp(Name, validityKey));
-            if (stratumJson == null)
-                return;
-            int stratumWrites = 0;
-            foreach (var kvp in perFileParquetPaths)
+            try
             {
-                string path = FirstPassModelIO.StratumPathFor(kvp.Value, kvp.Key);
-                try
+                if (FirstPassModelIO.SaveStratum(path, _proteinCompactStratum, OspreyVersion.Stamp(Name, validityKey)))
                 {
-                    FirstPassModelIO.WriteText(path, stratumJson);
-                    stratumWrites++;
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___,
-                        kvp.Key, ex.Message));
+                    ctx.LogVerbose(string.Format(
+                        OspreyTasksResources.FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0_,
+                        path));
                 }
             }
-            if (stratumWrites > 0)
+            catch (Exception ex)
             {
-                ctx.LogVerbose(CountText.Format(stratumWrites,
-                    OspreyTasksResources.FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_,
-                    OspreyTasksResources.FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_));
+                ctx.LogWarning(string.Format(
+                    OspreyTasksResources.FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0____1_,
+                    path, ex.Message));
             }
         }
 
@@ -1994,7 +1982,7 @@ namespace pwiz.Osprey.Tasks
             // previous arm's discriminant while the log says only that a model was reused. With
             // one sidecar adopted there is already an on-disk score that model produced, so
             // reusing it is the consistent choice rather than a surprising one.
-            var reloadedModel = LoadCurrentModelSidecar(perFileParquetPaths, sidecarValidityKey);
+            var reloadedModel = LoadCurrentModelSidecar(config, sidecarValidityKey);
             PercolatorResults adoptedModel = resumableFiles.Count > 0
                 ? reloadedModel?.Model
                 : null;
@@ -2016,7 +2004,7 @@ namespace pwiz.Osprey.Tasks
             // Training is the first phase, so persisting its product when it ends is what makes
             // every later phase resumable.
             Action<PercolatorResults> captureModel = results => PublishFirstPassModel(
-                results, reloadedModel, adoptedModel, perFileParquetPaths, sidecarValidityKey, ctx);
+                results, reloadedModel, adoptedModel, sidecarValidityKey, ctx);
 
             // FORWARD SCAN: with every file's sidecar current AND the analysis-wide experiment
             // sidecar current, everything from here to the compaction gate has already been done
@@ -2030,8 +2018,8 @@ namespace pwiz.Osprey.Tasks
             //
             // So resume where the work actually stops: at ComputeFirstPassBaseIds, which streams
             // the finalized sidecars off disk rather than reading anything this block would have
-            // built. The two byproducts the skipped region publishes are taken from the per-file
-            // .1st-pass.model.json instead - the model and the protein-compact stratum - so a
+            // built. The two byproducts the skipped region publishes are taken from the analysis's
+            // .1st-pass.model.json and .1st-pass.stratum.json instead, so a
             // consumer sees the same values from the same run that produced the scores.
             //
             // Deliberately all-or-nothing: one missing sidecar means the competition would differ,
@@ -2047,7 +2035,7 @@ namespace pwiz.Osprey.Tasks
             if (projections.PerFile.Count > 0 && resumableFiles.Count == projections.PerFile.Count)
             {
                 var refusals = CompactionGateRefusals(experimentPathForResume, sidecarValidityKey,
-                    perFileParquetPaths, config, out resumeSidecar);
+                    config, out resumeSidecar);
                 if (refusals.Count > 0)
                 {
                     ctx.LogInfo(string.Format(
@@ -2297,7 +2285,7 @@ namespace pwiz.Osprey.Tasks
                 if (OspreyEnvironment.Pass2ProteinCompact)
                 {
                     BuildAndPublishProteinCompactStratum(
-                        proteinResult, fullLibrary, perFileParquetPaths, sidecarValidityKey, ctx);
+                        proteinResult, fullLibrary, sidecarValidityKey, ctx);
                 }
             }
 
@@ -2352,11 +2340,10 @@ namespace pwiz.Osprey.Tasks
         /// one that was legitimately empty. The stratum is its own artifact
         /// (.1st-pass.stratum.json, written when protein FDR ends), so a run killed before
         /// protein FDR has the model and no stratum and correctly falls through to recompute;
-        /// <see cref="FirstPassModelIO.LoadFromAny"/> pairs the two from the same stem.</para>
+        /// <see cref="FirstPassModelIO.LoadForAnalysis"/> pairs the two by their stamps.</para>
         /// </summary>
         internal List<string> CompactionGateRefusals(string experimentPath, string validityKey,
-            IReadOnlyDictionary<string, string> perFileParquetPaths, OspreyConfig config,
-            out FirstPassModelIO.Sidecar modelSidecar)
+            OspreyConfig config, out FirstPassModelIO.Sidecar modelSidecar)
         {
             var refusals = new List<string>();
             if (string.IsNullOrEmpty(experimentPath))
@@ -2366,11 +2353,11 @@ namespace pwiz.Osprey.Tasks
             }
             else if (!PerFileResumeDriver.IsCurrent(experimentPath, Name, validityKey))
                 refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_whole_experiment_first_pass_intermediate_file_is_not_up_to_date___0_, experimentPath));
-            modelSidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+            modelSidecar = FirstPassModelIO.LoadForAnalysis(config);
             if (modelSidecar == null)
             {
-                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___,
-                    FirstPassModelIO.EXT_MODEL, ParquetScoreCache.EXT_SCORES));
+                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_found_at__0_,
+                    FirstPassModelIO.PathFor(config)));
             }
             else if (modelSidecar.Model == null)
             {
@@ -2395,8 +2382,8 @@ namespace pwiz.Osprey.Tasks
                 }
                 if (OspreyEnvironment.Pass2ProteinCompact && modelSidecar.StratumBaseIds == null)
                 {
-                    refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found,
-                        FirstPassModelIO.EXT_STRATUM, ParquetScoreCache.EXT_SCORES));
+                    refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides_was_found_at__0_,
+                        FirstPassModelIO.StratumPathFor(config)));
                 }
             }
             return refusals;
@@ -2405,31 +2392,22 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The persisted 1st-pass model, but only when a marker attests it was written by this
         /// build for THIS cohort and arm - otherwise null, and the caller trains as it always
-        /// did. Returns the first current copy found; the per-file copies are identical, so any
-        /// one is authoritative.
+        /// did.
         ///
-        /// <para>Marker-checked, unlike <see cref="FirstPassModelIO.LoadFromAny"/>. That reader
-        /// is only reached once every per-file sidecar has already matched this validity key, so
-        /// the cohort is established by the time it runs. A model reused on a PARTIAL resume has
-        /// no such corroboration: nothing else in the directory would contradict a model trained
-        /// on a different cohort, and adopting one would silently score the run with the wrong
-        /// discriminant.</para>
+        /// <para>Marker-checked here, where <see cref="CompactionGateRefusals"/> checks the stamp
+        /// after loading. That gate is only reached once every per-file sidecar has already
+        /// matched this validity key, so the cohort is established by the time it runs. A model
+        /// reused on a PARTIAL resume has no such corroboration: nothing else in the directory
+        /// would contradict a model trained on a different cohort, and adopting one would
+        /// silently score the run with the wrong discriminant.</para>
         /// </summary>
-        private FirstPassModelIO.Sidecar LoadCurrentModelSidecar(
-            IReadOnlyDictionary<string, string> perFileParquetPaths, string validityKey)
+        private FirstPassModelIO.Sidecar LoadCurrentModelSidecar(OspreyConfig config, string validityKey)
         {
-            if (perFileParquetPaths == null)
+            string path = FirstPassModelIO.PathFor(config);
+            if (path == null || !PerFileResumeDriver.IsCurrent(path, Name, validityKey))
                 return null;
-            foreach (var kvp in perFileParquetPaths)
-            {
-                string path = FirstPassModelIO.PathFor(kvp.Value, kvp.Key);
-                if (!PerFileResumeDriver.IsCurrent(path, Name, validityKey))
-                    continue;
-                var sidecar = FirstPassModelIO.Load(path);
-                if (sidecar?.Model != null)
-                    return sidecar;
-            }
-            return null;
+            var sidecar = FirstPassModelIO.Load(path);
+            return sidecar?.Model != null ? sidecar : null;
         }
 
         /// <summary>
@@ -2439,7 +2417,7 @@ namespace pwiz.Osprey.Tasks
         /// <para>Persisted whenever it was TRAINED, whatever is on disk already. A current model
         /// file does not mean the run used it: the scorer adopts one only when some file's scores
         /// are resumable, and retrains otherwise. Stage 6 and a distributed SecondPassFDR read
-        /// whichever model file is beside the inputs (<see cref="FirstPassModelIO.LoadFromAny"/>),
+        /// the analysis's model file (<see cref="FirstPassModelIO.LoadForAnalysis"/>),
         /// so skipping the write left them scoring with the stale model - of the other classifier,
         /// after a switch of <c>OSPREY_FDR_MODEL</c> - while the first-pass scores came from the new
         /// one. Only the adopted model is not written: it IS that file, already stamped, and
@@ -2450,13 +2428,11 @@ namespace pwiz.Osprey.Tasks
         /// <param name="reloadedModel">The current model sidecar found on disk, or null.</param>
         /// <param name="adoptedModel">The model the scorer was handed instead of training, or null
         ///   when it trains.</param>
-        /// <param name="perFileParquetPaths">Stem to score parquet, for the per-file copies.</param>
-        /// <param name="validityKey">The key each written copy is stamped with.</param>
+        /// <param name="validityKey">The key the written model is stamped with.</param>
         /// <param name="ctx">The pipeline context the model is published on.</param>
         internal void PublishFirstPassModel(PercolatorResults results,
             FirstPassModelIO.Sidecar reloadedModel, PercolatorResults adoptedModel,
-            IReadOnlyDictionary<string, string> perFileParquetPaths, string validityKey,
-            PipelineContext ctx)
+            string validityKey, PipelineContext ctx)
         {
             bool adopted = adoptedModel != null && ReferenceEquals(results, adoptedModel);
             if ((OspreyEnvironment.Pass2TransferQ || OspreyEnvironment.Pass2ProteinCompact) &&
@@ -2476,14 +2452,12 @@ namespace pwiz.Osprey.Tasks
                 });
             }
             if (!adopted)
-                PersistFirstPassModel(results, perFileParquetPaths, validityKey, ctx);
+                PersistFirstPassModel(results, validityKey, ctx);
         }
 
         /// <summary>
-        /// Persist the trained 1st-pass model beside each file's other Stage-5 sidecars, the
-        /// moment training produces it. Written per file (identical copies) so a distributed
-        /// <c>--task SecondPassFDR</c> node finds it by the same input-file stem it uses for
-        /// every other reconciled sidecar.
+        /// Persist the trained 1st-pass model to the analysis's one model file, the moment
+        /// training produces it.
         ///
         /// <para>Best-effort: a write failure must not fail the run, because nothing downstream
         /// requires the file to exist - SecondPassFDR keeps its pre-existing fail-fast and a
@@ -2491,16 +2465,16 @@ namespace pwiz.Osprey.Tasks
         /// classifier and declines only a model <see cref="FirstPassModelIO.Load"/> could not read
         /// back - a degenerate one, which carries nothing to persist.</para>
         /// </summary>
-        private void PersistFirstPassModel(
-            PercolatorResults results, IReadOnlyDictionary<string, string> perFileParquetPaths,
-            string validityKey, PipelineContext ctx)
+        private void PersistFirstPassModel(PercolatorResults results, string validityKey, PipelineContext ctx)
         {
-            if (results == null || perFileParquetPaths == null)
+            string path = FirstPassModelIO.PathFor(ctx.Config);
+            if (results == null || path == null)
                 return;
-            // Serialized ONCE. The copies are byte-identical, and a tree model is ~3.4 MB of JSON
-            // that took 1.15 s to render, measured - per copy, when this rendered it per file.
-            // Best-effort like the writes: a model that cannot be rendered (a non-finite weight)
-            // is logged and not persisted, as it was when each per-file Save threw.
+            // Best-effort: a model that cannot be rendered (a non-finite weight) is logged and
+            // not persisted. Save commits through SimpleFileSaver and the JSON carries its own
+            // validity stamp, so the artifact is absent or complete and identified; a model left
+            // by an earlier run is current only if this build wrote it with this key, so a
+            // declined model here cannot be mistaken for it.
             string modelJson;
             try
             {
@@ -2510,47 +2484,19 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 ctx.LogWarning(@"Could not serialize the 1st-pass model: " + ex.Message);
-                modelJson = null;
+                return;
             }
-            int modelWrites = 0;
-            string firstPath = null;
-            foreach (var kvp in perFileParquetPaths)
+            if (modelJson == null)
+                return;
+            try
             {
-                string path = FirstPassModelIO.PathFor(kvp.Value, kvp.Key);
-                // WriteText commits through SimpleFileSaver and the JSON carries its own validity stamp
-                // (which task, build and key made it), so the artifact is absent or complete and
-                // identified. A model left by an earlier run is current only if this build wrote
-                // it with this key, so a declined model here cannot be mistaken for it.
-                if (modelJson == null)
-                    continue;
-                try
-                {
-                    FirstPassModelIO.WriteText(path, modelJson);
-                    modelWrites++;
-                    firstPath = firstPath ?? path;
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_,
-                        kvp.Key, ex.Message));
-                }
+                FirstPassModelIO.WriteText(path, modelJson);
+                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_, path));
             }
-            // One path, not one per file: the copies are identical, and a 446-file run would
-            // otherwise print 446 lines here. A resume reuses the model instead of retraining.
-            if (modelWrites == 1)
+            catch (Exception ex)
             {
-                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_, firstPath));
-            }
-            else if (modelWrites == 2)
-            {
-                ctx.LogInfo(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input, firstPath));
-            }
-            else if (modelWrites > 2)
-            {
-                ctx.LogInfo(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs,
-                    firstPath, modelWrites - 1));
+                ctx.LogWarning(string.Format(OspreyTasksResources.FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0____1_,
+                    path, ex.Message));
             }
         }
 

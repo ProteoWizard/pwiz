@@ -317,18 +317,6 @@
     <value>{0} Percolator 结果：{1:N0} 个目标、{2:N0} 个诱饵通过 {3:P1} FDR</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___" xml:space="preserve">
-    <value>无法为“{0}”保存来自检测数不少于 2 的蛋白质的母离子候选：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_" xml:space="preserve">
-    <value>已为 1 个文件保存来自检测数不少于 2 的蛋白质的母离子候选。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_" xml:space="preserve">
-    <value>已为 {0:N0} 个文件保存来自检测数不少于 2 的蛋白质的母离子候选。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_BuildCalibrationData_Calibration_report___0__of__1__files_have_no_calibration_diagnostics_and_are_left_out_of_" xml:space="preserve">
     <value>校准报告：{1:N0} 个文件中有 {0:N0} 个没有校准诊断信息，未纳入报告：[{2}]</value>
     <comment>Needs Review:New resource</comment>
@@ -413,20 +401,8 @@
     <value>模型诊断：{0} 对于此分析已过期，因此重新运行第一轮以构建报告。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_" xml:space="preserve">
-    <value>无法保存“{0}”的第一轮模型：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
     <value>已将训练好的第一轮模型保存到 {0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs" xml:space="preserve">
-    <value>已将训练好的第一轮模型保存到 {0}，并为其他 {1:N0} 个输入各保存一份</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input" xml:space="preserve">
-    <value>已将训练好的第一轮模型保存到 {0}，并为另一个输入保存一份</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
@@ -507,14 +483,6 @@
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_" xml:space="preserve">
     <value>最新：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found" xml:space="preserve">
-    <value>在输入的 {1} 文件旁未找到来自第一轮肽段数不少于 2 的蛋白质的母离子列表（{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___" xml:space="preserve">
-    <value>在输入的 {1} 文件旁未找到可读取的第一轮模型文件（{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">

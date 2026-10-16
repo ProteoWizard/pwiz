@@ -953,8 +953,7 @@ namespace pwiz.Osprey.Tasks
                 TaskValidityKey = ValidityKey(ctx),
                 JoinFileStems = joinFileStems,
             };
-            inputs.Pass2Worker = CreatePass2Worker(
-                perFileParquetPaths, config, ctx, Name, inputs.TaskValidityKey);
+            inputs.Pass2Worker = CreatePass2Worker(config, ctx, Name, inputs.TaskValidityKey);
             inputs.HydrateRun = BuildPerRunHydrate(perFileParquetPaths, config, ctx);
 
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
@@ -1077,17 +1076,16 @@ namespace pwiz.Osprey.Tasks
         /// first pass, rather than at the top of Stage 7 after every run has been re-scored.
         /// Both used to leave the run to Stage 7, which answered it from the whole pool.</para>
         ///
-        /// <para>The three whole-run constants it needs all ride the per-file
-        /// <c>.1st-pass.model.json</c> relay that <c>FirstPassFdrTask</c> already writes - the
-        /// frozen model, the experiment-agg arm and the protein stratum - which is why this move
-        /// needs no new relay. The fourth input, the analysis-wide 1st-pass experiment sidecar,
-        /// is the v5 addition (issue #4486) and is read from the analysis, not from a file.</para>
+        /// <para>The three whole-run constants it needs come from the analysis's
+        /// <c>.1st-pass.model.json</c> and <c>.1st-pass.stratum.json</c>, which
+        /// <c>FirstPassFdrTask</c> already writes - the frozen model, the experiment-agg arm and
+        /// the protein stratum. The fourth input is the analysis-wide 1st-pass experiment
+        /// sidecar (issue #4486).</para>
         /// </summary>
-        private static Pass2PerFileWorker CreatePass2Worker(
-            IReadOnlyDictionary<string, string> perFileParquetPaths, OspreyConfig config,
+        private static Pass2PerFileWorker CreatePass2Worker(OspreyConfig config,
             PipelineContext ctx, string taskName, string taskValidityKey)
         {
-            var sidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
+            var sidecar = FirstPassModelIO.LoadForAnalysis(config);
             var scorer = sidecar?.Model != null ? FrozenModelScorer.TryCreate(sidecar.Model) : null;
             if (scorer == null)
             {

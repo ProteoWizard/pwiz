@@ -258,6 +258,8 @@ namespace pwiz.Osprey.Test
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
+            // With every optional per-run output on (--write-pin), still nothing replicated.
+            AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
 
             // The report alone, from what the analysis left: every analysis task is cached.
             File.Delete(diagnosticsReport);
@@ -970,6 +972,39 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(OspreyVersion.Current, BlibMetadata.Read(blib, OspreyBlibWriter.KEY_VERSION));
 
             AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib, MIN_RECOVERED_FRACTION);
+            AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
+        }
+
+        /// <summary>
+        /// No <c>&lt;stem&gt;.&lt;ext&gt;</c> output holds the same bytes for every run. Content
+        /// that is the same for every run is experiment-wide, and belongs in one
+        /// <c>&lt;blib-stem&gt;.&lt;ext&gt;</c> file an orchestrator ships to every node - not in
+        /// a copy per run, which on an 82-run cohort was 82 copies of the first-pass model and
+        /// 790 MB of the protein-compact stratum. This sees whole files only; a replicated payload
+        /// inside an otherwise per-run file needs a reviewer.
+        /// </summary>
+        private static void AssertNoReplicatedPerRunOutputs(string workDir, IReadOnlyList<string> runs)
+        {
+            Assert.IsTrue(runs.Count >= 2, @"replication is only visible across two or more runs");
+            var hashesBySuffix = new Dictionary<string, List<string>>();
+            foreach (string path in Directory.GetFiles(workDir))
+            {
+                string name = Path.GetFileName(path);
+                string run = runs.FirstOrDefault(r => name.StartsWith(r + @".", StringComparison.Ordinal));
+                if (run == null)
+                    continue;
+                string suffix = name.Substring(run.Length);
+                if (!hashesBySuffix.TryGetValue(suffix, out var hashes))
+                    hashesBySuffix.Add(suffix, hashes = new List<string>());
+                hashes.Add(Convert.ToBase64String(HashFile(path)));
+            }
+            Assert.IsTrue(hashesBySuffix.Count > 0, @"no per-run outputs found in " + workDir);
+            var replicated = hashesBySuffix
+                .Where(kvp => kvp.Value.Count == runs.Count && kvp.Value.Distinct().Count() == 1)
+                .Select(kvp => @"<stem>" + kvp.Key)
+                .ToList();
+            Assert.AreEqual(0, replicated.Count,
+                @"identical in every run, so experiment-wide and owed a <blib-stem> name: " + string.Join(@", ", replicated));
         }
 
         /// <summary>
@@ -1029,8 +1064,9 @@ namespace pwiz.Osprey.Test
                 ShipFiles(dirPrefix + @"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
                     run + CalibrationIO.EXT);
                 ShipFiles(dirPrefix + @"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT), run + ReconciliationFile.EXT,
-                    OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
-                ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM,
+                    OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
+                    OutputArtifact(FirstPassModelIO.EXT_MODEL));
+                ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, OutputArtifact(FirstPassModelIO.EXT_STRATUM),
                     ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
@@ -1043,7 +1079,6 @@ namespace pwiz.Osprey.Test
                 string phase3 = dirPrefix + @"phase3_" + run;
                 ShipFiles(phase3, phase4Dir, run + ParquetScoreCache.EXT_SCORES_RECONCILED, run + CalibrationIO.EXT,
                     run + ReconciliationFile.EXT);
-                ShipFilesIfPresent(phase3, phase4Dir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM);
                 // Every run's second-pass answer, and nothing from its first pass: PerFileRescoring
                 // writes the answer for every run (#4665), so a SecondPassFDR node needs no
                 // per-run 1st-pass file.
@@ -1052,9 +1087,10 @@ namespace pwiz.Osprey.Test
                 if (data.Pass2Mode == null)
                     ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
-            ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
+            ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
+                OutputArtifact(FirstPassModelIO.EXT_MODEL));
             ShipFilesIfPresent(dirPrefix + @"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
-                OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+                OutputArtifact(FirstPassModelIO.EXT_STRATUM), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
             string phase4Log = RunTask(data, phase4Dir, SecondPassFdrTask.TASK_NAME, data.Runs);
             AssertHasLine(phase4Log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
