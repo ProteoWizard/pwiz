@@ -33,25 +33,48 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Osprey's rows of a <c>.blib</c>: a <see cref="BlibWriter"/>, the one writer every tool of
-    /// ours writes the format through, with <see cref="OspreyBlibTables"/> beside the standard
-    /// tables, and the column values Osprey's search output and <c>--export-library</c> have
-    /// always written (Rust osprey's <c>blib.rs</c>): a <c>GENERIC Q-VALUE</c> score, the
-    /// spectrum's ordinal as its id in file, zero rather than NULL for the ion mobility columns
-    /// and the total ion current, the apex and bounds in the spectrum row, and the peptide text
-    /// through <see cref="BlibPeptideText"/>. The library is written beside its path and moved
-    /// over it by <see cref="Complete"/>; disposed without that, nothing at the path changes.
+    /// ours writes the format through, and the column values Osprey's search output and
+    /// <c>--export-library</c> have always written (Rust osprey's <c>blib.rs</c>): a
+    /// <c>GENERIC Q-VALUE</c> score, the spectrum's ordinal as its id in file, zero rather than
+    /// NULL for the ion mobility columns and the total ion current, the apex and bounds in the
+    /// spectrum row, and the peptide text through <see cref="BlibPeptideText"/>. Osprey keeps no
+    /// table of its own beside the standard ones: what it records about the library as a whole
+    /// goes in <c>LibMetadata</c> (<see cref="BlibMetadata"/>) under the <c>osprey.</c> keys
+    /// below, and every per-spectrum value is in <c>RefSpectra</c> and <c>RetentionTimes</c>.
+    /// The library is written beside its path and moved over it by <see cref="Complete"/>;
+    /// disposed without that, nothing at the path changes.
     /// </summary>
     public sealed class OspreyBlibWriter : IDisposable
     {
-        private readonly OspreyBlibTables _tables;
+        /// <summary>The Osprey build that wrote the library (<c>OspreyVersion.Current</c>).</summary>
+        public const string KEY_VERSION = @"osprey.version";
+        /// <summary>The full command line of the run that wrote the library.</summary>
+        public const string KEY_COMMAND = @"osprey.command";
+        /// <summary>A search output's search mode (<c>coelution</c>).</summary>
+        public const string KEY_SEARCH_MODE = @"osprey.search_mode";
+        /// <summary>A search output's run-level FDR threshold.</summary>
+        public const string KEY_RUN_FDR = @"osprey.run_fdr";
+        /// <summary>A search output's experiment-level FDR threshold.</summary>
+        public const string KEY_EXPERIMENT_FDR = @"osprey.experiment_fdr";
+        /// <summary>An exported library's source: the library file it was loaded from.</summary>
+        public const string KEY_LIBRARY_SOURCE = @"osprey.library_source";
+
+        /// <summary>
+        /// The validity stamp recorded in a blib's <c>LibMetadata</c> (or, for one release, its
+        /// <c>OspreyMetadata</c>) table, or null when the file is missing, unreadable or
+        /// unstamped. Never throws.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path)
+        {
+            return ArtifactStamp.Parse(BlibMetadata.Read(path, ArtifactStamp.PARQUET_KEY));
+        }
+
         private readonly BlibWriter _writer;
 
         /// <summary>Starts the library that <see cref="Complete"/> writes to <paramref name="path"/>.</summary>
         public OspreyBlibWriter(string path)
         {
-            _tables = new OspreyBlibTables();
-            // The writer owns the tables from here: it disposes their statements with its connection.
-            _writer = new BlibWriter(path, Path.GetFileName(path), _tables);
+            _writer = new BlibWriter(path, Path.GetFileName(path));
         }
 
         /// <summary>Begins a transaction over the rows that follow, for fast inserts.</summary>
@@ -133,48 +156,30 @@ namespace pwiz.Osprey.IO
                 0.0, 0.0, 0.0);
         }
 
-        /// <summary>One <c>OspreyPeakBoundaries</c> row: a passing precursor's best run.</summary>
-        public void AddPeakBoundaries(long refId, string fileName,
-            double startRt, double endRt, double apexRt,
-            double apexIntensity, double integratedArea)
+        /// <summary>
+        /// Adds a <c>DecoyPairs</c> row (see <see cref="BlibWriter.AddDecoyPair"/>): the library
+        /// supplies this spectrum as a decoy or a target of pair <paramref name="pairId"/>.
+        /// </summary>
+        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairId)
         {
-            _tables.AddPeakBoundaries(refId, fileName, startRt, endRt, apexRt, apexIntensity, integratedArea);
+            _writer.AddDecoyPair(refId, isDecoy, isEntrapment, pairId, null);
         }
 
-        /// <summary>One <c>OspreyRunScores</c> row: a passing precursor's best run.</summary>
-        public void AddRunScores(long refId, string fileName,
-            double runQValue, double discriminantScore, double posteriorErrorProb)
-        {
-            _tables.AddRunScores(refId, fileName, runQValue, discriminantScore, posteriorErrorProb);
-        }
-
-        /// <summary>One <c>OspreyExperimentScores</c> row per passing precursor.</summary>
-        public void AddExperimentScores(long refId,
-            double experimentQValue, int nRunsDetected, int nRunsSearched)
-        {
-            _tables.AddExperimentScores(refId, experimentQValue, nRunsDetected, nRunsSearched);
-        }
-
-        /// <summary>One <c>OspreyCoefficients</c> row: one scan of a peak's coefficient series.</summary>
-        public void AddCoefficient(long refId, string fileName,
-            uint scanNumber, double rt, double coefficient)
-        {
-            _tables.AddCoefficient(refId, fileName, scanNumber, rt, coefficient);
-        }
-
-        /// <summary>Adds or replaces an <c>OspreyMetadata</c> key-value row.</summary>
+        /// <summary>Adds or replaces a <c>LibMetadata</c> row; <paramref name="key"/> is one of the <c>KEY_</c> constants or a shared key.</summary>
         public void AddMetadata(string key, string value)
         {
-            _tables.AddMetadata(key, value);
+            _writer.AddMetadata(key, value);
         }
 
         /// <summary>
-        /// Records <paramref name="stamp"/> in <c>OspreyMetadata</c> under
+        /// Records <paramref name="stamp"/> in <c>LibMetadata</c> under
         /// <see cref="ArtifactStamp.PARQUET_KEY"/>, so the blib carries its own validity record.
         /// </summary>
         public void AddStamp(ArtifactStamp stamp)
         {
-            _tables.AddStamp(stamp);
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
+            _writer.AddMetadata(ArtifactStamp.PARQUET_KEY, stamp.ToString());
         }
 
         /// <summary>

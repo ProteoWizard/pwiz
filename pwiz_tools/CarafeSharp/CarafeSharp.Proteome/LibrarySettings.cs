@@ -203,6 +203,13 @@ namespace pwiz.CarafeSharp.Proteome
         public string PretrainedModels { get; set; }
 
         /// <summary>
+        /// The command line this run was given, as one line of text, recorded in the .blib it
+        /// writes (<c>LibMetadata</c>, key <c>carafe.command</c>) so the library carries how it
+        /// was made. Null (settings built in code) records nothing.
+        /// </summary>
+        public string CommandLine { get; set; }
+
+        /// <summary>
         /// <c>-rt_model</c> (CarafeSharp only), or null when it is not given: then the model folder's or saved
         /// model's RT model, else <see cref="DEFAULT_RT_MODEL"/>. A model that differs from a fine-tuned RT model
         /// replaces it with its own pretrained model.

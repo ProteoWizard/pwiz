@@ -636,7 +636,7 @@ artifact's format:
 | OSPRY binary sidecars | `.{1st,2nd}-pass.fdr_scores.bin` (v8), `.2nd-pass.fdr_decoys.bin` (v2), `.fdr_experiment.bin` (v3), `.1st-pass.retained_base_ids.bin` (v2) | UTF-8 trailer after the records; header bytes [24..28] hold its byte length (u32). Records keep their fixed offsets, and the exact-length check becomes `32 + count * recordLength + stampLength` |
 | JSON | `.calibration.json`, `.reconciliation.json`, `.1st-pass.model.json`, `.1st-pass.stratum.json`, the model-diagnostics data JSONs | FIRST property, `osprey_validity`; `ArtifactStamp.TryReadJsonHead` reads only the first 64 KB, because `reconciliation.json` is ~25 MB per run |
 | HTML | `<output>.model-diagnostics.html` | an opening `<!--osprey-validity/1;...-->` comment before the DOCTYPE |
-| blib | `<output>.blib` | `OspreyMetadata` row with Key `osprey.validity` (`BlibWriter.AddStamp` / `ReadStamp`) |
+| blib | `<output>.blib` | `LibMetadata` row with key `osprey.validity` (`OspreyBlibWriter.AddStamp` / `ReadStamp`; read from `OspreyMetadata`, the table's name before 2026-10-15, for one release) |
 
 `.spectra.bin` and the library cache were already self-validating from their headers
 (sections 2 and 7) and carry no stamp.
@@ -870,7 +870,7 @@ deliberate way to reuse artifacts across builds.
   the search + library (+ reconciliation) hashes, to drive resume-on-restart; Rust infers reuse
   from parquet footer hashes. The stamp adds fields Rust does not write - the `osprey.validity`
   parquet footer entry, the `osprey_validity` first property of `.calibration.json` and
-  `.reconciliation.json`, and the blib `OspreyMetadata` row `osprey.validity` - which
+  `.reconciliation.json`, and the blib `LibMetadata` row `osprey.validity` - which
   cross-impl comparisons must ignore. Evidence: `Shared/CommonUtil/Pipeline/ArtifactStamp.cs`;
   `Osprey.IO/ArtifactValidity.cs`. Severity: info.
 

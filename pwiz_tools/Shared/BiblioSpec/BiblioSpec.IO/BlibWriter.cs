@@ -36,8 +36,9 @@ namespace pwiz.BiblioSpec.IO
     /// Writes a BiblioSpec <c>.blib</c> (schema <see cref="BlibSchema.CurrentMinorVersion"/>)
     /// that Skyline, Osprey and CarafeSharp read: the tables of <see cref="BlibSchema"/>, one
     /// <see cref="BlibSpectrumRecord"/> per <c>RefSpectra</c> row with its peaks, annotations,
-    /// modifications and proteins, one <c>RetentionTimes</c> row per observation, and whatever
-    /// tables the writing tool keeps beside them (<see cref="IBlibExtensionTables"/>). Osprey's
+    /// modifications and proteins, one <c>RetentionTimes</c> row per observation, the
+    /// <c>LibMetadata</c> rows about the library as a whole (<see cref="BlibMetadata"/>), and
+    /// whatever tables the writing tool keeps beside them (<see cref="IBlibExtensionTables"/>). Osprey's
     /// search output and CarafeSharp's predicted libraries are written through it, so a
     /// library either tool writes is the same database for every reader.
     ///
@@ -132,6 +133,10 @@ namespace pwiz.BiblioSpec.IO
         private PreparedInsert _insertProtein;
         private PreparedInsert _insertSpectrumProtein;
         private PreparedInsert _insertRetentionTime;
+        private PreparedInsert _insertMetadata;
+        // Prepared, with its table created, on the first AddDecoyPair: a library without
+        // supplied decoys has no DecoyPairs table.
+        private PreparedInsert _insertDecoyPair;
         private int _spectrumCount;
 
         /// <summary>
@@ -270,6 +275,40 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
+        /// Adds or replaces a <c>LibMetadata</c> row (<see cref="BlibMetadata"/>): a value about
+        /// the library as a whole, under a key the writing tool namespaces
+        /// (<c>osprey.command</c>). A null <paramref name="value"/> is stored as NULL.
+        /// </summary>
+        public void AddMetadata(string key, string value)
+        {
+            if (string.IsNullOrEmpty(key))
+                throw new ArgumentException(@"A metadata key is required", nameof(key));
+            _insertMetadata.Execute(key, (object)value ?? DBNull.Value);
+        }
+
+        /// <summary>
+        /// Adds a <c>DecoyPairs</c> row (<see cref="BlibSchema.CreateDecoyPairs"/>): spectrum
+        /// <paramref name="refId"/> is a decoy or a target, of the entrapment partition or not,
+        /// and shares <paramref name="pairId"/> with the one other row of its pair (its target or
+        /// its decoy, at the same charge). <paramref name="method"/> names how a decoy was made
+        /// (<c>reverse</c>, <c>cycle</c>) and is null on a target or when unknown. The table is
+        /// created on the first call, so a library that supplies no decoys has none: a reader
+        /// takes the table's presence to mean the library pairs its own decoys.
+        /// </summary>
+        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairId, string method)
+        {
+            if (_insertDecoyPair == null)
+            {
+                Execute(BlibSchema.CreateDecoyPairs);
+                _insertDecoyPair = Prepare(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method) " +
+                                           @"VALUES (@id, @decoy, @entrapment, @pair, @method)",
+                    new[] { @"@id", @"@decoy", @"@entrapment", @"@pair", @"@method" },
+                    new[] { DbType.Int64, DbType.Int32, DbType.Int32, DbType.Int32, DbType.String });
+            }
+            _insertDecoyPair.Execute(refId, isDecoy ? 1 : 0, isEntrapment ? 1 : 0, pairId, (object)method ?? DBNull.Value);
+        }
+
+        /// <summary>
         /// Records the spectrum count, adds BiblioSpec's indexes and the writing tool's, closes
         /// the file and moves it over the final name, replacing any library there.
         /// </summary>
@@ -285,6 +324,8 @@ namespace pwiz.BiblioSpec.IO
                 Execute(statement);
             foreach (string statement in EXTRA_INDEX_STATEMENTS)
                 Execute(statement);
+            if (_insertDecoyPair != null)
+                Execute(BlibSchema.CreateIdxDecoyPairsPairId);
             _extensions?.CreateIndexes(_connection);
             CloseConnection();
             _file.Commit();
@@ -359,6 +400,7 @@ namespace pwiz.BiblioSpec.IO
             foreach (string statement in BlibSchema.AllCreateTableStatements)
                 Execute(statement);
             Execute(BlibSchema.CreateRetentionTimes);
+            Execute(BlibSchema.CreateLibMetadata);
             _extensions?.CreateTables(_connection);
             using (var transaction = _connection.BeginTransaction())
             {
@@ -432,6 +474,8 @@ namespace pwiz.BiblioSpec.IO
                     DbType.Int64, DbType.Int64, DbType.Double, DbType.Double, DbType.Double, DbType.Int32, DbType.Double, DbType.Double,
                     DbType.Double, DbType.Double, DbType.Int32,
                 });
+            _insertMetadata = Prepare(BlibMetadata.INSERT_SQL,
+                new[] { @"@key", @"@value" }, new[] { DbType.String, DbType.String });
         }
 
         /// <summary>
@@ -483,8 +527,10 @@ namespace pwiz.BiblioSpec.IO
             _insertProtein?.Dispose();
             _insertSpectrumProtein?.Dispose();
             _insertRetentionTime?.Dispose();
+            _insertMetadata?.Dispose();
+            _insertDecoyPair?.Dispose();
             _insertSpectrum = _insertPeaks = _insertModification = null;
-            _insertProtein = _insertSpectrumProtein = _insertRetentionTime = null;
+            _insertProtein = _insertSpectrumProtein = _insertRetentionTime = _insertMetadata = _insertDecoyPair = null;
             for (int i = 0; i < _insertAnnotations.Length; i++)
             {
                 _insertAnnotations[i]?.Dispose();

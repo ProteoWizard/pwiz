@@ -270,6 +270,33 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>cpp BlibMaker.cpp:317.</summary>
         public const string CreateIdxInChiKey = "CREATE INDEX idxInChiKey ON RefSpectra (inchiKey, precursorAdduct)";
 
+        // --- optional tables a writing tool adds (not in AllCreateTableStatements) --------------
+
+        /// <summary>
+        /// CREATE TABLE for <c>LibMetadata</c>: single-row text values about the library as a
+        /// whole, under keys namespaced by the writing tool (<c>osprey.version</c>,
+        /// <c>carafe.command</c>) plus a small unprefixed set every tool honors
+        /// (<c>library_contract</c>). Every tool that makes or transforms a library records its
+        /// command line under <c>&lt;tool&gt;.command</c>. Optional: a reader tests for the
+        /// table, not the schema version. Added 2026-10-15 in place of Osprey's
+        /// <c>OspreyMetadata</c>.
+        /// </summary>
+        public const string CreateLibMetadata = "CREATE TABLE LibMetadata (key TEXT PRIMARY KEY, value TEXT)";
+
+        /// <summary>
+        /// CREATE TABLE for <c>DecoyPairs</c>: a library that supplies its own decoys marks each
+        /// row decoy or target, entrapment or not, and gives a target and its decoy at one charge
+        /// one <c>PairID</c>; <c>Method</c> names how a decoy was made (<c>reverse</c>,
+        /// <c>cycle</c>) and is null on a target. Carafe's table (its SkylineIO), written by
+        /// CarafeSharp and read by Osprey, which pairs library decoys from it. Optional, as above.
+        /// </summary>
+        public const string CreateDecoyPairs =
+            "CREATE TABLE DecoyPairs (RefSpectraID INTEGER NOT NULL PRIMARY KEY, IsDecoy INTEGER NOT NULL, " +
+            "IsEntrapment INTEGER NOT NULL, PairID INTEGER NOT NULL, Method TEXT)";
+
+        /// <summary>The index a reader walking <c>DecoyPairs</c> by pair needs.</summary>
+        public const string CreateIdxDecoyPairsPairId = "CREATE INDEX idx_DecoyPairs_PairID ON DecoyPairs(PairID)";
+
         /// <summary>
         /// All CREATE TABLE statements that <c>BlibMaker.CreateTables</c> emits, in the
         /// same order as cpp <c>BlibMaker::createTables</c>. The LibInfo INSERT is NOT in this

@@ -22,8 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
 using System.Globalization;
 using System.Threading.Tasks;
 using pwiz.BiblioSpec.IO;
@@ -53,6 +51,9 @@ namespace pwiz.CarafeSharp.IO
     {
         public const string FILE_NAME = @"carafe_spectral_library.blib";
 
+        /// <summary>The <c>LibMetadata</c> key of the full command line that made the library.</summary>
+        public const string KEY_COMMAND = @"carafe.command";
+
         /// <summary>The most annotation rows one INSERT takes; a spectrum with more peaks takes several.</summary>
         public const int MAX_PEAKS_PER_INSERT = BlibWriter.MAX_ANNOTATIONS_PER_INSERT;
 
@@ -70,19 +71,27 @@ namespace pwiz.CarafeSharp.IO
         /// one source file named <paramref name="sourceFileName"/> (Carafe uses the library file
         /// name without its extension). It is written to a temp beside <paramref name="path"/>,
         /// so until then any library already there is left as it is. With
-        /// <paramref name="stamp"/>, the library records it (<see cref="ArtifactStamp.BLIB_TABLE_DDL"/>,
-        /// the slot Osprey's blib writer uses, which Skyline ignores) in the same commit as its
-        /// content, so a resume check can tell whether to reuse it. With
+        /// <paramref name="stamp"/>, the library records it in its <c>LibMetadata</c> table
+        /// (<see cref="BlibMetadata"/>, the slot Osprey's blib writer uses, which Skyline ignores)
+        /// in the same commit as its content, so a resume check can tell whether to reuse it. With
         /// <paramref name="libraryContract"/>, the library claims the Osprey library contract in
         /// the same table (<see cref="LibraryContract.METADATA_KEY"/>); the caller has checked, or
-        /// will check and discard the library, that it meets it.
+        /// will check and discard the library, that it meets it. <paramref name="commandLine"/>,
+        /// when given, is recorded under <see cref="KEY_COMMAND"/>: how the library was made.
         /// </summary>
-        public BlibLibraryWriter(string path, string sourceFileName, ArtifactStamp stamp = null, bool libraryContract = false)
+        public BlibLibraryWriter(string path, string sourceFileName, ArtifactStamp stamp = null, bool libraryContract = false,
+            string commandLine = null)
         {
-            var metadata = stamp != null || libraryContract ? new MetadataTable(stamp, libraryContract) : null;
-            _writer = new BlibWriter(path, null, metadata);
+            _writer = new BlibWriter(path);
             try
             {
+                // The metadata rows go first, so a library that reaches any spectrum carries them.
+                if (stamp != null)
+                    _writer.AddMetadata(ArtifactStamp.PARQUET_KEY, stamp.ToString());
+                if (libraryContract)
+                    _writer.AddMetadata(LibraryContract.METADATA_KEY, LibraryContract.METADATA_VALUE);
+                if (commandLine != null)
+                    _writer.AddMetadata(KEY_COMMAND, commandLine);
                 _sourceFileId = _writer.AddSourceFile(sourceFileName, null, null, BlibWriter.WORKFLOW_TYPE_DIA);
             }
             catch
@@ -123,33 +132,13 @@ namespace pwiz.CarafeSharp.IO
             return firstId;
         }
 
-        /// <summary>Adds Carafe's DecoyPairs table with these rows.</summary>
+        /// <summary>Adds the DecoyPairs table (Carafe's, <see cref="BlibSchema.CreateDecoyPairs"/>) with these rows.</summary>
         public void WriteDecoyPairs(IReadOnlyList<DecoyPairRow> rows)
         {
-            var connection = _writer.Connection;
-            Execute(connection, @"CREATE TABLE DecoyPairs (RefSpectraID INTEGER NOT NULL PRIMARY KEY, IsDecoy INTEGER NOT NULL, " +
-                                @"IsEntrapment INTEGER NOT NULL, PairID INTEGER NOT NULL, Method TEXT)");
-            Execute(connection, @"CREATE INDEX IF NOT EXISTS idx_DecoyPairs_PairID ON DecoyPairs(PairID)");
-            using (var transaction = connection.BeginTransaction())
-            using (var insert = new SQLiteCommand(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method) " +
-                                                  @"VALUES (@id, @decoy, @entrapment, @pair, @method)", connection))
-            {
-                var id = insert.Parameters.Add(@"@id", DbType.Int64);
-                var decoy = insert.Parameters.Add(@"@decoy", DbType.Int32);
-                var entrapment = insert.Parameters.Add(@"@entrapment", DbType.Int32);
-                var pair = insert.Parameters.Add(@"@pair", DbType.Int32);
-                var method = insert.Parameters.Add(@"@method", DbType.String);
-                foreach (var row in rows)
-                {
-                    id.Value = row.RefSpectraId;
-                    decoy.Value = row.IsDecoy ? 1 : 0;
-                    entrapment.Value = row.IsEntrapment ? 1 : 0;
-                    pair.Value = row.PairId;
-                    method.Value = (object)row.Method ?? DBNull.Value;
-                    insert.ExecuteNonQuery();
-                }
-                transaction.Commit();
-            }
+            _writer.BeginBatch();
+            foreach (var row in rows)
+                _writer.AddDecoyPair(row.RefSpectraId, row.IsDecoy, row.IsEntrapment, row.PairId, row.Method);
+            _writer.CommitBatch();
         }
 
         /// <summary>
@@ -259,56 +248,6 @@ namespace pwiz.CarafeSharp.IO
             if (proteinId == LibrarySpectrum.NO_PROTEIN)
                 return Array.Empty<string>();
             return proteinId.Split(';');
-        }
-
-        private static void Execute(SQLiteConnection connection, string sql)
-        {
-            using (var command = new SQLiteCommand(sql, connection))
-                command.ExecuteNonQuery();
-        }
-
-        /// <summary>
-        /// The validity stamp and the library contract claim, in the <c>OspreyMetadata</c> table
-        /// Osprey's own libraries carry them in, created with the library's tables so they commit
-        /// with the content. No indexes, no statements.
-        /// </summary>
-        private sealed class MetadataTable : IBlibExtensionTables
-        {
-            private readonly ArtifactStamp _stamp;
-            private readonly bool _libraryContract;
-
-            public MetadataTable(ArtifactStamp stamp, bool libraryContract)
-            {
-                _stamp = stamp;
-                _libraryContract = libraryContract;
-            }
-
-            public void CreateTables(SQLiteConnection connection)
-            {
-                Execute(connection, ArtifactStamp.BLIB_TABLE_DDL);
-                if (_stamp != null)
-                    Insert(connection, ArtifactStamp.PARQUET_KEY, _stamp.ToString());
-                if (_libraryContract)
-                    Insert(connection, LibraryContract.METADATA_KEY, LibraryContract.METADATA_VALUE);
-            }
-
-            private static void Insert(SQLiteConnection connection, string key, string value)
-            {
-                using (var insert = new SQLiteCommand(ArtifactStamp.BLIB_INSERT_SQL, connection))
-                {
-                    insert.Parameters.AddWithValue(@"@key", key);
-                    insert.Parameters.AddWithValue(@"@value", value);
-                    insert.ExecuteNonQuery();
-                }
-            }
-
-            public void CreateIndexes(SQLiteConnection connection)
-            {
-            }
-
-            public void Dispose()
-            {
-            }
         }
     }
 }

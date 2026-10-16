@@ -792,7 +792,7 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>
         /// Contract mode (<c>--library_contract</c>): a FASTA of targets and their decoys with the
         /// manifest pairing them predicts a library that claims the contract, with the marker in
-        /// its OspreyMetadata and its DecoyPairs rows; a FASTA whose accessions carry Carafe's
+        /// its LibMetadata and its DecoyPairs rows; a FASTA whose accessions carry Carafe's
         /// per-peptide suffix is refused before any prediction with the class named; a manifest
         /// whose decoys the FASTA lacks writes a library with unpaired targets, which is discarded,
         /// leaving nothing in the output folder. The command line requires the .blib output and
@@ -833,7 +833,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.IsTrue(generator.SpectrumCount > 0, log.ToString());
                 StringAssert.Contains(log.ToString(), @"Library contract:");
                 Assert.AreEqual(LibraryContract.METADATA_VALUE, Scalar(generator.BlibPath,
-                    @"SELECT Value FROM OspreyMetadata WHERE Key = '" + LibraryContract.METADATA_KEY + @"'"));
+                    @"SELECT value FROM LibMetadata WHERE key = '" + LibraryContract.METADATA_KEY + @"'"));
                 Assert.IsTrue((long)Scalar(generator.BlibPath, @"SELECT COUNT(*) FROM DecoyPairs") > 0);
 
                 // Carafe's per-peptide suffix on an accession: refused before prediction, nothing written.

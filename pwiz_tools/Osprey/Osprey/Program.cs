@@ -703,7 +703,7 @@ namespace pwiz.Osprey
             try
             {
                 written = LibraryBlibWriter.Write(path, library, config.LibrarySource.Path, config.NThreads,
-                    config.DecoyPrefixes);
+                    config.DecoyPrefixes, config.CommandLine);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Data.Common.DbException)
             {
