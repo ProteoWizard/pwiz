@@ -28,6 +28,8 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using pwiz.CarafeSharp.Core;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -83,9 +85,10 @@ namespace pwiz.CarafeSharp.Proteome
         /// What the RT model is (the folder's fine-tuned one, else the pretrained one the training predicted its library
         /// with: <c>-tf ms2 -rt_model</c>) and what it was fine-tuned from.
         /// </param>
+        /// <param name="stamp">The validity stamp the manifest records first, or null for a file written outside a task.</param>
         public static CarafeModelFile Write(string path, CarafeModelDirectory trained, string trainingType, string pretrainedSha256,
             string ms2StartModel, CarafeModelTraining training, AcquisitionVocabulary acquisition, CarafeModelFile baseModel,
-            CarafeModelOrigin ms2Origin, CarafeModelOrigin rtOrigin)
+            CarafeModelOrigin ms2Origin, CarafeModelOrigin rtOrigin, ArtifactStamp stamp = null)
         {
             // Only the safetensors this run wrote: a Carafe checkpoint left in the folder is not its model.
             string ms2 = SafetensorsOrNull(trained.GetMs2ModelPath(trainingType));
@@ -113,6 +116,7 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 Path = path,
                 Format = FORMAT,
+                Validity = stamp,
                 Creator = @"CarafeSharp " + GetVersion(),
                 Created = DateTime.UtcNow.ToString(@"o", CultureInfo.InvariantCulture),
                 TrainingType = trainingType,
@@ -142,17 +146,20 @@ namespace pwiz.CarafeSharp.Proteome
                 Entries = sources.ToDictionary(s => s.Entry, s => Sha256(File.ReadAllBytes(s.Path)), StringComparer.Ordinal),
             };
 
-            string temp = path + @".tmp";
-            if (File.Exists(temp))
-                File.Delete(temp);
-            using (var zip = ZipFile.Open(temp, ZipArchiveMode.Create))
+            // Written to a sibling temp and moved over the final name once complete, so a run that
+            // stops part way leaves any earlier model file as it was.
+            using (var saver = new SimpleFileSaver(path))
             {
-                using (var stream = zip.CreateEntry(MANIFEST_ENTRY).Open())
-                    model.WriteManifest(stream);
-                foreach (var source in sources)
-                    zip.CreateEntryFromFile(source.Path, source.Entry, CompressionLevel.Optimal);
+                using (var file = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var zip = new ZipArchive(file, ZipArchiveMode.Create))
+                {
+                    using (var stream = zip.CreateEntry(MANIFEST_ENTRY).Open())
+                        model.WriteManifest(stream);
+                    foreach (var source in sources)
+                        zip.CreateEntryFromFile(source.Path, source.Entry, CompressionLevel.Optimal);
+                }
+                saver.Commit();
             }
-            File.Move(temp, path, true);
             model.FileSha256 = Sha256(File.ReadAllBytes(path));
             return model;
         }
@@ -206,12 +213,48 @@ namespace pwiz.CarafeSharp.Proteome
             }
         }
 
+        /// <summary>
+        /// The stamp in the manifest of the model file at <paramref name="path"/>, or null when the
+        /// file is missing, not a model file, or unstamped. Never throws: "I cannot tell" resolves
+        /// to training again.
+        /// </summary>
+        public static ArtifactStamp ReadStamp(string path)
+        {
+            try
+            {
+                using (var zip = ZipFile.OpenRead(path))
+                {
+                    var manifestEntry = zip.GetEntry(MANIFEST_ENTRY);
+                    if (manifestEntry == null)
+                        return null;
+                    using (var stream = manifestEntry.Open())
+                    using (var json = JsonDocument.Parse(stream))
+                    {
+                        return json.RootElement.TryGetProperty(ArtifactStamp.JSON_PROPERTY, out var validity)
+                            ? ArtifactStamp.Parse(validity.GetString())
+                            : null;
+                    }
+                }
+            }
+            catch (Exception e) when (!(e is OutOfMemoryException))
+            {
+                return null;
+            }
+        }
+
         private CarafeModelFile()
         {
         }
 
         public string Path { get; private set; }
         public string Format { get; private set; }
+
+        /// <summary>
+        /// The validity stamp of the training run that wrote the file (its task, CarafeSharp
+        /// version and settings-and-inputs key), or null for a file written without one. The
+        /// manifest's first property, as every stamped JSON artifact places it.
+        /// </summary>
+        public ArtifactStamp Validity { get; private set; }
         /// <summary>What wrote the file: CarafeSharp and its version.</summary>
         public string Creator { get; private set; }
         /// <summary>When the file was written, UTC, ISO 8601.</summary>
@@ -443,6 +486,8 @@ namespace pwiz.CarafeSharp.Proteome
             using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
             {
                 json.WriteStartObject();
+                if (Validity != null)
+                    json.WriteString(ArtifactStamp.JSON_PROPERTY, Validity.ToString());
                 json.WriteString(@"format", Format);
                 json.WriteString(@"creator", Creator);
                 json.WriteString(@"created", Created);
@@ -523,6 +568,7 @@ namespace pwiz.CarafeSharp.Proteome
                 {
                     Path = path,
                     Format = format,
+                    Validity = root.TryGetProperty(ArtifactStamp.JSON_PROPERTY, out var validity) ? ArtifactStamp.Parse(validity.GetString()) : null,
                     Creator = root.GetProperty(@"creator").GetString(),
                     Created = root.GetProperty(@"created").GetString(),
                     TrainingType = root.GetProperty(@"training_type").GetString(),

@@ -199,8 +199,6 @@ namespace pwiz.CarafeSharp.Test
             string path = Path.Combine(folder, BlibLibraryWriter.FILE_NAME);
             try
             {
-                // A stale partial file from a run that died is replaced, not appended to.
-                File.WriteAllText(path + PartialFile.SUFFIX, @"left by a crashed run");
                 var target = Spectrum(@"PEPTIDEK", 2, @"sp|P1|A;;sp|P2|B;", Fragment('y', 6, 1, 700.35, 1.0f),
                     new LibraryFragment('y', 7, 2, @"H2O", 402.2, 402.2f, 0.6f), Fragment('b', 2, 1, 227.1, 0.2f));
                 var decoy = Spectrum(@"EDITPEPK", 2, @"decoy_sp|P1|A", Fragment('y', 5, 1, 573.3, 1.0f));
@@ -267,10 +265,12 @@ namespace pwiz.CarafeSharp.Test
                     CollectionAssert.Contains(Column<string>(connection, @"SELECT name FROM sqlite_master WHERE type='index'"), @"idx_DecoyPairs_PairID");
                 }
 
-                // A library that cannot be created fails at once and leaves nothing behind.
-                string missingFolder = Path.Combine(folder, @"missing", BlibLibraryWriter.FILE_NAME);
-                Assert.ThrowsException<SQLiteException>(() => new BlibLibraryWriter(missingFolder, @"x"));
-                Assert.IsFalse(Directory.Exists(Path.GetDirectoryName(missingFolder)));
+                // A library that cannot be created fails at once and leaves nothing behind: here its
+                // folder is an existing file. (A missing folder is created, as every output's is.)
+                string blockedFolder = Path.Combine(folder, @"blocked");
+                File.WriteAllText(blockedFolder, string.Empty);
+                Assert.ThrowsException<IOException>(() => new BlibLibraryWriter(Path.Combine(blockedFolder, BlibLibraryWriter.FILE_NAME), @"x"));
+                CollectionAssert.AreEqual(new[] { blockedFolder, path }, Directory.GetFiles(folder).OrderBy(f => f, StringComparer.Ordinal).ToArray());
             }
             finally
             {

@@ -29,10 +29,15 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
 using Parquet.Schema;
+using pwiz.BiblioSpec.IO;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -41,7 +46,7 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Tests for Osprey.IO types: BlibWriter, SpectraCache, SpectrumFileReader, and ParquetScoreCache.
+    /// Tests for Osprey.IO types: OspreyBlibWriter, SpectraCache, SpectrumFileReader, and ParquetScoreCache.
     /// Ported from osprey-io Rust tests.
     /// </summary>
     [TestClass]
@@ -137,7 +142,7 @@ namespace pwiz.Osprey.Test
             string path = Path.GetTempFileName();
             try
             {
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     Assert.IsTrue(fileId > 0);
@@ -152,8 +157,8 @@ namespace pwiz.Osprey.Test
                     Assert.IsTrue(refId > 0);
 
                     writer.AddRetentionTime(refId, fileId, 10.0, 9.0, 11.0, 0.01, true);
-                    writer.AddMetadata("osprey_version", "0.1.0");
-                    writer.FinalizeDatabase();
+                    writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, "0.1.0");
+                    writer.Complete();
                 }
 
                 // Verify schema and data by opening a separate read connection
@@ -193,22 +198,21 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    var mods = new List<Modification>
+                    {
+                        new Modification { Position = 4, UnimodId = 4, MassDelta = 57.021464, Name = "Carbamidomethyl" }
+                    };
                     refId = writer.AddSpectrum(
                         "PEPTCIDE", "PEPTC[+57.021]IDE",
                         500.0, 2,
                         10.0, 9.0, 11.0,
                         new[] { 300.0 },
                         new[] { 100.0f },
-                        0.01, fileId, 1, 0.0);
-
-                    var mods = new List<Modification>
-                    {
-                        new Modification { Position = 4, UnimodId = 4, MassDelta = 57.021464, Name = "Carbamidomethyl" }
-                    };
-                    writer.AddModifications(refId, mods);
+                        0.01, fileId, 1, 0.0, mods);
+                    writer.Complete();
                 }
 
                 // Verify stored as 1-based: position 4 (0-based) -> 5 (1-based)
@@ -241,7 +245,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     refId = writer.AddSpectrum(
@@ -251,6 +255,7 @@ namespace pwiz.Osprey.Test
                         new[] { 300.0 },
                         new[] { 100.0f },
                         0.01, fileId, 1, 0.0);
+                    writer.Complete();
                 }
 
                 using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
@@ -288,7 +293,7 @@ namespace pwiz.Osprey.Test
                 float[] intensities = { 100.0f, 80.5f, 60.0f, 45.2f, 30.0f };
                 long refId;
 
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
                     refId = writer.AddSpectrum(
@@ -297,6 +302,7 @@ namespace pwiz.Osprey.Test
                         10.0, 9.0, 11.0,
                         mzs, intensities,
                         0.005, fileId, 1, 0.0);
+                    writer.Complete();
                 }
 
                 // Read back from SQLite using a separate connection
@@ -320,8 +326,7 @@ namespace pwiz.Osprey.Test
                             Assert.AreEqual(5, numPeaks);
 
                             // Decompress and verify m/z values
-                            byte[] mzBytes = BlibWriter.DecompressBlob(mzBlob, mzs.Length * 8);
-                            double[] readMzs = BlibWriter.BytesToDoubles(mzBytes);
+                            double[] readMzs = BlibWriter.DecodeMzs(mzBlob, mzs.Length);
                             Assert.AreEqual(mzs.Length, readMzs.Length);
                             for (int i = 0; i < mzs.Length; i++)
                             {
@@ -330,8 +335,7 @@ namespace pwiz.Osprey.Test
                             }
 
                             // Decompress and verify intensities
-                            byte[] intBytes = BlibWriter.DecompressBlob(intBlob, intensities.Length * 4);
-                            float[] readInts = BlibWriter.BytesToFloats(intBytes);
+                            float[] readInts = BlibWriter.DecodeIntensities(intBlob, intensities.Length);
                             Assert.AreEqual(intensities.Length, readInts.Length);
                             for (int i = 0; i < intensities.Length; i++)
                             {
@@ -359,7 +363,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId1 = writer.AddSourceFile("run1.mzML", "library.tsv", 0.01);
                     long fileId2 = writer.AddSourceFile("run2.mzML", "library.tsv", 0.01);
@@ -379,6 +383,7 @@ namespace pwiz.Osprey.Test
                     writer.AddRetentionTime(refId, fileId2, 10.3, 9.3, 11.3, 0.005, true);
                     // Run 3: no ID (null RT), has boundaries
                     writer.AddRetentionTime(refId, fileId3, null, 9.7, 11.7, 0.012, false);
+                    writer.Complete();
                 }
 
                 // Read back RetentionTimes using a separate connection
@@ -431,23 +436,22 @@ namespace pwiz.Osprey.Test
             try
             {
                 long refId;
-                using (var writer = new BlibWriter(path))
+                using (var writer = new OspreyBlibWriter(path))
                 {
                     long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    var proteins = new List<string>
+                    {
+                        "sp|P12345|PROT_HUMAN",
+                        "sp|P67890|PROT2_HUMAN"
+                    };
                     refId = writer.AddSpectrum(
                         "PEPTIDE", "PEPTIDE",
                         400.0, 2,
                         10.0, 9.0, 11.0,
                         new[] { 300.0 },
                         new[] { 100.0f },
-                        0.01, fileId, 1, 0.0);
-
-                    var proteins = new List<string>
-                    {
-                        "sp|P12345|PROT_HUMAN",
-                        "sp|P67890|PROT2_HUMAN"
-                    };
-                    writer.AddProteinMapping(refId, proteins);
+                        0.01, fileId, 1, 0.0, proteins: proteins);
+                    writer.Complete();
                 }
 
                 // Read back protein accessions via join using a separate connection
@@ -485,42 +489,42 @@ namespace pwiz.Osprey.Test
         public void TestStripFlankingChars()
         {
             // No flanking chars
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("PEPTIDE"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("PEPTIDE"));
 
             // Underscores (DIA-NN format)
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("_PEPTIDE_"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("_PEPTIDE_"));
 
             // Periods/underscores (Prosit format)
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("_.PEPTIDE._"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("_.PEPTIDE._"));
 
             // Flanking amino acids with periods (standard notation)
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("K.PEPTIDE.R"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("K.PEPTIDE.R"));
 
             // Just periods
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars(".PEPTIDE."));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars(".PEPTIDE."));
 
             // Modified sequence with flanking chars
             Assert.AreEqual("PEPTC[+57.021]IDE",
-                BlibWriter.StripFlankingChars("_PEPTC[+57.021]IDE_"));
+                BlibPeptideText.StripFlankingChars("_PEPTC[+57.021]IDE_"));
 
             // Dashes at ends
-            Assert.AreEqual("PEPTIDE", BlibWriter.StripFlankingChars("-PEPTIDE-"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.StripFlankingChars("-PEPTIDE-"));
 
             // Dots inside modification brackets must NOT be treated as flanking separators
             Assert.AreEqual("C[+57.02146]GPSPC[+57.02146]GLLK",
-                BlibWriter.StripFlankingChars("C[+57.02146]GPSPC[+57.02146]GLLK"));
+                BlibPeptideText.StripFlankingChars("C[+57.02146]GPSPC[+57.02146]GLLK"));
 
             // Multiple modifications with decimal dots
             Assert.AreEqual("AC[+57.02146]AC[+57.02146]AHGMLAEDGASC[+57.02146]R",
-                BlibWriter.StripFlankingChars("AC[+57.02146]AC[+57.02146]AHGMLAEDGASC[+57.02146]R"));
+                BlibPeptideText.StripFlankingChars("AC[+57.02146]AC[+57.02146]AHGMLAEDGASC[+57.02146]R"));
 
             // Flanking chars with modification dots
             Assert.AreEqual("C[+57.02146]PEPTIDE",
-                BlibWriter.StripFlankingChars("K.C[+57.02146]PEPTIDE.R"));
+                BlibPeptideText.StripFlankingChars("K.C[+57.02146]PEPTIDE.R"));
 
             // N-terminal modification with dot
             Assert.AreEqual("[+42.011]PEPTC[+57.02146]IDE",
-                BlibWriter.StripFlankingChars("[+42.011]PEPTC[+57.02146]IDE"));
+                BlibPeptideText.StripFlankingChars("[+42.011]PEPTC[+57.02146]IDE"));
         }
 
         /// <summary>
@@ -530,49 +534,49 @@ namespace pwiz.Osprey.Test
         public void TestConvertUnimodToMass()
         {
             // No modifications
-            Assert.AreEqual("PEPTIDE", BlibWriter.ConvertUnimodToMass("PEPTIDE"));
+            Assert.AreEqual("PEPTIDE", BlibPeptideText.ConvertUnimodToMass("PEPTIDE"));
 
             // Already mass notation - unchanged
             Assert.AreEqual("PEPTC[+57.021]IDE",
-                BlibWriter.ConvertUnimodToMass("PEPTC[+57.021]IDE"));
+                BlibPeptideText.ConvertUnimodToMass("PEPTC[+57.021]IDE"));
 
             // UniMod:4 (Carbamidomethyl)
-            string result = BlibWriter.ConvertUnimodToMass("PEPTC[UniMod:4]IDE");
+            string result = BlibPeptideText.ConvertUnimodToMass("PEPTC[UniMod:4]IDE");
             Assert.IsTrue(result.StartsWith("PEPTC[+57."),
                 "Expected mass notation for UniMod:4, got: " + result);
             Assert.IsTrue(result.EndsWith("]IDE"),
                 "Expected to end with ]IDE, got: " + result);
 
             // UniMod:35 (Oxidation)
-            result = BlibWriter.ConvertUnimodToMass("PEPTM[UniMod:35]IDE");
+            result = BlibPeptideText.ConvertUnimodToMass("PEPTM[UniMod:35]IDE");
             Assert.IsTrue(result.StartsWith("PEPTM[+15."),
                 "Expected mass notation for UniMod:35, got: " + result);
 
             // Multiple modifications
-            result = BlibWriter.ConvertUnimodToMass("PEPTC[UniMod:4]M[UniMod:35]IDE");
+            result = BlibPeptideText.ConvertUnimodToMass("PEPTC[UniMod:4]M[UniMod:35]IDE");
             Assert.IsTrue(result.Contains("[+57."), "Should contain Carbamidomethyl mass");
             Assert.IsTrue(result.Contains("[+15."), "Should contain Oxidation mass");
 
             // Unknown UniMod - kept as-is
             Assert.AreEqual("PEPTX[UniMod:99999]IDE",
-                BlibWriter.ConvertUnimodToMass("PEPTX[UniMod:99999]IDE"));
+                BlibPeptideText.ConvertUnimodToMass("PEPTX[UniMod:99999]IDE"));
 
             // Case insensitive UNIMOD
-            result = BlibWriter.ConvertUnimodToMass("PEPTC[UNIMOD:4]IDE");
+            result = BlibPeptideText.ConvertUnimodToMass("PEPTC[UNIMOD:4]IDE");
             Assert.IsTrue(result.StartsWith("PEPTC[+57."),
                 "Case-insensitive UNIMOD should work, got: " + result);
 
             // Negative masses: Glu->pyro-Glu is UniMod:27, Gln->pyro-Glu UniMod:28
-            Assert.AreEqual("E[-18.0106]PEPTIDE", BlibWriter.ConvertUnimodToMass("E[UniMod:27]PEPTIDE"));
-            Assert.AreEqual("Q[-17.0265]PEPTIDE", BlibWriter.ConvertUnimodToMass("Q[UniMod:28]PEPTIDE"));
+            Assert.AreEqual("E[-18.0106]PEPTIDE", BlibPeptideText.ConvertUnimodToMass("E[UniMod:27]PEPTIDE"));
+            Assert.AreEqual("Q[-17.0265]PEPTIDE", BlibPeptideText.ConvertUnimodToMass("Q[UniMod:28]PEPTIDE"));
 
             // Verify TryGetUnimodMass for known IDs
             double mass;
-            Assert.IsTrue(BlibWriter.TryGetUnimodMass(4, out mass));
+            Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(4, out mass));
             Assert.AreEqual(57.021464, mass, 1e-6);
-            Assert.IsTrue(BlibWriter.TryGetUnimodMass(35, out mass));
+            Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(35, out mass));
             Assert.AreEqual(15.994915, mass, 1e-6);
-            Assert.IsFalse(BlibWriter.TryGetUnimodMass(99999, out mass));
+            Assert.IsFalse(BlibPeptideText.TryGetUnimodMass(99999, out mass));
 
             // The ids Osprey once mapped to another modification's mass, now Skyline's UniModData
             // masses: every reader and writer shares the one table.
@@ -593,7 +597,7 @@ namespace pwiz.Osprey.Test
             };
             foreach (var pair in skylineMasses)
             {
-                Assert.IsTrue(BlibWriter.TryGetUnimodMass(pair.Key, out mass), pair.Key.ToString());
+                Assert.IsTrue(BlibPeptideText.TryGetUnimodMass(pair.Key, out mass), pair.Key.ToString());
                 Assert.AreEqual(pair.Value, mass, pair.Key.ToString());
                 Assert.AreEqual(pair.Value, DiannTsvLoader.UnimodIdToMass(pair.Key), pair.Key.ToString());
             }
@@ -2476,12 +2480,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParquetScoreCacheRoundTrip()
         {
-            // FileSaver owns the scratch file's lifecycle: write + read back through
+            // SimpleFileSaver owns the scratch file's lifecycle: write + read back through
             // its sibling temp and never Commit() -- Dispose discards it (no leaked
             // GetTempFileName file, cleaned up even if an assertion throws).
             string dest = Path.Combine(Path.GetTempPath(),
                 @"osprey_roundtrip_" + Path.GetRandomFileName() + @".parquet");
-            using (var saver = new FileSaver(dest))
+            using (var saver = new SimpleFileSaver(dest))
             {
                 // Create test entries
                 var entries = new List<CoelutionScoredEntry>();
@@ -2600,12 +2604,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestHasPinFeatureColumnsRejectsFeaturelessParquet()
         {
-            // FileSaver owns the scratch file's lifecycle: write the fixture to its
+            // SimpleFileSaver owns the scratch file's lifecycle: write the fixture to its
             // sibling temp, probe that, and never Commit() -- Dispose discards the temp
             // (no leaked temp file, cleaned up even if an assertion throws).
             string dest = Path.Combine(Path.GetTempPath(),
                 @"osprey_haspin_" + Path.GetRandomFileName() + @".parquet");
-            using (var saver = new FileSaver(dest))
+            using (var saver = new SimpleFileSaver(dest))
             {
                 var entryIdField = new DataField<uint>("entry_id");
                 var schema = new ParquetSchema(entryIdField);
@@ -3270,6 +3274,79 @@ namespace pwiz.Osprey.Test
             finally
             {
                 ParquetScoreCache.RowGroupRowCapForTest = null;
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Concurrent scores-parquet writes must not corrupt each other's nullable columns.
+        /// When the writer's DataFields were shared statics, building one write's schema reset
+        /// the shared fields' definition level to 0 for a moment. A write in progress on another
+        /// thread then recorded present values as null, and its file read back with null
+        /// cwt_candidates cells and every later list shifted onto the wrong row. Found with 4
+        /// files scored at once in the 2026-10-13 SEA-AD acceptance run. Each row here carries
+        /// one candidate whose apex is its own entry id, so any null or shift is a mismatch.
+        /// </summary>
+        [TestMethod]
+        public void TestConcurrentScoresParquetWritesKeepCwtCandidatesAligned()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_cwt_concurrent_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                const int rows = 20000;
+                var entries = new List<FdrEntry>(rows);
+                for (uint id = 1; id <= rows; id++)
+                {
+                    var e = MakeStreamEntry(id, id);
+                    e.CwtCandidates = new List<CwtCandidate> { NewCwtCandidate(id, id - 0.5, id + 0.5, 1.0, 1.0, 1.0) };
+                    entries.Add(e);
+                }
+
+                int writers = Math.Max(4, Environment.ProcessorCount / 2);
+                var deadline = DateTime.UtcNow.AddSeconds(5);
+                int files = 0;
+                var failures = new List<string>();
+                Parallel.For(0, writers, new ParallelOptions { MaxDegreeOfParallelism = writers }, w =>
+                {
+                    // Each writer needs its own entries: the write assigns ParquetIndex.
+                    var mine = entries.Select(e => MakeStreamEntry(e.EntryId, e.EntryId)).ToList();
+                    for (int i = 0; i < mine.Count; i++)
+                        mine[i].CwtCandidates = entries[i].CwtCandidates;
+                    // A minimum number of writes each, so a writer started late still overlaps the others.
+                    for (int n = 0; n < 3 || DateTime.UtcNow < deadline; n++)
+                    {
+                        string path = Path.Combine(dir, string.Format("w{0}_{1}.scores.parquet", w, n));
+                        ParquetScoreCache.WriteScoresParquet(path, mine, null, null, "f.mzML");
+                        var lists = ParquetScoreCache.LoadCwtCandidatesFromParquet(path);
+                        Interlocked.Increment(ref files);
+                        if (lists.Count != rows)
+                        {
+                            lock (failures)
+                                failures.Add(string.Format("{0}: {1} rows", Path.GetFileName(path), lists.Count));
+                        }
+                        for (int row = 0; row < lists.Count; row++)
+                        {
+                            var list = lists[row];
+                            if (list == null || list.Count != 1 || list[0].ApexRt != row + 1)
+                            {
+                                lock (failures)
+                                {
+                                    failures.Add(string.Format("{0} row {1}: {2}", Path.GetFileName(path), row,
+                                        list == null ? "null" : list.Count == 1 ? "apex " + list[0].ApexRt : list.Count + " candidates"));
+                                }
+                                break;
+                            }
+                        }
+                        File.Delete(path);
+                    }
+                });
+                Assert.AreEqual(0, failures.Count, string.Format("{0} of {1} concurrently written files misaligned: {2}",
+                    failures.Count, files, string.Join("; ", failures.Take(5))));
+            }
+            finally
+            {
                 try { Directory.Delete(dir, true); } catch (IOException) { }
             }
         }
@@ -4861,7 +4938,7 @@ namespace pwiz.Osprey.Test
                 // A key carrying every character that could confuse the serialized form or a
                 // JSON / HTML slot: the field separators, quotes, backslashes, control characters.
                 const string key = "search=abc;library=def;path=C:\\proj\\ai;q=\"x\";ctrl=\b\f\n\r\t\u0001";
-                var stamp = ArtifactStamp.ForCurrentBuild(PerFileScoringTask.TASK_NAME, key);
+                var stamp = OspreyVersion.Stamp(PerFileScoringTask.TASK_NAME, key);
                 AssertStampSerialization(stamp, key);
                 AssertStampCurrency(stamp, key);
                 AssertBinaryStamps(dir, stamp);
@@ -4998,10 +5075,10 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(ArtifactValidity.ReadStamp(unstampedParquet));
 
             string blib = Path.Combine(dir, "out.blib");
-            using (var writer = new BlibWriter(blib))
+            using (var writer = new OspreyBlibWriter(blib))
             {
                 writer.AddStamp(stamp);
-                writer.FinalizeDatabase();
+                writer.Complete();
             }
             AssertStampRead(blib, stamp);
         }

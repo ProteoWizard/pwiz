@@ -24,6 +24,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -116,11 +117,11 @@ namespace pwiz.Osprey.IO
                 int logCount = Interlocked.Increment(ref s_unsortedLogCount);
                 if (logCount <= MaxUnsortedLogLines)
                 {
-                    OspreyOutput.Out.WriteLine(
+                    CommandOutput.Out.WriteLine(
                         $@"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
                     if (logCount == MaxUnsortedLogLines)
                     {
-                        OspreyOutput.Out.WriteLine(
+                        CommandOutput.Out.WriteLine(
                             $@"[unsorted-spectrum] suppressing further lines (>{MaxUnsortedLogLines} per process)");
                     }
                 }

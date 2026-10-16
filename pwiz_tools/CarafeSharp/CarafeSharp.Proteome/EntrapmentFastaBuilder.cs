@@ -27,7 +27,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using pwiz.CarafeSharp.Core;
+using pwiz.CarafeSharp.Contracts;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -42,12 +43,6 @@ namespace pwiz.CarafeSharp.Proteome
     /// </summary>
     public sealed class EntrapmentFastaBuilder
     {
-        public const string MANIFEST_HEADER = "sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index";
-        public const string PEPTIDE_TYPE_TARGET = @"target";
-        public const string PEPTIDE_TYPE_P_TARGET = @"p_target";
-        public const string PEPTIDE_TYPE_DECOY = @"decoy";
-        public const string PEPTIDE_TYPE_P_DECOY = @"p_decoy";
-
         private static readonly UTF8Encoding UTF8_NO_BOM = new UTF8Encoding(false);
 
         private readonly EntrapmentFastaSettings _settings;
@@ -97,14 +92,14 @@ namespace pwiz.CarafeSharp.Proteome
             // whole build finished: an earlier build's FASTA is removed before the new manifest takes
             // its final name, and the new FASTA is moved there last. A FASTA that cannot be removed
             // stops the build with the earlier FASTA and manifest both as they were.
-            var fasta = new PartialFile(_settings.OutputFasta);
-            var manifest = _settings.Manifest != null ? new PartialFile(_settings.Manifest) : null;
+            var fasta = new SimpleFileSaver(_settings.OutputFasta);
+            var manifest = _settings.Manifest != null ? new SimpleFileSaver(_settings.Manifest) : null;
             try
             {
-                WriteFasta(kept, result, fasta.PartialPath);
+                WriteFasta(kept, result, fasta.SafeName);
                 if (manifest != null)
                 {
-                    WriteManifest(kept, manifest.PartialPath);
+                    WriteManifest(kept, manifest.SafeName);
                     if (File.Exists(_settings.OutputFasta))
                         File.Delete(_settings.OutputFasta);
                     manifest.Commit();
@@ -115,11 +110,11 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 try
                 {
-                    fasta.Discard();
+                    fasta.Dispose();
                 }
                 finally
                 {
-                    manifest?.Discard();
+                    manifest?.Dispose();
                 }
             }
             return result;
@@ -162,8 +157,7 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 string fastaPath = Path.GetFullPath(_settings.OutputFasta);
                 string manifestPath = Path.GetFullPath(_settings.Manifest);
-                if (SamePath(fastaPath, manifestPath) || SamePath(fastaPath + PartialFile.SUFFIX, manifestPath) ||
-                    SamePath(fastaPath, manifestPath + PartialFile.SUFFIX))
+                if (SamePath(fastaPath, manifestPath))
                 {
                     throw new ArgumentException(string.Format(@"the FASTA and the manifest must be separate files: {0}, {1}",
                         _settings.OutputFasta, _settings.Manifest));
@@ -480,17 +474,17 @@ namespace pwiz.CarafeSharp.Proteome
             Log(@"Writing manifest: " + _settings.Manifest);
             using (var writer = CreateWriter(path))
             {
-                writer.Write(MANIFEST_HEADER + "\n");
+                PairingManifest.WriteHeader(writer);
                 int pairIndex = 0;
                 foreach (var quartet in kept)
                 {
-                    WriteManifestRow(writer, quartet.Target, false, JoinedLabel(quartet, null, false, false), PEPTIDE_TYPE_TARGET, pairIndex);
+                    PairingManifest.WriteRow(writer, quartet.Target, false, JoinedLabel(quartet, null, false, false), PeptideKind.Target, pairIndex);
                     if (quartet.PTarget != null)
-                        WriteManifestRow(writer, quartet.PTarget, false, JoinedLabel(quartet, null, true, false), PEPTIDE_TYPE_P_TARGET, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.PTarget, false, JoinedLabel(quartet, null, true, false), PeptideKind.PTarget, pairIndex);
                     if (quartet.Decoy != null)
-                        WriteManifestRow(writer, quartet.Decoy, true, JoinedLabel(quartet, null, false, true), PEPTIDE_TYPE_DECOY, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.Decoy, true, JoinedLabel(quartet, null, false, true), PeptideKind.Decoy, pairIndex);
                     if (quartet.PDecoy != null)
-                        WriteManifestRow(writer, quartet.PDecoy, true, JoinedLabel(quartet, null, true, true), PEPTIDE_TYPE_P_DECOY, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.PDecoy, true, JoinedLabel(quartet, null, true, true), PeptideKind.PDecoy, pairIndex);
                     pairIndex++;
                 }
             }
@@ -523,26 +517,13 @@ namespace pwiz.CarafeSharp.Proteome
             writer.Write('\n');
         }
 
-        private static void WriteManifestRow(TextWriter writer, string sequence, bool decoy, string proteins,
-            string peptideType, int pairIndex)
-        {
-            writer.Write(sequence);
-            writer.Write(decoy ? "\tYes\t" : "\tNo\t");
-            writer.Write(proteins);
-            writer.Write('\t');
-            writer.Write(peptideType);
-            writer.Write('\t');
-            writer.Write(pairIndex.ToString(CultureInfo.InvariantCulture));
-            writer.Write('\n');
-        }
-
         /// <summary>A UTF-8 (no BOM) writer, creating the parent folder as Carafe does. Lines end in LF.</summary>
         internal static StreamWriter CreateWriter(string path)
         {
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
-            return new StreamWriter(path, false, UTF8_NO_BOM, 1 << 16);
+            return new StreamWriter(path, false, UTF8_NO_BOM, 1 << 16) { NewLine = "\n" };
         }
 
         private void Log(string message)

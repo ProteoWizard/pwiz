@@ -64,7 +64,7 @@ namespace pwiz.Osprey.Test
 
                 FdrScoresSidecar.BeginRun();
                 FdrScoresSidecar.Write(output, records, FdrScoresSidecar.Pass.FirstPass,
-                    ArtifactStamp.ForCurrentBuild(TASK, "key1"));
+                    OspreyVersion.Stamp(TASK, "key1"));
                 Assert.IsTrue(PerFileResumeDriver.IsCurrent(output, TASK, "key1"));
                 Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK, "key2"));
                 Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK + "Other", "key1"));
@@ -72,7 +72,7 @@ namespace pwiz.Osprey.Test
                 // A later run's write replaces the stamp with its own.
                 FdrScoresSidecar.BeginRun();
                 FdrScoresSidecar.Write(output, records, FdrScoresSidecar.Pass.FirstPass,
-                    ArtifactStamp.ForCurrentBuild(TASK, "key2"));
+                    OspreyVersion.Stamp(TASK, "key2"));
                 Assert.IsTrue(PerFileResumeDriver.IsCurrent(output, TASK, "key2"));
                 Assert.IsFalse(PerFileResumeDriver.IsCurrent(output, TASK, "key1"));
 

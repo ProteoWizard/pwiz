@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
     <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
   </ItemGroup>
 

@@ -89,54 +89,6 @@ JOIN SpectrumSourceFiles sf ON rt.SpectrumSourceID = sf.id
         Exact = @('bestSpectrum')
     },
     @{
-        Name = 'OspreyRunScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.RunQValue, s.DiscriminantScore, s.PosteriorErrorProb
-FROM OspreyRunScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('RunQValue', 'DiscriminantScore', 'PosteriorErrorProb')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyExperimentScores'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge,
-       s.ExperimentQValue, s.NRunsDetected, s.NRunsSearched
-FROM OspreyExperimentScores s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('ExperimentQValue')
-        Exact = @('NRunsDetected', 'NRunsSearched')
-    },
-    @{
-        Name = 'OspreyPeakBoundaries'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName,
-       s.StartRT, s.EndRT, s.ApexRT, s.ApexIntensity, s.IntegratedArea
-FROM OspreyPeakBoundaries s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName')
-        Numeric = @('StartRT', 'EndRT', 'ApexRT', 'ApexIntensity', 'IntegratedArea')
-        Exact = @()
-    },
-    @{
-        Name = 'OspreyCoefficients'; Scope = 'Subset'
-        Sql = @'
-SELECT r.peptideModSeq, r.precursorCharge, s.FileName, s.ScanNumber,
-       s.RT, s.Coefficient
-FROM OspreyCoefficients s
-JOIN RefSpectra r ON s.RefSpectraID = r.id
-'@
-        Key = @('peptideModSeq', 'precursorCharge', 'FileName', 'ScanNumber')
-        Numeric = @('RT', 'Coefficient')
-        Exact = @()
-    },
-    @{
         Name = 'RefSpectraProteins'; Scope = 'Subset'
         Sql = @'
 SELECT r.peptideModSeq, r.precursorCharge, p.accession
@@ -174,13 +126,14 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
         Exact = @('idFileName', 'workflowType')
     },
     @{
-        Name = 'OspreyMetadata'; Scope = 'Full'
-        # Without the validity stamp (osprey.validity): it names the build and key that wrote
-        # the library, which is provenance, not a search result to hold against a golden.
-        Sql = "SELECT Key, Value FROM OspreyMetadata WHERE Key <> 'osprey.validity'"
-        Key = @('Key')
+        Name = 'LibMetadata'; Scope = 'Full'
+        # Without the validity stamp (osprey.validity) and the command line (osprey.command):
+        # they name the build, key and invocation that wrote the library, which is provenance,
+        # not a search result to hold against a golden.
+        Sql = "SELECT key, value FROM LibMetadata WHERE key NOT IN ('osprey.validity', 'osprey.command')"
+        Key = @('key')
         Numeric = @()
-        Exact = @('Value')
+        Exact = @('value')
     }
 )
 

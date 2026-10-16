@@ -21,6 +21,7 @@
 using System;
 using System.IO;
 using System.Text;
+using pwiz.Common.Pipeline;
 
 namespace pwiz.Osprey.Core
 {

@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Test
@@ -32,6 +33,6 @@ namespace pwiz.Osprey.Test
         public const string KEY = @"search=test;library=test";
 
         /// <summary>A stamp from this build, for task <see cref="TASK"/> and key <see cref="KEY"/>.</summary>
-        public static ArtifactStamp Any => ArtifactStamp.ForCurrentBuild(TASK, KEY);
+        public static ArtifactStamp Any => OspreyVersion.Stamp(TASK, KEY);
     }
 }

@@ -204,7 +204,7 @@
   <ItemGroup>
     <!-- Shared dep tree - all multi-targeted in the same session as this csproj.
          Each follows the same net472/net10.0-windows split internally. -->
-    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\Shared\Common\Common.csproj" />
@@ -282,11 +282,12 @@
          Skyline shipped msparser.dll - so DllImport("MascotShim") and its msparser dependency
          resolve from the executable's own directory. BiblioSpec.csproj emits msparserD.dll in
          Debug and msparser.dll otherwise (Debug links msparserD.lib), so the name tracks
-         $(Configuration). -->
+         $(Configuration). Without Mascot support (no vendor licenses) BlibBuild has none of
+         these, though the directory may still hold other natives. -->
     <PropertyGroup>
       <_MascotNativeDir>@(_BundledToolTargetPath->WithMetadataValue('Filename', 'BlibBuild')->'%(RootDir)%(Directory)runtimes\win-x64\native\')</_MascotNativeDir>
     </PropertyGroup>
-    <ItemGroup Condition="'$(_MascotNativeDir)' != '' And Exists('$(_MascotNativeDir)')">
+    <ItemGroup Condition="'$(_MascotNativeDir)' != '' And Exists('$(_MascotNativeDir)MascotShim.dll')">
       <Content Include="$(_MascotNativeDir)MascotShim.dll">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <Link>MascotShim.dll</Link>

@@ -25,7 +25,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
@@ -49,10 +49,10 @@ namespace pwiz.CarafeSharp.Proteome
     /// </summary>
     public static class DecoyPairPlanner
     {
-        private const string TARGET = @"target";
-        private const string DECOY = @"decoy";
-        private const string ENTRAPMENT_TARGET = @"p_target";
-        private const string ENTRAPMENT_DECOY = @"p_decoy";
+        private const string TARGET = PairingManifest.KIND_TARGET;
+        private const string DECOY = PairingManifest.KIND_DECOY;
+        private const string ENTRAPMENT_TARGET = PairingManifest.KIND_P_TARGET;
+        private const string ENTRAPMENT_DECOY = PairingManifest.KIND_P_DECOY;
 
         /// <summary>
         /// Carafe's key for a precursor's modification set: the alphabase names, sorted
@@ -105,40 +105,11 @@ namespace pwiz.CarafeSharp.Proteome
         public static List<ManifestEntry> ReadManifest(string path)
         {
             var rows = new List<ManifestEntry>();
-            using (var reader = new StreamReader(path, new UTF8Encoding(false), false))
-            {
-                string headerLine = reader.ReadLine();
-                if (headerLine == null)
-                    return rows;
-                string[] header = headerLine.Split('\t');
-                int iSequence = ColumnIndex(header, @"sequence");
-                int iDecoy = ColumnIndex(header, @"decoy");
-                int iType = ColumnIndex(header, @"peptide_type");
-                int iPair = ColumnIndex(header, @"peptide_pair_index");
-                int maxIndex = Math.Max(Math.Max(iSequence, iDecoy), Math.Max(iType, iPair));
-                int lineNumber = 1;
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    lineNumber++;
-                    if (line.Length == 0)
-                        continue;
-                    string[] cells = line.Split('\t');
-                    if (cells.Length <= maxIndex)
-                    {
-                        throw new IOException(string.Format(CultureInfo.InvariantCulture,
-                            @"Malformed pairing manifest at line {0}: expected at least {1} columns, found {2}",
-                            lineNumber, maxIndex + 1, cells.Length));
-                    }
-                    if (!int.TryParse(JavaText.Trim(cells[iPair]), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int pairIndex))
-                    {
-                        throw new IOException(string.Format(CultureInfo.InvariantCulture,
-                            @"Malformed pairing manifest at line {0}: non-integer peptide_pair_index '{1}'", lineNumber, cells[iPair]));
-                    }
-                    bool isDecoy = string.Equals(JavaText.Trim(cells[iDecoy]), @"yes", StringComparison.OrdinalIgnoreCase);
-                    rows.Add(new ManifestEntry(JavaText.Trim(cells[iSequence]), isDecoy, JavaText.Trim(cells[iType]), pairIndex));
-                }
-            }
+            // Carafe reads an empty file as a manifest with no rows; the shared reader refuses one.
+            if (new FileInfo(path).Length == 0)
+                return rows;
+            foreach (var row in PairingManifest.Read(path, true, out _))
+                rows.Add(new ManifestEntry(JavaText.Trim(row.Sequence), row.IsDecoy, JavaText.Trim(row.KindText), row.PairIndex));
             return rows;
         }
 
@@ -189,16 +160,6 @@ namespace pwiz.CarafeSharp.Proteome
             return group.TryGetValue(peptideType, out string sequence) ? sequence : null;
         }
 
-        private static int ColumnIndex(string[] header, string name)
-        {
-            for (int i = 0; i < header.Length; i++)
-            {
-                if (string.Equals(JavaText.Trim(header[i]), name, StringComparison.OrdinalIgnoreCase))
-                    return i;
-            }
-            throw new IOException(@"Pairing manifest is missing the '" + name + @"' column");
-        }
-
         /// <summary>The rows planned so far, each RefSpectra id used once.</summary>
         private sealed class PlannedPairs
         {
@@ -226,12 +187,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>A written RefSpectra row that may join a pair.</summary>
         public sealed class Precursor
         {
-            public Precursor(int refSpectraId, string strippedSequence, int charge, string modKey)
+            public Precursor(int refSpectraId, string strippedSequence, int charge, string modKey, string modifiedSequence = null)
             {
                 RefSpectraId = refSpectraId;
                 StrippedSequence = strippedSequence;
                 Charge = charge;
                 ModificationKey = modKey;
+                ModifiedSequence = modifiedSequence ?? strippedSequence;
             }
 
             public int RefSpectraId { get; }
@@ -239,6 +201,8 @@ namespace pwiz.CarafeSharp.Proteome
             public int Charge { get; }
             /// <summary>The precursor's <see cref="DecoyPairPlanner.ModKey"/>.</summary>
             public string ModificationKey { get; }
+            /// <summary>The written <c>peptideModSeq</c>, which with the charge identifies the precursor.</summary>
+            public string ModifiedSequence { get; }
         }
 
         /// <summary>One row of the pairing manifest.</summary>

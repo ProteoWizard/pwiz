@@ -29,6 +29,9 @@ internal static class ArgParser
             string a = args[i];
             if (!s_optionsByName.TryGetValue(a, out var option))
             {
+                if (UnsupportedWriteFormats.TryGetReason(a, out string? unsupportedReason))
+                    throw new ArgumentException($"{a}: {unsupportedReason}");
+
                 if (a.StartsWith('-'))
                     throw new ArgumentException($"Unknown option: {a}");
                 config.InputFiles.Add(a);
@@ -53,6 +56,7 @@ internal static class ArgParser
         if (config.InputFiles.Count == 0)
             throw new ArgumentException("No input files specified. Use --help for usage.");
 
+        ApplyZstd(config);
         return config;
     }
 
@@ -145,7 +149,7 @@ internal static class ArgParser
             (c, v) => LoadConfigFile(v, c)),
         Arg("outfile", "Override the name of output file.",
             (c, v) => c.OutFile = v),
-        Arg("ext,e", "set extension for output files [mzML|mzXML|mgf|txt|mz5|mzMLb]",
+        Arg("ext,e", "set extension for output files [mzML|mzXML|mgf|mzMLb]",
             (c, v) => c.OutputExtension = v),
 
         // -------- output format --------
@@ -153,8 +157,6 @@ internal static class ArgParser
             c => c.WriteConfig.Format = WriteFormat.Mzml) with { Aliases = new[] { "--mzml" } },
         Flag("mzXML", "write mzXML format",
             c => c.WriteConfig.Format = WriteFormat.MzXml),
-        Flag("mz5", "write mz5 format",
-            c => c.WriteConfig.Format = WriteFormat.Mz5),
         Flag("mzMLb", "write mzMLb format",
             c => c.WriteConfig.Format = WriteFormat.MzMLb),
         Arg("mzMLbChunkSize", "mzMLb dataset chunk size in bytes",
@@ -165,8 +167,6 @@ internal static class ArgParser
             defaultValue: Invariant(s_defaults.WriteConfig.MzMLbCompressionLevel)),
         Flag("mgf", "write Mascot generic format",
             c => c.WriteConfig.Format = WriteFormat.Mgf) with { Aliases = new[] { "--MGF" } },
-        Flag("text", "write ProteoWizard internal text format",
-            c => c.WriteConfig.Format = WriteFormat.Text),
         Flag("ms1", "write MS1 format",
             c => c.WriteConfig.Format = WriteFormat.Ms1),
         Flag("bms1", "write BMS1 format",
@@ -250,6 +250,14 @@ internal static class ArgParser
             (c, v) => c.ContactInfo = v),
         Flag("zlib,z", "use zlib compression for binary data",
             c => c.WriteConfig.EncoderConfig.Compression = BinaryCompression.Zlib),
+        // Applied after the loop by ApplyZstd, so they win over -z and numpress's
+        // stacked zlib wherever they appear on the command line, as in cpp.
+        Flag("zstd", "use Zstandard compression for binary data. This applies to all data arrays, instead of zlib",
+            c => c.Zstd = true),
+        Flag("mzShuffleZstd", "use byte-shuffling Zstandard compression for m/z and time values",
+            c => c.MzShuffleZstd = true),
+        Flag("dictZstd", "use dictionary encoding followed by Zstandard compression for m/z and ion mobility values. This overrides --mzShuffleZstd",
+            c => c.DictZstd = true),
         // pwiz C++ numpress flags set per-array overrides; --numpressAll combines Linear+Slof.
         OptionalNumber("numpressLinear", Invariant(s_defaults.WriteConfig.EncoderConfig.NumpressLinearErrorTolerance),
             "use numpress linear prediction compression for binary mz and rt data (relative accuracy loss will not exceed given tolerance arg, unless set to 0)", (c, v) =>
@@ -344,6 +352,69 @@ internal static class ArgParser
     internal static IEnumerable<string> OptionNames => s_optionsByName.Keys;
 
 
+    /// <summary>
+    /// Turns the zstd switches into encoder settings, as cpp msconvert.cpp does after parsing.
+    /// Idempotent, because a <c>--config</c> file's nested parse applies it before the outer
+    /// parse applies it again to the merged result.
+    /// </summary>
+    private static void ApplyZstd(MsConvertConfig config)
+    {
+        var encoder = config.WriteConfig.EncoderConfig;
+        if (config.Zstd)
+        {
+            encoder.Compression = BinaryCompression.Zstd;
+            // SetNumpress stacks zlib on the numpress arrays; cpp's numpress arrays take the
+            // global compression, so under --zstd they get the "followed by zstd" encodings.
+            foreach (var type in encoder.CompressionOverrides.Keys.ToList())
+            {
+                if (encoder.CompressionOverrides[type] == BinaryCompression.Zlib)
+                    encoder.CompressionOverrides[type] = BinaryCompression.Zstd;
+            }
+        }
+
+        if (config.DictZstd)
+        {
+            encoder.CompressionOverrides[CVID.MS_m_z_array] = BinaryCompression.DictZstd;
+            encoder.CompressionOverrides[CVID.MS_time_array] = BinaryCompression.ByteShuffleZstd;
+            foreach (var type in s_ionMobilityArrays)
+                encoder.CompressionOverrides[type] = BinaryCompression.DictZstd;
+        }
+        else if (config.MzShuffleZstd)
+        {
+            encoder.CompressionOverrides[CVID.MS_m_z_array] = BinaryCompression.ByteShuffleZstd;
+            encoder.CompressionOverrides[CVID.MS_time_array] = BinaryCompression.ByteShuffleZstd;
+        }
+
+        if (!config.DictZstd && !config.MzShuffleZstd)
+            return;
+
+        // cpp accepts both conflicts below at parse time and then fails, writing the first
+        // spectrum (numpress) or reading the file back (mzMLb); report them here instead.
+        if (config.WriteConfig.Format == WriteFormat.MzMLb)
+            throw new ArgumentException("--mzShuffleZstd and --dictZstd are not supported for mzMLb output.");
+        foreach (var (type, compression) in encoder.CompressionOverrides)
+        {
+            if (!compression.IsValueWise())
+                continue;
+            var numpress = encoder.NumpressOverrides.GetValueOrDefault(type, encoder.Numpress);
+            if (numpress != BinaryNumpress.None)
+            {
+                throw new ArgumentException(
+                    $"--mzShuffleZstd and --dictZstd cannot be combined with numpress on the same array ({CvLookup.CvTermInfo(type).Name} has {numpress}).");
+            }
+        }
+    }
+
+    /// <summary>The arrays cpp msconvert's --dictZstd dictionary-encodes besides m/z.</summary>
+    private static readonly CVID[] s_ionMobilityArrays =
+    {
+        CVID.MS_ion_mobility_array,
+        CVID.MS_raw_ion_mobility_drift_time_array,
+        CVID.MS_mean_inverse_reduced_ion_mobility_array,
+        CVID.MS_mean_ion_mobility_drift_time_array,
+        CVID.MS_deconvoluted_ion_mobility_drift_time_array,
+    };
+
     private static void SetNumpress(MsConvertConfig config, BinaryNumpress kind, params CVID[] arrayTypes)
     {
         foreach (var type in arrayTypes)
@@ -381,6 +452,9 @@ internal static class ArgParser
             if (eq < 0) { replay.Add("--" + line); continue; }
             string key = "--" + line[..eq].Trim();
             string val = line[(eq + 1)..].Trim();
+            // "mz5=false" asks for nothing this msconvert lacks, so it is dropped rather than refused.
+            if (UnsupportedWriteFormats.TryGetReason(key, out _) && IsFalse(val))
+                continue;
             // A switch takes no value on the command line, so "mzXML=true" turns it on and
             // "mzXML=false" leaves it off, as in a C++ msconvert config file.
             if (s_optionsByName.TryGetValue(key, out var option) && option.Value == OptionValue.None)
@@ -423,6 +497,9 @@ internal static class ArgParser
         foreach (var kv in s.PrecisionOverrides) d.PrecisionOverrides[kv.Key] = kv.Value;
         foreach (var kv in s.CompressionOverrides) d.CompressionOverrides[kv.Key] = kv.Value;
         foreach (var kv in s.NumpressOverrides) d.NumpressOverrides[kv.Key] = kv.Value;
+        dest.Zstd |= src.Zstd;
+        dest.MzShuffleZstd |= src.MzShuffleZstd;
+        dest.DictZstd |= src.DictZstd;
 
         // Boolean toggles copy through directly. Indexed defaults to true, so "indexed got
         // explicitly turned off in the config file" means src.WriteConfig.Indexed == false.

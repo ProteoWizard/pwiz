@@ -251,15 +251,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Unexpected argument --{0}.
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to No isolation list will be exported..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_ {
@@ -354,7 +345,16 @@ namespace pwiz.Skyline {
                         "sition_list_export", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected argument {0}.
+        /// </summary>
+        public static string CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}..
         /// </summary>

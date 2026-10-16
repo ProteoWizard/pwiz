@@ -537,18 +537,6 @@
     <value>{0:N0}個のファイルの第1パスタンパク質FDRを計算中</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_" xml:space="preserve">
-    <value>{0}の第1パスタンパク質Q値の決定に失敗しました：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第1パスタンパク質Q値を決定中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第1パスタンパク質Q値を決定中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>モデル診断：第1パスはすでに完了しているため、レポートは第1パス中間ファイルから構築されます。再実行は行いません。</value>
     <comment>Needs Review:New resource</comment>
@@ -1299,10 +1287,6 @@
   </data>
   <data name="ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__" xml:space="preserve">
     <value>{0}の{1:N0}個のプリカーサー候補ピークを書き込みました：{4:N0}個の第1パスピークから、{2:N0}個を再スコアリングし、{3:N0}個の欠損ピークを追加</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___" xml:space="preserve">
-    <value>{0}ステップで中間ファイルから結果を再読み込みできませんでした（終了コード{1}）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_" xml:space="preserve">
