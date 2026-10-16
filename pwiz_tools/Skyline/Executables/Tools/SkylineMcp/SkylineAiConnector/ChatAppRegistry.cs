@@ -21,7 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -428,8 +430,7 @@ namespace SkylineAiConnector
             {
                 try
                 {
-                    foreach (string exePath in Directory.EnumerateFiles(package, "codex.exe",
-                                 new EnumerationOptions { RecurseSubdirectories = true }))
+                    foreach (string exePath in Directory.EnumerateFiles(package, "codex.exe", SearchOption.AllDirectories))
                     {
                         if (exePath.IndexOf(targetTriple, StringComparison.OrdinalIgnoreCase) >= 0)
                             return exePath;
@@ -438,6 +439,10 @@ namespace SkylineAiConnector
                 catch (IOException)
                 {
                     // Dangling junction left by npm link, or similar
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // Unlike EnumerationOptions on .NET Core, .NET Framework does not skip inaccessible folders
                 }
             }
             return null;
@@ -467,10 +472,10 @@ namespace SkylineAiConnector
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 // Registration is user-wide; do not pick up a project-specific Codex configuration.
-                WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+                WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                // .NET Framework has no ProcessStartInfo.ArgumentList
+                Arguments = string.Join(" ", arguments.Select(QuoteArgument))
             };
-            foreach (string argument in arguments)
-                startInfo.ArgumentList.Add(argument);
             using var process = Process.Start(startInfo);
             if (process == null)
                 throw new InvalidOperationException("Failed to start Codex CLI.");
@@ -488,6 +493,32 @@ namespace SkylineAiConnector
                 throw new InvalidOperationException("Codex CLI failed: " +
                     (string.IsNullOrWhiteSpace(errorText) ? "exit code " + process.ExitCode : errorText.Trim()));
             }
+        }
+
+        /// <summary>
+        /// Quote one command-line argument the way CommandLineToArgvW parses it back, as
+        /// ProcessStartInfo.ArgumentList does on .NET Core: backslashes are literal except
+        /// before a quote, where each must be doubled.
+        /// </summary>
+        private static string QuoteArgument(string argument)
+        {
+            if (argument.Length > 0 && argument.IndexOfAny(new[] { ' ', '\t', '"' }) < 0)
+                return argument;
+            var sb = new StringBuilder("\"");
+            int backslashes = 0;
+            foreach (char c in argument)
+            {
+                if (c == '\\')
+                {
+                    backslashes++;
+                    continue;
+                }
+                sb.Append('\\', c == '"' ? backslashes * 2 + 1 : backslashes);
+                sb.Append(c);
+                backslashes = 0;
+            }
+            sb.Append('\\', backslashes * 2);
+            return sb.Append('"').ToString();
         }
 
         // -- Shared JSON config helpers --

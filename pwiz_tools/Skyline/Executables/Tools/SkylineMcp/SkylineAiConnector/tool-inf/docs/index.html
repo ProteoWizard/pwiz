@@ -16,8 +16,8 @@
         tutorials directly in your running Skyline instance.
     </p>
     <p>
-        Supported AI client applications include Claude Desktop, Claude Code, Gemini CLI, Antigravity, VS Code (Copilot),
-        Cursor, and Codex.
+        Supported AI client applications include Claude Desktop, Claude Code, OpenAI Codex, Gemini CLI, Antigravity,
+        VS Code (Copilot), and Cursor.
     </p>
 
     <h1>Prerequisites</h1>
@@ -168,6 +168,9 @@
             later. Older versions do not include the MCP server infrastructure.</li>
         <li><b>Claude Desktop checkbox disabled</b> &mdash; Claude Desktop may not be detected if it has
             never been launched. Start Claude Desktop at least once to create its configuration.</li>
+        <li><b>Codex asks before every Skyline tool call</b> &mdash; This is the Codex default for MCP servers. To
+            skip the prompts, add <code>default_tools_approval_mode = "approve"</code> under
+            <code>[mcp_servers.skyline]</code> in the Codex <code>config.toml</code>.</li>
     </ul>
 </body>
 </html>
