@@ -18,7 +18,7 @@ in the terms below, and either side fails loudly when a library is not.
 
 ## Scope
 
-The contract applies to a library that **claims** it: a `.blib` whose `OspreyMetadata` table
+The contract applies to a library that **claims** it: a `.blib` whose `LibMetadata` table
 holds the key `library_contract` (value `1`, `LibraryContract.METADATA_KEY`). CarafeSharp writes
 that key only in contract mode (`--library_contract`, below), after validating what it is about
 to write. Osprey validates a library that carries the key and fails the load on any violation.
@@ -112,7 +112,7 @@ checks rules 1 and 6 over the written precursors (the same list the DecoyPairs p
 from, with each precursor's modified sequence) and, on a violation, discards the library - the
 writers' temp files go with their disposal, so the output folder holds nothing - rather than
 keep one that lies about itself. The `library_contract` key is written with the library's
-tables (`BlibLibraryWriter`'s `OspreyMetadata` extension), so a library that survives both
+tables (the shared writer's `LibMetadata`, before any spectrum), so a library that survives both
 checks carries it. Outside contract mode CarafeSharp writes what Carafe writes, so other Carafe
 users' libraries are unchanged.
 
@@ -122,7 +122,7 @@ Carafe parity; contract mode needs a FASTA built without it, which the one-comma
 
 **Osprey, at load** (`LibraryLoader.CheckLibraryContract`): after the blib loader has parsed the
 file and before any repair (accession normalizing, dedup, decoy marking, pairing), a library
-carrying the key (`OspreyBlibTables.ReadMetadata`) is validated with its `DecoyPairs` marking
+carrying the key (`BlibMetadata.Read`) is validated with its `DecoyPairs` marking
 (`BlibLoader.ReadDecoyPairs`) against the manifest `--decoy-pairing-manifest` names (rules 1 to
 6; rules 1 to 4 alone when no manifest is given, which the report says, as a contract library
 is paired by construction). A violation fails the load with the report; nothing is repaired or

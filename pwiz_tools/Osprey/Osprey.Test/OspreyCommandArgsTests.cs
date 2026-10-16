@@ -121,6 +121,15 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"ref.blib", io.LibrarySource.Path);
             Assert.AreEqual(@"out.blib", io.OutputBlib);
 
+            // The command line is kept as one line of text for the library's LibMetadata, with
+            // an argument quoted only when a shell would need it.
+            Assert.AreEqual(string.Join(@" ", @"Osprey", OspreyCommandArgs.ARG_INPUT.ArgumentText, @"a.mzML", @"b.mzML",
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, @"ref.blib", OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"out.blib"), io.CommandLine);
+            var spaced = OspreyCommandArgs.ParseArgs(new[] { OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"out dir\x.blib" });
+            Assert.AreEqual(@"Osprey " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText + @" ""out dir\x.blib""", spaced.CommandLine);
+            Assert.AreEqual(@"""say \""hi\""""", CommandLineText.Quote(@"say ""hi"""));
+            Assert.AreEqual(@"""""", CommandLineText.Quote(string.Empty));
+
             Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
 
             // --work-dir fans out to both; an explicit --output-dir / --cache-dir overrides one.

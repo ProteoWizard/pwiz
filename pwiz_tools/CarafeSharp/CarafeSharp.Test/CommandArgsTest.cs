@@ -141,6 +141,9 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(@"x.fasta", commandLine.LibrarySettings.Database);
                 Assert.AreEqual(30.0, commandLine.LibrarySettings.Nce);
             }
+            // The command line as given is kept for the library's LibMetadata (carafe.command).
+            Assert.AreEqual(@"CarafeSharp -db x.fasta -nce 30", dash.LibrarySettings.CommandLine);
+            Assert.AreEqual(@"CarafeSharp -db=x.fasta --nce=30", inline.LibrarySettings.CommandLine);
             // The declarations spell themselves the standard way, as Osprey's do, and build
             // tokens that way; -h is the one short alias.
             Assert.AreEqual(@"--db", CarafeCommandLine.ARG_DB.ArgumentText);

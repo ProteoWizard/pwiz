@@ -325,16 +325,18 @@ namespace pwiz.Osprey.Tasks
             return refIdByPrecursor;
         }
 
-        // Add metadata. OspreyMetadata key set must match Rust's
-        // write_blib_from_plan (pipeline.rs:6078-6081) byte-for-byte.
+        // The LibMetadata rows: the values Rust's write_blib_from_plan (pipeline.rs:6078-6081)
+        // records, under Osprey's namespaced keys, plus the command line that made the library.
         private static void WriteMetadata(OspreyBlibWriter writer, OspreyConfig config)
         {
-            writer.AddMetadata(@"osprey_version", OspreyVersion.Current);
-            writer.AddMetadata(@"search_mode", @"coelution");
-            writer.AddMetadata(@"run_fdr",
+            writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, OspreyVersion.Current);
+            writer.AddMetadata(OspreyBlibWriter.KEY_SEARCH_MODE, @"coelution");
+            writer.AddMetadata(OspreyBlibWriter.KEY_RUN_FDR,
                 config.RunFdr.ToString(CultureInfo.InvariantCulture));
-            writer.AddMetadata(@"experiment_fdr",
+            writer.AddMetadata(OspreyBlibWriter.KEY_EXPERIMENT_FDR,
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
+            if (config.CommandLine != null)
+                writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, config.CommandLine);
         }
 
         /// <summary>

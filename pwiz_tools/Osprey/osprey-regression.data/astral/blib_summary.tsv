@@ -17,5 +17,5 @@ Modifications	mass	1439050.6869677838	57.021464	57.021464
 Proteins	<rows>	9805		
 SpectrumSourceFiles	<rows>	3		
 SpectrumSourceFiles	cutoffScore	0.03	0.01	0.01
-OspreyMetadata	<rows>	4		
+LibMetadata	<rows>	4		
 PeakDigest	<rows>	117236		

@@ -59,12 +59,15 @@ namespace pwiz.Osprey.Test
             new Projection(@"Proteins", 1, @"SELECT accession FROM Proteins"),
             new Projection(@"SpectrumSourceFiles", 1,
                 @"SELECT fileName, idFileName, cutoffScore, workflowType FROM SpectrumSourceFiles"),
-            // Without the validity stamp (ArtifactStamp.PARQUET_KEY, spelled out because the
-            // regression harness compiles this file alone): it records which task, build and key
-            // wrote the library, which two searches of the same thing may legitimately differ in
-            // (the library hash, for one library in two formats). Every other row is compared.
-            new Projection(@"OspreyMetadata", 1,
-                @"SELECT Key, Value FROM OspreyMetadata WHERE Key <> 'osprey.validity'"),
+            // Without the validity stamp (ArtifactStamp.PARQUET_KEY) and the command line
+            // (OspreyBlibWriter.KEY_COMMAND), both spelled out because the regression harness
+            // compiles this file alone: the stamp records which task, build and key wrote the
+            // library, which two searches of the same thing may legitimately differ in (the
+            // library hash, for one library in two formats), and the command line differs
+            // between a straight-through run and the HPC chain that reproduces it. Every other
+            // row is compared.
+            new Projection(@"LibMetadata", 1,
+                @"SELECT key, value FROM LibMetadata WHERE key NOT IN ('osprey.validity', 'osprey.command')"),
             new Projection(@"RefSpectraPeaks", 2,
                 @"SELECT r.peptideModSeq, r.precursorCharge, p.peakMZ, p.peakIntensity FROM RefSpectraPeaks p " +
                 @"JOIN RefSpectra r ON p.RefSpectraID = r.id")

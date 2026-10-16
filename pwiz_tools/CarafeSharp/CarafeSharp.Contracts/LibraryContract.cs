@@ -31,7 +31,7 @@ namespace pwiz.CarafeSharp.Contracts
     /// What a correct Osprey spectral library is, checked by one piece of code on both sides:
     /// CarafeSharp runs it before it keeps a library it writes in contract mode, and Osprey runs
     /// it when it loads a library that claims the contract (the <see cref="METADATA_KEY"/> row of
-    /// its <c>OspreyMetadata</c> table). The rules, by number (Osprey docs, "The Osprey library
+    /// its <c>LibMetadata</c> table). The rules, by number (Osprey docs, "The Osprey library
     /// contract"):
     /// <list type="number">
     /// <item>One row per precursor: no two rows share a modified sequence and charge.</item>
@@ -53,7 +53,7 @@ namespace pwiz.CarafeSharp.Contracts
     /// </summary>
     public static class LibraryContract
     {
-        /// <summary>The <c>OspreyMetadata</c> key a library claims the contract with, and its value.</summary>
+        /// <summary>The <c>LibMetadata</c> key a library claims the contract with (one of the shared, unprefixed keys), and its value.</summary>
         public const string METADATA_KEY = @"library_contract";
         public const string METADATA_VALUE = @"1";
 

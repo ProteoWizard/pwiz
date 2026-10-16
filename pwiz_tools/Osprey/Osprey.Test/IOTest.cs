@@ -157,7 +157,7 @@ namespace pwiz.Osprey.Test
                     Assert.IsTrue(refId > 0);
 
                     writer.AddRetentionTime(refId, fileId, 10.0, 9.0, 11.0, 0.01, true);
-                    writer.AddMetadata("osprey_version", "0.1.0");
+                    writer.AddMetadata(OspreyBlibWriter.KEY_VERSION, "0.1.0");
                     writer.Complete();
                 }
 

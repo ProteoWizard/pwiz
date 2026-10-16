@@ -428,7 +428,9 @@ namespace pwiz.Osprey
         {
             var parser = new OspreyCommandArgs();
             CreateParser().Parse(parser, args);
-            return parser.ToConfig(fdrModel);
+            var config = parser.ToConfig(fdrModel);
+            config.CommandLine = CommandLineText.Format(@"Osprey", args);
+            return config;
         }
 
         /// <summary>

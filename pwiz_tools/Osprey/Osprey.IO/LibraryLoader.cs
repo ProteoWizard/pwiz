@@ -28,6 +28,7 @@ using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
@@ -329,7 +330,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// A library that claims the Osprey library contract (the <see cref="LibraryContract.METADATA_KEY"/>
-        /// row of its <c>OspreyMetadata</c> table) is checked against it here, before any repair,
+        /// row of its <c>LibMetadata</c> table) is checked against it here, before any repair,
         /// and fails the load with the full report on a violation; its own <c>DecoyPairs</c>
         /// marking and the pairing manifest the run names take part in the check. A library
         /// without the claim takes the tolerant route unchanged.
@@ -338,7 +339,7 @@ namespace pwiz.Osprey.IO
             IOspreyLog log, out string error)
         {
             error = null;
-            if (OspreyBlibTables.ReadMetadata(path, LibraryContract.METADATA_KEY) != LibraryContract.METADATA_VALUE)
+            if (BlibMetadata.Read(path, LibraryContract.METADATA_KEY) != LibraryContract.METADATA_VALUE)
                 return true;
             log.LogInfo(OspreyIOResources.LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_);
             // Said first, so a library built with another prefix reads as a prefix mismatch rather

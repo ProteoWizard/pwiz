@@ -126,13 +126,14 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
         Exact = @('idFileName', 'workflowType')
     },
     @{
-        Name = 'OspreyMetadata'; Scope = 'Full'
-        # Without the validity stamp (osprey.validity): it names the build and key that wrote
-        # the library, which is provenance, not a search result to hold against a golden.
-        Sql = "SELECT Key, Value FROM OspreyMetadata WHERE Key <> 'osprey.validity'"
-        Key = @('Key')
+        Name = 'LibMetadata'; Scope = 'Full'
+        # Without the validity stamp (osprey.validity) and the command line (osprey.command):
+        # they name the build, key and invocation that wrote the library, which is provenance,
+        # not a search result to hold against a golden.
+        Sql = "SELECT key, value FROM LibMetadata WHERE key NOT IN ('osprey.validity', 'osprey.command')"
+        Key = @('key')
         Numeric = @()
-        Exact = @('Value')
+        Exact = @('value')
     }
 )
 

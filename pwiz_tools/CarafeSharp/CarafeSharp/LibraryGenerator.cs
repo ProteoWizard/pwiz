@@ -198,7 +198,8 @@ namespace pwiz.CarafeSharp
             _pairGate = CreatePairGate(forms);
             using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath, ccs != null) : null)
             using (var blib = BlibPath != null
-                       ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath), Stamp, _settings.LibraryContract)
+                       ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath), Stamp, _settings.LibraryContract,
+                           _settings.CommandLine)
                        : null)
             {
                 // Disposed before tsv and blib, so a failure stops the writer thread before their partial files are discarded.
