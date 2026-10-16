@@ -1500,6 +1500,14 @@ namespace pwiz.Skyline.Model.AuditLog {
             }
         }
         /// <summary>
+        ///   Looks up a localized string similar to Sage.
+        /// </summary>
+        public static string SearchEngine_Sage {
+            get {
+                return ResourceManager.GetString("SearchEngine_Sage", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to Hardklör.
         /// </summary>
         public static string SearchEngine_Hardklor {

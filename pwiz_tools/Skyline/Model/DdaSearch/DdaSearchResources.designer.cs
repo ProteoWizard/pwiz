@@ -95,7 +95,25 @@ namespace pwiz.Skyline.Model.DdaSearch {
                 return ResourceManager.GetString("DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sage did not produce a valid Percolator input file ({0})..
+        /// </summary>
+        public static string DdaSearch_SageSearchEngine_Sage_did_not_produce_a_valid_Percolator_input_file___0__ {
+            get {
+                return ResourceManager.GetString("DdaSearch_SageSearchEngine_Sage_did_not_produce_a_valid_Percolator_input_file___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Sage produced Percolator scores, but no search results could be matched to them. This may indicate an unsupported Sage version..
+        /// </summary>
+        public static string DdaSearch_SageSearchEngine_Sage_produced_Percolator_scores__but_no_search_results_could_be_matched_to_them__This_may_indicate_an_unsupported_Sage_version_ {
+            get {
+                return ResourceManager.GetString("DdaSearch_SageSearchEngine_Sage_produced_Percolator_scores__but_no_search_results_could_be_matched_to_them__This_may_indicate_an_unsupported_Sage_version_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Search failed: {0}.
         /// </summary>
