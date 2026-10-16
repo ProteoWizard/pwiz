@@ -549,7 +549,7 @@ namespace SkylineAiConnector
                 if (codexInstalled)
                     checkCodex.Checked = ChatAppRegistry.IsRegisteredInCodex();
                 else
-                    checkCodex.Text = "Codex (not installed)";
+                    checkCodex.Text = "Codex (ChatGPT) (not installed)";
             }
             finally
             {

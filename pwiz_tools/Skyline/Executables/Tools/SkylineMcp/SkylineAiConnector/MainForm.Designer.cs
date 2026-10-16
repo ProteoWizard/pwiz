@@ -152,7 +152,7 @@ namespace SkylineAiConnector
             this.checkCodex.Name = "checkCodex";
             this.checkCodex.Size = new System.Drawing.Size(62, 19);
             this.checkCodex.TabIndex = 2;
-            this.checkCodex.Text = "Code&x";
+            this.checkCodex.Text = "Code&x (ChatGPT)";
             this.checkCodex.CheckedChanged += new System.EventHandler(this.checkCodex_CheckedChanged);
             //
             // labelSetupStatus
