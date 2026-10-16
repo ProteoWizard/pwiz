@@ -110,6 +110,22 @@ namespace pwiz.CarafeSharp.Test
             AssertViolation(LibraryContractViolationClass.DecoyUnmarked, @"KEDITPEP: sp|P2|B", null,
                 Replace(clean, 2, Row(@"KEDITPEP", @"KEDITPEP", 2, @"decoy_sp|P1|A;sp|P2|B")));
 
+            // Rule 6 from the library's own pairing (a blib's DecoyPairs) when there is no manifest:
+            // each pair id names one decoy and one target at one charge, and the report says the
+            // pairs were checked that way. A decoy whose pair has no target row is unpaired.
+            var tablePaired = new List<LibraryContractRow>
+            {
+                Row(@"PEPTIDEK", @"PEPTIDEK", 2, @"sp|P1|A;sp|P2|B", false, 1),
+                Row(@"KEDITPEP", @"KEDITPEP", 2, @"decoy_sp|P1|A;decoy_sp|P2|B", true, 1),
+            };
+            report = LibraryContract.Validate(tablePaired, null, PREFIXES);
+            Assert.IsTrue(report.IsValid, report.Describe());
+            Assert.IsTrue(report.PairsCheckedFromLibrary);
+            Assert.AreEqual(ContractsResources.LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds_and_accessions_were_not_checked_against_one__the_pairs_were_checked_from_the_library_s_own_DecoyPairs_table_,
+                report.Describe());
+            AssertViolation(LibraryContractViolationClass.UnpairedDecoy, @"KEDITPEP/3 (no target in pair 2)", null,
+                tablePaired.Concat(new[] { Row(@"KEDITPEP", @"KEDITPEP", 3, @"decoy_sp|P1|A;decoy_sp|P2|B", true, 2) }).ToList());
+
             // Pairs-only and rows-only checks apply the rules they name.
             var unpaired = clean.Where((_, i) => i != 1).Select(r => Row(r.Sequence, r.ModifiedSequence, r.Charge, string.Empty)).ToList();
             report = LibraryContract.Validate(unpaired, manifest, PREFIXES, LibraryContractChecks.Pairs);
@@ -139,10 +155,11 @@ namespace pwiz.CarafeSharp.Test
             return copy;
         }
 
-        private static LibraryContractRow Row(string sequence, string modifiedSequence, int charge, string accessions, bool? markedDecoy = null)
+        private static LibraryContractRow Row(string sequence, string modifiedSequence, int charge, string accessions, bool? markedDecoy = null,
+            int? pairId = null)
         {
             return new LibraryContractRow(sequence, modifiedSequence, charge,
-                accessions.Length > 0 ? accessions.Split(';') : new string[0], markedDecoy);
+                accessions.Length > 0 ? accessions.Split(';') : new string[0], markedDecoy, pairId);
         }
 
         private static PairingManifestRow ManifestRow(string sequence, string kind, string proteins, int pairIndex)

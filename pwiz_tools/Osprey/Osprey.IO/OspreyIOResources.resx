@@ -199,6 +199,15 @@
   <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
     <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%): {3:N0} from the pairing manifest, {4:N0} by amino acid composition. {5:N0} decoys and {6:N0} targets have no partner.</value>
   </data>
+  <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_s_DecoyPairs_table___3__" xml:space="preserve">
+    <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%) from the library's DecoyPairs table. {3:N0} decoys and {4:N0} targets have no partner.</value>
+  </data>
+  <data name="LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pairing_each_decoy_with_its_target_" xml:space="preserve">
+    <value>The library {0} supplies decoys but has no DecoyPairs table pairing each decoy with its target. A BiblioSpec library searched with its own decoys must carry the table, as CarafeSharp writes it; otherwise leave out {1} so Osprey generates its own decoys.</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_" xml:space="preserve">
+    <value>Pairing library decoys to targets from the library's DecoyPairs table.</value>
+  </data>
   <data name="LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_" xml:space="preserve">
     <value>Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search.</value>
   </data>

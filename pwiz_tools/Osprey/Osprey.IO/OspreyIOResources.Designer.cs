@@ -409,6 +409,16 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The library {0} supplies decoys but has no DecoyPairs table pairing each decoy with its target. A BiblioSpec library searched with its own decoys must carry the table, as CarafeSharp writes it; otherwise leave out {1} so Osprey generates its own decoys..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pairing_each_decoy_with_its_target_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pa" +
+                        "iring_each_decoy_with_its_target_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unsupported library format: {0}.
         /// </summary>
         public static string LibraryLoader_Load_Unsupported_library_format___0_ {
@@ -437,6 +447,16 @@ namespace pwiz.Osprey.IO {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%) from the library&apos;s DecoyPairs table. {3:N0} decoys and {4:N0} targets have no partner..
+        /// </summary>
+        public static string LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_s_DecoyPairs_table___3__ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targe" +
+                        "ts___2____from_the_library_s_DecoyPairs_table___3__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search..
         /// </summary>
@@ -506,6 +526,16 @@ namespace pwiz.Osprey.IO {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Pairing library decoys to targets from the library&apos;s DecoyPairs table..
+        /// </summary>
+        public static string LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_" +
+                        "library_s_DecoyPairs_table_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Replaced the protein accessions of {0:N0} library precursors with the source-protein accessions in the pairing manifest.
         /// </summary>

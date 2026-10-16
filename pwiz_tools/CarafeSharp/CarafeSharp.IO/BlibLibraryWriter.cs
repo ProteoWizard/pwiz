@@ -22,8 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
 using System.Globalization;
 using System.Threading.Tasks;
 using pwiz.BiblioSpec.IO;
@@ -134,32 +132,13 @@ namespace pwiz.CarafeSharp.IO
             return firstId;
         }
 
-        /// <summary>Adds Carafe's DecoyPairs table with these rows.</summary>
+        /// <summary>Adds the DecoyPairs table (Carafe's, <see cref="BlibSchema.CreateDecoyPairs"/>) with these rows.</summary>
         public void WriteDecoyPairs(IReadOnlyList<DecoyPairRow> rows)
         {
-            var connection = _writer.Connection;
-            Execute(connection, BlibSchema.CreateDecoyPairs);
-            Execute(connection, BlibSchema.CreateIdxDecoyPairsPairId);
-            using (var transaction = connection.BeginTransaction())
-            using (var insert = new SQLiteCommand(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method) " +
-                                                  @"VALUES (@id, @decoy, @entrapment, @pair, @method)", connection))
-            {
-                var id = insert.Parameters.Add(@"@id", DbType.Int64);
-                var decoy = insert.Parameters.Add(@"@decoy", DbType.Int32);
-                var entrapment = insert.Parameters.Add(@"@entrapment", DbType.Int32);
-                var pair = insert.Parameters.Add(@"@pair", DbType.Int32);
-                var method = insert.Parameters.Add(@"@method", DbType.String);
-                foreach (var row in rows)
-                {
-                    id.Value = row.RefSpectraId;
-                    decoy.Value = row.IsDecoy ? 1 : 0;
-                    entrapment.Value = row.IsEntrapment ? 1 : 0;
-                    pair.Value = row.PairId;
-                    method.Value = (object)row.Method ?? DBNull.Value;
-                    insert.ExecuteNonQuery();
-                }
-                transaction.Commit();
-            }
+            _writer.BeginBatch();
+            foreach (var row in rows)
+                _writer.AddDecoyPair(row.RefSpectraId, row.IsDecoy, row.IsEntrapment, row.PairId, row.Method);
+            _writer.CommitBatch();
         }
 
         /// <summary>
@@ -269,12 +248,6 @@ namespace pwiz.CarafeSharp.IO
             if (proteinId == LibrarySpectrum.NO_PROTEIN)
                 return Array.Empty<string>();
             return proteinId.Split(';');
-        }
-
-        private static void Execute(SQLiteConnection connection, string sql)
-        {
-            using (var command = new SQLiteCommand(sql, connection))
-                command.ExecuteNonQuery();
         }
     }
 }

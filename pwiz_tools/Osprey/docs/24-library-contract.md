@@ -122,13 +122,24 @@ Carafe parity; contract mode needs a FASTA built without it, which the one-comma
 
 **Osprey, at load** (`LibraryLoader.CheckLibraryContract`): after the blib loader has parsed the
 file and before any repair (accession normalizing, dedup, decoy marking, pairing), a library
-carrying the key (`BlibMetadata.Read`) is validated with its `DecoyPairs` marking
-(`BlibLoader.ReadDecoyPairs`) against the manifest `--decoy-pairing-manifest` names (rules 1 to
-6; rules 1 to 4 alone when no manifest is given, which the report says, as a contract library
-is paired by construction). A violation fails the load with the report; nothing is repaired or
-cached. A library without the key takes the tolerant route. A library cache is written only
-after the check, and its composition hash covers the manifest, so a cached load is of a library
-that passed.
+carrying the key (`BlibMetadata.Read`) is validated with its `DecoyPairs` marking and pairing
+(`BlibDecoyPairs.Read`) against the manifest `--decoy-pairing-manifest` names (rules 1 to 6;
+without a manifest rules 1 to 4 from the rows and rule 6 from the table's pair ids, each of
+which must name one decoy and one target at one charge, which the report says). A violation
+fails the load with the report; nothing is repaired or cached. A library without the key takes
+the tolerant route. A library cache is written only after the check, and its composition hash
+covers the manifest, so a cached load is of a library that passed.
+
+**Osprey, pairing a blib's decoys** (`LibraryLoader.TryFinishSuppliedDecoys`, decision of
+2026-10-15): a `.blib` searched with its own decoys (`--decoys-in-library`) must carry
+`DecoyPairs`, and Osprey pairs its decoys from the table alone (`BlibDecoyPairs.Pair`: the
+table's side is authoritative over the accession prefixes, and each pair gives the decoy its
+target's id with the decoy bit). A decoy-bearing blib without the table is refused with the
+message to search with generated decoys instead. The pairing manifest and the amino-acid
+composition fallback stay for TSV libraries, which have no table to carry their pairing; the
+manifest still serves a blib's entrapment pairing and FDRBench output, which the table does not
+cover. Osprey's own `--export-library` writes `DecoyPairs` for the decoys the load paired, so an
+exported decoy library searches back.
 
 ---
 

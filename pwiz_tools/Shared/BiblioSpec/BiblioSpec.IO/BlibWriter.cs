@@ -134,6 +134,9 @@ namespace pwiz.BiblioSpec.IO
         private PreparedInsert _insertSpectrumProtein;
         private PreparedInsert _insertRetentionTime;
         private PreparedInsert _insertMetadata;
+        // Prepared, with its table created, on the first AddDecoyPair: a library without
+        // supplied decoys has no DecoyPairs table.
+        private PreparedInsert _insertDecoyPair;
         private int _spectrumCount;
 
         /// <summary>
@@ -284,6 +287,28 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
+        /// Adds a <c>DecoyPairs</c> row (<see cref="BlibSchema.CreateDecoyPairs"/>): spectrum
+        /// <paramref name="refId"/> is a decoy or a target, of the entrapment partition or not,
+        /// and shares <paramref name="pairId"/> with the one other row of its pair (its target or
+        /// its decoy, at the same charge). <paramref name="method"/> names how a decoy was made
+        /// (<c>reverse</c>, <c>cycle</c>) and is null on a target or when unknown. The table is
+        /// created on the first call, so a library that supplies no decoys has none: a reader
+        /// takes the table's presence to mean the library pairs its own decoys.
+        /// </summary>
+        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairId, string method)
+        {
+            if (_insertDecoyPair == null)
+            {
+                Execute(BlibSchema.CreateDecoyPairs);
+                _insertDecoyPair = Prepare(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method) " +
+                                           @"VALUES (@id, @decoy, @entrapment, @pair, @method)",
+                    new[] { @"@id", @"@decoy", @"@entrapment", @"@pair", @"@method" },
+                    new[] { DbType.Int64, DbType.Int32, DbType.Int32, DbType.Int32, DbType.String });
+            }
+            _insertDecoyPair.Execute(refId, isDecoy ? 1 : 0, isEntrapment ? 1 : 0, pairId, (object)method ?? DBNull.Value);
+        }
+
+        /// <summary>
         /// Records the spectrum count, adds BiblioSpec's indexes and the writing tool's, closes
         /// the file and moves it over the final name, replacing any library there.
         /// </summary>
@@ -299,6 +324,8 @@ namespace pwiz.BiblioSpec.IO
                 Execute(statement);
             foreach (string statement in EXTRA_INDEX_STATEMENTS)
                 Execute(statement);
+            if (_insertDecoyPair != null)
+                Execute(BlibSchema.CreateIdxDecoyPairsPairId);
             _extensions?.CreateIndexes(_connection);
             CloseConnection();
             _file.Commit();
@@ -501,8 +528,9 @@ namespace pwiz.BiblioSpec.IO
             _insertSpectrumProtein?.Dispose();
             _insertRetentionTime?.Dispose();
             _insertMetadata?.Dispose();
+            _insertDecoyPair?.Dispose();
             _insertSpectrum = _insertPeaks = _insertModification = null;
-            _insertProtein = _insertSpectrumProtein = _insertRetentionTime = _insertMetadata = null;
+            _insertProtein = _insertSpectrumProtein = _insertRetentionTime = _insertMetadata = _insertDecoyPair = null;
             for (int i = 0; i < _insertAnnotations.Length; i++)
             {
                 _insertAnnotations[i]?.Dispose();

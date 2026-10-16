@@ -24,9 +24,17 @@ Standard BiblioSpec tables (BlibSchema, created by BlibWriter.CreateSchema)
   RefSpectra, RefSpectraPeaks, RefSpectraPeakAnnotations,
   Modifications, Proteins, RefSpectraProteins, RetentionTimes
 
-Optional table (BlibSchema.CreateLibMetadata, created by BlibWriter.CreateSchema too)
-  LibMetadata (key TEXT PRIMARY KEY, value TEXT)
+Optional tables (BlibSchema.CreateLibMetadata / CreateDecoyPairs)
+  LibMetadata (key TEXT PRIMARY KEY, value TEXT)   - in every library BlibWriter writes
+  DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method)
+                                                   - in a library that supplies its decoys
 ```
+
+`DecoyPairs` (Carafe's table, written by CarafeSharp and by `--export-library` for the decoys a
+load paired) names each supplied decoy's target: one `PairID` for the two rows of a pair, at one
+charge. A blib searched with its own decoys must carry it, and Osprey pairs from it alone
+([01](01-decoy-generation.md) step 2, [24](24-library-contract.md)). The search output blib has
+none: its decoys are not reported.
 
 `LibMetadata` holds single-row values about the library as a whole (`BiblioSpec.IO/BlibMetadata.cs`). Keys are namespaced by the writing tool - Osprey's `osprey.version`, `osprey.command`, `osprey.search_mode`, `osprey.run_fdr`, `osprey.experiment_fdr`, `osprey.library_source` and the validity stamp `osprey.validity`; CarafeSharp's `carafe.command` - with a small unprefixed set every tool honors (`library_contract`, see [24](24-library-contract.md)). Every tool that makes or transforms a library records its full command line under `<tool>.command`, so a library carries how it was made. A reader tests for the table, never for `LibInfo.minorVersion`. Until 2026-10-15 the table was Osprey's own `OspreyMetadata` with unprefixed keys; `BlibMetadata.Read` falls back to that name for one release so a search started under it still resumes.
 

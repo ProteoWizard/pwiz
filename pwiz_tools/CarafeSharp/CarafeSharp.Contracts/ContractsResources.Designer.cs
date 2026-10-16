@@ -70,6 +70,15 @@ namespace pwiz.CarafeSharp.Contracts {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to No pairing manifest was given, so the rows&apos; kinds and accessions were not checked against one; the pairs were checked from the library&apos;s own DecoyPairs table..
+        /// </summary>
+        public static string LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds_and_accessions_were_not_checked_against_one__the_pairs_were_checked_from_the_library_s_own_DecoyPairs_table_ {
+            get {
+                return ResourceManager.GetString("LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds_and_accessions_were_not_checked_against_one__the_pairs_were_checked_from_the_library_s_own_DecoyPairs_table_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The library violates the Osprey library contract in {0} way(s):.
         /// </summary>
         public static string LibraryContractReport_Describe_The_library_violates_the_Osprey_library_contract_in__0__way_s__ {
