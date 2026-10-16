@@ -8,7 +8,6 @@
 // readers that need XML parsing will use System.Xml.XmlReader directly.
 
 using System.Buffers;
-using System.Data.SQLite;
 using System.Globalization;
 using pwiz.BiblioSpec.IO;
 
@@ -1062,15 +1061,9 @@ public abstract class BuildParser : IDisposable
         // protein the first time it sees its accession.
         record.Proteins = psm.Proteins.Select(protein => protein.Accession).ToList();
 
-        try
-        {
-            BlibMaker.InsertSpectrum(record);
-        }
-        catch (SQLiteException ex)
-        {
-            // cpp parity: BuildParser.cpp:638 — Verbosity::error logs and throws.
-            Verbosity.Error($"Error inserting spectrum row: {ex.Message}");
-        }
+        // cpp parity: BuildParser.cpp:638 - a failed insert is a BlibException, which
+        // BuildTables annotates with the PSM.
+        BlibMaker.InsertSpectrum(record);
     }
 
     /// <summary>

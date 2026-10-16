@@ -330,7 +330,10 @@ public class BlibBuilder : BlibMaker
         {
             if (HasExtensionCi(_inputFiles[i], ".blib"))
             {
-                SqlStmt(string.Format(CultureInfo.InvariantCulture, "DETACH DATABASE tmp{0}", i));
+                // A .blib input that failed before its ATTACH (missing, unreadable) was logged
+                // and skipped by BuildLibrary; its DETACH fails, and must not take the library
+                // the other inputs built with it.
+                SqlStmt(string.Format(CultureInfo.InvariantCulture, "DETACH DATABASE tmp{0}", i), ignoreFailure: true);
             }
         }
     }

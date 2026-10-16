@@ -28,9 +28,10 @@ namespace Pwiz.Tools.BiblioSpec;
 /// override <see cref="AttachAll"/>, <see cref="DetachAll"/> and <see cref="GetLsid"/> the same way.
 /// </para>
 /// <para>
-/// The library is written at a temp beside its final name and moved over it by
+/// A new library is written at a temp beside its final name and moved over it by
 /// <see cref="Commit"/> (the writer's doing), so until then the file at <see cref="LibName"/>
-/// is whatever it was. Appending copies the existing library to the temp first.
+/// is whatever it was, overwrite or not. Appending writes the existing library in place, as cpp
+/// did.
 /// </para>
 /// </remarks>
 public class BlibMaker : IDisposable
@@ -95,12 +96,12 @@ public class BlibMaker : IDisposable
     /// </summary>
     protected internal BlibWriter Writer => _writer ?? throw new InvalidOperationException("Db not open. Call Init first.");
 
-    /// <summary>True if the library has been opened for writing.</summary>
+    /// <summary>True while the library is open for writing: after <see cref="Init"/>, until <see cref="Commit"/> closes it.</summary>
     /// <remarks>cpp parity: cpp's <c>sqlite3_prepare</c> on a NULL db returns an error code
     /// and silently no-ops; the cpp BuildParser ctor relies on that to construct a temporary
     /// builder (e.g. for SQT-mod-table parsing in PercolatorXmlReader). The C# port throws on
     /// access, so subclasses use this property to short-circuit before touching the DB.</remarks>
-    public bool IsDbOpen => _writer != null;
+    public bool IsDbOpen => _writer?.Connection != null;
 
     /// <summary>The library file name / path. cpp <c>getLibName</c>.</summary>
     public string? LibName => _libName;
@@ -238,37 +239,11 @@ public class BlibMaker : IDisposable
             throw new BlibException(false, "Library name has not been set; call SetLibName first.");
 
         // cpp parity: empty / non-existent file => overwrite. Existing non-empty file =>
-        // remove if overwrite was already requested, else append.
-        if (!File.Exists(_libName))
-        {
+        // overwrite if requested, else append. cpp removed the file up front when overwriting;
+        // the writer builds the new library beside it and replaces it at Commit, so a build that
+        // stops short leaves the old library where it was.
+        if (!File.Exists(_libName) || new FileInfo(_libName).Length == 0)
             _overwrite = true;
-        }
-        else if (_overwrite)
-        {
-            // Swallow a delete failure so it doesn't throw out of Init(); the real guard is the
-            // File.Exists check that follows - Verbosity.Error fires either way if the file is
-            // still on disk. (Same hardening as AbortCurrentLibrary.)
-            string? removeError = null;
-            try
-            {
-                File.Delete(_libName);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                removeError = ex.Message;
-            }
-            if (File.Exists(_libName))
-            {
-                Verbosity.Error($"Failed to remove existing redundant library '{_libName}'{(removeError != null ? ": " + removeError : string.Empty)}.");
-            }
-        }
-        else
-        {
-            // cpp parity: zero-length file is treated as overwrite candidate.
-            var info = new FileInfo(_libName);
-            if (info.Length == 0)
-                _overwrite = true;
-        }
 
         OpenWriter(_libName);
 
@@ -815,7 +790,17 @@ public class BlibMaker : IDisposable
         ArgumentNullException.ThrowIfNull(specFile);
         ArgumentNullException.ThrowIfNull(idFile);
 
-        var newFileId = (int)Writer.AddSourceFile(specFile, idFile, cutoffScore, (int)workflowType);
+        int newFileId;
+        try
+        {
+            newFileId = (int)Writer.AddSourceFile(specFile, idFile, cutoffScore, (int)workflowType);
+        }
+        catch (SQLiteException ex)
+        {
+            // cpp parity: a failed statement is a BlibException with the SQL and the message.
+            FailSql(ex.ErrorCode, "INSERT INTO SpectrumSourceFiles", ex.Message, _message);
+            throw; // unreachable; FailSql throws
+        }
         _fileIdCache[specFile] = (newFileId, cutoffScore);
         return newFileId;
     }
@@ -828,7 +813,17 @@ public class BlibMaker : IDisposable
     public int InsertSpectrum(BlibSpectrumRecord spectrum)
     {
         ArgumentNullException.ThrowIfNull(spectrum);
-        return (int)Writer.AddSpectrum(spectrum);
+        try
+        {
+            return (int)Writer.AddSpectrum(spectrum);
+        }
+        catch (SQLiteException ex)
+        {
+            // cpp parity: BuildParser.cpp:638 - a failed insert is a BlibException via
+            // Verbosity::error, with the SQL and the message.
+            FailSql(ex.ErrorCode, "INSERT INTO RefSpectra", ex.Message, "Error inserting spectrum row.");
+            throw; // unreachable; FailSql throws
+        }
     }
 
     // --- transfer helpers (cpp BlibMaker.cpp:716-1031) --------------------------------------

@@ -47,14 +47,17 @@ namespace pwiz.BiblioSpec.IO
     /// <para>The constructor starts a new non-redundant library with every table. BiblioSpec
     /// takes the longer way in through <see cref="Open"/>: the database with no schema yet, so
     /// that it can attach its input libraries first (a filtered library's LSID comes from the
-    /// redundant one) and then <see cref="CreateSchema"/>; or, when appending, a copy of the
-    /// library it is adding to. A redundant library has no <c>RetentionTimes</c> table and a
-    /// library carries <c>LibMetadata</c> once something is recorded in it.</para>
+    /// redundant one) and then <see cref="CreateSchema"/>; or, when appending, the library it
+    /// is adding to, written in place. A redundant library has no <c>RetentionTimes</c> table
+    /// and a library carries <c>LibMetadata</c> once something is recorded in it.</para>
     ///
-    /// <para>The file is written to a <see cref="SimpleFileSaver"/> temp beside
+    /// <para>A new library is written to a <see cref="SimpleFileSaver"/> temp beside
     /// <c>path</c> and moved over the final name by <see cref="Complete"/>, so
     /// until then any library already there is left as it is, and a run that stops short
-    /// leaves no half-written library. Peak blobs are little-endian float64 m/z and float32
+    /// leaves no half-written library. An appended library is written in place, as BiblioSpec
+    /// has always appended: its own rollback journal covers a run that stops short, and a copy
+    /// of a redundant library of some gigabytes to add one more file's spectra is not worth
+    /// what it would buy. Peak blobs are little-endian float64 m/z and float32
     /// intensity, zlib-compressed (Ionic.Zlib level 6, stock zlib's bytes, as Skyline's own
     /// writer does) only when that is smaller - the BiblioSpec reader's test for compression.
     /// Row ids are SQLite's autoincrement ids, in insertion order.</para>
@@ -98,7 +101,9 @@ namespace pwiz.BiblioSpec.IO
             (@"RetentionTimes", @"idxRefIdRetentionTimes", @"CREATE INDEX idxRefIdRetentionTimes ON RetentionTimes (RefSpectraID)"),
         };
 
+        // The temp a new library is written to; null for a library appended to in place.
         private readonly SimpleFileSaver _file;
+        private readonly string _path;
         private IBlibExtensionTables _extensions;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         // The INSERT of n annotation rows at index n, prepared when first needed.
@@ -148,19 +153,21 @@ namespace pwiz.BiblioSpec.IO
 
         private BlibWriter(string path, bool append)
         {
-            _file = new SimpleFileSaver(path);
+            _path = Path.GetFullPath(path);
+            _file = append ? null : new SimpleFileSaver(path);
             try
             {
-                if (append)
-                    File.Copy(_file.RealName, _file.SafeName, true);
                 // A ';' in the path must not end the connection string early: the builder quotes it.
-                var connectionString = new SQLiteConnectionStringBuilder { DataSource = _file.SafeName, Version = 3 };
+                var connectionString = new SQLiteConnectionStringBuilder { DataSource = TempPath, Version = 3 };
                 _connection = new SQLiteConnection(connectionString.ToString());
                 _connection.Open();
-                // The file is a temp until Complete moves it into place, so a crash loses nothing
-                // durable: no journal to replay and no sync per transaction.
+                // No sync per transaction, as BiblioSpec has always written. A new library is a
+                // temp until Complete moves it into place, so a crash loses nothing durable and
+                // there is no journal to replay either; an appended library keeps its rollback
+                // journal, which is what makes writing it in place safe.
                 Execute(@"PRAGMA synchronous=OFF");
-                Execute(@"PRAGMA journal_mode=MEMORY");
+                if (!append)
+                    Execute(@"PRAGMA journal_mode=MEMORY");
                 if (append)
                 {
                     _spectrumCount = (int)Scalar(@"SELECT COUNT(*) FROM RefSpectra");
@@ -177,11 +184,12 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// Opens the library BiblioSpec's BlibBuild or BlibFilter writes to <paramref name="path"/>
         /// without a schema, for the tool to attach its input libraries to
-        /// <see cref="Connection"/> and then <see cref="CreateSchema"/>; or, with
-        /// <paramref name="append"/>, as a copy of the library at <paramref name="path"/>, schema
-        /// and rows included, for the tool to add to (it brings a library of an older schema up to
-        /// date itself, and drops the indexes with <see cref="DropIndexes"/> before the bulk
-        /// inserts). Either way <see cref="Complete"/> moves the result over <paramref name="path"/>.
+        /// <see cref="Connection"/> and then <see cref="CreateSchema"/>, with
+        /// <see cref="Complete"/> moving the result over <paramref name="path"/>; or, with
+        /// <paramref name="append"/>, the library at <paramref name="path"/> itself, schema and
+        /// rows included, for the tool to add to in place (it brings a library of an older schema
+        /// up to date itself, and drops the indexes with <see cref="DropIndexes"/> before the bulk
+        /// inserts).
         /// </summary>
         public static BlibWriter Open(string path, bool append)
         {
@@ -198,10 +206,10 @@ namespace pwiz.BiblioSpec.IO
             get { return _connection; }
         }
 
-        /// <summary>The file being written, which <see cref="Complete"/> moves over the final name.</summary>
+        /// <summary>The file being written: the temp <see cref="Complete"/> moves over the final name, or the library itself when appending.</summary>
         public string TempPath
         {
-            get { return _file.SafeName; }
+            get { return _file != null ? _file.SafeName : _path; }
         }
 
         /// <summary><c>RefSpectra</c> rows so far, those of an appended library included; the next spectrum gets this plus one as its id.</summary>
@@ -468,23 +476,24 @@ namespace pwiz.BiblioSpec.IO
                 Execute(BlibSchema.CreateIdxDecoyPairsPairId);
             _extensions?.CreateIndexes(_connection);
             CloseConnection();
-            _file.Commit();
+            _file?.Commit();
         }
 
         /// <summary>
         /// Moves the completed library to <paramref name="path"/>, which nothing may hold, when
-        /// <see cref="Complete"/> could not move it over the final name.
+        /// <see cref="Complete"/> could not move it over the final name. Nothing for a library
+        /// appended in place, which is already where it belongs.
         /// </summary>
         public void CommitAs(string path)
         {
-            _file.CommitAs(path);
+            _file?.CommitAs(path);
         }
 
-        /// <summary>Closes the file; without <see cref="Complete"/>, deletes it and leaves the final name as it was.</summary>
+        /// <summary>Closes the file; without <see cref="Complete"/>, deletes a new library's temp and leaves the final name as it was.</summary>
         public void Dispose()
         {
             CloseConnection();
-            _file.Dispose();
+            _file?.Dispose();
         }
 
         /// <summary>The <c>RefSpectraPeaks.peakMZ</c> blob of these m/z values: little-endian float64, compressed when that is smaller.</summary>

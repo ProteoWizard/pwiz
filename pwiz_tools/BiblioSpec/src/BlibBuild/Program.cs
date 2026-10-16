@@ -45,7 +45,8 @@ public static class Program
         // See CliPreproc for cpp-parity refs.
         var (argv, expectedError) = CliPreproc.Strip(args);
 
-        var builder = new BlibBuilder();
+        // Disposed on every path: a build that fails leaves no temp library beside the output.
+        using var builder = new BlibBuilder();
         var foundExpectedError = false;
 
         try
