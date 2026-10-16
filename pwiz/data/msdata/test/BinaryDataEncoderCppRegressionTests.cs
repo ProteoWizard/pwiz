@@ -296,6 +296,53 @@ public class BinaryDataEncoderCppRegressionTests
         }
     }
 
+    /// <summary>cpp's sampleEncoded{32,64}{,Shuffle,Dict}Zstd_, all little-endian.</summary>
+    private static readonly (BinaryCompression Compression, BinaryPrecision Precision, string Expected)[] ZstdCases =
+    {
+        (BinaryCompression.Zstd, BinaryPrecision.Bits32,
+            "KLUv/SCghQMAVAUMAEhDAAAAABwsPEIbSVJicoIbSUPTK2NEkhtJQ55InkSiG0lDqkOdRLIbSUPHMlREwtLiAAAAlkMAAIA/AADIQwAAIEEAAPpDAADIQgAAFkQAAHpECwBzyALyQWYZQiYgC8gHkoHmgBPg7txyBA=="),
+        (BinaryCompression.Zstd, BinaryPrecision.Bits64,
+            "KLUv/WBAAJ0FAMQH/xedigEAaUAAhXl9hgOkK16CBV8uP34Hrgc2NWgjq7y4Nmqcwzs4bIIcvzluWsdCO3BgemWMQCXExjxywBPJk0DlEks+dEB1qJNAmLPPP3bgWIaKQD+mVEF42+rZQnppgV9EfMBy8D8AeUAAJEBAf0AAAFlAwIJAAECPQBoAIAY4AmyANoAMlYunSgQtAASAARg9MabgBjAQGAgMBAYCQwOjgdHAaLALMBoYPdPoDBwB"),
+        (BinaryCompression.ByteShuffleZstd, BinaryPrecision.Bits32,
+            "KLUv/SCg/QIAVAQMABwALAA8AEIAUgBiAHIAgtOSnqKqssfCANIA4gAbKxtIG0MbMkhJY0meSZ1JVEgAloDIIPrIFnpDAEQAQz9DQUNCREQKAGAAyG6up5jDALlcZqW2nTksR1w94AQ="),
+        (BinaryCompression.ByteShuffleZstd, BinaryPrecision.Bits64,
+            "KLUv/WBAAD0GADIMKjIwc9IawKBH6X442Jy+dOTi9k0fskbmRtDHm1FJn/8+YigSr2eHAr2kZTwCsMpwNCmdAnd3d9g9lazC5AAldFo1VmO1lO1a761VF8y1c2VcR6aKUISAfBCcUh47ctyoUVRgQIARSyF+sHtoOWCQNmQ4urBkVnXVtOdEnhJzltokpTmKvUiy5cmgL2cOxKnT4M2aogoTohZsfWJXAkVoMcsypkxTlyiHAgwAgADIbq6jm4TJ9TRzWI64Au8E2wm2E2znBpw="),
+        (BinaryCompression.DictZstd, BinaryPrecision.Bits32,
+            "KLUv/SCspQMAtAWEAB0ADBwsPEJSYnKCkqKywtLix9MAqp4bMisAQ0gAgCDISEmWyPoWVGN6nZ4AP0FCQ0QFAAYABwAIAAkACgALAAwADRkOHA8bEBgRABIAEwAEABQBFQIWAxcaCgBAEIBXsBdnWNMCbt+iSuMZKjBtAG0="),
+        (BinaryCompression.DictZstd, BinaryPrecision.Bits64,
+            "KLUv/WAgAPUFAAQK+AAdAP+FpF+uq5yCWiXlmD/baQAXeSsuB7zDHMfEErOm6oEAnX1ePza4O79CxkvPVNlfAIqGgn41Njg5Ozw+P0FCROBgAEDAAAEDBQdoamxucHJ0dnh6fFh6AHUTI8AAQMCGZUCoyQDwJFlpcnl/goqMj5OTAD9ABQAGAAcACAAJAAoACwAMAA0ZDhwPGxAYEQASABMABAAUARUCFgMXGgwAwE5AV3xfIpR2MxZLaD6DChwAOABwADBtAG0="),
+    };
+
+    /// <summary>
+    /// The zstd codecs (cpp's mzd.hpp, run through the vendored zstd 1.5.7) against cpp's
+    /// expected strings, at both precisions.
+    /// </summary>
+    [TestMethod]
+    public void Zstd_EncodesAndDecodesLikeCpp()
+    {
+        var mismatches = new List<string>();
+        foreach (var (compression, precision, expected) in ZstdCases)
+        {
+            var encoder = new BinaryDataEncoder(new BinaryEncoderConfig { Compression = compression, Precision = precision });
+            string label = $"{compression} {precision}";
+
+            string actual = encoder.Encode(SampleData);
+            if (actual != expected)
+                mismatches.Add($"  {label} encode{Environment.NewLine}    cpp:  {expected}{Environment.NewLine}    port: {actual}");
+
+            double[] decoded = encoder.DecodeDoubles(expected);
+            var expectedValues = precision == BinaryPrecision.Bits32
+                ? SampleData.Select(v => (double)(float)v).ToArray()
+                : SampleData;
+            if (!decoded.AsSpan().SequenceEqual(expectedValues))
+                mismatches.Add($"  {label} decode: {decoded.Length} values, not cpp's sample data");
+        }
+
+        Assert.AreEqual(0, mismatches.Count,
+            $"{mismatches.Count} zstd checks disagree with pwiz C++:" +
+            Environment.NewLine + string.Join(Environment.NewLine, mismatches));
+    }
+
     /// <summary>cpp's sampleEncodedModified64BigZlib_: what the encoder emits once numpress is
     /// refused for the blown-out input.</summary>
     private const string SuppressedNumpressExpected =
