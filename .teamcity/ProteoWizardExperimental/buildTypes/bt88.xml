@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="cac48fa0-3d33-48f4-ab78-9a96b88bb57f" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
-  <name>Core Windows x86_64 subset (no vendor DLLs)</name>
+<build-type xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="713cb7a3-1828-45eb-8391-41dbd79cbf64" paused="true" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>Core Windows x86_64 subset</name>
   <description />
   <settings>
     <inherits>
@@ -15,17 +15,17 @@
       <setting-ref ref="RUNNER_simpleRunner_139" />
       <setting-ref ref="vcsTrigger" />
     </disabled-settings>
-    <build-runners order="RUNNER_simpleRunner_139, Set_PYTHON_HOME_if_unset_by_agent, RUNNER_2158">
-      <runner id="RUNNER_2158" name="" type="simpleRunner">
+    <build-runners order="RUNNER_simpleRunner_139, Set_PYTHON_HOME_if_unset_by_agent, RUNNER_2157">
+      <runner id="RUNNER_2157" name="" type="simpleRunner">
         <parameters>
           <param name="command.executable" value="scripts/misc/tcbuild-subset.bat" />
-          <param name="command.parameters" value="--abbreviate-paths pwiz-bin.tar.bz2 address-model=64 -j%env.NUMBER_OF_CORES% %env.toolset_property%" />
+          <param name="command.parameters" value="--hash --i-agree-to-the-vendor-licenses address-model=64 pwiz-bin.tar.bz2 -j%env.NUMBER_OF_CORES% %env.toolset_property%" />
           <param name="teamcity.step.mode" value="default" />
         </parameters>
       </runner>
     </build-runners>
     <build-triggers>
-      <build-trigger id="TRIGGER_1026" type="buildDependencyTrigger">
+      <build-trigger id="TRIGGER_1025" type="buildDependencyTrigger">
         <parameters>
           <param name="afterSuccessfulBuildOnly" value="true" />
           <param name="dependsOn" value="bt81" />
@@ -33,9 +33,9 @@
       </build-trigger>
     </build-triggers>
     <artifact-dependencies>
-      <dependency id="ARTIFACT_DEPENDENCY_1480" sourceBuildTypeId="bt81" cleanDestination="false">
+      <dependency id="ARTIFACT_DEPENDENCY_815" sourceBuildTypeId="bt81" cleanDestination="false">
         <revisionRule name="sameChainOrLastFinished" revision="latest.sameChainOrLastFinished" />
-        <artifact sourcePath="pwiz*-src-without-tv-*.tar.bz2=&gt;." />
+        <artifact sourcePath="pwiz*-src-without-t-*.tar.bz2=&gt;." />
       </dependency>
     </artifact-dependencies>
     <dependencies>
