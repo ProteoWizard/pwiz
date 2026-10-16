@@ -32,6 +32,7 @@
        tasks emit dumps through the context instead of the exe-only static
        facade. Nothing below Tasks references Tasks, so this stays acyclic. -->
   <ItemGroup>
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <ProjectReference Include="..\Osprey.Diagnostics\Osprey.Diagnostics.csproj" />
     <ProjectReference Include="..\Osprey.IO\Osprey.IO.csproj" />

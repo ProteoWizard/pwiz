@@ -187,7 +187,7 @@ namespace pwiz.Osprey.Test
                 var ctx = TaskConfigs.ContextFor(config);
                 var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
                 string key = task.ValidityKey(ctx);
-                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportParquet.PathFor(input));
+                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportWriter.PathFor(input));
 
                 string otherRun = RunKey(runB);
                 string current = RunKey(runA);
@@ -309,7 +309,7 @@ namespace pwiz.Osprey.Test
             off.OutputBlib = @"out.blib";
             var offCtx = TaskConfigs.ContextFor(off);
             var offTask = off.Pipeline.OfType<PerFileRescoreTask>().Single();
-            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            string export = TrainingExportWriter.PathFor(@"a.mzML");
             Assert.IsFalse(offTask.Outputs(offCtx).Contains(export), @"no export is declared with the flag off");
 
             string straight = ExportKey(TaskConfigs.StraightThrough(), c => { }, out string taskKeyOn, out bool declared);
@@ -341,7 +341,7 @@ namespace pwiz.Osprey.Test
             mutate(config);
             var ctx = TaskConfigs.ContextFor(config);
             var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
-            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            string export = TrainingExportWriter.PathFor(@"a.mzML");
             taskKey = task.ValidityKey(ctx);
             declared = task.Outputs(ctx).Contains(export);
             return task.OutputValidityKey(ctx, taskKey, export);

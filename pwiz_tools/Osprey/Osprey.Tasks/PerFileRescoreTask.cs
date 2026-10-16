@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -236,7 +237,7 @@ namespace pwiz.Osprey.Tasks
             if (ExportsTraining(ctx.Config))
             {
                 foreach (var input in ctx.Config.InputFiles)
-                    yield return TrainingExportParquet.PathFor(input);
+                    yield return TrainingExportWriter.PathFor(input);
             }
 
             // The per-run 2nd-pass FDR sidecar is THIS task's output (#4486): the per-file half
@@ -348,7 +349,7 @@ namespace pwiz.Osprey.Tasks
             for (int i = 0; i < nFiles; i++)
             {
                 string input = config.InputFiles[i];
-                string output = TrainingExportParquet.PathFor(input);
+                string output = TrainingExportWriter.PathFor(input);
                 string runKey = OutputValidityKey(ctx, key, output);
                 if (_trainingExportErrors.ContainsKey(input) || PerFileResumeDriver.IsCurrent(output, Name, runKey))
                     continue;
@@ -455,7 +456,7 @@ namespace pwiz.Osprey.Tasks
             }
             foreach (string input in config.InputFiles)
             {
-                if (string.Equals(TrainingExportParquet.PathFor(input), output, StringComparison.Ordinal))
+                if (string.Equals(TrainingExportWriter.PathFor(input), output, StringComparison.Ordinal))
                     return input;
             }
             return null;
@@ -1568,7 +1569,7 @@ namespace pwiz.Osprey.Tasks
             // from disk; the file is the same either way.
             if (wroteReconciled && ExportsTraining(inputs.Config))
             {
-                string exportPath = TrainingExportParquet.PathFor(inputFile);
+                string exportPath = TrainingExportWriter.PathFor(inputFile);
                 WriteTrainingExport(inputFile, exportPath, OutputValidityKey(ctx, inputs.TaskValidityKey, exportPath),
                     inputs.LibraryById, ctx, fileConfig.NThreads, spectraIndex, ms2Cal);
             }

@@ -221,7 +221,7 @@ namespace pwiz.CarafeSharp
                     {
                         var peptide = spectra[i].Precursor.Peptide;
                         _pairingPrecursors.Add(new DecoyPairPlanner.Precursor(firstId + i, peptide.Sequence,
-                            spectra[i].Charge, DecoyPairPlanner.ModKey(peptide.ModNames)));
+                            spectra[i].Charge, DecoyPairPlanner.ModKey(peptide.ModNames), spectra[i].SkylineModifiedSequence));
                     }
                 }
             }

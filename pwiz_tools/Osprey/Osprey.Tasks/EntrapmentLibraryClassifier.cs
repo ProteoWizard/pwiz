@@ -20,7 +20,7 @@
 
 using System;
 using System.Collections.Generic;
-using pwiz.Osprey.IO;
+using pwiz.CarafeSharp.Contracts;
 
 namespace pwiz.Osprey.Tasks
 {
