@@ -174,6 +174,29 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Fills a TabPage with a control from its designer position to the page's bottom
+        /// edge and to the given right margin (device pixels), on every resize. On .NET a
+        /// control anchored to the bottom of a TabPage comes out short at high DPI, and the
+        /// Dock.Fill-with-Padding workaround shifts the page's other anchored controls by
+        /// the padding (WinForms anchors them to the padded display rectangle), so the
+        /// control is sized by hand instead. The right margin is a parameter because the
+        /// control's own width cannot be trusted either (a ZedGraphControl measured 422
+        /// wide on a 1059-wide page) (issue #4599).
+        /// </summary>
+        public static void FillTabPage(TabPage page, Control control, int right)
+        {
+            int left = control.Left, top = control.Top;
+            control.Anchor = AnchorStyles.None;
+            page.Resize += (sender, args) => FitTabPage(page, control, left, top, right);
+            FitTabPage(page, control, left, top, right);
+        }
+
+        private static void FitTabPage(TabPage page, Control control, int left, int top, int right)
+        {
+            control.Bounds = new Rectangle(left, top, page.ClientSize.Width - left - right, page.ClientSize.Height - top);
+        }
+
+        /// <summary>
         /// Rewrites a freshly saved docking-layout (.view) file so floating-window SIZES
         /// are stored in 96-DPI logical units, keeping the file portable across machines
         /// with different display scaling (files saved by DPI-unaware builds are logical

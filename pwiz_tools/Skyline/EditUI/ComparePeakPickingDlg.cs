@@ -75,11 +75,11 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             // On .NET an anchored ZedGraphControl inside a TabPage comes out far too small at
-            // high DPI (measured 422x362 at 150% whatever its designer size); docking below the
-            // control strip through the page padding is immune to that (issue #4599).
-            DockGraphBelowStrip(tabROC, zedGraphRoc);
-            DockGraphBelowStrip(tabQq, zedGraphQq);
-            DockGraphBelowStrip(tabPage2, zedGraphFiles);
+            // high DPI (measured 422x362 at 150% whatever its designer size); sizing it below the
+            // control strip by hand is immune to that (issue #4599).
+            DpiUtil.FillTabPage(tabROC, zedGraphRoc, 0);
+            DpiUtil.FillTabPage(tabQq, zedGraphQq, 0);
+            DpiUtil.FillTabPage(tabPage2, zedGraphFiles, 0);
 
             _axisLabelScaler = new AxisLabelScaler(zedGraphFiles.GraphPane);
             _colors =
@@ -901,12 +901,6 @@ namespace pwiz.Skyline.EditUI
             }
             UpdateAll();
             btnRefresh.Enabled = false;
-        }
-
-        private static void DockGraphBelowStrip(TabPage page, Control graph)
-        {
-            page.Padding = new Padding(0, graph.Top, 0, 0);
-            graph.Dock = DockStyle.Fill;
         }
     }
 
