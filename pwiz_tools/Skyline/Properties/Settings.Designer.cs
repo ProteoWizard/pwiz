@@ -1710,7 +1710,19 @@ namespace pwiz.Skyline.Properties {
                 this["LibraryKeepRedundant"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AlphaPeptDeepUseGpu {
+            get {
+                return ((bool)(this["AlphaPeptDeepUseGpu"]));
+            }
+            set {
+                this["AlphaPeptDeepUseGpu"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
@@ -3645,24 +3657,6 @@ namespace pwiz.Skyline.Properties {
         public int RtRegressionSegmentCount {
             get {
                 return ((int)(this["RtRegressionSegmentCount"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("3.9.13")]
-        public string PythonEmbeddableVersion {
-            get {
-                return ((string)(this["PythonEmbeddableVersion"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("57731cf80b1c429a0be7133266d7d7cf")]
-        public string PythonEmbeddableHash {
-            get {
-                return ((string)(this["PythonEmbeddableHash"]));
             }
         }
         

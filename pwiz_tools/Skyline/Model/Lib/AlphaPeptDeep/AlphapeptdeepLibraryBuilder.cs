@@ -24,86 +24,51 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.BiblioSpec;
+using pwiz.CarafeSharp.Core;
+using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
+using TorchSharp;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 {
-    public class ArgumentAndValue
-    {
-        private const string DEFAULT_DASH = @"--";
-
-        public ArgumentAndValue(string name, string value, bool quoteValue)
-            : this(name, value, DEFAULT_DASH, quoteValue)
-        {}
-
-        public ArgumentAndValue(string name, string value, string dash = DEFAULT_DASH, bool quoteValue = false)
-        {
-            Name = name;
-            Value = value;
-            if (quoteValue)
-                Value = '"' + Value + '"';
-            Dash = dash;
-        }
-        public string Name { get; private set; }
-        public string Value { get; private set; }
-        public string Dash { get; set; }
-
-        public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
-    }
-
+    /// <summary>
+    /// Builds a library of AlphaPeptDeep MS2 and RT predictions for the document's precursors. The
+    /// models run in process through CarafeSharp's TorchSharp port of peptdeep, on an NVIDIA GPU when
+    /// the CUDA runtime is installed (see <see cref="TorchRuntimes"/>) and otherwise on the CPU. The predictions are written as the predict.speclib.tsv
+    /// that peptdeep 1.5.0's "cmd-flow --task_workflow library" wrote when Skyline ran it in Python,
+    /// using that workflow's defaults, and are then imported through BlibBuild as before. The library
+    /// keeps the predicted CCS, which Skyline converts to ion mobility with each data file's calibration.
+    /// </summary>
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
 
-        // AlphaPeptDeep commands
-        private const string PEPTDEEP_EXECUTABLE = @"peptdeep.exe";
-        private const string CMD_FLOW_COMMAND = @"cmd-flow";
-        private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
+        // peptdeep 1.5.0 library defaults (model_mgr and library--output_tsv in its default settings.yaml).
+        // With them CarafeSharp reproduces the libraries peptdeep built for TestAlphaPeptDeepBuildLibrary:
+        // the same fragments, intensities within 1e-5 and iRT within 0.02.
+        private const double NCE = 30;
+        private const string INSTRUMENT = @"Lumos";
+        private const double MIN_FRAGMENT_MZ = 200;
+        private const double MAX_FRAGMENT_MZ = 2000;
+        private const float MIN_RELATIVE_INTENSITY = 0.001f;
+        private const int MAX_FRAGMENTS = 12;
 
-        // peptdeep imports alpharaw, which loads a .NET runtime into the Python process purely as an import
-        // side effect - building a library reads no Thermo (.raw) or Sciex (.wiff) files. Since alpharaw
-        // 0.7.0 (2026-08-26) that import kills the process on the way out: it calls
-        // atexit.unregister(pythonnet.unload), dropping Python.NET's orderly shutdown, so the CLR tears itself
-        // down after Py_Finalize and PythonEngine.Shutdown() raises an AccessViolationException. peptdeep has
-        // written all of its output by then, but the process exits with 0xE0434352 and Skyline reports the
-        // library build as failed.
-        //
-        // Setting ALPHARAW_DOTNET_RUNTIME to a name alpharaw does not recognize restores the orderly shutdown.
-        // The name never reaches a runtime: it makes alpharaw's runtime lookup raise, which skips the whole
-        // block that contains the atexit.unregister call, so Python.NET's own shutdown hook survives and runs
-        // while the interpreter is still alive. Note this does not keep the CLR out of the process - a bare
-        // "import clr" in alpharaw.sciex has already loaded it by then - it just lets it shut down cleanly.
-        // It does leave alpharaw's readers in a poor state, so do not reuse this for a peptdeep command that
-        // reads raw files: Thermo reports cleanly that it is unavailable, but Sciex still advertises itself
-        // and then fails partway through a read.
-        //
-        // That earlier "import clr" is also why the variable cannot be used to choose a runtime instead.
-        // alpharaw.sciex runs it before anything imports the module that reads the variable, so Python.NET is
-        // already loaded by then and alpharaw's load() call is a silent no-op. Only PYTHONNET_RUNTIME reaches
-        // that earlier load. Hosting under .NET Core would also avoid the crash, but .NET Core is not part of
-        // Windows, so asking for it would take effect on developer machines and do nothing on most users' -
-        // leaving the nightly testing a path users never run. Revisit when Skyline itself is on .NET.
-        // Releases before 0.7.0 ignore this variable, and do not have the bug either way.
-        // TODO: delete this once alpharaw only unregisters the hook for the Mono runtime it was working
-        // around. No upstream issue to link to - as of 2026-08-27 this had not been reported to MannLabs.
-        private const string ALPHARAW_DOTNET_RUNTIME = @"ALPHARAW_DOTNET_RUNTIME";
-        // Deliberately not "none", which upstream could one day make meaningful. This can never name a runtime.
-        private const string ALPHARAW_DOTNET_RUNTIME_NONE = @"skyline-no-dotnet";
+        // Precursors predicted between progress updates and cancellation checks
+        private const int PRECURSORS_PER_CHUNK = 1000;
 
         // Processing folders
         private const string PREFIX_WORKDIR = "APD";
-        private const string OUTPUT_MODELS = @"output_models";
         private const string OUTPUT_SPECTRAL_LIBS = @"output_libs";
+        private const string CARAFE_MODEL_DIR = @"carafe_model";
 
         // Processing intermediate file names
         private const string INPUT_FILE_NAME = @"input.tsv";
-        private const string SETTINGS_FILE_NAME = @"settings.yaml";
         private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict.speclib.tsv";
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_sky.speclib.tsv";
 
@@ -118,40 +83,20 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         // Column names for BlibBuild
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
         private const string NORMALIZED_RT = "RT";
-        private const string ION_MOBILITY = "IonMobility";
         private const string CCS = "CCS";
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
 
-        public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
-
-        public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
-
-        public static PythonInstaller CreatePythonInstaller(TextWriter writer)
+        // Columns of the predict.speclib.tsv peptdeep wrote, without its IonMobility, the timsTOF 1/K0 of the
+        // CCS, which the library did not keep
+        private static readonly string[] SpectralLibraryColumnNames =
         {
-            var packages = new[]
-            {
-                // Pin peptdeep to a specific release so the predicted-library baselines used by
-                // TestAlphaPeptDeepBuildLibrary stay reproducible. An unpinned install pulls the
-                // latest peptdeep (and pretrained model), whose predictions drift at the 7th
-                // significant figure -- enough to reorder near-tied fragments and break the exact
-                // baseline comparison. Bump this (and re-record the baselines) intentionally.
-                new PythonPackage { Name = @"peptdeep", Version = @"1.5.0" },
+            MODIFIED_PEPTIDE, @"PrecursorCharge", NORMALIZED_RT, CCS, @"StrippedPeptide", @"PrecursorMz", @"Decoy",
+            @"FragmentType", @"FragmentMz", @"RelativeIntensity", @"FragmentCharge", @"FragmentNumber",
+            @"FragmentLossType"
+        };
 
-                // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
-                // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
-                // TODO: delete the following line after the issue above is resolved
-                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
-
-                // xxhash 4.0.0 (2026-08-12) stopped accepting str and now requires bytes, which breaks
-                // alphabase.peptide.precursor.hash_mod_seq_df ("TypeError: Strings must be encoded before hashing").
-                // alphabase only requires an unpinned "xxhash", so pip picks up 4.0.0. Pin to the version
-                // alphabase itself pins in its requirements.txt.
-                // TODO: delete the following line once alphabase encodes its strings before hashing
-                new PythonPackage { Name = @"xxhash", Version = @"3.5.0" }
-            };
-
-            return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
-        }
+        private static readonly string[] FRAGMENT_TYPES = { @"b", @"b", @"y", @"y" };
+        private static readonly int[] FRAGMENT_CHARGES = { 1, 2, 1, 2 };
 
         protected override string ToolName => ALPHAPEPTDEEP;
 
@@ -165,7 +110,35 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             GetUniModType(121, PredictionSupport.fragmentation) // GlyGly (a.k.a. GG)
         };
 
+        /// <summary>
+        /// The pinned AlphaPeptDeep pretrained models, which the build places beside the Skyline assembly.
+        /// </summary>
+        public static string PretrainedModelsPath =>
+            Path.Combine(BundledFilesDirectory, PretrainedModels.BUNDLED_RELATIVE_PATH);
+
+        private static string BundledFilesDirectory =>
+            Path.GetDirectoryName(typeof(AlphapeptdeepLibraryBuilder).Assembly.Location) ?? string.Empty;
+
         public LibrarySpec LibrarySpec { get; private set; }
+
+        /// <summary>
+        /// A model CarafeSharp fine-tuned on a set of runs and saved as a .carafemodel file, to predict
+        /// with in place of the pretrained models, or null for the pretrained models. It predicts for
+        /// the collision energy, instrument, activation and analyzer it was trained on, with the kind of
+        /// RT model it names.
+        /// </summary>
+        public string CarafeModelPath { get; set; }
+
+        /// <summary>
+        /// The libtorch runtimes to predict with.
+        /// </summary>
+        public TorchRuntimes TorchRuntimes { get; set; } = new TorchRuntimes();
+
+        /// <summary>
+        /// Whether to predict on the GPU, which needs the CUDA runtime installed. Otherwise, and when this
+        /// process already predicted on the CPU, prediction runs on the CPU.
+        /// </summary>
+        public bool UseGpu { get; set; }
 
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
@@ -179,39 +152,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 .ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
-        private string PeptdeepExecutablePath => Path.Combine(ScriptsDir, PEPTDEEP_EXECUTABLE);
-
         public override string InputFilePath => Path.Combine(WorkDir, INPUT_FILE_NAME);
         public override string TrainingFilePath => null;
-        
-        private string SettingsFilePath => Path.Combine(WorkDir, SETTINGS_FILE_NAME);
-        private string OutputModelsDir => Path.Combine(WorkDir, OUTPUT_MODELS);
+
         private string OutputSpectralLibsDir => Path.Combine(WorkDir, OUTPUT_SPECTRAL_LIBS);
-        
+
         public string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
-
-        /// <summary>
-        /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
-        /// This is how the peptdeep CLI supports command line arguments.
-        /// </summary>
-        private IList<ArgumentAndValue> CmdFlowCommandArguments =>
-            new[]
-            {
-                new ArgumentAndValue(@"task_workflow", @"library"),
-                new ArgumentAndValue(@"settings_yaml", SettingsFilePath, true),
-                new ArgumentAndValue(@"PEPTDEEP_HOME", WorkDir, true),
-                new ArgumentAndValue(@"transfer--model_output_folder", OutputModelsDir, true),
-                new ArgumentAndValue(@"library--infile_type", @"precursor_table"),
-                new ArgumentAndValue(@"library--infiles", InputFilePath, true),
-                new ArgumentAndValue(@"library--output_folder", OutputSpectralLibsDir, true),
-                new ArgumentAndValue(@"library--output_tsv--enabled", @"True"),
-                new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
-                new ArgumentAndValue(@"library--rt_to_irt", @"True"),
-                new ArgumentAndValue(@"library--decoy", @"diann"),
-                new ArgumentAndValue(@"device", 
-                    PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD ? @"gpu" : @"cpu")
-            };
 
         private Dictionary<string, string> OpenSwathAssayLikeColName =>
             new Dictionary<string, string>()
@@ -221,8 +168,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 { @"FragmentMz", @"ProductMz" },
                 { @"RelativeIntensity", @"LibraryIntensity" },
                 { @"FragmentNumber", @"FragmentSeriesNumber" },
-                { CCS, COLLISIONAL_CROSS_SECTION},
-                { ION_MOBILITY, null}
+                { CCS, COLLISIONAL_CROSS_SECTION}
             };
 
         /// <summary>
@@ -265,103 +211,220 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // Note: Segments are distributed to balance the expected work of each task
-            var segmentEndPercentages = new[] { 5, 10, 15, 95 };
+            // One end per step, including the last: NextSegment() never advances past the final end
+            var segmentEndPercentages = new[] { 5, 85, 90, 100 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
             PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-            PrepareSettingsFile(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
-            ExecutePeptdeep(progress, ref progressStatus);
+            PredictSpectralLibrary(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
         }
 
-        private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
+        /// <summary>
+        /// Predicts fragment intensities and retention times (iRT, or minutes with a fine-tuned RT model)
+        /// for every precursor in the input file and writes them
+        /// to <see cref="OutputSpectraLibFilepath"/>.
+        /// </summary>
+        private void PredictSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file));
-
-            // Generate template settings.yaml file
-            var pr = new ProcessRunner();
-            var psi = CreatePeptdeepStartInfo($@"{EXPORT_SETTINGS_COMMAND} ""{SettingsFilePath}""");
-            try
-            {
-                //REMOVE: This runs so quickly that counting lines here is not necessary for only 5% of the total progress bar
-                //pr.ExpectedOutputLinesCount = 213;
-                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
-                //TotalExpectedLinesOfOutput += pr.ExpectedOutputLinesCount;
-                //TotalGeneratedLinesOfOutput += pr.OutputLinesGenerated;
-            }
-            catch (Exception ex)
-            {
-                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_, ex);
-            }
-        }
-
-        private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
-        {
-            Stopwatch timer = new Stopwatch();
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep));
-
-            progressStatus.ChangePercentComplete(0);
-            // Compose peptdeep cmd-flow command arguments to build library
-            var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
-
-            // Execute command
-            var pr = new ProcessRunner();
-            var psi = CreatePeptdeepStartInfo($@"{CMD_FLOW_COMMAND} {args}");
+            var timer = Stopwatch.StartNew();
+            var precursors = ReadPrecursorInputFile();
             try
             {
-                var filterStrings = new[]
+                // Before anything touches TorchSharp, which would otherwise look for libtorch beside the executable
+                var runtime = TorchRuntimes.Load(UseGpu);
+                var device = TorchDevice.Resolve(UseGpu && runtime.IsCuda ? TorchDevice.GPU : TorchDevice.CPU, out _);
+                Messages.WriteAsyncUserMessage(device.type == DeviceType.CUDA
+                    ? ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU
+                    : ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU);
+                var pretrained = PretrainedModels.Open(PretrainedModelsPath);
+                Directory.CreateDirectory(OutputSpectralLibsDir);
+                var settings = new LibrarySettings { Nce = NCE, Instrument = INSTRUMENT };
+                var modelDirectory = OpenCarafeModel(settings);
+                if (modelDirectory == null)
+                    settings.RtModelType = RtModelType.alphapeptdeep;
+                string ms2Path = modelDirectory?.GetMs2ModelPath(settings.TrainingType);
+                using var ms2 = ms2Path != null ? Ms2Model.FromFile(ms2Path, device) : Ms2Model.FromPretrained(pretrained, device);
+                using var rt = new RtPredictorLoader(() => pretrained, device)
                 {
-                    @"     ____             __  ____",
-                    @"    / __ \___  ____  / /_/ __ \___  ___  ____",
-                    @"   / /_/ / _ \/ __ \/ __/ / / / _ \/ _ \/ __ \",
-                    @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
-                    @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
-                    @"           /_/                       /_/",
-                    @"s/DiaNN\/Spectronaut/Skyline/",    // Replace DiaNN/Spectronaut with Skyline
+                    FineTunedPath = modelDirectory?.GetRtModelPath(settings.TrainingType),
+                    RtModelType = settings.RtModelType,
+                    DefaultRtModelType = LibrarySettings.DEFAULT_RT_MODEL,
+                    ModelDirectory = modelDirectory?.DirectoryPath,
+                    RtMax = settings.RtMax,
+                    ChronologerDirectory = Path.Combine(BundledFilesDirectory, ChronologerFiles.BUNDLED_RELATIVE_DIRECTORY),
+                }.Load();
+                // A .carafemodel holds no CCS model, as CarafeSharp does not fine-tune it
+                using var ccs = CcsModel.FromPretrained(pretrained, device);
+                // A model of a fraction of the gradient gives minutes on the training runs' gradient, as CarafeSharp
+                // writes them; the pretrained models' predictions, and a Chronologer's hydrophobic index, give iRT
+                double libraryRtMax = rt.PredictsNormalizedRt ? settings.RtMax : 0;
+                var irt = libraryRtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
+                using var writer = new StreamWriter(OutputSpectraLibFilepath, false, new UTF8Encoding(false));
+                writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV_STR, SpectralLibraryColumnNames));
+                for (int start = 0; start < precursors.Count; start += PRECURSORS_PER_CHUNK)
+                {
+                    if (progress.IsCanceled)
+                        throw new OperationCanceledException();
 
-                    // alpharaw complains that it could not load a .NET runtime, which is precisely what
-                    // ALPHARAW_DOTNET_RUNTIME tells it to do (see above). Building a library reads no Thermo
-                    // or Sciex files, so the warning and the RuntimeError beside it would only alarm the user.
-                    @"UserWarning: .NET dependencies could not be loaded",
-                    @"No .NET runtime available"
-                };
+                    var chunk = precursors.Skip(start).Take(PRECURSORS_PER_CHUNK).ToList();
+                    var spectra = ms2.Predict(chunk.Select(p =>
+                        new Ms2Request(p, settings.Nce, settings.Instrument, settings.Activation, settings.Analyzer)).ToList());
+                    var rtPredictions = rt.Predict(chunk.Select(p => p.Peptide).ToList());
+                    var ccsPredictions = ccs.Predict(chunk);
+                    for (int i = 0; i < chunk.Count; i++)
+                    {
+                        WriteSpectrum(writer, spectra[i],
+                            LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[i], libraryRtMax, irt.Slope, irt.Intercept),
+                            ccsPredictions[i]);
+                    }
 
-                pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
-                pr.ExpectedOutputLinesCount = 119;
-                timer.Start();
-                pr.Run(psi, string.Empty, progress, ref progressStatus, new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
-                timer.Stop();
-                string message = string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_, timer.Elapsed.Minutes, timer.Elapsed.Seconds);
-                Messages.WriteAsyncUserMessage(message);
-                TotalExpectedLinesOfOutput += pr.ExpectedOutputLinesCount;
-                TotalGeneratedLinesOfOutput += pr.OutputLinesGenerated;
+                    progress.UpdateProgress(progressStatus = progressStatus
+                        .ChangePercentComplete((start + chunk.Count) * 100 / precursors.Count));
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_, ex);
+                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_, ex);
             }
-
+            timer.Stop();
+            Messages.WriteAsyncUserMessage(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_,
+                timer.Elapsed.Minutes, timer.Elapsed.Seconds));
         }
 
-        private ProcessStartInfo CreatePeptdeepStartInfo(string arguments)
+        /// <summary>
+        /// Opens <see cref="CarafeModelPath"/>, checking every entry, unpacks its models into the work
+        /// folder, and takes into <paramref name="settings"/> what CarafeSharp takes from the file when it
+        /// predicts a library with it: the training run's NCE, instrument, activation, analyzer and rt_max,
+        /// and the kind of RT model. Null when no model file is given.
+        /// </summary>
+        private CarafeModelDirectory OpenCarafeModel(LibrarySettings settings)
         {
-            var psi = new ProcessStartInfo(PeptdeepExecutablePath, arguments)
+            if (string.IsNullOrEmpty(CarafeModelPath))
+                return null;
+            var modelFile = CarafeModelFile.Open(CarafeModelPath);
+            var modelDirectory = modelFile.Extract(Path.Combine(WorkDir, CARAFE_MODEL_DIR));
+            modelFile.ApplyPredictionDefaults(settings);
+            Messages.WriteAsyncUserMessage(string.Format(
+                ModelResources.AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_,
+                CarafeModelPath, modelFile.Describe()));
+            return modelDirectory;
+        }
+
+        private List<PrecursorForm> ReadPrecursorInputFile()
+        {
+            var precursors = new List<PrecursorForm>();
+            using var reader = new DsvFileReader(InputFilePath, TextUtil.SEPARATOR_TSV);
+            while (null != reader.ReadLine())
             {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = false
-            };
-            // Keeps alpharaw from crashing the process at exit - see ALPHARAW_DOTNET_RUNTIME above
-            psi.EnvironmentVariables[ALPHARAW_DOTNET_RUNTIME] = ALPHARAW_DOTNET_RUNTIME_NONE;
-            return psi;
+                var peptide = PeptideForm.FromAlphabase(reader.GetFieldByName(SEQUENCE),
+                    reader.GetFieldByName(MODS), reader.GetFieldByName(MOD_SITES));
+                precursors.Add(new PrecursorForm(peptide,
+                    int.Parse(reader.GetFieldByName(CHARGE), CultureInfo.InvariantCulture)));
+            }
+            return precursors;
+        }
+
+        /// <summary>
+        /// Writes one precursor's rows the way peptdeep translated its predictions to TSV: b and y ions of
+        /// charge 1 and 2 (not above the precursor charge) within the fragment m/z range, renormalized to the
+        /// most intense of them, at least <see cref="MIN_RELATIVE_INTENSITY"/>, the
+        /// <see cref="MAX_FRAGMENTS"/> most intense, in decreasing intensity.
+        /// </summary>
+        private static void WriteSpectrum(TextWriter writer, Ms2Prediction spectrum, double irt, double ccs)
+        {
+            var precursor = spectrum.Precursor;
+            var peptide = precursor.Peptide;
+            var fragmentMzs = AlphabaseFragmentMz.Calculate(precursor);
+            var fragments = new List<(int Row, int Column, float Mz, float Intensity)>();
+            for (int row = 0; row < spectrum.RowCount; row++)
+            {
+                for (int column = 0; column < AlphabaseFragmentMz.COLUMN_COUNT; column++)
+                {
+                    float intensity = spectrum.Get(row, column);
+                    double mz = fragmentMzs[row * AlphabaseFragmentMz.COLUMN_COUNT + column];
+                    if (FRAGMENT_CHARGES[column] > precursor.Charge || intensity <= 0 ||
+                        mz < MIN_FRAGMENT_MZ || mz > MAX_FRAGMENT_MZ)
+                    {
+                        continue;
+                    }
+                    fragments.Add((row, column, (float)mz, intensity));
+                }
+            }
+            if (fragments.Count == 0)
+                return;
+
+            float maxIntensity = fragments.Max(f => f.Intensity);
+            string precursorColumns = string.Join(TextUtil.SEPARATOR_TSV_STR,
+                GetModifiedPeptide(peptide),
+                precursor.Charge.ToString(CultureInfo.InvariantCulture),
+                irt.ToString(CultureInfo.InvariantCulture),
+                ccs.ToString(CultureInfo.InvariantCulture),
+                peptide.Sequence,
+                GetPrecursorMz(precursor).ToString(CultureInfo.InvariantCulture),
+                @"0");
+            foreach (var fragment in fragments
+                         .Select(f => (f.Row, f.Column, f.Mz, Intensity: f.Intensity / maxIntensity))
+                         .Where(f => f.Intensity >= MIN_RELATIVE_INTENSITY)
+                         .OrderByDescending(f => f.Intensity)
+                         .Take(MAX_FRAGMENTS))
+            {
+                string type = FRAGMENT_TYPES[fragment.Column];
+                int number = type == @"b" ? fragment.Row + 1 : peptide.Length - 1 - fragment.Row;
+                writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV_STR,
+                    precursorColumns,
+                    type,
+                    fragment.Mz.ToString(CultureInfo.InvariantCulture),
+                    fragment.Intensity.ToString(CultureInfo.InvariantCulture),
+                    FRAGMENT_CHARGES[fragment.Column].ToString(CultureInfo.InvariantCulture),
+                    number.ToString(CultureInfo.InvariantCulture),
+                    @"noloss"));
+            }
+        }
+
+        /// <summary>
+        /// The peptide in peptdeep's DIA-NN notation with UniMod ids, e.g. _S[UniMod:21]KYLINE_. A terminal
+        /// modification follows the terminal residue, as peptdeep writes it.
+        /// </summary>
+        private static string GetModifiedPeptide(PeptideForm peptide)
+        {
+            var modsAfterResidue = new List<string>[peptide.Length];
+            for (int i = 0; i < peptide.ModNames.Count; i++)
+            {
+                int site = peptide.ModSites[i];
+                int index = site == 0 ? 0 : site == -1 ? peptide.Length - 1 : site - 1;
+                modsAfterResidue[index] ??= new List<string>();
+                modsAfterResidue[index].Add(string.Format(CultureInfo.InvariantCulture, @"[UniMod:{0}]",
+                    ModificationTable.Get(peptide.ModNames[i]).UnimodId));
+            }
+            var result = new StringBuilder(@"_");
+            for (int i = 0; i < peptide.Length; i++)
+            {
+                result.Append(peptide.Sequence[i]);
+                if (modsAfterResidue[i] != null)
+                    result.Append(string.Concat(modsAfterResidue[i]));
+            }
+            return result.Append(@"_").ToString();
+        }
+
+        /// <summary>
+        /// Monoisotopic precursor m/z from alphabase's masses, which peptdeep reported.
+        /// </summary>
+        private static double GetPrecursorMz(PrecursorForm precursor)
+        {
+            var peptide = precursor.Peptide;
+            double mass = peptide.Sequence.Sum(AlphabaseMasses.GetResidueMass) + AlphabaseMasses.H2O +
+                          peptide.ModNames.Sum(name => ModificationTable.Get(name).Mass);
+            return mass / precursor.Charge + AlphabaseMasses.PROTON;
         }
 
         public void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
@@ -375,20 +438,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             // Transform table header
             var colNames = reader.FieldNames;
-            var newColNames = new List<string>();
-            foreach (var colName in colNames)
-            {
-                string newColName;
-                if (!OpenSwathAssayLikeColName.TryGetValue(colName, out newColName))
-                {
-                    newColName = colName;
-                }
-                if (newColName != null)
-                {
-                    newColNames.Add(newColName);
-                }
-            }
-            var header = string.Join(TextUtil.SEPARATOR_TSV_STR, newColNames);
+            var header = string.Join(TextUtil.SEPARATOR_TSV_STR,
+                colNames.Select(colName => OpenSwathAssayLikeColName.TryGetValue(colName, out var newColName) ? newColName : colName));
             result.Add(header);
 
             // Transform table body line by line
@@ -422,7 +473,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         AddDoubleCell(line, cell,
                             !modifiedPeptide || LibraryBuilderModificationSupport.PeptideHasOnlyRtSupportedMod(peptideWithMods));
                     }
-                    else if (colName != ION_MOBILITY)
+                    else
                     {
                         line.Add(cell);
                     }
@@ -470,19 +521,24 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
             }
 
-            var blibFilter = new BlibFilter();
-            // Build the final filtered library
-            completed = completed && blibFilter.Filter(incompleteBlibPath, output, progress, ref progressStatus);
+            try
+            {
+                var blibFilter = new BlibFilter();
+                // Build the final filtered library
+                completed = completed && blibFilter.Filter(incompleteBlibPath, output, progress, ref progressStatus);
+            }
+            finally
+            {
+                File.Delete(incompleteBlibPath);
+            }
 
-            if (completed)
-            {
-                Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
-            }
-            else
-            {
-                Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
-            }
-            File.Delete(incompleteBlibPath);
+            // Throw rather than return, so the caller does not add a library that was never written
+            if (progress.IsCanceled)
+                throw new OperationCanceledException();
+            if (!completed)
+                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
+
+            Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
         }
     }
 }

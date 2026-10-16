@@ -28,7 +28,6 @@ LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg.PropertiesPage,TestFullScanId
 BuildLibraryDlg.FilesPage,TestFullScanId
-BuildLibraryDlg.LearningPage,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
 CalibrationForm,TestCalibration

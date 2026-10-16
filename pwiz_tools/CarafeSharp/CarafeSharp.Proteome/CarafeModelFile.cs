@@ -633,7 +633,7 @@ namespace pwiz.CarafeSharp.Proteome
 
         private static string SafetensorsOrNull(string modelPath)
         {
-            return modelPath != null && CarafeModelDirectory.IsSafetensors(modelPath) ? modelPath : null;
+            return modelPath != null && ModelFiles.IsSafetensors(modelPath) ? modelPath : null;
         }
 
         /// <summary>model_evaluation_metrics.json's scores, as "ms2.pretrained.cos" and the like.</summary>

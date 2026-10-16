@@ -323,6 +323,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline chooses between the CPU and the GPU when it first predicts a library. Restart Skyline to change it..
+        /// </summary>
+        public static string BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_G" +
+                        "PU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
         /// </summary>
         public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
@@ -340,7 +350,45 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Download {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Download", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to download the NVIDIA CUDA runtime..
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting on the GPU needs the NVIDIA CUDA runtime, a {0} GB download from nuget.org that takes about twice that on disk..
+        /// </summary>
+        public static string BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_ru" +
+                        "ntime", resourceCulture);
+            }
+        }
+
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuned Carafe Models.
+        /// </summary>
+        public static string BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Access violation attempting to write to {0}..
         /// </summary>
@@ -406,7 +454,25 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not a valid fine-tuned Carafe model..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Library {0}.
         /// </summary>

@@ -166,14 +166,6 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\*.sky" />
   </ItemGroup>
 
-  <!-- NVIDIA install/uninstall .bat templates loaded via
-       GetManifestResourceStream(typeof(PythonInstaller), "...-bat.txt").
-       SDK default globs don't embed .txt. -->
-  <ItemGroup>
-    <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt" />
-    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
-  </ItemGroup>
-
   <!-- log4net runtime config - [DeploymentItem("SkylineLog4Net.config")] in
        AbstractUnitTest.cs assumes this file lands next to the assembly. Legacy
        csproj emitted it via a None entry with CopyToOutputDirectory. SDK glob
@@ -313,6 +305,57 @@
       </Content>
     </ItemGroup>
   </Target>
+
+  <!-- AlphaPeptDeep library prediction runs in process through CarafeSharp's TorchSharp port of the
+       peptdeep MS2 and RT models (pwiz_tools\CarafeSharp). Skyline ships the CPU libtorch in torch\cpu
+       and downloads the CUDA libtorch (about 2.5 GB, 4 GB installed) from nuget.org the first time it
+       predicts on a computer with a GPU that can use it. Neither is beside the executable, where
+       TorchSharp would find it by itself: AlphapeptdeepLibraryBuilder loads the one it chooses
+       (LibTorchRuntime). The CUDA package is restored only to write the list of its part packages and
+       their hashes (LibTorchPackageSet.targets), which the download is checked against. The libtorch
+       version must match the one CarafeSharp's Directory.Build.props pairs with its TorchSharp version. -->
+  <PropertyGroup>
+    <SkylineLibTorchVersion>2.10.0</SkylineLibTorchVersion>
+    <LibTorchPackageSetId>libtorch-cuda-12.8-win-x64</LibTorchPackageSetId>
+    <LibTorchPackageSetVersion>$(SkylineLibTorchVersion)</LibTorchPackageSetVersion>
+    <LibTorchPackageSetFile>torch\$(LibTorchPackageSetId).packages.txt</LibTorchPackageSetFile>
+  </PropertyGroup>
+  <Import Project="..\CarafeSharp\LibTorchPackageSet.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <!-- Reads the fine-tuned models CarafeSharp saves as .carafemodel files -->
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+    <PackageReference Include="libtorch-cpu-win-x64" Version="$(SkylineLibTorchVersion)" ExcludeAssets="all" />
+    <PackageReference Include="$(LibTorchPackageSetId)" Version="$(SkylineLibTorchVersion)" ExcludeAssets="all" />
+    <Content Include="$(NuGetPackageRoot)libtorch-cpu-win-x64\$(SkylineLibTorchVersion)\runtimes\win-x64\native\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>torch\cpu\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)libtorch-cpu-win-x64\$(SkylineLibTorchVersion)\LICENSE-LIBTORCH.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>torch\cpu\LICENSE-LIBTORCH.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+    <!-- The pinned AlphaPeptDeep v1 pretrained models, beside the executable where
+         AlphapeptdeepLibraryBuilder looks for them. -->
+    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\pretrained_models.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\alphapeptdeep-v1\pretrained_models.zip</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\alphapeptdeep-v1\LICENSE.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+    <!-- The pinned Chronologer RT model, which a .carafemodel file's RT model can be. -->
+    <Content Include="..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.pt;..\CarafeSharp\models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json;..\CarafeSharp\models\chronologer-20220601193755\LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\chronologer-20220601193755\%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
 
   <!-- msconvert (managed pwiz-sharp port). Skyline shells out to msconvert for DIA-Umpire and
        EncyclopeDIA demultiplexing conversions, expecting msconvert.exe next to Skyline in the bin

@@ -189,13 +189,13 @@ namespace pwiz.CarafeSharp
             string modelFile = Path.Combine(_settings.OutputDirectory, CarafeModelFile.DEFAULT_FILE_NAME);
             var trained = CarafeModelDirectory.Open(_settings.OutputDirectory, true);
             string ms2File = trained.GetMs2ModelPath(_settings.TrainingType);
-            var acquisition = ms2File != null && CarafeModelDirectory.IsSafetensors(ms2File)
+            var acquisition = ms2File != null && ModelFiles.IsSafetensors(ms2File)
                 ? AcquisitionVocabulary.FromMetadata(StateDict.ReadSafetensorsMetadata(ms2File)) ?? AcquisitionVocabulary.DEFAULT
                 : AcquisitionVocabulary.DEFAULT;
             // The RT model this run fine-tuned, else (-tf ms2) the pretrained one its library predicts with.
             string rtFile = trained.GetRtModelPath(_settings.TrainingType);
-            var rtModel = rtFile != null ? LibraryGenerator.GetRtModelType(rtFile) : fineTune.RtModelType;
-            bool ms2Held = ms2File != null && CarafeModelDirectory.IsSafetensors(ms2File);
+            var rtModel = rtFile != null ? RtPredictorLoader.GetRtModelType(rtFile) : fineTune.RtModelType;
+            bool ms2Held = ms2File != null && ModelFiles.IsSafetensors(ms2File);
             var saved = CarafeModelFile.Write(modelFile, trained, _settings.TrainingType, pretrained?.Sha256, _settings.Ms2Model,
                 BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition, baseModel,
                 BuildMs2Origin(fineTune, baseModel, ms2Held), BuildRtOrigin(fineTune, baseModel, rtModel), Stamp);
@@ -432,7 +432,7 @@ namespace pwiz.CarafeSharp
         /// </summary>
         private void SetBaseRtModel(FineTuneOptions fineTune, CarafeModelFile baseModel, string baseRt)
         {
-            var baseType = baseRt != null ? LibraryGenerator.GetRtModelType(baseRt) : baseModel.RtModelWithoutFineTuned;
+            var baseType = baseRt != null ? RtPredictorLoader.GetRtModelType(baseRt) : baseModel.RtModelWithoutFineTuned;
             fineTune.RtModelType = _settings.RtModelType ?? baseType ?? LibrarySettings.DEFAULT_RT_MODEL;
             if (baseRt == null || baseType == fineTune.RtModelType)
             {

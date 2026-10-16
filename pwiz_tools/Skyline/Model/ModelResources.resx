@@ -885,28 +885,20 @@ Please consider using the fine-tuning method provided by Carafe for building thi
 
 Would you like to continue building this predicted library?</value>
   </data>
-  <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don't have the necessary permissions and ask them to run the following script:
-
-{0}
-
-Would you like to continue?
-    </value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
-    <value>Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command.</value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
-    <value>Failed to build library by running the AlphaPeptDeep cmd-flow command.</value>
-  </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
     <value>Preparing prediction input file</value>
   </data>
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>Preparing training input file</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
-    <value>Preparing settings file</value>
+  <data name="AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_" xml:space="preserve">
+    <value>Failed to predict the library with AlphaPeptDeep.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU" xml:space="preserve">
+    <value>Predicting with AlphaPeptDeep on the CPU.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU" xml:space="preserve">
+    <value>Predicting with AlphaPeptDeep on the GPU.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
     <value>Running AlphaPeptDeep</value>
@@ -922,6 +914,9 @@ Would you like to continue?
   </data>
   <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_" xml:space="preserve">
     <value>AlphaPeptDeep finished in {0} minutes {1} seconds.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_" xml:space="preserve">
+    <value>Predicting with the fine-tuned model {0}: {1}</value>
   </data>
   <data name="PersistedViews_GetDefaults_Detailed_Log" xml:space="preserve">
     <value>Detailed Log</value>
@@ -982,5 +977,27 @@ Would you like to continue?
   <data name="PeakBoundaryImporter_ReadFirstLine__0__or__1_" xml:space="preserve">
     <value>{0} or {1}</value>
     <comment>Joins the two acceptable file-identity column names (FileName, ReplicateName) in a missing-header error; localize the word "or".</comment>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_No_NVIDIA_GPU_was_found__Predicting_on_the_GPU_needs_an_NVIDIA_GPU_and_its_driver_" xml:space="preserve">
+    <value>No NVIDIA GPU was found. Predicting on the GPU needs an NVIDIA GPU and its driver.</value>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_NVIDIA_GPU" xml:space="preserve">
+    <value>NVIDIA GPU</value>
+    <comment>Stands in for the GPU's name, as {0} in "The {0} has compute capability...", when the driver does not give it.</comment>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_The__0__has_compute_capability__1___but_predicting_on_the_GPU_needs_compute_capability__2__or_later_" xml:space="preserve">
+    <value>The {0} has compute capability {1}, but predicting on the GPU needs compute capability {2} or later.</value>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_The_NVIDIA_driver_supports_CUDA__0___but_predicting_on_the_GPU_needs_a_driver_for_CUDA__1__or_later__Update_the_NVIDIA_driver_to_predict_on_the_GPU_" xml:space="preserve">
+    <value>The NVIDIA driver supports CUDA {0}, but predicting on the GPU needs a driver for CUDA {1} or later. Update the NVIDIA driver to predict on the GPU.</value>
+  </data>
+  <data name="TorchRuntimes_GetCudaUnavailableReason_This_build_of_Skyline_does_not_list_the_NVIDIA_CUDA_runtime_packages_" xml:space="preserve">
+    <value>This build of Skyline does not list the NVIDIA CUDA runtime packages.</value>
+  </data>
+  <data name="TorchRuntimes_InstallCuda_Downloading_the_NVIDIA_CUDA_runtime__package__0__of__1__" xml:space="preserve">
+    <value>Downloading the NVIDIA CUDA runtime (package {0} of {1})</value>
+  </data>
+  <data name="TorchRuntimes_InstallCuda_Installing_the_NVIDIA_CUDA_runtime" xml:space="preserve">
+    <value>Installing the NVIDIA CUDA runtime</value>
   </data>
 </root>

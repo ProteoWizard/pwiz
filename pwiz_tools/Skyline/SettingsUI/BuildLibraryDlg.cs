@@ -22,6 +22,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
+using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -36,7 +38,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using File = System.IO.File;
 
@@ -82,20 +83,17 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
-        public enum Pages { properties, files, learning }
+        public enum Pages { properties, files }
 
         public class PropertiesPage : IFormView { }
         public class FilesPage : IFormView { }
-        public class LearningPage : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PropertiesPage(), new FilesPage(), new LearningPage(),
+            new PropertiesPage(), new FilesPage(),
         };
-        private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => false;  // TODO(dshteyn): Implement and enable
-        
-        public enum DataSourcePages { files, alpha, carafe, koina }
+
+        public enum DataSourcePages { files, alpha, koina }
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
@@ -106,6 +104,9 @@ namespace pwiz.Skyline.SettingsUI
         // Values used to keep from overwriting user changes to synchronized fields
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
+
+        private TorchRuntimes _torchRuntimes;
+        private bool _updatingUseGpu;
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -148,37 +149,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // If we're not using dataSourceGroupBox (because we're in small molecule mode) shift other controls over where it was
             if (modeUIHandler.ComponentsDisabledForModeUI(dataSourceGroupBox))
-            {
                 tabControlDataSource.Left = dataSourceGroupBox.Left;
-                Height -= tabControlDataSource.Bottom - dataSourceGroupBox.Bottom;
-            }
-            else
-            {
-                int heightDiffGroupBox = 0;
-                if (!IsAlphaEnabled)
-                {
-                    int yShift = radioCarafeSource.Top - radioAlphaSource.Top;
-                    radioCarafeSource.Top -= yShift;
-                    radioKoinaSource.Top -= yShift;
-                    koinaInfoSettingsBtn.Top -= yShift;
-                    radioAlphaSource.Visible = false;
-                    heightDiffGroupBox += yShift;
-                }
-
-                if (!IsCarafeEnabled)
-                {
-                    int yShift = radioKoinaSource.Top - radioCarafeSource.Top;
-                    radioKoinaSource.Top -= yShift;
-                    koinaInfoSettingsBtn.Top -= yShift;
-                    radioCarafeSource.Visible = false;
-                    heightDiffGroupBox += yShift;
-                }
-
-                dataSourceGroupBox.Height -= heightDiffGroupBox;
-                iRTPeptidesLabel.Top -= heightDiffGroupBox;
-                comboStandards.Top -= heightDiffGroupBox;
-                Height -= heightDiffGroupBox;
-            }
         }
 
         private void BuildLibraryDlg_FormClosing(object sender, FormClosingEventArgs e)
@@ -319,14 +290,187 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            if (!SetupPythonEnvironmentForAlpha())
-            {
+            string carafeModelPath = CarafeModelPath.Trim();
+            if (carafeModelPath.Length > 0 && !ValidateCarafeModel(carafeModelPath))
                 return false;
-            }
 
-            Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard);
+            Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
+            {
+                CarafeModelPath = carafeModelPath.Length > 0 ? carafeModelPath : null,
+                TorchRuntimes = TorchRuntimes,
+                UseGpu = UseGpu
+            };
+            // Not when this session already loaded a runtime, which decides the box
+            if (TorchRuntimes.CanChooseRuntime)
+                Settings.Default.AlphaPeptDeepUseGpu = UseGpu;
 
             return true;
+        }
+
+        /// <summary>
+        /// The libtorch runtimes AlphaPeptDeep predicts with, which decide whether Use GPU can be checked.
+        /// </summary>
+        public TorchRuntimes TorchRuntimes
+        {
+            get { return _torchRuntimes ??= new TorchRuntimes(); }
+            set
+            {
+                _torchRuntimes = value;
+                UpdateUseGpu();
+            }
+        }
+
+        /// <summary>
+        /// Whether AlphaPeptDeep predicts on the GPU. Checking it says why when the GPU cannot be used,
+        /// and otherwise downloads the NVIDIA CUDA runtime first, if it is not installed.
+        /// </summary>
+        public bool UseGpu
+        {
+            get { return cbUseGpu.Checked; }
+            set { cbUseGpu.Checked = value; }
+        }
+
+        /// <summary>
+        /// Shows the runtime this session already predicted with, which it cannot change, or else checks
+        /// Use GPU as the user last left it, if the GPU can be used and the CUDA runtime is installed.
+        /// </summary>
+        private void UpdateUseGpu()
+        {
+            var runtimes = TorchRuntimes;
+            SetUseGpu(runtimes.CanChooseRuntime
+                ? runtimes.CanUseCuda && runtimes.IsCudaInstalled && Settings.Default.AlphaPeptDeepUseGpu
+                : LibTorchRuntime.Loaded.IsCuda);
+        }
+
+        private void cbUseGpu_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_updatingUseGpu)
+                return;
+
+            string reason = null;
+            if (!TorchRuntimes.CanChooseRuntime)
+                reason = SettingsUIResources.BuildLibraryDlg_cbUseGpu_CheckedChanged_Skyline_chooses_between_the_CPU_and_the_GPU_when_it_first_predicts_a_library__Restart_Skyline_to_change_it_;
+            else if (cbUseGpu.Checked)
+                reason = TorchRuntimes.GetCudaUnavailableReason();
+
+            if (reason != null)
+            {
+                MessageDlg.Show(this, reason);
+                SetUseGpu(!cbUseGpu.Checked);
+            }
+            else if (cbUseGpu.Checked && !TorchRuntimes.IsCudaInstalled && !InstallCudaRuntime())
+            {
+                SetUseGpu(false);
+            }
+        }
+
+        /// <summary>
+        /// Checks or unchecks Use GPU without asking anything of the user.
+        /// </summary>
+        private void SetUseGpu(bool useGpu)
+        {
+            _updatingUseGpu = true;
+            try
+            {
+                cbUseGpu.Checked = useGpu;
+            }
+            finally
+            {
+                _updatingUseGpu = false;
+            }
+        }
+
+        /// <summary>
+        /// Downloads and installs the CUDA runtime, once the user agrees to its size. Returns false if the
+        /// user declines, or the download fails or is canceled.
+        /// </summary>
+        private bool InstallCudaRuntime()
+        {
+            long downloadSize = TorchRuntimes.CudaInstaller.PackageSet.TotalSize;
+            string message = string.Format(SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Predicting_on_the_GPU_needs_the_NVIDIA_CUDA_runtime,
+                (downloadSize / 1e9).ToString(@"0.0", LocalizationHelper.CurrentCulture));
+            using (var confirmDlg = new MultiButtonMsgDlg(message, SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Download))
+            {
+                if (confirmDlg.ShowDialog(this) != DialogResult.OK)
+                    return false;
+            }
+
+            try
+            {
+                using var longWaitDlg = new LongWaitDlg();
+                var status = longWaitDlg.PerformWork(this, 0, progressMonitor =>
+                {
+                    IProgressStatus progressStatus = new ProgressStatus();
+                    TorchRuntimes.InstallCuda(progressMonitor, ref progressStatus);
+                });
+                return !status.IsCanceled;
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                MessageDlg.ShowWithException(this,
+                    SettingsUIResources.BuildLibraryDlg_InstallCudaRuntime_Failed_to_download_the_NVIDIA_CUDA_runtime_, x);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Opens the fine-tuned model file, which checks its contents, so that a missing or damaged
+        /// file is reported here rather than after the build starts.
+        /// </summary>
+        private bool ValidateCarafeModel(string path)
+        {
+            if (!File.Exists(path))
+            {
+                _helper.ShowTextBoxError(textCarafeModel,
+                    SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_, path);
+                return false;
+            }
+            try
+            {
+                CarafeModelFile.Open(path);
+                return true;
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                MessageDlg.ShowWithException(this,
+                    string.Format(SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_, path), x);
+                textCarafeModel.Focus();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// A .carafemodel file of models fine-tuned by CarafeSharp, to predict with in place of the
+        /// pretrained AlphaPeptDeep models, or empty for the pretrained models.
+        /// </summary>
+        public string CarafeModelPath
+        {
+            get { return textCarafeModel.Text; }
+            set { textCarafeModel.Text = value; }
+        }
+
+        private void btnCarafeModelBrowse_Click(object sender, EventArgs e)
+        {
+            ShowCarafeModelDlg();
+        }
+
+        public void ShowCarafeModelDlg()
+        {
+            using var dlg = new OpenFileDialog();
+            string currentPath = CarafeModelPath.Trim();
+            dlg.InitialDirectory = File.Exists(currentPath)
+                ? Path.GetDirectoryName(currentPath)
+                : Settings.Default.LibraryDirectory;
+            dlg.CheckFileExists = true;
+            dlg.DefaultExt = CarafeModelFile.EXTENSION;
+            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                SettingsUIResources.BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models, CarafeModelFile.EXTENSION));
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+                CarafeModelPath = dlg.FileName;
         }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
@@ -369,62 +513,6 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            return true;
-        }
-
-        private bool SetupPythonEnvironmentForAlpha()
-        {
-            var pythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
-
-            btnNext.Enabled = false;
-
-            bool setupSuccess = false;
-            try
-            {
-                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
-            }
-            finally
-            {
-                // If not a successful installation, try to clean-up before leaving
-                if (!setupSuccess)
-                    pythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
-
-                btnNext.Enabled = true;
-            }
-
-            return setupSuccess;
-        }
-
-        private bool SetupPythonEnvironmentInternal(PythonInstaller pythonInstaller)
-        {
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                return true;
-            }
-
-            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
-            {
-                using var pythonDlg = new MultiButtonMsgDlg(
-                    string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        AlphapeptdeepLibraryBuilder.PythonVersion, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP), 
-                    Resources.OK);
-                
-                if (pythonDlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    return false;
-                }
-                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    return false;
-                }
-            }
-            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    return false;
-                }
-            }
             return true;
         }
 
@@ -491,7 +579,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
+            if (tabControlMain.SelectedIndex != (int)Pages.properties || !radioFilesSource.Checked)
             {
                 if (ValidateBuilder(true))
                 {
@@ -504,16 +592,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
-                tabControlMain.SelectedIndex = (int)(radioFilesSource.Checked
-                    ? Pages.files
-                    : Pages.learning);  // Carafe
+                tabControlMain.SelectedIndex = (int)Pages.files;
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
-                if (radioFilesSource.Checked)
-                    btnNext.Enabled = Grid.IsReady;
-                else
-                    btnNext.Enabled = true;
+                btnNext.Enabled = Grid.IsReady;
             }
         }
 
@@ -871,12 +954,6 @@ namespace pwiz.Skyline.SettingsUI
             set { radioAlphaSource.Checked = value; }
         }
 
-        public bool Carafe
-        {
-            get { return radioCarafeSource.Checked; }
-            set { radioCarafeSource.Checked = value; }
-        }
-
         public int NCE
         {
             get { return (int)ceCombo.SelectedItem; }
@@ -967,13 +1044,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
 
-                if (radioCarafeSource.Checked)
-                {
-                    tabControlDataSource.SelectedIndex = (int)DataSourcePages.carafe;
-                }
-                else if (radioAlphaSource.Checked)
+                if (radioAlphaSource.Checked)
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
+                    // Only now, so the NVIDIA driver is not loaded for the other library sources
+                    UpdateUseGpu();
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 }
                 else // must be Koina
