@@ -26,9 +26,10 @@ namespace pwiz.Common.CommandLine
     /// <summary>
     /// A command line as one line of text again, for recording how an artifact was made (a
     /// library's <c>LibMetadata</c> row <c>&lt;tool&gt;.command</c>): the tool's name, then each
-    /// argument as a shell would need it typed - quoted when it holds whitespace or a quote,
-    /// with an embedded quote escaped by a backslash. Provenance for a reader, not input for a
-    /// parser.
+    /// argument as a program would need it typed - quoted when it holds whitespace or a quote,
+    /// by the rule .NET and the C runtime parse arguments with (a quote is escaped by a
+    /// backslash, and the backslashes before a quote or the closing quote are doubled), so the
+    /// line pastes back into a run.
     /// </summary>
     public static class CommandLineText
     {
@@ -41,12 +42,41 @@ namespace pwiz.Common.CommandLine
             return text.ToString();
         }
 
-        /// <summary><paramref name="arg"/> as a shell would need it typed: itself, or in double quotes.</summary>
+        /// <summary><paramref name="arg"/> as a program would need it typed: itself, or in double quotes.</summary>
         public static string Quote(string arg)
         {
-            if (!string.IsNullOrEmpty(arg) && arg.IndexOfAny(new[] { ' ', '\t', '"' }) < 0)
+            arg = arg ?? string.Empty;
+            if (arg.Length > 0 && arg.IndexOfAny(new[] { ' ', '\t', '"' }) < 0)
                 return arg;
-            return @"""" + (arg ?? string.Empty).Replace(@"""", @"\""") + @"""";
+            var quoted = new StringBuilder(arg.Length + 2);
+            quoted.Append('"');
+            int i = 0;
+            while (i < arg.Length)
+            {
+                int backslashes = 0;
+                while (i < arg.Length && arg[i] == '\\')
+                {
+                    backslashes++;
+                    i++;
+                }
+                if (i == arg.Length)
+                {
+                    // Backslashes before the closing quote are doubled, so they stay backslashes.
+                    quoted.Append('\\', backslashes * 2);
+                }
+                else if (arg[i] == '"')
+                {
+                    // Backslashes before a quote are doubled, then the quote is escaped.
+                    quoted.Append('\\', backslashes * 2 + 1).Append('"');
+                    i++;
+                }
+                else
+                {
+                    quoted.Append('\\', backslashes).Append(arg[i]);
+                    i++;
+                }
+            }
+            return quoted.Append('"').ToString();
         }
     }
 }

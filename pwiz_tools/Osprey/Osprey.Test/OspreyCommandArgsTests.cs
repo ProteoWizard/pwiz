@@ -129,6 +129,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"Osprey " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText + @" ""out dir\x.blib""", spaced.CommandLine);
             Assert.AreEqual(@"""say \""hi\""""", CommandLineText.Quote(@"say ""hi"""));
             Assert.AreEqual(@"""""", CommandLineText.Quote(string.Empty));
+            // Backslashes before the closing quote or an embedded quote are doubled, so the text parses back.
+            Assert.AreEqual(@"""C:\out dir\\""", CommandLineText.Quote(@"C:\out dir\"));
+            Assert.AreEqual(@"""a\\\""b c""", CommandLineText.Quote(@"a\""b c"));
 
             Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
 

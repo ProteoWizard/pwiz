@@ -18,9 +18,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.IO;
 using System.Linq;
+using pwiz.BiblioSpec.IO;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -56,8 +60,16 @@ namespace pwiz.Osprey.IO
     {
         public const string TABLE = @"DecoyPairs";
 
+        /// <summary>True when the library claims the Osprey library contract in its metadata, which makes its table part of the contract check.</summary>
+        public static bool ClaimsContract(string path)
+        {
+            return BlibMetadata.Read(path, LibraryContract.METADATA_KEY) == LibraryContract.METADATA_VALUE;
+        }
+
         /// <summary>
-        /// The table's rows by RefSpectra id, or null when the library has no such table.
+        /// The table's rows by RefSpectra id, or null when the library has no such table. A
+        /// table Osprey cannot read (another writer's columns) is a library fault, reported as
+        /// one rather than as a defect.
         /// </summary>
         public static Dictionary<uint, BlibDecoyPair> Read(string path)
         {
@@ -73,14 +85,23 @@ namespace pwiz.Osprey.IO
                         return null;
                 }
                 var rows = new Dictionary<uint, BlibDecoyPair>();
-                using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID FROM DecoyPairs", connection))
-                using (var reader = command.ExecuteReader())
+                try
                 {
-                    while (reader.Read())
+                    using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID FROM DecoyPairs", connection))
+                    using (var reader = command.ExecuteReader())
                     {
-                        rows[(uint)reader.GetInt64(0)] = new BlibDecoyPair(reader.GetInt64(1) != 0, reader.GetInt64(2) != 0,
-                            (int)reader.GetInt64(3));
+                        while (reader.Read())
+                        {
+                            rows[(uint)reader.GetInt64(0)] = new BlibDecoyPair(reader.GetInt64(1) != 0, reader.GetInt64(2) != 0,
+                                (int)reader.GetInt64(3));
+                        }
                     }
+                }
+                catch (Exception ex) when (ex is SQLiteException || ex is InvalidCastException)
+                {
+                    throw new InvalidDataException(string.Format(
+                        OspreyIOResources.BlibDecoyPairs_Read_The_library__0__has_a_DecoyPairs_table_Osprey_cannot_read___1_,
+                        path, ex.Message), ex);
                 }
                 return rows;
             }
@@ -106,17 +127,19 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Marks and pairs <paramref name="library"/> from its table: a row's side is
         /// authoritative over the accession prefixes (<paramref name="newlyMarked"/> counts the
-        /// entries it changed), and each pair whose target and decoy are both in the library at
-        /// one charge gives the decoy its target's id with the decoy bit, as the manifest and
-        /// composition pairings do. Returns the pairs made. A pair with one side missing (the
-        /// deduplicator dropped it, or the writer left it out) pairs nothing, and counts as an
-        /// unpaired decoy or target in the summary.
+        /// entries it changed, each given or stripped of the decoy bit as the marker would), and
+        /// each pair id naming exactly one target and one decoy at one charge gives the decoy
+        /// its target's id with the decoy bit, as the manifest and composition pairings do.
+        /// Returns the pairs made. A pair id with a side missing (the deduplicator dropped it,
+        /// or the writer left it out) or with more than two rows is malformed and pairs nothing,
+        /// the same rule the library contract's rule 6 applies, so its rows count as unpaired in
+        /// the summary.
         /// </summary>
         public static int Pair(IList<LibraryEntry> library, IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> pairs,
             PairingState state, out int newlyMarked)
         {
             newlyMarked = 0;
-            var sides = new Dictionary<int, (int Target, int Decoy)>();
+            var groups = new Dictionary<int, List<int>>();
             for (int idx = 0; idx < library.Count; idx++)
             {
                 var entry = library[idx];
@@ -125,32 +148,32 @@ namespace pwiz.Osprey.IO
                 if (entry.IsDecoy != pair.IsDecoy)
                 {
                     entry.IsDecoy = pair.IsDecoy;
+                    entry.Id = pair.IsDecoy ? entry.Id | LibraryEntry.DECOY_ID_BIT : entry.Id & ~LibraryEntry.DECOY_ID_BIT;
                     newlyMarked++;
                 }
-                sides.TryGetValue(pair.PairId, out var side);
-                if (!sides.ContainsKey(pair.PairId))
-                    side = (-1, -1);
-                // The first row of each side wins; a second is a malformed pair and stays unpaired.
-                if (pair.IsDecoy && side.Decoy < 0)
-                    side.Decoy = idx;
-                else if (!pair.IsDecoy && side.Target < 0)
-                    side.Target = idx;
-                sides[pair.PairId] = side;
+                if (!groups.TryGetValue(pair.PairId, out var group))
+                    groups.Add(pair.PairId, group = new List<int>(2));
+                group.Add(idx);
             }
             int paired = 0;
             // Pair-id order, so the ids a library gets do not depend on dictionary order.
-            foreach (int pairId in sides.Keys.OrderBy(id => id))
+            foreach (int pairId in groups.Keys.OrderBy(id => id))
             {
-                var side = sides[pairId];
-                if (side.Target < 0 || side.Decoy < 0)
+                var group = groups[pairId];
+                if (group.Count != 2)
                     continue;
-                var target = library[side.Target];
-                var decoy = library[side.Decoy];
-                if (target.Charge != decoy.Charge || state.ClaimedTargets.Contains(side.Target) || state.PairedDecoys.Contains(side.Decoy))
+                int targetIdx = library[group[0]].IsDecoy ? group[1] : group[0];
+                int decoyIdx = library[group[0]].IsDecoy ? group[0] : group[1];
+                var target = library[targetIdx];
+                var decoy = library[decoyIdx];
+                if (target.IsDecoy || !decoy.IsDecoy || target.Charge != decoy.Charge ||
+                    state.ClaimedTargets.Contains(targetIdx) || state.PairedDecoys.Contains(decoyIdx))
+                {
                     continue;
+                }
                 decoy.Id = target.Id | LibraryEntry.DECOY_ID_BIT;
-                state.ClaimedTargets.Add(side.Target);
-                state.PairedDecoys.Add(side.Decoy);
+                state.ClaimedTargets.Add(targetIdx);
+                state.PairedDecoys.Add(decoyIdx);
                 paired++;
             }
             return paired;

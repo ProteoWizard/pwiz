@@ -196,7 +196,8 @@ namespace pwiz.Osprey.Test
                     new[] { (0, false, 1), (1, true, 1), (2, true, 2) });
                 var unpairedViolation = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(ContractConfig(unpaired), null, null));
                 StringAssert.Contains(unpairedViolation.Message, LibraryContractViolationClass.UnpairedDecoy.ToString());
-                StringAssert.Contains(unpairedViolation.Message, @"KEDITCPEQ/2 (no target in pair 2)");
+                StringAssert.Contains(unpairedViolation.Message,
+                    string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__, @"KEDITCPEQ", 2, 2));
             }
             finally
             {

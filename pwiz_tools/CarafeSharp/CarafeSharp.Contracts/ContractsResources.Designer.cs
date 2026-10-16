@@ -88,6 +88,33 @@ namespace pwiz.CarafeSharp.Contracts {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to {0}/{1} (no decoy in pair {2}).
+        /// </summary>
+        public static string LibraryContract_CheckPairsFromLibrary__0___1___no_decoy_in_pair__2__ {
+            get {
+                return ResourceManager.GetString("LibraryContract_CheckPairsFromLibrary__0___1___no_decoy_in_pair__2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}/{1} (no target in pair {2}).
+        /// </summary>
+        public static string LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__ {
+            get {
+                return ResourceManager.GetString("LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}/{1} (pair {2} has {3} decoy row(s) and {4} target row(s)).
+        /// </summary>
+        public static string LibraryContract_CheckPairsFromLibrary__0___1___pair__2__has__3__decoy_row_s__and__4__target_row_s__ {
+            get {
+                return ResourceManager.GetString("LibraryContract_CheckPairsFromLibrary__0___1___pair__2__has__3__decoy_row_s__and__4__target_row_s__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The decoy pairing manifest {0} is malformed at line {1}: it has {2} columns where at least {3} are needed..
         /// </summary>
         public static string PairingManifest_Read_The_decoy_pairing_manifest__0__is_malformed_at_line__1___it_has__2__columns_where_at_least__3__are_needed_ {

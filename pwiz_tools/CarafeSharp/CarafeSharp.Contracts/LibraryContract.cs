@@ -261,9 +261,10 @@ namespace pwiz.CarafeSharp.Contracts
         /// <summary>
         /// Rule 6 from the library's own pairing, for a library without a manifest: every
         /// <see cref="LibraryContractRow.PairId"/> names exactly one decoy row and one target row
-        /// at one charge. A decoy whose pair has no target row, or a target whose pair has no
-        /// decoy row, is unpaired. Returns false when no row carries a pair id, so the caller
-        /// knows the pairs went unchecked.
+        /// at one charge, the rule Osprey pairs by. A decoy whose pair has no target row, or a
+        /// target whose pair has no decoy row, is unpaired; every row of a pair id with more
+        /// than two rows is, since none of them pairs. Returns false when no row carries a pair
+        /// id, so the caller knows the pairs went unchecked.
         /// </summary>
         private static bool CheckPairsFromLibrary(IReadOnlyList<LibraryContractRow> rows, Dictionary<LibraryContractViolationClass, Tally> tallies)
         {
@@ -280,15 +281,28 @@ namespace pwiz.CarafeSharp.Contracts
                 return false;
             foreach (var pair in groups.OrderBy(pair => pair.Key))
             {
+                int decoys = pair.Value.Count(row => row.MarkedDecoy.Value);
+                int targets = pair.Value.Count - decoys;
+                bool wellFormed = decoys == 1 && targets == 1 && pair.Value[0].Charge == pair.Value[1].Charge;
+                if (wellFormed)
+                    continue;
                 foreach (var row in pair.Value)
                 {
                     bool decoy = row.MarkedDecoy.Value;
-                    bool hasPartner = pair.Value.Any(other => other.MarkedDecoy.Value != decoy && other.Charge == row.Charge);
-                    if (hasPartner)
-                        continue;
-                    Hit(tallies, decoy ? LibraryContractViolationClass.UnpairedDecoy : LibraryContractViolationClass.UnpairedTarget,
-                        string.Format(CultureInfo.InvariantCulture, @"{0}/{1} (no {2} in pair {3})", row.Sequence, row.Charge,
-                            decoy ? @"target" : @"decoy", pair.Key));
+                    string example;
+                    if (pair.Value.Count == 1 || (decoys == 1 && targets == 1))
+                    {
+                        example = string.Format(decoy
+                                ? ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__
+                                : ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_decoy_in_pair__2__,
+                            row.Sequence, row.Charge, pair.Key);
+                    }
+                    else
+                    {
+                        example = string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___pair__2__has__3__decoy_row_s__and__4__target_row_s__,
+                            row.Sequence, row.Charge, pair.Key, decoys, targets);
+                    }
+                    Hit(tallies, decoy ? LibraryContractViolationClass.UnpairedDecoy : LibraryContractViolationClass.UnpairedTarget, example);
                 }
             }
             return true;

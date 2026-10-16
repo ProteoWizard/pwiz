@@ -28,7 +28,6 @@ using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
@@ -236,7 +235,10 @@ namespace pwiz.Osprey.IO
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader(config.FragmentTolerance);
                     entries = blibLoader.Load(path, log.LogInfo);
-                    var decoyPairs = BlibDecoyPairs.Read(path);
+                    // The table is read for the two readers of it, not for every load.
+                    var decoyPairs = config.LibrarySuppliesDecoys || BlibDecoyPairs.ClaimsContract(path)
+                        ? BlibDecoyPairs.Read(path)
+                        : null;
                     // A blib searched with its own decoys must say which they are and which
                     // target each was made from: the table CarafeSharp writes. Without it the
                     // search uses generated decoys or nothing.
@@ -358,7 +360,7 @@ namespace pwiz.Osprey.IO
             IReadOnlyDictionary<uint, BlibDecoyPair> decoyPairs, OspreyConfig config, IOspreyLog log, out string error)
         {
             error = null;
-            if (BlibMetadata.Read(path, LibraryContract.METADATA_KEY) != LibraryContract.METADATA_VALUE)
+            if (!BlibDecoyPairs.ClaimsContract(path))
                 return true;
             log.LogInfo(OspreyIOResources.LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_);
             // Said first, so a library built with another prefix reads as a prefix mismatch rather
@@ -445,6 +447,28 @@ namespace pwiz.Osprey.IO
             log.LogInfo(LogTag.COUNT, @"Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
                 markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix);
 
+            // A blib's table is authoritative over the prefixes, so it marks before the counts
+            // below and pairs here; a manifest given with a blib pairs nothing (it still serves
+            // the entrapment pairing and the FDRBench output downstream), and is said to.
+            var pairingState = new PairingState();
+            int pairedFromTable = 0;
+            if (blibPairs != null)
+            {
+                log.LogInfo(OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_);
+                if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+                {
+                    log.LogInfo(string.Format(
+                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_DecoyPairs__the_pairing_manifest__0__serves_entrapment_pairing_only_,
+                        config.DecoyPairingManifestPath));
+                }
+                pairedFromTable = BlibDecoyPairs.Pair(library, blibPairs, pairingState, out int newlyMarked);
+                if (newlyMarked > 0)
+                {
+                    log.LogInfo(LogTag.COUNT, @"Library-decoy mode: the DecoyPairs table changed the side of {0} precursors",
+                        newlyMarked);
+                }
+            }
+
             int nLibraryTargets = 0;
             foreach (var entry in library)
             {
@@ -467,31 +491,17 @@ namespace pwiz.Osprey.IO
                 return false;
             }
 
-            // Hybrid pairing. Net result on real Carafe-generated entrapment libraries:
+            // Hybrid pairing for a TSV. Net result on real Carafe-generated entrapment libraries:
             // ~30% via manifest, ~70% via composition, >99% total.
-            var pairingState = new PairingState();
             LibraryDecoyPairing.CountTargetsAndDecoys(library,
                 out int nTargetsForStats, out int nDecoysForStats);
             var pairingStats = new PairingStats
             {
                 NTargets = nTargetsForStats,
                 NDecoys = nDecoysForStats,
+                NPairedViaTable = pairedFromTable,
             };
-            if (blibPairs != null)
-            {
-                log.LogInfo(OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_);
-                pairingStats.NPairedViaTable = BlibDecoyPairs.Pair(library, blibPairs, pairingState, out int newlyMarked);
-                if (newlyMarked > 0)
-                {
-                    // The table's side wins over the accession prefixes; recount so the pairing
-                    // fraction is honest, as the manifest arm does below.
-                    LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                        out nTargetsForStats, out nDecoysForStats);
-                    pairingStats.NTargets = nTargetsForStats;
-                    pairingStats.NDecoys = nDecoysForStats;
-                }
-            }
-            else if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            if (blibPairs == null && !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
             {
                 log.LogInfo(string.Format(
                     OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_,
@@ -536,7 +546,7 @@ namespace pwiz.Osprey.IO
                     pairingStats.NDecoys = nDecoysForStats;
                 }
             }
-            else
+            else if (blibPairs == null)
             {
                 log.LogInfo(
                     OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_by_amino_acid_composition__no_manifest_provided__);
@@ -561,13 +571,19 @@ namespace pwiz.Osprey.IO
                 return false;
             if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
             {
-                error = string.Format(
-                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___,
-                    pairingStats.PairedFraction * 100.0,
-                    config.DecoyPairMinFraction * 100.0,
-                    OspreyArgNames.Text(OspreyArgNames.DECOY_PAIRING_MANIFEST),
-                    FormatPrefixList(config.DecoyPrefixes),
-                    OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
+                error = blibPairs != null
+                    ? string.Format(
+                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_s_decoys_are_paired_with_a_target_in_its_DecoyPairs_table__at_least__1___is_needed___,
+                        pairingStats.PairedFraction * 100.0,
+                        config.DecoyPairMinFraction * 100.0,
+                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY))
+                    : string.Format(
+                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___,
+                        pairingStats.PairedFraction * 100.0,
+                        config.DecoyPairMinFraction * 100.0,
+                        OspreyArgNames.Text(OspreyArgNames.DECOY_PAIRING_MANIFEST),
+                        FormatPrefixList(config.DecoyPrefixes),
+                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                 return false;
             }
             return true;

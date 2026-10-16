@@ -192,7 +192,7 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   intentional reviewed change with `-CreateGolden` (`regression.ps1:48-50,483-488`).
   Golden tables under `osprey-regression.data/*/tables/` include RefSpectra,
   RetentionTimes, RefSpectraProteins, Modifications, Proteins,
-  SpectrumSourceFiles, PeakDigest (per-spectrum SHA-256), and OspreyMetadata.
+  SpectrumSourceFiles, PeakDigest (per-spectrum SHA-256), and LibMetadata.
 - **mode 3 — HPC 4-task worker-chain self-consistency**
   (`regression.ps1:502-522`, `Invoke-HpcChain` at `regression.ps1:338`). Runs the
   distributed `--task` pipeline `PerFileScoring → FirstPassFDR → PerFileRescoring
@@ -211,7 +211,7 @@ It runs three complementary correctness legs, all at a **1e-9 tolerance**
   that resume depends on.
 
 Version pinning: the daily build stamps a changing `YEAR.ORDINAL.BRANCH.DOY`
-version, but the golden compares the `osprey_version` metadata cell exactly, so
+version, but the golden compares the `osprey.version` metadata cell exactly, so
 the harness pins `OSPREY_VERSION_OVERRIDE = '26.1.1.0'` (`regression.ps1:133`,
 honored at `Osprey.Core/OspreyVersion.cs:93`) to keep the stamp deterministic.
 Any mismatch emits a TeamCity `buildProblem` and a non-zero exit
@@ -317,7 +317,7 @@ Environment variables that affect testing:
 
 | Env var | Where | Effect |
 |---|---|---|
-| `OSPREY_VERSION_OVERRIDE` | `OspreyVersion.cs:93`; set by `regression.ps1:133` | Pins the logical version string so the golden's `osprey_version` cell stays deterministic |
+| `OSPREY_VERSION_OVERRIDE` | `OspreyVersion.cs:93`; set by `regression.ps1:133` | Pins the logical version string so the golden's `osprey.version` cell stays deterministic |
 | `OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT` | `OspreyEnvironment.cs:104`; used `IOTest.cs:2082` | When set, the sidecar round-trip test copies its output there for a byte-compare against the Rust sibling test |
 | `OSPREY_CROSS_IMPL_RECONCILIATION_OUT` | `OspreyEnvironment.cs:112` | Same, for the reconciliation sidecar |
 | `OSPREY_DUMP_STAGE7_PROTEIN_FDR` | set by `regression.ps1:244` | Emits the Stage 7 protein-FDR dump that mode 1 diffs against the golden |

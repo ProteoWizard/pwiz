@@ -123,8 +123,14 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(report.PairsCheckedFromLibrary);
             Assert.AreEqual(ContractsResources.LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds_and_accessions_were_not_checked_against_one__the_pairs_were_checked_from_the_library_s_own_DecoyPairs_table_,
                 report.Describe());
-            AssertViolation(LibraryContractViolationClass.UnpairedDecoy, @"KEDITPEP/3 (no target in pair 2)", null,
+            AssertViolation(LibraryContractViolationClass.UnpairedDecoy,
+                string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__, @"KEDITPEP", 3, 2), null,
                 tablePaired.Concat(new[] { Row(@"KEDITPEP", @"KEDITPEP", 3, @"decoy_sp|P1|A;decoy_sp|P2|B", true, 2) }).ToList());
+            // A pair id with three rows pairs nothing (Osprey pairs by the same rule), so every row is unpaired.
+            AssertViolation(LibraryContractViolationClass.UnpairedTarget,
+                string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___pair__2__has__3__decoy_row_s__and__4__target_row_s__, @"PEPTIDEK", 2, 1, 2, 1), null,
+                tablePaired.Concat(new[] { Row(@"KEDITPEQ", @"KEDITPEQ", 2, @"decoy_sp|P2|B", true, 1) }).ToList(),
+                LibraryContractViolationClass.UnpairedDecoy);
 
             // Pairs-only and rows-only checks apply the rules they name.
             var unpaired = clean.Where((_, i) => i != 1).Select(r => Row(r.Sequence, r.ModifiedSequence, r.Charge, string.Empty)).ToList();
