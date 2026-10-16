@@ -79,7 +79,14 @@ namespace pwiz.Common.Controls
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                 g.SmoothingMode = SmoothingMode.HighQuality;
-                g.DrawImage(image, new Rectangle(Point.Empty, size));
+                // Without a wrap mode the filter samples transparent black past the bitmap
+                // edge, leaving a faint grey frame around every icon
+                using (var attributes = new ImageAttributes())
+                {
+                    attributes.SetWrapMode(WrapMode.TileFlipXY);
+                    g.DrawImage(image, new Rectangle(Point.Empty, size), 0, 0, image.Width, image.Height,
+                        GraphicsUnit.Pixel, attributes);
+                }
             }
             return result;
         }

@@ -125,7 +125,14 @@ namespace pwiz.Skyline.Util
                     source.MakeTransparent(transparentKey.Value);
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.DrawImage(source, new Rectangle(Point.Empty, scaled.Size));
+                // Without a wrap mode the filter samples transparent black past the bitmap
+                // edge, leaving a faint grey frame around every icon
+                using (var attributes = new ImageAttributes())
+                {
+                    attributes.SetWrapMode(WrapMode.TileFlipXY);
+                    g.DrawImage(source, new Rectangle(Point.Empty, scaled.Size), 0, 0, source.Width, source.Height,
+                        GraphicsUnit.Pixel, attributes);
+                }
             }
             return scaled;
         }
