@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
@@ -146,15 +147,6 @@ namespace pwiz.Skyline.Controls
                 TransparentColor = Color.Magenta,
                 ColorDepth = ColorDepth.Depth24Bit
             };
-            if (DpiUtil.GetFactor(this) > 1)
-            {
-                // AddNodeImage pre-scales each icon to the DPI size as 32-bit ARGB with the
-                // magenta key already applied, so the list must preserve alpha instead of
-                // color-keying (issue #4599).
-                ImageList.TransparentColor = Color.Transparent;
-                ImageList.ColorDepth = ColorDepth.Depth32Bit;
-                ImageList.ImageSize = DpiUtil.ScaleSize(this, ImageList.ImageSize);
-            }
             AddNodeImage(Resources.Blank);      // 1bpp
             AddNodeImage(Resources.Protein);    // 16bpp
             AddNodeImage(Resources.Peptide);    // 4bpp
@@ -185,20 +177,17 @@ namespace pwiz.Skyline.Controls
             AddNodeImage(Resources.MoleculeList); // 16bpp
             AddNodeImage(Resources.PeptideList); // 16bpp
             AddNodeImage(Resources.EmptyList);  // 16bpp
+            ImageListScaler.ScaleToDpi(this, ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
 
             StateImageList = new ImageList
             {
                 ColorDepth = ColorDepth.Depth24Bit
             };
-            if (DpiUtil.GetFactor(this) > 1)
-            {
-                StateImageList.ColorDepth = ColorDepth.Depth32Bit;
-                StateImageList.ImageSize = DpiUtil.ScaleSize(this, StateImageList.ImageSize);
-            }
             AddStateImage(Resources.Peak);  // 8bpp
             AddStateImage(Resources.Keep);  // 24bpp
             AddStateImage(Resources.NoPeak); // 24bpp
             AddStateImage(Resources.PeakBlank); // 8bpp
+            ImageListScaler.ScaleToDpi(this, StateImageList);
 
             // Add the editable node at the end
             Nodes.Add(new EmptyNode());
@@ -217,12 +206,12 @@ namespace pwiz.Skyline.Controls
 
         private void AddNodeImage(Image image)
         {
-            ImageList.Images.Add(DpiUtil.ScaleImageForList(this, image, Color.Magenta));
+            ImageList.Images.Add(image);
         }
 
         private void AddStateImage(Image image)
         {
-            StateImageList.Images.Add(DpiUtil.ScaleImageForList(this, image));
+            StateImageList.Images.Add(image);
         }
 
         protected override void  Dispose(bool disposing)

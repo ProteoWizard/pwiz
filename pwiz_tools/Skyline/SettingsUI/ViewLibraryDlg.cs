@@ -184,8 +184,8 @@ namespace pwiz.Skyline.SettingsUI
             ModFonts = new ModFontHolder(listPeptide);
             _originalFileLabelText = labelFilename.Text;
             // The 16x16 icons are drawn at the row height scaled above, so scale them to match
-            _peptideImg = (Bitmap) DpiUtil.ScaleImageForList(this, Resources.PeptideLib);
-            _moleculeImg = (Bitmap) DpiUtil.ScaleImageForList(this, Resources.MoleculeLib);
+            _peptideImg = (Bitmap) DpiUtil.ScaleImage(this, Resources.PeptideLib);
+            _moleculeImg = (Bitmap) DpiUtil.ScaleImage(this, Resources.MoleculeLib);
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
@@ -194,7 +194,7 @@ namespace pwiz.Skyline.SettingsUI
             // 96-DPI logical units (see DpiUtil); location is physical screen coordinates.
             Size size = Settings.Default.ViewLibrarySize;
             if (!size.IsEmpty)
-                Size = DpiUtil.ScaleFromLogical(this, size);
+                Size = DpiUtil.ScaleSize(this, size);
             Point location = Settings.Default.ViewLibraryLocation;
             if (!location.IsEmpty)
             {

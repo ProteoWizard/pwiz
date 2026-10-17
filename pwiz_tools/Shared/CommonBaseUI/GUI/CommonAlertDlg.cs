@@ -26,6 +26,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.CommonResources;
 using pwiz.Common.SystemUtil;
 
@@ -103,7 +104,7 @@ namespace pwiz.Common.GUI
 
         private int Scale(int pixels)
         {
-            return (int) Math.Round(pixels * DeviceDpi / 96f);
+            return DpiScale.Scale(this, pixels);
         }
 
         public string DetailMessage

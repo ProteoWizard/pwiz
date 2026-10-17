@@ -180,8 +180,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static void ScaleButtonImages(Control root)
         {
-            float factor = DpiUtil.GetFactor(root);
-            if (Math.Abs(factor - 1) < 0.01f)
+            if (!DpiUtil.IsScaled(root))
                 return;
             var scaled = new Dictionary<Image, Image>();
             var scaledLists = new HashSet<ImageList>();
@@ -206,8 +205,7 @@ namespace pwiz.Skyline.Util
                     continue;
                 if (!scaled.TryGetValue(button.Image, out var image))
                 {
-                    var size = new Size((int) Math.Round(button.Image.Width * factor), (int) Math.Round(button.Image.Height * factor));
-                    image = ImageListScaler.ScaleImage(button.Image, size);
+                    image = DpiScale.Resample(button.Image, DpiScale.ScaleSize(button, button.Image.Size));
                     scaled.Add(button.Image, image);
                 }
                 button.Image = image;

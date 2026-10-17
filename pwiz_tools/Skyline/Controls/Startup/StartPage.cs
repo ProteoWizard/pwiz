@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Controls.Startup
             // Restore window placement. The persisted size is in 96-DPI logical units
             // (see DpiUtil), so scale it to the current display DPI.
             if (!size.IsEmpty)
-                Size = DpiUtil.ScaleFromLogical(this, size);
+                Size = DpiUtil.ScaleSize(this, size);
             if (!location.IsEmpty)
             {
                 StartPosition = FormStartPosition.Manual;

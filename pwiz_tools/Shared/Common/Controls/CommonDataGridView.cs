@@ -53,13 +53,12 @@ namespace pwiz.Common.Controls
         private void ScaleRowTemplateHeight()
         {
             const int defaultPadding = 9;
-            float factor = DeviceDpi / 96f;
-            if (Math.Abs(factor - 1) < 0.01f)
+            if (!DpiScale.IsScaled(this))
                 return;
             int fontHeight = Font.Height;
             if (RowTemplate.Height != fontHeight + defaultPadding && RowTemplate.Height != _scaledDefaultRowHeight)
                 return;
-            _scaledDefaultRowHeight = fontHeight + (int) Math.Round(defaultPadding * factor);
+            _scaledDefaultRowHeight = fontHeight + DpiScale.Scale(this, defaultPadding);
             RowTemplate.Height = _scaledDefaultRowHeight;
         }
 

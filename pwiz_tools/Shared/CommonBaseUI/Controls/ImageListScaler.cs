@@ -18,11 +18,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 namespace pwiz.Common.Controls
@@ -35,30 +32,28 @@ namespace pwiz.Common.Controls
     /// </summary>
     public static class ImageListScaler
     {
-        public static float GetFactor(Control control)
-        {
-            return control.DeviceDpi / 96f;
-        }
-
+        /// <summary>
+        /// Scales the list and every icon in it to the display DPI. Icons added afterwards
+        /// go through <see cref="AddScaled"/> or <see cref="AddRangeScaled"/>, which resample
+        /// to the list's new size; a plain Add would have ImageList stretch them with
+        /// nearest-neighbor sampling. The list keeps its transparent color, so keyed icons
+        /// added later are still keyed.
+        /// </summary>
         public static void ScaleToDpi(Control control, ImageList imageList)
         {
-            if (imageList == null)
-                return;
-            var factor = GetFactor(control);
-            if (Math.Abs(factor - 1) < 0.01f)
+            if (imageList == null || !DpiScale.IsScaled(control))
                 return;
             var originals = new List<KeyValuePair<string, Image>>();
             for (int i = 0; i < imageList.Images.Count; i++)
                 originals.Add(new KeyValuePair<string, Image>(imageList.Images.Keys[i], imageList.Images[i]));
-            var size = new Size((int) Math.Round(imageList.ImageSize.Width * factor),
-                (int) Math.Round(imageList.ImageSize.Height * factor));
+            var size = DpiScale.ScaleSize(control, imageList.ImageSize);
             // Changing the size empties the list, so it is rebuilt from the originals below.
             imageList.ColorDepth = ColorDepth.Depth32Bit;
             imageList.ImageSize = size;
             imageList.Images.Clear();
             foreach (var original in originals)
             {
-                var scaled = ScaleImage(original.Value, size);
+                var scaled = Resample(imageList, original.Value);
                 if (string.IsNullOrEmpty(original.Key))
                     imageList.Images.Add(scaled);
                 else
@@ -67,28 +62,27 @@ namespace pwiz.Common.Controls
         }
 
         /// <summary>
-        /// Bicubic resample into a 32-bit ARGB bitmap at the given size. Noticeably better
-        /// than the nearest-neighbor stretch ImageList applies on its own.
+        /// Adds an icon to a list that <see cref="ScaleToDpi"/> may already have scaled,
+        /// resampling it to the list's size when they differ. At 100% nothing is resampled.
+        /// The image is not disposed: callers often pass shared resources.
         /// </summary>
-        public static Bitmap ScaleImage(Image image, Size size)
+        public static void AddScaled(ImageList imageList, Image image)
         {
-            var result = new Bitmap(size.Width, size.Height, PixelFormat.Format32bppArgb);
-            result.SetResolution(96, 96);
-            using (var g = Graphics.FromImage(result))
-            {
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.SmoothingMode = SmoothingMode.HighQuality;
-                // Without a wrap mode the filter samples transparent black past the bitmap
-                // edge, leaving a faint grey frame around every icon
-                using (var attributes = new ImageAttributes())
-                {
-                    attributes.SetWrapMode(WrapMode.TileFlipXY);
-                    g.DrawImage(image, new Rectangle(Point.Empty, size), 0, 0, image.Width, image.Height,
-                        GraphicsUnit.Pixel, attributes);
-                }
-            }
-            return result;
+            imageList.Images.Add(image.Size == imageList.ImageSize ? image : Resample(imageList, image));
+        }
+
+        public static void AddRangeScaled(ImageList imageList, IEnumerable<Image> images)
+        {
+            foreach (var image in images)
+                AddScaled(imageList, image);
+        }
+
+        private static Bitmap Resample(ImageList imageList, Image image)
+        {
+            // A color-keyed list applies its key only to exact matches, so the key goes on
+            // before interpolation: afterwards the blended edge pixels would no longer match
+            var key = imageList.TransparentColor;
+            return DpiScale.Resample(image, imageList.ImageSize, key.A > 0 ? key : (Color?) null);
         }
     }
 }

@@ -121,9 +121,9 @@ namespace pwiz.Skyline.Controls.Databinding
                         DataSchemaLocalizer.INVARIANT));
                 _viewContext.ViewsChanged += OnViewsChanged;
                 imageList1.Images.Clear();
-                imageList1.Images.Add(Resources.Folder);
-                imageList1.Images.Add(Resources.Blank);
-                imageList1.Images.AddRange(_viewContext.GetImageList());
+                ImageListScaler.AddScaled(imageList1, Resources.Folder);
+                ImageListScaler.AddScaled(imageList1, Resources.Blank);
+                ImageListScaler.AddRangeScaled(imageList1, _viewContext.GetImageList());
                 _rowFactories = RowFactories.GetRowFactories(CancellationToken.None, _viewContext.SkylineDataSchema);
                 Repopulate();
             }

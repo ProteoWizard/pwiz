@@ -533,7 +533,7 @@ namespace pwiz.Skyline.FileUI
                 // height, clipping its text at high DPI; its dropdown-arrow glyph is a
                 // 96-DPI bitmap, pre-scaled here to keep pace (issue #4599).
                 combo.Height = DpiUtil.Scale(this, combo.Height);
-                combo.Image = DpiUtil.ScaleImageForList(this, combo.Image);
+                combo.Image = DpiUtil.ScaleImage(this, combo.Image);
                 ComboBoxes.Add(combo);
                 comboPanelInner.Controls.Add(combo);
                 combo.BringToFront();
@@ -834,7 +834,7 @@ namespace pwiz.Skyline.FileUI
             comboPanelOuter.Size = new Size(gridWidth, height);
             comboPanelInner.Size = new Size(xOffset, height);
             comboPanelInner.Location = new Point(-dataGrid.HorizontalScrollingOffset, 0);
-            if (DpiUtil.GetFactor(this) > 1 && dataGrid.Rows.Count > 0 && height > 0)
+            if (DpiUtil.IsScaled(this) && dataGrid.Rows.Count > 0 && height > 0)
             {
                 // The first table row is a placeholder ("...") that this combo overlay is
                 // meant to cover exactly. At high DPI the overlay (one scaled combo tall)

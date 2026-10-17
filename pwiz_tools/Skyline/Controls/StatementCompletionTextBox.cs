@@ -26,6 +26,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -59,17 +60,11 @@ namespace pwiz.Skyline.Controls
         {
             MatchTypes = ProteinMatchTypes.ALL;
             _documentUiContainer = documentUiContainer;
-            if (DpiUtil.GetFactor(null) > 1)
-            {
-                // AddImage pre-scales each icon to the DPI size as 32-bit ARGB with the
-                // magenta key already applied, so the list must preserve alpha instead of
-                // color-keying (issue #4599).
-                _imageList.TransparentColor = Color.Transparent;
-                _imageList.ColorDepth = ColorDepth.Depth32Bit;
-                _imageList.ImageSize = DpiUtil.ScaleSize(null, _imageList.ImageSize);
-            }
             AddImage(Resources.Protein);   // 16bpp
             AddImage(Resources.Peptide);   // 4bpp
+            // 16x16 icons are a 96-DPI design (issue #4599); no control exists yet, so the
+            // system DPI is used
+            ImageListScaler.ScaleToDpi(null, _imageList);
             _hideOnLoseFocus = hideOnLoseFocus;
         }
 
@@ -721,7 +716,7 @@ namespace pwiz.Skyline.Controls
 
         private void AddImage(Image image)
         {
-            _imageList.Images.Add(DpiUtil.ScaleImageForList(null, image, Color.Magenta));
+            _imageList.Images.Add(image);
         }
     }
 

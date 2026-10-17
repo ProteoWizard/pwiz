@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
@@ -82,12 +83,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 TransparentColor = Color.Magenta,
                 ColorDepth = ColorDepth.Depth32Bit
             };
-            if (DpiUtil.GetFactor(this) > 1)
-            {
-                ImageList.TransparentColor = Color.Transparent;
-                ImageList.ImageSize = DpiUtil.ScaleSize(this, ImageList.ImageSize);
-            }
-
             AddNodeImage(Resources.Blank);              // 1bpp
             AddNodeImage(Resources.Folder);             // 32bpp
             AddNodeImage(Resources.FolderMissing);      // 32bpp
@@ -105,11 +100,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             AddNodeImage(Resources.ImsDB);              // 32bpp
             AddNodeImage(Resources.OptDB);              // 32bpp
             AddNodeImage(Resources.IrtCalculator);      // 32bpp
+            ImageListScaler.ScaleToDpi(this, ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
         }
 
         private void AddNodeImage(Image image)
         {
-            ImageList.Images.Add(DpiUtil.ScaleImageForList(this, image, Color.Magenta));
+            ImageList.Images.Add(image);
         }
 
         [Browsable(false)]

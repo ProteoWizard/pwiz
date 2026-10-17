@@ -69,7 +69,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 var newGroups = new List<ListViewGroup>();
                 if (null != ViewContext)
                 {
-                    imageList1.Images.AddRange(ViewContext.GetImageList());
+                    ImageListScaler.AddRangeScaled(imageList1, ViewContext.GetImageList());
                     toolStripComboGroup.Items.AddRange(ViewContext.ViewGroups.ToArray());
                     IEnumerable<ViewGroup> groups;
                     if (null != SelectedGroup)

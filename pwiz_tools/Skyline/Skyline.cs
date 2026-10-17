@@ -226,7 +226,7 @@ namespace pwiz.Skyline
             // physical screen coordinates, clamped by ForceOnScreen below.
             Size size = Settings.Default.MainWindowSize;
             if (!size.IsEmpty)
-                Size = DpiUtil.ScaleFromLogical(this, size);
+                Size = DpiUtil.ScaleSize(this, size);
 
             // Restore window placement.
             Point location = Settings.Default.MainWindowLocation;

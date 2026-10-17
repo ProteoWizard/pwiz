@@ -52,7 +52,7 @@ namespace pwiz.Skyline.ToolsUI
             colorCol.Width = DpiUtil.Scale(this, colorCol.Width);
             rgbCol.MinimumWidth = DpiUtil.Scale(this, rgbCol.MinimumWidth);
             hexCol.MinimumWidth = DpiUtil.Scale(this, hexCol.MinimumWidth);
-            if (DpiUtil.GetFactor(this) > 1)
+            if (DpiUtil.IsScaled(this))
             {
                 // The anchored children do not follow this container's size when the
                 // parent dialog resizes it at high DPI (the same autoscale bookkeeping

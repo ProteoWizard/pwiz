@@ -20,8 +20,6 @@
 
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -29,6 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Util
 {
@@ -41,30 +40,20 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class DpiUtil
     {
-        public const int REFERENCE_DPI = 96;
-
-        private static float _factor;
+        public const int REFERENCE_DPI = DpiScale.REFERENCE_DPI;
 
         /// <summary>
-        /// Ratio of the process's rendering DPI to the classic 96 DPI baseline
-        /// (1.0 at 100% display scaling, 1.25 at 125%, etc.). In system-DPI-aware mode the
-        /// system DPI is fixed for the process lifetime and Control.DeviceDpi carries the
-        /// same value, so the screen DC is read once and cached: this is called from
-        /// per-node paint paths and from code with no control at hand (callers pass null).
-        /// The control parameter is kept for the day per-monitor V2 makes DPI genuinely
-        /// per-control (issue #4599).
+        /// Ratio of the control's rendering DPI to the 96 DPI baseline; see
+        /// <see cref="DpiScale.Factor"/>. Callers with no control at hand pass null.
         /// </summary>
         public static float GetFactor(Control control)
         {
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (_factor == 0)
-            {
-                using (var g = Graphics.FromHwnd(IntPtr.Zero))
-                {
-                    _factor = g.DpiX / REFERENCE_DPI;
-                }
-            }
-            return _factor;
+            return DpiScale.Factor(control);
+        }
+
+        public static bool IsScaled(Control control)
+        {
+            return DpiScale.IsScaled(control);
         }
 
         /// <summary>
@@ -72,69 +61,44 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static int Scale(Control control, int pixels)
         {
-            return (int)Math.Round(pixels * GetFactor(control));
+            return DpiScale.Scale(control, pixels);
         }
 
         /// <summary>
-        /// Scales a 96-DPI pixel measurement using the DPI of a Graphics surface, for
-        /// static drawing code that has no control reference.
+        /// Scales a 96-DPI pixel measurement to the DPI of a Graphics, for paint code that
+        /// has no control at hand.
         /// </summary>
         public static int Scale(Graphics g, int pixels)
         {
             return (int)Math.Round(pixels * g.DpiX / REFERENCE_DPI);
         }
 
-        /// <summary>
-        /// Scales a 96-DPI size to the control's rendering DPI.
-        /// </summary>
         public static Size ScaleSize(Control control, Size size)
         {
-            var factor = GetFactor(control);
-            return new Size((int)Math.Round(size.Width * factor), (int)Math.Round(size.Height * factor));
+            return DpiScale.ScaleSize(control, size);
         }
 
         /// <summary>
-        /// Prepares a 96-DPI icon for an ImageList whose ImageSize has been scaled to the
-        /// current DPI. At 100% scaling the original image is returned untouched, preserving
-        /// the list's existing color-key behavior. At higher scaling the image is converted
-        /// to 32-bit ARGB, its transparency key (if any) is applied before interpolation so
-        /// the key color cannot bleed into the glyph edges, and it is resampled with
-        /// high-quality bicubic interpolation - noticeably better than the nearest-neighbor
-        /// scaling ImageList applies internally. A stopgap until higher-resolution icon
-        /// assets exist (issue #4599).
+        /// Converts device pixels to the 96-DPI logical units in which window geometry is
+        /// persisted (values saved by DPI-unaware builds were logical already, so the
+        /// convention is backward compatible with existing settings).
         /// </summary>
-        public static Image ScaleImageForList(Control control, Image image, Color? transparentKey = null)
+        public static Size ScaleToLogical(Control control, Size deviceSize)
         {
-            var factor = GetFactor(control);
-            if (Math.Abs(factor - 1) < 0.01f)
-                return image;
-            var source = new Bitmap(image);
-            // The caller keeps only the scaled copy (ImageList.Images.Add copies, and
-            // image-property call sites replace the reference), so dispose the input to
-            // avoid orphaning a GDI+ bitmap per scaled icon.
-            image.Dispose();
-            var scaled = new Bitmap((int)Math.Round(source.Width * factor),
-                (int)Math.Round(source.Height * factor), PixelFormat.Format32bppArgb);
-            // Tag as 96-DPI so consumers that honor DPI metadata (e.g. DrawImageUnscaled)
-            // treat the bitmap as pixel-sized instead of re-inflating it.
-            scaled.SetResolution(REFERENCE_DPI, REFERENCE_DPI);
-            using (source)
-            using (var g = Graphics.FromImage(scaled))
-            {
-                if (transparentKey.HasValue)
-                    source.MakeTransparent(transparentKey.Value);
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                // Without a wrap mode the filter samples transparent black past the bitmap
-                // edge, leaving a faint grey frame around every icon
-                using (var attributes = new ImageAttributes())
-                {
-                    attributes.SetWrapMode(WrapMode.TileFlipXY);
-                    g.DrawImage(source, new Rectangle(Point.Empty, scaled.Size), 0, 0, source.Width, source.Height,
-                        GraphicsUnit.Pixel, attributes);
-                }
-            }
-            return scaled;
+            return DpiScale.ToLogical(control, deviceSize);
+        }
+
+        public static int ScaleToLogical(Control control, int devicePixels)
+        {
+            return DpiScale.ToLogical(control, devicePixels);
+        }
+
+        /// <summary>
+        /// Scales a 96-DPI image to the control's rendering DPI; see <see cref="DpiScale.ScaleImage"/>.
+        /// </summary>
+        public static Image ScaleImage(Control control, Image image, Color? transparentKey = null)
+        {
+            return DpiScale.ScaleImage(control, image, transparentKey);
         }
 
         /// <summary>
@@ -147,37 +111,6 @@ namespace pwiz.Skyline.Util
         {
             g.DrawImage(image, new Rectangle(x, rowTop + (rowHeight - image.Height) / 2,
                 image.Width, image.Height));
-        }
-
-        /// <summary>
-        /// Converts a persisted 96-DPI logical size to device pixels for restoring
-        /// window geometry.
-        /// </summary>
-        public static Size ScaleFromLogical(Control control, Size logicalSize)
-        {
-            var factor = GetFactor(control);
-            return new Size((int)Math.Round(logicalSize.Width * factor),
-                (int)Math.Round(logicalSize.Height * factor));
-        }
-
-        /// <summary>
-        /// Converts a device-pixel size to 96-DPI logical units for persisting
-        /// window geometry.
-        /// </summary>
-        public static Size ScaleToLogical(Control control, Size deviceSize)
-        {
-            var factor = GetFactor(control);
-            return new Size((int)Math.Round(deviceSize.Width / factor),
-                (int)Math.Round(deviceSize.Height / factor));
-        }
-
-        /// <summary>
-        /// Converts a device-pixel measurement to 96-DPI logical units for persisting
-        /// (e.g. a splitter distance).
-        /// </summary>
-        public static int ScaleToLogical(Control control, int devicePixels)
-        {
-            return (int)Math.Round(devicePixels / GetFactor(control));
         }
 
         /// <summary>
@@ -215,9 +148,9 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static void NormalizeDockLayoutFile(Control control, string path)
         {
-            var factor = GetFactor(control);
-            if (Math.Abs(factor - 1) < 0.01f)
+            if (!IsScaled(control))
                 return;
+            var factor = GetFactor(control);
             try
             {
                 var doc = XDocument.Load(path);
@@ -248,8 +181,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static Stream NormalizeDockLayoutStream(Control control, Stream layoutStream)
         {
-            var factor = GetFactor(control);
-            return Math.Abs(factor - 1) < 0.01f ? layoutStream : TransformDockLayoutStream(layoutStream, 1 / factor);
+            return IsScaled(control) ? TransformDockLayoutStream(layoutStream, 1 / GetFactor(control)) : layoutStream;
         }
 
         /// <summary>
@@ -260,8 +192,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static Stream DenormalizeDockLayoutStream(Control control, Stream layoutStream)
         {
-            var factor = GetFactor(control);
-            return Math.Abs(factor - 1) < 0.01f ? layoutStream : TransformDockLayoutStream(layoutStream, factor);
+            return IsScaled(control) ? TransformDockLayoutStream(layoutStream, GetFactor(control)) : layoutStream;
         }
 
         private static Stream TransformDockLayoutStream(Stream layoutStream, float factor)

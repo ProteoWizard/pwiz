@@ -227,12 +227,6 @@ namespace pwiz.Common.DataBinding.Controls
         }
 
         /// <summary>
-        /// View layouts store column widths in 96-DPI pixels, so a layout saved at one display
-        /// scale lays out the same at another. The grid works in device pixels (issue #4599).
-        /// </summary>
-        private float DpiFactor => DeviceDpi / 96f;
-
-        /// <summary>
         /// A width from a <see cref="FormatAttribute"/> is a 96-DPI design value that the view
         /// context applied as raw pixels.
         /// </summary>
@@ -244,14 +238,18 @@ namespace pwiz.Common.DataBinding.Controls
                 column.Width = ToDeviceWidth(format.Width);
             }
         }
+        /// <summary>
+        /// View layouts store column widths in 96-DPI pixels, so a layout saved at one display
+        /// scale lays out the same at another. The grid works in device pixels (issue #4599).
+        /// </summary>
         private int ToDeviceWidth(int layoutWidth)
         {
-            return (int) Math.Round(layoutWidth * DpiFactor);
+            return DpiScale.Scale(this, layoutWidth);
         }
 
         private int ToLayoutWidth(int deviceWidth)
         {
-            return (int) Math.Round(deviceWidth / DpiFactor);
+            return DpiScale.ToLogical(this, deviceWidth);
         }
         protected void UpdateColumnFormats(bool restoreDefaultFormats)
         {

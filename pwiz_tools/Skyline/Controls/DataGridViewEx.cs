@@ -44,8 +44,7 @@ namespace pwiz.Skyline.Controls
             if (_columnWidthsScaled || !ScaleDesignerColumnWidths)
                 return;
             _columnWidthsScaled = true;
-            var factor = DpiUtil.GetFactor(this);
-            if (Math.Abs(factor - 1) < 0.01f)
+            if (!DpiUtil.IsScaled(this))
                 return;
             int defaultWidth = DpiUtil.Scale(this, 100);    // what an untouched column already has
             foreach (DataGridViewColumn column in Columns)
