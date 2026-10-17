@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -53,6 +54,10 @@ namespace pwiz.Osprey.IO
         public const string READER_VERSION = @"2";
 
         private readonly FragmentToleranceConfig _fragmentTolerance;
+        // The whole of the last load's row and protein work, and the part of it spent making
+        // entries of the rows; the rest is the reader's.
+        private readonly Stopwatch _total = new Stopwatch();
+        private readonly Stopwatch _type = new Stopwatch();
 
         /// <summary>
         /// A reader that types each spectrum's peaks within <paramref name="fragmentTolerance"/>,
@@ -62,6 +67,18 @@ namespace pwiz.Osprey.IO
         public BlibLoader(FragmentToleranceConfig fragmentTolerance)
         {
             _fragmentTolerance = fragmentTolerance;
+        }
+
+        /// <summary>Seconds of the last <see cref="Load"/> spent in <see cref="BlibReader"/>: reading the rows and decoding the peak blobs.</summary>
+        public double ReadSeconds
+        {
+            get { return (_total.Elapsed - _type.Elapsed).TotalSeconds; }
+        }
+
+        /// <summary>Seconds of the last <see cref="Load"/> spent making entries of the rows: parsing modifications, typing and interning.</summary>
+        public double TypeSeconds
+        {
+            get { return _type.Elapsed.TotalSeconds; }
         }
 
         /// <summary>
@@ -84,6 +101,8 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
+            _total.Reset();
+            _type.Reset();
             using (var reader = new BlibReader(path))
             {
                 if (!reader.HasTable(BlibReader.TABLE_REF_SPECTRA))
@@ -116,6 +135,9 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Reads every spectrum with its peaks, typing them as they are read. A library with any
         /// modification that cannot be identified is refused, listing every such modification.
+        /// The time goes into two buckets, <see cref="ReadSeconds"/> for the reader's row and
+        /// blob work and <see cref="TypeSeconds"/> for everything made of the row, so a slow
+        /// load says which side it is on.
         /// </summary>
         private List<LibraryEntry> LoadSpectra(BlibReader reader, LibraryStringInterner interner,
             FragmentTypingStats typingStats)
@@ -123,13 +145,15 @@ namespace pwiz.Osprey.IO
             var entries = new List<LibraryEntry>();
             var unidentifiedMods = new UnidentifiedModifications();
 
+            _total.Start();
             foreach (var spectrum in reader.ReadSpectra(true))
             {
-                // A row without a sequence (a small molecule) is refused as a peptide too short
-                // to search; one without a modified sequence is the unmodified peptide.
+                // A row without a sequence (a small molecule) is refused as a peptide too
+                // short to search; one without a modified sequence is the unmodified peptide.
                 string peptideSeq = spectrum.PeptideSeq ?? string.Empty;
                 string peptideModSeq = spectrum.PeptideModSeq ?? peptideSeq;
 
+                _type.Start();
                 // The same bound the TSV loader enforces. An invariant only one
                 // format checks is not an invariant, and DecoyGenerator's
                 // fragment-overlap gate relies on this one whatever the library
@@ -140,12 +164,16 @@ namespace pwiz.Osprey.IO
                 if (parsed == null)
                 {
                     unidentifiedMods.Add(unidentified, spectrum.Id, peptideModSeq);
+                    _type.Stop();
                     continue;
                 }
                 var modifications = BuildInternedModifications(parsed, interner);
+                _type.Stop();
 
                 // A spectrum without a peaks row has no fragments.
                 var peaks = BlibReader.DecodePeaks(spectrum);
+
+                _type.Start();
                 var fragments = peaks != null ? ToFragments(peaks) : Array.Empty<LibraryFragment>();
                 FragmentTyping.TypeFragments(peptideSeq, modifications, spectrum.PrecursorCharge, fragments,
                     _fragmentTolerance, typingStats);
@@ -157,17 +185,21 @@ namespace pwiz.Osprey.IO
                 entry.Fragments = fragments;
 
                 entries.Add(entry);
+                _type.Stop();
             }
+            _total.Stop();
 
             if (unidentifiedMods.Any)
                 throw unidentifiedMods.ToException();
             return entries;
         }
 
-        private static void LoadProteinMappings(BlibReader reader, List<LibraryEntry> entries,
+        private void LoadProteinMappings(BlibReader reader, List<LibraryEntry> entries,
             LibraryStringInterner interner)
         {
+            _total.Start();
             var proteins = reader.ReadProteins();
+            _total.Stop();
             foreach (var entry in entries)
             {
                 // The lookup is empty for a spectrum without a protein, which keeps its default.

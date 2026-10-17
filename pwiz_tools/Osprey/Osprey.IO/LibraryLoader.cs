@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Globalization;
@@ -149,14 +150,19 @@ namespace pwiz.Osprey.IO
                     // each entry's arrays and logs a one-line collapse summary.
                     // OmitFragments has it read-and-discard the fragment blocks so
                     // the returned entries stay lean (no ~3.2 GB of peak arrays).
+                    var swCache = Stopwatch.StartNew();
                     var cached = LibraryCache.LoadCache(
                         cachePath, libraryHash, options.OmitFragments, log.LogInfo, out status,
                         options.RetainFragmentsFor);
+                    swCache.Stop();
                     if (cached != null && cached.Count > 0)
                     {
                         log.LogInfo(string.Format(
                             OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__,
                             cached.Count, cachePath));
+                        // The number a library read has to reach for the cache to be unnecessary.
+                        log.LogInfo(LogTag.TIMING, @"Library cache read: {0:F2}s ({1:N0} precursors)",
+                            swCache.Elapsed.TotalSeconds, cached.Count);
                         // Caches written before the normalizer existed still hold Carafe's
                         // per-peptide accessions, and the cache is keyed on the SOURCE hash, so
                         // nothing else would invalidate them. Normalizing here keeps a cached
@@ -224,6 +230,10 @@ namespace pwiz.Osprey.IO
             // A blib's own pairing of its decoys, by entry, for the pairing after dedup; null
             // for a TSV, which pairs through the manifest and composition.
             IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> blibPairs = null;
+            // The parse against the cache read above, with a blib's split between the file and
+            // the work done on its rows: what a blib read must close for the cache to go.
+            var swParse = Stopwatch.StartNew();
+            string parseDetail;
 
             switch (config.LibrarySource.Format)
             {
@@ -231,11 +241,15 @@ namespace pwiz.Osprey.IO
                     var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
                     entries = tsvLoader.Load(path, log.LogInfo);
                     tsvLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
+                    parseDetail = @"tsv";
                     break;
 
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader(config.FragmentTolerance);
                     entries = blibLoader.Load(path, log.LogInfo);
+                    parseDetail = string.Format(CultureInfo.InvariantCulture,
+                        @"blib; file read and peak decode {0:F2}s, modifications and peak typing {1:F2}s",
+                        blibLoader.ReadSeconds, blibLoader.TypeSeconds);
                     // The table is read for the two readers of it, not for every load.
                     var decoyPairs = config.LibrarySuppliesDecoys || BlibDecoyPairs.ClaimsContract(path)
                         ? BlibDecoyPairs.Read(path)
@@ -263,6 +277,9 @@ namespace pwiz.Osprey.IO
                     throw new NotSupportedException(string.Format(
                         OspreyIOResources.LibraryLoader_Load_Unsupported_library_format___0_, config.LibrarySource.Format));
             }
+            swParse.Stop();
+            log.LogInfo(LogTag.TIMING, @"Library parse: {0:F2}s ({1:N0} precursors; {2})",
+                swParse.Elapsed.TotalSeconds, entries.Count, parseDetail);
 
             // Strip Carafe's per-peptide "_pepNNNNN" pseudo-protein accessions BEFORE dedup:
             // dedup unions each (modified sequence, charge) group's accessions through a
