@@ -255,6 +255,28 @@ public class WriterIterationListenerTests
     }
 
     [TestMethod]
+    public void AllWriters_ContinueOnError_StillReportProgressForTheSkippedSpectrum()
+    {
+        var writers = new (string Format, Action<MSData, IterationListenerRegistry> Write)[]
+        {
+            ("mzML", (msd, reg) => new MzmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
+            ("mzXML", (msd, reg) => new MzxmlWriter { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
+            ("MGF", (msd, reg) => new MgfSerializer { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd)),
+            ("MS2", (msd, reg) => new SerializerMSn(MSnType.Ms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
+            ("CMS2", (msd, reg) => new SerializerMSn(MSnType.Cms2) { ContinueOnError = true, SkipLog = TextWriter.Null, IterationListenerRegistry = reg }.Write(msd, Stream.Null)),
+        };
+        foreach (var (format, write) in writers)
+        {
+            var reg = new IterationListenerRegistry();
+            var listener = new RecordingListener();
+            reg.AddListener(listener, iterationPeriod: 1);
+            write(BuildDocWithUnreadableSpectrum(), reg);
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, listener.Updates.Select(u => u.IterationIndex).ToArray(),
+                $"{format}: one update per input spectrum, including the skipped one");
+        }
+    }
+
+    [TestMethod]
     public void AllWriters_WithoutContinueOnError_ThrowEnumerationException()
     {
         // EnumerationException is what makes msconvert suggest re-running with --continueOnError.

@@ -716,6 +716,11 @@ public sealed class MzmlWriter
         int skipped = 0;
         for (int i = 0; i < count; i++)
         {
+            // Broadcast progress before the fetch, so a spectrum skipped under ContinueOnError
+            // still reports. Throttling is handled by the registry's per-listener period/timer
+            // settings; we just push every spectrum.
+            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
+
             // Per-item fetch is the failure-prone step (vendor SDK throws during
             // GetSpectrum, e.g. a corrupted scan that can't be centroided). cpp
             // IO.cpp:3001-3017 wraps only the fetch; the actual write is not in
@@ -731,10 +736,6 @@ public sealed class MzmlWriter
             // list may hand back the caller's own Spectrum. The list's count attribute
             // above still counts the skipped spectra, as cpp's does.
             WriteSpectrum(w, spec, i - skipped);
-
-            // Broadcast progress before moving on. Throttling is handled by the registry's
-            // per-listener period/timer settings; we just push every spectrum.
-            registry?.Broadcast(new IterationUpdate(i, count, "writing spectra"));
         }
 
         w.WriteEndElement();
