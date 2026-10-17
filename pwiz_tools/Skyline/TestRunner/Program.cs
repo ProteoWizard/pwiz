@@ -291,7 +291,7 @@ namespace TestRunner
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;skipsystemheaps=off;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
-            "demo=off;showformnames=off;status=off;buildcheck=0;" +
+            "demo=off;showformnames=off;dpiaware=off;status=off;buildcheck=0;" +
             "stage=off;configuration=Debug;stageprojects=;stageruntime=on;" +
             "quality=off;qualityonly=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;perffirst=off;" +
@@ -314,6 +314,12 @@ namespace TestRunner
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+
+            // dpiaware=on runs the tests system-DPI-aware, like shipping Skyline, so tutorial
+            // screenshots are taken at the display scale. It must precede SetDefaultFont, which
+            // fixes WinForms scaling. The default stays DPI-unaware: 96-DPI test geometry.
+            if (new CommandLineArgs(args, commandLineOptions).ArgAsBool("dpiaware"))
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
 
             // Pin the WinForms default font exactly as shipping Skyline does, before any control
             // is created. Skyline sets this in its own Main, but by the time the first functional
@@ -3284,6 +3290,11 @@ Here is a list of recognized arguments:
                                     
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
                                     from flashing on the desktop during a test run.
+
+    dpiaware=[on|off]               Set dpiaware=on to run system-DPI-aware, as shipping
+                                    Skyline does, so that tutorial screenshots are taken at
+                                    the display scale. The default (off) keeps the test run
+                                    at 96 DPI, which tutorial screenshots normally require.
 
     language=[language1,language2,...]  Choose a random language from this list before executing
                                     each test.  Default value is ""en-US,fr-FR"".  You can

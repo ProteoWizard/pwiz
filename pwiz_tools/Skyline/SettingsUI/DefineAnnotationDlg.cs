@@ -225,6 +225,23 @@ namespace pwiz.Skyline.SettingsUI
             availableFieldsTree1.SelectColumn(propertyPath);
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            // The designer anchors the tab-page controls from the top so that autoscaling lays
+            // them out correctly at high DPI: a control anchored to the bottom of a TabPage is
+            // misplaced, because WinForms sizes the page after its children are scaled
+            // (issue #4599). Now that the pages have their final size, anchor the way the
+            // dialog resizes: the values box and the fields tree grow, the controls below them
+            // keep their distance from the bottom.
+            tbxValues.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            lblAppliesTo.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            checkedListBoxAppliesTo.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            availableFieldsTree1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            lblAggregateOperation.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            comboAggregateOperation.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+        }
+
         public bool IsCalculated
         {
             get { return tabControl1.SelectedTab == tabPageCalculated; }

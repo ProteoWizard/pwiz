@@ -1476,6 +1476,9 @@ namespace pwiz.Skyline
                 if (saverUser.CanSave(this))
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
+                    // Store floating-window sizes in 96-DPI logical units so the .view
+                    // file is portable across display scale factors (issue #4599).
+                    DpiUtil.NormalizeDockLayoutFile(this, saverUser.SafeName);
                     saverUser.Commit();
                 }
             }
@@ -1557,7 +1560,7 @@ namespace pwiz.Skyline
 
         public void ImportLayout(string viewFilePath)
         {
-            MemoryStream previousLayout = null;
+            Stream previousLayout = null;
             try
             {
                 using var stream = File.OpenRead(viewFilePath);
@@ -1567,7 +1570,9 @@ namespace pwiz.Skyline
                     // Remember the current layout in case something goes wrong.
                     dockPanel.SaveAsXml(memoryStream, new UTF8Encoding(false), true); // UTF-8 without BOM
                     memoryStream.Position = 0;
-                    previousLayout = memoryStream;
+                    // SaveAsXml writes device pixels; LoadLayout expects the logical units
+                    // of a saved .view file, so normalize the backup the same way (issue #4599)
+                    previousLayout = DpiUtil.NormalizeDockLayoutStream(this, memoryStream);
                 }
                 catch
                 {

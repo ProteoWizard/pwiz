@@ -92,11 +92,11 @@ namespace ImageComparer
             OpenFolder(Settings.Default.LastOpenFolder);
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             Settings.Default.Save();
 
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         private bool HasBackgroundWork { get { lock(_lock) { return !IsOldLoaded || !IsNewLoaded; } } }

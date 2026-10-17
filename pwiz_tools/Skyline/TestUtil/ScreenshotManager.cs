@@ -57,6 +57,8 @@ namespace pwiz.SkylineTestUtil
 
         public static Rectangle GetWindowRectangle(Control ctrl, bool fullScreen = false, bool scale = true)
         {
+            if (!fullScreen && TryGetVisibleFrameBounds(ctrl, out var frameBounds))
+                return frameBounds;
             return ScreenCapture.GetWindowRectangle(ctrl, fullScreen, scale);
         }
 
@@ -67,7 +69,29 @@ namespace pwiz.SkylineTestUtil
 
         public static Rectangle GetFramedWindowBounds(Control ctrl)
         {
+            if (TryGetVisibleFrameBounds(ctrl, out var frameBounds))
+                return frameBounds;
             return ScreenCapture.GetFramedWindowBounds(ctrl);
+        }
+
+        /// <summary>
+        /// At high DPI the visible window border is thicker than SystemInformation.BorderSize
+        /// (2px at 150%), so the frame arithmetic in <see cref="ScreenCapture"/> trims one border
+        /// pixel from the left, right and bottom. In a DPI-aware process, get the visible frame
+        /// of a top-level window from DWM instead. At 100%, or for docked forms and controls,
+        /// this returns false and the existing arithmetic applies.
+        /// </summary>
+        private static bool TryGetVisibleFrameBounds(Control ctrl, out Rectangle bounds)
+        {
+            bounds = Rectangle.Empty;
+            if (DpiUtil.GetFactor(null) <= 1)
+                return false;
+            var form = FindParent<FloatingWindow>(ctrl) ?? ctrl as Form;
+            if (form == null)
+                return false;
+            Func<IntPtr> getHandle = () => form.TopLevel && form.IsHandleCreated ? form.Handle : IntPtr.Zero;
+            var hwnd = form.InvokeRequired ? (IntPtr) form.Invoke(getHandle) : getHandle();
+            return hwnd != IntPtr.Zero && DwmapiTest.TryGetExtendedFrameBounds(hwnd, out bounds);
         }
 
         public static TParent FindParent<TParent>(Control ctrl) where TParent : Control
@@ -116,7 +140,7 @@ namespace pwiz.SkylineTestUtil
             [NotNull]
             public override Bitmap Take()
             {
-                var shotRect = ScreenCapture.GetWindowRectangle(_activeWindow, _fullscreen);
+                var shotRect = GetWindowRectangle(_activeWindow, _fullscreen);
                 var bmpCapture = new Bitmap(shotRect.Width, shotRect.Height, PixelFormat.Format32bppArgb);
                 using var g = Graphics.FromImage(bmpCapture);
                 while (!CaptureFromScreen(g, shotRect))

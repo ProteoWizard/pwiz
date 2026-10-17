@@ -27,6 +27,36 @@ namespace pwiz.Skyline.Controls
 {
     public class DataGridViewEx : CommonDataGridView
     {
+        private bool _columnWidthsScaled;
+
+        /// <summary>
+        /// Column widths set in the designer are 96-DPI pixel values that auto-scaling
+        /// never touches: only a column left at the default width gets the DPI-dependent
+        /// default. True (the default) scales every other fixed-width column once, when
+        /// the handle is created. A grid that sizes its columns itself sets this false
+        /// (issue #4599).
+        /// </summary>
+        public bool ScaleDesignerColumnWidths { get; set; } = true;
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (_columnWidthsScaled || !ScaleDesignerColumnWidths)
+                return;
+            _columnWidthsScaled = true;
+            if (!DpiUtil.IsScaled(this))
+                return;
+            int defaultWidth = DpiUtil.Scale(this, 100);    // what an untouched column already has
+            foreach (DataGridViewColumn column in Columns)
+            {
+                var autoSize = column.InheritedAutoSizeMode;
+                if (autoSize != DataGridViewAutoSizeColumnMode.None && autoSize != DataGridViewAutoSizeColumnMode.NotSet)
+                    continue;   // width follows the content or the grid, not the designer
+                if (column.Width != defaultWidth)
+                    column.Width = DpiUtil.Scale(this, column.Width);
+            }
+        }
+
         public string GetCopyText()
         {
             return string.Join(TextUtil.SEPARATOR_TSV_STR, Columns.OfType<DataGridViewColumn>().Where(col => col.Visible).Select(col => col.HeaderText))

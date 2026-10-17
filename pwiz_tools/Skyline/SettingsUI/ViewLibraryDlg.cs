@@ -155,6 +155,9 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
+            // The owner-drawn peptide list keeps its 96-DPI row height; WinForms scales only
+            // the font (issue #4599).
+            listPeptide.ItemHeight = DpiUtil.Scale(this, listPeptide.ItemHeight);
 
             _graphHelper = GraphHelper.Attach(GraphControl);
             GraphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
@@ -180,16 +183,18 @@ namespace pwiz.Skyline.SettingsUI
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
             _originalFileLabelText = labelFilename.Text;
-            _peptideImg = Resources.PeptideLib;
-            _moleculeImg = Resources.MoleculeLib;
+            // The 16x16 icons are drawn at the row height scaled above, so scale them to match
+            _peptideImg = (Bitmap) DpiUtil.ScaleImage(this, Resources.PeptideLib);
+            _moleculeImg = (Bitmap) DpiUtil.ScaleImage(this, Resources.MoleculeLib);
 
             // Tip for peptides in list
             _nodeTip = new NodeTip(this) {Parent = this};
 
-            // Restore window placement.
+            // Restore window placement. Size and splitter distance are persisted in
+            // 96-DPI logical units (see DpiUtil); location is physical screen coordinates.
             Size size = Settings.Default.ViewLibrarySize;
             if (!size.IsEmpty)
-                Size = size;
+                Size = DpiUtil.ScaleSize(this, size);
             Point location = Settings.Default.ViewLibraryLocation;
             if (!location.IsEmpty)
             {
@@ -200,7 +205,7 @@ namespace pwiz.Skyline.SettingsUI
                 ForceOnScreen();
             }
             if (Settings.Default.ViewLibrarySplitMainDist > 0)
-                splitMain.SplitterDistance = Settings.Default.ViewLibrarySplitMainDist;
+                splitMain.SplitterDistance = DpiUtil.Scale(this, Settings.Default.ViewLibrarySplitMainDist);
 
             msGraphExtension1.RestorePropertiesSheet();
             msGraphExtension1.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
@@ -493,8 +498,8 @@ namespace pwiz.Skyline.SettingsUI
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             Settings.Default.ViewLibraryLocation = Location;
-            Settings.Default.ViewLibrarySize = Size;
-            Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
+            Settings.Default.ViewLibrarySize = DpiUtil.ScaleToLogical(this, Size);
+            Settings.Default.ViewLibrarySplitMainDist = DpiUtil.ScaleToLogical(this, splitMain.SplitterDistance);
             Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
 
             base.OnFormClosing(e);

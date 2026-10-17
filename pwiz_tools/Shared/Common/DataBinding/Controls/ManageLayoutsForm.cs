@@ -19,6 +19,7 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
@@ -46,6 +47,7 @@ namespace pwiz.Common.DataBinding.Controls
             imageList1.Images.Add(Resources.Filter);
             imageList1.Images.Add(Resources.Pivot);
             imageList1.Images.Add(Resources.PivotAndFilter);
+            ImageListScaler.ScaleToDpi(this, imageList1);   // 16x16 icons are a 96-DPI design (issue #4599)
         }
 
         public ViewLayoutList ViewLayoutList

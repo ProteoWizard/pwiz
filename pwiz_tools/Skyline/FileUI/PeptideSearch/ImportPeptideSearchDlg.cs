@@ -146,29 +146,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             buildLibraryPanel.Controls.Add(BuildPepSearchLibControl);
 
             ImportFastaControl = new ImportFastaControl(this, SkylineWindow.SequenceTree);
-            AddPageControl(ImportFastaControl, importFastaPage, 2, 60);
+            WizardPages.AddPageControl(ImportFastaControl, importFastaPage, 2, 60);
 
             MatchModificationsControl = new MatchModificationsControl(this, ImportPeptideSearch);
-            AddPageControl(MatchModificationsControl, matchModificationsPage, 2, 60);
+            WizardPages.AddPageControl(MatchModificationsControl, matchModificationsPage, 2, 60);
 
             TransitionSettingsControl = new TransitionSettingsControl(this);
-            AddPageControl(TransitionSettingsControl, transitionSettingsUiPage, 18, 60);
+            WizardPages.AddPageControl(TransitionSettingsControl, transitionSettingsUiPage, 18, 60);
 
             MakeFullScanSettingsControl(workflowType);
 
             ImportResultsDDAControl = new ImportResultsControl(ImportPeptideSearch, DocumentFilePath);
-            AddPageControl(ImportResultsDDAControl, getChromatogramsPage, 2, 60);
+            WizardPages.AddPageControl(ImportResultsDDAControl, getChromatogramsPage, 2, 60);
             ImportResultsControl = ImportResultsDDAControl;
 
             ConverterSettingsControl = new ConverterSettingsControl(this, ImportPeptideSearch, () => FullScanSettingsControl);
-            AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
+            WizardPages.AddPageControl(ConverterSettingsControl, converterSettingsPage, 18, 50);
 
             var isFeatureDetection = workflowType is Workflow.feature_detection;
 
             if (!useExistingLibrary)
             {
                 SearchSettingsControl = new SearchSettingsControl(this, ImportPeptideSearch);
-                AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18, isFeatureDetection ? this.buildSpectralLibraryTitlePanel.Bottom : 50);
+                // The title panel is already scaled, so pass its bottom back in 96-DPI pixels
+                WizardPages.AddPageControl(SearchSettingsControl, ddaSearchSettingsPage, 18,
+                    isFeatureDetection ? DpiUtil.ScaleToLogical(this, buildSpectralLibraryTitlePanel.Bottom) : 50);
             }
 
             if (isFeatureDetection)
@@ -179,7 +181,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 SearchControl = new DDASearchControl(ImportPeptideSearch);
             }
-            AddPageControl(SearchControl, ddaSearchPage, isFeatureDetection ? 3 : 18, 50);
+            WizardPages.AddPageControl(SearchControl, ddaSearchPage, isFeatureDetection ? 3 : 18, 50);
             if (isFeatureDetection)
             {
                 SearchControl.SetProgressBarDisplayStyle(ProgressBarDisplayText.CustomText);
@@ -240,19 +242,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var isFeatureDetection = workflowType is Workflow.feature_detection;
             FullScanSettingsControl = new FullScanSettingsControl(this,
                 isFeatureDetection ? ImportPeptideSearch.eFeatureDetectionPhase.fullscan_settings : ImportPeptideSearch.eFeatureDetectionPhase.none);
-            AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, isFeatureDetection ? 0 : 18, isFeatureDetection ? 43 : 50);
+            WizardPages.AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, isFeatureDetection ? 0 : 18, isFeatureDetection ? 43 : 50);
 
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
-        }
-
-        private static void AddPageControl<TControl>(TControl pageControl, TabPage tabPage, int border, int header)
-            where TControl : UserControl
-        {
-            pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pageControl.Location = new Point(border, header);
-            pageControl.Width = tabPage.Width - border * 2;
-            pageControl.Height = tabPage.Height - header - border;
-            tabPage.Controls.Add(pageControl);
         }
 
         #region Settings Preset

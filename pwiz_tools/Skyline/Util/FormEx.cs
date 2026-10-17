@@ -17,12 +17,14 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -158,6 +160,8 @@ namespace pwiz.Skyline.Util
                 // Track undisposed forms.
             }
 
+            ScaleButtonImages(this);
+
             // Potentially replace "peptide" with "molecule" etc in all controls on open, or possibly disable non-proteomic components etc
             GetModeUIHelper().OnLoad(this);
 
@@ -168,6 +172,45 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /// <summary>
+        /// WinForms scales toolbar and menu images with the display DPI but not a Button's Image,
+        /// which stays the 96-DPI bitmap from the designer, nor the ImageList a Button draws its
+        /// glyph from by ImageKey. Scale them once, when the form loads; an image or list shared
+        /// by several buttons is scaled once and shared again (issue #4599).
+        /// </summary>
+        public static void ScaleButtonImages(Control root)
+        {
+            if (!DpiUtil.IsScaled(root))
+                return;
+            var scaled = new Dictionary<Image, Image>();
+            var scaledLists = new HashSet<ImageList>();
+            var pending = new Stack<Control>();
+            pending.Push(root);
+            while (pending.Count > 0)
+            {
+                var control = pending.Pop();
+                foreach (Control child in control.Controls)
+                    pending.Push(child);
+                // Exact type only: Button subclasses (e.g. LiteDropDownList) manage their own images
+                if (control.GetType() != typeof(Button))
+                    continue;
+                var button = (Button) control;
+                if (button.ImageList != null)
+                {
+                    if (scaledLists.Add(button.ImageList))
+                        ImageListScaler.ScaleToDpi(button, button.ImageList);
+                    continue;
+                }
+                if (button.Image == null)
+                    continue;
+                if (!scaled.TryGetValue(button.Image, out var image))
+                {
+                    image = DpiScale.Resample(button.Image, DpiScale.ScaleSize(button, button.Image.Size));
+                    scaled.Add(button.Image, image);
+                }
+                button.Image = image;
+            }
+        }
         protected override bool ShowWithoutActivation
         {
             // Avoid activating forms during test mode or when off-screen, but not when

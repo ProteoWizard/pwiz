@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
@@ -46,6 +47,7 @@ namespace pwiz.PanoramaClient
         public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showWebDav = false, string selectedPath = null)
         {
             InitializeComponent();
+            ImageListScaler.ScaleToDpi(this, fileIcons);   // 16x16 icons are a 96-DPI design (issue #4599)
 
             _servers = servers;
             _treeState = stateString;
@@ -716,6 +718,7 @@ namespace pwiz.PanoramaClient
         public PanoramaFilePicker(PanoramaServer server, JToken folderJson, JToken fileJson, JToken sizeJson)
         {
             InitializeComponent();
+            ImageListScaler.ScaleToDpi(this, fileIcons);   // 16x16 icons are a 96-DPI design (issue #4599)
 
             _restoring = true;
             versionOptions.Text = RECENT_VER;

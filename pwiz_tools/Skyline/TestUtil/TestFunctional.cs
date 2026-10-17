@@ -1559,9 +1559,25 @@ namespace pwiz.SkylineTestUtil
             RunUI(() =>
             {
                 var rect = SkylineWindow.Bounds;
-                var ptDest = new Point((int)(rect.X + rect.Width * xProportion), (int)(rect.Y + rect.Height * yProportion));
+                // The dock indicators sit a fixed number of 96-DPI pixels from the panel edges
+                // (DigitalRune does not scale them), so a point near an edge has to keep its
+                // 96-DPI distance from that edge at any display scale; a central point stays
+                // proportional (issue #4599).
+                float factor = DpiUtil.GetFactor(SkylineWindow);
+                var ptDest = new Point(EdgeAwareOffset(rect.X, rect.Width, xProportion, factor),
+                    EdgeAwareOffset(rect.Y, rect.Height, yProportion, factor));
                 SkylineWindow.DockPanel.BeginDragDisplay(FindFloatingWindow(dockableForm), ptDest);
             });
+        }
+
+        private static int EdgeAwareOffset(int start, int extent, double proportion, float factor)
+        {
+            const double edgeZone = 0.25;
+            if (proportion < edgeZone)
+                return (int) (start + extent / factor * proportion);                 // 96-DPI distance from the near edge
+            if (proportion > 1 - edgeZone)
+                return (int) (start + extent - extent / factor * (1 - proportion)); // 96-DPI distance from the far edge
+            return (int) (start + extent * proportion);
         }
 
         public void EndDragDisplay()
