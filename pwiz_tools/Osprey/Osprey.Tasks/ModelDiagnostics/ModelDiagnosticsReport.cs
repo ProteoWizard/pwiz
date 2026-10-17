@@ -72,6 +72,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
 
+        /// <summary>
+        /// One run's calibration-view row, written by PerFileScoring at Stage 3 - the phase that
+        /// computes it (P12) - under <c>--model-diagnostics</c>. See
+        /// <see cref="CalibrationDiagnosticsPath"/>.
+        /// </summary>
+        public const string EXT_CALIBRATION_DIAGNOSTICS = @".calibration-diagnostics.json";
+
         /// <summary>Logged when no first-pass model was trained on this run, so the Model tab
         /// has nothing to show: a resumed or rehydrated run takes its q-values from sidecars.</summary>
         internal const string MODEL_NOT_RETRAINED_NOTE =
@@ -750,6 +757,68 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         public static string Pass2SidecarPath(OspreyConfig config)
         {
             return ResolvePass2SidecarPath(config);
+        }
+
+        /// <summary>
+        /// One run's calibration-view row, <c>&lt;stem&gt;.calibration-diagnostics.json</c> beside
+        /// its <c>.calibration.json</c>. Written by PerFileScoring at Stage 3 under
+        /// <c>--model-diagnostics</c>, because only Stage 3 holds the calibration matches the row
+        /// is binned from; read back by FirstPassFDR when the in-memory byproduct is absent - a
+        /// resume past Stage 3, or an HPC join. Without it every such run's report had no
+        /// calibration view.
+        /// </summary>
+        public static string CalibrationDiagnosticsPath(string inputFile)
+        {
+            string stem = Path.GetFileNameWithoutExtension(inputFile);
+            string dir = ArtifactPaths.ResolveOutputDir(inputFile);
+            return string.IsNullOrEmpty(dir) ? stem + EXT_CALIBRATION_DIAGNOSTICS : Path.Combine(dir, stem + EXT_CALIBRATION_DIAGNOSTICS);
+        }
+
+        /// <summary>
+        /// Write <paramref name="row"/> and its run's mass-error unit (the row does not carry it)
+        /// to <see cref="CalibrationDiagnosticsPath"/>, stamped with <paramref name="stamp"/> - the
+        /// stamp of the run's <c>.calibration.json</c>, which is how a reader knows the two came
+        /// from the same calibration.
+        /// </summary>
+        public static void WriteCalibrationDiagnostics(string inputFile, ModelDiagnosticsData.CalFileRow row,
+            string massUnit, ArtifactStamp stamp)
+        {
+            WriteJson(CalibrationDiagnosticsPath(inputFile),
+                new CalibrationDiagnosticsFile { MassUnit = massUnit, Row = row }, stamp);
+        }
+
+        /// <summary>
+        /// The run's calibration-view row, or null when there is none, it is unreadable, or its
+        /// stamp differs from <paramref name="calibrationStamp"/> - a row left by an earlier
+        /// calibration must not describe this one.
+        /// </summary>
+        public static ModelDiagnosticsData.CalFileRow ReadCalibrationDiagnostics(string inputFile,
+            ArtifactStamp calibrationStamp, out string massUnit)
+        {
+            massUnit = null;
+            string path = CalibrationDiagnosticsPath(inputFile);
+            if (calibrationStamp == null || !File.Exists(path) ||
+                !string.Equals(ArtifactStamp.TryReadJsonHead(path)?.ToString(), calibrationStamp.ToString(), StringComparison.Ordinal))
+            {
+                return null;
+            }
+            try
+            {
+                var file = ReadJson<CalibrationDiagnosticsFile>(path);
+                massUnit = file?.MassUnit;
+                return file?.Row;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>The on-disk form of <see cref="WriteCalibrationDiagnostics"/>.</summary>
+        private sealed class CalibrationDiagnosticsFile
+        {
+            public string MassUnit { get; set; }
+            public ModelDiagnosticsData.CalFileRow Row { get; set; }
         }
 
         private static string ResolvePass1SidecarPath(OspreyConfig config)

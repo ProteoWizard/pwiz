@@ -36,6 +36,7 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -2214,6 +2215,14 @@ namespace pwiz.Osprey.Tasks
                 string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
                 CalibrationIO.SaveCalibration(calParams, calPath, _outputStamp);
                 ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Saved_calibration_to__0_, calPath));
+                // The calibration view's row for this run, under the calibration's own stamp. Only
+                // this phase holds the matches it is binned from, so a report built by any later
+                // process - a resume, an HPC join - reads it from here or not at all (P16).
+                if (calDiagnostics != null)
+                {
+                    ModelDiagnosticsReport.WriteCalibrationDiagnostics(inputFile, calDiagnostics,
+                        !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit, _outputStamp);
+                }
             }
             catch (Exception ex)
             {

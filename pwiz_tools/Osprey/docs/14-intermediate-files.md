@@ -26,6 +26,7 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 | File pattern | Scope | Format | C# writer/reader | Purpose |
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
+| `<stem>.calibration-diagnostics.json` | run | JSON, stamp first | `Osprey.Tasks/ModelDiagnostics/ModelDiagnosticsReport.cs` | `--model-diagnostics` only: the run's calibration-view row (`CalFileRow`) and mass unit, written at Stage 3 under the same stamp as the run's `.calibration.json` and read only when that stamp matches. A separate file because `.calibration.json` keeps Rust's schema and its project cannot see the row type. Not a declared output: adding the flag to a finished analysis does not re-run Stage 3, so such an analysis has no calibration view |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
@@ -83,7 +84,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `FirstPassModelIO` (2 sites) | `<blib-stem>.1st-pass.model.json`, `<blib-stem>.1st-pass.stratum.json` |
 | `BlibOutputWriter` | `<output>.blib` |
 | `TrainingExportWriter` | `<stem>.training.parquet` |
-| `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
+| `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.html`, the diagnostics JSON products and `<stem>.calibration-diagnostics.json` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
 | `PerFileScoringTask.WriteFeatureDump` | `--write-pin`'s `<stem>.cs_features.tsv` |

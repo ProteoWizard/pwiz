@@ -1821,6 +1821,10 @@ function Invoke-HpcChain {
     foreach ($s in $stemList) {
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
         Copy-Item (Join-Path $ph1Dirs[$s] "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
+        # Under --model-diagnostics, the run's calibration-view row. Only Stage 3 can compute it,
+        # so the join's report has no calibration view without this hop.
+        $ph1CalDiag = Join-Path $ph1Dirs[$s] "$s.calibration-diagnostics.json"
+        if (Test-Path $ph1CalDiag) { Copy-Item $ph1CalDiag (Join-Path $ph2 "$s.calibration-diagnostics.json") }
     }
     Copy-LibraryInto -Library $Library -Dir $ph2 -Manifest $Manifest
     # -i names the DATA files, exactly as phase 1 was given them, even though this

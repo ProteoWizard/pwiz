@@ -142,12 +142,19 @@ namespace pwiz.Osprey.Tasks
         /// and the fold decision cannot drift apart. A bare instance can answer for the one the
         /// pipeline holds because every term is derived from <paramref name="ctx"/> and its
         /// config; the task carries no state until <see cref="Run"/> is under way.</para>
+        ///
+        /// <para>False when this process does not run FirstPassFDR at all. Its outputs say only
+        /// what a FirstPassFDR WOULD do; under <c>--task SecondPassFDR</c> on a node that was not
+        /// shipped the pass-1 product, they said "only the report is owed", and the per-file
+        /// scoring load took the fold route for a task that never runs - a route that refuses a
+        /// reconciled-input node, so the second pass died before loading a run.</para>
         /// </summary>
         internal static bool WillOnlyFoldDiagnostics(PipelineContext ctx)
         {
             // Short-circuits before any file probe on the overwhelmingly common path, where the
             // flag is off and no diagnostics product is owed at all.
             return ctx.Config.ModelDiagnostics &&
+                   ScoringTaskShared.Includes<FirstPassFdrTask>(ctx.Config) &&
                    new FirstPassFdrTask().OnlyDiagnosticsProductOutstanding(ctx);
         }
 
@@ -847,9 +854,10 @@ namespace pwiz.Osprey.Tasks
         /// the report from the per-file calibration diagnostics
         /// (<see cref="PerFileCalibrationDiagnostics"/>) PerFileScoringTask captured at
         /// Stage 3. The rows are ordered by <paramref name="orderedFileNames"/> (input-file
-        /// order) so the report's file selector matches the rest of the page. Returns
-        /// <c>null</c> when no rows were captured (a resumed / rehydrated run, or none of
-        /// the files calibrated), which hides the CAL tab. HasEntrapment is true when any
+        /// order) so the report's file selector matches the rest of the page. A run whose row
+        /// is not in the byproduct - one Stage 3 did not calibrate in this process, as on a
+        /// resume or an HPC join - is read from its <c>.calibration-diagnostics.json</c>.
+        /// Returns <c>null</c> when no run has a row, which hides the CAL tab. HasEntrapment is true when any
         /// row carries an entrapment FDP curve; MassUnit is the per-run unit the byproduct
         /// stashed at capture (the row does not carry it).
         /// </summary>
@@ -864,14 +872,24 @@ namespace pwiz.Osprey.Tasks
                 byFile = diag.Value;
                 massUnit = diag.MassUnit;
             }
-            if (byFile == null || byFile.Count == 0)
-                return null;
+
+            // A run Stage 3 did not calibrate in this process - a resume past Stage 3, an HPC
+            // join - has its row on disk, written by the process that did. Matched by input stem.
+            var inputByName = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (ctx.Config.InputFiles != null)
+            {
+                foreach (string inputFile in ctx.Config.InputFiles)
+                    inputByName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
+            }
 
             var files = new List<ModelDiagnosticsData.CalFileRow>(orderedFileNames.Count);
             var omitted = new List<string>();
             foreach (var name in orderedFileNames)
             {
-                if (byFile.TryGetValue(name, out var row) && row != null)
+                ModelDiagnosticsData.CalFileRow row = null;
+                if (byFile == null || !byFile.TryGetValue(name, out row) || row == null)
+                    row = ReadCalibrationDiagnosticsFromDisk(name, inputByName, ref massUnit);
+                if (row != null)
                     files.Add(row);
                 else
                     omitted.Add(name);
@@ -906,6 +924,24 @@ namespace pwiz.Osprey.Tasks
                 MassUnit = !string.IsNullOrEmpty(massUnit) ? massUnit : MzCalibration.UNIT_PPM,
                 FileCount = files.Count,
             };
+        }
+
+        /// <summary>
+        /// One run's calibration-view row from its <c>.calibration-diagnostics.json</c>, when that
+        /// file carries the stamp of the run's <c>.calibration.json</c>; else null. Sets
+        /// <paramref name="massUnit"/> from the file when it is not yet known.
+        /// </summary>
+        private static ModelDiagnosticsData.CalFileRow ReadCalibrationDiagnosticsFromDisk(string fileName,
+            IReadOnlyDictionary<string, string> inputByName, ref string massUnit)
+        {
+            if (!inputByName.TryGetValue(fileName, out string inputFile))
+                return null;
+            string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
+            var row = ModelDiagnosticsReport.ReadCalibrationDiagnostics(inputFile,
+                ArtifactStamp.TryReadJsonHead(calPath), out string fileUnit);
+            if (row != null && string.IsNullOrEmpty(massUnit))
+                massUnit = fileUnit;
+            return row;
         }
 
         /// <summary>

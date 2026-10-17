@@ -352,7 +352,7 @@ namespace pwiz.Osprey.Test
             string pass2 = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS2));
             string report = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             string referenceDir = CreateDir(@"diagnostics-reference");
-            foreach (string product in new[] { pass1, pass2, report })
+            foreach (string product in new[] { pass1, pass2, report, blib })
             {
                 Assert.IsTrue(File.Exists(product), @"the analysis wrote no " + product);
                 File.Copy(product, Path.Combine(referenceDir, Path.GetFileName(product)));
@@ -436,6 +436,20 @@ namespace pwiz.Osprey.Test
             log = RunDiagnostics(SecondPassFdrTask.TASK_NAME);
             AssertLogShape(log, new[] { foldPass2 }, noAnalysis);
             Assert.IsTrue(File.Exists(pass2), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME) + @" folded nothing");
+
+            // --task SecondPassFDR owing the real second pass, on a node that was not shipped the
+            // pass-1 product - the bed an orchestrator builds without the optional relay. The
+            // second pass runs and only the report's pass-1 half is missing. It once died before
+            // loading a run: FirstPassFDR, which this process does not run, was asked whether it
+            // would "only fold its report", said yes, and sent the per-file scoring load down the
+            // fold route, which refuses a reconciled-input node.
+            DeleteSecondPassOutputs(blib);
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            log = RunDiagnostics(SecondPassFdrTask.TASK_NAME);
+            AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
+            AssertBlibsEqual(ReferenceOf(blib), blib);
+            Assert.IsFalse(File.Exists(pass1), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME) +
+                @" wrote the pass-1 product, which only FirstPassFDR owns");
         }
 
         /// <summary>
@@ -1054,6 +1068,7 @@ namespace pwiz.Osprey.Test
             foreach (string run in data.Runs)
             {
                 ShipFiles(dirPrefix + @"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
+                ShipFilesIfPresent(dirPrefix + @"phase1_" + run, phase2Dir, run + ModelDiagnosticsReport.EXT_CALIBRATION_DIAGNOSTICS);
             }
             RunTask(data, phase2Dir, FirstPassFdrTask.TASK_NAME, data.Runs);
 
@@ -1418,7 +1433,10 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertSameFirstPassProduct(string expectedPath, string actualPath)
         {
-            string[] notComparable = { @"generatedUtc", @"cal", @"model", @"featureHistEdges", @"featureCount", @"modelComposite" };
+            // The calibration view IS comparable: Stage 3 writes each run's rows to its
+            // .calibration-diagnostics.json, so a fold rebuilds them. It was listed here once, which
+            // is how every resume shipping a report with no calibration view passed this test.
+            string[] notComparable = { @"generatedUtc", @"model", @"featureHistEdges", @"featureCount", @"modelComposite" };
             JObject Comparable(string path)
             {
                 var json = JObject.Parse(File.ReadAllText(path));
