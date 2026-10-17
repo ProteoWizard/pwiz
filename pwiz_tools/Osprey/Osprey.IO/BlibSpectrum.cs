@@ -87,11 +87,14 @@ namespace pwiz.Osprey.IO
             }
             var modMasses = PeptideFragmentMass.ModMassesByPosition(entry.Modifications);
             var byResidue = SumByResidue(modMasses, entry.Sequence.Length);
-            // A modification the library loader could not resolve is missing from Modifications
-            // but not from the precursor's identity. Building the text from Modifications would
-            // then give two library precursors one (peptideModSeq, charge), so such an entry keeps
-            // its own text, with the UniMod ids the writer knows converted to masses.
-            string modifiedSequence = CountModificationTokens(entry.ModifiedSequence) == (entry.Modifications?.Count ?? 0)
+            // The text is built from the modifications, which the loaders give ModifiedSequence
+            // too. An entry made elsewhere whose text names a modification its Modifications do
+            // not carry keeps its own text (with the UniMod ids the writer knows converted to
+            // masses), so two library precursors never share one (peptideModSeq, charge).
+            // Counted against the modified residues, not the modification records: two records
+            // on one residue (an N-terminal acetyl and an oxidized first methionine) are one
+            // bracket.
+            string modifiedSequence = CountModificationTokens(entry.ModifiedSequence) == byResidue.Count
                 ? FormatModifiedSequence(entry.Sequence, byResidue)
                 : BlibPeptideText.ConvertUnimodToMass(BlibPeptideText.StripFlankingChars(entry.ModifiedSequence));
             return new BlibSpectrum(entry,

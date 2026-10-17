@@ -65,7 +65,9 @@ namespace pwiz.Osprey.Test
             double y5Doubly = Mz(IonType.Y, 5, 2, modMasses, null);
             double y4Water = Mz(IonType.Y, 4, 1, modMasses, NeutralLoss.H2OMass);
             double b5 = Mz(IonType.B, 5, 1, modMasses, null);
-            double[] peaks = { b3, y3, y5Doubly, y4Water, b5, 700.0 };
+            // In m/z order, which the reader keeps whatever order a blib holds its peaks in.
+            double[] peaks = { y5Doubly, b3, y3, y4Water, b5, 700.0 };
+            CollectionAssert.AreEqual(peaks.OrderBy(mz => mz).ToArray(), peaks);
 
             string plain = CreateBlib(peaks, new (int, string, int)[0]);
             try
@@ -82,11 +84,11 @@ namespace pwiz.Osprey.Test
                     new OspreyConfig(), null, false, out _);
                 var decoy = decoys.Single();
                 Assert.IsTrue(decoy.IsDecoy);
-                Assert.AreNotEqual(entry.Fragments[0].Mz, decoy.Fragments[0].Mz);
+                Assert.AreNotEqual(entry.Fragments[1].Mz, decoy.Fragments[1].Mz);
                 var decoyMods = PeptideFragmentMass.ModMassesByPosition(decoy.Modifications);
                 double? decoyB3 = PeptideFragmentMass.CalculateFragmentMz(IonType.B, 3, 1, decoy.Sequence, decoyMods, null);
                 Assert.IsNotNull(decoyB3);
-                Assert.AreEqual(decoyB3.Value, decoy.Fragments[0].Mz, 1e-9);
+                Assert.AreEqual(decoyB3.Value, decoy.Fragments[1].Mz, 1e-9);
             }
             finally
             {
@@ -94,7 +96,7 @@ namespace pwiz.Osprey.Test
             }
 
             // Rows naming other ions than the typing gives change nothing.
-            string annotated = CreateBlib(peaks, new[] { (0, @"y2", 1), (1, @"b3", 1), (4, @"y5", 1), (5, @"y6", 1) });
+            string annotated = CreateBlib(peaks, new[] { (0, @"y2", 1), (1, @"y4", 1), (4, @"y5", 1), (5, @"y6", 1) });
             try
             {
                 AssertTypedAsExpected(new BlibLoader(TOLERANCE).Load(annotated).Single());
@@ -356,9 +358,9 @@ namespace pwiz.Osprey.Test
         private static void AssertTypedAsExpected(LibraryEntry entry)
         {
             var types = entry.Fragments.Select(f => f.Annotation).ToArray();
-            AssertAnnotation(types[0], IonType.B, 3, 1, NeutralLossCode.None);
-            AssertAnnotation(types[1], IonType.Y, 3, 1, NeutralLossCode.None);
-            AssertAnnotation(types[2], IonType.Y, 5, 2, NeutralLossCode.None);
+            AssertAnnotation(types[0], IonType.Y, 5, 2, NeutralLossCode.None);
+            AssertAnnotation(types[1], IonType.B, 3, 1, NeutralLossCode.None);
+            AssertAnnotation(types[2], IonType.Y, 3, 1, NeutralLossCode.None);
             Assert.AreEqual(IonType.Unknown, types[3].IonType, @"a neutral loss is not typed");
             AssertAnnotation(types[4], IonType.B, 5, 1, NeutralLossCode.None);
             Assert.AreEqual(IonType.Unknown, types[5].IonType, @"no ion reaches 700.0");

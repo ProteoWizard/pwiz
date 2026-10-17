@@ -266,10 +266,10 @@ namespace pwiz.Osprey.IO
                                 path, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                             return null;
                         }
-                        blibPairs = BlibDecoyPairs.ByEntry(entries, decoyPairs);
+                        blibPairs = BlibDecoyPairs.ByEntry(entries, blibLoader.RefSpectraIds, decoyPairs);
                     }
                     // Before any repair below: a library that claims the contract must need none.
-                    if (!CheckLibraryContract(path, entries, decoyPairs, config, log, out error))
+                    if (!CheckLibraryContract(path, entries, blibLoader.RefSpectraIds, decoyPairs, config, log, out error))
                         return null;
                     break;
 
@@ -374,7 +374,7 @@ namespace pwiz.Osprey.IO
         /// entries still carry here) and the pairing manifest the run names take part in the
         /// check. A library without the claim takes the tolerant route unchanged.
         /// </summary>
-        private static bool CheckLibraryContract(string path, List<LibraryEntry> entries,
+        private static bool CheckLibraryContract(string path, List<LibraryEntry> entries, IReadOnlyList<long> refSpectraIds,
             IReadOnlyDictionary<long, BlibDecoyPair> decoyPairs, OspreyConfig config, IOspreyLog log, out string error)
         {
             error = null;
@@ -386,12 +386,15 @@ namespace pwiz.Osprey.IO
             log.LogInfo(string.Format(
                 OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_,
                 FormatPrefixList(config.DecoyPrefixes)));
+            if (entries.Count != refSpectraIds.Count)
+                throw new ArgumentException($@"{entries.Count} entries but {refSpectraIds.Count} RefSpectra ids: not the loader's list");
             var rows = new List<LibraryContractRow>(entries.Count);
-            foreach (var entry in entries)
+            for (int i = 0; i < entries.Count; i++)
             {
+                var entry = entries[i];
                 bool? markedDecoy = null;
                 int? pairId = null;
-                if (decoyPairs != null && decoyPairs.TryGetValue(entry.Id, out var pair))
+                if (decoyPairs != null && decoyPairs.TryGetValue(refSpectraIds[i], out var pair))
                 {
                     markedDecoy = pair.IsDecoy;
                     pairId = pair.PairId;

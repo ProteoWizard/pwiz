@@ -70,18 +70,21 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The rows of <paramref name="table"/> keyed by the entry they describe, taken while
-        /// <see cref="LibraryEntry.Id"/> is still the RefSpectra id. The entries survive
-        /// deduplication as the same objects, so the map still addresses them afterwards.
+        /// The rows of <paramref name="table"/> keyed by the entry they describe, through
+        /// <paramref name="refSpectraIds"/>, the RefSpectra id of each entry in order (the
+        /// loader's <see cref="BlibLoader.RefSpectraIds"/>). The entries survive deduplication
+        /// as the same objects, so the map still addresses them afterwards.
         /// </summary>
-        public static IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> ByEntry(IEnumerable<LibraryEntry> entries,
-            IReadOnlyDictionary<long, BlibDecoyPair> table)
+        public static IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> ByEntry(IReadOnlyList<LibraryEntry> entries,
+            IReadOnlyList<long> refSpectraIds, IReadOnlyDictionary<long, BlibDecoyPair> table)
         {
+            if (entries.Count != refSpectraIds.Count)
+                throw new ArgumentException($@"{entries.Count} entries but {refSpectraIds.Count} RefSpectra ids: not the loader's list");
             var byEntry = new Dictionary<LibraryEntry, BlibDecoyPair>(ReferenceEqualityComparer.Instance);
-            foreach (var entry in entries)
+            for (int i = 0; i < entries.Count; i++)
             {
-                if (table.TryGetValue(entry.Id, out var pair))
-                    byEntry.Add(entry, pair);
+                if (table.TryGetValue(refSpectraIds[i], out var pair))
+                    byEntry.Add(entries[i], pair);
             }
             return byEntry;
         }

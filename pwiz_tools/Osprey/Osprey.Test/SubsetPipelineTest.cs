@@ -690,10 +690,10 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, noNumbersDir
             }).Concat(CommonArgs()).ToArray(), Verifier(false));
             Assert.AreEqual(0, SplitLines(noNumbersLog).Count(CommandStatusWriter.IsErrorLine), noNumbersLog);
-            int noNumbersLines = File.ReadLines(noNumbers).Skip(1).Count();
+            int noNumbersPeaks = CountLibraryPeaks(noNumbers, _ => true);
             StringAssert.Contains(noNumbersLog, string.Format(
                 OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
-                Path.GetFileName(noNumbers), 0, 0, 0, noNumbersLines, 0));
+                Path.GetFileName(noNumbers), 0, 0, 0, noNumbersPeaks, 0));
             int noNumbersPrecursors = BlibComparer.CountRows(Path.Combine(noNumbersDir, BLIB_FILE), @"RefSpectra");
             Assert.IsTrue(noNumbersPrecursors > 0, string.Format(@"{0} precursors reported", noNumbersPrecursors));
 
@@ -719,10 +719,11 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(strayDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, strayDir
             }).Concat(CommonArgs()).ToArray(), Verifier(false));
-            int totalLines = File.ReadLines(strays).Skip(1).Count();
+            int strayPeaks = CountLibraryPeaks(strays, strayPeptides.Contains);
+            int otherPeaks = CountLibraryPeaks(strays, peptide => !strayPeptides.Contains(peptide));
             StringAssert.Contains(log, string.Format(
                 OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
-                Path.GetFileName(strays), totalLines - strayLines, totalLines - strayLines, 0, strayLines, 0));
+                Path.GetFileName(strays), otherPeaks, otherPeaks, 0, strayPeaks, 0));
             Assert.IsFalse(log.Contains(OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_.Split('{')[0]), log);
             Assert.AreEqual(noNumbersPrecursors, BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra"));
         }
@@ -792,6 +793,25 @@ namespace pwiz.Osprey.Test
                 fields[column] = value;
                 return fields;
             });
+        }
+
+        /// <summary>
+        /// The peaks of the precursors <paramref name="peptideFilter"/> admits in a .tsv library
+        /// as the loader counts them: one per (modified peptide, charge, m/z), since rows at one
+        /// m/z of one precursor load as one peak.
+        /// </summary>
+        private static int CountLibraryPeaks(string path, Func<string, bool> peptideFilter)
+        {
+            var lines = File.ReadAllLines(path);
+            var header = lines[0].Split('\t');
+            int peptide = Array.IndexOf(header, @"ModifiedPeptide");
+            int charge = Array.IndexOf(header, @"PrecursorCharge");
+            int mz = Array.IndexOf(header, @"FragmentMz");
+            Assert.IsTrue(peptide >= 0 && charge >= 0 && mz >= 0, lines[0]);
+            return lines.Skip(1).Select(line => line.Split('\t'))
+                .Where(fields => peptideFilter(fields[peptide]))
+                .Select(fields => (fields[peptide], fields[charge], fields[mz]))
+                .Distinct().Count();
         }
 
         /// <summary>A copy of the subset library without column <paramref name="columnName"/>.</summary>

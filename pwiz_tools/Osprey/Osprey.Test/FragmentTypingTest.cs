@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 
@@ -267,6 +268,61 @@ namespace pwiz.Osprey.Test
                 noTolerance.ParseReader(reader);
             }
             Assert.IsFalse(noTolerance.TypeCheck.AnyStated);
+        }
+
+        /// <summary>
+        /// A library's peaks are one peak per m/z, scaled to the base peak, whichever file they
+        /// come from (<see cref="FragmentPeaks"/>): two rows at one m/z are one peak with the
+        /// summed intensity, which the typing then types once; rows at different m/z, however
+        /// close, stay separate.
+        /// </summary>
+        [TestMethod]
+        public void TestOnePeakPerMz()
+        {
+            // Nothing to merge, base peak 1: unchanged.
+            var separate = Fragments((100.0, 0.5f), (100.0 + 1e-9, 0.25f), (300.0, 1f));
+            CollectionAssert.AreEqual(separate.Select(f => f.Mz).ToArray(),
+                FragmentPeaks.MergeEqualMz(separate).Select(f => f.Mz).ToArray());
+            CollectionAssert.AreEqual(separate.Select(f => f.RelativeIntensity).ToArray(),
+                FragmentPeaks.MergeEqualMz(separate).Select(f => f.RelativeIntensity).ToArray());
+
+            // Two at one m/z: one peak, summed, the spectrum rescaled to its new base peak. The
+            // merged peak keeps the first annotation.
+            var stacked = Fragments((100.0, 0.5f), (200.0, 0.2f), (200.0, 1f), (300.0, 0.4f));
+            stacked[1].Annotation = new FragmentAnnotation { IonType = IonType.B, Ordinal = 2, Charge = 1 };
+            var merged = FragmentPeaks.MergeEqualMz(stacked);
+            CollectionAssert.AreEqual(new[] { 100.0, 200.0, 300.0 }, merged.Select(f => f.Mz).ToArray());
+            CollectionAssert.AreEqual(new[] { 0.5f / 1.2f, 1f, 0.4f / 1.2f }, merged.Select(f => f.RelativeIntensity).ToArray());
+            AssertIon(merged[1].Annotation, IonType.B, 2, 1);
+            Assert.AreEqual(0.2f, stacked[1].RelativeIntensity, @"the input is not modified");
+
+            // The .tsv route: b6 and b12^2 of the repeat as two rows at one m/z (each 1.0) are one
+            // peak at 1.0, typed b6, and the y3 row is scaled to 0.5 beside it.
+            double b6 = Mz(IonType.B, 6, 1, REPEAT, null);
+            double y3 = Mz(IonType.Y, 3, 1, REPEAT, null);
+            string tsv = @"ModifiedPeptide	StrippedPeptide	PrecursorMz	PrecursorCharge	Tr_recalibrated	ProteinID	FragmentMz	RelativeIntensity	FragmentType	FragmentNumber	FragmentCharge	FragmentLossType" + "\n" +
+                         Line(y3, @"y", 3, @"noloss").Replace(@"PEPTIDEK", REPEAT) +
+                         Line(b6, @"b", 6, @"noloss").Replace(@"PEPTIDEK", REPEAT) +
+                         Line(b6, @"b", 12, @"noloss", 2).Replace(@"PEPTIDEK", REPEAT);
+            var loader = new DiannTsvLoader(2, FragmentToleranceConfig.Hram(10));
+            List<LibraryEntry> entries;
+            using (var reader = new StringReader(tsv))
+            {
+                entries = loader.ParseReader(reader);
+            }
+            var loaded = entries.Single().Fragments;
+            Assert.AreEqual(2, loaded.Count);
+            Assert.AreEqual(0.5f, loaded.Single(f => f.Mz == y3).RelativeIntensity);
+            Assert.AreEqual(1f, loaded.Single(f => f.Mz == b6).RelativeIntensity);
+            AssertIon(loaded.Single(f => f.Mz == b6).Annotation, IonType.B, 6, 1);
+            Assert.AreEqual(2, loader.TypeCheck.Agree, @"one statement per peak");
+
+            // The .blib route: the same rule on the decoded peaks, in m/z order, and a peak no
+            // ion names carries the annotation the .tsv route leaves on one.
+            var fromBlib = BlibLoader.ToFragments(new BlibPeaks(new[] { 200.0, 100.0, 200.0 }, new[] { 1f, 2f, 3f }));
+            CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, fromBlib.Select(f => f.Mz).ToArray());
+            CollectionAssert.AreEqual(new[] { 0.5f, 1f }, fromBlib.Select(f => f.RelativeIntensity).ToArray());
+            Assert.AreEqual(new FragmentAnnotation { IonType = IonType.Unknown }, fromBlib[0].Annotation);
         }
 
         private static string Line(double mz, string type, int number, string loss, int fragmentCharge = 1)

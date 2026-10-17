@@ -43,7 +43,10 @@ namespace pwiz.Osprey.IO
     {
 
         /// <summary>
-        /// Version of what this reader makes of a blib. 3: the residue masses the typing computes
+        /// Version of what this reader makes of a blib. 4: peaks in m/z order, one peak per m/z
+        /// (<see cref="FragmentPeaks"/>); ids from 0 in reading order and the modified sequence
+        /// rebuilt from the modification masses, as the TSV loader's are, so an entry reads the
+        /// same from either file. 3: the residue masses the typing computes
         /// from are the shared chemistry's (<c>pwiz.Common.Chemistry</c>) rather than a
         /// six-decimal table. 2: every peak is typed from m/z (<see cref="FragmentTyping"/>),
         /// where version 1 left every peak Unknown, and modification text is read residue- and
@@ -51,13 +54,15 @@ namespace pwiz.Osprey.IO
         /// under it, so the <c>.libcache</c> composition term and the task-key term both carry
         /// it for every blib, and a change to either moves both by editing this one value.
         /// </summary>
-        public const string READER_VERSION = @"3";
+        public const string READER_VERSION = @"4";
 
         private readonly FragmentToleranceConfig _fragmentTolerance;
         // The whole of the last load's row and protein work, and the part of it spent making
         // entries of the rows; the rest is the reader's.
         private readonly Stopwatch _total = new Stopwatch();
         private readonly Stopwatch _type = new Stopwatch();
+        // The RefSpectra id of each entry of the last load, in the entries' order.
+        private readonly List<long> _refSpectraIds = new List<long>();
 
         /// <summary>
         /// A reader that types each spectrum's peaks within <paramref name="fragmentTolerance"/>,
@@ -67,6 +72,16 @@ namespace pwiz.Osprey.IO
         public BlibLoader(FragmentToleranceConfig fragmentTolerance)
         {
             _fragmentTolerance = fragmentTolerance;
+        }
+
+        /// <summary>
+        /// The RefSpectra id of each entry of the last <see cref="Load"/>, in the entries' order:
+        /// what the library's other tables (proteins, decoy pairs) refer to, where
+        /// <see cref="LibraryEntry.Id"/> runs from 0 as every loader's ids do.
+        /// </summary>
+        public IReadOnlyList<long> RefSpectraIds
+        {
+            get { return _refSpectraIds; }
         }
 
         /// <summary>Seconds of the last <see cref="Load"/> spent in <see cref="BlibReader"/>: reading the rows and decoding the peak blobs.</summary>
@@ -103,6 +118,7 @@ namespace pwiz.Osprey.IO
         {
             _total.Reset();
             _type.Reset();
+            _refSpectraIds.Clear();
             using (var reader = new BlibReader(path))
             {
                 if (!reader.HasTable(BlibReader.TABLE_REF_SPECTRA))
@@ -178,9 +194,16 @@ namespace pwiz.Osprey.IO
                 FragmentTyping.TypeFragments(peptideSeq, modifications, spectrum.PrecursorCharge, fragments,
                     _fragmentTolerance, typingStats);
 
-                var entry = new LibraryEntry((uint)spectrum.Id,
-                    interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
+                // Ids run from 0 in reading order, as the TSV loader's do (the RefSpectra id is
+                // kept beside the entry for the tables that refer to it), and the modified
+                // sequence is rebuilt from the modification masses in the one text every loader
+                // gives it, whatever precision the file printed.
+                var entry = new LibraryEntry((uint)entries.Count,
+                    interner.Intern(peptideSeq),
+                    interner.Intern(BlibSpectrum.FormatModifiedSequence(peptideSeq,
+                        PeptideFragmentMass.ModMassesByPosition(modifications))),
                     (byte)spectrum.PrecursorCharge, spectrum.PrecursorMz, spectrum.RetentionTime ?? 0.0);
+                _refSpectraIds.Add(spectrum.Id);
                 entry.Modifications = modifications;
                 entry.Fragments = fragments;
 
@@ -200,10 +223,11 @@ namespace pwiz.Osprey.IO
             _total.Start();
             var proteins = reader.ReadProteins();
             _total.Stop();
-            foreach (var entry in entries)
+            for (int i = 0; i < entries.Count; i++)
             {
+                var entry = entries[i];
                 // The lookup is empty for a spectrum without a protein, which keeps its default.
-                var accessions = proteins[entry.Id].Select(interner.Intern).ToArray();
+                var accessions = proteins[_refSpectraIds[i]].Select(interner.Intern).ToArray();
                 if (accessions.Length > 0)
                     entry.ProteinIds = accessions;
             }
@@ -370,32 +394,29 @@ namespace pwiz.Osprey.IO
         internal static LibraryFragment[] ToFragments(BlibPeaks peaks)
         {
             var fragments = new LibraryFragment[peaks.Count];
-            float maxIntensity = 0f;
             for (int i = 0; i < fragments.Length; i++)
             {
-                float intensity = peaks.Intensities[i];
-                if (intensity > maxIntensity)
-                    maxIntensity = intensity;
+                // Untyped until the typing names an ion; a peak it cannot name stays exactly
+                // this, the annotation the TSV loader leaves on such a peak.
                 fragments[i] = new LibraryFragment
                 {
                     Mz = peaks.Mzs[i],
-                    RelativeIntensity = intensity,
-                    Annotation = new FragmentAnnotation
-                    {
-                        IonType = IonType.Unknown,
-                        Ordinal = (byte)(i + 1),
-                        Charge = 1
-                    }
+                    RelativeIntensity = peaks.Intensities[i],
+                    Annotation = new FragmentAnnotation { IonType = IonType.Unknown }
                 };
             }
-
-            if (maxIntensity > 0f)
+            // In m/z order (a BiblioSpec writer's order, so the sort runs only for a .blib
+            // written otherwise), one peak per m/z, scaled to the base peak as a DIA-NN library
+            // already is.
+            for (int i = 1; i < fragments.Length; i++)
             {
-                for (int i = 0; i < fragments.Length; i++)
-                    fragments[i].RelativeIntensity /= maxIntensity;
+                if (fragments[i].Mz < fragments[i - 1].Mz)
+                {
+                    fragments = fragments.OrderBy(f => f.Mz).ToArray();
+                    break;
+                }
             }
-
-            return fragments;
+            return FragmentPeaks.MergeEqualMz(fragments);
         }
 
         /// <summary>

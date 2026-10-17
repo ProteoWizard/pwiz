@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 
@@ -201,13 +200,8 @@ namespace pwiz.Osprey.Scoring
         /// index is returned in library order.
         /// </summary>
         /// <remarks>
-        /// The sort is a STABLE <c>OrderByDescending</c> (stable per the .NET
-        /// contract) so ties on RelativeIntensity preserve the library's fragment
-        /// order, matching Rust's stable <c>slice::sort_by</c>
-        /// (osprey-scoring/src/lib.rs:528). <c>List&lt;T&gt;.Sort</c> /
-        /// <c>Array.Sort</c> with a <c>Comparison&lt;T&gt;</c> is introsort and
-        /// unstable, which would pick different fragments on ties and cascade
-        /// through XIC extraction -> peak detection -> rankScore -> bestPeak.
+        /// The ranking, ties included, is <see cref="FragmentMath.TopIndicesByIntensity"/>, the
+        /// one the spectrum prefilter's top six use too.
         /// </remarks>
         public static int[] SelectTopFragmentIndices(
             IReadOnlyList<LibraryFragment> fragments, int maxFragments)
@@ -220,10 +214,7 @@ namespace pwiz.Osprey.Scoring
                     allIndices[i] = i;
                 return allIndices;
             }
-            return Enumerable.Range(0, nFrags)
-                .OrderByDescending(i => fragments[i].RelativeIntensity)
-                .Take(maxFragments)
-                .ToArray();
+            return FragmentMath.TopIndicesByIntensity(fragments, maxFragments);
         }
 
         /// <summary>
