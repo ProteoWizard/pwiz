@@ -68,7 +68,11 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>A <c>ScoreTypes</c> id, <see cref="BlibWriter.SCORE_TYPE_UNKNOWN"/> by default.</summary>
         public int ScoreType { get; set; } = BlibWriter.SCORE_TYPE_UNKNOWN;
 
-        /// <summary>The peak m/z values as <see cref="BlibWriter.CompressMzs"/> encodes them.</summary>
+        /// <summary>
+        /// The peak m/z values as <see cref="BlibWriter.CompressMzs"/> encodes them; null for a
+        /// spectrum with no <c>RefSpectraPeaks</c> row at all, as BiblioSpec writes a
+        /// precursor-only entry (an empty array is a row of empty blobs).
+        /// </summary>
         public byte[] MzBlob { get; set; }
         /// <summary>The peak intensities as <see cref="BlibWriter.CompressIntensities"/> encodes them.</summary>
         public byte[] IntensityBlob { get; set; }
