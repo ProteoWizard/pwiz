@@ -1105,11 +1105,12 @@ function Resolve-DatasetInputs {
         $saved = Select-String -Path $exportLog -Pattern 'Saved [\d,]+ library precursors? to' | Select-Object -Last 1
         Write-Host ("  {0}" -f ($(if ($saved) { $saved.Line -replace '^\[[^\]]*\]\s*', '' } else { "exported " + (Split-Path -Leaf $blib) })))
         $library = $blib
-        # The manifest stays on the legs' command line. The .blib pairs its decoys from its own
-        # DecoyPairs table and the loader ignores the manifest for that, but the model
-        # diagnostics' paired entrapment FDP pairs each entrapment peptide with its original
-        # target, which only the manifest describes (DecoyPairs pairs targets with decoys):
-        # without it, mode 1b moves while mode 1 does not.
+        # The legs search the .blib ALONE: its DecoyPairs table carries the whole pairing design
+        # (each decoy's target, and the manifest's pairing id that pairs an entrapment peptide
+        # with its original target), so the manifest is not on their command line. The .blib
+        # must reproduce every golden the .tsv plus manifest produced, the model diagnostics'
+        # paired entrapment FDP (mode 1b) included.
+        $manifest = $null
     }
     return @{ Dir = $dir; LibDir = $libDir; Mzmls = $mzmls; Library = $library; Manifest = $manifest }
 }

@@ -61,6 +61,18 @@ namespace pwiz.Osprey.Core
         public IReadOnlyList<string> GeneNames { get; set; }
         public bool IsDecoy { get; set; }
 
+        /// <summary>
+        /// The pairing this entry belongs to, null for none: the FDRBench manifest's
+        /// <c>peptide_pair_index</c> (which starts at 0), shared by a target, its entrapment
+        /// target and both their decoys, which is what pairs an entrapment peptide with its
+        /// original target. Assigned once at load (from the manifest for a .tsv, from
+        /// <c>DecoyPairs.PairingID</c> for a .blib, a standalone index for a peptide in neither;
+        /// null for an entrapment peptide with no target), kept in the library cache and written
+        /// by the library export, so every consumer reads the entry, not a file. A generated
+        /// decoy inherits its target's.
+        /// </summary>
+        public uint? PairingId { get; set; }
+
         public LibraryEntry(uint id, string sequence, string modifiedSequence,
             byte charge, double precursorMz, double retentionTime)
         {

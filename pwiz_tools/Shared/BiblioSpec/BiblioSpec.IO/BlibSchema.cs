@@ -326,19 +326,26 @@ namespace pwiz.BiblioSpec.IO
         public const string CreateLibMetadata = "CREATE TABLE LibMetadata (key TEXT PRIMARY KEY, value TEXT)";
 
         /// <summary>
-        /// CREATE TABLE for <c>DecoyPairs</c>: a library that supplies its own decoys marks each
-        /// row decoy or target, entrapment or not, and gives a target and its decoy at one charge
-        /// one <c>PairID</c>; <c>Method</c> names how a decoy was made (<c>reverse</c>,
-        /// <c>cycle</c>) and is null on a target. Carafe's table (its SkylineIO), written by
-        /// CarafeSharp and read by Osprey, which pairs library decoys from it. Optional, as above.
+        /// CREATE TABLE for <c>DecoyPairs</c>: the decoy and entrapment design of a library that
+        /// supplies its own decoys, one row per spectrum in the design. <c>IsDecoy</c> and
+        /// <c>IsEntrapment</c> give a row's side and partition (the four kinds of an FDRBench
+        /// pairing manifest: target, p_target, decoy, p_decoy); <c>PairingID</c> is the manifest's
+        /// <c>peptide_pair_index</c>, shared by a target, its entrapment target and both their
+        /// decoys, which is what pairs an entrapment peptide with its original target;
+        /// <c>TargetRefSpectraID</c> is a decoy's target spectrum at the same charge, null on a
+        /// target or a decoy with no target; <c>Method</c> names how a decoy was made
+        /// (<c>reverse</c>, <c>cycle</c>) and is null on a target. Written by CarafeSharp and by
+        /// Osprey's library export, read by Osprey, which pairs library decoys and entrapment
+        /// from it with no manifest. Optional, as above.
         /// </summary>
         public const string CreateDecoyPairs =
             "CREATE TABLE DecoyPairs (RefSpectraID INTEGER NOT NULL PRIMARY KEY, IsDecoy INTEGER NOT NULL, " +
-            "IsEntrapment INTEGER NOT NULL, PairID INTEGER NOT NULL, Method TEXT)";
+            "IsEntrapment INTEGER NOT NULL, PairingID INTEGER NOT NULL, " +
+            "TargetRefSpectraID INTEGER REFERENCES RefSpectra(id), Method TEXT)";
 
-        /// <summary>The index a reader walking <c>DecoyPairs</c> by pair needs.</summary>
-        public const string IdxDecoyPairsPairIdName = "idx_DecoyPairs_PairID";
-        public const string CreateIdxDecoyPairsPairId = "CREATE INDEX " + IdxDecoyPairsPairIdName + " ON DecoyPairs(PairID)";
+        /// <summary>The index a reader joining a target to its decoy needs; the primary key serves the other direction.</summary>
+        public const string IdxDecoyPairsTargetName = "idx_DecoyPairs_TargetRefSpectraID";
+        public const string CreateIdxDecoyPairsTarget = "CREATE INDEX " + IdxDecoyPairsTargetName + " ON DecoyPairs(TargetRefSpectraID)";
 
         /// <summary>
         /// All CREATE TABLE statements that <c>BlibMaker.CreateTables</c> emits, in the

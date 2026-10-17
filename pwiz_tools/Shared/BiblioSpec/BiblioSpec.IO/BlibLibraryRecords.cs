@@ -100,27 +100,34 @@ namespace pwiz.BiblioSpec.IO
     }
 
     /// <summary>
-    /// One <c>DecoyPairs</c> row (<see cref="BlibSchema.CreateDecoyPairs"/>): what a library
-    /// that supplies its own decoys says about a spectrum's side and pair, as
-    /// <see cref="BlibWriter.AddDecoyPair"/> writes it.
+    /// One <c>DecoyPairs</c> row (<see cref="BlibSchema.CreateDecoyPairs"/>): a spectrum's place
+    /// in a library's decoy and entrapment design, as <see cref="BlibWriter.AddDecoyPair"/>
+    /// writes it.
     /// </summary>
     public readonly struct BlibDecoyPair
     {
         public const string TABLE = @"DecoyPairs";
 
-        public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairId, string method = null)
+        public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId = null, string method = null)
         {
             IsDecoy = isDecoy;
             IsEntrapment = isEntrapment;
-            PairId = pairId;
+            PairingId = pairingId;
+            TargetRefSpectraId = targetRefSpectraId;
             Method = method;
         }
 
         public bool IsDecoy { get; }
         /// <summary>True for an entrapment target or entrapment decoy (FDRBench's p_target / p_decoy).</summary>
         public bool IsEntrapment { get; }
-        /// <summary>Shared by exactly two rows: a target and its decoy, at one charge.</summary>
-        public int PairId { get; }
+        /// <summary>
+        /// The pairing manifest's <c>peptide_pair_index</c>: shared by a target, its entrapment
+        /// target and both their decoys, the group an entrapment peptide is paired with its
+        /// original target by.
+        /// </summary>
+        public int PairingId { get; }
+        /// <summary>A decoy's target spectrum, at the same charge; null on a target or a decoy with no target.</summary>
+        public long? TargetRefSpectraId { get; }
         /// <summary>How a decoy was made (<c>reverse</c>, <c>cycle</c>); null on a target or when unknown.</summary>
         public string Method { get; }
     }

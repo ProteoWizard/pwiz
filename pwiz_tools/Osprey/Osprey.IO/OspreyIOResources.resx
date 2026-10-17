@@ -422,4 +422,16 @@
   <data name="LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_" xml:space="preserve">
     <value>The library claims the Osprey library contract; checking it before any repair.</value>
   </data>
+  <data name="PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">
+    <value>Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_" xml:space="preserve">
+    <value>Excluded 1 entrapment peptide with no target pair and no known cause ({1}). Check the library and its pairing manifest.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_" xml:space="preserve">
+    <value>Excluded {0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_" xml:space="preserve">
+    <value>Excluded {0} entrapment peptides with no target pair and no known cause (e.g. {1}). Check the library and its pairing manifest.</value>
+  </data>
 </root>

@@ -638,7 +638,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     ? OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_first_pass_model_diagnostics___
                     : OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_second_pass_model_diagnostics___,
                 libraryById.Count));
-            var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+            var pairing = EntrapmentPairing.Build(libraryById);
 
             int nTarget = 0, nPTarget = 0;
             classByBaseId = new Dictionary<uint, EntrapmentClass>();
@@ -672,7 +672,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (nTarget > 0)
                 entrapmentRatio = (double)nPTarget / nTarget;
 
-            pairing.LogSummary(log);
         }
 
         /// <summary>

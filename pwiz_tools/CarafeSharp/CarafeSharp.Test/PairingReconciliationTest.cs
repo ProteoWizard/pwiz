@@ -165,7 +165,8 @@ namespace pwiz.CarafeSharp.Test
             var rows = DecoyPairPlanner.Plan(precursors, entries, out int skipped);
             Assert.AreEqual(0, skipped);
             CollectionAssert.AreEqual(new[] { 3, 7, 4, 6, 8, 9 }, rows.Select(r => r.RefSpectraId).ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 1, 2, 2, 3, 3 }, rows.Select(r => r.PairId).ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 1, 1, 1, 1, 1 }, rows.Select(r => r.PairingId).ToArray());
+            CollectionAssert.AreEqual(new int?[] { null, 3, null, 4, null, 8 }, rows.Select(r => r.TargetRefSpectraId).ToArray());
             CollectionAssert.AreEqual(new[] { false, false, false, false, true, true }, rows.Select(r => r.IsEntrapment).ToArray());
             CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"cycle" }, rows.Select(r => r.Method).ToArray());
 

@@ -309,7 +309,7 @@ namespace pwiz.BiblioSpec.IO
                 Execute(@"DROP INDEX IF EXISTS " + name);
             foreach (var index in EXTRA_INDEXES)
                 Execute(@"DROP INDEX IF EXISTS " + index.Name);
-            Execute(@"DROP INDEX IF EXISTS " + BlibSchema.IdxDecoyPairsPairIdName);
+            Execute(@"DROP INDEX IF EXISTS " + BlibSchema.IdxDecoyPairsTargetName);
         }
 
         /// <summary>Begins a transaction over the rows that follow; one per batch of spectra keeps the inserts fast.</summary>
@@ -430,24 +430,27 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// Adds a <c>DecoyPairs</c> row (<see cref="BlibSchema.CreateDecoyPairs"/>): spectrum
         /// <paramref name="refId"/> is a decoy or a target, of the entrapment partition or not,
-        /// and shares <paramref name="pairId"/> with the one other row of its pair (its target or
-        /// its decoy, at the same charge). <paramref name="method"/> names how a decoy was made
-        /// (<c>reverse</c>, <c>cycle</c>) and is null on a target or when unknown. The table is
-        /// created on the first call, so a library that supplies no decoys has none: a reader
-        /// takes the table's presence to mean the library pairs its own decoys.
+        /// belongs to the pairing <paramref name="pairingId"/> (the manifest's
+        /// <c>peptide_pair_index</c>, shared by a target, its entrapment target and both their
+        /// decoys), and, when it is a decoy with a target, names that target's spectrum in
+        /// <paramref name="targetRefSpectraId"/>. <paramref name="method"/> names how a decoy
+        /// was made (<c>reverse</c>, <c>cycle</c>) and is null on a target or when unknown. The
+        /// table is created on the first call, so a library that supplies no decoys has none: a
+        /// reader takes the table's presence to mean the library pairs its own decoys.
         /// </summary>
-        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairId, string method)
+        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId, string method)
         {
             if (_insertDecoyPair == null)
             {
                 if (!TableExists(@"DecoyPairs"))
                     Execute(BlibSchema.CreateDecoyPairs);
-                _insertDecoyPair = Prepare(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method) " +
-                                           @"VALUES (@id, @decoy, @entrapment, @pair, @method)",
-                    new[] { @"@id", @"@decoy", @"@entrapment", @"@pair", @"@method" },
-                    new[] { DbType.Int64, DbType.Int32, DbType.Int32, DbType.Int32, DbType.String });
+                _insertDecoyPair = Prepare(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairingID, TargetRefSpectraID, Method) " +
+                                           @"VALUES (@id, @decoy, @entrapment, @pairing, @target, @method)",
+                    new[] { @"@id", @"@decoy", @"@entrapment", @"@pairing", @"@target", @"@method" },
+                    new[] { DbType.Int64, DbType.Int32, DbType.Int32, DbType.Int32, DbType.Int64, DbType.String });
             }
-            _insertDecoyPair.Execute(refId, isDecoy ? 1 : 0, isEntrapment ? 1 : 0, pairId, (object)method ?? DBNull.Value);
+            _insertDecoyPair.Execute(refId, isDecoy ? 1 : 0, isEntrapment ? 1 : 0, pairingId,
+                (object)targetRefSpectraId ?? DBNull.Value, (object)method ?? DBNull.Value);
         }
 
         /// <summary>
@@ -473,7 +476,7 @@ namespace pwiz.BiblioSpec.IO
                     Execute(index.Statement);
             }
             if (TableExists(@"DecoyPairs"))
-                Execute(BlibSchema.CreateIdxDecoyPairsPairId);
+                Execute(BlibSchema.CreateIdxDecoyPairsTarget);
             _extensions?.CreateIndexes(_connection);
             CloseConnection();
             _file?.Commit();

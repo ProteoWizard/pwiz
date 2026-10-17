@@ -88,10 +88,10 @@ namespace pwiz.CarafeSharp.Proteome
                 group[JavaText.Trim(entry.PeptideType ?? string.Empty).ToLowerInvariant()] = entry.Sequence;
             }
             var planned = new PlannedPairs();
-            foreach (var group in groups.Values)
+            foreach (var group in groups)
             {
-                EmitSidePair(Lookup(group, TARGET), Lookup(group, DECOY), false, bySequence, planned);
-                EmitSidePair(Lookup(group, ENTRAPMENT_TARGET), Lookup(group, ENTRAPMENT_DECOY), true, bySequence, planned);
+                EmitSidePair(Lookup(group.Value, TARGET), Lookup(group.Value, DECOY), false, group.Key, bySequence, planned);
+                EmitSidePair(Lookup(group.Value, ENTRAPMENT_TARGET), Lookup(group.Value, ENTRAPMENT_DECOY), true, group.Key, bySequence, planned);
             }
             skippedPairs = planned.Skipped;
             return planned.Rows;
@@ -113,7 +113,7 @@ namespace pwiz.CarafeSharp.Proteome
             return rows;
         }
 
-        private static void EmitSidePair(string targetSequence, string decoySequence, bool entrapment,
+        private static void EmitSidePair(string targetSequence, string decoySequence, bool entrapment, int pairingId,
             Dictionary<string, List<Precursor>> bySequence, PlannedPairs planned)
         {
             if (targetSequence == null || decoySequence == null)
@@ -133,7 +133,7 @@ namespace pwiz.CarafeSharp.Proteome
                 var decoyIds = decoyBucket.Select(p => p.RefSpectraId).OrderBy(id => id).ToList();
                 int count = Math.Min(targetIds.Count, decoyIds.Count);
                 for (int i = 0; i < count; i++)
-                    planned.Add(targetIds[i], decoyIds[i], entrapment, method);
+                    planned.Add(targetIds[i], decoyIds[i], entrapment, pairingId, method);
             }
         }
 
@@ -169,7 +169,7 @@ namespace pwiz.CarafeSharp.Proteome
 
             public int Skipped { get; private set; }
 
-            public void Add(int targetId, int decoyId, bool entrapment, string method)
+            public void Add(int targetId, int decoyId, bool entrapment, int pairingId, string method)
             {
                 if (_paired.Contains(targetId) || _paired.Contains(decoyId) || targetId == decoyId)
                 {
@@ -178,9 +178,8 @@ namespace pwiz.CarafeSharp.Proteome
                 }
                 _paired.Add(targetId);
                 _paired.Add(decoyId);
-                int pairId = Rows.Count / 2 + 1;
-                Rows.Add(new DecoyPairRow(targetId, false, entrapment, pairId, null));
-                Rows.Add(new DecoyPairRow(decoyId, true, entrapment, pairId, method));
+                Rows.Add(new DecoyPairRow(targetId, false, entrapment, pairingId, null, null));
+                Rows.Add(new DecoyPairRow(decoyId, true, entrapment, pairingId, targetId, method));
             }
         }
 

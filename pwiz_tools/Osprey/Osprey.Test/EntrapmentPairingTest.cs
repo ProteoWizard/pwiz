@@ -21,8 +21,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -75,7 +77,9 @@ namespace pwiz.Osprey.Test
                 Add(lib, ref id, "ENTD4K",  target: false);  //   its manifest partner (idx 4 is a valid covered pair)
                 Add(lib, ref id, "WEIRDK",  target: false);  // UNEXPLAINED: M+WEIRDK not in the manifest
 
-                var pairing = EntrapmentPairing.Build(lib, manifestPath);
+                // The ids are assigned at load, from the manifest; the pairing then reads the entries.
+                var summary = PairingIds.Assign(lib.Values.ToList(), DecoyPairingManifest.FromTsv(manifestPath));
+                var pairing = EntrapmentPairing.Build(lib);
 
                 // Only orphans and the unexplained entrapment are excluded.
                 Assert.IsTrue(pairing.ExcludedEntrapment.Contains("ENTBK"), "orphan must be dropped");
@@ -86,9 +90,9 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(3, pairing.ExcludedEntrapment.Count);
 
                 // The two orphans are Met-clip artifacts; WEIRDK is surfaced, not silently dropped.
-                Assert.AreEqual(2, pairing.MetClipDroppedCount);
-                Assert.AreEqual(1, pairing.UnexplainedEntrapment.Count);
-                Assert.AreEqual("WEIRDK", pairing.UnexplainedEntrapment[0]);
+                Assert.AreEqual(2, summary.MetClipDropped);
+                Assert.AreEqual(1, summary.Unexplained.Count);
+                Assert.AreEqual("WEIRDK", summary.Unexplained[0]);
                 // The covered collision pair keeps its own manifest index.
                 Assert.AreEqual(4u, pairing.PairIndexBySeq["TGTDK"]);
                 Assert.AreEqual(4u, pairing.PairIndexBySeq["ENTD4K"]);
@@ -109,9 +113,11 @@ namespace pwiz.Osprey.Test
                 Assert.IsFalse(pairing.PairIndexBySeq.ContainsKey("WEIRDK"));
 
                 // No manifest -> nothing is classified as a Met-clip artifact (no reference to reconcile against).
-                var noManifest = EntrapmentPairing.Build(lib, null);
+                var noManifestSummary = PairingIds.Assign(lib.Values.ToList(), null);
+                var noManifest = EntrapmentPairing.Build(lib);
                 Assert.AreEqual(0, noManifest.ExcludedEntrapment.Count);
-                Assert.AreEqual(0, noManifest.MetClipDroppedCount);
+                Assert.AreEqual(0, noManifestSummary.MetClipDropped);
+                Assert.AreEqual(lib.Count, noManifest.PairIndexBySeq.Count);
             }
             finally
             {

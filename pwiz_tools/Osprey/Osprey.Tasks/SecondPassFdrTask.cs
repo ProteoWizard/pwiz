@@ -498,7 +498,7 @@ namespace pwiz.Osprey.Tasks
             if (benchPath != null)
             {
                 var swFdrBench = Stopwatch.StartNew();
-                var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+                var pairing = EntrapmentPairing.Build(libraryById);
                 var benchResult = FdrBenchInputWriter.WritePeptideInput(
                     benchPath, rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_Run_Writing_second_pass_FDRBench_input), libraryById, config.FdrLevel,
                     config.FdrBenchPerRun, pairing.ExcludedEntrapment);
@@ -512,7 +512,6 @@ namespace pwiz.Osprey.Tasks
                     benchPath, benchResult.Rows));
                 ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run_Wrote_the_FDRBench_pairing_manifest__from_the_searched_library__to__0____1__peptides,
                     manifestPath, manifestRows));
-                pairing.LogSummary(ctx);
                 if (benchResult.MissingLibrary > 0)
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_no_matching_library_peptide__their_peptide_and_protein_columns_were_,

@@ -115,8 +115,8 @@ public class BlibReaderTests
                 writer.AddRetentionTime(bareId, fileA, null, null, null, 0, true);
                 writer.AddMetadata("test.key", "value");
                 writer.AddMetadata("test.null", null);
-                writer.AddDecoyPair(peptideId, false, false, 1, null);
-                writer.AddDecoyPair(bareId, true, true, 1, "reverse");
+                writer.AddDecoyPair(peptideId, false, false, 7, null, null);
+                writer.AddDecoyPair(bareId, true, true, 7, peptideId, "reverse");
                 writer.CommitBatch();
                 writer.Complete();
             }
@@ -154,10 +154,14 @@ public class BlibReaderTests
             Assert.IsNotNull(pairs);
             Assert.AreEqual(2, pairs.Count);
             Assert.IsFalse(pairs[peptideId].IsDecoy);
+            Assert.IsFalse(pairs[peptideId].IsEntrapment);
+            Assert.AreEqual(7, pairs[peptideId].PairingId);
+            Assert.IsNull(pairs[peptideId].TargetRefSpectraId);
             Assert.IsNull(pairs[peptideId].Method);
             Assert.IsTrue(pairs[bareId].IsDecoy);
             Assert.IsTrue(pairs[bareId].IsEntrapment);
-            Assert.AreEqual(1, pairs[bareId].PairId);
+            Assert.AreEqual(7, pairs[bareId].PairingId);
+            Assert.AreEqual(peptideId, pairs[bareId].TargetRefSpectraId);
             Assert.AreEqual("reverse", pairs[bareId].Method);
 
             var proteins = reader.ReadProteins();

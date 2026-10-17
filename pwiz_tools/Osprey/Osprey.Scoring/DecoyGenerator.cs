@@ -519,6 +519,7 @@ namespace pwiz.Osprey.Scoring
                 target.RetentionTime);
             decoy.RtCalibrated = target.RtCalibrated;
             decoy.IsDecoy = true;
+            decoy.PairingId = target.PairingId;
             decoy.Modifications = RemapModifications(target.Modifications, positionMapping);
             decoy.Fragments = omitFragments
                 ? Array.Empty<LibraryFragment>()

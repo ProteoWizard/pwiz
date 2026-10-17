@@ -158,11 +158,12 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Adds a <c>DecoyPairs</c> row (see <see cref="BlibWriter.AddDecoyPair"/>): the library
-        /// supplies this spectrum as a decoy or a target of pair <paramref name="pairId"/>.
+        /// supplies this spectrum as a decoy or a target of the pairing
+        /// <paramref name="pairingId"/>, a decoy naming its target spectrum.
         /// </summary>
-        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairId)
+        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId, string method = null)
         {
-            _writer.AddDecoyPair(refId, isDecoy, isEntrapment, pairId, null);
+            _writer.AddDecoyPair(refId, isDecoy, isEntrapment, pairingId, targetRefSpectraId, method);
         }
 
         /// <summary>Adds or replaces a <c>LibMetadata</c> row; <paramref name="key"/> is one of the <c>KEY_</c> constants or a shared key.</summary>

@@ -1062,10 +1062,10 @@ namespace pwiz.Osprey.Tasks
 
             var libraryById = ctx.Get<LibraryById>().Value;
             var swFdrBench = Stopwatch.StartNew();
-            // Reconcile the library against the external manifest: reconstruct the
-            // extras' pairing and drop unmatched entrapment (Met-clip artifacts) so the
-            // TSV and the emitted manifest stay consistent and stock FDRBench works.
-            var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+            // The library's pairing, assigned at load: the extras' reconstructed pairing and
+            // the unmatched entrapment (Met-clip artifacts) to drop, so the TSV and the emitted
+            // manifest stay consistent and stock FDRBench works.
+            var pairing = EntrapmentPairing.Build(libraryById);
             FdrBenchInputWriter.Result benchResult;
             using (var sink = new FdrBenchInputWriter.PeptideInputSink(
                        benchPath, libraryById, config.FdrLevel, config.FdrBenchPerRun,
@@ -1083,7 +1083,6 @@ namespace pwiz.Osprey.Tasks
                 benchPath, benchResult.Rows));
             ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_EmitFdrBenchPass1_Wrote_the_FDRBench_pairing_manifest__from_the_searched_library__to__0____1__peptides,
                 manifestPath, manifestRows));
-            pairing.LogSummary(ctx);
             if (benchResult.MissingLibrary > 0)
             {
                 ctx.LogInfo(string.Format(

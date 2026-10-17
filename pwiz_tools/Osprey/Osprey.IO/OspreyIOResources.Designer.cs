@@ -576,6 +576,42 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded 1 entrapment peptide with no target pair and no known cause ({1}). Check the library and its pairing manifest..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} entrapment peptides with no target pair and no known cause (e.g. {1}). Check the library and its pairing manifest..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} does not record the search settings it was scored with, so it cannot be reused. Score the file again ({1})..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_ {

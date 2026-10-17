@@ -122,6 +122,7 @@ namespace pwiz.Osprey.Test
                 Compare(lines, entry, @"RetentionTime", ea.RetentionTime, eb.RetentionTime);
                 Compare(lines, entry, @"RtCalibrated", ea.RtCalibrated, eb.RtCalibrated);
                 Compare(lines, entry, @"IsDecoy", ea.IsDecoy, eb.IsDecoy);
+                Compare(lines, entry, @"PairingId", ea.PairingId, eb.PairingId);
                 CompareLists(lines, entry, @"Modifications", ea.Modifications, eb.Modifications,
                     m => string.Format(CultureInfo.InvariantCulture, @"{0}@{1} {2:R} {3} {4}", m.Name, m.Position, m.MassDelta, m.UnimodId, string.Empty).TrimEnd());
                 CompareLists(lines, entry, @"Fragments", ea.Fragments, eb.Fragments, FormatFragment);

@@ -139,25 +139,33 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static void WriteDecoyPairs(OspreyBlibWriter writer, IReadOnlyList<LibraryEntry> entries, long[] refIds)
         {
+            // The table describes a library that supplies its decoys; one of generated decoys
+            // (none here: the export writes the loaded library) or of none writes no table.
+            if (!entries.Any(e => e.IsDecoy))
+                return;
             var targetIndexById = new Dictionary<uint, int>();
             for (int i = 0; i < entries.Count; i++)
             {
                 if (!entries[i].IsDecoy)
                     targetIndexById[entries[i].Id] = i;
             }
-            int pairId = 0;
+            var namedTargets = new HashSet<uint>();
+            foreach (var decoy in entries)
+            {
+                if (decoy.IsDecoy && (decoy.Id & LibraryEntry.DECOY_ID_BIT) != 0)
+                    namedTargets.Add(decoy.Id & ~LibraryEntry.DECOY_ID_BIT);
+            }
             for (int i = 0; i < entries.Count; i++)
             {
-                var decoy = entries[i];
-                if (!decoy.IsDecoy || (decoy.Id & LibraryEntry.DECOY_ID_BIT) == 0 ||
-                    !targetIndexById.TryGetValue(decoy.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex))
-                {
+                var entry = entries[i];
+                // A target outside any pairing and with no decoy (an excluded entrapment orphan)
+                // has no row; a decoy always does, naming its target when it has one.
+                if (!entry.IsDecoy && !entry.PairingId.HasValue && !namedTargets.Contains(entry.Id))
                     continue;
-                }
-                pairId++;
-                bool entrapment = IsEntrapment(entries[targetIndex]);
-                writer.AddDecoyPair(refIds[targetIndex], false, entrapment, pairId);
-                writer.AddDecoyPair(refIds[i], true, entrapment, pairId);
+                long? targetRefId = entry.IsDecoy && (entry.Id & LibraryEntry.DECOY_ID_BIT) != 0 &&
+                                    targetIndexById.TryGetValue(entry.Id & ~LibraryEntry.DECOY_ID_BIT, out int targetIndex)
+                    ? refIds[targetIndex] : null;
+                writer.AddDecoyPair(refIds[i], entry.IsDecoy, IsEntrapment(entry), (int)(entry.PairingId ?? 0), targetRefId);
             }
         }
 

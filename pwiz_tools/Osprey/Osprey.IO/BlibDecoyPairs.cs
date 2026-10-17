@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
 using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
@@ -101,13 +100,14 @@ namespace pwiz.Osprey.IO
         /// the summary.
         /// </summary>
         public static int Pair(IList<LibraryEntry> library, IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> pairs,
-            PairingState state, out int newlyMarked)
+            IReadOnlyDictionary<long, LibraryEntry> entriesByRefSpectraId, PairingState state, out int newlyMarked)
         {
             newlyMarked = 0;
-            var groups = new Dictionary<int, List<int>>();
+            var indexByEntry = new Dictionary<LibraryEntry, int>(ReferenceEqualityComparer.Instance);
             for (int idx = 0; idx < library.Count; idx++)
             {
                 var entry = library[idx];
+                indexByEntry[entry] = idx;
                 if (!pairs.TryGetValue(entry, out var pair))
                     continue;
                 if (entry.IsDecoy != pair.IsDecoy)
@@ -116,22 +116,20 @@ namespace pwiz.Osprey.IO
                     entry.Id = pair.IsDecoy ? entry.Id | LibraryEntry.DECOY_ID_BIT : entry.Id & ~LibraryEntry.DECOY_ID_BIT;
                     newlyMarked++;
                 }
-                if (!groups.TryGetValue(pair.PairId, out var group))
-                    groups.Add(pair.PairId, group = new List<int>(2));
-                group.Add(idx);
+                entry.PairingId = (uint)pair.PairingId;
             }
             int paired = 0;
-            // Pair-id order, so the ids a library gets do not depend on dictionary order.
-            foreach (int pairId in groups.Keys.OrderBy(id => id))
+            // Library order, so the ids a library gets do not depend on dictionary order.
+            for (int decoyIdx = 0; decoyIdx < library.Count; decoyIdx++)
             {
-                var group = groups[pairId];
-                if (group.Count != 2)
-                    continue;
-                int targetIdx = library[group[0]].IsDecoy ? group[1] : group[0];
-                int decoyIdx = library[group[0]].IsDecoy ? group[0] : group[1];
-                var target = library[targetIdx];
                 var decoy = library[decoyIdx];
-                if (target.IsDecoy || !decoy.IsDecoy || target.Charge != decoy.Charge ||
+                if (!pairs.TryGetValue(decoy, out var pair) || !pair.IsDecoy || !pair.TargetRefSpectraId.HasValue ||
+                    !entriesByRefSpectraId.TryGetValue(pair.TargetRefSpectraId.Value, out var target) ||
+                    !indexByEntry.TryGetValue(target, out int targetIdx))
+                {
+                    continue;
+                }
+                if (target.IsDecoy || target.Charge != decoy.Charge ||
                     state.ClaimedTargets.Contains(targetIdx) || state.PairedDecoys.Contains(decoyIdx))
                 {
                     continue;
@@ -142,6 +140,22 @@ namespace pwiz.Osprey.IO
                 paired++;
             }
             return paired;
+        }
+
+        /// <summary>
+        /// The entries of <paramref name="entries"/> by RefSpectra id, through
+        /// <paramref name="refSpectraIds"/> (the loader's list, in the entries' order): what a
+        /// row's <see cref="BlibDecoyPair.TargetRefSpectraId"/> names.
+        /// </summary>
+        public static IReadOnlyDictionary<long, LibraryEntry> ByRefSpectraId(IReadOnlyList<LibraryEntry> entries,
+            IReadOnlyList<long> refSpectraIds)
+        {
+            if (entries.Count != refSpectraIds.Count)
+                throw new ArgumentException($@"{entries.Count} entries but {refSpectraIds.Count} RefSpectra ids: not the loader's list");
+            var byId = new Dictionary<long, LibraryEntry>(entries.Count);
+            for (int i = 0; i < entries.Count; i++)
+                byId[refSpectraIds[i]] = entries[i];
+            return byId;
         }
     }
 }

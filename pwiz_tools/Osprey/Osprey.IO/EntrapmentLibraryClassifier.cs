@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using pwiz.CarafeSharp.Contracts;
 
-namespace pwiz.Osprey.Tasks
+namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Classifies a searched library entry as target / entrapment / decoy /
@@ -42,7 +42,7 @@ namespace pwiz.Osprey.Tasks
     /// the library for protein parsimony, so entrapment-to-target PAIRING is not
     /// recoverable here and still comes from the manifest; the CLASS is.)
     /// </summary>
-    internal static class EntrapmentLibraryClassifier
+    public static class EntrapmentLibraryClassifier
     {
         /// <summary>FDRBench default entrapment label embedded in entrapment protein accessions.</summary>
         private const string EntrapmentMarker = @"_p_target";
