@@ -40,11 +40,27 @@ namespace pwiz.Osprey.IO
     public class DiannTsvLoader
     {
         /// <summary>
-        /// The reader's version, in the <c>.libcache</c> composition hash. 2: an invalid value in
-        /// any column the library has (or a modification with no known mass) refuses the whole
-        /// library, where version 1 read it as a default or dropped it.
+        /// The reader's version, in the <c>.libcache</c> composition hash. 3: fragments in m/z
+        /// order and typed from m/z within the search's fragment tolerance, as a .blib's are, the
+        /// stated types a report only, and residue masses from the shared chemistry; version 2
+        /// kept the row order and the stated types. 2: an invalid value in any column the library
+        /// has (or a modification with no known mass) refuses the whole library, where version 1
+        /// read it as a default or dropped it.
         /// </summary>
-        public const int READER_VERSION = 2;
+        public const int READER_VERSION = 3;
+
+        /// <summary>
+        /// The <c>.libcache</c> composition term of a .tsv read by this reader: its version and
+        /// the tolerance it types within, which the cached fragment types carry, as
+        /// <see cref="BlibLoader.CacheTerm"/> does for a .blib.
+        /// </summary>
+        public static string CacheTerm(FragmentToleranceConfig fragmentTolerance)
+        {
+            // ReSharper disable LocalizableElement
+            return string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0},{1},{2}\n",
+                READER_VERSION, fragmentTolerance.Tolerance, fragmentTolerance.Unit);
+            // ReSharper restore LocalizableElement
+        }
 
         private const int DEFAULT_MIN_FRAGMENTS = 3;
 
@@ -240,9 +256,12 @@ namespace pwiz.Osprey.IO
         private static void ApplyTyping(LibraryEntry entry, LibraryFragment[] fragments, FragmentToleranceConfig tolerance,
             FragmentTypeCheck check)
         {
-            if (fragments.All(f => f.Annotation.IonType == IonType.Unknown))
+            if (fragments.Length == 0)
                 return;
-            var candidates = new FragmentCandidates(entry.Sequence, entry.Modifications, entry.Charge);
+            // Typed from m/z whether or not the library states types; the candidates are only
+            // for the comparison, and a library stating nothing costs no comparison.
+            bool anyStated = fragments.Any(f => f.Annotation.IonType != IonType.Unknown);
+            var candidates = anyStated ? new FragmentCandidates(entry.Sequence, entry.Modifications, entry.Charge) : null;
             var ospreyChoice = FragmentTyping.Compute(entry.Sequence, entry.Modifications, entry.Charge,
                 fragments, tolerance);
             for (int i = 0; i < fragments.Length; i++)

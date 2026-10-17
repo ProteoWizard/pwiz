@@ -822,12 +822,13 @@ namespace pwiz.Osprey.IO
             // A cache is only as validated as the reader that wrote it: a DIA-NN TSV cached
             // before the reader refused invalid lines is re-read once, so a bad library is
             // reported instead of served from its cache. A valid library caches the same bytes.
+            // Every library's peaks, a .tsv's as a .blib's, are typed from m/z within the
+            // search's fragment tolerance, and the cache holds the types, so a different
+            // tolerance is a different cache.
             if (source.Format == LibraryFormat.DiannTsv)
-                return string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION);
+                return DiannTsvLoader.CacheTerm(config.FragmentTolerance);
             if (source.Format != LibraryFormat.Blib)
                 return string.Empty;
-            // Every blib's peaks are typed from m/z within the search's fragment tolerance, and
-            // the cache holds the types, so a different tolerance is a different cache.
             return BlibLoader.CacheTerm(config.FragmentTolerance);
         }
 

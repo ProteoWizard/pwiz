@@ -186,14 +186,17 @@ namespace pwiz.BiblioSpec.IO
         {
             if (!HasTable(BlibDecoyPair.TABLE))
                 return null;
+            // Method came later than the four columns Osprey first read; a table without it reads.
+            bool hasMethod = BlibSqlite.ColumnNames(_connection, BlibDecoyPair.TABLE).Contains(@"Method");
             var pairs = new Dictionary<long, BlibDecoyPair>();
-            using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID, Method FROM DecoyPairs", _connection))
+            using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID" +
+                                                   (hasMethod ? @", Method" : string.Empty) + @" FROM DecoyPairs", _connection))
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
                     pairs[reader.GetInt64(0)] = new BlibDecoyPair(reader.GetInt64(1) != 0, reader.GetInt64(2) != 0,
-                        (int)reader.GetInt64(3), GetString(reader, 4));
+                        (int)reader.GetInt64(3), hasMethod ? GetString(reader, 4) : null);
                 }
             }
             return pairs;
