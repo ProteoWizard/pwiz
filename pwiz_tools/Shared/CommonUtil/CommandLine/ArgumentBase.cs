@@ -92,6 +92,14 @@ namespace pwiz.Common.CommandLine
         /// e.g. the invariant names for an argument whose values are shown localized.
         /// </summary>
         public Func<string[]> AcceptedValues { get; set; }
+        /// <summary>
+        /// A test for values accepted beyond <see cref="Values"/> and <see cref="AcceptedValues"/>
+        /// that no list can name, e.g. a culture accepted because its parent is known. An argument
+        /// that checks its value when parsed (<see cref="HasValueChecking"/>) should test with the
+        /// same rule here, so a token built with <c>+</c> is refused exactly when the parser would
+        /// refuse it.
+        /// </summary>
+        public Func<string, bool> AcceptsValue { get; set; }
 
         /// <summary>
         /// The argument as typed and as help shows it: the installed grammar's
@@ -148,15 +156,18 @@ namespace pwiz.Common.CommandLine
 
         /// <summary>
         /// True if the value is one of <see cref="Values"/> or <see cref="AcceptedValues"/>, ignoring case,
-        /// or if the argument lists neither and so has nothing to check the value against.
+        /// or passes <see cref="AcceptsValue"/>, or if the argument has none of them and so nothing to
+        /// check the value against.
         /// </summary>
         public bool IsValidValue(string value)
         {
-            if (Values == null && AcceptedValues == null)
+            if (Values == null && AcceptedValues == null && AcceptsValue == null)
                 return true;
             if (Values != null && Values.Any(v => string.Equals(v, value, StringComparison.CurrentCultureIgnoreCase)))
                 return true;
-            return AcceptedValues != null && AcceptedValues().Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase));
+            if (AcceptedValues != null && AcceptedValues().Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase)))
+                return true;
+            return AcceptsValue != null && AcceptsValue(value);
         }
 
         /// <summary>

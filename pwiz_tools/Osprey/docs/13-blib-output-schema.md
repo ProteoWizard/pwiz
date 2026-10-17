@@ -2,7 +2,7 @@
 
 > Pipeline stage: Output (Stage 7). C# port of Rust docs/08-blib-output-schema.md. Corresponds to Rust osprey BiblioSpec (.blib) output.
 
-Osprey emits its final results as a **BiblioSpec (`.blib`)** SQLite database — the spectral-library format Skyline consumes for chromatogram extraction, ID lines, and quantification. The `.blib` format is the lab's own file type, and no project of ours writes it from scratch: Osprey writes it through the one managed writer in `pwiz_tools/Shared/BiblioSpec/BiblioSpec.IO` (`pwiz.BiblioSpec.IO.BlibWriter`, `System.Data.SQLite`), which CarafeSharp's predicted libraries go through as well, so a library either tool writes is the same database for every reader. The writer follows the schema (`BlibSchema`, one definition with its version history) and the byte conventions of Skyline's own `BlibData`/`BlibDb` writer closely enough to be byte-identical to the Rust output on the reference datasets.
+Osprey emits its final results as a **BiblioSpec (`.blib`)** SQLite database — the spectral-library format Skyline consumes for chromatogram extraction, ID lines, and quantification. The `.blib` format is the lab's own file type, and no project of ours writes it from scratch: Osprey writes it through the one managed writer in `pwiz_tools/Shared/BiblioSpec/BiblioSpec.IO` (`pwiz.BiblioSpec.IO.BlibWriter`, `System.Data.SQLite`), which CarafeSharp's predicted libraries and BiblioSpec's own BlibBuild and BlibFilter (the C# port's `BlibMaker`) go through as well, so a library any of them writes is the same database for every reader. The writer follows the schema (`BlibSchema`, one definition with its version history) and the byte conventions of Skyline's own `BlibData`/`BlibDb` writer closely enough to be byte-identical to the Rust output on the reference datasets.
 
 Three layers are involved:
 
@@ -25,7 +25,8 @@ Standard BiblioSpec tables (BlibSchema, created by BlibWriter.CreateSchema)
   Modifications, Proteins, RefSpectraProteins, RetentionTimes
 
 Optional tables (BlibSchema.CreateLibMetadata / CreateDecoyPairs)
-  LibMetadata (key TEXT PRIMARY KEY, value TEXT)   - in every library BlibWriter writes
+  LibMetadata (key TEXT PRIMARY KEY, value TEXT)   - in every library a tool of ours writes
+                                                     (each records its command line in it)
   DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method)
                                                    - in a library that supplies its decoys
 ```
