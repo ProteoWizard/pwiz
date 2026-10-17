@@ -13,7 +13,7 @@
 [CmdletBinding()]
 param(
     [string]$CppMsConvert      = 'C:\dev\pwiz-cpp\build-nt-x86\msvc-release-x86_64\msconvert.exe',
-    [string]$SharpMsConvert    = (Join-Path $PSScriptRoot '..\pwiz_tools\Commandline\MsConvert\src\bin\Release\net10.0\msconvert-sharp.exe'),
+    [string]$SharpMsConvert    = (Join-Path $PSScriptRoot '..\pwiz_tools\Commandline\MsConvert\src\bin\x64\Release\net10.0\msconvert-sharp.exe'),
     [string]$MsDiff            = 'C:\dev\pwiz-cpp\build-nt-x86\msvc-release-x86_64\msdiff.exe',
     [string]$UrlsFile          = (Join-Path $PSScriptRoot '..\pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Test.data\urls.txt'),
     [string]$OutDir            = (Join-Path $env:TEMP "unifi-bench-$([DateTime]::Now.ToString('yyyyMMdd-HHmmss'))"),
