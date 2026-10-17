@@ -408,6 +408,16 @@ namespace pwiz.Osprey.IO {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The library&apos;s DecoyPairs table carries its pairing design; the pairing manifest {0} is not read..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the" +
+                        "_pairing_manifest__0__is_not_read_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Unsupported library format: {0}.
         /// </summary>
         public static string LibraryLoader_Load_Unsupported_library_format___0_ {
@@ -545,16 +555,6 @@ namespace pwiz.Osprey.IO {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to The library pairs its own decoys from DecoyPairs; the pairing manifest {0} serves entrapment pairing only..
-        /// </summary>
-        public static string LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_DecoyPairs__the_pairing_manifest__0__serves_entrapment_pairing_only_ {
-            get {
-                return ResourceManager.GetString("LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_Decoy" +
-                        "Pairs__the_pairing_manifest__0__serves_entrapment_pairing_only_", resourceCulture);
-            }
-        }
-
         /// <summary>
         ///   Looks up a localized string similar to The pairing manifest marked {0:N0} more library precursors as decoys (their protein accessions have no decoy prefix).
         /// </summary>

@@ -319,24 +319,25 @@ namespace pwiz.Osprey.Test
         private static void AssertLibraryTextAndDecoys(string path)
         {
             var fragment = new[] { new LibraryFragment { Mz = 300.0, RelativeIntensity = 1f } };
-            var unresolved = new LibraryEntry(1, @"PEPTIDEK", @"_PEPTIDEK(UniMod:259)_", 2, 470.0, 10.0) { Fragments = fragment };
+            var unresolved = new LibraryEntry(1, @"PEPTIDEK", @"_PEPTIDEK(UniMod:259)_", 2, 470.0, 10.0) { Fragments = fragment, PairingId = 1 };
             var plain = new LibraryEntry(2, @"PEPTIDEK", @"_PEPTIDEK_", 2, 466.0, 10.0) { Fragments = fragment };
             var oneDecimal = new LibraryEntry(3, @"LIFAGKQLEDGR", @"LIFAGK[+114.0]QLEDGR", 2, 717.9, 20.0)
             {
                 Modifications = new[] { new Modification { Position = 5, MassDelta = 114.0 } },
-                Fragments = fragment
+                Fragments = fragment, PairingId = 2
             };
             var columnDecoy = new LibraryEntry(4, @"KEDITPEP", @"KEDITPEP", 2, 464.7, 15.0)
             {
-                Fragments = fragment, ProteinIds = new[] { @"P12345" }, IsDecoy = true
+                Fragments = fragment, ProteinIds = new[] { @"P12345" }, IsDecoy = true, PairingId = 3
             };
             var prefixedDecoy = new LibraryEntry(5, @"KEDITPEPR", @"KEDITPEPR", 2, 542.8, 15.0)
             {
-                Fragments = fragment, ProteinIds = new[] { @"rev_P12345" }, IsDecoy = true
+                Fragments = fragment, ProteinIds = new[] { @"rev_P12345" }, IsDecoy = true, PairingId = 4
             };
-            // A decoy the load paired with plain (its id is plain's with the decoy bit) names it in
-            // its DecoyPairs row, and plain gets a row for being named; the two unpaired decoys
-            // get rows naming no target. Only plain and its decoy belong to a pairing.
+            // A library with decoys writes a DecoyPairs row for every entry, each with its own
+            // pairing id: a decoy the load paired with plain (its id is plain's with the decoy
+            // bit) names it, the two unpaired decoys name no target, and plain and its decoy
+            // share a pairing id.
             plain.PairingId = 7;
             var pairedDecoy = new LibraryEntry(2 | LibraryEntry.DECOY_ID_BIT, @"KEDITPEPK", @"KEDITPEPK", 2, 466.0, 10.0)
             {
@@ -349,8 +350,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'DECOY_P12345'"));
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'rev_P12345'"));
             Assert.AreEqual(0, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'P12345'"));
-            Assert.AreEqual(4, BlibComparer.CountWhere(path, @"DecoyPairs", @"IsEntrapment = 0"));
+            Assert.AreEqual(6, BlibComparer.CountWhere(path, @"DecoyPairs", @"IsEntrapment = 0"));
             Assert.AreEqual(2, BlibComparer.CountWhere(path, @"DecoyPairs", @"PairingID = 7"));
+            Assert.AreEqual(4, BlibComparer.CountWhere(path, @"DecoyPairs", @"PairingID IN (1, 2, 3, 4)"));
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID",
                 @"r.peptideModSeq = 'PEPTIDEK' AND d.IsDecoy = 0 AND d.PairingID = 7 AND d.TargetRefSpectraID IS NULL"));
             Assert.AreEqual(1, BlibComparer.CountWhere(path, @"DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID JOIN RefSpectra t ON t.id = d.TargetRefSpectraID",

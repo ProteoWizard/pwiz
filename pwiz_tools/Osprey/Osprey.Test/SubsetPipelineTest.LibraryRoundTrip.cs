@@ -26,6 +26,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -35,7 +36,10 @@ namespace pwiz.Osprey.Test
         /// A library is the same object in memory whichever file it came from: the subset .tsv
         /// loaded directly, and loaded back from its .blib export, are compared entry by entry
         /// and field by field - identity, modifications, every fragment's m/z, intensity and
-        /// annotation, proteins - and every difference is listed. The regression's
+        /// annotation, proteins - and every difference is listed. The library-decoy subset goes
+        /// through <see cref="LibraryLoader"/> as well: the .tsv with its pairing manifest,
+        /// and its export loaded with no manifest at all, must agree on every entry's pairing id
+        /// and on the entrapment pairing built from them. The regression's
         /// <c>-LibraryAsBlib</c> legs prove the same thing at the search's output, forty
         /// minutes later; this is the seconds-long form of that gate, and the one to run first
         /// when a loader changes.
@@ -46,6 +50,7 @@ namespace pwiz.Osprey.Test
             var report = new List<string>();
             report.AddRange(RoundTripDifferences(_dataDir, LIBRARY_FILE, FragmentToleranceConfig.UnitResolution(0.5)));
             report.AddRange(RoundTripDifferences(ExtractAstral(), ASTRAL_LIBRARY_FILE, FragmentToleranceConfig.Hram(10)));
+            report.AddRange(LoaderRoundTripDifferences());
             // The same library with its modifications printed as masses, as DIA-NN prints them:
             // identified by residue and mass, so the entries read the same as from the UniMod text.
             var twoMasses = DiannTsvLoader.ParseModifications(@"KDC[+57.021464]PWPC[+57.021464]PK");
@@ -84,14 +89,74 @@ namespace pwiz.Osprey.Test
             string blib = Path.Combine(_testDir, Path.GetFileNameWithoutExtension(libraryFile) + @".blib");
             LibraryBlibWriter.Write(blib, fromTsv, Path.GetFileName(tsv));
             var fromBlib = new BlibLoader(tolerance).Load(blib);
+            return DescribeDifferences(libraryFile, LibraryDifferences(fromTsv, fromBlib), fromTsv.Count);
+        }
+
+        /// <summary>
+        /// The differences between the library-decoy subset loaded by <see cref="LibraryLoader"/>
+        /// from its .tsv with the pairing manifest, and loaded by it from the .blib export of
+        /// that library ALONE: every entry's fields, its pairing id among them, and the
+        /// entrapment pairing <see cref="EntrapmentPairing.Build"/> reads from the ids. Empty
+        /// when the .blib carries the whole design the manifest gave.
+        /// </summary>
+        private List<string> LoaderRoundTripDifferences()
+        {
+            var tolerance = FragmentToleranceConfig.UnitResolution(0.5);
+            string tsv = Path.Combine(_dataDir, LIBDECOY_FILE);
+            var fromTsv = LibraryLoader.Load(new OspreyConfig
+            {
+                LibrarySource = LibrarySource.FromPath(tsv),
+                FragmentTolerance = tolerance,
+                DecoysInLibrary = true,
+                DecoyPairingManifestPath = Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+            }, null, null);
+            string blib = Path.Combine(_testDir, Path.GetFileNameWithoutExtension(LIBDECOY_FILE) + @".blib");
+            LibraryBlibWriter.Write(blib, fromTsv, Path.GetFileName(tsv));
+            var fromBlib = LibraryLoader.Load(new OspreyConfig
+            {
+                LibrarySource = LibrarySource.FromPath(blib),
+                FragmentTolerance = tolerance,
+                DecoysInLibrary = true,
+            }, null, null);
 
             var differences = LibraryDifferences(fromTsv, fromBlib);
+            var pairingTsv = EntrapmentPairing.Build(fromTsv.ToDictionary(e => e.Id));
+            var pairingBlib = EntrapmentPairing.Build(fromBlib.ToDictionary(e => e.Id));
+            // The subset must exercise what is compared: entrapment peptides paired with targets.
+            int pairedGroups = pairingTsv.PairIndexBySeq.GroupBy(kv => kv.Value).Count(g => g.Count() > 1);
+            if (pairedGroups == 0)
+                differences.Add(@"pairing: the .tsv pairs no peptide with another, so the subset proves nothing about entrapment pairing");
+            foreach (var kv in pairingTsv.PairIndexBySeq)
+            {
+                if (!pairingBlib.PairIndexBySeq.TryGetValue(kv.Key, out uint idx))
+                    differences.Add(string.Format(@"{0}: pairing: {1} vs none", kv.Key, kv.Value));
+                else if (idx != kv.Value)
+                    differences.Add(string.Format(@"{0}: pairing: {1} vs {2}", kv.Key, kv.Value, idx));
+            }
+            foreach (var kv in pairingBlib.PairIndexBySeq)
+            {
+                if (!pairingTsv.PairIndexBySeq.ContainsKey(kv.Key))
+                    differences.Add(string.Format(@"{0}: pairing: none vs {1}", kv.Key, kv.Value));
+            }
+            foreach (string seq in pairingTsv.ExcludedEntrapment.Except(pairingBlib.ExcludedEntrapment))
+                differences.Add(string.Format(@"{0}: excluded: true vs false", seq));
+            foreach (string seq in pairingBlib.ExcludedEntrapment.Except(pairingTsv.ExcludedEntrapment))
+                differences.Add(string.Format(@"{0}: excluded: false vs true", seq));
+            return DescribeDifferences(LIBDECOY_FILE + @" (LibraryLoader, no manifest for the .blib)", differences, fromTsv.Count);
+        }
+
+        /// <summary>
+        /// <paramref name="differences"/> as a report: a count per field, then the first forty
+        /// lines. Empty when there are none.
+        /// </summary>
+        private static List<string> DescribeDifferences(string libraryFile, List<string> differences, int entryCount)
+        {
             if (differences.Count == 0)
                 return differences;
             var report = new List<string>
             {
                 string.Format(@"{0}: {1} difference(s) between the .tsv and its .blib ({2} entries)", libraryFile,
-                    differences.Count, fromTsv.Count)
+                    differences.Count, entryCount)
             };
             report.AddRange(differences.GroupBy(line => line.Split(':')[1].Trim().Split('[')[0])
                 .Select(group => string.Format(@"  {0}: {1}", group.Key, group.Count())));

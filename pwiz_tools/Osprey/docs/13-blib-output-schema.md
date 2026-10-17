@@ -32,14 +32,16 @@ Optional tables (BlibSchema.CreateLibMetadata / CreateDecoyPairs)
 ```
 
 `DecoyPairs` (written by CarafeSharp and by `--export-library`) is the library's decoy and
-entrapment design, one row per spectrum in it: `IsDecoy` and `IsEntrapment` are the row's side
+entrapment design, one row per spectrum of a library that has one (supplied decoys, or
+entrapment peptides): `IsDecoy` and `IsEntrapment` are the row's side
 and partition (the four kinds of an FDRBench pairing manifest), `PairingID` is the manifest's
 `peptide_pair_index` - shared by a target, its entrapment target and both their decoys, which is
 what pairs an entrapment peptide with its original target - `TargetRefSpectraID` is a decoy's
 target spectrum at the same charge (a foreign key to `RefSpectra.id`, indexed), and `Method` how
 a decoy was made. A blib searched with its own decoys must carry it, and Osprey pairs decoys and
-entrapment from it alone, with no manifest ([01](01-decoy-generation.md) step 2,
-[24](24-library-contract.md)). The search output blib has none: its decoys are not reported.
+entrapment from it alone, with no manifest, reading it on every load that finds it
+([01](01-decoy-generation.md) step 2, [24](24-library-contract.md)). The search output blib has
+none: its decoys are not reported.
 
 `LibMetadata` holds single-row values about the library as a whole (`BiblioSpec.IO/BlibMetadata.cs`). Keys are namespaced by the writing tool - Osprey's `osprey.version`, `osprey.command`, `osprey.search_mode`, `osprey.run_fdr`, `osprey.experiment_fdr`, `osprey.library_source` and the validity stamp `osprey.validity`; CarafeSharp's `carafe.command` - with a small unprefixed set every tool honors (`library_contract`, see [24](24-library-contract.md)). Every tool that makes or transforms a library records its full command line under `<tool>.command`, so a library carries how it was made. A reader tests for the table, never for `LibInfo.minorVersion`. Until 2026-10-15 the table was Osprey's own `OspreyMetadata` with unprefixed keys; `BlibMetadata.Read` falls back to that name for one release so a search started under it still resumes.
 

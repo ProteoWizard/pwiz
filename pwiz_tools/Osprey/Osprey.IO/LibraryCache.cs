@@ -69,8 +69,11 @@ namespace pwiz.Osprey.IO
         /// <para>v5: each entry carries its <see cref="LibraryEntry.PairingId"/> (the pairing
         /// manifest's group, assigned at load), so a cached library pairs entrapment with no
         /// manifest, as a .blib's <c>DecoyPairs</c> does.</para>
+        ///
+        /// <para>v6: every entry has a pairing id, written as the plain uint; v5 wrote a
+        /// has-value byte before it, for the entrapment orphans that then had none.</para>
         /// </remarks>
-        private const uint VERSION = 5;
+        private const uint VERSION = 6;
 
         /// <summary>
         /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
@@ -126,8 +129,7 @@ namespace pwiz.Osprey.IO
                         w.Write(entry.RetentionTime);
                         w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
                         w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
-                        w.Write(entry.PairingId.HasValue ? (byte)1 : (byte)0);
-                        w.Write(entry.PairingId ?? 0u);
+                        w.Write(entry.PairingId);
 
                         // Modifications
                         w.Write((uint)entry.Modifications.Count);
@@ -296,7 +298,6 @@ namespace pwiz.Osprey.IO
                         double retentionTime = r.ReadDouble();
                         bool rtCalibrated = r.ReadByte() != 0;
                         bool isDecoy = r.ReadByte() != 0;
-                        bool hasPairingId = r.ReadByte() != 0;
                         uint pairingId = r.ReadUInt32();
 
                         // Modifications (share one empty array when none).
@@ -409,7 +410,7 @@ namespace pwiz.Osprey.IO
                             charge, precursorMz, retentionTime);
                         entry.RtCalibrated = rtCalibrated;
                         entry.IsDecoy = isDecoy;
-                        entry.PairingId = hasPairingId ? pairingId : null;
+                        entry.PairingId = pairingId;
                         entry.Modifications = modifications;
                         entry.Fragments = fragments;
                         // A spectrum skipped by the retain set is RELEASED, not empty. The two

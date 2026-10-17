@@ -143,9 +143,11 @@ decoys, read into `LibraryEntry.PairingId`, so a blib's entrapment pairing - the
 diagnostics' paired FDP and the FDRBench output - comes from the library too, and a blib is
 searched with no manifest at all. The pairing manifest and the amino-acid composition fallback
 stay for TSV libraries, which have no table to carry their pairing; a TSV's pairing ids are
-assigned from the manifest at load (`PairingIds.Assign`) and kept in the library cache. Osprey's
-own `--export-library` writes `DecoyPairs` for every entry in a pairing and every decoy, so an
-exported decoy library searches back exactly as the TSV with its manifest did
+assigned from the manifest at load (`PairingIds.Assign`) and kept in the library cache. Every
+entry has a pairing id; an entrapment peptide whose id no original target shares is the orphan
+the FDRBench input and the diagnostics exclude. Osprey's own `--export-library` writes a
+`DecoyPairs` row for every entry of a library with decoys or entrapment, so an exported library
+searches back exactly as the TSV with its manifest did
 (`SubsetPipelineTest.TestLibraryLoadsIdenticallyFromTsvAndBlib`).
 
 ---

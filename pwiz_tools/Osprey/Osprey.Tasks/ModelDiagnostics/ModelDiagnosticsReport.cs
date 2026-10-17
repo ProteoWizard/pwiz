@@ -649,8 +649,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 if (lib == null || lib.Sequence == null)
                     continue;
                 // Skip decoy-side entries: their base-id equals their target's, which
-                // the target-side entry below classifies (accession is authoritative).
-                if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                // the target-side entry below classifies.
+                if (EntrapmentLibraryClassifier.IsDecoySide(lib))
                     continue;
                 // Exclude unmatched entrapment so the HTML FDP counts the same peptides
                 // the emitted manifest gives FDRBench.

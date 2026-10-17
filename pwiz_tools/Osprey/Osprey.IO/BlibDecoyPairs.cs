@@ -92,12 +92,12 @@ namespace pwiz.Osprey.IO
         /// Marks and pairs <paramref name="library"/> from its table: a row's side is
         /// authoritative over the accession prefixes (<paramref name="newlyMarked"/> counts the
         /// entries it changed, each given or stripped of the decoy bit as the marker would), and
-        /// each pair id naming exactly one target and one decoy at one charge gives the decoy
-        /// its target's id with the decoy bit, as the manifest and composition pairings do.
-        /// Returns the pairs made. A pair id with a side missing (the deduplicator dropped it,
-        /// or the writer left it out) or with more than two rows is malformed and pairs nothing,
-        /// the same rule the library contract's rule 6 applies, so its rows count as unpaired in
-        /// the summary.
+        /// each decoy row naming a target at its charge gives the decoy that target's id with the
+        /// decoy bit, as the manifest and composition pairings do. Returns the pairs made. A
+        /// decoy row naming no target, a target the deduplicator dropped, a decoy, or a target at
+        /// another charge pairs nothing, the same rule the library contract's rule 6 applies, so
+        /// it counts as unpaired in the summary. The rows' pairing ids are
+        /// <see cref="PairingIds.Assign"/>'s to give, after this.
         /// </summary>
         public static int Pair(IList<LibraryEntry> library, IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> pairs,
             IReadOnlyDictionary<long, LibraryEntry> entriesByRefSpectraId, PairingState state, out int newlyMarked)
@@ -116,7 +116,6 @@ namespace pwiz.Osprey.IO
                     entry.Id = pair.IsDecoy ? entry.Id | LibraryEntry.DECOY_ID_BIT : entry.Id & ~LibraryEntry.DECOY_ID_BIT;
                     newlyMarked++;
                 }
-                entry.PairingId = (uint)pair.PairingId;
             }
             int paired = 0;
             // Library order, so the ids a library gets do not depend on dictionary order.

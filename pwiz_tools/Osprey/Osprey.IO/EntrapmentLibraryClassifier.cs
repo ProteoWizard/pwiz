@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {
@@ -76,6 +77,16 @@ namespace pwiz.Osprey.IO
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// True if <paramref name="entry"/> is a decoy by its flag or by its accessions: the one
+        /// test of the decoy side for the pairing and its consumers, since a generated decoy is
+        /// flagged but carries Osprey's <c>DECOY_</c> prefix, not the manifest's.
+        /// </summary>
+        public static bool IsDecoySide(LibraryEntry entry)
+        {
+            return entry.IsDecoy || IsDecoySide(entry.ProteinIds);
         }
 
         /// <summary>The four-way peptide kind for a library entry, from its accessions.</summary>

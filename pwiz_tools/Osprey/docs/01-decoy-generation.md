@@ -288,9 +288,15 @@ its original target for the diagnostics and the FDRBench output - so a blib need
 A blib searched with its own decoys but without the table is refused at load. The rows are read
 by RefSpectra id before the deduplicator renumbers the entries and carried by entry object into
 the pairing. The two stages below are the **TSV** library's, which has no table to carry its
-pairing; after them `PairingIds.Assign` gives every TSV entry its pairing id from the manifest
-(the Met-clip reconciliation that `EntrapmentPairing.Build` used to redo per task lives there
-now), and the library cache keeps it.
+pairing; after them `PairingIds.Assign` gives every entry its pairing id - from the table's rows
+for a blib, from the manifest for a TSV (the Met-clip reconciliation that
+`EntrapmentPairing.Build` used to redo per task lives there now), a standalone index for a
+peptide in neither - and the library cache keeps it. Every entry has one; an entrapment peptide
+whose id no original target shares is the orphan `EntrapmentPairing.Build` excludes from the
+FDRBench input and the diagnostics. A library searched with generated decoys takes the same
+id assignment (its table, or the manifest given with it), so an entrapment library's pairing
+ids do not depend on where its decoys come from; the manifest's rewrite of accessions and decoy
+marks (`ApplyToLibrary`) stays the supplied-decoy route's, as before.
 
 First, a **hard guard**: if there are no library decoys at all,
 the load returns that fault as `error` and the caller exits with code 1

@@ -20,7 +20,8 @@
 
 using System;
 using System.Collections.Generic;
-using pwiz.CarafeSharp.Contracts;
+using System.Linq;
+using pwiz.BiblioSpec.IO;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -29,26 +30,29 @@ namespace pwiz.Osprey.IO
     /// Assigns every library entry its <see cref="LibraryEntry.PairingId"/> once, at load, so
     /// the pairing of an entrapment peptide with its original target lives in the library -
     /// the cache, a .blib's <c>DecoyPairs</c>, the export - and every consumer reads the entry
-    /// rather than the pairing manifest file.
+    /// rather than the pairing manifest file. Every entry gets an id. Whether an entrapment
+    /// peptide's id pairs it with an original target is a property of its group, read by
+    /// <see cref="ExcludedEntrapment"/> (for <c>EntrapmentPairing.Build</c>), not of the id.
     ///
-    /// <para>A peptide the manifest covers takes the manifest's <c>peptide_pair_index</c>. The
-    /// library legitimately holds peptide forms the manifest never had - N-terminal-Met-clipped
-    /// variants a predictor makes (Carafe <c>-clip_n_m</c>) - and for those the pairing is
-    /// reconstructed as it always was: a clipped peptide whose M-prefixed sequence is a manifest
-    /// peptide pairs on a clip index above the manifest's range (one per original pair index),
-    /// which a clipped entrapment shares with the clip of its manifest target when that clip is
-    /// itself an extra in the library; a clipped entrapment with no such target is the known
-    /// orphan the FDRBench input and the diagnostics exclude (it gets no id), and an extra
-    /// entrapment that is not a clip form is excluded and reported. An extra target, and every
-    /// peptide of a library with no manifest, takes a standalone index. A decoy takes the index
-    /// of its own sequence when the manifest covers it, else its target's.</para>
+    /// <para>An entry with a <c>DecoyPairs</c> row takes the row's id: the design as the
+    /// library's writer recorded it. A peptide the manifest covers takes the manifest's
+    /// <c>peptide_pair_index</c>. The library legitimately holds peptide forms the manifest
+    /// never had - N-terminal-Met-clipped variants a predictor makes (Carafe <c>-clip_n_m</c>) -
+    /// and a clipped peptide whose M-prefixed sequence is a manifest peptide takes a clip index
+    /// above the manifest's range (one per original pair index), which a clipped entrapment
+    /// shares with the clip of its manifest target when the library holds that clip as an
+    /// extra; a clipped entrapment alone in its group is the known orphan the FDRBench input
+    /// and the diagnostics exclude. Any other peptide - an extra that is not a clip form,
+    /// every peptide of a library with neither table nor manifest - takes a standalone index.
+    /// A decoy takes the index of its own sequence when the manifest covers it, else its
+    /// target's, else a standalone one.</para>
     /// </summary>
     public static class PairingIds
     {
         // N-terminal methionine, prepended to reverse a Met clip.
         private const string MET_PREFIX = @"M";
 
-        /// <summary>What <see cref="Assign"/> excluded: for the load log.</summary>
+        /// <summary>What the pairing excludes: for the load log.</summary>
         public sealed class Summary
         {
             /// <summary>Entrapment sequences with no target pair that are the known N-terminal-Met-clip artifact.</summary>
@@ -60,136 +64,166 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Sets <see cref="LibraryEntry.PairingId"/> on every entry of <paramref name="library"/>
-        /// from <paramref name="manifest"/> (null for a library with none) by the rules in the
-        /// class summary. Entries are visited in library order, so the standalone indices a
-        /// library gets do not depend on anything else.
+        /// by the rules in the class summary: from <paramref name="tableRows"/> (a .blib's
+        /// <c>DecoyPairs</c> rows by entry; null for a library without the table), then from
+        /// <paramref name="manifest"/> (null for a library with none). Entries are visited in
+        /// library order, so the standalone indices a library gets do not depend on anything
+        /// else. Returns what the group rule excludes, for the log.
         /// </summary>
-        public static Summary Assign(IList<LibraryEntry> library, DecoyPairingManifest manifest)
+        public static Summary Assign(IList<LibraryEntry> library, DecoyPairingManifest manifest,
+            IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> tableRows = null)
         {
-            var manifestKind = new Dictionary<string, PeptideKind>(StringComparer.Ordinal);
             var manifestPairIdx = new Dictionary<string, uint>(StringComparer.Ordinal);
-            var targetByPairIdx = new Dictionary<uint, string>();
             uint maxIdx = 0;
             if (manifest != null)
             {
-                foreach (var kv in manifest.Kinds())
-                    manifestKind[kv.Key] = kv.Value;
                 foreach (var kv in manifest.PairIndices())
                 {
                     manifestPairIdx[kv.Key] = kv.Value;
                     if (kv.Value > maxIdx)
                         maxIdx = kv.Value;
                 }
-                foreach (var kv in manifestKind)
+            }
+
+            // The table's rows first: their ids are the design as written, and the indices
+            // assigned below start above them.
+            var assigned = new HashSet<LibraryEntry>(ReferenceEqualityComparer.Instance);
+            var pairIndexBySeq = new Dictionary<string, uint>(StringComparer.Ordinal);
+            if (tableRows != null)
+            {
+                foreach (var entry in library)
                 {
-                    if (kv.Value == PeptideKind.Target && manifestPairIdx.TryGetValue(kv.Key, out uint idx))
-                        targetByPairIdx[idx] = kv.Key;
+                    if (entry == null || !tableRows.TryGetValue(entry, out var row))
+                        continue;
+                    entry.PairingId = (uint)row.PairingId;
+                    assigned.Add(entry);
+                    if (entry.PairingId > maxIdx)
+                        maxIdx = entry.PairingId;
+                    if (entry.Sequence != null && !IsDecoySide(entry) && !pairIndexBySeq.ContainsKey(entry.Sequence))
+                        pairIndexBySeq[entry.Sequence] = entry.PairingId;
                 }
             }
             // Clip-quartet indices live above the manifest's range so they never collide with it
-            // or with each other (one per original pair index).
-            bool haveManifest = manifestKind.Count > 0;
+            // or with each other (one per original pair index); standalone indices above those.
+            bool haveManifest = manifestPairIdx.Count > 0;
             uint clipBase = maxIdx + 1;
             uint nextStandalone = clipBase + maxIdx + 1;
 
-            // Library non-decoy sequences, for the "is the clipped target in the library?" test.
-            var libSeqs = new HashSet<string>(StringComparer.Ordinal);
+            // Each target-side sequence not already placed: its manifest index, its clip index,
+            // or a standalone one.
             foreach (var entry in library)
             {
-                if (entry?.Sequence != null && !EntrapmentLibraryClassifier.IsDecoySide(entry.ProteinIds))
-                    libSeqs.Add(entry.Sequence);
-            }
-
-            var summary = new Summary();
-            var pairIndexBySeq = new Dictionary<string, uint>(StringComparer.Ordinal);
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var entry in library)
-            {
-                if (entry?.Sequence == null || EntrapmentLibraryClassifier.IsDecoySide(entry.ProteinIds))
+                if (entry?.Sequence == null || IsDecoySide(entry) || assigned.Contains(entry))
                     continue;
                 string seq = entry.Sequence;
-                if (!seen.Add(seq))
+                if (pairIndexBySeq.ContainsKey(seq))
                     continue;
-
-                // Covered by the manifest: its pairing directly.
                 if (manifestPairIdx.TryGetValue(seq, out uint mi))
                 {
                     pairIndexBySeq[seq] = mi;
-                    continue;
                 }
-
-                // With no manifest there is nothing to reconcile against: every peptide is kept,
-                // none excluded (Met-clip artifacts are undetectable).
-                if (!haveManifest)
+                else if (haveManifest && manifestPairIdx.TryGetValue(MET_PREFIX + seq, out uint origIdx))
                 {
-                    pairIndexBySeq[seq] = nextStandalone++;
-                    continue;
-                }
-
-                bool entrapment = EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds);
-                // An extra: it should be a Met-clip form of a manifest peptide.
-                if (!manifestKind.ContainsKey(MET_PREFIX + seq))
-                {
-                    if (entrapment)
-                        summary.Unexplained.Add(seq); // not a clip form and unpaired: surfaced, not silently dropped
-                    else
-                        pairIndexBySeq[seq] = nextStandalone++; // an extra target only adds to n_t
-                    continue;
-                }
-
-                uint origIdx = manifestPairIdx[MET_PREFIX + seq];
-                if (entrapment)
-                {
-                    // A clipped entrapment pairs only with the clip of the manifest target at this
-                    // pair index, which exists only if that target starts with M and its clipped
-                    // form was predicted into the library as an extra (a clipped form that is itself
-                    // a manifest peptide keeps that manifest index, leaving this one an orphan).
-                    string target = targetByPairIdx.TryGetValue(origIdx, out var t) ? t : null;
-                    string clippedTarget = target != null && target.StartsWith(MET_PREFIX, StringComparison.Ordinal)
-                        ? target.Substring(1) : null;
-                    bool clippedTargetExists = clippedTarget != null &&
-                                               libSeqs.Contains(clippedTarget) && !manifestKind.ContainsKey(clippedTarget);
-                    if (clippedTargetExists)
-                        pairIndexBySeq[seq] = clipBase + origIdx;
-                    else
-                        summary.MetClipDropped++; // the understood Met-clip orphan entrapment
+                    // A Met-clip form of a manifest peptide: the clip index of its original pair,
+                    // which a clipped target and a clipped entrapment share when the library holds
+                    // both. A clipped entrapment alone there is the known orphan.
+                    pairIndexBySeq[seq] = clipBase + origIdx;
                 }
                 else
                 {
-                    // A clipped target: the clip-quartet index, shared with its clipped entrapment.
-                    pairIndexBySeq[seq] = clipBase + origIdx;
+                    // Nothing to reconstruct from: no manifest, or an extra that is not a clip form.
+                    pairIndexBySeq[seq] = nextStandalone++;
                 }
             }
 
-            // Every entry: a target-side entry takes its sequence's index (none for an excluded
-            // orphan); a decoy takes its own sequence's manifest index when the manifest covers
-            // it, else its target's.
+            // Target-side entries take their sequence's index; then the decoys, whose fallback
+            // is their target's id, which the pass before this one set.
             var targetById = new Dictionary<uint, LibraryEntry>();
             foreach (var entry in library)
             {
-                if (entry != null && !entry.IsDecoy)
-                    targetById[entry.Id] = entry;
+                if (entry?.Sequence == null || IsDecoySide(entry))
+                    continue;
+                targetById[entry.Id] = entry;
+                if (!assigned.Contains(entry))
+                    entry.PairingId = pairIndexBySeq[entry.Sequence];
             }
+            var decoyIndexBySeq = new Dictionary<string, uint>(StringComparer.Ordinal);
             foreach (var entry in library)
             {
-                if (entry?.Sequence == null)
+                if (entry?.Sequence == null || !IsDecoySide(entry) || assigned.Contains(entry))
                     continue;
-                bool decoySide = entry.IsDecoy || EntrapmentLibraryClassifier.IsDecoySide(entry.ProteinIds);
-                if (!decoySide)
-                {
-                    entry.PairingId = pairIndexBySeq.TryGetValue(entry.Sequence, out uint idx) ? idx : null;
-                }
-                else if (manifestPairIdx.TryGetValue(entry.Sequence, out uint own))
+                if (manifestPairIdx.TryGetValue(entry.Sequence, out uint own))
                 {
                     entry.PairingId = own;
                 }
+                else if (targetById.TryGetValue(entry.Id & ~LibraryEntry.DECOY_ID_BIT, out var target))
+                {
+                    entry.PairingId = target.PairingId;
+                }
                 else
                 {
-                    entry.PairingId = targetById.TryGetValue(entry.Id & ~LibraryEntry.DECOY_ID_BIT, out var target)
-                        ? target.PairingId : null;
+                    // An unpaired decoy: a group of its own, shared by its charge states.
+                    if (!decoyIndexBySeq.TryGetValue(entry.Sequence, out uint standalone))
+                        decoyIndexBySeq[entry.Sequence] = standalone = nextStandalone++;
+                    entry.PairingId = standalone;
                 }
             }
+
+            // What the group rule excludes, named for the log: a clip form of a manifest peptide
+            // is the understood Met-clip orphan, and anything else is surfaced. With no manifest
+            // (a .blib, whose rows carried the ids), a clip form of a library peptide stands in.
+            var libSeqs = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entry in library)
+            {
+                if (entry?.Sequence != null && !IsDecoySide(entry))
+                    libSeqs.Add(entry.Sequence);
+            }
+            var summary = new Summary();
+            foreach (string seq in ExcludedEntrapment(library).OrderBy(s => s, StringComparer.Ordinal))
+            {
+                bool metClip = haveManifest ? manifestPairIdx.ContainsKey(MET_PREFIX + seq) : libSeqs.Contains(MET_PREFIX + seq);
+                if (metClip)
+                    summary.MetClipDropped++;
+                else
+                    summary.Unexplained.Add(seq);
+            }
             return summary;
+        }
+
+        /// <summary>
+        /// The entrapment sequences of <paramref name="library"/> that the FDRBench input and the
+        /// diagnostics exclude: those whose <see cref="LibraryEntry.PairingId"/> no original
+        /// (non-entrapment) target shares, in a library that pairs entrapment with original
+        /// targets at all. A library with no such pair - a .tsv searched with no manifest - has no
+        /// pairing design to be an orphan of, and excludes nothing.
+        /// </summary>
+        public static HashSet<string> ExcludedEntrapment(IEnumerable<LibraryEntry> library)
+        {
+            var originals = new HashSet<uint>();
+            var entrapmentIdBySeq = new Dictionary<string, uint>(StringComparer.Ordinal);
+            foreach (var entry in library)
+            {
+                if (entry?.Sequence == null || IsDecoySide(entry))
+                    continue;
+                if (!EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                    originals.Add(entry.PairingId);
+                else if (!entrapmentIdBySeq.ContainsKey(entry.Sequence))
+                    entrapmentIdBySeq[entry.Sequence] = entry.PairingId;
+            }
+            var excluded = new HashSet<string>(StringComparer.Ordinal);
+            if (!entrapmentIdBySeq.Values.Any(originals.Contains))
+                return excluded;
+            foreach (var kv in entrapmentIdBySeq)
+            {
+                if (!originals.Contains(kv.Value))
+                    excluded.Add(kv.Key);
+            }
+            return excluded;
+        }
+
+        private static bool IsDecoySide(LibraryEntry entry)
+        {
+            return EntrapmentLibraryClassifier.IsDecoySide(entry);
         }
     }
 }

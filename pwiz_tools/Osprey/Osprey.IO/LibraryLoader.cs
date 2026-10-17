@@ -251,10 +251,12 @@ namespace pwiz.Osprey.IO
                     parseDetail = string.Format(CultureInfo.InvariantCulture,
                         @"blib; file read and peak decode {0:F2}s, modifications and peak typing {1:F2}s",
                         blibLoader.ReadSeconds, blibLoader.TypeSeconds);
-                    // The table is read for the two readers of it, not for every load.
-                    var decoyPairs = config.LibrarySuppliesDecoys || BlibDecoyPairs.ClaimsContract(path)
-                        ? BlibDecoyPairs.Read(path)
-                        : null;
+                    // The table is the library's pairing design - each decoy's target, and the
+                    // pairing id that pairs an entrapment peptide with its original target - so
+                    // it is read whenever the library has one, whichever way the decoys come.
+                    var decoyPairs = BlibDecoyPairs.Read(path);
+                    if (decoyPairs != null)
+                        blibPairs = BlibDecoyPairs.ByEntry(entries, blibLoader.RefSpectraIds, decoyPairs);
                     // A blib searched with its own decoys must say which they are and which
                     // target each was made from: the table CarafeSharp writes. Without it the
                     // search uses generated decoys or nothing.
@@ -267,7 +269,6 @@ namespace pwiz.Osprey.IO
                                 path, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                             return null;
                         }
-                        blibPairs = BlibDecoyPairs.ByEntry(entries, blibLoader.RefSpectraIds, decoyPairs);
                         blibEntriesById = BlibDecoyPairs.ByRefSpectraId(entries, blibLoader.RefSpectraIds);
                     }
                     // Before any repair below: a library that claims the contract must need none.
@@ -315,8 +316,21 @@ namespace pwiz.Osprey.IO
             // rewritten from the manifest. Ordering against Normalize and Deduplicate above is
             // unchanged - both still run first, which is what the cross-impl byte parity rests
             // on.
+            // The pairing manifest, read once. A .blib with a DecoyPairs table carries its whole
+            // pairing design and reads no manifest, and says so when one was given.
+            DecoyPairingManifest manifest = null;
+            if (blibPairs != null && !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                log.LogInfo(string.Format(
+                    OspreyIOResources.LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_,
+                    config.DecoyPairingManifestPath));
+            }
+            else if (blibPairs == null && !TryReadManifest(config.DecoyPairingManifestPath, log, out manifest, out error))
+            {
+                return null;
+            }
             if (config.LibrarySuppliesDecoys &&
-                !TryFinishSuppliedDecoys(entries, config, blibPairs, blibEntriesById, log, out error))
+                !TryFinishSuppliedDecoys(entries, config, manifest, blibPairs, blibEntriesById, log, out error))
             {
                 return null;
             }
@@ -325,10 +339,12 @@ namespace pwiz.Osprey.IO
                 error = DescribeUnflaggedDecoys(entries, config);
                 if (error != null)
                     return null;
-                // No manifest and no entrapment: every peptide its own pairing, as the FDRBench
-                // output and the diagnostics have always numbered them.
-                PairingIds.Assign(entries, null);
             }
+            // Every entry's pairing id, once, whichever way the decoys come: from the DecoyPairs
+            // rows for a .blib, from the manifest for a .tsv, else every peptide its own pairing,
+            // as the FDRBench output and the diagnostics have always numbered them. The cache,
+            // the export and every consumer read the entry rather than the manifest file.
+            LogPairingIds(PairingIds.Assign(entries, manifest, blibPairs), log);
 
             // Save binary cache for next run
             try
@@ -459,11 +475,13 @@ namespace pwiz.Osprey.IO
         /// target-decoy competition are not worth producing.</para>
         ///
         /// <para>A blib pairs from its own <c>DecoyPairs</c> table (<paramref name="blibPairs"/>,
-        /// decision of 2026-10-15) and nothing else; the manifest and the composition fallback
-        /// below are the TSV library's, which has no table to carry its pairing.</para>
+        /// decision of 2026-10-15) and nothing else; the manifest (<paramref name="manifest"/>,
+        /// which the caller reads for a TSV only) and the composition fallback below are the TSV
+        /// library's, which has no table to carry its pairing.</para>
         /// </summary>
         private static bool TryFinishSuppliedDecoys(
-            List<LibraryEntry> library, OspreyConfig config, IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> blibPairs,
+            List<LibraryEntry> library, OspreyConfig config, DecoyPairingManifest manifest,
+            IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> blibPairs,
             IReadOnlyDictionary<long, LibraryEntry> blibEntriesById, IOspreyLog log, out string error)
         {
             error = null;
@@ -477,19 +495,12 @@ namespace pwiz.Osprey.IO
                 markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix);
 
             // A blib's table is authoritative over the prefixes, so it marks before the counts
-            // below and pairs here; a manifest given with a blib pairs nothing (it still serves
-            // the entrapment pairing and the FDRBench output downstream), and is said to.
+            // below and pairs here.
             var pairingState = new PairingState();
             int pairedFromTable = 0;
             if (blibPairs != null)
             {
                 log.LogInfo(OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_);
-                if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
-                {
-                    log.LogInfo(string.Format(
-                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_DecoyPairs__the_pairing_manifest__0__serves_entrapment_pairing_only_,
-                        config.DecoyPairingManifestPath));
-                }
                 pairedFromTable = BlibDecoyPairs.Pair(library, blibPairs, blibEntriesById, pairingState, out int newlyMarked);
                 if (newlyMarked > 0)
                 {
@@ -530,23 +541,8 @@ namespace pwiz.Osprey.IO
                 NDecoys = nDecoysForStats,
                 NPairedViaTable = pairedFromTable,
             };
-            DecoyPairingManifest manifest = null;
-            if (blibPairs == null && !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            if (manifest != null)
             {
-                log.LogInfo(string.Format(
-                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_,
-                    config.DecoyPairingManifestPath));
-                try
-                {
-                    manifest = DecoyPairingManifest.FromTsv(config.DecoyPairingManifestPath);
-                }
-                catch (Exception ex)
-                {
-                    error = string.Format(
-                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_,
-                        config.DecoyPairingManifestPath, ex.Message);
-                    return false;
-                }
                 var manifestStats = manifest.ApplyToLibrary(library, pairingState, log.LogInfo);
                 if (manifestStats.DecoysListedAsTargets.Count > 0)
                 {
@@ -595,10 +591,6 @@ namespace pwiz.Osprey.IO
             pairingStats.NUnpairedTargets = Math.Max(0,
                 pairingStats.NTargets - pairingState.ClaimedTargets.Count);
             LogPairingSummary(pairingStats, log);
-            // Every entry's pairing id, once: from the manifest for a .tsv (a .blib's came from its
-            // DecoyPairs rows above, and its extras get theirs here), so the cache, the export
-            // and every consumer read the entry rather than the manifest file.
-            LogPairingIds(PairingIds.Assign(library, manifest), log);
             error = DescribeSharedDecoyIds(library);
             if (error != null)
                 return false;
@@ -622,7 +614,34 @@ namespace pwiz.Osprey.IO
             return true;
         }
 
-        /// <summary>The entrapment peptides the pairing-id assignment excluded, as a count of the known Met-clip artifact and a listing of the rest.</summary>
+        /// <summary>
+        /// The pairing manifest at <paramref name="path"/>, logged as it is read; null and true
+        /// for no path. A manifest that does not read is the fault <paramref name="error"/>
+        /// describes.
+        /// </summary>
+        private static bool TryReadManifest(string path, IOspreyLog log, out DecoyPairingManifest manifest, out string error)
+        {
+            manifest = null;
+            error = null;
+            if (string.IsNullOrEmpty(path))
+                return true;
+            log.LogInfo(string.Format(
+                OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_, path));
+            try
+            {
+                manifest = DecoyPairingManifest.FromTsv(path);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = string.Format(
+                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_,
+                    path, ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>The entrapment peptides the pairing excludes, as a count of the known Met-clip artifact and a listing of the rest.</summary>
         private static void LogPairingIds(PairingIds.Summary summary, IOspreyLog log)
         {
             if (summary.MetClipDropped > 0)
