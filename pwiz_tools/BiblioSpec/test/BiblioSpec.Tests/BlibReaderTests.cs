@@ -207,10 +207,12 @@ public class BlibReaderTests
             Assert.AreEqual(0, bare.NumPeaks);
             Assert.AreEqual(1, bare.Copies);
 
-            // The partitions together are the table, each in id order.
+            // The partitions together are the table, each in id order; a bad partition is refused at the call.
             var partitioned = Enumerable.Range(0, 3).SelectMany(i => reader.ReadSpectra(false, 3, i)).Select(s => s.Id).ToList();
             CollectionAssert.AreEquivalent(index.Select(s => s.Id).ToList(), partitioned);
             Assert.AreEqual(3, partitioned.Distinct().Count());
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => reader.ReadSpectra(false, 3, 3));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => reader.ReadRetentionTimes(0));
 
             // The scan with peaks: blobs as written, null for the spectrum without a peaks row.
             var withPeaks = reader.ReadSpectra(true).ToList();
@@ -337,6 +339,19 @@ public class BlibReaderTests
             Assert.IsNotNull(peaks);
             CollectionAssert.AreEqual(mzs, peaks.Mzs);
             CollectionAssert.AreEqual(new[] { 1f, 0.25f }, peaks.Intensities);
+            reader.Dispose();
+
+            // Without the peaks table at all, the scan with peaks still runs, with null blobs.
+            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            {
+                connection.Open();
+                Execute(connection, "DROP TABLE RefSpectraPeaks");
+            }
+            using var indexOnly = new BlibReader(path);
+            var withoutPeaks = indexOnly.ReadSpectra(true).Single();
+            Assert.IsNull(withoutPeaks.MzBlob);
+            Assert.IsNull(BlibReader.DecodePeaks(withoutPeaks));
+            Assert.IsNull(indexOnly.ReadPeaks(1, 2));
         }
         finally
         {

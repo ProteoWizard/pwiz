@@ -224,8 +224,9 @@ namespace pwiz.CarafeSharp.Proteome
                     }
                 }
             }
-            catch (SQLiteException e)
+            catch (Exception e) when (e is SQLiteException || e is InvalidDataException)
             {
+                // A file that is not a library, or one without its RefSpectra table.
                 throw new IOException(@"failed to read peptides from blib: " + blib, e);
             }
             return sequences;

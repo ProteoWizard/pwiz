@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.BiblioSpec.IO;
 using pwiz.Osprey.Core;
@@ -124,8 +125,10 @@ namespace pwiz.Osprey.IO
 
             foreach (var spectrum in reader.ReadSpectra(true))
             {
-                string peptideSeq = spectrum.PeptideSeq;
-                string peptideModSeq = spectrum.PeptideModSeq;
+                // A row without a sequence (a small molecule) is refused as a peptide too short
+                // to search; one without a modified sequence is the unmodified peptide.
+                string peptideSeq = spectrum.PeptideSeq ?? string.Empty;
+                string peptideModSeq = spectrum.PeptideModSeq ?? peptideSeq;
 
                 // The same bound the TSV loader enforces. An invariant only one
                 // format checks is not an invariant, and DecoyGenerator's
@@ -167,13 +170,10 @@ namespace pwiz.Osprey.IO
             var proteins = reader.ReadProteins();
             foreach (var entry in entries)
             {
-                if (!proteins.Contains(entry.Id))
-                    continue;
-                var interned = new List<string>();
-                foreach (string accession in proteins[entry.Id])
-                    interned.Add(interner.Intern(accession));
-                if (interned.Count > 0)
-                    entry.ProteinIds = interned.ToArray();
+                // The lookup is empty for a spectrum without a protein, which keeps its default.
+                var accessions = proteins[entry.Id].Select(interner.Intern).ToArray();
+                if (accessions.Length > 0)
+                    entry.ProteinIds = accessions;
             }
         }
 

@@ -1851,9 +1851,21 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < intValues.Length; i++)
                 Buffer.BlockCopy(BitConverter.GetBytes((double)intValues[i]), 0, doubleIntBytes, i * 8, 8);
             CollectionAssert.AreEqual(intValues, BlibWriter.DecodeIntensities(doubleIntBytes, intValues.Length));
+            // Compressed too, on enough values that the zlib bytes cannot be a raw length.
+            float[] manyValues = Enumerable.Range(0, 64).Select(i => 1000f - i * 7.5f).ToArray();
+            byte[] manyDoubleBytes = new byte[manyValues.Length * 8];
+            for (int i = 0; i < manyValues.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes((double)manyValues[i]), 0, manyDoubleBytes, i * 8, 8);
+            byte[] compressedDoubleInt = ZlibCompress(manyDoubleBytes);
+            Assert.AreNotEqual(manyValues.Length * 4, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            Assert.AreNotEqual(manyValues.Length * 8, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            CollectionAssert.AreEqual(manyValues, BlibWriter.DecodeIntensities(compressedDoubleInt, manyValues.Length));
 
-            // A blob that inflates to another length than numPeaks says is refused, not misread.
+            // A blob that inflates to another length than numPeaks says, or that is neither raw
+            // nor zlib, is refused as library data, not misread.
             Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(compressedMz, mzBytes.Length + 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(mzBytes, mzBytes.Length - 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeIntensities(compressedMz, intValues.Length + 1));
         }
 
         #endregion

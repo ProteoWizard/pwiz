@@ -535,14 +535,7 @@ namespace pwiz.BiblioSpec.IO
         {
             if (blob.Length == expectedLength)
                 return blob;
-            byte[] bytes;
-            using (var input = new MemoryStream(blob))
-            using (var zlib = new Ionic.Zlib.ZlibStream(input, Ionic.Zlib.CompressionMode.Decompress))
-            using (var output = new MemoryStream(expectedLength))
-            {
-                zlib.CopyTo(output);
-                bytes = output.ToArray();
-            }
+            var bytes = Inflate(blob);
             if (bytes.Length != expectedLength)
             {
                 throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
@@ -561,23 +554,55 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
-        /// The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks.
-        /// A blob of eight bytes per peak holds float64 intensities, which a writer before this
-        /// one stored uncompressed and the Rust osprey reader accepted; the format's float32 is
-        /// read raw or inflated as the m/z values are.
+        /// The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks:
+        /// the format's float32, raw or inflated as the m/z values are. A blob of eight bytes per
+        /// peak, raw or inflated, holds float64 intensities, which an earlier writer stored and
+        /// the Rust osprey reader accepted. A compressed float32 blob is never eight bytes per
+        /// peak from any writer of ours, which keep the compressed bytes only when they are
+        /// fewer than the raw four per peak.
         /// </summary>
         public static float[] DecodeIntensities(byte[] blob, int count)
         {
+            int floatLength = count * sizeof(float);
+            int doubleLength = count * sizeof(double);
+            var bytes = blob.Length == floatLength || blob.Length == doubleLength ? blob : Inflate(blob);
             var values = new float[count];
-            if (count > 0 && blob.Length == count * sizeof(double))
+            if (bytes.Length == floatLength)
+            {
+                Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+            }
+            else if (bytes.Length == doubleLength)
             {
                 for (int i = 0; i < count; i++)
-                    values[i] = (float)BitConverter.ToDouble(blob, i * sizeof(double));
-                return values;
+                    values[i] = (float)BitConverter.ToDouble(bytes, i * sizeof(double));
             }
-            var bytes = DecodeBlob(blob, count * sizeof(float));
-            Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+            else
+            {
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"An intensity blob of {0} bytes holds {1} bytes where {2} or {3} were expected", blob.Length, bytes.Length,
+                    floatLength, doubleLength));
+            }
             return values;
+        }
+
+        /// <summary>The bytes of a zlib blob; one that is not a zlib stream is refused as library data, not as a codec fault.</summary>
+        private static byte[] Inflate(byte[] blob)
+        {
+            try
+            {
+                using (var input = new MemoryStream(blob))
+                using (var zlib = new Ionic.Zlib.ZlibStream(input, Ionic.Zlib.CompressionMode.Decompress))
+                using (var output = new MemoryStream())
+                {
+                    zlib.CopyTo(output);
+                    return output.ToArray();
+                }
+            }
+            catch (Ionic.Zlib.ZlibException ex)
+            {
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"A peak blob of {0} bytes is neither the expected raw length nor a zlib stream", blob.Length), ex);
+            }
         }
 
         private void EnsurePrepared()

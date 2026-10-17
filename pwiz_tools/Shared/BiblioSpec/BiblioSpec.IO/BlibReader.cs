@@ -64,6 +64,9 @@ namespace pwiz.BiblioSpec.IO
 
         private readonly SQLiteConnection _connection;
         private readonly bool _ownsConnection;
+        // Which tables the library has, asked once each: a read-only library's tables do not
+        // change, and the by-id reads ask per spectrum.
+        private readonly Dictionary<string, bool> _tables = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         private BlibLibraryInfo _info;
         private SpectrumColumns _spectrumColumns;
         private RetentionTimeColumns _retentionTimeColumns;
@@ -100,7 +103,9 @@ namespace pwiz.BiblioSpec.IO
 
         public bool HasTable(string table)
         {
-            return BlibSqlite.TableExists(_connection, table);
+            if (!_tables.TryGetValue(table, out bool exists))
+                _tables.Add(table, exists = BlibSqlite.TableExists(_connection, table));
+            return exists;
         }
 
         /// <summary>The <c>RefSpectra</c> rows counted, for a library whose header does not say (<see cref="BlibLibraryInfo.SpectrumCount"/>).</summary>
@@ -221,19 +226,25 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The <c>RefSpectra</c> rows in id order, each with <see cref="BlibSpectrumRecord.Id"/>
         /// set and, with <paramref name="withPeaks"/>, its peak blobs from
-        /// <c>RefSpectraPeaks</c> (null blobs for a spectrum without a peaks row); without, the
-        /// blobs are null and the scan touches no blob. The modifications, proteins and
-        /// annotations are not filled in: <see cref="ReadProteins"/> reads them for every
-        /// spectrum at once, <see cref="ReadModifications"/> and <see cref="ReadAnnotations"/>
-        /// for one. With <paramref name="partitionCount"/> above one, only the rows whose id
-        /// falls in partition <paramref name="partitionIndex"/> (<c>id % count = index</c>), so
-        /// the partitions together are the whole table and a caller can scan them on several
-        /// threads, each with a reader of its own.
+        /// <c>RefSpectraPeaks</c> (null blobs for a spectrum without a peaks row, or in a library
+        /// without the table); without, the blobs are null and the scan touches no blob. The
+        /// modifications, proteins and annotations are not filled in: <see cref="ReadProteins"/>
+        /// reads them for every spectrum at once, <see cref="ReadModifications"/> and
+        /// <see cref="ReadAnnotations"/> for one. With <paramref name="partitionCount"/> above
+        /// one, only the rows whose id falls in partition <paramref name="partitionIndex"/>
+        /// (<c>id % count = index</c>), so the partitions together are the whole table and a
+        /// caller can scan them on several threads, each with a reader of its own.
         /// </summary>
         public IEnumerable<BlibSpectrumRecord> ReadSpectra(bool withPeaks, int partitionCount = 1, int partitionIndex = 0)
         {
             ValidatePartition(partitionCount, partitionIndex);
             var columns = _spectrumColumns ?? (_spectrumColumns = new SpectrumColumns(BlibSqlite.ColumnNames(_connection, TABLE_REF_SPECTRA)));
+            return EnumerateSpectra(columns, withPeaks && HasTable(TABLE_REF_SPECTRA_PEAKS), partitionCount, partitionIndex);
+        }
+
+        /// <summary>The scan of <see cref="ReadSpectra"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
+        private IEnumerable<BlibSpectrumRecord> EnumerateSpectra(SpectrumColumns columns, bool withPeaks, int partitionCount, int partitionIndex)
+        {
             var sql = new StringBuilder(@"SELECT ");
             sql.Append(columns.SelectList(@"r."));
             if (withPeaks)
@@ -272,7 +283,13 @@ namespace pwiz.BiblioSpec.IO
             var columns = _retentionTimeColumns ??
                           (_retentionTimeColumns = new RetentionTimeColumns(BlibSqlite.ColumnNames(_connection, TABLE_RETENTION_TIMES)));
             if (columns.Count == 0)
-                yield break;
+                return Array.Empty<BlibRetentionTimeRecord>();
+            return EnumerateRetentionTimes(columns, partitionCount, partitionIndex);
+        }
+
+        /// <summary>The scan of <see cref="ReadRetentionTimes"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
+        private IEnumerable<BlibRetentionTimeRecord> EnumerateRetentionTimes(RetentionTimeColumns columns, int partitionCount, int partitionIndex)
+        {
             var sql = new StringBuilder(@"SELECT ");
             sql.Append(columns.SelectList(string.Empty));
             sql.Append(@" FROM RetentionTimes");
@@ -289,10 +306,13 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The peaks of spectrum <paramref name="refId"/>, decoded from its
         /// <c>RefSpectraPeaks</c> row with <paramref name="numPeaks"/> (the spectrum's
-        /// <c>RefSpectra.numPeaks</c>) peaks, or null for a spectrum without a peaks row.
+        /// <c>RefSpectra.numPeaks</c>) peaks, or null for a spectrum without a peaks row, or in
+        /// a library without the table.
         /// </summary>
         public BlibPeaks ReadPeaks(long refId, int numPeaks)
         {
+            if (!HasTable(TABLE_REF_SPECTRA_PEAKS))
+                return null;
             using (var command = new SQLiteCommand(@"SELECT peakMZ, peakIntensity FROM RefSpectraPeaks WHERE RefSpectraID = @id", _connection))
             {
                 command.Parameters.AddWithValue(@"@id", refId);
