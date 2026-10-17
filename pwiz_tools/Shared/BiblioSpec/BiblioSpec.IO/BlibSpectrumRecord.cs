@@ -31,12 +31,15 @@ namespace pwiz.BiblioSpec.IO
     /// small-molecule writer fill the same record. The defaults are what BiblioSpec writes
     /// for a column a writer has nothing for: <c>-</c> flanking residues, one copy, empty
     /// small-molecule text (Skyline reads those columns with GetString, so never NULL), and
-    /// NULL for the optional numbers.
+    /// NULL for the optional numbers. <see cref="BlibReader"/> reads the same record back, with
+    /// <see cref="Id"/> set; a column a library of an older schema lacks keeps its default.
     /// </summary>
     public sealed class BlibSpectrumRecord
     {
         public const string NO_FLANKING_RESIDUE = @"-";
 
+        /// <summary>The <c>RefSpectra</c> id a reader found the row under; the writer assigns its own and ignores this.</summary>
+        public long Id { get; set; }
         public string PeptideSeq { get; set; }
         public double PrecursorMz { get; set; }
         public int PrecursorCharge { get; set; }

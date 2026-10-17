@@ -23,23 +23,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
-using System.IO.Compression;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {
     /// <summary>
-    /// Loads spectral libraries from BiblioSpec blib format (SQLite).
-    /// Ported from osprey-io/src/library/blib.rs.
+    /// Loads spectral libraries from BiblioSpec blib format through <see cref="BlibReader"/>,
+    /// which reads the file; this class makes Osprey's library entries of its records: the
+    /// modifications parsed from the modified sequence, the peaks typed from m/z, and the
+    /// intensities scaled to the base peak. Ported from osprey-io/src/library/blib.rs.
     /// </summary>
     public class BlibLoader
     {
         private const double CYSTEINE_RESIDUE_MASS = 103.009185;
-        private const string TABLE_REF_SPECTRA = @"RefSpectra";
 
         /// <summary>
         /// Version of what this reader makes of a blib. 2: every peak is typed from m/z
@@ -83,15 +83,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
-            string connStr = string.Format(@"Data Source={0};Read Only=True;", path);
-            using (var conn = new SQLiteConnection(connStr))
+            using (var reader = new BlibReader(path))
             {
-                conn.Open();
-
-                if (!TableExists(conn, TABLE_REF_SPECTRA))
+                if (!reader.HasTable(BlibReader.TABLE_REF_SPECTRA))
                 {
                     throw new InvalidOperationException(string.Format(
-                        OspreyIOResources.BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_, TABLE_REF_SPECTRA));
+                        OspreyIOResources.BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_,
+                        BlibReader.TABLE_REF_SPECTRA));
                 }
 
                 // Intern the repeated strings (sequences, modification names,
@@ -101,8 +99,8 @@ namespace pwiz.Osprey.IO
                 // changes, so output is unchanged.
                 var interner = new LibraryStringInterner();
                 var typingStats = new FragmentTypingStats();
-                var entries = LoadSpectra(conn, interner, typingStats);
-                LoadProteinMappings(conn, entries, interner);
+                var entries = LoadSpectra(reader, interner, typingStats);
+                LoadProteinMappings(reader, entries, interner);
                 interner.LogSummary(logInfo);
                 logInfo?.Invoke(string.Format(
                     OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
@@ -114,89 +112,48 @@ namespace pwiz.Osprey.IO
 
         #region Private helpers
 
-        private static bool TableExists(SQLiteConnection conn, string tableName)
-        {
-            using (var cmd = conn.CreateCommand())
-            {
-                cmd.CommandText = @"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name";
-                cmd.Parameters.AddWithValue(@"@name", tableName);
-                long count = (long)(cmd.ExecuteScalar() ?? 0L);
-                return count > 0;
-            }
-        }
-
         /// <summary>
         /// Reads every spectrum with its peaks, typing them as they are read. A library with any
         /// modification that cannot be identified is refused, listing every such modification.
         /// </summary>
-        private List<LibraryEntry> LoadSpectra(SQLiteConnection conn, LibraryStringInterner interner,
+        private List<LibraryEntry> LoadSpectra(BlibReader reader, LibraryStringInterner interner,
             FragmentTypingStats typingStats)
         {
             var entries = new List<LibraryEntry>();
             var unidentifiedMods = new UnidentifiedModifications();
 
-            using (var cmd = conn.CreateCommand())
+            foreach (var spectrum in reader.ReadSpectra(true))
             {
-                cmd.CommandText = @"
-                    SELECT
-                        r.id,
-                        r.peptideSeq,
-                        r.peptideModSeq,
-                        r.precursorMZ,
-                        r.precursorCharge,
-                        r.retentionTime,
-                        r.numPeaks,
-                        p.peakMZ,
-                        p.peakIntensity
-                    FROM RefSpectra r
-                    LEFT JOIN RefSpectraPeaks p ON r.id = p.RefSpectraID
-                    ORDER BY r.id";
+                string peptideSeq = spectrum.PeptideSeq;
+                string peptideModSeq = spectrum.PeptideModSeq;
 
-                using (var reader = cmd.ExecuteReader())
+                // The same bound the TSV loader enforces. An invariant only one
+                // format checks is not an invariant, and DecoyGenerator's
+                // fragment-overlap gate relies on this one whatever the library
+                // was built from.
+                LibraryValidation.ValidatePeptideLength(peptideSeq);
+
+                var parsed = ParseBlibModifications(peptideModSeq, out string unidentified);
+                if (parsed == null)
                 {
-                    while (reader.Read())
-                    {
-                        long id = reader.GetInt64(0);
-                        string peptideSeq = reader.GetString(1);
-                        string peptideModSeq = reader.GetString(2);
-                        double precursorMz = reader.GetDouble(3);
-                        int precursorCharge = reader.GetInt32(4);
-                        double retentionTime = reader.IsDBNull(5) ? 0.0 : reader.GetDouble(5);
-                        int numPeaks = reader.IsDBNull(6) ? 0 : reader.GetInt32(6);
-                        byte[] peakMzBlob = reader.IsDBNull(7) ? null : (byte[])reader[7];
-                        byte[] peakIntBlob = reader.IsDBNull(8) ? null : (byte[])reader[8];
-
-                        // The same bound the TSV loader enforces. An invariant only one
-                        // format checks is not an invariant, and DecoyGenerator's
-                        // fragment-overlap gate relies on this one whatever the library
-                        // was built from.
-                        LibraryValidation.ValidatePeptideLength(peptideSeq);
-
-                        var parsed = ParseBlibModifications(peptideModSeq, out string unidentified);
-                        if (parsed == null)
-                        {
-                            unidentifiedMods.Add(unidentified, id, peptideModSeq);
-                            continue;
-                        }
-                        var modifications = BuildInternedModifications(parsed, interner);
-
-                        LibraryFragment[] fragments;
-                        if (peakMzBlob != null && peakIntBlob != null)
-                            fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks).ToArray();
-                        else
-                            fragments = Array.Empty<LibraryFragment>();
-                        FragmentTyping.TypeFragments(peptideSeq, modifications, precursorCharge, fragments,
-                            _fragmentTolerance, typingStats);
-
-                        var entry = new LibraryEntry((uint)id,
-                            interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
-                            (byte)precursorCharge, precursorMz, retentionTime);
-                        entry.Modifications = modifications;
-                        entry.Fragments = fragments;
-
-                        entries.Add(entry);
-                    }
+                    unidentifiedMods.Add(unidentified, spectrum.Id, peptideModSeq);
+                    continue;
                 }
+                var modifications = BuildInternedModifications(parsed, interner);
+
+                // A spectrum without a peaks row has no fragments.
+                var peaks = BlibReader.DecodePeaks(spectrum);
+                var fragments = peaks != null ? ToFragments(peaks) : Array.Empty<LibraryFragment>();
+                FragmentTyping.TypeFragments(peptideSeq, modifications, spectrum.PrecursorCharge, fragments,
+                    _fragmentTolerance, typingStats);
+
+                var entry = new LibraryEntry((uint)spectrum.Id,
+                    interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
+                    (byte)spectrum.PrecursorCharge, spectrum.PrecursorMz, spectrum.RetentionTime ?? 0.0);
+                entry.Modifications = modifications;
+                entry.Fragments = fragments;
+
+                entries.Add(entry);
             }
 
             if (unidentifiedMods.Any)
@@ -204,50 +161,19 @@ namespace pwiz.Osprey.IO
             return entries;
         }
 
-        private void LoadProteinMappings(SQLiteConnection conn, List<LibraryEntry> entries,
+        private static void LoadProteinMappings(BlibReader reader, List<LibraryEntry> entries,
             LibraryStringInterner interner)
         {
-            if (!TableExists(conn, @"RefSpectraProteins") || !TableExists(conn, @"Proteins"))
-                return;
-
-            var proteinMap = new Dictionary<uint, List<string>>();
-
-            using (var cmd = conn.CreateCommand())
-            {
-                cmd.CommandText = @"
-                    SELECT rsp.RefSpectraID, p.accession
-                    FROM RefSpectraProteins rsp
-                    JOIN Proteins p ON rsp.ProteinID = p.id
-                    ORDER BY rsp.RefSpectraID";
-
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        uint refId = (uint)reader.GetInt64(0);
-                        string accession = reader.GetString(1);
-
-                        List<string> proteins;
-                        if (!proteinMap.TryGetValue(refId, out proteins))
-                        {
-                            proteins = new List<string>();
-                            proteinMap[refId] = proteins;
-                        }
-                        proteins.Add(accession);
-                    }
-                }
-            }
-
+            var proteins = reader.ReadProteins();
             foreach (var entry in entries)
             {
-                List<string> proteins;
-                if (proteinMap.TryGetValue(entry.Id, out proteins) && proteins.Count > 0)
-                {
-                    var interned = new string[proteins.Count];
-                    for (int i = 0; i < proteins.Count; i++)
-                        interned[i] = interner.Intern(proteins[i]);
-                    entry.ProteinIds = interned;
-                }
+                if (!proteins.Contains(entry.Id))
+                    continue;
+                var interned = new List<string>();
+                foreach (string accession in proteins[entry.Id])
+                    interned.Add(interner.Intern(accession));
+                if (interned.Count > 0)
+                    entry.ProteinIds = interned.ToArray();
             }
         }
 
@@ -402,73 +328,22 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Attempt zlib decompression of a blob. Returns null if decompression fails.
+        /// A spectrum's decoded peaks as library fragments, untyped (every one Unknown until
+        /// <see cref="FragmentTyping"/> types it) and with the intensities scaled to the base
+        /// peak, as a DIA-NN library already has them.
         /// </summary>
-        internal static byte[] TryZlibDecompress(byte[] data, int expectedSize)
+        internal static LibraryFragment[] ToFragments(BlibPeaks peaks)
         {
-            try
+            var fragments = new LibraryFragment[peaks.Count];
+            float maxIntensity = 0f;
+            for (int i = 0; i < fragments.Length; i++)
             {
-                // zlib format: 2-byte header + deflate data + 4-byte checksum
-                // Skip the 2-byte zlib header, use DeflateStream on the rest
-                if (data.Length < 3)
-                    return null;
-
-                using (var input = new MemoryStream(data, 2, data.Length - 2))
-                using (var deflate = new DeflateStream(input, CompressionMode.Decompress))
-                using (var output = new MemoryStream(expectedSize))
+                float intensity = peaks.Intensities[i];
+                if (intensity > maxIntensity)
+                    maxIntensity = intensity;
+                fragments[i] = new LibraryFragment
                 {
-                    deflate.CopyTo(output);
-                    return output.ToArray();
-                }
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Decode peak blobs from blib format. Handles both compressed (zlib) and
-        /// uncompressed formats. m/z is stored as f64, intensity as f32 or f64.
-        /// </summary>
-        internal static List<LibraryFragment> DecodeBlibPeaks(byte[] mzBlob, byte[] intensityBlob, int numPeaks)
-        {
-            byte[] mzData;
-            byte[] intData;
-            DecompressPeakBlobs(mzBlob, intensityBlob, numPeaks, out mzData, out intData);
-
-            if (mzData.Length % 8 != 0)
-                throw new InvalidOperationException(string.Format(
-                    OspreyIOResources.BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_, mzData.Length));
-
-            int nPeaks = mzData.Length / 8;
-
-            // Intensity can be float (4 bytes) or double (8 bytes)
-            int intensitySize;
-            if (intData.Length == nPeaks * 4)
-                intensitySize = 4;
-            else if (intData.Length == nPeaks * 8)
-                intensitySize = 8;
-            else
-                throw new InvalidOperationException(string.Format(
-                    OspreyIOResources.BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_,
-                    nPeaks * 4, nPeaks * 8, intData.Length));
-
-            var fragments = new List<LibraryFragment>(nPeaks);
-
-            for (int i = 0; i < nPeaks; i++)
-            {
-                double mz = BitConverter.ToDouble(mzData, i * 8);
-
-                float intensity;
-                if (intensitySize == 4)
-                    intensity = BitConverter.ToSingle(intData, i * 4);
-                else
-                    intensity = (float)BitConverter.ToDouble(intData, i * 8);
-
-                fragments.Add(new LibraryFragment
-                {
-                    Mz = mz,
+                    Mz = peaks.Mzs[i],
                     RelativeIntensity = intensity,
                     Annotation = new FragmentAnnotation
                     {
@@ -476,106 +351,16 @@ namespace pwiz.Osprey.IO
                         Ordinal = (byte)(i + 1),
                         Charge = 1
                     }
-                });
-            }
-
-            // Normalize intensities
-            float maxIntensity = 0f;
-            foreach (var f in fragments)
-            {
-                if (f.RelativeIntensity > maxIntensity)
-                    maxIntensity = f.RelativeIntensity;
+                };
             }
 
             if (maxIntensity > 0f)
             {
-                for (int i = 0; i < fragments.Count; i++)
-                {
-                    var f = fragments[i];
-                    f.RelativeIntensity /= maxIntensity;
-                    fragments[i] = f;
-                }
+                for (int i = 0; i < fragments.Length; i++)
+                    fragments[i].RelativeIntensity /= maxIntensity;
             }
 
             return fragments;
-        }
-
-        private static void DecompressPeakBlobs(byte[] mzBlob, byte[] intensityBlob, int numPeaks,
-            out byte[] mzData, out byte[] intData)
-        {
-            int expectedMzSize = numPeaks * 8; // f64
-
-            // If raw m/z blob is already the right size, assume uncompressed
-            if (mzBlob.Length == expectedMzSize && mzBlob.Length % 8 == 0)
-            {
-                mzData = mzBlob;
-
-                int expectedIntF32 = numPeaks * 4;
-                int expectedIntF64 = numPeaks * 8;
-                if (intensityBlob.Length == expectedIntF32 || intensityBlob.Length == expectedIntF64)
-                {
-                    intData = intensityBlob;
-                    return;
-                }
-
-                // Try decompressing intensity only
-                byte[] decInt = TryZlibDecompress(intensityBlob, expectedIntF32);
-                if (decInt != null && (decInt.Length == expectedIntF32 || decInt.Length == expectedIntF64))
-                {
-                    intData = decInt;
-                    return;
-                }
-
-                intData = intensityBlob;
-                return;
-            }
-
-            // m/z blob doesn't match expected raw size - try zlib decompression
-            if (numPeaks > 0)
-            {
-                byte[] mzDec = TryZlibDecompress(mzBlob, expectedMzSize);
-                if (mzDec != null)
-                {
-                    mzData = mzDec;
-
-                    if (intensityBlob.Length == numPeaks * 4 || intensityBlob.Length == numPeaks * 8)
-                    {
-                        intData = intensityBlob;
-                    }
-                    else
-                    {
-                        byte[] intDec = TryZlibDecompress(intensityBlob, numPeaks * 4);
-                        intData = intDec ?? intensityBlob;
-                    }
-                    return;
-                }
-            }
-
-            // Try decompressing m/z and infer n_peaks from result
-            if (mzBlob.Length % 8 != 0)
-            {
-                byte[] mzDec = TryZlibDecompress(mzBlob, mzBlob.Length * 4);
-                if (mzDec != null)
-                {
-                    mzData = mzDec;
-                    int inferredN = mzDec.Length / 8;
-
-                    if (intensityBlob.Length == inferredN * 4 || intensityBlob.Length == inferredN * 8)
-                    {
-                        intData = intensityBlob;
-                    }
-                    else
-                    {
-                        byte[] intDec = TryZlibDecompress(intensityBlob, inferredN * 4);
-                        intData = intDec ?? intensityBlob;
-                    }
-                    return;
-                }
-            }
-
-            // Fall through - use raw blobs
-            mzData = mzBlob;
-            intData = intensityBlob;
         }
 
         /// <summary>

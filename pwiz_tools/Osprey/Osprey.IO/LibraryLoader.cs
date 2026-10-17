@@ -28,6 +28,7 @@ using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
@@ -357,7 +358,7 @@ namespace pwiz.Osprey.IO
         /// check. A library without the claim takes the tolerant route unchanged.
         /// </summary>
         private static bool CheckLibraryContract(string path, List<LibraryEntry> entries,
-            IReadOnlyDictionary<uint, BlibDecoyPair> decoyPairs, OspreyConfig config, IOspreyLog log, out string error)
+            IReadOnlyDictionary<long, BlibDecoyPair> decoyPairs, OspreyConfig config, IOspreyLog log, out string error)
         {
             error = null;
             if (!BlibDecoyPairs.ClaimsContract(path))

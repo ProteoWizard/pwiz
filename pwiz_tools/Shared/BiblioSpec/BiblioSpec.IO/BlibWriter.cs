@@ -526,18 +526,29 @@ namespace pwiz.BiblioSpec.IO
             return compress ? CompressIfSmaller(bytes) : bytes;
         }
 
-        /// <summary>Reverses the blob encoding: raw when the length matches <paramref name="expectedLength"/>, else zlib.</summary>
+        /// <summary>
+        /// Reverses the blob encoding: raw when the length matches <paramref name="expectedLength"/>,
+        /// else zlib, which must inflate to that length or the blob does not hold the peaks the
+        /// spectrum's <c>numPeaks</c> says it does.
+        /// </summary>
         public static byte[] DecodeBlob(byte[] blob, int expectedLength)
         {
             if (blob.Length == expectedLength)
                 return blob;
+            byte[] bytes;
             using (var input = new MemoryStream(blob))
             using (var zlib = new Ionic.Zlib.ZlibStream(input, Ionic.Zlib.CompressionMode.Decompress))
             using (var output = new MemoryStream(expectedLength))
             {
                 zlib.CopyTo(output);
-                return output.ToArray();
+                bytes = output.ToArray();
             }
+            if (bytes.Length != expectedLength)
+            {
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"A peak blob of {0} bytes inflated to {1} bytes where {2} were expected", blob.Length, bytes.Length, expectedLength));
+            }
+            return bytes;
         }
 
         /// <summary>The m/z values of a <c>peakMZ</c> blob holding <paramref name="count"/> peaks.</summary>
@@ -549,11 +560,22 @@ namespace pwiz.BiblioSpec.IO
             return values;
         }
 
-        /// <summary>The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks.</summary>
+        /// <summary>
+        /// The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks.
+        /// A blob of eight bytes per peak holds float64 intensities, which a writer before this
+        /// one stored uncompressed and the Rust osprey reader accepted; the format's float32 is
+        /// read raw or inflated as the m/z values are.
+        /// </summary>
         public static float[] DecodeIntensities(byte[] blob, int count)
         {
-            var bytes = DecodeBlob(blob, count * sizeof(float));
             var values = new float[count];
+            if (count > 0 && blob.Length == count * sizeof(double))
+            {
+                for (int i = 0; i < count; i++)
+                    values[i] = (float)BitConverter.ToDouble(blob, i * sizeof(double));
+                return values;
+            }
+            var bytes = DecodeBlob(blob, count * sizeof(float));
             Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
             return values;
         }
@@ -643,11 +665,7 @@ namespace pwiz.BiblioSpec.IO
 
         private bool TableExists(string table)
         {
-            using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = @name", _connection))
-            {
-                command.Parameters.AddWithValue(@"@name", table);
-                return Convert.ToInt64(command.ExecuteScalar()) > 0;
-            }
+            return BlibSqlite.TableExists(_connection, table);
         }
 
         private PreparedInsert Prepare(string sql, string[] names, DbType[] types)
