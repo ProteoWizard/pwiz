@@ -19,8 +19,18 @@
     reported as state 'error' rather than quietly passing. The only outcome that reports
     'success' is a run that completed and found nothing at or above -Severity.
 
-    The report is written outside the checkout by default. tcbuild.bat fails the build when
-    'git status --porcelain' is non-empty at the end.
+    The same status enforces the warning-free build. The Directory.Build.props files do not
+    promote warnings to errors, because a promoted warning stops the build before any test runs -
+    including one the commit did not cause, such as a NuGet advisory published overnight. Instead
+    the pre-build below logs every restore and build warning, and any warning makes the status a
+    failure just as an inspection finding does, leaving the build itself green. A TeamCity
+    buildProblem would not do: it fails this step, and TeamCity then skips tcbuild.bat and every
+    test, which is the outcome all of this exists to avoid. In the per-commit configuration this pre-build is
+    the first compile after clean.bat, and build.bat builds on top of it incrementally, so this is
+    the one place every compiler warning is emitted; an up-to-date project re-emits none.
+
+    The report and the warnings log are written outside the checkout by default. tcbuild.bat
+    fails the build when 'git status --porcelain' is non-empty at the end.
 
     The ReSharper command line tool is pinned in .config/dotnet-tools.json rather than taken
     from the TeamCity agent's bundled copy, so a developer running this locally and the CI
@@ -57,11 +67,27 @@ param(
     # bin\Release, which is not where the inspection looks (build #298).
     #
     # Skyline.csproj is the hub - ProteowizardWrapper and its fifteen, Bruker.PrmScheduling,
-    # and the tool projects all hang off it - so nothing here needs a list of what to build,
-    # and a csproj build passes Platform down the whole reference graph. It is also the same
-    # x64 build build.bat does, so the build step that follows the inspection builds on top of
-    # it instead of starting over.
-    [string] $PreBuild = (Join-Path $PSScriptRoot 'Skyline.csproj'),
+    # and the tool projects all hang off it - and a csproj build passes Platform down the whole
+    # reference graph. The rest are build.bat's other BUILD_TARGET projects plus SkylineTester,
+    # which it builds for the distro zips. They are listed because build.bat builds on top of
+    # this pre-build: a project it compiles first here has its warnings logged, while one left to
+    # inspectcode's own solution build would be compiled with no warnings log, and build.bat would
+    # then find it up to date and emit none. Keep this list in step with build.bat's.
+    [string[]] $PreBuild = (@(
+        'Skyline.csproj'
+        'CommonTest\CommonTest.csproj'
+        'Test\Test.csproj'
+        'TestData\TestData.csproj'
+        'TestFunctional\TestFunctional.csproj'
+        'TestConnected\TestConnected.csproj'
+        'TestTutorial\TestTutorial.csproj'
+        'TestPerf\TestPerf.csproj'
+        'TestRunner\TestRunner.csproj'
+        'SkylineTester\SkylineTester.csproj'
+    ) | ForEach-Object { Join-Path $PSScriptRoot $_ }),
+    # Every warning the pre-build logs, restore (NuGet audit) included. With -UseExistingReport
+    # the log a previous run left here is read instead.
+    [string] $BuildWarningsPath = (Join-Path ([System.IO.Path]::GetTempPath()) 'skyline-inspectcode/build-warnings.log'),
     # Empty by default: with the references resolved there is nothing left for an exclusion of
     # the ported sandbox to hide.
     [string[]] $Exclude = @(),
@@ -84,34 +110,19 @@ $ErrorActionPreference = 'Stop'
 # and turn it into a failed build step, which is the one thing this script must never do.
 $PSNativeCommandUseErrorActionPreference = $false
 
-# TeamCity service message values escape these six. Counts never contain them; the description
-# carries tool output on the failure paths, which can.
-function Format-TcValue([string] $text) {
-    if ([string]::IsNullOrEmpty($text)) { return '' }
-    return $text.Replace('|', '||').Replace("'", "|'").Replace("`n", '|n').Replace("`r", '|r').Replace('[', '|[').Replace(']', '|]')
+# Format-TcValue, Publish-GitHubStatus and the build-warnings check, shared with the pwiz-sharp
+# tcinspect.ps1. Loaded before anything that reports, since every report goes through it; if it
+# cannot load there is no way to post a verdict, and the step must still not fail the build.
+try {
+    Import-Module (Join-Path $PSScriptRoot '..\..\scripts\BuildWarnings.psm1') -Force
+} catch {
+    Write-Host "##teamcity[message text='Could not load scripts/BuildWarnings.psm1; code inspection did not run' status='WARNING']"
+    exit 0
 }
 
-# Never throws and never retries: a status that fails to post is worth a warning in the log,
-# not a failed build. The token is a TeamCity credentialsJSON value, so it is never echoed.
 function Send-GitHubStatus([string] $state, [string] $description) {
-    $missing = @()
-    if ([string]::IsNullOrEmpty($env:GITHUB_STATUS_TOKEN)) { $missing += 'GITHUB_STATUS_TOKEN' }
-    if ([string]::IsNullOrEmpty($CommitSha)) { $missing += 'BUILD_VCS_NUMBER' }
-    if ($missing.Count -gt 0) {
-        Write-Host "  (not posting '$state' to '$StatusContext': $($missing -join ' and ') $(if ($missing.Count -gt 1) { 'are' } else { 'is' }) empty)"
-        return
-    }
-    $body = @{ state = $state; context = $StatusContext; description = $description }
-    if (-not [string]::IsNullOrEmpty($TargetUrl)) { $body['target_url'] = $TargetUrl }
-    try {
-        Invoke-RestMethod -Method Post -ContentType 'application/json' `
-            -Uri "https://api.github.com/repos/$Repository/statuses/$CommitSha" `
-            -Headers @{ Authorization = "Bearer $env:GITHUB_STATUS_TOKEN" } `
-            -Body ($body | ConvertTo-Json -Compress) | Out-Null
-        Write-Host "  posted '$state' to GitHub status '$StatusContext' on $CommitSha"
-    } catch {
-        Write-Host "##teamcity[message text='Could not post the code inspection status: $(Format-TcValue $_.Exception.Message)' status='WARNING']"
-    }
+    Publish-GitHubStatus -State $state -Description $description -Context $StatusContext `
+                         -CommitSha $CommitSha -TargetUrl $TargetUrl -Repository $Repository
 }
 
 # The single exit point. Every path lands here, and every path exits 0: this step must never be
@@ -128,14 +139,17 @@ function Complete-Inspection([string] $state, [string] $summary) {
 try {
     $Solution = [System.IO.Path]::GetFullPath($Solution)
     $ReportPath = [System.IO.Path]::GetFullPath($ReportPath)
+    $BuildWarningsPath = [System.IO.Path]::GetFullPath($BuildWarningsPath)
 
-    $reportDir = Split-Path -Parent $ReportPath
-    if ($reportDir -and -not (Test-Path $reportDir)) {
-        New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
+    foreach ($outputDir in @((Split-Path -Parent $ReportPath), (Split-Path -Parent $BuildWarningsPath))) {
+        if ($outputDir -and -not (Test-Path $outputDir)) {
+            New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
+        }
     }
 
     if (-not $UseExistingReport) {
         if (Test-Path $ReportPath) { Remove-Item $ReportPath -Force }
+        if (Test-Path $BuildWarningsPath) { Remove-Item $BuildWarningsPath -Force }
 
         # Up front, so the check appears on the PR straight away rather than minutes in.
         Send-GitHubStatus 'pending' 'Running ReSharper inspection'
@@ -161,17 +175,19 @@ try {
             }
             if ($AutomatedBuild) { $buildProperties.AutomatedBuild = 'true' }
 
-            if (-not [string]::IsNullOrEmpty($PreBuild)) {
-                Write-Host "##teamcity[progressMessage 'Building $(Split-Path -Leaf $PreBuild) for the inspection']"
-                Write-Host "##teamcity[blockOpened name='pre-build']"
-                & dotnet build $PreBuild @($buildProperties.GetEnumerator() | ForEach-Object { "-p:$($_.Key)=$($_.Value)" })
+            $warningsLogger = Get-BuildWarningsLoggerArgs $BuildWarningsPath
+            foreach ($project in @($PreBuild | Where-Object { -not [string]::IsNullOrEmpty($_) })) {
+                $projectName = Split-Path -Leaf $project
+                Write-Host "##teamcity[progressMessage 'Building $projectName for the inspection']"
+                Write-Host "##teamcity[blockOpened name='pre-build $projectName']"
+                & dotnet build $project @($buildProperties.GetEnumerator() | ForEach-Object { "-p:$($_.Key)=$($_.Value)" }) @warningsLogger
                 $preBuildExit = $LASTEXITCODE
-                Write-Host "##teamcity[blockClosed name='pre-build']"
+                Write-Host "##teamcity[blockClosed name='pre-build $projectName']"
                 # Not fatal, and not silent: the inspection still runs, it just reports every
                 # out-of-solution type as unresolved. Saying so here is what tells that apart
                 # from a real finding when the error count comes back high.
                 if ($preBuildExit -ne 0) {
-                    Write-Host "##teamcity[message text='Pre-build of $(Format-TcValue $PreBuild) failed with code $preBuildExit; out-of-solution references will not resolve' status='WARNING']"
+                    Write-Host "##teamcity[message text='Pre-build of $(Format-TcValue $project) failed with code $preBuildExit; out-of-solution references will not resolve' status='WARNING']"
                 }
             }
 
@@ -254,13 +270,23 @@ try {
         if ($total -gt 100) { Write-Host "  ... and $($total - 100) more; see the Inspections tab" }
     }
 
-    if ($total -eq 0) {
-        Complete-Inspection 'success' "No inspections at $Severity or above"
+    $buildWarningCount = Write-BuildWarnings -LogPath $BuildWarningsPath -ArtifactDir '.teamcity/skyline-inspectcode'
+
+    $verdict = @()
+    # No log after a pre-build means no evidence the build is warning-free, so it cannot pass.
+    # -UseExistingReport may have no log to read, which only matters to whoever is iterating.
+    if ($null -eq $buildWarningCount -and -not $UseExistingReport) { $verdict += 'build warnings not checked' }
+    if ($buildWarningCount -gt 0) { $verdict += "$buildWarningCount build warnings" }
+    if ($total -gt 0) {
+        $counts = ($bySeverity.GetEnumerator() | Sort-Object -Property Key |
+                   ForEach-Object { "$($_.Value) $($_.Key.ToLowerInvariant())" }) -join ', '
+        $verdict += "$total inspections ($counts)"
     }
 
-    $counts = ($bySeverity.GetEnumerator() | Sort-Object -Property Key |
-               ForEach-Object { "$($_.Value) $($_.Key.ToLowerInvariant())" }) -join ', '
-    Complete-Inspection 'failure' "$total inspections ($counts)"
+    if ($verdict.Count -eq 0) {
+        Complete-Inspection 'success' "No build warnings and no inspections at $Severity or above"
+    }
+    Complete-Inspection 'failure' ($verdict -join '; ')
 } catch {
     # Anything unforeseen still has to leave a verdict behind rather than a failed build step.
     Complete-Inspection 'error' "code inspection threw: $($_.Exception.Message)"
