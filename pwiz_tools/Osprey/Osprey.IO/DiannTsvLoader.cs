@@ -201,9 +201,15 @@ namespace pwiz.Osprey.IO
                     interner.Intern(data.ModifiedSequence),
                     data.Charge, data.PrecursorMz, data.RetentionTime);
                 entry.Modifications = modifications;
-                entry.Fragments = data.Fragments.ToArray();
+                // In m/z order, as a .blib stores peaks and the blib loader reads them, so the
+                // library is the same object whichever file it came from: the order of an entry's
+                // fragments reaches the search (the top-fragment selection keeps it on ties and
+                // returns a short entry in it), and a .tsv's row order is the writer's, not a
+                // property of the library. Stable, so peaks at one m/z keep their row order.
+                var fragments = data.Fragments.OrderBy(f => f.Mz).ToArray();
                 if (_fragmentTolerance != null)
-                    CheckStatedTypes(entry, _fragmentTolerance, TypeCheck);
+                    ApplyTyping(entry, fragments, _fragmentTolerance, TypeCheck);
+                entry.Fragments = fragments;
                 entry.ProteinIds = interner.InternToArray(data.ProteinIds);
                 entry.GeneNames = interner.InternToArray(data.GeneNames);
                 entry.IsDecoy = data.IsDecoy;
@@ -218,25 +224,36 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Add each fragment of <paramref name="entry"/> whose type the library's columns state
-        /// to <paramref name="check"/>, against the type Osprey's own typing gives its m/z. A
-        /// library with no fragment type column states none, and costs no typing.
+        /// Type <paramref name="fragments"/> as Osprey's own typing types them from m/z, exactly
+        /// as <see cref="BlibLoader"/> types a .blib's peaks, so a library read from a .tsv is
+        /// the library its .blib export reads back. The types the library's columns state are a
+        /// report, counted against the typing in <paramref name="check"/>, and nothing more: a
+        /// peak the typing names an ion for takes that ion, and a peak it cannot - no primary ion
+        /// in reach, a selenocysteine peptide with no residue mass to compute from - is Unknown,
+        /// whatever the column said, since the .blib route has no column to say it. What the
+        /// labels would otherwise change: 237 isobaric pairs of the HeLa library (<c>b4^2</c> and
+        /// <c>y3^2</c> as two peaks at one m/z, listed the other way round from the typing's
+        /// preference) and 90 selenocysteine peptides of the Astral one, each enough to move
+        /// every q-value of a search through its decoys. A library with no fragment type column
+        /// states none, and costs no comparison.
         /// </summary>
-        private static void CheckStatedTypes(LibraryEntry entry, FragmentToleranceConfig tolerance,
+        private static void ApplyTyping(LibraryEntry entry, LibraryFragment[] fragments, FragmentToleranceConfig tolerance,
             FragmentTypeCheck check)
         {
-            if (entry.Fragments.All(f => f.Annotation.IonType == IonType.Unknown))
+            if (fragments.All(f => f.Annotation.IonType == IonType.Unknown))
                 return;
             var candidates = new FragmentCandidates(entry.Sequence, entry.Modifications, entry.Charge);
             var ospreyChoice = FragmentTyping.Compute(entry.Sequence, entry.Modifications, entry.Charge,
-                entry.Fragments, tolerance);
-            for (int i = 0; i < entry.Fragments.Count; i++)
+                fragments, tolerance);
+            for (int i = 0; i < fragments.Length; i++)
             {
-                var fragment = entry.Fragments[i];
-                if (fragment.Annotation.IonType == IonType.Unknown)
-                    continue;
-                check.AddPeak(fragment.Annotation, ospreyChoice[i], candidates, tolerance, entry.Sequence, entry.Charge,
-                    fragment.Mz);
+                var stated = fragments[i].Annotation;
+                if (stated.IonType != IonType.Unknown)
+                {
+                    check.AddPeak(stated, ospreyChoice[i], candidates, tolerance, entry.Sequence, entry.Charge,
+                        fragments[i].Mz);
+                }
+                fragments[i].Annotation = ospreyChoice[i] ?? new FragmentAnnotation { IonType = IonType.Unknown };
             }
         }
 

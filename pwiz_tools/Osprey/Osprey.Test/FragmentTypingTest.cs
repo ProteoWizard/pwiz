@@ -195,8 +195,14 @@ namespace pwiz.Osprey.Test
             {
                 entries = loader.ParseReader(reader);
             }
-            // The columns are the typing: the stated y6 stays a y6.
-            BlibLibraryInputTest.AssertAnnotation(entries.Single().Fragments[2].Annotation, IonType.Y, 6, 1, NeutralLossCode.None);
+            // The typing is the type, as it is for a .blib: the stated y6 at b3's m/z becomes the
+            // b3, and the loss, which the typing cannot produce, is Unknown as it would be read
+            // from a .blib. The fragments are in m/z order, as a .blib holds them, whatever the
+            // rows' order.
+            var loaded = entries.Single().Fragments;
+            CollectionAssert.AreEqual(loaded.Select(f => f.Mz).OrderBy(mz => mz).ToArray(), loaded.Select(f => f.Mz).ToArray());
+            BlibLibraryInputTest.AssertAnnotation(loaded.Single(f => f.Mz == b3).Annotation, IonType.B, 3, 1, NeutralLossCode.None);
+            Assert.AreEqual(IonType.Unknown, loaded.Single(f => f.Mz == y5Water).Annotation.IonType);
             var check = loader.TypeCheck;
             Assert.AreEqual(2, check.Agree);
             Assert.AreEqual(1, check.Differ);
@@ -229,19 +235,27 @@ namespace pwiz.Osprey.Test
 
             // A stated ion Osprey agrees is possible but would not choose itself - b12^2 of a
             // repeat, where Osprey prefers the b6 at the same m/z - is the library's choice, not
-            // a disagreement: counted apart, and no warning.
+            // a disagreement: counted apart, kept as an example (it is what a .blib of the library
+            // types otherwise), and no warning. The fragment takes the b6, as the .blib would.
             double b6 = Mz(IonType.B, 6, 1, REPEAT, null);
             string isobaricTsv = tsv.Substring(0, tsv.IndexOf('\n') + 1) +
                                  Line(Mz(IonType.Y, 3, 1, REPEAT, null), @"y", 3, @"noloss").Replace(@"PEPTIDEK", REPEAT) +
                                  Line(b6, @"b", 12, @"noloss", 2).Replace(@"PEPTIDEK", REPEAT);
             var isobaric = new DiannTsvLoader(2, FragmentToleranceConfig.Hram(10));
+            List<LibraryEntry> isobaricEntries;
             using (var reader = new StringReader(isobaricTsv))
             {
-                isobaric.ParseReader(reader);
+                isobaricEntries = isobaric.ParseReader(reader);
             }
+            BlibLibraryInputTest.AssertAnnotation(isobaricEntries.Single().Fragments.Single(f => f.Mz == b6).Annotation, IonType.B, 6, 1, NeutralLossCode.None);
             Assert.AreEqual(1, isobaric.TypeCheck.Agree);
             Assert.AreEqual(1, isobaric.TypeCheck.LibraryChoice);
             Assert.AreEqual(0, isobaric.TypeCheck.Differ);
+            CollectionAssert.AreEqual(new[]
+            {
+                string.Format(OspreyIOResources.FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_,
+                    REPEAT, 2, b6, @"b12^2", @"b6"),
+            }, isobaric.TypeCheck.Examples.ToArray());
             warnings.Clear();
             isobaric.TypeCheck.Report(@"library.tsv", true, info.Add, warnings.Add);
             Assert.AreEqual(0, warnings.Count);

@@ -91,10 +91,14 @@ namespace pwiz.Osprey.IO
             }
             if (candidates.IsPossible(stated, peakMz, tolerance))
             {
+                // Kept as an example too: these are the peaks a library without stated types
+                // (a .blib) types otherwise, so they say what a .blib search changes.
                 Interlocked.Increment(ref _libraryChoice);
-                return;
             }
-            Interlocked.Increment(ref _differ);
+            else
+            {
+                Interlocked.Increment(ref _differ);
+            }
             lock (_examples)
             {
                 if (_examples.Count < MAX_EXAMPLES)
