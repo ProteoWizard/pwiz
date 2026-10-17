@@ -659,7 +659,7 @@ namespace pwiz.Osprey.Test
             string blib = Path.Combine(straightDir, BLIB_FILE);
             int precursors = BlibComparer.CountRows(blib, @"RefSpectra");
             Assert.IsTrue(precursors >= MIN_ASTRAL_PRECURSORS, string.Format(@"{0} precursors reported", precursors));
-            Assert.AreEqual(precursors * ASTRAL_RUN_NAMES.Length, BlibComparer.CountRows(blib, @"RetentionTimes"));
+            AssertRetentionTimeRows(blib, precursors, ASTRAL_RUN_NAMES.Length);
             AssertRecoversFullRun(Path.Combine(dataDir, MANIFEST_FILE), blib, MIN_ASTRAL_RECOVERED_FRACTION);
 
             string parallelDir = CreateDir(@"astral-parallel");
@@ -669,23 +669,33 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Libraries whose generated decoys have no fragments of their own. A decoy is built by
-        /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of
-        /// another type is copied verbatim and one with no fragment number is dropped. A library
-        /// with no fragment number column must stop with one plain error; a library with a few
-        /// precursors of copied-only fragments must warn and still finish. A fragment number the
-        /// library HAS but states as 0 is not "missing": the loader refuses the library, naming
-        /// the lines. (A .blib states no fragment types at all, but Osprey types its peaks from
-        /// m/z, so its decoys are usable - see the blib library tests.)
+        /// Libraries whose fragment type columns are missing or wrong. Osprey types every peak
+        /// from m/z, a .tsv's as a .blib's, and the columns are a report against that typing, so
+        /// a library with no fragment number column and one that labels real b and y peaks as
+        /// a ions both search at full depth, with every decoy built from its own typed
+        /// fragments. A fragment number the library HAS but states as 0 is not "missing": the
+        /// loader refuses the library, naming the lines.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetUnusableDecoys()
         {
-            // No fragment number column, so every decoy fragment is dropped.
+            // No fragment number column: every stated type is an ion without a number, outside
+            // the model and reported as such, and the search runs on the typing alone.
             string noNumbers = WriteLibraryWithoutColumn(@"no-fragment-numbers.tsv", @"FragmentNumber");
-            int libraryPrecursors = CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE));
-            string output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
-            StringAssert.Contains(output, RefusalText(noNumbers, libraryPrecursors));
+            string noNumbersDir = CreateDir(@"no-fragment-numbers");
+            string noNumbersLog = RunOsprey(InputArgs(DataInputs()).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, noNumbers,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(noNumbersDir, BLIB_FILE),
+                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, noNumbersDir
+            }).Concat(CommonArgs()).ToArray(), Verifier(false));
+            Assert.AreEqual(0, SplitLines(noNumbersLog).Count(CommandStatusWriter.IsErrorLine), noNumbersLog);
+            int noNumbersPeaks = CountLibraryPeaks(noNumbers, _ => true);
+            StringAssert.Contains(noNumbersLog, string.Format(
+                OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
+                Path.GetFileName(noNumbers), 0, 0, 0, noNumbersPeaks, 0));
+            int noNumbersPrecursors = BlibComparer.CountRows(Path.Combine(noNumbersDir, BLIB_FILE), @"RefSpectra");
+            Assert.IsTrue(noNumbersPrecursors > 0, string.Format(@"{0} precursors reported", noNumbersPrecursors));
 
             // Two precursors whose fragment numbers read 0: the library is invalid, and the load
             // refuses it with every one of their lines counted.
@@ -695,12 +705,12 @@ namespace pwiz.Osprey.Test
                 @"FragmentNumber", @"0");
             int strayLines = File.ReadLines(Path.Combine(_dataDir, LIBRARY_FILE))
                 .Skip(1).Count(line => strayPeptides.Contains(line.Split('\t')[0]));
-            output = RunExpectingRefusal(@"zero-fragment-numbers", zeroNumbers);
+            string output = RunExpectingRefusal(@"zero-fragment-numbers", zeroNumbers);
             StringAssert.Contains(output, string.Format(
                 OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, strayLines));
 
-            // Two precursors of a-ion fragments, which a decoy copies verbatim: a warning naming
-            // the count, and a search.
+            // Two precursors whose real b and y peaks are labeled a ions: reported as stated types
+            // outside the model, and typed from m/z regardless, so the search is the same search.
             string strays = WriteLibraryWithCell(@"two-stray.tsv", strayPeptides.Contains, @"FragmentType", @"a");
             string strayDir = CreateDir(@"two-stray");
             string log = RunOsprey(InputArgs(DataInputs()).Concat(new[]
@@ -709,14 +719,26 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(strayDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, strayDir
             }).Concat(CommonArgs()).ToArray(), Verifier(false));
+            int strayPeaks = CountLibraryPeaks(strays, strayPeptides.Contains);
+            int otherPeaks = CountLibraryPeaks(strays, peptide => !strayPeptides.Contains(peptide));
             StringAssert.Contains(log, string.Format(
-                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_,
-                strayPeptides.Count, libraryPrecursors, strayPeptides.Count / (double)libraryPrecursors, strays));
-            // The search finishes and reports. Not at the usual depth: those two decoys are
-            // identical to their targets, so they score as well as real detections, and on a
-            // subset reporting ~177 precursors two top-scoring decoys alone are over 1% FDR.
-            int strayPrecursors = BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra");
-            Assert.IsTrue(strayPrecursors > 0, string.Format(@"{0} precursors reported", strayPrecursors));
+                OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
+                Path.GetFileName(strays), otherPeaks, otherPeaks, 0, strayPeaks, 0));
+            Assert.IsFalse(log.Contains(OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_.Split('{')[0]), log);
+            Assert.AreEqual(noNumbersPrecursors, BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra"));
+        }
+
+        /// <summary>
+        /// Every reported precursor has a RetentionTimes row for at least one run and at most
+        /// one per run. Not one per run: a precursor passes the experiment on its best runs,
+        /// and a run with no acceptable peak writes no observation (the Stellar golden has
+        /// 93,758 rows for 31,253 precursors over 3 runs, one short of three each).
+        /// </summary>
+        private static void AssertRetentionTimeRows(string blib, int precursors, int runs)
+        {
+            int rows = BlibComparer.CountRows(blib, @"RetentionTimes");
+            Assert.IsTrue(rows >= precursors && rows <= precursors * runs,
+                string.Format(@"{0} RetentionTimes rows for {1} precursors over {2} runs", rows, precursors, runs));
         }
 
         /// <summary>
@@ -747,18 +769,6 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The refusal for a library none of whose <paramref name="decoyCount"/> generated decoys
-        /// has a fragment of its own.
-        /// </summary>
-        private static string RefusalText(string library, int decoyCount)
-        {
-            return string.Format(
-                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
-                decoyCount, decoyCount, 1.0, library, PerFileScoringTask.MAX_UNUSABLE_DECOY_FRACTION,
-                OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
-        }
-
-        /// <summary>
         /// The distinct precursors (modified peptide, charge) in a DIA-NN style .tsv library.
         /// </summary>
         private static int CountLibraryPrecursors(string library)
@@ -783,6 +793,25 @@ namespace pwiz.Osprey.Test
                 fields[column] = value;
                 return fields;
             });
+        }
+
+        /// <summary>
+        /// The peaks of the precursors <paramref name="peptideFilter"/> admits in a .tsv library
+        /// as the loader counts them: one per (modified peptide, charge, m/z), since rows at one
+        /// m/z of one precursor load as one peak.
+        /// </summary>
+        private static int CountLibraryPeaks(string path, Func<string, bool> peptideFilter)
+        {
+            var lines = File.ReadAllLines(path);
+            var header = lines[0].Split('\t');
+            int peptide = Array.IndexOf(header, @"ModifiedPeptide");
+            int charge = Array.IndexOf(header, @"PrecursorCharge");
+            int mz = Array.IndexOf(header, @"FragmentMz");
+            Assert.IsTrue(peptide >= 0 && charge >= 0 && mz >= 0, lines[0]);
+            return lines.Skip(1).Select(line => line.Split('\t'))
+                .Where(fields => peptideFilter(fields[peptide]))
+                .Select(fields => (fields[peptide], fields[charge], fields[mz]))
+                .Distinct().Count();
         }
 
         /// <summary>A copy of the subset library without column <paramref name="columnName"/>.</summary>
@@ -963,7 +992,7 @@ namespace pwiz.Osprey.Test
             int precursors = BlibComparer.CountRows(blib, @"RefSpectra");
             Assert.IsTrue(precursors >= MIN_PRECURSORS, string.Format(@"{0} precursors reported", precursors));
             Assert.AreEqual(RUN_NAMES.Length, BlibComparer.CountRows(blib, @"SpectrumSourceFiles"));
-            Assert.AreEqual(precursors * RUN_NAMES.Length, BlibComparer.CountRows(blib, @"RetentionTimes"));
+            AssertRetentionTimeRows(blib, precursors, RUN_NAMES.Length);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"Proteins") > 0);
             // The library carries how it was made: the run's command line and its version.
             StringAssert.StartsWith(BlibMetadata.Read(blib, OspreyBlibWriter.KEY_COMMAND), @"Osprey ");

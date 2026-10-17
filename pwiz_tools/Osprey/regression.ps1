@@ -176,6 +176,15 @@
     Override the downloads folder (default: Windows Downloads, honoring
     SKYLINE_DOWNLOAD_PATH and a relocated Downloads).
 
+.PARAMETER LibraryAsBlib
+    Search every dataset through a .blib instead of its .tsv: before the legs, the built Osprey
+    exports the staged library (decoys stripped, or marked and paired from the manifest, as the
+    dataset says) with --export-library, and every leg then takes the .blib (the manifest stays:
+    the .blib pairs its decoys from its own DecoyPairs table, but the diagnostics' entrapment
+    pairing still comes from the manifest). The goldens stay the .tsv search's,
+    so mode 1 asks whether a search through the shared BiblioSpec.IO reader is byte-identical to
+    one through the TSV parser; the only gate on the .blib read path, since every dataset's
+    library is a .tsv. Opt-in; TeamCity does not pass it. Refused with -CreateGolden.
 .PARAMETER Threads
     --threads for each run (default 16).
 
@@ -292,10 +301,16 @@ param(
     # is written in the invariant culture, so the SAME golden must match: a fr-FR run that
     # passes proves no number in a file or a tagged line follows the UI culture. The log's
     # prose is in fr-FR form (1 234 567, 12,5 %) and is never compared.
-    [string]$Culture
+    [string]$Culture,
+    # Every leg searches an exported .blib of the dataset's library instead of the .tsv; see
+    # the parameter help.
+    [switch]$LibraryAsBlib
 )
 
 $ErrorActionPreference = 'Stop'
+if ($LibraryAsBlib -and $CreateGolden) {
+    throw "-LibraryAsBlib and -CreateGolden do not mix: the goldens are the .tsv search's, and a .blib run is compared against them."
+}
 
 # Clean BEFORE a run, not after. Stated ONCE here; every other comment on cleanup points
 # back to this block rather than restating it (copies drift - this PR replaced eight).
@@ -1062,6 +1077,39 @@ function Resolve-DatasetInputs {
     if ($Spec.Manifest) {
         $manifest = Join-Path $libDir $Spec.Manifest
         if (-not (Test-Path $manifest)) { throw "Pairing manifest not found: $manifest" }
+    }
+
+    # -LibraryAsBlib: the legs search an exported .blib of the library staged above. Derived
+    # EVERY run, never cached: the export is the loader's own reading of the .tsv (its typing,
+    # its decoy marking and pairing from the manifest), so a .blib from an earlier build would
+    # mask exactly the change a run is meant to catch. Into the same scratch as StripDecoys,
+    # through a temp name moved into place, for the same reason as there.
+    if ($LibraryAsBlib) {
+        $derivedDir = Join-Path $scriptRoot 'TestResults\_derived'
+        New-Item -ItemType Directory -Path $derivedDir -Force | Out-Null
+        $blib = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.blib')
+        $blibTmp = $blib + '.tmp'
+        $exportDir = Join-Path $derivedDir 'export'
+        $exportLog = Join-Path $derivedDir ([IO.Path]::GetFileNameWithoutExtension($library) + '.export.log')
+        Remove-Item $blib, $blibTmp -Force -ErrorAction SilentlyContinue
+        $exportArgs = @('-l', $library, '--export-library', $blibTmp, '--resolution', $Spec.Resolution,
+                        '--threads', $Threads.ToString(), '--work-dir', $exportDir)
+        if ($Spec.DecoysInLibrary) { $exportArgs += '--decoys-in-library' }
+        if ($manifest) { $exportArgs += @('--decoy-pairing-manifest', $manifest) }
+        Write-Host "  exporting the library as a .blib for the legs to search..."
+        & $ospreyExe @exportArgs 2>&1 | Tee-Object -FilePath $exportLog | Out-Null
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $blibTmp)) {
+            throw "Exporting $library as a .blib failed (exit $LASTEXITCODE); see $exportLog"
+        }
+        Move-Item $blibTmp $blib -Force
+        $saved = Select-String -Path $exportLog -Pattern 'Saved [\d,]+ library precursors? to' | Select-Object -Last 1
+        Write-Host ("  {0}" -f ($(if ($saved) { $saved.Line -replace '^\[[^\]]*\]\s*', '' } else { "exported " + (Split-Path -Leaf $blib) })))
+        $library = $blib
+        # The manifest stays on the legs' command line. The .blib pairs its decoys from its own
+        # DecoyPairs table and the loader ignores the manifest for that, but the model
+        # diagnostics' paired entrapment FDP pairs each entrapment peptide with its original
+        # target, which only the manifest describes (DecoyPairs pairs targets with decoys):
+        # without it, mode 1b moves while mode 1 does not.
     }
     return @{ Dir = $dir; LibDir = $libDir; Mzmls = $mzmls; Library = $library; Manifest = $manifest }
 }
@@ -2168,7 +2216,7 @@ foreach ($name in $selected) {
 
     # ---- mode 1: straight-through vs committed golden ----
     Write-Progress-Tc "${name}: comparing vs golden (mode 1)"
-    $m1 = Compare-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump -Tolerance $Tolerance
+    $m1 = Compare-BlibGolden -Blib $straightBlib -GoldenDir $goldenDir -ProteinFdrTsv $proteinDump -Tolerance $Tolerance -LibraryAsBlib:$LibraryAsBlib
     if ($m1.Pass) {
         $summaryLines.Add("$name mode1 (vs golden): PASS")
     } else {

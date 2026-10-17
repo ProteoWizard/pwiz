@@ -109,12 +109,6 @@
   <data name="FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks" xml:space="preserve">
     <value>Fragment types in {0}: of {2:N0} peaks the library types as a b or y ion, Osprey's own typing agrees on {1:N0}, the library chooses another ion within tolerance of the peak on {5:N0}, and names no ion within tolerance on {3:N0}; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable)</value>
   </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
-    <value>Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}</value>
-  </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
-    <value>Invalid peak m/z blob size: {0} bytes (not a multiple of 8)</value>
-  </data>
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>Invalid BiblioSpec library: the {0} table was not found.</value>
   </data>

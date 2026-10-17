@@ -70,26 +70,6 @@ namespace pwiz.Osprey.IO {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}.
-        /// </summary>
-        public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_ {
-            get {
-                return ResourceManager.GetString("BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__" +
-                        "bytes__got__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid peak m/z blob size: {0} bytes (not a multiple of 8).
-        /// </summary>
-        public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_ {
-            get {
-                return ResourceManager.GetString("BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_" +
-                        "of_8_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid BiblioSpec library: the {0} table was not found..
         /// </summary>
         public static string BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_ {

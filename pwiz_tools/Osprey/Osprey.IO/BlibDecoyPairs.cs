@@ -29,37 +29,18 @@ using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {
-    /// <summary>One row of a blib's <c>DecoyPairs</c> table: what the library says about a spectrum's side and pair.</summary>
-    public readonly struct BlibDecoyPair
-    {
-        public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairId)
-        {
-            IsDecoy = isDecoy;
-            IsEntrapment = isEntrapment;
-            PairId = pairId;
-        }
-
-        public bool IsDecoy { get; }
-        /// <summary>True for an entrapment target or entrapment decoy (FDRBench's p_target / p_decoy).</summary>
-        public bool IsEntrapment { get; }
-        /// <summary>Shared by exactly two rows: a target and its decoy, at one charge.</summary>
-        public int PairId { get; }
-    }
-
     /// <summary>
     /// The <c>DecoyPairs</c> table of a blib that supplies its own decoys (CarafeSharp writes
-    /// it, <c>BlibSchema.CreateDecoyPairs</c> defines it): which spectra are decoys, which are
-    /// entrapment, and which target each decoy was made from. A blib searched with its own
-    /// decoys must carry the table, and Osprey pairs the decoys from it alone - no manifest, no
-    /// composition fallback, both of which stay for TSV libraries. Read by RefSpectra id, which
-    /// is a <see cref="LibraryEntry.Id"/> only until the deduplicator renumbers the library, so
-    /// the rows are carried by entry object (<see cref="ByEntry"/>) into the pairing that runs
-    /// after it.
+    /// it, <c>BlibSchema.CreateDecoyPairs</c> defines it, <see cref="BlibReader.ReadDecoyPairs"/>
+    /// reads it): which spectra are decoys, which are entrapment, and which target each decoy
+    /// was made from. A blib searched with its own decoys must carry the table, and Osprey pairs
+    /// the decoys from it alone - no manifest, no composition fallback, both of which stay for
+    /// TSV libraries. Read by RefSpectra id, which is a <see cref="LibraryEntry.Id"/> only until
+    /// the deduplicator renumbers the library, so the rows are carried by entry object
+    /// (<see cref="ByEntry"/>) into the pairing that runs after it.
     /// </summary>
     public static class BlibDecoyPairs
     {
-        public const string TABLE = @"DecoyPairs";
-
         /// <summary>True when the library claims the Osprey library contract in its metadata, which makes its table part of the contract check.</summary>
         public static bool ClaimsContract(string path)
         {
@@ -71,31 +52,13 @@ namespace pwiz.Osprey.IO
         /// table Osprey cannot read (another writer's columns) is a library fault, reported as
         /// one rather than as a defect.
         /// </summary>
-        public static Dictionary<uint, BlibDecoyPair> Read(string path)
+        public static IReadOnlyDictionary<long, BlibDecoyPair> Read(string path)
         {
-            // A ';' in the path must not end the connection string early: the builder quotes it.
-            var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3, ReadOnly = true };
-            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            using (var reader = new BlibReader(path))
             {
-                connection.Open();
-                using (var exists = new SQLiteCommand(@"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name", connection))
-                {
-                    exists.Parameters.AddWithValue(@"@name", TABLE);
-                    if ((long)(exists.ExecuteScalar() ?? 0L) == 0)
-                        return null;
-                }
-                var rows = new Dictionary<uint, BlibDecoyPair>();
                 try
                 {
-                    using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID FROM DecoyPairs", connection))
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            rows[(uint)reader.GetInt64(0)] = new BlibDecoyPair(reader.GetInt64(1) != 0, reader.GetInt64(2) != 0,
-                                (int)reader.GetInt64(3));
-                        }
-                    }
+                    return reader.ReadDecoyPairs();
                 }
                 catch (Exception ex) when (ex is SQLiteException || ex is InvalidCastException)
                 {
@@ -103,23 +66,25 @@ namespace pwiz.Osprey.IO
                         OspreyIOResources.BlibDecoyPairs_Read_The_library__0__has_a_DecoyPairs_table_Osprey_cannot_read___1_,
                         path, ex.Message), ex);
                 }
-                return rows;
             }
         }
 
         /// <summary>
-        /// The rows of <paramref name="table"/> keyed by the entry they describe, taken while
-        /// <see cref="LibraryEntry.Id"/> is still the RefSpectra id. The entries survive
-        /// deduplication as the same objects, so the map still addresses them afterwards.
+        /// The rows of <paramref name="table"/> keyed by the entry they describe, through
+        /// <paramref name="refSpectraIds"/>, the RefSpectra id of each entry in order (the
+        /// loader's <see cref="BlibLoader.RefSpectraIds"/>). The entries survive deduplication
+        /// as the same objects, so the map still addresses them afterwards.
         /// </summary>
-        public static IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> ByEntry(IEnumerable<LibraryEntry> entries,
-            IReadOnlyDictionary<uint, BlibDecoyPair> table)
+        public static IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> ByEntry(IReadOnlyList<LibraryEntry> entries,
+            IReadOnlyList<long> refSpectraIds, IReadOnlyDictionary<long, BlibDecoyPair> table)
         {
+            if (entries.Count != refSpectraIds.Count)
+                throw new ArgumentException($@"{entries.Count} entries but {refSpectraIds.Count} RefSpectra ids: not the loader's list");
             var byEntry = new Dictionary<LibraryEntry, BlibDecoyPair>(ReferenceEqualityComparer.Instance);
-            foreach (var entry in entries)
+            for (int i = 0; i < entries.Count; i++)
             {
-                if (table.TryGetValue(entry.Id, out var pair))
-                    byEntry.Add(entry, pair);
+                if (table.TryGetValue(refSpectraIds[i], out var pair))
+                    byEntry.Add(entries[i], pair);
             }
             return byEntry;
         }

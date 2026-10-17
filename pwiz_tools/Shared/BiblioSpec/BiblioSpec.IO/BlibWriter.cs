@@ -526,18 +526,22 @@ namespace pwiz.BiblioSpec.IO
             return compress ? CompressIfSmaller(bytes) : bytes;
         }
 
-        /// <summary>Reverses the blob encoding: raw when the length matches <paramref name="expectedLength"/>, else zlib.</summary>
+        /// <summary>
+        /// Reverses the blob encoding: raw when the length matches <paramref name="expectedLength"/>,
+        /// else zlib, which must inflate to that length or the blob does not hold the peaks the
+        /// spectrum's <c>numPeaks</c> says it does.
+        /// </summary>
         public static byte[] DecodeBlob(byte[] blob, int expectedLength)
         {
             if (blob.Length == expectedLength)
                 return blob;
-            using (var input = new MemoryStream(blob))
-            using (var zlib = new Ionic.Zlib.ZlibStream(input, Ionic.Zlib.CompressionMode.Decompress))
-            using (var output = new MemoryStream(expectedLength))
+            var bytes = Inflate(blob);
+            if (bytes.Length != expectedLength)
             {
-                zlib.CopyTo(output);
-                return output.ToArray();
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"A peak blob of {0} bytes inflated to {1} bytes where {2} were expected", blob.Length, bytes.Length, expectedLength));
             }
+            return bytes;
         }
 
         /// <summary>The m/z values of a <c>peakMZ</c> blob holding <paramref name="count"/> peaks.</summary>
@@ -549,13 +553,56 @@ namespace pwiz.BiblioSpec.IO
             return values;
         }
 
-        /// <summary>The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks.</summary>
+        /// <summary>
+        /// The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks:
+        /// the format's float32, raw or inflated as the m/z values are. A blob of eight bytes per
+        /// peak, raw or inflated, holds float64 intensities, which an earlier writer stored and
+        /// the Rust osprey reader accepted. A compressed float32 blob is never eight bytes per
+        /// peak from any writer of ours, which keep the compressed bytes only when they are
+        /// fewer than the raw four per peak.
+        /// </summary>
         public static float[] DecodeIntensities(byte[] blob, int count)
         {
-            var bytes = DecodeBlob(blob, count * sizeof(float));
+            int floatLength = count * sizeof(float);
+            int doubleLength = count * sizeof(double);
+            var bytes = blob.Length == floatLength || blob.Length == doubleLength ? blob : Inflate(blob);
             var values = new float[count];
-            Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+            if (bytes.Length == floatLength)
+            {
+                Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+            }
+            else if (bytes.Length == doubleLength)
+            {
+                for (int i = 0; i < count; i++)
+                    values[i] = (float)BitConverter.ToDouble(bytes, i * sizeof(double));
+            }
+            else
+            {
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"An intensity blob of {0} bytes holds {1} bytes where {2} or {3} were expected", blob.Length, bytes.Length,
+                    floatLength, doubleLength));
+            }
             return values;
+        }
+
+        /// <summary>The bytes of a zlib blob; one that is not a zlib stream is refused as library data, not as a codec fault.</summary>
+        private static byte[] Inflate(byte[] blob)
+        {
+            try
+            {
+                using (var input = new MemoryStream(blob))
+                using (var zlib = new Ionic.Zlib.ZlibStream(input, Ionic.Zlib.CompressionMode.Decompress))
+                using (var output = new MemoryStream())
+                {
+                    zlib.CopyTo(output);
+                    return output.ToArray();
+                }
+            }
+            catch (Ionic.Zlib.ZlibException ex)
+            {
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"A peak blob of {0} bytes is neither the expected raw length nor a zlib stream", blob.Length), ex);
+            }
         }
 
         private void EnsurePrepared()
@@ -643,11 +690,7 @@ namespace pwiz.BiblioSpec.IO
 
         private bool TableExists(string table)
         {
-            using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = @name", _connection))
-            {
-                command.Parameters.AddWithValue(@"@name", table);
-                return Convert.ToInt64(command.ExecuteScalar()) > 0;
-            }
+            return BlibSqlite.TableExists(_connection, table);
         }
 
         private PreparedInsert Prepare(string sql, string[] names, DbType[] types)

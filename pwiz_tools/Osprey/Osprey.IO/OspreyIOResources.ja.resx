@@ -97,14 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
-    <value>ピーク強度blobのサイズが無効です：{0}または{1}バイトが必要ですが、{2}です</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
-    <value>ピークm/z blobのサイズが無効です：{0}バイト（8の倍数ではありません）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>無効なBiblioSpecライブラリ：{0}テーブルが見つかりませんでした。</value>
     <comment>Needs Review:New resource</comment>

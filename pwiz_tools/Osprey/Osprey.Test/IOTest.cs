@@ -1822,8 +1822,8 @@ namespace pwiz.Osprey.Test
             byte[] compressedMz = ZlibCompress(mzBytes);
             byte[] compressedInt = ZlibCompress(intBytes);
 
-            // Decompress and verify
-            byte[] decompressedMz = BlibLoader.TryZlibDecompress(compressedMz, mzBytes.Length);
+            // Decompress and verify through the shared reader's decoders
+            byte[] decompressedMz = BlibWriter.DecodeBlob(compressedMz, mzBytes.Length);
             Assert.IsNotNull(decompressedMz);
             Assert.AreEqual(mzBytes.Length, decompressedMz.Length);
 
@@ -1834,9 +1834,38 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(mzValues[i], mz, 1e-10);
             }
 
-            byte[] decompressedInt = BlibLoader.TryZlibDecompress(compressedInt, intBytes.Length);
+            byte[] decompressedInt = BlibWriter.DecodeBlob(compressedInt, intBytes.Length);
             Assert.IsNotNull(decompressedInt);
             Assert.AreEqual(intBytes.Length, decompressedInt.Length);
+
+            // Decoded together, scaled to the base peak, as the loader makes fragments of them.
+            var peaks = BlibReader.DecodePeaks(compressedMz, compressedInt, mzValues.Length);
+            Assert.IsNotNull(peaks);
+            CollectionAssert.AreEqual(mzValues, peaks.Mzs);
+            CollectionAssert.AreEqual(intValues, peaks.Intensities);
+            var fragments = BlibLoader.ToFragments(peaks);
+            CollectionAssert.AreEqual(new[] { 1f, 0.5f, 0.25f }, fragments.Select(f => f.RelativeIntensity).ToArray());
+
+            // Eight bytes per peak is a float64 intensity blob, which an early writer stored.
+            byte[] doubleIntBytes = new byte[intValues.Length * 8];
+            for (int i = 0; i < intValues.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes((double)intValues[i]), 0, doubleIntBytes, i * 8, 8);
+            CollectionAssert.AreEqual(intValues, BlibWriter.DecodeIntensities(doubleIntBytes, intValues.Length));
+            // Compressed too, on enough values that the zlib bytes cannot be a raw length.
+            float[] manyValues = Enumerable.Range(0, 64).Select(i => 1000f - i * 7.5f).ToArray();
+            byte[] manyDoubleBytes = new byte[manyValues.Length * 8];
+            for (int i = 0; i < manyValues.Length; i++)
+                Buffer.BlockCopy(BitConverter.GetBytes((double)manyValues[i]), 0, manyDoubleBytes, i * 8, 8);
+            byte[] compressedDoubleInt = ZlibCompress(manyDoubleBytes);
+            Assert.AreNotEqual(manyValues.Length * 4, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            Assert.AreNotEqual(manyValues.Length * 8, compressedDoubleInt.Length, "The fixture must not look like a raw blob.");
+            CollectionAssert.AreEqual(manyValues, BlibWriter.DecodeIntensities(compressedDoubleInt, manyValues.Length));
+
+            // A blob that inflates to another length than numPeaks says, or that is neither raw
+            // nor zlib, is refused as library data, not misread.
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(compressedMz, mzBytes.Length + 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeBlob(mzBytes, mzBytes.Length - 8));
+            Assert.ThrowsException<InvalidDataException>(() => BlibWriter.DecodeIntensities(compressedMz, intValues.Length + 1));
         }
 
         #endregion

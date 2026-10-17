@@ -1,0 +1,144 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace pwiz.BiblioSpec.IO
+{
+    /// <summary>
+    /// The <c>LibInfo</c> row: what a library says about itself as a whole, as
+    /// <see cref="BlibReader.Info"/> reads it. <see cref="SpectrumCount"/> is -1 in a library
+    /// still being written and has been 0 in a damaged one, so a reader that needs the count
+    /// falls back to <see cref="BlibReader.CountSpectra"/>.
+    /// </summary>
+    public sealed class BlibLibraryInfo
+    {
+        public BlibLibraryInfo(string lsid, string createTime, int spectrumCount, int revision, int schemaVersion)
+        {
+            Lsid = lsid;
+            CreateTime = createTime;
+            SpectrumCount = spectrumCount;
+            Revision = revision;
+            SchemaVersion = schemaVersion;
+        }
+
+        public string Lsid { get; }
+        /// <summary>The creation time in ctime() format, as <see cref="BlibSchema.FormatCreateTime"/> writes it.</summary>
+        public string CreateTime { get; }
+        /// <summary><c>numSpecs</c>.</summary>
+        public int SpectrumCount { get; }
+        /// <summary><c>majorVersion</c>: the build of this library, from 1.</summary>
+        public int Revision { get; }
+        /// <summary><c>minorVersion</c>: the schema version (<see cref="BlibSchema.CurrentMinorVersion"/>).</summary>
+        public int SchemaVersion { get; }
+        /// <summary>True for a redundant library, by its LSID; a redundant library has no <c>RetentionTimes</c> table.</summary>
+        public bool IsRedundant
+        {
+            get { return Lsid != null && Lsid.Contains(@":redundant:"); }
+        }
+    }
+
+    /// <summary>One <c>SpectrumSourceFiles</c> row, as <see cref="BlibWriter.AddSourceFile"/> writes it.</summary>
+    public sealed class BlibSourceFile
+    {
+        public BlibSourceFile(long id, string fileName, string idFileName, double? cutoffScore, int workflowType)
+        {
+            Id = id;
+            FileName = fileName;
+            IdFileName = idFileName;
+            CutoffScore = cutoffScore;
+            WorkflowType = workflowType;
+        }
+
+        /// <summary>The id <c>RefSpectra.fileID</c> and <c>RetentionTimes.SpectrumSourceID</c> refer to.</summary>
+        public long Id { get; }
+        public string FileName { get; }
+        /// <summary>The identification file, or null.</summary>
+        public string IdFileName { get; }
+        public double? CutoffScore { get; }
+        /// <summary><see cref="BlibWriter.WORKFLOW_TYPE_DDA"/> or <see cref="BlibWriter.WORKFLOW_TYPE_DIA"/>; DDA in a library before the column.</summary>
+        public int WorkflowType { get; }
+    }
+
+    /// <summary>
+    /// One <c>RetentionTimes</c> row: an observation of a spectrum in a source file, as
+    /// <see cref="BlibWriter.AddRetentionTime"/> writes it. The ion mobility columns are those
+    /// of schema 6 and later; a library before that (drift time columns under other names)
+    /// reads them as null.
+    /// </summary>
+    public sealed class BlibRetentionTimeRecord
+    {
+        public long RefSpectraId { get; set; }
+        /// <summary>The observation's own spectrum in the redundant library, or 0 when the library was not filtered from one.</summary>
+        public long RedundantRefSpectraId { get; set; }
+        /// <summary>The <c>SpectrumSourceFiles</c> id, or null.</summary>
+        public long? SpectrumSourceId { get; set; }
+        public double? IonMobility { get; set; }
+        public double? CollisionalCrossSectionSqA { get; set; }
+        public double? IonMobilityHighEnergyOffset { get; set; }
+        public int IonMobilityType { get; set; } = BlibWriter.ION_MOBILITY_TYPE_NONE;
+        public double? RetentionTime { get; set; }
+        public double? StartTime { get; set; }
+        public double? EndTime { get; set; }
+        public double? Score { get; set; }
+        public bool BestSpectrum { get; set; }
+    }
+
+    /// <summary>
+    /// One <c>DecoyPairs</c> row (<see cref="BlibSchema.CreateDecoyPairs"/>): what a library
+    /// that supplies its own decoys says about a spectrum's side and pair, as
+    /// <see cref="BlibWriter.AddDecoyPair"/> writes it.
+    /// </summary>
+    public readonly struct BlibDecoyPair
+    {
+        public const string TABLE = @"DecoyPairs";
+
+        public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairId, string method = null)
+        {
+            IsDecoy = isDecoy;
+            IsEntrapment = isEntrapment;
+            PairId = pairId;
+            Method = method;
+        }
+
+        public bool IsDecoy { get; }
+        /// <summary>True for an entrapment target or entrapment decoy (FDRBench's p_target / p_decoy).</summary>
+        public bool IsEntrapment { get; }
+        /// <summary>Shared by exactly two rows: a target and its decoy, at one charge.</summary>
+        public int PairId { get; }
+        /// <summary>How a decoy was made (<c>reverse</c>, <c>cycle</c>); null on a target or when unknown.</summary>
+        public string Method { get; }
+    }
+
+    /// <summary>The decoded peaks of one spectrum: m/z values and intensities, index for index.</summary>
+    public sealed class BlibPeaks
+    {
+        public BlibPeaks(double[] mzs, float[] intensities)
+        {
+            Mzs = mzs;
+            Intensities = intensities;
+        }
+
+        public double[] Mzs { get; }
+        public float[] Intensities { get; }
+        public int Count
+        {
+            get { return Mzs.Length; }
+        }
+    }
+}
