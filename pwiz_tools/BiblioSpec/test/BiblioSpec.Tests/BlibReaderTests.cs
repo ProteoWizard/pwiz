@@ -218,6 +218,27 @@ public class BlibReaderTests
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => reader.ReadSpectra(false, 3, 3));
             Assert.ThrowsException<ArgumentOutOfRangeException>(() => reader.ReadRetentionTimes(0));
 
+            // The filtered scan: each bound inclusive, a bound left null not applied, composed with a partition.
+            var inWindow = reader.ReadSpectra(false, new BlibSpectrumFilter { MinPrecursorMz = 400.2, MaxPrecursorMz = 500.25 }).Select(s => s.Id).ToList();
+            CollectionAssert.AreEqual(new[] { peptideId, bareId }, inWindow);
+            var withPeakRows = reader.ReadSpectra(false, new BlibSpectrumFilter { MinNumPeaks = 1 }).Select(s => s.Id).ToList();
+            CollectionAssert.AreEqual(new[] { peptideId, moleculeId }, withPeakRows);
+            var singlyCharged = reader.ReadSpectra(false, new BlibSpectrumFilter { MinPrecursorCharge = 1, MaxPrecursorCharge = 1 }).Select(s => s.Id).ToList();
+            CollectionAssert.AreEqual(new[] { moleculeId }, singlyCharged);
+            var withPeaksRows = reader.ReadSpectra(false, new BlibSpectrumFilter { RequirePeaksRow = true }).Select(s => s.Id).ToList();
+            CollectionAssert.AreEqual(new[] { peptideId, moleculeId }, withPeaksRows);
+            Assert.AreEqual(0, reader.ReadSpectra(false, new BlibSpectrumFilter { MinPrecursorMz = 600 }).Count());
+            var partitionedInWindow = Enumerable.Range(0, 2).SelectMany(i => reader.ReadSpectra(false, new BlibSpectrumFilter { MinPrecursorMz = 400.0 }, 2, i)).Select(s => s.Id).ToList();
+            CollectionAssert.AreEquivalent(inWindow, partitionedInWindow);
+
+            // One row by id, with and without its blobs; null for an id the library lacks.
+            var one = reader.ReadSpectrum(moleculeId, true);
+            Assert.IsNotNull(one);
+            Assert.AreEqual("Glucose", one.MoleculeName);
+            CollectionAssert.AreEqual(new[] { 100.0, 120.0 }, BlibReader.DecodePeaks(one)!.Mzs);
+            Assert.IsNull(reader.ReadSpectrum(peptideId, false)!.MzBlob);
+            Assert.IsNull(reader.ReadSpectrum(bareId + 1, true));
+
             // The scan with peaks: blobs as written, null for the spectrum without a peaks row.
             var withPeaks = reader.ReadSpectra(true).ToList();
             CollectionAssert.AreEqual(mzBlob, withPeaks[0].MzBlob);
@@ -356,6 +377,7 @@ public class BlibReaderTests
             Assert.IsNull(withoutPeaks.MzBlob);
             Assert.IsNull(BlibReader.DecodePeaks(withoutPeaks));
             Assert.IsNull(indexOnly.ReadPeaks(1, 2));
+            Assert.AreEqual(0, indexOnly.ReadSpectra(true, new BlibSpectrumFilter { RequirePeaksRow = true }).Count());
         }
         finally
         {
