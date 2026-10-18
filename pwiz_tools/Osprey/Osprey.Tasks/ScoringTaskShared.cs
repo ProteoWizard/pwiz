@@ -1026,7 +1026,8 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
                     entry.IsDecoy, entry.Score,
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
-                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep,
+                        entry.ExperimentPeptidePep));
             }
         }
 
@@ -1045,7 +1046,7 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, row.ModifiedSequence, row.Charge, row.EntryId,
                     row.IsDecoy, row.Score,
                     new FdrQValues(row.RunPrecursorQvalue, row.RunPeptideQvalue,
-                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0));
+                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0, 1.0));
             }
         }
 
