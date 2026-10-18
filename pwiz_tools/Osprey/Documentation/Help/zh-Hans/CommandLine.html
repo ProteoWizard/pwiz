@@ -106,7 +106,7 @@ Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution uni
 
 # 合并 1 - 对所有运行使用一个进程（传入排序后的列表，以确保顺序确定）
 Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   在每个 parquet 旁写入：&lt;stem&gt;.1st-pass.fdr_scores.bin、&lt;stem&gt;.reconciliation.json
+#   在每个 parquet 旁写入：&lt;stem&gt;.1st-pass.fdr_scores.bin、out.1st-pass.*
 
 # 拆分 2 - 每个文件一个进程（得分 parquet 及其中间文件一起）
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01

@@ -319,14 +319,8 @@
   <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
     <value>Reading the intermediate file '{0}' failed partway, after {1:N0} records were read. The run stops here rather than continue with part of the file's values.</value>
   </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
-    <value>Reconciliation file {0} has {2} {1} but does not carry the first-pass precursor set. Delete this analysis's {3} files and run the first pass again.</value>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
-    <value>Reconciliation file {0} has {2} {1} but does not list the input files it covers ({3}). Delete this analysis's {4} files and run the first pass again.</value>
-  </data>
   <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">
-    <value>Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis's {4} files and run the first pass again.</value>
+    <value>Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis's {4} files and run the analysis again.</value>
   </data>
   <data name="ReconciliationFile_Load_Reconciliation_file_not_found__" xml:space="preserve">
     <value>Reconciliation file not found: {0}</value>

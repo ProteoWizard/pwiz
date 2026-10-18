@@ -176,7 +176,7 @@
     <value>writes: {0}, and {1} with {2}</value>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_" xml:space="preserve">
-    <value>writes beside each parquet: {0}, {1}</value>
+    <value>writes beside each parquet: {0}; and once for the analysis: {1}</value>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_" xml:space="preserve">
     <value>For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: {0}. The argument tables below are generated from the command-line declarations, so they always match the build; run {1} for the same reference as text.</value>

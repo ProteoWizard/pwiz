@@ -333,14 +333,6 @@
     <value>中間ファイル「{0}」の読み取りが、{1:N0}個のレコードを読み取った後に途中で失敗しました。ファイルの値の一部だけで続行せず、ここで実行を停止します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
-    <value>整合ファイル{0}の{2}は{1}ですが、第1パスのプリカーサーセットが含まれていません。この解析の{3}ファイルを削除し、第1パスを再実行してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
-    <value>整合ファイル{0}の{2}は{1}ですが、対象とする入力ファイル（{3}）が記載されていません。この解析の{4}ファイルを削除し、第1パスを再実行してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">
     <value>整合ファイル{0}の{3} {1}はサポートされていません（想定{2}）。この解析の{4}ファイルを削除し、第1パスを再実行してください。</value>
     <comment>Needs Review:New resource</comment>

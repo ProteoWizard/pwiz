@@ -189,13 +189,14 @@ iteration cap, ignoring `OSPREY_GBT_*`) and pass 2 froze that SVM.
 `FdrTest.TestStreamingFirstPassTrainsGbdt` pins the fix against the resident projection path,
 byte for byte.
 
-Under `--model-diagnostics` the tree paths also bin each scored row's standardized features,
-so the report's per-feature target/decoy distributions exist for trees as for the SVM. A tree
-ensemble has no coefficients, so the contribution table itself is marked not applicable
-(`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the model
-was not retrained.
+The tree paths also bin each scored row's standardized features - on every run, into the
+run's `FeatureSums` share in its first-pass FDR file - so the report's per-feature
+target/decoy distributions exist for trees as for the SVM. A tree ensemble has no
+coefficients, so the contribution table itself is marked not applicable
+(`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the
+feature report is unavailable.
 
-The trained ensembles persist in `<stem>.1st-pass.model.json` (`FirstPassModelIO`, as
+The trained ensembles persist in `<blib-stem>.1st-pass.model.json` (`FirstPassModelIO`, as
 `GbtModelData`, which round-trips exactly), so a resume, the Stage 6 per-file competition and
 a distributed `--task SecondPassFDR` node score with the same trees the first pass used. A
 tree model's file is about 3.4 MB, against a few hundred KB for the linear model, so it is
@@ -741,7 +742,7 @@ would make the effective default depend on another variable, which is harder to 
 a loud failure whose message names the fix.
 
 The refusal gates on the arm the **first pass recorded** - persisted as
-`ExperimentAgg` in the per-file `<stem>.1st-pass.model.json` sidecar
+`ExperimentAgg` in the analysis's `<blib-stem>.1st-pass.model.json`
 (`FirstPassModelIO`) - not on the live process environment, because a
 `--task SecondPassFDR` node reloads the frozen model from disk and never
 trained pass 1. A sidecar written before arm recording reports null, which means

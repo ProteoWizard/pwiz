@@ -348,11 +348,13 @@ namespace pwiz.Osprey.FDR
     /// <para>Arrays are the pass's own scratch and are REUSED after this returns, so an
     /// implementation must consume them synchronously rather than retaining them.
     /// <paramref name="fileIndex"/> is the file's position in the score pass's file order,
-    /// which is the projection's file order.</para>
+    /// which is the projection's file order. <paramref name="featureSums"/> is the file's share
+    /// of the first-pass feature report, which the sidecar carries so a later process can build
+    /// the report without re-scoring the file.</para>
     /// </summary>
     public delegate void FileRunScopeSink(string fileName, int fileIndex, int rowCount,
         uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
-        double[] apexRts);
+        double[] apexRts, FeatureSums featureSums);
 
     /// <summary>
     /// Streams one file's finished first-pass run-scope record back off the sidecar

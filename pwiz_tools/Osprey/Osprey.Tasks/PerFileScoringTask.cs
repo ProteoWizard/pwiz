@@ -36,6 +36,7 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -159,7 +160,8 @@ namespace pwiz.Osprey.Tasks
         // Per-file CAL-view calibration diagnostics for the --model-diagnostics HTML
         // report, keyed by file name in input order (mirrors _perFileCalibrations).
         // Empty on a normal run: only populated on the compute path when
-        // config.ModelDiagnostics is on. Published as PerFileCalibrationDiagnostics.
+        // config.ModelDiagnostics is on (every run saves the rows to disk regardless).
+        // Published as PerFileCalibrationDiagnostics.
         private ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow> _perFileCalibrationDiagnostics
             = new ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow>();
         // The per-run mass-error unit ("ppm" / "Th") for the CAL view, recorded from the
@@ -827,9 +829,9 @@ namespace pwiz.Osprey.Tasks
             // CAL-view per-file diagnostics for --model-diagnostics. Harvested directly
             // onto the instance field by ProcessFile (compute path only), so it is
             // published from the field rather than a Finalize local. Empty on a normal
-            // run and on the rehydrate/resume paths (no calibration matches to shape) --
-            // FirstPassFdrTask reads it only under config.ModelDiagnostics and tolerates
-            // empty. See TODO-20260712 for the HPC-split persistence caveat.
+            // run and on the rehydrate/resume paths (no calibration matches to shape) -
+            // FirstPassFdrTask reads it only under config.ModelDiagnostics and reads any run
+            // missing here from its .calibration.json.
             ctx.Publish(new PerFileCalibrationDiagnostics(_perFileCalibrationDiagnostics, _calibrationMassUnit));
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
@@ -1827,12 +1829,14 @@ namespace pwiz.Osprey.Tasks
                 context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
                 out ModelDiagnosticsData.CalFileRow calDiagnostics, ctx);
 
-            // Harvest the CAL-view per-file diagnostics for the --model-diagnostics
-            // HTML report. Only non-null on the compute path under config.ModelDiagnostics;
-            // FirstPassFdrTask assembles these into ModelDiagnosticsData.Cal. Keyed by file
-            // name in input order, mirroring the per-file calibration harvest below. The
-            // ConcurrentDictionary field tolerates the parallel per-file fan-out.
-            if (calDiagnostics != null)
+            // Harvest the CAL-view per-file diagnostics for this process's --model-diagnostics
+            // HTML report. Non-null on every compute path, and always saved beside the
+            // calibration (ResolveCalibration); held in memory only when this process writes
+            // the report, which otherwise reads them back from disk. FirstPassFdrTask assembles
+            // these into ModelDiagnosticsData.Cal. Keyed by file name in input order, mirroring
+            // the per-file calibration harvest below. The ConcurrentDictionary field tolerates
+            // the parallel per-file fan-out.
+            if (calDiagnostics != null && config.ModelDiagnostics)
             {
                 _perFileCalibrationDiagnostics[fileName] = calDiagnostics;
                 // Record the per-run mass-error unit from the mass calibration (the
@@ -2206,7 +2210,12 @@ namespace pwiz.Osprey.Tasks
                     RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration,
                         config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                         config.RtCalibration.MinCalibrationPoints),
-                    SecondPassRt = null
+                    SecondPassRt = null,
+                    // The calibration view's row for this run. Only this phase holds the matches it
+                    // is binned from, so a report built by any later process - a resume, an HPC
+                    // join, --model-diagnostics added afterwards - reads it from here (P16).
+                    ModelDiagnostics = ModelDiagnosticsReport.CalibrationDiagnosticsToJson(calDiagnostics,
+                        !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit)
                 };
                 // ArtifactPaths.ResolveOutputDir routes the calibration JSON to
                 // the configured output dir (or the input's own directory by
