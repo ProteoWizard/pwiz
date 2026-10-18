@@ -907,7 +907,9 @@ namespace pwiz.CarafeSharp.Test
             // order; group 2 then finds all of its precursors paired, where Carafe fails.
             Assert.AreEqual(3, skipped);
             CollectionAssert.AreEqual(new[] { 1, 2, 6, 7, 3, 5 }, rows.Select(r => r.RefSpectraId).ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 1, 2, 2, 3, 3 }, rows.Select(r => r.PairId).ToArray());
+            // The pairing is the manifest's index, shared by every pair the group makes; a decoy names its target.
+            CollectionAssert.AreEqual(new[] { 1, 1, 1, 1, 1, 1 }, rows.Select(r => r.PairingId).ToArray());
+            CollectionAssert.AreEqual(new int?[] { null, 1, null, 6, null, 3 }, rows.Select(r => r.TargetRefSpectraId).ToArray());
             CollectionAssert.AreEqual(new[] { false, true, false, true, false, true }, rows.Select(r => r.IsDecoy).ToArray());
             CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"reverse" }, rows.Select(r => r.Method).ToArray());
             Assert.IsFalse(rows.Any(r => r.IsEntrapment));

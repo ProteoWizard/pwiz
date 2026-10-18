@@ -280,12 +280,25 @@ so their `base_id`s match — required for SVM competition, LDA calibration, and
 fold grouping (see 07-fdr-control.md, 16-determinism.md).
 
 A **`.blib` pairs from its `DecoyPairs` table** and nothing else (`Osprey.IO/BlibDecoyPairs.cs`,
-decision of 2026-10-15; see [24](24-library-contract.md), "Osprey, pairing a blib's decoys"): the
-table's `IsDecoy` is authoritative over the accession prefixes, and each `PairID` names the
-target and the decoy at one charge. A blib searched with its own decoys but without the table is
-refused at load. The rows are read by RefSpectra id before the deduplicator renumbers the
-entries and carried by entry object into the pairing. The two stages below are the **TSV**
-library's, which has no table to carry its pairing.
+decisions of 2026-10-15 and 2026-10-17; see [24](24-library-contract.md), "Osprey, pairing a
+blib's decoys"): the table's `IsDecoy` is authoritative over the accession prefixes, each decoy
+row's `TargetRefSpectraID` names its target at one charge, and `PairingID` (the manifest's
+`peptide_pair_index`) becomes the entry's `PairingId`, which pairs an entrapment peptide with
+its original target for the diagnostics and the FDRBench output - so a blib needs no manifest.
+A blib searched with its own decoys but without the table is refused at load. The rows are read
+by RefSpectra id before the deduplicator renumbers the entries and carried by entry object into
+the pairing. The two stages below are the **TSV** library's, which has no table to carry its
+pairing; after them `PairingIds.Assign` gives every entry its pairing id - from the table's rows
+for a blib, from the manifest for a TSV (the Met-clip reconciliation that
+`EntrapmentPairing.Build` used to redo per task lives there now), a standalone index for a
+peptide in neither - and the library cache keeps it. Every entry has one; an entrapment peptide
+whose id no original target shares is the orphan `EntrapmentPairing.Build` excludes from the
+FDRBench input and the diagnostics. A library searched with generated decoys takes the same
+id assignment (its table, or the manifest given with it), so an entrapment library's pairing
+ids do not depend on where its decoys come from; the manifest's rewrite of accessions and decoy
+marks (`ApplyToLibrary`) stays the supplied-decoy route's, as before. An entrapment library
+(`_p_target` accessions) that brings neither a table nor a manifest is refused at load: its
+paired FDP and FDRBench output would be guesses, and the message names what to supply.
 
 First, a **hard guard**: if there are no library decoys at all,
 the load returns that fault as `error` and the caller exits with code 1

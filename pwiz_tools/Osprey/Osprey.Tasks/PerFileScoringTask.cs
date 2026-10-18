@@ -1198,24 +1198,15 @@ namespace pwiz.Osprey.Tasks
             string library = config.LibrarySource?.Path;
             if (fraction > MAX_UNUSABLE_DECOY_FRACTION)
             {
-                // A .blib's peaks are typed from m/z, so what it lacks is peaks within the
-                // fragment tolerance of the peptide's b and y ions, not annotations.
-                if (config.LibrarySource?.Format == LibraryFormat.Blib)
-                {
-                    ctx.LogError(string.Format(
-                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance,
-                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
-                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY),
-                        config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit.GetLocalizedString(),
-                        OspreyArgNames.Text(OspreyArgNames.FRAGMENT_TOLERANCE), OspreyArgNames.Text(OspreyArgNames.RESOLUTION)));
-                }
-                else
-                {
-                    ctx.LogError(string.Format(
-                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
-                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
-                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
-                }
+                // Every library's peaks are typed from m/z, a .tsv's as a .blib's, so what the
+                // library lacks is peaks within the fragment tolerance of the peptide's b and y
+                // ions, not annotations.
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance,
+                    nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
+                    OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY),
+                    config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit.GetLocalizedString(),
+                    OspreyArgNames.Text(OspreyArgNames.FRAGMENT_TOLERANCE), OspreyArgNames.Text(OspreyArgNames.RESOLUTION)));
                 return false;
             }
             ctx.LogWarning(string.Format(

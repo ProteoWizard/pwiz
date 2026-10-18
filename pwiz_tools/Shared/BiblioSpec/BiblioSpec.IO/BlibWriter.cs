@@ -309,7 +309,7 @@ namespace pwiz.BiblioSpec.IO
                 Execute(@"DROP INDEX IF EXISTS " + name);
             foreach (var index in EXTRA_INDEXES)
                 Execute(@"DROP INDEX IF EXISTS " + index.Name);
-            Execute(@"DROP INDEX IF EXISTS " + BlibSchema.IdxDecoyPairsPairIdName);
+            Execute(@"DROP INDEX IF EXISTS " + BlibSchema.IdxDecoyPairsTargetName);
         }
 
         /// <summary>Begins a transaction over the rows that follow; one per batch of spectra keeps the inserts fast.</summary>
@@ -430,24 +430,27 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// Adds a <c>DecoyPairs</c> row (<see cref="BlibSchema.CreateDecoyPairs"/>): spectrum
         /// <paramref name="refId"/> is a decoy or a target, of the entrapment partition or not,
-        /// and shares <paramref name="pairId"/> with the one other row of its pair (its target or
-        /// its decoy, at the same charge). <paramref name="method"/> names how a decoy was made
-        /// (<c>reverse</c>, <c>cycle</c>) and is null on a target or when unknown. The table is
-        /// created on the first call, so a library that supplies no decoys has none: a reader
-        /// takes the table's presence to mean the library pairs its own decoys.
+        /// belongs to the pairing <paramref name="pairingId"/> (the manifest's
+        /// <c>peptide_pair_index</c>, shared by a target, its entrapment target and both their
+        /// decoys), and, when it is a decoy with a target, names that target's spectrum in
+        /// <paramref name="targetRefSpectraId"/>. <paramref name="method"/> names how a decoy
+        /// was made (<c>reverse</c>, <c>cycle</c>) and is null on a target or when unknown. The
+        /// table is created on the first call, so a library that supplies no decoys has none: a
+        /// reader takes the table's presence to mean the library pairs its own decoys.
         /// </summary>
-        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairId, string method)
+        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId, string method)
         {
             if (_insertDecoyPair == null)
             {
                 if (!TableExists(@"DecoyPairs"))
                     Execute(BlibSchema.CreateDecoyPairs);
-                _insertDecoyPair = Prepare(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method) " +
-                                           @"VALUES (@id, @decoy, @entrapment, @pair, @method)",
-                    new[] { @"@id", @"@decoy", @"@entrapment", @"@pair", @"@method" },
-                    new[] { DbType.Int64, DbType.Int32, DbType.Int32, DbType.Int32, DbType.String });
+                _insertDecoyPair = Prepare(@"INSERT INTO DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairingID, TargetRefSpectraID, Method) " +
+                                           @"VALUES (@id, @decoy, @entrapment, @pairing, @target, @method)",
+                    new[] { @"@id", @"@decoy", @"@entrapment", @"@pairing", @"@target", @"@method" },
+                    new[] { DbType.Int64, DbType.Int32, DbType.Int32, DbType.Int32, DbType.Int64, DbType.String });
             }
-            _insertDecoyPair.Execute(refId, isDecoy ? 1 : 0, isEntrapment ? 1 : 0, pairId, (object)method ?? DBNull.Value);
+            _insertDecoyPair.Execute(refId, isDecoy ? 1 : 0, isEntrapment ? 1 : 0, pairingId,
+                (object)targetRefSpectraId ?? DBNull.Value, (object)method ?? DBNull.Value);
         }
 
         /// <summary>
@@ -473,7 +476,7 @@ namespace pwiz.BiblioSpec.IO
                     Execute(index.Statement);
             }
             if (TableExists(@"DecoyPairs"))
-                Execute(BlibSchema.CreateIdxDecoyPairsPairId);
+                Execute(BlibSchema.CreateIdxDecoyPairsTarget);
             _extensions?.CreateIndexes(_connection);
             CloseConnection();
             _file?.Commit();
@@ -526,18 +529,22 @@ namespace pwiz.BiblioSpec.IO
             return compress ? CompressIfSmaller(bytes) : bytes;
         }
 
-        /// <summary>Reverses the blob encoding: raw when the length matches <paramref name="expectedLength"/>, else zlib.</summary>
+        /// <summary>
+        /// Reverses the blob encoding: raw when the length matches <paramref name="expectedLength"/>,
+        /// else zlib, which must inflate to that length or the blob does not hold the peaks the
+        /// spectrum's <c>numPeaks</c> says it does.
+        /// </summary>
         public static byte[] DecodeBlob(byte[] blob, int expectedLength)
         {
             if (blob.Length == expectedLength)
                 return blob;
-            using (var input = new MemoryStream(blob))
-            using (var zlib = new Ionic.Zlib.ZlibStream(input, Ionic.Zlib.CompressionMode.Decompress))
-            using (var output = new MemoryStream(expectedLength))
+            var bytes = Inflate(blob);
+            if (bytes.Length != expectedLength)
             {
-                zlib.CopyTo(output);
-                return output.ToArray();
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"A peak blob of {0} bytes inflated to {1} bytes where {2} were expected", blob.Length, bytes.Length, expectedLength));
             }
+            return bytes;
         }
 
         /// <summary>The m/z values of a <c>peakMZ</c> blob holding <paramref name="count"/> peaks.</summary>
@@ -549,13 +556,56 @@ namespace pwiz.BiblioSpec.IO
             return values;
         }
 
-        /// <summary>The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks.</summary>
+        /// <summary>
+        /// The intensities of a <c>peakIntensity</c> blob holding <paramref name="count"/> peaks:
+        /// the format's float32, raw or inflated as the m/z values are. A blob of eight bytes per
+        /// peak, raw or inflated, holds float64 intensities, which an earlier writer stored and
+        /// the Rust osprey reader accepted. A compressed float32 blob is never eight bytes per
+        /// peak from any writer of ours, which keep the compressed bytes only when they are
+        /// fewer than the raw four per peak.
+        /// </summary>
         public static float[] DecodeIntensities(byte[] blob, int count)
         {
-            var bytes = DecodeBlob(blob, count * sizeof(float));
+            int floatLength = count * sizeof(float);
+            int doubleLength = count * sizeof(double);
+            var bytes = blob.Length == floatLength || blob.Length == doubleLength ? blob : Inflate(blob);
             var values = new float[count];
-            Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+            if (bytes.Length == floatLength)
+            {
+                Buffer.BlockCopy(bytes, 0, values, 0, bytes.Length);
+            }
+            else if (bytes.Length == doubleLength)
+            {
+                for (int i = 0; i < count; i++)
+                    values[i] = (float)BitConverter.ToDouble(bytes, i * sizeof(double));
+            }
+            else
+            {
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"An intensity blob of {0} bytes holds {1} bytes where {2} or {3} were expected", blob.Length, bytes.Length,
+                    floatLength, doubleLength));
+            }
             return values;
+        }
+
+        /// <summary>The bytes of a zlib blob; one that is not a zlib stream is refused as library data, not as a codec fault.</summary>
+        private static byte[] Inflate(byte[] blob)
+        {
+            try
+            {
+                using (var input = new MemoryStream(blob))
+                using (var zlib = new Ionic.Zlib.ZlibStream(input, Ionic.Zlib.CompressionMode.Decompress))
+                using (var output = new MemoryStream())
+                {
+                    zlib.CopyTo(output);
+                    return output.ToArray();
+                }
+            }
+            catch (Ionic.Zlib.ZlibException ex)
+            {
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    @"A peak blob of {0} bytes is neither the expected raw length nor a zlib stream", blob.Length), ex);
+            }
         }
 
         private void EnsurePrepared()
@@ -643,11 +693,7 @@ namespace pwiz.BiblioSpec.IO
 
         private bool TableExists(string table)
         {
-            using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = @name", _connection))
-            {
-                command.Parameters.AddWithValue(@"@name", table);
-                return Convert.ToInt64(command.ExecuteScalar()) > 0;
-            }
+            return BlibSqlite.TableExists(_connection, table);
         }
 
         private PreparedInsert Prepare(string sql, string[] names, DbType[] types)

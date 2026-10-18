@@ -27,13 +27,21 @@ Standard BiblioSpec tables (BlibSchema, created by BlibWriter.CreateSchema)
 Optional tables (BlibSchema.CreateLibMetadata / CreateDecoyPairs)
   LibMetadata (key TEXT PRIMARY KEY, value TEXT)   - in every library a tool of ours writes
                                                      (each records its command line in it)
-  DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairID, Method)
+  DecoyPairs (RefSpectraID, IsDecoy, IsEntrapment, PairingID, TargetRefSpectraID, Method)
                                                    - in a library that supplies its decoys
 ```
 
-`DecoyPairs` (Carafe's table, written by CarafeSharp and by `--export-library` for the decoys a
-load paired) names each supplied decoy's target: one `PairID` for the two rows of a pair, at one
-charge. A blib searched with its own decoys must carry it, and Osprey pairs from it alone
+`DecoyPairs` (written by CarafeSharp and by `--export-library`) is the library's decoy and
+entrapment design, one row per spectrum of a library that has one (supplied decoys, or
+entrapment peptides): `IsDecoy` and `IsEntrapment` are the row's side
+and partition (the four kinds of an FDRBench pairing manifest), `PairingID` is the manifest's
+`peptide_pair_index` - shared by a target, its entrapment target and both their decoys, which is
+what pairs an entrapment peptide with its original target - `TargetRefSpectraID` is a decoy's
+target spectrum at the same charge (a foreign key to `RefSpectra.id`, indexed), and `Method` how
+the row's sequence was made from the row it was made from: `reverse` or `cycle` on a decoy,
+`shuffle` or `foreign` on an entrapment target (from the pairing manifest's `entrapment_method`
+column, which CarafeSharp's entrapment FASTA stage writes), null on an original target. A blib searched with its own decoys must carry it, and Osprey pairs decoys and
+entrapment from it alone, with no manifest, reading it on every load that finds it
 ([01](01-decoy-generation.md) step 2, [24](24-library-contract.md)). The search output blib has
 none: its decoys are not reported.
 

@@ -68,6 +68,13 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string BLIB_READER_TERM = @";blibreader=" + BlibLoader.READER_VERSION;
 
+        /// <summary>
+        /// The TSV counterpart of <see cref="BLIB_READER_TERM"/>: what the reader makes of a .tsv
+        /// (peaks merged, typed, the modified sequence's text) changes with its version too, so
+        /// outputs scored under an earlier reader are not adopted by a search under this one.
+        /// </summary>
+        public const string TSV_READER_TERM = @";tsvreader=4";
+
         // ---- The selection contract (ISelectableTask) ------------------------------------
         // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a
         // task added later is a join that hydrates nothing per run until its author says
@@ -203,8 +210,22 @@ namespace pwiz.Osprey.Tasks
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
-            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty,
+            ReaderTerm(ctx.Config.LibrarySource?.Format),
             DemuxCache.ValidityKeySuffix(ctx.Config));
+
+        /// <summary>The reader-version term of the validity key for a library of <paramref name="format"/>.</summary>
+        private static string ReaderTerm(LibraryFormat? format)
+        {
+            switch (format)
+            {
+                case LibraryFormat.Blib:
+                    return BLIB_READER_TERM;
+                case LibraryFormat.DiannTsv:
+                    return TSV_READER_TERM;
+                default:
+                    return string.Empty;
+            }
+        }
 
         /// <summary>
         /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>

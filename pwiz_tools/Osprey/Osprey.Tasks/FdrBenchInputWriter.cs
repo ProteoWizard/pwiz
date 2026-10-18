@@ -431,7 +431,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (lib == null || lib.Sequence == null)
                     continue;
-                if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                if (EntrapmentLibraryClassifier.IsDecoySide(lib))
                     continue;
                 if (!pairing.PairIndexBySeq.ContainsKey(lib.Sequence))
                     continue;

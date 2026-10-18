@@ -23,11 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
@@ -148,14 +150,19 @@ namespace pwiz.Osprey.IO
                     // each entry's arrays and logs a one-line collapse summary.
                     // OmitFragments has it read-and-discard the fragment blocks so
                     // the returned entries stay lean (no ~3.2 GB of peak arrays).
+                    var swCache = Stopwatch.StartNew();
                     var cached = LibraryCache.LoadCache(
                         cachePath, libraryHash, options.OmitFragments, log.LogInfo, out status,
                         options.RetainFragmentsFor);
+                    swCache.Stop();
                     if (cached != null && cached.Count > 0)
                     {
                         log.LogInfo(string.Format(
                             OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__,
                             cached.Count, cachePath));
+                        // The number a library read has to reach for the cache to be unnecessary.
+                        log.LogInfo(LogTag.TIMING, @"Library cache read: {0:F2}s ({1:N0} precursors)",
+                            swCache.Elapsed.TotalSeconds, cached.Count);
                         // Caches written before the normalizer existed still hold Carafe's
                         // per-peptide accessions, and the cache is keyed on the SOURCE hash, so
                         // nothing else would invalidate them. Normalizing here keeps a cached
@@ -223,6 +230,11 @@ namespace pwiz.Osprey.IO
             // A blib's own pairing of its decoys, by entry, for the pairing after dedup; null
             // for a TSV, which pairs through the manifest and composition.
             IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> blibPairs = null;
+            IReadOnlyDictionary<long, LibraryEntry> blibEntriesById = null;
+            // The parse against the cache read above, with a blib's split between the file and
+            // the work done on its rows: what a blib read must close for the cache to go.
+            var swParse = Stopwatch.StartNew();
+            string parseDetail;
 
             switch (config.LibrarySource.Format)
             {
@@ -230,15 +242,21 @@ namespace pwiz.Osprey.IO
                     var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
                     entries = tsvLoader.Load(path, log.LogInfo);
                     tsvLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
+                    parseDetail = @"tsv";
                     break;
 
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader(config.FragmentTolerance);
                     entries = blibLoader.Load(path, log.LogInfo);
-                    // The table is read for the two readers of it, not for every load.
-                    var decoyPairs = config.LibrarySuppliesDecoys || BlibDecoyPairs.ClaimsContract(path)
-                        ? BlibDecoyPairs.Read(path)
-                        : null;
+                    parseDetail = string.Format(CultureInfo.InvariantCulture,
+                        @"blib; file read and peak decode {0:F2}s, modifications and peak typing {1:F2}s",
+                        blibLoader.ReadSeconds, blibLoader.TypeSeconds);
+                    // The table is the library's pairing design - each decoy's target, and the
+                    // pairing id that pairs an entrapment peptide with its original target - so
+                    // it is read whenever the library has one, whichever way the decoys come.
+                    var decoyPairs = BlibDecoyPairs.Read(path);
+                    if (decoyPairs != null)
+                        blibPairs = BlibDecoyPairs.ByEntry(entries, blibLoader.RefSpectraIds, decoyPairs);
                     // A blib searched with its own decoys must say which they are and which
                     // target each was made from: the table CarafeSharp writes. Without it the
                     // search uses generated decoys or nothing.
@@ -251,10 +269,10 @@ namespace pwiz.Osprey.IO
                                 path, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                             return null;
                         }
-                        blibPairs = BlibDecoyPairs.ByEntry(entries, decoyPairs);
+                        blibEntriesById = BlibDecoyPairs.ByRefSpectraId(entries, blibLoader.RefSpectraIds);
                     }
                     // Before any repair below: a library that claims the contract must need none.
-                    if (!CheckLibraryContract(path, entries, decoyPairs, config, log, out error))
+                    if (!CheckLibraryContract(path, entries, blibLoader.RefSpectraIds, decoyPairs, config, log, out error))
                         return null;
                     break;
 
@@ -262,6 +280,9 @@ namespace pwiz.Osprey.IO
                     throw new NotSupportedException(string.Format(
                         OspreyIOResources.LibraryLoader_Load_Unsupported_library_format___0_, config.LibrarySource.Format));
             }
+            swParse.Stop();
+            log.LogInfo(LogTag.TIMING, @"Library parse: {0:F2}s ({1:N0} precursors; {2})",
+                swParse.Elapsed.TotalSeconds, entries.Count, parseDetail);
 
             // Strip Carafe's per-peptide "_pepNNNNN" pseudo-protein accessions BEFORE dedup:
             // dedup unions each (modified sequence, charge) group's accessions through a
@@ -295,8 +316,21 @@ namespace pwiz.Osprey.IO
             // rewritten from the manifest. Ordering against Normalize and Deduplicate above is
             // unchanged - both still run first, which is what the cross-impl byte parity rests
             // on.
+            // The pairing manifest, read once. A .blib with a DecoyPairs table carries its whole
+            // pairing design and reads no manifest, and says so when one was given.
+            DecoyPairingManifest manifest = null;
+            if (blibPairs != null && !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                log.LogInfo(string.Format(
+                    OspreyIOResources.LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_,
+                    config.DecoyPairingManifestPath));
+            }
+            else if (blibPairs == null && !TryReadManifest(config.DecoyPairingManifestPath, log, out manifest, out error))
+            {
+                return null;
+            }
             if (config.LibrarySuppliesDecoys &&
-                !TryFinishSuppliedDecoys(entries, config, blibPairs, log, out error))
+                !TryFinishSuppliedDecoys(entries, config, manifest, blibPairs, blibEntriesById, log, out error))
             {
                 return null;
             }
@@ -306,6 +340,22 @@ namespace pwiz.Osprey.IO
                 if (error != null)
                     return null;
             }
+            // Entrapment peptides are never paired by guesswork: a library that has them must
+            // bring its pairing (the table or the manifest), or the paired FDP and the FDRBench
+            // output it was built for would be wrong with nothing in the run to show for it.
+            if (manifest == null && blibPairs == null &&
+                entries.Exists(e => EntrapmentLibraryClassifier.IsEntrapment(e.ProteinIds)))
+            {
+                error = string.Format(
+                    OspreyIOResources.LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_,
+                    path, OspreyArgNames.Text(OspreyArgNames.DECOY_PAIRING_MANIFEST));
+                return null;
+            }
+            // Every entry's pairing id, once, whichever way the decoys come: from the DecoyPairs
+            // rows for a .blib, from the manifest for a .tsv, else every peptide its own pairing,
+            // as the FDRBench output and the diagnostics have always numbered them. The cache,
+            // the export and every consumer read the entry rather than the manifest file.
+            LogPairingIds(PairingIds.Assign(entries, manifest, blibPairs), log);
 
             // Save binary cache for next run
             try
@@ -356,8 +406,8 @@ namespace pwiz.Osprey.IO
         /// entries still carry here) and the pairing manifest the run names take part in the
         /// check. A library without the claim takes the tolerant route unchanged.
         /// </summary>
-        private static bool CheckLibraryContract(string path, List<LibraryEntry> entries,
-            IReadOnlyDictionary<uint, BlibDecoyPair> decoyPairs, OspreyConfig config, IOspreyLog log, out string error)
+        private static bool CheckLibraryContract(string path, List<LibraryEntry> entries, IReadOnlyList<long> refSpectraIds,
+            IReadOnlyDictionary<long, BlibDecoyPair> decoyPairs, OspreyConfig config, IOspreyLog log, out string error)
         {
             error = null;
             if (!BlibDecoyPairs.ClaimsContract(path))
@@ -368,17 +418,23 @@ namespace pwiz.Osprey.IO
             log.LogInfo(string.Format(
                 OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_,
                 FormatPrefixList(config.DecoyPrefixes)));
+            if (entries.Count != refSpectraIds.Count)
+                throw new ArgumentException($@"{entries.Count} entries but {refSpectraIds.Count} RefSpectra ids: not the loader's list");
             var rows = new List<LibraryContractRow>(entries.Count);
-            foreach (var entry in entries)
+            for (int i = 0; i < entries.Count; i++)
             {
+                var entry = entries[i];
                 bool? markedDecoy = null;
-                int? pairId = null;
-                if (decoyPairs != null && decoyPairs.TryGetValue(entry.Id, out var pair))
+                int? pairingId = null;
+                long? targetRefSpectraId = null;
+                if (decoyPairs != null && decoyPairs.TryGetValue(refSpectraIds[i], out var pair))
                 {
                     markedDecoy = pair.IsDecoy;
-                    pairId = pair.PairId;
+                    pairingId = pair.PairingId;
+                    targetRefSpectraId = pair.TargetRefSpectraId;
                 }
-                rows.Add(new LibraryContractRow(entry.Sequence, entry.ModifiedSequence, entry.Charge, entry.ProteinIds, markedDecoy, pairId));
+                rows.Add(new LibraryContractRow(entry.Sequence, entry.ModifiedSequence, entry.Charge, entry.ProteinIds,
+                    markedDecoy, pairingId, refSpectraIds[i], targetRefSpectraId));
             }
             List<PairingManifestRow> manifest = null;
             if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
@@ -430,12 +486,14 @@ namespace pwiz.Osprey.IO
         /// target-decoy competition are not worth producing.</para>
         ///
         /// <para>A blib pairs from its own <c>DecoyPairs</c> table (<paramref name="blibPairs"/>,
-        /// decision of 2026-10-15) and nothing else; the manifest and the composition fallback
-        /// below are the TSV library's, which has no table to carry its pairing.</para>
+        /// decision of 2026-10-15) and nothing else; the manifest (<paramref name="manifest"/>,
+        /// which the caller reads for a TSV only) and the composition fallback below are the TSV
+        /// library's, which has no table to carry its pairing.</para>
         /// </summary>
         private static bool TryFinishSuppliedDecoys(
-            List<LibraryEntry> library, OspreyConfig config, IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> blibPairs,
-            IOspreyLog log, out string error)
+            List<LibraryEntry> library, OspreyConfig config, DecoyPairingManifest manifest,
+            IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> blibPairs,
+            IReadOnlyDictionary<long, LibraryEntry> blibEntriesById, IOspreyLog log, out string error)
         {
             error = null;
 
@@ -448,20 +506,13 @@ namespace pwiz.Osprey.IO
                 markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix);
 
             // A blib's table is authoritative over the prefixes, so it marks before the counts
-            // below and pairs here; a manifest given with a blib pairs nothing (it still serves
-            // the entrapment pairing and the FDRBench output downstream), and is said to.
+            // below and pairs here.
             var pairingState = new PairingState();
             int pairedFromTable = 0;
             if (blibPairs != null)
             {
                 log.LogInfo(OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_);
-                if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
-                {
-                    log.LogInfo(string.Format(
-                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_DecoyPairs__the_pairing_manifest__0__serves_entrapment_pairing_only_,
-                        config.DecoyPairingManifestPath));
-                }
-                pairedFromTable = BlibDecoyPairs.Pair(library, blibPairs, pairingState, out int newlyMarked);
+                pairedFromTable = BlibDecoyPairs.Pair(library, blibPairs, blibEntriesById, pairingState, out int newlyMarked);
                 if (newlyMarked > 0)
                 {
                     log.LogInfo(LogTag.COUNT, @"Library-decoy mode: the DecoyPairs table changed the side of {0} precursors",
@@ -501,23 +552,8 @@ namespace pwiz.Osprey.IO
                 NDecoys = nDecoysForStats,
                 NPairedViaTable = pairedFromTable,
             };
-            if (blibPairs == null && !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            if (manifest != null)
             {
-                log.LogInfo(string.Format(
-                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_,
-                    config.DecoyPairingManifestPath));
-                DecoyPairingManifest manifest;
-                try
-                {
-                    manifest = DecoyPairingManifest.FromTsv(config.DecoyPairingManifestPath);
-                }
-                catch (Exception ex)
-                {
-                    error = string.Format(
-                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_,
-                        config.DecoyPairingManifestPath, ex.Message);
-                    return false;
-                }
                 var manifestStats = manifest.ApplyToLibrary(library, pairingState, log.LogInfo);
                 if (manifestStats.DecoysListedAsTargets.Count > 0)
                 {
@@ -587,6 +623,51 @@ namespace pwiz.Osprey.IO
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// The pairing manifest at <paramref name="path"/>, logged as it is read; null and true
+        /// for no path. A manifest that does not read is the fault <paramref name="error"/>
+        /// describes.
+        /// </summary>
+        private static bool TryReadManifest(string path, IOspreyLog log, out DecoyPairingManifest manifest, out string error)
+        {
+            manifest = null;
+            error = null;
+            if (string.IsNullOrEmpty(path))
+                return true;
+            log.LogInfo(string.Format(
+                OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_, path));
+            try
+            {
+                manifest = DecoyPairingManifest.FromTsv(path);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = string.Format(
+                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_,
+                    path, ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>The entrapment peptides the pairing excludes, as a count of the known Met-clip artifact and a listing of the rest.</summary>
+        private static void LogPairingIds(PairingIds.Summary summary, IOspreyLog log)
+        {
+            if (summary.MetClipDropped > 0)
+            {
+                log.LogInfo(LogTag.ENTRAPMENT, CountText.Format(summary.MetClipDropped,
+                    OspreyIOResources.PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_,
+                    OspreyIOResources.PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_));
+            }
+            if (summary.Unexplained.Count > 0)
+            {
+                log.LogInfo(LogTag.ENTRAPMENT, CountText.Format(summary.Unexplained.Count,
+                    OspreyIOResources.PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_,
+                    OspreyIOResources.PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_,
+                    string.Join(@", ", summary.Unexplained.Take(3))));
+            }
         }
 
         /// <summary>
@@ -804,12 +885,13 @@ namespace pwiz.Osprey.IO
             // A cache is only as validated as the reader that wrote it: a DIA-NN TSV cached
             // before the reader refused invalid lines is re-read once, so a bad library is
             // reported instead of served from its cache. A valid library caches the same bytes.
+            // Every library's peaks, a .tsv's as a .blib's, are typed from m/z within the
+            // search's fragment tolerance, and the cache holds the types, so a different
+            // tolerance is a different cache.
             if (source.Format == LibraryFormat.DiannTsv)
-                return string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION);
+                return DiannTsvLoader.CacheTerm(config.FragmentTolerance);
             if (source.Format != LibraryFormat.Blib)
                 return string.Empty;
-            // Every blib's peaks are typed from m/z within the search's fragment tolerance, and
-            // the cache holds the types, so a different tolerance is a different cache.
             return BlibLoader.CacheTerm(config.FragmentTolerance);
         }
 

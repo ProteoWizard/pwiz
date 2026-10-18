@@ -2515,16 +2515,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The library {3} is missing b or y fragment ion annotations or fragment numbers: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Use a library with annotated fragments, such as a DIA-NN or Carafe library, or one that already contains decoys, with {5}..
-        /// </summary>
-        public static string PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_i" +
-                        "on_annotations_or_fragment_numbers___0__of__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Too few peaks of the library {3} are b or y ions within the fragment tolerance of {6} {7}: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Set a fragment tolerance that fits the library&apos;s m/z accuracy with {8} or {9}, or use a library that already contains decoys, with {5}..
         /// </summary>
         public static string PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance {

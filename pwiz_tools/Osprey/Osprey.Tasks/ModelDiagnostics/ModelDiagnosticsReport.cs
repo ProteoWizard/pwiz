@@ -641,7 +641,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     ? OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_first_pass_model_diagnostics___
                     : OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_second_pass_model_diagnostics___,
                 libraryById.Count));
-            var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+            var pairing = EntrapmentPairing.Build(libraryById);
 
             int nTarget = 0, nPTarget = 0;
             classByBaseId = new Dictionary<uint, EntrapmentClass>();
@@ -652,8 +652,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 if (lib == null || lib.Sequence == null)
                     continue;
                 // Skip decoy-side entries: their base-id equals their target's, which
-                // the target-side entry below classifies (accession is authoritative).
-                if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                // the target-side entry below classifies.
+                if (EntrapmentLibraryClassifier.IsDecoySide(lib))
                     continue;
                 // Exclude unmatched entrapment so the HTML FDP counts the same peptides
                 // the emitted manifest gives FDRBench.
@@ -675,7 +675,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (nTarget > 0)
                 entrapmentRatio = (double)nPTarget / nTarget;
 
-            pairing.LogSummary(log);
         }
 
         /// <summary>
