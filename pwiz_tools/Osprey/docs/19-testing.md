@@ -230,7 +230,7 @@ Run output is cleaned **before** a run, never after. A local run retains its fin
 products under `TestResults/regression-<stamp>` (`<dataset>/straight`, the phase 3/4
 outputs, `chain/logs` — a passing run's files have readers: a later A/B, a memory profile,
 the streamed diagnostics HTML), but the staged input **copies** (the phase-1 mzML copies,
-the per-worker `spectra.bin` / library / `.libcache` copies) are always deleted as they are
+the per-worker `spectra.bin` / library / derived-library copies) are always deleted as they are
 consumed. The next run's startup prune, before it creates its own root, keeps the most
 recent `-KeepRunDirs` completed sets (default 1), so the disk holds KeepRunDirs+1 sets
 between runs — two by default; `-KeepRunDirs 0` keeps only the current run's output. The
