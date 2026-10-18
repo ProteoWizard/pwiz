@@ -233,6 +233,62 @@ namespace pwiz.Osprey.Test
                 derived));
             StringAssert.Contains(rebuiltLog.ToString(), string.Format(
                 OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__, rebuilt.Count, derived));
+
+            // Decoys the manifest declares but no accession prefix marks (a predictor that
+            // stripped the prefix): a copy loses the prefix on half its decoy precursors, by
+            // sequence so every row of a precursor agrees, while the other half keeps it (a load
+            // whose prefixes mark no decoy at all is refused before the manifest can mark any).
+            // The derived library must keep the accessions as loaded - its DecoyPairs table marks
+            // the decoys - so the warm run reads the entries the parse made, not prefixed copies.
+            string unprefixedDir = CreateDir(@"derived-unprefixed");
+            string unprefixedTsv = Path.Combine(unprefixedDir, LIBDECOY_FILE);
+            var lines = File.ReadAllLines(tsv);
+            var header = lines[0].Split('\t');
+            int proteinColumn = Array.IndexOf(header, @"ProteinID");
+            int sequenceColumn = Array.IndexOf(header, @"StrippedPeptide");
+            Assert.IsTrue(proteinColumn >= 0 && sequenceColumn >= 0, lines[0]);
+            const string subsetDecoyPrefix = "decoy_";
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var fields = lines[i].Split('\t');
+                if (!fields[proteinColumn].StartsWith(subsetDecoyPrefix, StringComparison.Ordinal) || fields[sequenceColumn][0] > 'M')
+                    continue;
+                fields[proteinColumn] = fields[proteinColumn].Substring(subsetDecoyPrefix.Length);
+                lines[i] = string.Join("\t", fields);
+            }
+            File.WriteAllLines(unprefixedTsv, lines);
+            // The manifest replaces a decoy's accessions with its own source-protein accessions,
+            // so its copy loses the prefix on the same decoys, or every decoy would end prefixed.
+            string unprefixedManifest = Path.Combine(unprefixedDir, LIBDECOY_PAIRING_FILE);
+            var manifestLines = File.ReadAllLines(manifest);
+            var manifestHeader = manifestLines[0].Split('\t');
+            int manifestSequence = Array.IndexOf(manifestHeader, @"sequence");
+            int manifestDecoy = Array.IndexOf(manifestHeader, @"decoy");
+            int manifestProteins = Array.IndexOf(manifestHeader, @"proteins");
+            Assert.IsTrue(manifestSequence >= 0 && manifestDecoy >= 0 && manifestProteins >= 0, manifestLines[0]);
+            for (int i = 1; i < manifestLines.Length; i++)
+            {
+                var fields = manifestLines[i].Split('\t');
+                if (fields[manifestDecoy] != @"Yes" || fields[manifestSequence][0] > 'M' ||
+                    !fields[manifestProteins].StartsWith(subsetDecoyPrefix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                fields[manifestProteins] = fields[manifestProteins].Substring(subsetDecoyPrefix.Length);
+                manifestLines[i] = string.Join("\t", fields);
+            }
+            File.WriteAllLines(unprefixedManifest, manifestLines);
+            var unprefixedLog = new StringBuilder();
+            var unprefixedFirst = LoadDerived(unprefixedTsv, unprefixedManifest, FragmentToleranceConfig.UnitResolution(0.5),
+                LibraryLoadOptions.Default, unprefixedLog);
+            var prefixes = new OspreyConfig().DecoyPrefixes;
+            Assert.IsTrue(unprefixedFirst.Any(e => e.IsDecoy && !e.LooksLikeLibraryDecoy(prefixes)),
+                string.Format(@"no decoy without a prefix: the copy proves nothing ({0} decoys of {1}; first decoy accessions: {2}){3}{4}",
+                    unprefixedFirst.Count(e => e.IsDecoy), unprefixedFirst.Count,
+                    string.Join(@";", unprefixedFirst.First(e => e.IsDecoy).ProteinIds), Environment.NewLine, unprefixedLog));
+            var unprefixedSecond = LoadDerived(unprefixedTsv, unprefixedManifest, FragmentToleranceConfig.UnitResolution(0.5),
+                LibraryLoadOptions.Default, new StringBuilder());
+            differences.AddRange(LibraryDifferences(unprefixedFirst, unprefixedSecond).Select(line => @"unprefixed decoys " + line));
             return DescribeDifferences(LIBDECOY_FILE + @" (LibraryLoader, derived library)", differences, first.Count);
         }
 
