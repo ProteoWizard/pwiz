@@ -335,10 +335,10 @@
     <value>Multi-charge consensus planning</value>
   </data>
   <data name="FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for_1_file__" xml:space="preserve">
-    <value>{1} complete: first-pass FDR and reconciliation planning done for 1 file. The next task, {2}, reads this output directory: the files written for the input and the analysis-wide first-pass files.</value>
+    <value>{1} complete: first-pass FDR and the cross-run consensus done for 1 file. The next task, {2}, reads this output directory: the files written for the input and the analysis-wide first-pass files.</value>
   </data>
   <data name="FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for__0__" xml:space="preserve">
-    <value>{1} complete: first-pass FDR and reconciliation planning done for {0:N0} files. The next task, {2}, reads this output directory: the files written for each input and the analysis-wide first-pass files.</value>
+    <value>{1} complete: first-pass FDR and the cross-run consensus done for {0:N0} files. The next task, {2}, reads this output directory: the files written for each input and the analysis-wide first-pass files.</value>
   </data>
   <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Re_scoring_loads_each_of__0__files_on_its_own__so_no_combined_cross_run_reconciliation_" xml:space="preserve">
     <value>Re-scoring loads each of {0:N0} files on its own, so no combined cross-run reconciliation data is built.</value>

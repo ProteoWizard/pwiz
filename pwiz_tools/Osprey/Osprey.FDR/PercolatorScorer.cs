@@ -155,7 +155,10 @@ namespace pwiz.Osprey.FDR
             var featureBuf = new double[nFeatures];
             // The feature report: each file's share (sums in row order, histograms) added in file
             // order - the same reduction the streaming first pass makes, so the two report the
-            // same contributions for the same rows (FeatureSums).
+            // same contributions for the same rows (FeatureSums). Only when it has a reader: this
+            // path persists no share, and under a tree model the report is a serial
+            // standardization of every row, which the second pass would otherwise pay for nothing.
+            bool reportContributions = captureContributions != null || OspreyOutput.Verbose;
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, true);
 
             // Streaming score pass over the projection, one file at a time. The
@@ -173,7 +176,7 @@ namespace pwiz.Osprey.FDR
                 {
                     IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
                     var projRows = kvp.Value;
-                    var share = new FeatureContributions.Accumulator(nFeatures, true);
+                    var share = reportContributions ? new FeatureContributions.Accumulator(nFeatures, true) : null;
                     if (gbtModels != null)
                     {
                         // Tree path: parallel over contiguous row chunks. A tree score is a
@@ -188,10 +191,13 @@ namespace pwiz.Osprey.FDR
                             gbtModels, standardizer, nFeatures, finalScores, gi, config.NThreads);
                         // The per-feature report IS a cross-row accumulation, so it stays serial and
                         // in row order, after the parallel pass.
-                        foreach (var proj in projRows)
+                        if (share != null)
                         {
-                            share.Add(StandardizeFeatureRow(standardizer, featureBuf, rows,
-                                proj.ParquetIndex, proj.CoelutionSum, nFeatures), proj.IsDecoy);
+                            foreach (var proj in projRows)
+                            {
+                                share.Add(StandardizeFeatureRow(standardizer, featureBuf, rows,
+                                    proj.ParquetIndex, proj.CoelutionSum, nFeatures), proj.IsDecoy);
+                            }
                         }
                         gi += projRows.Count;
                     }
@@ -207,16 +213,19 @@ namespace pwiz.Osprey.FDR
                             standardizer.TransformSlice(featureBuf);
                             finalScores[gi] = ScoreStandardizedRow(null, avgWeights, avgBias, featureBuf);
 
-                            share.Add(featureBuf, proj.IsDecoy);
+                            share?.Add(featureBuf, proj.IsDecoy);
                             gi++;
                         }
                     }
-                    contribAcc.Add(share.ToFeatureSums());
+                    if (share != null)
+                        contribAcc.Add(share.ToFeatureSums());
                     scoreProgress.Report(gi);
                 }
             }
 
-            var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config);
+            var contributions = reportContributions
+                ? BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config)
+                : null;
             // Surface the trained model's contributions to the caller (the projection-path
             // --model-diagnostics report reads them). No-op (null) on every path that does not
             // request them; a pure hand-off, so scoring stays byte-identical.

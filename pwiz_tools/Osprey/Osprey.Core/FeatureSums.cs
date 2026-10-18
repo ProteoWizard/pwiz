@@ -66,8 +66,13 @@ namespace pwiz.Osprey.Core
 
         private static int ByteLengthFor(int featureCount, int binCount)
         {
-            return checked(2 * sizeof(uint) + 2 * sizeof(long) + 2 * featureCount * sizeof(double) +
-                           2 * featureCount * binCount * sizeof(int));
+            return checked((int)LongByteLengthFor(featureCount, binCount));
+        }
+
+        private static long LongByteLengthFor(long featureCount, long binCount)
+        {
+            return 2 * sizeof(uint) + 2 * sizeof(long) + 2 * featureCount * sizeof(double) +
+                   2 * featureCount * binCount * sizeof(int);
         }
 
         public void Write(BinaryWriter writer)
@@ -94,8 +99,9 @@ namespace pwiz.Osprey.Core
                 return null;
             uint featureCount = reader.ReadUInt32();
             uint binCount = reader.ReadUInt32();
+            // Long arithmetic: corrupt counts must fail this comparison, not overflow it.
             if (featureCount > short.MaxValue || binCount > short.MaxValue ||
-                ByteLengthFor((int)featureCount, (int)binCount) != length)
+                LongByteLengthFor(featureCount, binCount) != length)
             {
                 return null;
             }

@@ -4675,6 +4675,65 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The v9 first-pass sidecar's feature sums - the run's share of the model diagnostics
+        /// Model tab - round-trip exactly beside unchanged records; a sidecar written without
+        /// them reads as having none; and a share whose counts are corrupt reads as none rather
+        /// than throwing, which would abort a resume or a report fold.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarFeatureSums()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_sums_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var sums = new FeatureSums(2, 3) { TargetCount = 5, DecoyCount = 4 };
+                sums.TargetSums[0] = 1.25;
+                sums.TargetSums[1] = -0.1;
+                sums.DecoySums[0] = double.NaN;
+                sums.DecoySums[1] = 3e-300;
+                sums.TargetHistograms[1][2] = 7;
+                sums.DecoyHistograms[0][0] = 2;
+                var records = new List<FdrScoreRecord> { new FdrScoreRecord(3, 0.5, 0.01, 0.02, 12.5) };
+
+                string path = Path.Combine(dir, "with.1st-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(path, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any, sums);
+                var read = FdrScoresSidecar.ReadFeatureSums(path);
+                Assert.IsNotNull(read);
+                Assert.AreEqual(sums.TargetCount, read.TargetCount);
+                Assert.AreEqual(sums.DecoyCount, read.DecoyCount);
+                for (int j = 0; j < 2; j++)
+                {
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sums.TargetSums[j]), BitConverter.DoubleToInt64Bits(read.TargetSums[j]));
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(sums.DecoySums[j]), BitConverter.DoubleToInt64Bits(read.DecoySums[j]));
+                    CollectionAssert.AreEqual(sums.TargetHistograms[j], read.TargetHistograms[j]);
+                    CollectionAssert.AreEqual(sums.DecoyHistograms[j], read.DecoyHistograms[j]);
+                }
+                var readRecords = new List<FdrScoreRecord>();
+                Assert.IsTrue(FdrScoresSidecar.ReadRecords(path, FdrScoresSidecar.Pass.FirstPass, readRecords.Add));
+                Assert.AreEqual(1, readRecords.Count);
+                Assert.AreEqual(3u, readRecords[0].EntryId);
+                Assert.AreEqual(TestStamps.Any.ToString(), FdrScoresSidecar.ReadStamp(path, FdrScoresSidecar.Pass.FirstPass)?.ToString());
+
+                string without = Path.Combine(dir, "without.1st-pass.fdr_scores.bin");
+                FdrScoresSidecar.Write(without, records, FdrScoresSidecar.Pass.FirstPass, TestStamps.Any);
+                Assert.IsNull(FdrScoresSidecar.ReadFeatureSums(without));
+
+                // Feature and bin counts large enough that the implied length overflows an int.
+                byte[] data = File.ReadAllBytes(path);
+                int sumsOffset = FdrScoresSidecar.HeaderLength + FdrScoresSidecar.RecordLength;
+                BitConverter.GetBytes(20000u).CopyTo(data, sumsOffset);
+                BitConverter.GetBytes(20000u).CopyTo(data, sumsOffset + 4);
+                File.WriteAllBytes(path, data);
+                Assert.IsNull(FdrScoresSidecar.ReadFeatureSums(path));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
         /// A 1st-pass sidecar must NOT load into a TryRead call that
         /// expects 2nd-pass (and vice versa) — would otherwise scramble
         /// q-values silently because the records are positionally

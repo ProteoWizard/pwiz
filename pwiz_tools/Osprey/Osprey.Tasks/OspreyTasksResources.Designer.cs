@@ -882,7 +882,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {1} complete: first-pass FDR and reconciliation planning done for {0:N0} files. The next task, {2}, reads this output directory: the files written for each input and the analysis-wide first-pass files..
+        ///   Looks up a localized string similar to {1} complete: first-pass FDR and the cross-run consensus done for {0:N0} files. The next task, {2}, reads this output directory: the files written for each input and the analysis-wide first-pass files..
         /// </summary>
         public static string FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for__0__ {
             get {
@@ -892,7 +892,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {1} complete: first-pass FDR and reconciliation planning done for 1 file. The next task, {2}, reads this output directory: the files written for the input and the analysis-wide first-pass files..
+        ///   Looks up a localized string similar to {1} complete: first-pass FDR and the cross-run consensus done for 1 file. The next task, {2}, reads this output directory: the files written for the input and the analysis-wide first-pass files..
         /// </summary>
         public static string FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for_1_file__ {
             get {
