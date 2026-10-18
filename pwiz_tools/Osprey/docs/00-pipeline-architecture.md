@@ -804,7 +804,7 @@ node running that task needs a copy, whatever batch it was handed.
 
 | File | Scope / kind | Written by | Read by | Relay |
 |---|---|---|---|---|
-| `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
+| `<library-leaf>.blib` (derived library; a `.tsv` source only) | experiment cache | library load, any task | all tasks | ship it, or rebuild locally - it is the finished library in the transfer format, validated by its own `osprey.library_hash` row, and the `.libcache` it replaced is read for one release where one is left |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on a multiplexed run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, read demultiplexed from the source | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, and it can be rebuilt only from the source, so keep the source to absorb a demux settings change |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
@@ -828,9 +828,10 @@ node running that task needs a copy, whatever batch it was handed.
 
 No row lists a validity record, because none is a separate file. Every product above
 carries its own validity stamp inside itself (see "Validity stamps live inside the artifact"
-below), and the two caches, `.libcache` and `.spectra.bin`, validate themselves from their
-headers as they always have. A node that has the artifact has its stamp; there is nothing
-else to stage.
+below), and the two caches validate themselves: `.spectra.bin` from its header as it always
+has, the derived `<library-leaf>.blib` from its `LibMetadata` row `osprey.library_hash`, the
+library's composition hash plus the blib reader's term. A node that has the artifact has its
+stamp; there is nothing else to stage.
 
 Nothing else is part of this contract. The `--fdrbench` pairing manifests and the
 peptide-trace dumps are side channels: no task reads them, nothing relays them, and
@@ -999,7 +1000,7 @@ both defaulting to "beside the input file":
 | Setting | Sets | Holds |
 |---|---|---|
 | `--output-dir` | `ArtifactPaths.OutputDir` | products: scores parquet, calibration JSON, FDR sidecars, reconciliation JSON |
-| `--cache-dir` | `ArtifactPaths.CacheDir` | caches: `.spectra.bin`, `.libcache` |
+| `--cache-dir` | `ArtifactPaths.CacheDir` | caches: `.spectra.bin`, the derived `<library-leaf>.blib` (and a `.libcache` an earlier release left) |
 | `--work-dir` | both | the single-flag form |
 
 This is the product/cache split from the contract table made operational. `ResolveOutputDir`

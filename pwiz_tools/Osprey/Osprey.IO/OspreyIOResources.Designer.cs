@@ -87,7 +87,16 @@ namespace pwiz.Osprey.IO {
                         "_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0:N0} library spectra.
+        /// </summary>
+        public static string BlibLoader_LoadSpectra_Reading__0_N0__library_spectra {
+            get {
+                return ResourceManager.GetString("BlibLoader_LoadSpectra_Reading__0_N0__library_spectra", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to ... and {0:N0} more modifications.
         /// </summary>
@@ -343,11 +352,21 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to save library cache: {0}.
+        ///   Looks up a localized string similar to Failed to read the derived library &apos;{0}&apos;: {1} Reading the library file instead..
         /// </summary>
-        public static string LibraryLoader_Load_Failed_to_save_library_cache___0_ {
+        public static string LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_save_library_cache___0_", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_libra" +
+                        "ry_file_instead_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to save the derived library: {0}.
+        /// </summary>
+        public static string LibraryLoader_Load_Failed_to_save_the_derived_library___0_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_save_the_derived_library___0_", resourceCulture);
             }
         }
         
@@ -378,6 +397,15 @@ namespace pwiz.Osprey.IO {
                 return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Loaded {0:N0} library precursors from the derived library &apos;{1}&apos;.
+        /// </summary>
+        public static string LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Loading spectral library from {0}....
@@ -389,11 +417,21 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved library cache ({0:N0} precursors) to &apos;{1}&apos;.
+        ///   Looks up a localized string similar to Saved the derived library ({0:N0} precursors) to &apos;{1}&apos;.
         /// </summary>
-        public static string LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__ {
+        public static string LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The derived library &apos;{0}&apos; was built from a different version or configuration; rebuilding it from the source library..
+        /// </summary>
+        public static string LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_or_configuration__rebuilding_it_from_the_source_library_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_" +
+                        "or_configuration__rebuilding_it_from_the_source_library_", resourceCulture);
             }
         }
         

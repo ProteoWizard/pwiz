@@ -112,6 +112,9 @@
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>Invalid BiblioSpec library: the {0} table was not found.</value>
   </data>
+  <data name="BlibLoader_LoadSpectra_Reading__0_N0__library_spectra" xml:space="preserve">
+    <value>Reading {0:N0} library spectra</value>
+  </data>
   <data name="CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_" xml:space="preserve">
     <value>Library protein accessions carry the per-peptide '{4}' suffix that Carafe adds (e.g. '{2}' -&gt; '{3}'); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein.</value>
   </data>
@@ -166,8 +169,11 @@
   <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
     <value>Failed to load the library cache: {0}. Reading the library file instead.</value>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
-    <value>Failed to save library cache: {0}</value>
+  <data name="LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_" xml:space="preserve">
+    <value>Failed to read the derived library '{0}': {1} Reading the library file instead.</value>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_save_the_derived_library___0_" xml:space="preserve">
+    <value>Failed to save the derived library: {0}</value>
   </data>
   <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
     <value>Library cache '{0}' was built from a different version of the source library; ignoring the stale cache and rebuilding from source.</value>
@@ -178,11 +184,17 @@
   <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
     <value>Loaded {0:N0} library precursors from cache '{1}'</value>
   </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__" xml:space="preserve">
+    <value>Loaded {0:N0} library precursors from the derived library '{1}'</value>
+  </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
     <value>Loading spectral library from {0}...</value>
   </data>
-  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
-    <value>Saved library cache ({0:N0} precursors) to '{1}'</value>
+  <data name="LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__" xml:space="preserve">
+    <value>Saved the derived library ({0:N0} precursors) to '{1}'</value>
+  </data>
+  <data name="LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_or_configuration__rebuilding_it_from_the_source_library_" xml:space="preserve">
+    <value>The derived library '{0}' was built from a different version or configuration; rebuilding it from the source library.</value>
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
     <value>Unsupported library format: {0}</value>

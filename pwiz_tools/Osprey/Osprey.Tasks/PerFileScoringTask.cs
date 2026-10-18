@@ -969,7 +969,7 @@ namespace pwiz.Osprey.Tasks
 
             var swLibrary = Stopwatch.StartNew();
             // Load AND finish: marking and pairing a supplied-decoy library moved inside the
-            // loader (issue #4650) so the .libcache holds the finished library rather than a
+            // loader (issue #4650) so the derived library holds the finished library rather than a
             // half-built one the caller completes. The pairing faults still stop the run
             // here, with the same messages and the same exit code - they arrive as `loadError`
             // instead of being raised in this method.
