@@ -66,6 +66,18 @@ namespace pwiz.Skyline.Model.Lib
         public static readonly LibraryGlobalScores EMPTY =
             new LibraryGlobalScores(null, null, null, null, Enumerable.Empty<LibraryProteinGroup>());
 
+        /// <summary>
+        /// The scores of an entry known only by its protein (or molecule list) name: that one
+        /// group without values, or <see cref="EMPTY"/> for no name.
+        /// </summary>
+        public static LibraryGlobalScores ForProtein(string protein)
+        {
+            if (string.IsNullOrEmpty(protein))
+                return EMPTY;
+            return new LibraryGlobalScores(null, null, null, null,
+                ImmutableList.Singleton(new LibraryProteinGroup(protein, null, null)));
+        }
+
         public LibraryGlobalScores(double? precursorQValue, double? precursorPep, double? peptideQValue,
             double? peptidePep, IEnumerable<LibraryProteinGroup> proteinGroups)
         {

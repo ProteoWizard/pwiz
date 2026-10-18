@@ -736,8 +736,6 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     proteinGroupsBySpectraID.TryGetValue(row.id, out var proteinGroups);
-                    // Used to name molecule lists for small molecules, so the first group is enough
-                    string protein = proteinGroups?[0].Name;
                     int? fileIndex = null;
                     if (row.fileId.HasValue && fileIdToIndex.TryGetValue(row.fileId.Value, out int iFile))
                     {
@@ -830,8 +828,8 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
 
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, row.id, fileIndex, protein,
-                                scoreName == null ? null : score, scoreName, GetGlobalScores(row, proteinGroups)));
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, row.id, fileIndex,
+                                GetGlobalScores(row, proteinGroups), scoreName == null ? null : score, scoreName));
                         }
                     }
                 }
@@ -2604,21 +2602,30 @@ namespace pwiz.Skyline.Model.Lib
 
     public class BiblioLiteSpectrumInfo : Immutable, ICachedSpectrumInfo
     {
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceIndex, string protein,
-            double? score = null, string scoreType = null, LibraryGlobalScores globalScores = null)
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceIndex,
+            LibraryGlobalScores globalScores, double? score = null, string scoreType = null)
         {
             Key = key;
             Copies = copies;
             NumPeaks = numPeaks;
             Id = id;
             SpectrumSourceIndex = spectrumSourceIndex;
-            Protein = protein;
             RetentionTimesByFileIndex = IndexedMultiArray<float>.EMPTY;
             IonMobilitiesByFileIndex = IndexedMultiArray<IonMobilityAndCCS>.EMPTY;
             PeakBoundariesByFileIndex = ExplicitPeakBoundsList.EMPTY;
             Score = score;
             ScoreType = scoreType;
             GlobalScores = globalScores ?? LibraryGlobalScores.EMPTY;
+        }
+
+        /// <summary>
+        /// An entry whose only protein information is a name (a protein accession, or a molecule
+        /// list name for a small molecule), which becomes its one protein group without values.
+        /// </summary>
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceIndex, string protein,
+            double? score = null, string scoreType = null)
+            : this(key, copies, numPeaks, id, spectrumSourceIndex, LibraryGlobalScores.ForProtein(protein), score, scoreType)
+        {
         }
 
         public LibKey Key { get; }
@@ -2631,7 +2638,15 @@ namespace pwiz.Skyline.Model.Lib
         /// database.
         /// </summary>
         public int? SpectrumSourceIndex { get; }
-        public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
+        /// <summary>
+        /// The entry's first protein group's name from the RefSpectraProteins table: a protein
+        /// accession, or an arbitrary molecule list name. Read from <see cref="GlobalScores"/>
+        /// rather than held again on every entry; the group is shared by the entries mapped to it.
+        /// </summary>
+        public string Protein
+        {
+            get { return GlobalScores.ProteinGroups.Count > 0 ? GlobalScores.ProteinGroups[0].Name : null; }
+        }
         public IndexedMultiArray<float> RetentionTimesByFileIndex { get; private set; }
         public IndexedMultiArray<IonMobilityAndCCS> IonMobilitiesByFileIndex { get; private set; }
         public ExplicitPeakBoundsList PeakBoundariesByFileIndex { get; private set; }
