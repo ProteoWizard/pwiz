@@ -213,7 +213,7 @@
 
 .PARAMETER KeepOutput
     Retain EVERYTHING this run writes, including the staged input copies the HPC chain
-    makes (per-worker spectra.bin / library / .libcache / parquet copies, the consumed
+    makes (per-worker spectra.bin / library / derived .blib / parquet copies, the consumed
     phase dirs). A local run already retains its PRODUCTS - <dataset>\straight, the
     chain's phase 3/4 outputs and logs, every comparison input a red leg needs - and
     drops the copies as they are consumed, because they are byte-identical to what
@@ -322,7 +322,7 @@ if ($LibraryAsBlib -and $CreateGolden) {
 #                    only to regenerate files a passing run had produced and then deleted.
 #                    False under -TeamCity or -CleanOutput; -KeepOutput forces it.
 #   $retainStaging - the staged input COPIES survive too: per-worker spectra.bin / library /
-#                    .libcache / parquet copies and the consumed phase dirs (Remove-Staging
+#                    derived .blib / parquet copies and the consumed phase dirs (Remove-Staging
 #                    honors it). Only -KeepOutput: the copies are byte-identical to what the
 #                    straight leg already holds and were 69% of a retained Stellar run dir,
 #                    ~67 GB of an Astral one.
@@ -1767,12 +1767,16 @@ function Assert-ExitAgreesWithLog {
     }
 }
 
-# Stage the library (+ its .libcache when present) into a phase dir.
+# Stage the library (+ its derived .blib, and a .libcache an earlier release left, when
+# present) into a phase dir. The derived <lib>.blib is the finished library in its transfer
+# format, validated by its own osprey.library_hash row, so a phase that receives it loads it
+# instead of re-parsing the .tsv - the relay an HPC orchestrator makes.
 function Copy-LibraryInto {
     param([string]$Library, [string]$Dir, [string]$Manifest)
     Copy-Item $Library (Join-Path $Dir (Split-Path -Leaf $Library))
-    $libCache = $Library + '.libcache'
-    if (Test-Path $libCache) { Copy-Item $libCache (Join-Path $Dir (Split-Path -Leaf $libCache)) }
+    foreach ($derived in @(($Library + '.blib'), ($Library + '.libcache'))) {
+        if (Test-Path $derived) { Copy-Item $derived (Join-Path $Dir (Split-Path -Leaf $derived)) }
+    }
     # The pairing manifest is an input like the library: each phase runs with its
     # own dir as CWD and references it by leaf name, so it must be staged too.
     if ($Manifest) { Copy-Item $Manifest (Join-Path $Dir (Split-Path -Leaf $Manifest)) }
@@ -1968,6 +1972,7 @@ function Invoke-HpcChain {
         Remove-Staging (Join-Path $ph3 "$s.spectra.bin")
         Remove-Staging (Join-Path $ph3 "$s.scores.parquet")
         Remove-Staging (Join-Path $ph3 $libName)
+        Remove-Staging (Join-Path $ph3 ($libName + '.blib'))
         Remove-Staging (Join-Path $ph3 ($libName + '.libcache'))
     }
 

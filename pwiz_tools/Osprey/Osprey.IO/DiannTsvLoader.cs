@@ -40,7 +40,8 @@ namespace pwiz.Osprey.IO
     public class DiannTsvLoader
     {
         /// <summary>
-        /// The reader's version, in the <c>.libcache</c> composition hash. 4: one peak per m/z,
+        /// The reader's version, in the library composition hash (the derived .blib's and the
+        /// <c>.libcache</c>'s). 4: one peak per m/z,
         /// scaled to the base peak (<see cref="FragmentPeaks"/>); the modified sequence in the
         /// blib writer's text (<c>C[+57.0215]</c>) and modifications named by their UniMod
         /// entry, as the blib loader reads them, so an entry reads the same from either file.
@@ -54,8 +55,8 @@ namespace pwiz.Osprey.IO
         public const int READER_VERSION = 4;
 
         /// <summary>
-        /// The <c>.libcache</c> composition term of a .tsv read by this reader: its version and
-        /// the tolerance it types within, which the cached fragment types carry, as
+        /// The library composition term of a .tsv read by this reader: its version and
+        /// the tolerance it types within, which the derived library's typed fragments carry, as
         /// <see cref="BlibLoader.CacheTerm"/> does for a .blib.
         /// </summary>
         public static string CacheTerm(FragmentToleranceConfig fragmentTolerance)

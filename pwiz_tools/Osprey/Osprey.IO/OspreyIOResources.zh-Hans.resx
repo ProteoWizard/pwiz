@@ -153,10 +153,6 @@
     <value>无法加载库缓存：{0}。改为读取库文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
-    <value>保存库缓存失败：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
     <value>库缓存“{0}”由不同版本的源库构建；将忽略该过期缓存并从源库重新构建。</value>
     <comment>Needs Review:New resource</comment>
@@ -171,10 +167,6 @@
   </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
     <value>正在从 {0} 加载谱图库…</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
-    <value>已将库缓存（{0:N0} 个母离子）保存到“{1}”</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">

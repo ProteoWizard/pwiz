@@ -62,8 +62,9 @@ namespace pwiz.Osprey.IO
         /// six-decimal table. 2: every peak is typed from m/z (<see cref="FragmentTyping"/>),
         /// where version 1 left every peak Unknown, and modification text is read residue- and
         /// precision-aware (<see cref="IdentifyModification"/>). Every blib reads differently
-        /// under it, so the <c>.libcache</c> composition term and the task-key term both carry
-        /// it for every blib, and a change to either moves both by editing this one value.
+        /// under it, so the library composition term (in the hash of a .tsv's derived .blib, and
+        /// of a <c>.libcache</c>) and the task-key term both carry it for every blib, and a
+        /// change to either moves both by editing this one value.
         /// </summary>
         public const string READER_VERSION = @"4";
 
@@ -86,6 +87,9 @@ namespace pwiz.Osprey.IO
         private int _partitionCount;
         // The RefSpectra id of each entry of the last load, in the entries' order.
         private readonly List<long> _refSpectraIds = new List<long>();
+        // The RefSpectra ids whose peaks the current load decodes, when RetainFragmentsFor names
+        // a set; null decodes every spectrum's.
+        private HashSet<long> _retainedRefIds;
 
         /// <summary>
         /// A reader that types each spectrum's peaks within <paramref name="fragmentTolerance"/>,
@@ -108,6 +112,30 @@ namespace pwiz.Osprey.IO
         {
             get { return _refSpectraIds; }
         }
+
+        /// <summary>
+        /// When true, the scan reads no peak blob at all (<see cref="BlibReader.ReadSpectra"/>
+        /// without peaks) and every entry is returned with a readable empty
+        /// <see cref="LibraryEntry.Fragments"/>: the lean load of a FirstPassFDR /
+        /// <c>StopAfterStage5</c> worker, whose FDR stages read only the scalars. Set it only
+        /// for a FINISHED library (one Osprey derived from a .tsv): the peak-less check and the
+        /// deduplicator's fragment-count tie-break have already run on what it holds, and it
+        /// claims no contract to check.
+        /// </summary>
+        public bool OmitFragments { get; set; }
+
+        /// <summary>
+        /// Decode and type peaks ONLY for the spectra whose FINAL base id is in this set, and
+        /// return every other entry with its spectrum RELEASED
+        /// (<see cref="LibraryEntry.ReleaseSpectrum"/>), the state loading everything and then
+        /// releasing the same set leaves (<c>LibraryLoadOptions.RetainFragmentsFor</c> states
+        /// the contract). Null retains everything. Only meaningful for a FINISHED library Osprey
+        /// derived from a .tsv, where the final id of a target is its 0-based index in RefSpectra
+        /// id order and a decoy's base id is its target's (<c>DecoyPairs.TargetRefSpectraID</c>),
+        /// which is how the set is resolved to RefSpectra ids before the scan. Ignored when
+        /// <see cref="OmitFragments"/> is set.
+        /// </summary>
+        public HashSet<uint> RetainFragmentsFor { get; set; }
 
         /// <summary>Threads the last <see cref="Load"/> read on.</summary>
         public int PartitionCount
@@ -140,8 +168,10 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// The <c>.libcache</c> composition term of a blib read by this reader: its version and
-        /// the tolerance it types within, which the cached fragment types carry.
+        /// The library composition term of a blib read by this reader: its version and the
+        /// tolerance it types within, which the typed fragments carry. In the hash of every
+        /// library this reader reads back - a .tsv's derived .blib among them - and of a
+        /// <c>.libcache</c> of a blib source.
         /// </summary>
         public static string CacheTerm(FragmentToleranceConfig fragmentTolerance)
         {
@@ -181,21 +211,90 @@ namespace pwiz.Osprey.IO
                 // the interning is the merge's, after the parallel scan.
                 var interner = new LibraryStringInterner();
                 var typingStats = new FragmentTypingStats();
+                _retainedRefIds = OmitFragments || RetainFragmentsFor == null ? null : RetainedRefIds(reader);
                 // The protein tables are read on a connection of their own while the spectra
                 // scan runs: the two meet only at the mapping, after the merge.
                 var proteins = Task.Run(() => ReadProteins(path));
-                var entries = LoadSpectra(path, reader, interner, typingStats);
+                List<LibraryEntry> entries;
+                try
+                {
+                    entries = LoadSpectra(path, reader, interner, typingStats);
+                }
+                catch
+                {
+                    // The protein read holds a reader of its own on the file until it finishes,
+                    // and a caller that deletes the refused library on the fault would race it.
+                    try
+                    {
+                        proteins.Wait();
+                    }
+                    catch (AggregateException)
+                    {
+                        // The spectra fault is the one reported.
+                    }
+                    throw;
+                }
                 LoadProteinMappings(proteins.GetAwaiter().GetResult(), entries, interner);
                 interner.LogSummary(logInfo);
-                logInfo?.Invoke(string.Format(
-                    OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
-                    typingStats.Typed, typingStats.Total, _fragmentTolerance.Tolerance,
-                    _fragmentTolerance.Unit.GetLocalizedString()));
+                // Nothing was typed on a lean load, so the line would say so of every library.
+                if (!OmitFragments)
+                {
+                    logInfo?.Invoke(string.Format(
+                        OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
+                        typingStats.Typed, typingStats.Total, _fragmentTolerance.Tolerance,
+                        _fragmentTolerance.Unit.GetLocalizedString()));
+                }
                 return entries;
             }
         }
 
         #region Private helpers
+
+        /// <summary>
+        /// The RefSpectra ids whose peaks <see cref="RetainFragmentsFor"/> keeps, resolved before
+        /// the scan: a spectrum's final id is its 0-based index in id order, and a decoy's base
+        /// id is its target's index when its <c>DecoyPairs</c> row names one (an unpaired decoy
+        /// keeps its own). The same rule the loaded entries end up numbered by, so the set of
+        /// final base ids addresses the rows before any entry exists.
+        /// </summary>
+        private HashSet<long> RetainedRefIds(BlibReader reader)
+        {
+            var ids = reader.ReadSpectrumIds();
+            var pairs = reader.ReadDecoyPairs();
+            var retained = new HashSet<long>();
+            for (int i = 0; i < ids.Count; i++)
+            {
+                long refId = ids[i];
+                int baseIndex = i;
+                if (pairs != null && pairs.TryGetValue(refId, out var pair) && pair.IsDecoy && pair.TargetRefSpectraId.HasValue)
+                {
+                    int targetIndex = BinarySearch(ids, pair.TargetRefSpectraId.Value);
+                    if (targetIndex >= 0)
+                        baseIndex = targetIndex;
+                }
+                if (RetainFragmentsFor.Contains((uint)baseIndex))
+                    retained.Add(refId);
+            }
+            return retained;
+        }
+
+        /// <summary>The index of <paramref name="id"/> in the ascending <paramref name="ids"/>, or -1.</summary>
+        private static int BinarySearch(IReadOnlyList<long> ids, long id)
+        {
+            int lo = 0, hi = ids.Count - 1;
+            while (lo <= hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                long midId = ids[mid];
+                if (midId == id)
+                    return mid;
+                if (midId < id)
+                    lo = mid + 1;
+                else
+                    hi = mid - 1;
+            }
+            return -1;
+        }
 
         /// <summary>
         /// Reads every spectrum with its peaks: in partitions by id on the threads, each
@@ -255,9 +354,11 @@ namespace pwiz.Osprey.IO
             int sinceReport = 0;
             using (var reader = new BlibReader(path))
             {
-                foreach (var spectrum in reader.ReadSpectra(true, _partitionCount, partition))
+                // A lean load selects no blob column, so the peaks are never read.
+                foreach (var spectrum in reader.ReadSpectra(!OmitFragments, _partitionCount, partition))
                 {
-                    parsed.Add(ParseSpectrum(spectrum, typingStats, typing));
+                    bool keepPeaks = _retainedRefIds == null || _retainedRefIds.Contains(spectrum.Id);
+                    parsed.Add(ParseSpectrum(spectrum, typingStats, typing, keepPeaks));
                     if (++sinceReport == progressBlock)
                     {
                         progress.Report(Interlocked.Add(ref done, sinceReport));
@@ -277,9 +378,13 @@ namespace pwiz.Osprey.IO
         /// modification masses in the one text every loader gives it, whatever precision the
         /// file printed. Nothing is interned or numbered here, since the threads share neither.
         /// A modification that cannot be identified leaves <see cref="ParsedSpectrum.Unidentified"/>
-        /// naming it, for the merge to collect.
+        /// naming it, for the merge to collect. Without <paramref name="keepPeaks"/> the blobs are
+        /// neither decoded nor typed and the entry's spectrum is released at the merge
+        /// (<see cref="RetainFragmentsFor"/>); under <see cref="OmitFragments"/> there are no
+        /// blobs and the fragments are a readable empty array.
         /// </summary>
-        private ParsedSpectrum ParseSpectrum(BlibSpectrumRecord spectrum, FragmentTypingStats typingStats, Stopwatch typing)
+        private ParsedSpectrum ParseSpectrum(BlibSpectrumRecord spectrum, FragmentTypingStats typingStats, Stopwatch typing,
+            bool keepPeaks)
         {
             // A row without a sequence (a small molecule) is refused as a peptide too
             // short to search; one without a modified sequence is the unmodified peptide.
@@ -301,7 +406,19 @@ namespace pwiz.Osprey.IO
                 return parsed;
             }
             parsed.Modifications = modifications.Count == 0 ? Array.Empty<Modification>() : modifications.ToArray();
+            parsed.ModifiedSequence = BlibSpectrum.FormatModifiedSequence(peptideSeq,
+                PeptideFragmentMass.ModMassesByPosition(parsed.Modifications));
 
+            if (!keepPeaks)
+            {
+                parsed.Released = true;
+                return parsed;
+            }
+            if (OmitFragments)
+            {
+                parsed.Fragments = Array.Empty<LibraryFragment>();
+                return parsed;
+            }
             // A spectrum without a peaks row has no fragments.
             var peaks = BlibReader.DecodePeaks(spectrum);
             typing.Start();
@@ -310,8 +427,6 @@ namespace pwiz.Osprey.IO
                 _fragmentTolerance, typingStats);
             typing.Stop();
             parsed.Fragments = fragments;
-            parsed.ModifiedSequence = BlibSpectrum.FormatModifiedSequence(peptideSeq,
-                PeptideFragmentMass.ModMassesByPosition(parsed.Modifications));
             return parsed;
         }
 
@@ -355,7 +470,13 @@ namespace pwiz.Osprey.IO
                     (byte)parsed.Charge, parsed.PrecursorMz, parsed.RetentionTime);
                 _refSpectraIds.Add(parsed.RefId);
                 entry.Modifications = InternModificationNames(parsed.Modifications, interner);
-                entry.Fragments = parsed.Fragments;
+                // RELEASED, not empty, for a spectrum the retain set skipped: the state a load of
+                // everything followed by LibraryFragmentRelease leaves, tripwire included (see
+                // LibraryEntry.ReleaseSpectrum).
+                if (parsed.Released)
+                    entry.ReleaseSpectrum();
+                else
+                    entry.Fragments = parsed.Fragments;
                 entries.Add(entry);
             }
 
@@ -577,6 +698,8 @@ namespace pwiz.Osprey.IO
             public string ModifiedSequence;
             public Modification[] Modifications;
             public LibraryFragment[] Fragments;
+            /// <summary>True when the retain set skipped this spectrum's peaks, so the entry's spectrum is released.</summary>
+            public bool Released;
             public int Charge;
             public double PrecursorMz;
             public double RetentionTime;

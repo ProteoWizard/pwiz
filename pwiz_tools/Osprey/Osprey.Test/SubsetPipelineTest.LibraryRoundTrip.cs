@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -42,7 +43,9 @@ namespace pwiz.Osprey.Test
         /// and on the entrapment pairing built from them. The regression's
         /// <c>-LibraryAsBlib</c> legs prove the same thing at the search's output, forty
         /// minutes later; this is the seconds-long form of that gate, and the one to run first
-        /// when a loader changes.
+        /// when a loader changes. The derived library the loader keeps of a .tsv in place of
+        /// the <c>.libcache</c> is the same round trip made by the loader itself
+        /// (<see cref="DerivedLibraryDifferences"/>), its lean loads included.
         /// </summary>
         [TestMethod]
         public void TestLibraryLoadsIdenticallyFromTsvAndBlib()
@@ -51,6 +54,7 @@ namespace pwiz.Osprey.Test
             report.AddRange(RoundTripDifferences(_dataDir, LIBRARY_FILE, FragmentToleranceConfig.UnitResolution(0.5)));
             report.AddRange(RoundTripDifferences(ExtractAstral(), ASTRAL_LIBRARY_FILE, FragmentToleranceConfig.Hram(10)));
             report.AddRange(LoaderRoundTripDifferences());
+            report.AddRange(DerivedLibraryDifferences());
             // The same library with its modifications printed as masses, as DIA-NN prints them:
             // identified by residue and mass, so the entries read the same as from the UniMod text.
             var twoMasses = DiannTsvLoader.ParseModifications(@"KDC[+57.021464]PWPC[+57.021464]PK");
@@ -153,6 +157,148 @@ namespace pwiz.Osprey.Test
             foreach (string seq in pairingBlib.ExcludedEntrapment.Except(pairingTsv.ExcludedEntrapment))
                 differences.Add(string.Format(@"{0}: excluded: false vs true", seq));
             return DescribeDifferences(LIBDECOY_FILE + @" (LibraryLoader, no manifest for the .blib)", differences, fromTsv.Count);
+        }
+
+        /// <summary>
+        /// The derived library. The first <see cref="LibraryLoader"/> load of the library-decoy
+        /// subset from its .tsv writes <c>&lt;library&gt;.blib</c> where the <c>.libcache</c> was
+        /// kept, and no <c>.libcache</c>; the next load says it read the derived library and
+        /// gives the identical library, entry by entry; a load under another configuration says
+        /// the derived library no longer matches and rebuilds it. The two lean loads through the
+        /// derived library have the cache route's shape: under <c>OmitFragments</c> every entry
+        /// keeps its scalars with a readable empty spectrum, and under <c>RetainFragmentsFor</c>
+        /// the library is exactly what a full load followed by
+        /// <see cref="LibraryFragmentRelease.ReleaseFragments"/> leaves - released, not empty,
+        /// where the set does not name the entry's base id, decoys following their targets.
+        /// </summary>
+        private List<string> DerivedLibraryDifferences()
+        {
+            string dir = CreateDir(@"derived");
+            string tsv = Path.Combine(dir, LIBDECOY_FILE);
+            File.Copy(Path.Combine(_dataDir, LIBDECOY_FILE), tsv);
+            string manifest = Path.Combine(dir, LIBDECOY_PAIRING_FILE);
+            File.Copy(Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE), manifest);
+            string cacheDir = ArtifactPaths.ResolveCacheDir(tsv);
+            string derived = Path.Combine(cacheDir, LIBDECOY_FILE + LibraryLoader.DERIVED_LIBRARY_EXT);
+            var differences = new List<string>();
+
+            var firstLog = new StringBuilder();
+            var first = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, firstLog);
+            if (!File.Exists(derived))
+                differences.Add(@"derived: no derived library written at " + derived);
+            if (File.Exists(Path.Combine(cacheDir, LIBDECOY_FILE + LibraryCache.EXT)))
+                differences.Add(@"derived: a .libcache was written");
+            string saved = string.Format(OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__,
+                first.Count, derived);
+            string loaded = string.Format(OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__,
+                first.Count, derived);
+            StringAssert.Contains(firstLog.ToString(), saved);
+            Assert.IsFalse(firstLog.ToString().Contains(loaded), firstLog.ToString());
+
+            // The second load reads the derived library and gives the same library.
+            var secondLog = new StringBuilder();
+            var second = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5), LibraryLoadOptions.Default, secondLog);
+            StringAssert.Contains(secondLog.ToString(), loaded);
+            Assert.IsFalse(secondLog.ToString().Contains(saved), secondLog.ToString());
+            differences.AddRange(LibraryDifferences(first, second));
+
+            // Every entry's scalars with a readable empty spectrum: the FirstPassFDR worker's load.
+            var lean = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5),
+                new LibraryLoadOptions { OmitFragments = true }, new StringBuilder());
+            Assert.AreEqual(first.Count, lean.Count);
+            for (int i = 0; i < first.Count; i++)
+            {
+                AssertSameIdentity(first[i], lean[i], string.Format(@"entry {0} (id {1})", i, first[i].Id));
+                Assert.IsFalse(lean[i].IsSpectrumReleased);
+                Assert.AreEqual(0, lean[i].Fragments.Count);
+            }
+
+            // Every other target's base id, which carries its paired decoy along: the set must
+            // both retain and release, and on both sides, or the comparison proves nothing.
+            var retained = new HashSet<uint>(first.Where(e => !e.IsDecoy).Select(e => e.Id).Where((id, i) => i % 2 == 0));
+            var skipped = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.5),
+                new LibraryLoadOptions { RetainFragmentsFor = retained }, new StringBuilder());
+            int nReleased = LibraryFragmentRelease.ReleaseFragments(second, retained);
+            Assert.IsTrue(nReleased > 0 && nReleased < second.Count, nReleased.ToString());
+            Assert.IsTrue(skipped.Any(e => e.IsDecoy && e.IsSpectrumReleased), @"no decoy released");
+            Assert.IsTrue(skipped.Any(e => e.IsDecoy && !e.IsSpectrumReleased), @"no decoy retained");
+            AssertRetainMatchesRelease(second, skipped, retained);
+
+            // Another configuration - a tolerance the types were not computed within - finds the
+            // derived library stale and rebuilds it, under its own hash.
+            var rebuiltLog = new StringBuilder();
+            var rebuilt = LoadDerived(tsv, manifest, FragmentToleranceConfig.UnitResolution(0.6), LibraryLoadOptions.Default, rebuiltLog);
+            StringAssert.Contains(rebuiltLog.ToString(), string.Format(
+                OspreyIOResources.LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_or_configuration__rebuilding_it_from_the_source_library_,
+                derived));
+            StringAssert.Contains(rebuiltLog.ToString(), string.Format(
+                OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__, rebuilt.Count, derived));
+            return DescribeDifferences(LIBDECOY_FILE + @" (LibraryLoader, derived library)", differences, first.Count);
+        }
+
+        /// <summary>The library-decoy subset at <paramref name="tsv"/> with its manifest, loaded by <see cref="LibraryLoader"/> with <paramref name="options"/>, its log in <paramref name="log"/>.</summary>
+        private static List<LibraryEntry> LoadDerived(string tsv, string manifest, FragmentToleranceConfig tolerance,
+            LibraryLoadOptions options, StringBuilder log)
+        {
+            return LibraryLoader.Load(new OspreyConfig
+            {
+                LibrarySource = LibrarySource.FromPath(tsv),
+                FragmentTolerance = tolerance,
+                DecoysInLibrary = true,
+                DecoyPairingManifestPath = manifest,
+            }, options, OspreyLog.FromDelegate(line => log.AppendLine(line)), line => log.AppendLine(line));
+        }
+
+        /// <summary>Every member but the spectrum, equal on <paramref name="a"/> and <paramref name="b"/>.</summary>
+        private static void AssertSameIdentity(LibraryEntry a, LibraryEntry b, string what)
+        {
+            Assert.AreEqual(a.Id, b.Id, what);
+            Assert.AreEqual(a.Sequence, b.Sequence, what);
+            Assert.AreEqual(a.ModifiedSequence, b.ModifiedSequence, what);
+            Assert.AreEqual(a.Charge, b.Charge, what);
+            Assert.AreEqual(a.PrecursorMz, b.PrecursorMz, 1e-10, what);
+            Assert.AreEqual(a.RetentionTime, b.RetentionTime, 1e-10, what);
+            Assert.AreEqual(a.RtCalibrated, b.RtCalibrated, what);
+            Assert.AreEqual(a.IsDecoy, b.IsDecoy, what);
+            Assert.AreEqual(a.PairingId, b.PairingId, what);
+            Assert.AreEqual(a.Modifications.Count, b.Modifications.Count, what);
+            CollectionAssert.AreEqual(a.ProteinIds.ToArray(), b.ProteinIds.ToArray(), what);
+            CollectionAssert.AreEqual(a.GeneNames.ToArray(), b.GeneNames.ToArray(), what);
+        }
+
+        /// <summary>
+        /// <paramref name="skipped"/>, loaded with the retain set, is entry by entry the state
+        /// <paramref name="released"/> was left in by a full load and
+        /// <see cref="LibraryFragmentRelease.ReleaseFragments"/> with the same set: identity
+        /// untouched on both sides, a skipped spectrum RELEASED (asked through
+        /// <see cref="LibraryEntry.IsSpectrumReleased"/>, and the throw on reading it asserted
+        /// rather than inferred, since equality would also hold if both sides had quietly become
+        /// readable-empty), a retained one carrying the identical peaks. The cache route's
+        /// <c>IOTest.TestLibraryCacheRetainMatchesRelease</c>, for the derived library.
+        /// </summary>
+        private static void AssertRetainMatchesRelease(IReadOnlyList<LibraryEntry> released, IReadOnlyList<LibraryEntry> skipped,
+            HashSet<uint> retained)
+        {
+            Assert.AreEqual(released.Count, skipped.Count);
+            for (int i = 0; i < released.Count; i++)
+            {
+                var a = released[i];
+                var b = skipped[i];
+                string what = string.Format(CultureInfo.InvariantCulture, @"entry {0} (id {1})", i, a.Id);
+                AssertSameIdentity(a, b, what);
+                Assert.AreEqual(a.IsSpectrumReleased, b.IsSpectrumReleased, what);
+                bool expectReleased = !retained.Contains(a.Id & ScoringTaskShared.BASE_ID_MASK);
+                Assert.AreEqual(expectReleased, b.IsSpectrumReleased, what);
+                if (expectReleased)
+                {
+                    Assert.ThrowsException<InvalidOperationException>(() =>
+                    {
+                        int unused = b.Fragments.Count;
+                    }, what + @": a skipped spectrum must throw on read, not read as empty");
+                    continue;
+                }
+                CollectionAssert.AreEqual(a.Fragments.Select(FormatFragment).ToArray(), b.Fragments.Select(FormatFragment).ToArray(), what);
+            }
         }
 
         /// <summary>

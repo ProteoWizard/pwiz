@@ -45,7 +45,7 @@ entrapment from it alone, with no manifest, reading it on every load that finds 
 ([01](01-decoy-generation.md) step 2, [24](24-library-contract.md)). The search output blib has
 none: its decoys are not reported.
 
-`LibMetadata` holds single-row values about the library as a whole (`BiblioSpec.IO/BlibMetadata.cs`). Keys are namespaced by the writing tool - Osprey's `osprey.version`, `osprey.command`, `osprey.search_mode`, `osprey.run_fdr`, `osprey.experiment_fdr`, `osprey.library_source` and the validity stamp `osprey.validity`; CarafeSharp's `carafe.command` - with a small unprefixed set every tool honors (`library_contract`, see [24](24-library-contract.md)). Every tool that makes or transforms a library records its full command line under `<tool>.command`, so a library carries how it was made. A reader tests for the table, never for `LibInfo.minorVersion`. Until 2026-10-15 the table was Osprey's own `OspreyMetadata` with unprefixed keys; `BlibMetadata.Read` falls back to that name for one release so a search started under it still resumes.
+`LibMetadata` holds single-row values about the library as a whole (`BiblioSpec.IO/BlibMetadata.cs`). Keys are namespaced by the writing tool - Osprey's `osprey.version`, `osprey.command`, `osprey.search_mode`, `osprey.run_fdr`, `osprey.experiment_fdr`, `osprey.library_source`, `osprey.library_hash` (the validity of a library derived from a `.tsv` source, [14](14-intermediate-files.md) section 7) and the validity stamp `osprey.validity`; CarafeSharp's `carafe.command` - with a small unprefixed set every tool honors (`library_contract`, see [24](24-library-contract.md)). Every tool that makes or transforms a library records its full command line under `<tool>.command`, so a library carries how it was made. A reader tests for the table, never for `LibInfo.minorVersion`. Until 2026-10-15 the table was Osprey's own `OspreyMetadata` with unprefixed keys; `BlibMetadata.Read` falls back to that name for one release so a search started under it still resumes.
 
 Every per-spectrum value Osprey reports is in the standard tables: the experiment q-value is `RefSpectra.score`, the run count `RefSpectra.copies`, the best run's apex and bounds the `RefSpectra` retention-time columns, and each run's q-value and peak boundaries its `RetentionTimes` row. Rust osprey writes four more tables beside them (`OspreyPeakBoundaries`, `OspreyRunScores`, `OspreyExperimentScores`, `OspreyCoefficients`); Osprey stopped writing them on 2026-10-15 (see "The dropped `Osprey*` tables" below).
 
@@ -161,9 +161,11 @@ Until 2026-10-15 Osprey also wrote Rust osprey's four tool tables, one row per `
   recomputes typed fragments' m/z for the permuted sequence), and the training export's
   library flags ([22](22-training-export.md)).
 - **Resume and cache safety:** every blib search adds `;blibreader=2` to every task validity key,
-  and the `.libcache` composition carries `blib_reader:2` with the fragment tolerance the cached
-  types were computed within ([14](14-intermediate-files.md)). Both carry
-  `BlibLoader.READER_VERSION`, which also covers the modification parsing below.
+  and the library composition carries `blib_reader:2` with the fragment tolerance the typed
+  peaks were computed within - in the hash of a `.tsv` library's derived `.blib`, which this
+  reader reads back, and of a `.libcache` an earlier release left ([14](14-intermediate-files.md)
+  section 7). Both carry `BlibLoader.READER_VERSION`, which also covers the modification parsing
+  below.
 
 ### Library annotations are not read
 

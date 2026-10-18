@@ -120,6 +120,22 @@ namespace pwiz.BiblioSpec.IO
                 return Convert.ToInt32(command.ExecuteScalar());
         }
 
+        /// <summary>
+        /// The <c>RefSpectra</c> ids in ascending order: the order <see cref="ReadSpectra"/> reads
+        /// the rows in, so a row's position in this list is its index in that order.
+        /// </summary>
+        public IReadOnlyList<long> ReadSpectrumIds()
+        {
+            var ids = new List<long>();
+            using (var command = new SQLiteCommand(@"SELECT id FROM RefSpectra ORDER BY id", _connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                    ids.Add(reader.GetInt64(0));
+            }
+            return ids;
+        }
+
         /// <summary>The <c>SpectrumSourceFiles</c> rows in id order; empty in a library without the table.</summary>
         public IReadOnlyList<BlibSourceFile> ReadSourceFiles()
         {

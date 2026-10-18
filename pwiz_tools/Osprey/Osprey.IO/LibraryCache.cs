@@ -33,6 +33,13 @@ namespace pwiz.Osprey.IO
     /// <summary>
     /// Binary cache for fast reload of parsed spectral libraries.
     /// Ported from osprey-io/src/library/cache.rs.
+    ///
+    /// <para>READ ONLY from the 2026-10 release: <c>LibraryLoader</c> keeps a .tsv library's
+    /// finished form as a derived <c>.blib</c> instead (the library's transfer format, read by
+    /// <see cref="BlibLoader"/>), and writes no <c>.libcache</c>. <see cref="LoadCache(string)"/>
+    /// stays for one release so a valid cache an earlier build left is still honoured, and
+    /// <see cref="SaveCache"/> stays for its tests; both go when the release after this one
+    /// ships.</para>
     /// </summary>
     public static class LibraryCache
     {

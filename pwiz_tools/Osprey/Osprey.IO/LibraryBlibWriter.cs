@@ -59,11 +59,13 @@ namespace pwiz.Osprey.IO
         /// library the entries were loaded from, recorded as the spectrum source.
         /// <paramref name="decoyPrefixes"/> are the accession prefixes that mark a library decoy
         /// (a search's defaults when none are given), and <paramref name="commandLine"/> the
-        /// command that made the library, recorded in its metadata when given. Returns the
-        /// number of spectra written.
+        /// command that made the library, recorded in its metadata when given.
+        /// <paramref name="libraryHash"/> is the validity hash a library derived from a .tsv
+        /// source is reused by (<see cref="OspreyBlibWriter.KEY_LIBRARY_HASH"/>), recorded when
+        /// given. Returns the number of spectra written.
         /// </summary>
         public static int Write(string path, IReadOnlyList<LibraryEntry> entries, string librarySource,
-            int nThreads = 0, IList<string> decoyPrefixes = null, string commandLine = null)
+            int nThreads = 0, IList<string> decoyPrefixes = null, string commandLine = null, string libraryHash = null)
         {
             var parallelOptions = new ParallelOptions
             {
@@ -110,6 +112,8 @@ namespace pwiz.Osprey.IO
                 writer.AddMetadata(OspreyBlibWriter.KEY_LIBRARY_SOURCE, sourceName);
                 if (commandLine != null)
                     writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, commandLine);
+                if (libraryHash != null)
+                    writer.AddMetadata(OspreyBlibWriter.KEY_LIBRARY_HASH, libraryHash);
                 writer.Complete();
             }
             return entries.Count;
