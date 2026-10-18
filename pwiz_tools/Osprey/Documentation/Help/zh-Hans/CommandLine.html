@@ -57,7 +57,6 @@ a { color: #1565c0; }
 <tr><th>参数</th><th>描述</th></tr>
 <tr><td><nobr>--decoys-in-library</nobr></td><td>信任谱图库中已有的诱饵，而不是生成反向诱饵。如果未识别到任何诱饵，则报错停止。</td></tr>
 <tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>FDRBench 5 列配对清单 (TSV)，与“<nobr>--decoys-in-library</nobr>”一起使用</td></tr>
-<tr><td><nobr>--write-pin</nobr></td><td>为外部工具写入 PIN 文件</td></tr>
 </table>
 <div class="RowType">Training Export</div>
 <table>
@@ -95,10 +94,10 @@ a { color: #1565c0; }
 <tr><th>参数</th><th>描述</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>写入开发人员诊断转储文件，用于与 Rust 实现进行比较</td></tr>
 <tr><td><nobr>--model-diagnostics</nobr></td><td>写入独立的交互式 HTML 报告，内容包括训练好的评分模型、FDR 校准，以及单峰多 ID 重复分配</td></tr>
-<tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>显示此帮助信息（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>显示此帮助信息（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>显示版本</td></tr>
 </table>
-<p>示例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC 拆分（一个节点 = 一个“--task”）：请参见上方的“--task”。</p><div class="RowType">分布式执行（HPC）</div>
+<p>示例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC 拆分（一个节点 = 一个“--task”）：请参见上方的“--task”。</p><p>也接受的其他形式：值也可以用“=”连在选项后（--output=results.blib）；已存在的文件可以不带 -i 直接给出。</p><div class="RowType">分布式执行（HPC）</div>
 <p>不指定 <code>--task</code> 时，整个流程在一个进程中运行。对于分布式（HPC／工作流引擎）执行，流程在合并／扇出边界处拆分为四个单任务工作进程，每个节点对应一个 <code>--task</code>：<code>PerFileScoring</code>（拆分，每个文件）&rarr; <code>FirstPassFDR</code>（合并，所有文件）&rarr; <code>PerFileRescoring</code>（拆分，每个文件）&rarr; <code>SecondPassFDR</code>（合并，所有文件）。请向每个任务传入相同的 <code>--library</code> 和搜索选项；parquet 完整性检查会拒绝搜索／库哈希不匹配的输入。</p>
 <pre>
 # 拆分 1 - 每个 mzML 一个进程（在每个输入旁写入 &lt;stem&gt;.scores.parquet、&lt;stem&gt;.calibration.json）
@@ -106,7 +105,7 @@ Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution uni
 
 # 合并 1 - 对所有运行使用一个进程（传入排序后的列表，以确保顺序确定）
 Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   在每个 parquet 旁写入：&lt;stem&gt;.1st-pass.fdr_scores.bin、&lt;stem&gt;.reconciliation.json
+#   在每个 parquet 旁写入：&lt;stem&gt;.1st-pass.fdr_scores.bin、out.1st-pass.*
 
 # 拆分 2 - 每个文件一个进程（得分 parquet 及其中间文件一起）
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01

@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -499,7 +500,7 @@ namespace pwiz.Osprey.Tasks
             if (benchPath != null)
             {
                 var swFdrBench = Stopwatch.StartNew();
-                var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+                var pairing = EntrapmentPairing.Build(libraryById);
                 var benchResult = FdrBenchInputWriter.WritePeptideInput(
                     benchPath, rescored.StreamFiles(OspreyTasksResources.SecondPassFdrTask_Run_Writing_second_pass_FDRBench_input), libraryById, config.FdrLevel,
                     config.FdrBenchPerRun, pairing.ExcludedEntrapment);
@@ -513,7 +514,6 @@ namespace pwiz.Osprey.Tasks
                     benchPath, benchResult.Rows));
                 ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run_Wrote_the_FDRBench_pairing_manifest__from_the_searched_library__to__0____1__peptides,
                     manifestPath, manifestRows));
-                pairing.LogSummary(ctx);
                 if (benchResult.MissingLibrary > 0)
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_no_matching_library_peptide__their_peptide_and_protein_columns_were_,
@@ -737,7 +737,7 @@ namespace pwiz.Osprey.Tasks
             // protein-compact it SPLITS the pass-2 acceptance boundary in two (#4573), so a
             // fold without it would draw one boundary where the join drew two and produce a
             // different - complete, plausible, wrong - co-assignment panel.
-            Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
+            Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx);
             HashSet<uint> stratumBaseIds = null;
             if (OspreyEnvironment.Pass2ProteinCompact &&
                 ctx.TryGet<ProteinCompactStratum>(out var pcStratum))
@@ -1342,7 +1342,7 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Deduplicated by (modseq, charge) keeping the best
         /// <c>EffectiveRunQvalue(Both)</c>, matching Rust pipeline.rs:6133-6138. The blib's
-        /// RefSpectra / OspreyRunScores / OspreyPeakBoundaries all source from this best run,
+        /// RefSpectra row (its apex, bounds and bestSpectrum flag) sources from this best run,
         /// so the cross-impl best-file choice must match exactly - which is why the walk order
         /// is the pool's own and the comparison is strictly less-than, exactly as the second
         /// pass over the passing list was.</para>
@@ -1394,8 +1394,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         // Best (min) experiment_precursor_qvalue per (modseq, charge) across all
-        // files — the value Rust writes into RefSpectra.score and
-        // OspreyExperimentScores.ExperimentQValue (pipeline.rs:4670-4683 + 4795).
+        // files - the value written into RefSpectra.score (Rust pipeline.rs:4670-4683 + 4795).
         private static Dictionary<(string, byte), double> BuildBestExpPrecursorQ(
             List<PassingObservation> passingEntries)
         {

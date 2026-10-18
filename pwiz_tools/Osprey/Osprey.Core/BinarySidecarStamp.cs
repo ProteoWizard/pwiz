@@ -21,6 +21,7 @@
 using System;
 using System.IO;
 using System.Text;
+using pwiz.Common.Pipeline;
 
 namespace pwiz.Osprey.Core
 {
@@ -35,19 +36,23 @@ namespace pwiz.Osprey.Core
     ///   reserved      [10..16]
     ///   record count  [16..24] u64
     ///   stamp length  [24..28] u32   (this class)
-    ///   reserved      [28..32]
+    ///   extension     [28..32] u32   length of a format's extension section; 0 for most
     ///   records       [32..]   count * recordLength bytes
+    ///   extension     [..]     extension length bytes, defined by the format
     ///   stamp         [..end]  stamp length bytes of UTF-8 <see cref="ArtifactStamp.ToString"/>
     /// </code>
     /// The stamp follows the records so every record stays at its fixed offset from the header;
     /// a reader that walks records is unchanged, and the file's exact length remains a function
-    /// of its header (records plus stamp), which is how a damaged sidecar is still rejected.
+    /// of its header (records, extension and stamp), which is how a damaged sidecar is still
+    /// rejected. The extension length was a reserved zero before any format used it, so a format
+    /// without one reads the same as it always did.
     /// </summary>
     public static class BinarySidecarStamp
     {
         public const int HEADER_LENGTH = 32;
         private const int COUNT_OFFSET = 16;
         private const int STAMP_LENGTH_OFFSET = 24;
+        private const int EXTENSION_LENGTH_OFFSET = 28;
 
         /// <summary>The bytes a writer appends after its records.</summary>
         public static byte[] Encode(ArtifactStamp stamp)
@@ -58,13 +63,21 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Write header bytes [24..32] - the stamp length and four reserved zero bytes - in place
+        /// Write header bytes [24..32] - the stamp length and the extension length - in place
         /// of the eight reserved bytes the header carried before it held a stamp.
         /// </summary>
-        public static void WriteHeaderField(BinaryWriter writer, byte[] stampBytes)
+        public static void WriteHeaderField(BinaryWriter writer, byte[] stampBytes, int extensionLength = 0)
         {
+            if (extensionLength < 0)
+                throw new ArgumentOutOfRangeException(nameof(extensionLength));
             writer.Write((uint)stampBytes.Length);
-            writer.Write(0u);
+            writer.Write((uint)extensionLength);
+        }
+
+        /// <summary>The extension length recorded in a 32-byte header.</summary>
+        public static uint ReadExtensionLength(byte[] header)
+        {
+            return BitConverter.ToUInt32(header, EXTENSION_LENGTH_OFFSET);
         }
 
         /// <summary>The stamp length recorded in a 32-byte header.</summary>
@@ -75,7 +88,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// The record count a 32-byte <paramref name="header"/> declares and the exact file length
-        /// that implies - header, records and stamp. False when the count does not fit an
+        /// that implies - header, records, extension and stamp. False when the count does not fit an
         /// <see cref="int"/>: checked arithmetic, so a corrupt or hostile count is rejected rather
         /// than wrapping and letting a size check pass spuriously.
         /// </summary>
@@ -86,7 +99,8 @@ namespace pwiz.Osprey.Core
             try
             {
                 recordCount = checked((int)count);
-                expectedLength = checked(HEADER_LENGTH + (long)recordCount * recordLength) + ReadLength(header);
+                expectedLength = checked(HEADER_LENGTH + (long)recordCount * recordLength) +
+                                 ReadExtensionLength(header) + ReadLength(header);
                 return true;
             }
             catch (OverflowException)

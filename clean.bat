@@ -85,10 +85,11 @@ REM # under a dir with any of these names, so the sweep is safe. pwiz_tools\Skyl
 REM # Shared and Osprey are NOT swept here — pwiz_tools\clean-apps.bat handles those:
 REM # Skyline through Skyline\CleanSkyline.bat, Shared and Osprey with its git-aware
 REM # CleanBinaries (Shared\Lib keeps tracked binaries under bin-like dirs).
+REM # The walk lives in :sweep because cmd does not expand a FOR variable in the root
+REM # path of FOR /R: written inline as `for /r "%SCRIPT_DIR%\%%s"`, the root is the
+REM # literal "...\%s", which does not exist, and the loop silently removes nothing.
 for %%s in (pwiz build examples scripts pwiz_tools\BiblioSpec pwiz_tools\Commandline pwiz_tools\MSConvertGUI pwiz_tools\SeeMS pwiz_tools\BullseyeSharp) do (
-    for /d /r "%SCRIPT_DIR%\%%s" %%d in (bin obj TestResults) do (
-        if exist "%%d" rmdir /s /q "%%d" 2>nul
-    )
+    call :sweep "%SCRIPT_DIR%\%%s"
 )
 if exist "%SCRIPT_DIR%\TestResults" rmdir /s /q "%SCRIPT_DIR%\TestResults"
 
@@ -131,4 +132,12 @@ if %CLEAN_CACHE%==1 (
 )
 
 popd
+exit /b 0
+
+REM # Remove every bin, obj and TestResults dir under %1.
+:sweep
+if not exist "%~1" exit /b 0
+for /d /r "%~1" %%d in (bin obj TestResults) do (
+    if exist "%%d" rmdir /s /q "%%d" 2>nul
+)
 exit /b 0

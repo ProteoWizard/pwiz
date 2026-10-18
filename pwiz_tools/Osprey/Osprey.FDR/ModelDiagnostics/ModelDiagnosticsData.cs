@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR.ModelDiagnostics
@@ -632,19 +633,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
             data.HasEntrapment = data.NPTarget > 0;
-            data.FeatureCount = contributions?.Features.Count ?? 0;
             data.NClassifiedFromManifest = nWithClass;
             data.NUnclassified = nWithoutClass;
 
             // ---- model table (pass 1) ----
-            if (contributions != null)
-            {
-                data.ModelComposite = contributions.Composite;
-                data.ModelDegenerate = contributions.IsDegenerate;
-                data.ModelIsTreeEnsemble = contributions.IsTreeEnsemble;
-                data.FeatureHistEdges = contributions.HistogramEdges;
-                data.Model = BuildFeatureRows(contributions);
-            }
+            ModelView.ApplyTo(ModelView.From(contributions), data);
 
             // ---- score histogram + decoy normal fit ----
             data.Scores = BuildScoreHistogram(precs);

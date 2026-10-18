@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -246,10 +247,10 @@ namespace pwiz.Osprey.Tasks
             // Default to 0 so early returns / exception paths leave the
             // metadata caller in a known state. Overwritten on success.
             numSampledPrecursors = 0;
-            // The CAL-view per-file diagnostics row, built from the ACCEPTED pass
-            // only when --model-diagnostics is on. Null on every failure/fallback
-            // path and on a normal run; the caller only consumes it under
-            // config.ModelDiagnostics.
+            // The CAL-view per-file diagnostics row, built from the ACCEPTED pass on
+            // every run, with or without --model-diagnostics: only this phase holds the
+            // matches it is binned from, so a report asked for later can only read it
+            // back (doc 00, P16). Null on every failure/fallback path.
             calDiagnostics = null;
             // The wide pre-calibration RT tolerance (the "before" number in the
             // console summary's before-vs-after RT window). Defaults to 0 to keep the
@@ -270,10 +271,8 @@ namespace pwiz.Osprey.Tasks
             int nTotalTargets = 0;
             // --verbose anchor-purity diagnostic: tally the full-library entrapment
             // composition once, so RunLdaAndCollectPoints can report the entrapment-FDP of
-            // the selected anchors against the FDRBench ratio r. Also computed under
-            // --model-diagnostics, which needs the same ratio r for the CAL-view FDP curve.
-            // Gated so a normal run pays nothing for the per-entry accession scan.
-            bool tallyEntrapment = OspreyOutput.Verbose || config.ModelDiagnostics;
+            // the selected anchors against the FDRBench ratio r. Also the ratio r of the CAL
+            // view's FDP curve, which every run records (see calDiagnostics above).
             _libTargetSideCount = 0;
             _libEntrapmentCount = 0;
             foreach (var entry in library)
@@ -281,19 +280,16 @@ namespace pwiz.Osprey.Tasks
                 if (!entry.IsDecoy)
                 {
                     nTotalTargets++;
-                    if (tallyEntrapment)
-                    {
-                        _libTargetSideCount++;
-                        if (EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
-                            _libEntrapmentCount++;
-                    }
+                    _libTargetSideCount++;
+                    if (EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                        _libEntrapmentCount++;
                     if (entry.RetentionTime < libMinRt)
                         libMinRt = entry.RetentionTime;
                     if (entry.RetentionTime > libMaxRt)
                         libMaxRt = entry.RetentionTime;
                 }
             }
-            if (tallyEntrapment && _libEntrapmentCount > 0)
+            if (_libEntrapmentCount > 0)
             {
                 long realTargets = _libTargetSideCount - _libEntrapmentCount;
                 double rLib = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
@@ -412,7 +408,7 @@ namespace pwiz.Osprey.Tasks
                 // env var is set (bisection mode - stop once we agree here). Rust
                 // dumps per attempt too; attempt 1 is the comparable one, and the
                 // *_ONLY abort fires there.
-                if (config.WritePin || (_ctx.Diagnostics?.DumpCalSample ?? false))
+                if (_ctx.Diagnostics?.DumpCalSample ?? false)
                 {
                     _ctx.Diagnostics?.WriteCalSampleDump(context.FileName, sampledEntries);
                     if (_ctx.Diagnostics?.CalSampleOnly ?? false)
@@ -536,8 +532,7 @@ namespace pwiz.Osprey.Tasks
 
                 var pass1 = FitCalibrationPass(
                     1, matchArray, accumulated, libRtsDetected, measuredRtsDetected,
-                    config, decision.EffectiveMinPoints,
-                    config.ModelDiagnostics ? calReport : null);
+                    config, decision.EffectiveMinPoints, calReport);
 
                 // A thin fit that lands somewhere the range mapping cannot justify is
                 // worse than no fit: it would re-centre every search window on a wrong
@@ -683,9 +678,8 @@ namespace pwiz.Osprey.Tasks
                             // CAL-view diagnostics from the ACCEPTED (pass 2) fit:
                             // its narrowed RT half-window is the tolerance actually
                             // used, the wide initial window is the "before" number.
-                            if (config.ModelDiagnostics)
-                                calDiagnostics = BuildCalDiagnostics(
-                                    context, pass2, refinedTolerance, initialTolerance);
+                            calDiagnostics = BuildCalDiagnostics(
+                                context, pass2, refinedTolerance, initialTolerance);
                             return pass2.Calibration;
                         }
                         _ctx.LogInfo(string.Format(
@@ -705,9 +699,8 @@ namespace pwiz.Osprey.Tasks
                 // CAL-view diagnostics from the ACCEPTED (pass 1) fit: pass1Tolerance
                 // is the RT half-window that will search this file (pass 2 was skipped
                 // or rejected), initialTolerance is the pre-calibration "before" number.
-                if (config.ModelDiagnostics)
-                    calDiagnostics = BuildCalDiagnostics(
-                        context, pass1, pass1Tolerance, initialTolerance);
+                calDiagnostics = BuildCalDiagnostics(
+                    context, pass1, pass1Tolerance, initialTolerance);
                 return pass1.Calibration;
             }
 
@@ -983,7 +976,7 @@ namespace pwiz.Osprey.Tasks
                 2, matchArray, refined, libRtsDetected, measuredRtsDetected,
                 context.Config,
                 Math.Min(libRtsDetected.Count, context.Config.RtCalibration.MinCalibrationPoints),
-                context.Config.ModelDiagnostics ? calReport : null);
+                calReport);
         }
 
         /// <summary>
@@ -1114,20 +1107,9 @@ namespace pwiz.Osprey.Tasks
         {
             // Train LDA + 1% FDR target-decoy competition.
             var swLda = Stopwatch.StartNew();
-            // Only build the training report when it will actually be consumed: --verbose dumps it
-            // below, --model-diagnostics feeds it to the CAL view. On a normal run use the plain
-            // overload so the per-iteration confident-positive competition (CountPassingTargets) is
-            // not paid for a report nobody reads.
-            int nPassing;
-            if (OspreyOutput.Verbose || _ctx.Config.ModelDiagnostics)
-            {
-                nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false, out calReport);
-            }
-            else
-            {
-                nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
-                calReport = null;
-            }
+            // The training report feeds the CAL view on every run (see RunCalibration) and the
+            // --verbose dump below.
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false, out calReport);
             swLda.Stop();
 
             // --verbose: dump the calibration LDA's seed, per-iteration refinement trace,
@@ -1411,8 +1393,8 @@ namespace pwiz.Osprey.Tasks
         /// full-library composition tallied in <see cref="RunCalibration"/>. The heavy
         /// per-match arrays are binned to small histograms / swept curves immediately by
         /// <see cref="ModelDiagnosticsData.BuildCalFile"/>, so only the compact row is
-        /// retained. Called only under <c>config.ModelDiagnostics</c>; on a normal run
-        /// the accepted pass carries no diagnostic payload and this is never invoked.
+        /// retained. Called on every run, so a report asked for after Stage 3 has its
+        /// calibration view (doc 00, P16).
         /// </summary>
         private ModelDiagnosticsData.CalFileRow BuildCalDiagnostics(
             ScoringContext context,
@@ -1428,8 +1410,8 @@ namespace pwiz.Osprey.Tasks
                 return null;
 
             // FDRBench entrapment ratio r = entrapment / (target-side - entrapment),
-            // from the full-library composition tallied at the top of RunCalibration
-            // (tallyEntrapment fires under --model-diagnostics). Zero on a plain library.
+            // from the full-library composition tallied at the top of RunCalibration.
+            // Zero on a plain library.
             long realTargets = _libTargetSideCount - _libEntrapmentCount;
             double r = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
             bool hasEntrapment = _libEntrapmentCount > 0;
@@ -2209,12 +2191,10 @@ namespace pwiz.Osprey.Tasks
                 EntryId = entry.Id,
                 IsDecoy = entry.IsDecoy,
                 // Entrapment class recovered from the library accessions (FDRBench _p_target
-                // marker). Pure diagnostic tag for the --verbose / --model-diagnostics anchor-purity
-                // report; unused by scoring/selection, so output is unchanged. Gated on those
-                // diagnostics so a normal run pays nothing for the per-entry accession scan (mirrors
-                // the library-composition tally gate). False when the tag is not being collected.
-                IsEntrapment = (OspreyOutput.Verbose || _ctx.Config.ModelDiagnostics) &&
-                               EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                // marker). Pure diagnostic tag for the --verbose anchor-purity report and the CAL
+                // view's entrapment-FDP curve, which every run records; unused by scoring/selection,
+                // so output is unchanged.
+                IsEntrapment = EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
                 Sequence = entry.Sequence,
                 ScanNumber = apexSpectrum.ScanNumber,
                 CorrelationScore = bestCorrSum,

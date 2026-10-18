@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
@@ -288,6 +289,29 @@ namespace pwiz.CarafeSharp.Test
         {
             foreach (string name in names)
                 RequireFile(Path.Combine(folder, name));
+        }
+
+        /// <summary>
+        /// A copy of the pairing manifest <paramref name="manifest"/>, beside it, with FDRBench's
+        /// five columns only - the sixth cell of every line cut - so a manifest CarafeSharp wrote
+        /// with its <c>entrapment_method</c> column compares byte for byte with one Carafe wrote.
+        /// Same encoding and line ending as the builder's: UTF-8 without a BOM, LF.
+        /// </summary>
+        public static string FdrBenchColumnsOf(string manifest)
+        {
+            string projected = manifest + @".fdrbench.tsv";
+            using (var reader = new StreamReader(manifest))
+            using (var writer = new StreamWriter(projected, false, new UTF8Encoding(false)))
+            {
+                writer.NewLine = "\n";
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var cells = line.Split('\t');
+                    writer.WriteLine(cells.Length > 5 ? string.Join("\t", cells, 0, 5) : line);
+                }
+            }
+            return projected;
         }
 
         /// <summary>

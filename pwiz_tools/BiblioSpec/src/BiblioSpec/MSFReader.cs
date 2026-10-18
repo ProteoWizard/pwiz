@@ -14,6 +14,8 @@ using System.IO.Compression;
 using System.Text;
 using System.Xml;
 
+using pwiz.BiblioSpec.IO;
+
 namespace Pwiz.Tools.BiblioSpec;
 
 /// <summary>

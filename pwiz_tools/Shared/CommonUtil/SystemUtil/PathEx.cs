@@ -393,6 +393,12 @@ namespace pwiz.Common.SystemUtil
             return text;
         }
 
+        // Matches every ampersand, capturing a predefined XML entity or a complete decimal or
+        // hexadecimal character reference that follows it ([0-9] rather than \d, which matches
+        // non-ASCII digits)
+        private static readonly Regex REGEX_AMPERSAND =
+            new Regex(@"&(?:(?<entity>apos|quot|[gl]t|amp);|#(?<dec>[0-9]+);|#x(?<hex>[0-9A-Fa-f]+);)?", RegexOptions.Compiled);
+
         // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
         // Return a suitably escaped version of the string
         public static string EscapePathForXML(string path)
@@ -400,9 +406,35 @@ namespace pwiz.Common.SystemUtil
             if (path.Contains(@"&")) // Valid windows filename character, may need escaping
             {
                 // But it may also be in use as an escape character - don't mess with &quot; etc
-                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
+                path = REGEX_AMPERSAND.Replace(path, match => IsValidXmlReference(match) ? match.Value : @"&amp;" + match.Value.Substring(1));
             }
             return path;
+        }
+
+        private static bool IsValidXmlReference(Match match)
+        {
+            if (match.Groups[@"entity"].Success)
+                return true;
+            long codePoint;
+            if (match.Groups[@"dec"].Success)
+            {
+                if (!long.TryParse(match.Groups[@"dec"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out codePoint))
+                    return false;
+            }
+            else if (match.Groups[@"hex"].Success)
+            {
+                if (!long.TryParse(match.Groups[@"hex"].Value, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out codePoint))
+                    return false;
+            }
+            else
+            {
+                return false;   // A bare ampersand
+            }
+            // The XML 1.0 Char production
+            return codePoint == 0x9 || codePoint == 0xA || codePoint == 0xD ||
+                   (codePoint >= 0x20 && codePoint <= 0xD7FF) ||
+                   (codePoint >= 0xE000 && codePoint <= 0xFFFD) ||
+                   (codePoint >= 0x10000 && codePoint <= 0x10FFFF);
         }
 
         /// <summary>

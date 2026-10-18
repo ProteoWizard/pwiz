@@ -57,7 +57,6 @@ a { color: #1565c0; }
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>--decoys-in-library</nobr></td><td>リバースデコイを生成する代わりに、スペクトルライブラリにすでに含まれるデコイを使用します。デコイが認識されない場合は、エラーで停止します。</td></tr>
 <tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>FDRBench 5列ペアリングマニフェスト（TSV）、<nobr>--decoys-in-libraryと併用</nobr></td></tr>
-<tr><td><nobr>--write-pin</nobr></td><td>外部ツール用のPINファイルを書き込みます</td></tr>
 </table>
 <div class="RowType">Training Export</div>
 <table>
@@ -95,10 +94,10 @@ a { color: #1565c0; }
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>開発者向けの診断ダンプファイルを書き込みます（Rust実装との比較用）</td></tr>
 <tr><td><nobr>--model-diagnostics</nobr></td><td>トレーニング済みスコアリングモデル、FDR校正、単一ピークに対する複数IDの重複割り当てについて、自己完結型のインタラクティブなHTMLレポートを書き込みます</td></tr>
-<tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>このヘルプメッセージを表示します（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
+<tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>このヘルプメッセージを表示します（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>バージョンを表示します</td></tr>
 </table>
-<p>例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC分割（1ノード = 1つの--task）：上記の--taskを参照してください。</p><div class="RowType">分散実行（HPC）</div>
+<p>例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC分割（1ノード = 1つの--task）：上記の--taskを参照してください。</p><p>受け付けるその他の形式：値はオプションに「=」でつなげて指定することもでき（--output=results.blib）、存在するファイルは-iなしで指定できます。</p><div class="RowType">分散実行（HPC）</div>
 <p><code>--task</code>を指定しない場合、パイプライン全体が1つのプロセスで実行されます。分散（HPC／ワークフローエンジン）実行では、パイプラインは結合／ファンアウトの境界で4つの単一タスクワーカーに分割されます（1ノード = 1つの<code>--task</code>）：<code>PerFileScoring</code>（分割、ファイルごと）&rarr;<code>FirstPassFDR</code>（結合、全ファイル）&rarr;<code>PerFileRescoring</code>（分割、ファイルごと）&rarr;<code>SecondPassFDR</code>（結合、全ファイル）。すべてのタスクに同じ<code>--library</code>と検索オプションを渡してください。parquetの整合性チェックにより、検索／ライブラリのハッシュが一致しない入力は拒否されます。</p>
 <pre>
 # 分割1 - mzMLごとに1プロセス（各入力の横に&lt;stem&gt;.scores.parquet、&lt;stem&gt;.calibration.jsonを書き込み）
@@ -106,7 +105,7 @@ Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution uni
 
 # 結合1 - 全ランに対して1プロセス（順序が決定的になるよう、ソート済みのリストを渡す）
 Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   各parquetの横に書き込み：&lt;stem&gt;.1st-pass.fdr_scores.bin、&lt;stem&gt;.reconciliation.json
+#   各parquetの横に書き込み：&lt;stem&gt;.1st-pass.fdr_scores.bin、out.1st-pass.*
 
 # 分割2 - ファイルごとに1プロセス（スコアparquetとその中間ファイルをまとめて）
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01

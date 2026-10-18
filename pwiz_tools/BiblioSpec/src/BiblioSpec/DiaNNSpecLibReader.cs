@@ -54,12 +54,13 @@
 //   - Modifications are resolved via the C# Unimod port (Pwiz.Data.Common.Unimod)
 //     for "(UniMod:N)" tags; non-UniMod bracketed deltas are parsed as numbers.
 
-using System.Data.SQLite;
 using System.Globalization;
 using System.Text;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Unimod;
 using Pwiz.Util.Chemistry;
+
+using pwiz.BiblioSpec.IO;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -97,7 +98,6 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     private readonly string _specLibFile;
     private readonly Library _specLib = new();
-    private SQLiteCommand? _insertRtCmd;
     private IonMobilityType _ionMobilityType = IonMobilityType.None;
     private int _missingFromSpeclibCount;
 
@@ -134,48 +134,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         // Impl ctor does this in score-lookup mode too (bailing out earlier); we follow the
         // cpp guard exactly.
         if (!maker.IsScoreLookupMode)
-        {
-            const string createRetentionTimes =
-                "CREATE TABLE RetentionTimes (RefSpectraID INTEGER, " +
-                "RedundantRefSpectraID INTEGER, " +
-                "SpectrumSourceID INTEGER, " +
-                "ionMobility REAL, " +
-                "collisionalCrossSectionSqA REAL, " +
-                "ionMobilityHighEnergyOffset REAL, " +
-                "ionMobilityType TINYINT, " +
-                "retentionTime REAL, " +
-                "startTime REAL, " +
-                "endTime REAL, " +
-                "score REAL, " +
-                "bestSpectrum INTEGER, " +
-                "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )";
-            maker.SqlStmt(createRetentionTimes);
-
-            _insertRtCmd = maker.Db.CreateCommand();
-            _insertRtCmd.CommandText =
-                "INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, " +
-                "SpectrumSourceID, ionMobility, collisionalCrossSectionSqA, " +
-                "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, " +
-                "startTime, endTime, score, bestSpectrum) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            for (int i = 0; i < 12; i++)
-                _insertRtCmd.Parameters.Add(_insertRtCmd.CreateParameter());
-            _insertRtCmd.Prepare();
-        }
-
-        // cpp parity: DiaNNSpecLibReader.cpp:967 — must re-prepare after adding RetentionTimes.
-        PrepareInsertSpectrumStatement();
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _insertRtCmd?.Dispose();
-            _insertRtCmd = null;
-        }
-        base.Dispose(disposing);
+            maker.Writer.EnsureRetentionTimes();
     }
 
     /// <summary>Score types this reader produces. cpp parity: DiaNNSpecLibReader.cpp:1297.</summary>
@@ -1343,25 +1302,12 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     private void BindAndExecRtInsert(int refSpectraId, RtPsm psm, int bestSpectrum)
     {
-        if (_insertRtCmd is null)
-            throw new InvalidOperationException("RetentionTimes INSERT statement not prepared.");
-        var p = _insertRtCmd.Parameters;
-        // Column order: RefSpectraID, RedundantRefSpectraID, SpectrumSourceID, ionMobility,
-        // collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType,
-        // retentionTime, startTime, endTime, score, bestSpectrum.
-        p[0].Value = refSpectraId;
-        p[1].Value = 0;
-        p[2].Value = psm.FileId;
-        p[3].Value = (double)psm.IonMobility;
-        p[4].Value = 0.0;
-        p[5].Value = 0.0;
-        p[6].Value = (int)(psm.IonMobility > 0 ? _ionMobilityType : IonMobilityType.None);
-        p[7].Value = (double)psm.Rt;
-        p[8].Value = (double)psm.RtStart;
-        p[9].Value = (double)psm.RtEnd;
-        p[10].Value = (double)psm.Score;
-        p[11].Value = bestSpectrum;
-        _insertRtCmd.ExecuteNonQuery();
+        // cpp parity: every time is written, zero included, and the CCS and high-energy
+        // offset are 0 rather than NULL.
+        BlibMaker.Writer.AddRetentionTime(refSpectraId, psm.FileId, (double)psm.Rt, (double)psm.RtStart, (double)psm.RtEnd,
+            psm.Score, bestSpectrum != 0,
+            (double)psm.IonMobility, 0.0, 0.0,
+            (int)(psm.IonMobility > 0 ? _ionMobilityType : IonMobilityType.None));
     }
 
     // --- internal types -----------------------------------------------------------------

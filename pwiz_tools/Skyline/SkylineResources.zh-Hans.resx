@@ -172,8 +172,8 @@
   <data name="CommandArgs_ParseArgsInternal_Error__The_specified_working_directory__0__does_not_exist_" xml:space="preserve">
     <value>错误：指定的作业目录{0}不存在。</value>
   </data>
-  <data name="CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_" xml:space="preserve">
-    <value>错误：意外参数 --{0}</value>
+  <data name="CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_" xml:space="preserve">
+    <value>意外参数 {0}</value>
   </data>
   <data name="CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_" xml:space="preserve">
     <value>无分离列表将被导出。</value>

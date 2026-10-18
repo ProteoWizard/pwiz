@@ -325,7 +325,8 @@ namespace pwiz.Skyline
         // Parsing checks the value in SetCulture, which also accepts other spellings of a known culture name.
         public static readonly Argument ARG_CULTURE = new Argument(@"culture",
             () => DISPLAY_LANGUAGE_NAMES.Value, (c, p) => SetCulture(p))
-            { HasValueChecking = true, AcceptedValues = GetKnownCultureNames };
+            // The value is checked by SetCulture when parsed; a token built with + is checked by the same rule.
+            { HasValueChecking = true, AcceptsValue = name => GetKnownCulture(name) != null };
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,
@@ -2767,39 +2768,18 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool ParseArgsInternal(IEnumerable<string> args)
+        private bool ParseArgsInternal(IReadOnlyList<string> args)
         {
+            // The shared parser under the default grammar: Skyline's strict --name=value, which
+            // ignores a bare word and refuses a value outside an argument's declared list.
             _seenArguments.Clear();
-
-            foreach (string s in args)
-            {
-                var pair = ArgumentBase.Parse(s);
-                if (!ProcessArgument(pair))
-                    return false;
-            }
+            var parser = new CommandLineParser<CommandArgs>(AllArguments);
+            if (!parser.Parse(this, args))
+                return false;
+            foreach (var seenArgument in parser.SeenArguments)
+                _seenArguments.Add(seenArgument);
 
             return ValidateArgs();
-        }
-
-        private bool ProcessArgument(NameValuePair pair)
-        {
-            // Only name-value pairs get processed here
-            if (pair == null || pair.IsEmpty)
-                return true;
-
-            foreach (var definedArgument in AllArguments)
-            {
-                if (pair.IsMatch(definedArgument))
-                {
-                    Assume.IsNotNull(definedArgument.ProcessValue); // Must define some way to process the value
-
-                    _seenArguments.Add(definedArgument);
-                    return definedArgument.ProcessValue(this, pair);
-                }
-            }
-            // Unmatched argument
-            WriteLine(SkylineResources.CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_, pair.Name);
-            return false;
         }
 
         private bool ValidateArgs()
@@ -3082,6 +3062,11 @@ namespace pwiz.Skyline
             public string ValueInvalidPathMessage(string argText, string value)
             {
                 return string.Format(Resources.ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_, value, argText);
+            }
+
+            public string UnknownArgumentMessage(string argText)
+            {
+                return string.Format(SkylineResources.CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_, argText);
             }
         }
 

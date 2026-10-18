@@ -1,5 +1,7 @@
 using System.Data.SQLite;
 
+using pwiz.BiblioSpec.IO;
+
 namespace Pwiz.Tools.BiblioSpec.Tests;
 
 /// <summary>

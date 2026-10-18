@@ -299,7 +299,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to writes beside each parquet: {0}, {1}.
+        ///   Looks up a localized string similar to writes beside each parquet: {0}; and once for the analysis: {1}.
         /// </summary>
         public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_ {
             get {
@@ -540,6 +540,16 @@ namespace pwiz.Osprey {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to OTHER FORMS ACCEPTED: a value may also be joined to its option ({0}), and a file that exists may be given without {1}..
+        /// </summary>
+        public static string OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_to_its_option___0___and_a_file_that_exists_may_be_given_without__1__ {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_t" +
+                        "o_its_option___0___and_a_file_that_exists_may_be_given_without__1__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Osprey - Peptide-centric DIA analysis.
         /// </summary>

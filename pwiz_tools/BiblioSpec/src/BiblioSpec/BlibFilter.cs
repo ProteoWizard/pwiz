@@ -15,6 +15,7 @@
 
 using System.Data.SQLite;
 using System.Globalization;
+using pwiz.BiblioSpec.IO;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -61,7 +62,12 @@ public class BlibFilter : BlibMaker
 
     private int _tableVersion;
     private readonly Dictionary<int, bool> _higherIsBetter = new();
-    private SQLiteCommand? _insertStmt;
+
+    /// <summary>
+    /// The <c>LibMetadata</c> key under which BlibFilter records the command line it was run
+    /// with (see <see cref="BlibMaker.RecordCommandLine"/>).
+    /// </summary>
+    public const string CommandMetadataKey = "bibliospec.blibfilter.command";
 
     /// <summary>
     /// Constructs a BlibFilter with cpp-default options. cpp BlibFilter.cpp:124-134:
@@ -138,12 +144,12 @@ public class BlibFilter : BlibMaker
     }
 
     /// <summary>
-    /// cpp <c>BlibFilter::commit</c> at BlibFilter.cpp:225-232. Calls the base implementation
-    /// (which writes indexes) and then DETACH'es the redundant schema.
+    /// cpp <c>BlibFilter::commit</c> at BlibFilter.cpp:225-232, the DETACH of the redundant
+    /// schema: after LibInfo has taken its revision from it, before the writer closes the
+    /// connection.
     /// </summary>
-    public override void Commit()
+    protected override void DetachAll()
     {
-        base.Commit();
         SqlStmt("DETACH DATABASE " + _redundantDbName);
     }
 
@@ -194,59 +200,14 @@ public class BlibFilter : BlibMaker
 
     /// <summary>
     /// cpp <c>BlibFilter::init</c> at BlibFilter.cpp:286-312. Calls base init (which opens
-    /// the file and creates standard tables via <see cref="AttachAll"/>), then creates the
-    /// RetentionTimes table and prepares the insert statement used by
-    /// <see cref="CompAndInsert"/>.
+    /// the writer and creates the standard tables after <see cref="AttachAll"/>), then adds
+    /// the RetentionTimes table <see cref="CompAndInsert"/> fills.
     /// </summary>
     public override void Init()
     {
         base.Init();
 
-        SqlStmt(
-            "CREATE TABLE RetentionTimes (RefSpectraID INTEGER, " +
-            "RedundantRefSpectraID INTEGER, " +
-            "SpectrumSourceID INTEGER, " +
-            "ionMobility REAL, " +
-            "collisionalCrossSectionSqA REAL, " +
-            "ionMobilityHighEnergyOffset REAL, " +
-            "ionMobilityType TINYINT, " +
-            "retentionTime REAL, " +
-            "startTime REAL, " +
-            "endTime REAL, " +
-            "score REAL, " +
-            "bestSpectrum INTEGER, " + // boolean
-            "FOREIGN KEY(RefSpectraID) REFERENCES RefSpectra(id) )");
-
-        _insertStmt = Db.CreateCommand();
-        _insertStmt.CommandText =
-            "INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, " +
-            "SpectrumSourceID, ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, " +
-            "retentionTime, startTime, endTime, score, bestSpectrum) " +
-            "VALUES (@refId, @redundantRefId, @sourceId, @ionMobility, @ccs, @ionMobilityHEO, @ionMobilityType, " +
-            "@retentionTime, @startTime, @endTime, @score, @bestSpectrum)";
-        _insertStmt.Parameters.Add("@refId", System.Data.DbType.Int32);
-        _insertStmt.Parameters.Add("@redundantRefId", System.Data.DbType.Int32);
-        _insertStmt.Parameters.Add("@sourceId", System.Data.DbType.Int32);
-        _insertStmt.Parameters.Add("@ionMobility", System.Data.DbType.Double);
-        _insertStmt.Parameters.Add("@ccs", System.Data.DbType.Double);
-        _insertStmt.Parameters.Add("@ionMobilityHEO", System.Data.DbType.Double);
-        _insertStmt.Parameters.Add("@ionMobilityType", System.Data.DbType.Int32);
-        _insertStmt.Parameters.Add("@retentionTime", System.Data.DbType.Double);
-        _insertStmt.Parameters.Add("@startTime", System.Data.DbType.Double);
-        _insertStmt.Parameters.Add("@endTime", System.Data.DbType.Double);
-        _insertStmt.Parameters.Add("@score", System.Data.DbType.Double);
-        _insertStmt.Parameters.Add("@bestSpectrum", System.Data.DbType.Int32);
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _insertStmt?.Dispose();
-            _insertStmt = null;
-        }
-        base.Dispose(disposing);
+        Writer.EnsureRetentionTimes();
     }
 
     // --- main algorithm --------------------------------------------------------------------
@@ -806,32 +767,18 @@ public class BlibFilter : BlibMaker
             var startTime = spectrum.StartTime;
             var endTime = spectrum.EndTime;
 
-            var stmt = _insertStmt ?? throw new InvalidOperationException("Insert statement not initialised; call Init first.");
-            stmt.Parameters["@refId"].Value = specId;
-            stmt.Parameters["@redundantRefId"].Value = specIdRedundant;
-            stmt.Parameters["@sourceId"].Value = GetNewFileId(_redundantDbName, specIdRedundant);
-            stmt.Parameters["@ionMobility"].Value = spectrum.IonMobility;
-            stmt.Parameters["@ccs"].Value = spectrum.CollisionalCrossSection;
-            stmt.Parameters["@ionMobilityHEO"].Value = spectrum.IonMobilityHighEnergyOffset;
-            stmt.Parameters["@ionMobilityType"].Value = (int)spectrum.IonMobilityType;
-            stmt.Parameters["@retentionTime"].Value = retentionTime != 0 ? retentionTime : DBNull.Value;
-            if (startTime != 0 && endTime != 0)
-            {
-                stmt.Parameters["@startTime"].Value = startTime;
-                stmt.Parameters["@endTime"].Value = endTime;
-            }
-            else
-            {
-                stmt.Parameters["@startTime"].Value = DBNull.Value;
-                stmt.Parameters["@endTime"].Value = DBNull.Value;
-            }
-            stmt.Parameters["@score"].Value = spectrum.Score;
-            stmt.Parameters["@bestSpectrum"].Value = i == bestIndex ? 1 : 0;
-
+            // cpp parity: a zero retention time is unknown, and the start and end times are
+            // kept only as a pair.
+            var hasBounds = startTime != 0 && endTime != 0;
             try
             {
-                if (stmt.ExecuteNonQuery() != 1)
-                    throw new BlibException(false, "Error inserting row into RetentionTimes");
+                Writer.AddRetentionTime(specId, GetNewFileId(_redundantDbName, specIdRedundant),
+                    retentionTime != 0 ? retentionTime : null,
+                    hasBounds ? startTime : null,
+                    hasBounds ? endTime : null,
+                    spectrum.Score, i == bestIndex,
+                    spectrum.IonMobility, spectrum.CollisionalCrossSection, spectrum.IonMobilityHighEnergyOffset,
+                    (int)spectrum.IonMobilityType, specIdRedundant);
             }
             catch (SQLiteException ex)
             {

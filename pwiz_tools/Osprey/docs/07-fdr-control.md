@@ -189,13 +189,14 @@ iteration cap, ignoring `OSPREY_GBT_*`) and pass 2 froze that SVM.
 `FdrTest.TestStreamingFirstPassTrainsGbdt` pins the fix against the resident projection path,
 byte for byte.
 
-Under `--model-diagnostics` the tree paths also bin each scored row's standardized features,
-so the report's per-feature target/decoy distributions exist for trees as for the SVM. A tree
-ensemble has no coefficients, so the contribution table itself is marked not applicable
-(`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the model
-was not retrained.
+The tree paths also bin each scored row's standardized features - on every run, into the
+run's `FeatureSums` share in its first-pass FDR file - so the report's per-feature
+target/decoy distributions exist for trees as for the SVM. A tree ensemble has no
+coefficients, so the contribution table itself is marked not applicable
+(`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the
+feature report is unavailable.
 
-The trained ensembles persist in `<stem>.1st-pass.model.json` (`FirstPassModelIO`, as
+The trained ensembles persist in `<blib-stem>.1st-pass.model.json` (`FirstPassModelIO`, as
 `GbtModelData`, which round-trips exactly), so a resume, the Stage 6 per-file competition and
 a distributed `--task SecondPassFDR` node score with the same trees the first pass used. A
 tree model's file is about 3.4 MB, against a few hundred KB for the linear model, so it is
@@ -741,7 +742,7 @@ would make the effective default depend on another variable, which is harder to 
 a loud failure whose message names the fix.
 
 The refusal gates on the arm the **first pass recorded** - persisted as
-`ExperimentAgg` in the per-file `<stem>.1st-pass.model.json` sidecar
+`ExperimentAgg` in the analysis's `<blib-stem>.1st-pass.model.json`
 (`FirstPassModelIO`) - not on the live process environment, because a
 `--task SecondPassFDR` node reloads the frozen model from disk and never
 trained pass 1. A sidecar written before arm recording reports null, which means
@@ -813,7 +814,6 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--reconciliation-compaction-fdr <threshold>` | `0.01` (`OspreyConfig.cs:135`) | Peptide q-value gate for first-pass compaction; loosen (e.g. 0.05) to broaden the reconciliation pool. Protein rescue is additive. |
 | `--protein-fdr <threshold>` | unset → `EffectiveProteinFdr = 0.01` (`OspreyConfig.cs:271`) | Protein machinery **always runs** regardless; this only sets the passing-group threshold. |
 | `--shared-peptides {all\|razor\|unique}` | `all` (`OspreyConfig.cs:274`) | Protein-level shared-peptide handling (see `08-protein-parsimony.md`). |
-| `--write-pin` | off (`OspreyCommandArgs.cs:196`) | Writes PIN files for external tools; diagnostic only — the FDR engine does not consume them. |
 | `--fdrbench <tsv>` | off (`OspreyCommandArgs.cs:179`) | Emit an FDRBench-compatible input TSV (entrapment true-FDR). Level taken from `--fdr-level`. |
 | `--fdrbench-per-run` | off (`OspreyCommandArgs.cs:181`) | One row per (precursor, run) with run-level q-values; default is one row per precursor with experiment q-values. |
 | `--fdrbench-pass {1\|2\|both}` | `2` (`OspreyCommandArgs.cs:183`) | Which pass to emit: 2 = post-compaction second-pass survivors; 1 = full pre-compaction first-pass pool; both = both with `.pass1`/`.pass2` suffixes. |

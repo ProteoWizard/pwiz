@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -83,8 +84,7 @@ namespace pwiz.Osprey.Test
             "    0.125,\n" +
             "    -3\n" +
             "  ],\n" +
-            "  \"ExperimentAgg\": \"max\",\n" +
-            "  \"StratumBaseIds\": null\n" +
+            "  \"ExperimentAgg\": \"max\"\n" +
             "}\n";
 
         private static PercolatorResults MakeSvmModel()
@@ -374,11 +374,12 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// What FirstPassFDR does with the model file beside each input. It writes every model
-        /// it TRAINS - a current model of the other classifier on disk does not excuse the
-        /// write, because Stage 6 and a distributed SecondPassFDR read whatever file is there -
-        /// and it enters the resume at the compaction gate only with a persisted model of the
-        /// classifier this run uses.
+        /// What FirstPassFDR does with the analysis's model file. It writes every model it TRAINS
+        /// - a current model of the other classifier on disk does not excuse the write, because
+        /// Stage 6 and a distributed SecondPassFDR read whatever file is there - and it enters the
+        /// resume at the compaction gate only with a persisted model of the classifier this run
+        /// uses. The model and stratum are experiment-wide, so they are written ONCE under the
+        /// analysis name and never beside a run.
         /// </summary>
         [TestMethod]
         public void TestFirstPassFdrTaskPersistsAndAdoptsOnlyItsOwnModel()
@@ -387,14 +388,11 @@ namespace pwiz.Osprey.Test
             Directory.CreateDirectory(dir);
             try
             {
-                var parquetPaths = new Dictionary<string, string>
-                {
-                    { @"run1", Path.Combine(dir, @"run1.scores.parquet") },
-                    { @"run2", Path.Combine(dir, @"run2.scores.parquet") },
-                };
-                AssertEveryTrainedModelIsPersisted(parquetPaths);
-                AssertGateAdoptsOnlyThisRunsClassifier(dir, parquetPaths);
-                AssertLoadFromAnyPairsOneStem(Path.Combine(dir, @"pairing"));
+                AssertEveryTrainedModelIsPersisted(dir, AnalysisConfig(dir));
+                AssertGateAdoptsOnlyThisRunsClassifier(dir, AnalysisConfig(dir));
+                string pairingDir = Path.Combine(dir, @"pairing");
+                Directory.CreateDirectory(pairingDir);
+                AssertLoadForAnalysisPairsByStamp(AnalysisConfig(pairingDir));
             }
             finally
             {
@@ -402,116 +400,108 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        /// <summary>
-        /// <see cref="FirstPassModelIO.LoadFromAny"/> returns the model and stratum of ONE stem:
-        /// the first stem that has both, else the first readable model with no stratum. The two
-        /// stems here hold different models, so a pairing across stems would show.
-        /// </summary>
-        private static void AssertLoadFromAnyPairsOneStem(string dir)
+        /// <summary>A two-run analysis in <paramref name="dir"/> writing <c>output.blib</c>.</summary>
+        private static OspreyConfig AnalysisConfig(string dir)
         {
-            Directory.CreateDirectory(dir);
-            var parquetPaths = new Dictionary<string, string>
+            return new OspreyConfig
             {
-                { @"run1", Path.Combine(dir, @"run1.scores.parquet") },
-                { @"run2", Path.Combine(dir, @"run2.scores.parquet") },
+                OutputBlib = Path.Combine(dir, @"output.blib"),
+                InputFiles = new List<string> { Path.Combine(dir, @"run1.mzML"), Path.Combine(dir, @"run2.mzML") },
             };
-            Assert.IsNull(FirstPassModelIO.LoadFromAny(parquetPaths), @"no model file: nothing to load");
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(parquetPaths[@"run1"], @"run1"), MakeTreeModel(), @"max", TestStamps.Any));
-            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(parquetPaths[@"run2"], @"run2"), MakeSvmModel(), @"max", TestStamps.Any));
+        }
 
-            var modelOnly = FirstPassModelIO.LoadFromAny(parquetPaths);
+        /// <summary>
+        /// <see cref="FirstPassModelIO.LoadForAnalysis"/> pairs the stratum with the model only
+        /// when both carry the same stamp, and otherwise returns the model alone.
+        /// </summary>
+        private static void AssertLoadForAnalysisPairsByStamp(OspreyConfig config)
+        {
+            Assert.IsNull(FirstPassModelIO.LoadForAnalysis(config), @"no model file: nothing to load");
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), @"max", TestStamps.Any));
+
+            var modelOnly = FirstPassModelIO.LoadForAnalysis(config);
             Assert.IsNotNull(modelOnly);
             Assert.IsNotNull(modelOnly.Model);
-            Assert.IsTrue(modelOnly.Model.IsGradientBoostedTrees, @"no stratum anywhere: the first stem's model");
-            Assert.IsNull(modelOnly.StratumBaseIds);
+            Assert.IsNull(modelOnly.StratumBaseIds, @"no stratum file: the model alone");
 
             var stratum = new HashSet<uint> { 7, 11 };
-            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(parquetPaths[@"run2"], @"run2"), stratum, TestStamps.Any));
-            var paired = FirstPassModelIO.LoadFromAny(parquetPaths);
+            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config), stratum, TestStamps.Any));
+            var paired = FirstPassModelIO.LoadForAnalysis(config);
             Assert.IsNotNull(paired);
-            Assert.IsNotNull(paired.Model);
-            Assert.IsFalse(paired.Model.IsGradientBoostedTrees, @"the stratum's own stem supplies the model");
             Assert.IsTrue(stratum.SetEquals(paired.StratumBaseIds));
 
             // A stratum written by another run (another key) is not this model's, so it is not
             // paired with it.
-            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(parquetPaths[@"run2"], @"run2"), stratum,
-                ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, @"another-run")));
-            var unpaired = FirstPassModelIO.LoadFromAny(parquetPaths);
+            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config), stratum,
+                OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"another-run")));
+            var unpaired = FirstPassModelIO.LoadForAnalysis(config);
             Assert.IsNotNull(unpaired);
             Assert.IsNull(unpaired.StratumBaseIds, @"a stratum stamped by another run must not be paired");
         }
 
-        private static void AssertEveryTrainedModelIsPersisted(Dictionary<string, string> parquetPaths)
+        private static void AssertEveryTrainedModelIsPersisted(string dir, OspreyConfig config)
         {
             const string key = @"validity-key";
             var task = FirstPassTask();
-            string run1Path = FirstPassModelIO.PathFor(parquetPaths[@"run1"], @"run1");
-            string run2Path = FirstPassModelIO.PathFor(parquetPaths[@"run2"], @"run2");
+            string modelPath = FirstPassModelIO.PathFor(config);
+            Assert.AreEqual(Path.Combine(dir, @"output" + FirstPassModelIO.EXT_MODEL), modelPath,
+                @"the model is named for the analysis, beside the per-run artifacts");
 
-            // A first run persists the linear model it trained.
-            task.PublishFirstPassModel(MakeSvmModel(), null, null, parquetPaths, key, NewContext());
-            var onDisk = FirstPassModelIO.Load(run1Path);
+            // A first run persists the linear model it trained - once, and not beside any run.
+            task.PublishFirstPassModel(MakeSvmModel(), null, null, key, NewContext(config));
+            var onDisk = FirstPassModelIO.Load(modelPath);
             Assert.IsNotNull(onDisk, @"the trained model should be persisted");
             Assert.IsNotNull(onDisk.Model, @"the persisted file should carry the model");
             Assert.IsFalse(onDisk.Model.IsGradientBoostedTrees, @"the persisted model should be the linear one");
+            Assert.AreEqual(0, Directory.GetFiles(dir, @"run*").Length, @"no per-run copy of the model");
 
             // A re-run finds that model current but trains its own, as it does whenever no file
-            // is resumable. Its model must replace the file beside every input.
-            task.PublishFirstPassModel(MakeTreeModel(), onDisk, null, parquetPaths, key, NewContext());
-            foreach (var kvp in parquetPaths)
-            {
-                string path = FirstPassModelIO.PathFor(kvp.Value, kvp.Key);
-                Assert.IsTrue(FirstPassModelIO.Load(path)?.Model?.IsGradientBoostedTrees ?? false,
-                    @"a retrained model must replace the persisted one: " + kvp.Key);
-                Assert.IsTrue(PerFileResumeDriver.IsCurrent(path, FirstPassFdrTask.TASK_NAME, key),
-                    @"the replacement must be stamped current: " + kvp.Key);
-            }
+            // is resumable. Its model must replace the file.
+            task.PublishFirstPassModel(MakeTreeModel(), onDisk, null, key, NewContext(config));
+            Assert.IsTrue(FirstPassModelIO.Load(modelPath)?.Model?.IsGradientBoostedTrees ?? false,
+                @"a retrained model must replace the persisted one");
+            Assert.IsTrue(PerFileResumeDriver.IsCurrent(modelPath, FirstPassFdrTask.TASK_NAME, key),
+                @"the replacement must be stamped current");
 
             // A model the run ADOPTED is the file already on disk, attested by its marker, so it
             // is not written again.
-            var adopted = FirstPassModelIO.Load(run1Path);
+            var adopted = FirstPassModelIO.Load(modelPath);
             Assert.IsNotNull(adopted);
-            File.Delete(run2Path);
-            task.PublishFirstPassModel(adopted.Model, adopted, adopted.Model, parquetPaths, key, NewContext());
-            Assert.IsFalse(File.Exists(run2Path), @"an adopted model is not written again");
+            File.Delete(modelPath);
+            task.PublishFirstPassModel(adopted.Model, adopted, adopted.Model, key, NewContext(config));
+            Assert.IsFalse(File.Exists(modelPath), @"an adopted model is not written again");
         }
 
-        private static void AssertGateAdoptsOnlyThisRunsClassifier(string dir, Dictionary<string, string> parquetPaths)
+        private static void AssertGateAdoptsOnlyThisRunsClassifier(string dir, OspreyConfig config)
         {
             const string key = @"validity-key";
             var task = FirstPassTask();
             string experimentPath = Path.Combine(dir, @"output.1st-pass.fdr_experiment.bin");
             FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
-                FdrScoresSidecar.Pass.FirstPass, ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, key));
+                FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
             // A model and stratum left by a run under ANOTHER key are not this run's first pass.
-            var otherRun = ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, @"other-key");
-            SaveModelAndStratum(parquetPaths, otherRun);
-            var refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
-                new OspreyConfig(), out _);
+            var otherRun = OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"other-key");
+            SaveModelAndStratum(config, otherRun);
+            var refusals = task.CompactionGateRefusals(experimentPath, key, config, out _);
             Assert.AreEqual(1, refusals.Count, @"a model stamped with another key must not enter at the gate");
 
-            SaveModelAndStratum(parquetPaths, ArtifactStamp.ForCurrentBuild(FirstPassFdrTask.TASK_NAME, key));
-            refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
-                new OspreyConfig(), out var sidecar);
+            SaveModelAndStratum(config, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, key));
+            refusals = task.CompactionGateRefusals(experimentPath, key, config, out var sidecar);
             Assert.AreEqual(0, refusals.Count, string.Join(@"; ", refusals));
             Assert.IsNotNull(sidecar, @"the gate should hand back the sidecar it checked");
             Assert.IsNotNull(sidecar.Model, @"the gate should hand back the model it checked");
 
-            refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
-                new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, out _);
+            config.FdrClassifier = FdrClassifier.Gbdt;
+            refusals = task.CompactionGateRefusals(experimentPath, key, config, out _);
             Assert.AreEqual(1, refusals.Count,
                 @"a gbdt run must not enter at the gate with a linear model: it would publish that model");
         }
 
-        private static void SaveModelAndStratum(Dictionary<string, string> parquetPaths, ArtifactStamp stamp)
+        private static void SaveModelAndStratum(OspreyConfig config, ArtifactStamp stamp)
         {
-            foreach (var kvp in parquetPaths)
-            {
-                Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(kvp.Value, kvp.Key), MakeSvmModel(), @"max", stamp));
-                Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(kvp.Value, kvp.Key),
-                    new HashSet<uint> { 1, 2, 3 }, stamp));
-            }
+            Assert.IsTrue(FirstPassModelIO.Save(FirstPassModelIO.PathFor(config), MakeSvmModel(), @"max", stamp));
+            Assert.IsTrue(FirstPassModelIO.SaveStratum(FirstPassModelIO.StratumPathFor(config),
+                new HashSet<uint> { 1, 2, 3 }, stamp));
         }
 
         private static FirstPassFdrTask FirstPassTask()
@@ -525,9 +515,9 @@ namespace pwiz.Osprey.Test
             return null;
         }
 
-        private static PipelineContext NewContext()
+        private static PipelineContext NewContext(OspreyConfig config)
         {
-            return new PipelineContext(new OspreyConfig(), OspreyTasks.Create().Pipeline, null,
+            return new PipelineContext(config, OspreyTasks.Create().Pipeline, null,
                 message => Assert.Fail(message), message => Assert.Fail(message));
         }
 
@@ -576,21 +566,13 @@ namespace pwiz.Osprey.Test
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""ExperimentAgg"": ""mean-best-2"" }",
                 @"mean-best-2", @"sidecar with a recorded arm");
 
-            // Same argument for the stratum: it was added to the same schema version, so a
-            // sidecar written before it exists must load with a null stratum rather than fail.
-            // A SecondPassFDR node then keeps the protein-compact fail-fast, which is correct - an
-            // EMPTY stratum would instead constrain the pass-2 competition to nothing.
-            AssertLoadsWithStratum(
-                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0] }", null, @"pre-stratum sidecar");
-            AssertLoadsWithStratum(
-                @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
-                @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""StratumBaseIds"": [] }",
-                null, @"sidecar with an empty stratum");
-            AssertLoadsWithStratum(
+            // The stratum comes only from its own file. A model file written before the split
+            // carried one inline; that copy is ignored, so it loads as a model with no stratum
+            // and a protein-compact consumer keeps its fail-fast.
+            AssertLoadsWithoutStratum(
                 @"{ ""SchemaVersion"": 1, ""NumFeatures"": 2, ""Means"": [0.0, 1.0], ""Stds"": [1.0, 1.0], " +
                 @"""FoldWeights"": [[0.5, 0.5]], ""FoldBiases"": [0.0], ""StratumBaseIds"": [4, 9] }",
-                new[] { 4u, 9u }, @"sidecar with a stratum");
+                @"model file with an inline stratum");
         }
 
         /// <summary>
@@ -690,7 +672,7 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        private static void AssertLoadsWithStratum(string json, uint[] expectedBaseIds, string what)
+        private static void AssertLoadsWithoutStratum(string json, string what)
         {
             string path = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_stratum_" + Guid.NewGuid().ToString(@"N") + @".json");
@@ -699,14 +681,7 @@ namespace pwiz.Osprey.Test
                 File.WriteAllText(path, json);
                 var sidecar = FirstPassModelIO.Load(path);
                 Assert.IsNotNull(sidecar, what + @" should load");
-                if (expectedBaseIds == null)
-                {
-                    Assert.IsNull(sidecar.StratumBaseIds, what + @" should carry no stratum");
-                    return;
-                }
-                Assert.IsNotNull(sidecar.StratumBaseIds, what + @" should carry a stratum");
-                Assert.IsTrue(new HashSet<uint>(expectedBaseIds).SetEquals(sidecar.StratumBaseIds),
-                    what + @" base ids");
+                Assert.IsNull(sidecar.StratumBaseIds, what + @" should carry no stratum");
             }
             finally
             {

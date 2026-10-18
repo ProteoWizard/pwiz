@@ -37,6 +37,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
@@ -110,12 +111,12 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// The <see cref="CreateCoAssignRowDump"/> sink. A log, not an artifact: it writes
         /// the rows file directly at its final path rather than through
-        /// <see cref="FileSaver"/>. Seeing however far a panel got is the whole reason to
+        /// <see cref="SimpleFileSaver"/>. Seeing however far a panel got is the whole reason to
         /// stream rather than buffer, so a throw mid-panel should leave whatever rows were
         /// written, not discard them - a TSV degrades to a readable partial file, and
         /// nothing downstream reads this back to gate correctness, so presence not proving
         /// completeness costs nothing here. <c>WriteCutoffs</c> is a separate, ordinary
-        /// one-shot <see cref="FileSaver"/> write, since a boundary table is either fully
+        /// one-shot <see cref="SimpleFileSaver"/> write, since a boundary table is either fully
         /// known or not worth having at all.
         /// </summary>
         public sealed class CoAssignRowDump : IDisposable
@@ -204,7 +205,7 @@ namespace pwiz.Osprey.FDR
                 double experimentCutoffOffStratum, int acceptedInStratum, int acceptedOffStratum)
             {
                 var inv = CultureInfo.InvariantCulture;
-                using (var saver = new FileSaver(NameFor(_dir, _pass, _seq, @"cutoffs")))
+                using (var saver = new SimpleFileSaver(NameFor(_dir, _pass, _seq, @"cutoffs")))
                 {
                     using (var sw = new StreamWriter(saver.SafeName))
                     {
@@ -264,7 +265,7 @@ namespace pwiz.Osprey.FDR
         {
             const string path = @"cs_stage7_winners.tsv";
             var inv = CultureInfo.InvariantCulture;
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
@@ -298,7 +299,7 @@ namespace pwiz.Osprey.FDR
             var inv = CultureInfo.InvariantCulture;
             var keys = new List<string>(best.Keys);
             keys.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only (not parity-sensitive); keys are unique dictionary keys so the comparator never ties anyway
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {

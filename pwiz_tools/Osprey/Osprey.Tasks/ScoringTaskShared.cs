@@ -493,6 +493,25 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// <c>&lt;blib-stem&gt;&lt;ext&gt;</c> for an analysis-wide artifact: named for the output
+        /// blib, in the directory this analysis's per-run artifacts resolve to - the rule doc 00
+        /// gives under "Where blib-named experiment-wide artifacts live". Null when there is no
+        /// output blib or input to resolve it from.
+        /// </summary>
+        internal static string AnalysisArtifactPath(OspreyConfig config, string ext)
+        {
+            string outputBlib = config?.OutputBlib;
+            string siblingPath = ArtifactSiblingPath(config);
+            if (string.IsNullOrEmpty(outputBlib) || string.IsNullOrEmpty(siblingPath))
+                return null;
+            string stem = Path.GetFileNameWithoutExtension(outputBlib);
+            if (string.IsNullOrEmpty(stem))
+                return null;
+            string parent = ArtifactPaths.ResolveOutputDir(siblingPath);
+            return string.IsNullOrEmpty(parent) ? stem + ext : Path.Combine(parent, stem + ext);
+        }
+
+        /// <summary>
         /// Whether this run's Stage-6 rescore hydrates each run from that run's own artifacts.
         /// TRUE means the <c>--input-scores</c> load must NOT build the all-runs bundle: the
         /// rescore loop hydrates per run, and anything the load pre-built would be discarded and
@@ -956,10 +975,10 @@ namespace pwiz.Osprey.Tasks
         /// null with <paramref name="error"/> set to an operator-facing message naming the
         /// producer.
         ///
-        /// <para>Absence is FATAL to the caller and must not fall back to rebuilding the union
-        /// from every run's <c>reconciliation.json</c>. That fallback is precisely the O(files)
-        /// pre-pass this artifact exists to delete - 10.7 GB of envelope JSON on a 446-run
-        /// cohort - so a quiet degradation to it would restore the behaviour without restoring
+        /// <para>Absence is FATAL to the caller and must not fall back to rebuilding the set by
+        /// surveying every run. That fallback is precisely the O(files) pre-pass this artifact
+        /// exists to delete - it once read 10.7 GB of per-run JSON on a 446-run cohort - so a
+        /// quiet degradation to it would restore the behaviour without restoring
         /// any signal that it had happened. A directory written before this artifact existed is
         /// re-runnable, which costs a FirstPassFDR pass; a silent join is not detectable at
         /// all.</para>
@@ -1026,7 +1045,7 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, row.ModifiedSequence, row.Charge, row.EntryId,
                     row.IsDecoy, row.Score,
                     new FdrQValues(row.RunPrecursorQvalue, row.RunPeptideQvalue,
-                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0, 1.0));
+                        row.ExperimentPrecursorQvalue, row.ExperimentPeptideQvalue, 1.0));
             }
         }
 
