@@ -121,6 +121,18 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"ref.blib", io.LibrarySource.Path);
             Assert.AreEqual(@"out.blib", io.OutputBlib);
 
+            // The command line is kept as one line of text for the library's LibMetadata, with
+            // an argument quoted only when a shell would need it.
+            Assert.AreEqual(string.Join(@" ", @"Osprey", OspreyCommandArgs.ARG_INPUT.ArgumentText, @"a.mzML", @"b.mzML",
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, @"ref.blib", OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"out.blib"), io.CommandLine);
+            var spaced = OspreyCommandArgs.ParseArgs(new[] { OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"out dir\x.blib" });
+            Assert.AreEqual(@"Osprey " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText + @" ""out dir\x.blib""", spaced.CommandLine);
+            Assert.AreEqual(@"""say \""hi\""""", CommandLineText.Quote(@"say ""hi"""));
+            Assert.AreEqual(@"""""", CommandLineText.Quote(string.Empty));
+            // Backslashes before the closing quote or an embedded quote are doubled, so the text parses back.
+            Assert.AreEqual(@"""C:\out dir\\""", CommandLineText.Quote(@"C:\out dir\"));
+            Assert.AreEqual(@"""a\\\""b c""", CommandLineText.Quote(@"a\""b c"));
+
             Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
 
             // --work-dir fans out to both; an explicit --output-dir / --cache-dir overrides one.
@@ -187,7 +199,6 @@ namespace pwiz.Osprey.Test
             // Decoys.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
-            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_WRITE_PIN).WritePin);
 
             // Training export: off by default, and each setting lands where the task reads it.
             var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
@@ -308,11 +319,11 @@ namespace pwiz.Osprey.Test
             // exception type, same message but for the name, whatever value follows.
             const string removedArg = @"--fdr-method";
             const string neverArg = @"--no-such-argument";
-            string neverMessage = Assert.ThrowsException<ArgumentException>(
+            string neverMessage = Assert.ThrowsException<UnknownArgumentException>(
                 () => OspreyCommandArgs.ParseArgs(new[] { neverArg })).Message;
             foreach (var removedValue in new[] { @"gbdt", @"percolator", @"simple" })
             {
-                var removed = Assert.ThrowsException<ArgumentException>(
+                var removed = Assert.ThrowsException<UnknownArgumentException>(
                     () => OspreyCommandArgs.ParseArgs(new[] { removedArg, removedValue }), removedValue);
                 Assert.AreEqual(neverMessage.Replace(neverArg, removedArg), removed.Message);
             }
@@ -438,10 +449,10 @@ namespace pwiz.Osprey.Test
 
             // An empty value is a missing value, reported as it is for the spaced form.
             var argOutput = OspreyCommandArgs.ARG_OUTPUT;
-            var missing = Assert.ThrowsException<ArgumentException>(() => ParseInline(argOutput, string.Empty));
+            var missing = Assert.ThrowsException<ValueMissingException>(() => ParseInline(argOutput, string.Empty));
             Assert.AreEqual(ArgUsage.Provider.ValueMissingMessage(argOutput.ArgumentText), missing.Message);
             // A flag takes no value in either form.
-            Assert.ThrowsException<ArgumentException>(() => ParseInline(OspreyCommandArgs.ARG_VERBOSE, 1));
+            Assert.ThrowsException<ValueUnexpectedException>(() => ParseInline(OspreyCommandArgs.ARG_VERBOSE, 1));
 
             // --task: the tokenizer consumes both forms, and FindValue reads both the same way.
             var argTask = OspreyCommandArgs.ARG_TASK;
@@ -453,11 +464,11 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(OspreyCommandArgs.FindValue(ArgTokens.Split(argThreads + 8), argTask));
             string noTaskName = string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
                 argTask.ArgumentText, string.Join(@", ", argTask.Values));
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => OspreyCommandArgs.FindValue(new[] { InlineToken(argTask, string.Empty) }, argTask)).Message);
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => OspreyCommandArgs.FindValue(new[] { argTask.ArgumentText }, argTask)).Message);
-            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ValueMissingException>(
                 () => Parse(argTask)).Message);
         }
 
@@ -594,7 +605,7 @@ namespace pwiz.Osprey.Test
 
             // section filter: only the matching group.
             string filtered = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Decoys);
-            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText);
+            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText);
             Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
 
             // unknown section: a helpful message, no crash.

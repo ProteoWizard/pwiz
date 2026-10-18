@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
@@ -184,15 +185,12 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// The order-dependent half of <see cref="Add(double[],bool)"/>: the class count and
-            /// the running per-feature sums, for the vector starting at
-            /// <paramref name="offset"/> in <paramref name="standardizedFeatures"/>. Floating-point
-            /// addition does not associate, so a caller that splits the work across files must
-            /// still call this once per row in the original row order to reproduce the sums
-            /// exactly; the histogram half has no such constraint (see
-            /// <see cref="MergeHistograms"/>).
+            /// The class count and running per-feature sums half of <see cref="Add(double[],bool)"/>,
+            /// for the vector starting at <paramref name="offset"/>. Floating-point addition does
+            /// not associate, so the row order is part of the sums; a cross-run total adds whole
+            /// runs' shares in run order instead (<see cref="Add(FeatureSums)"/>).
             /// </summary>
-            public void AddSums(double[] standardizedFeatures, int offset, bool isDecoy)
+            private void AddSums(double[] standardizedFeatures, int offset, bool isDecoy)
             {
                 if (isDecoy)
                 {
@@ -209,13 +207,11 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// The order-free half of <see cref="Add(double[],bool)"/>: bins the vector starting
-            /// at <paramref name="offset"/> into the per-feature class histograms, when this
-            /// accumulator collects them. Integer counts, so partial accumulators built per file
-            /// and combined with <see cref="MergeHistograms"/> give exactly the counts one
-            /// accumulator fed every row would.
+            /// The histogram half of <see cref="Add(double[],bool)"/>: bins the vector starting at
+            /// <paramref name="offset"/> into the per-feature class histograms, when this
+            /// accumulator collects them.
             /// </summary>
-            public void AddHistogram(double[] standardizedFeatures, int offset, bool isDecoy)
+            private void AddHistogram(double[] standardizedFeatures, int offset, bool isDecoy)
             {
                 if (_histTarget == null)
                     return;
@@ -229,21 +225,56 @@ namespace pwiz.Osprey.FDR
             }
 
             /// <summary>
-            /// Adds <paramref name="other"/>'s histogram counts into this accumulator's. Only the
-            /// histograms: the sums and class counts are deliberately not merged, because merging
-            /// partial floating-point sums would not reproduce the row-order sum - feed those
-            /// through <see cref="AddSums"/> instead.
+            /// This accumulator's counts, sums and histograms as one run's <see cref="FeatureSums"/>
+            /// share, for the run's first-pass FDR sidecar. Requires histograms.
             /// </summary>
-            public void MergeHistograms(Accumulator other)
+            public FeatureSums ToFeatureSums()
             {
-                if (_histTarget == null || other?._histTarget == null)
+                if (_histTarget == null)
+                    throw new InvalidOperationException(@"A feature-sums share needs an accumulator that collects histograms.");
+                var share = new FeatureSums(_sumTarget.Length, HistBinCount)
+                {
+                    TargetCount = _nTarget,
+                    DecoyCount = _nDecoy
+                };
+                Array.Copy(_sumTarget, share.TargetSums, _sumTarget.Length);
+                Array.Copy(_sumDecoy, share.DecoySums, _sumDecoy.Length);
+                for (int j = 0; j < _histTarget.Length; j++)
+                {
+                    Array.Copy(_histTarget[j], share.TargetHistograms[j], HistBinCount);
+                    Array.Copy(_histDecoy[j], share.DecoyHistograms[j], HistBinCount);
+                }
+                return share;
+            }
+
+            /// <summary>
+            /// Add one run's <see cref="FeatureSums"/> share. Callers add the shares in run order:
+            /// the sums are floating-point, so that order is part of the result, and it is the
+            /// same whichever lanes scored the runs and whether a run was scored or resumed.
+            /// </summary>
+            public void Add(FeatureSums share)
+            {
+                if (share.FeatureCount != _sumTarget.Length || (_histTarget != null && share.BinCount != HistBinCount))
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
+                        @"A feature-sums share of {0} features x {1} bins cannot be added to {2} features x {3} bins.",
+                        share.FeatureCount, share.BinCount, _sumTarget.Length, HistBinCount));
+                }
+                _nTarget += share.TargetCount;
+                _nDecoy += share.DecoyCount;
+                for (int j = 0; j < _sumTarget.Length; j++)
+                {
+                    _sumTarget[j] += share.TargetSums[j];
+                    _sumDecoy[j] += share.DecoySums[j];
+                }
+                if (_histTarget == null)
                     return;
                 for (int j = 0; j < _histTarget.Length; j++)
                 {
                     for (int b = 0; b < HistBinCount; b++)
                     {
-                        _histTarget[j][b] += other._histTarget[j][b];
-                        _histDecoy[j][b] += other._histDecoy[j][b];
+                        _histTarget[j][b] += share.TargetHistograms[j][b];
+                        _histDecoy[j][b] += share.DecoyHistograms[j][b];
                     }
                 }
             }

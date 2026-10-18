@@ -78,8 +78,11 @@ namespace pwiz.Osprey.Core
             var candidates = new FragmentCandidates(sequence, modifications, precursorCharge);
             var claimed = new bool[candidates.SlotCount];
             // Most intense first, so the ion a peak claims goes to the strongest peak it explains.
+            // Ties go to the lower m/z rather than the earlier row, so the typing does not depend
+            // on the order the library lists its peaks in (peaks equal in both are interchangeable).
             foreach (int i in Enumerable.Range(0, fragments.Length)
-                         .OrderByDescending(i => fragments[i].RelativeIntensity).ThenBy(i => i))
+                         .OrderByDescending(i => fragments[i].RelativeIntensity)
+                         .ThenBy(i => fragments[i].Mz).ThenBy(i => i))
             {
                 int slot = candidates.PreferredSlot(fragments[i].Mz, tolerance, claimed);
                 if (slot < 0)

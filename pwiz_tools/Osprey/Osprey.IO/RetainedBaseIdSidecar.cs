@@ -24,31 +24,28 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Reader / writer for the ANALYSIS-wide <c>&lt;blib-stem&gt;.1st-pass.retained_base_ids.bin</c>
-    /// summary: the COMPLETE set of base_ids the Stage 6 rescore retains, which is the join-wide
-    /// first-pass passing set UNION the base_id of every reconciliation action target across
-    /// every run.
+    /// summary: the COMPLETE set of base_ids the Stage 6 rescore retains - the distinct base_ids
+    /// of every run's first-pass survivors, the join-wide first-pass passing set.
     ///
-    /// <para>Why it exists. Both terms are known only to the planner, and only when planning has
-    /// finished. The first term alone is already carried by every run's
-    /// <c>reconciliation.json</c> (<c>first_pass_base_ids</c>, identical in all of them), but the
-    /// second cannot be: each envelope is written the moment THAT run's planning finishes, so at
-    /// that instant the actions of the runs planned later do not exist. Every consumer therefore
-    /// had to rebuild the union by reading every run's envelope - a pre-pass over all files that
-    /// made <c>--task PerFileRescoring</c> a join task in everything but name, at 10.7 GB of JSON
-    /// and 30.8 M actions resident on a 446-run cohort. Written once here, it is a summary a
-    /// per-run worker reads in full and holds like the spectral library.</para>
+    /// <para>Why it exists. Only the join knows the set, because it is a union over every run.
+    /// Before this file a per-run worker had to rebuild it by reading every run's
+    /// <c>reconciliation.json</c> - a pre-pass over all files that made
+    /// <c>--task PerFileRescoring</c> a join task in everything but name, at 10.7 GB of JSON on a
+    /// 446-run cohort. Written once here, it is a summary a per-run worker reads in full and
+    /// holds like the spectral library. (It used to add the base_id of every reconciliation
+    /// action target too, which never added one: every action targets a survivor.)</para>
     ///
-    /// <para>The set is bounded by the LIBRARY, not by run count: both terms are sets of
-    /// base_ids drawn from the same library, so a cohort of any size produces at most one entry
-    /// per library precursor. On the 446-run CHS cohort the first term alone is 744,943 ids -
-    /// 2.98 MB here against the 6.26 MB of JSON each of the 446 envelopes spends restating
-    /// it.</para>
+    /// <para>The set is bounded by the LIBRARY, not by run count: base_ids are drawn from the
+    /// library, so a cohort of any size produces at most one entry per library precursor. On
+    /// the 446-run CHS cohort it is 744,943 ids - 2.98 MB.</para>
     ///
     /// <para>Layout - little-endian, mirroring <see cref="FdrExperimentSidecar"/>'s header so the
     /// two analysis-wide summaries stay recognizably one family:</para>
@@ -166,7 +163,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write the retained base_id summary in ascending base_id order. Atomic via
-        /// <see cref="FileSaver"/>: the temp file is promoted on Commit, so a failure leaves any
+        /// <see cref="SimpleFileSaver"/>: the temp file is promoted on Commit, so a failure leaves any
         /// existing destination untouched.
         /// </summary>
         public static void Write(string path, IReadOnlyCollection<uint> baseIds, ArtifactStamp stamp)
@@ -188,7 +185,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var bw = new BinaryWriter(fs))

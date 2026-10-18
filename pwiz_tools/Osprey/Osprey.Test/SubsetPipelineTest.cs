@@ -30,6 +30,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.BiblioSpec.IO;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -241,8 +243,7 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
                 OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText,
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
-                OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both",
-                OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText
+                OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
             };
             RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
@@ -256,6 +257,8 @@ namespace pwiz.Osprey.Test
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
+            // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
+            AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
 
             // The report alone, from what the analysis left: every analysis task is cached.
             File.Delete(diagnosticsReport);
@@ -348,7 +351,7 @@ namespace pwiz.Osprey.Test
             string pass2 = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS2));
             string report = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             string referenceDir = CreateDir(@"diagnostics-reference");
-            foreach (string product in new[] { pass1, pass2, report })
+            foreach (string product in new[] { pass1, pass2, report, blib })
             {
                 Assert.IsTrue(File.Exists(product), @"the analysis wrote no " + product);
                 File.Copy(product, Path.Combine(referenceDir, Path.GetFileName(product)));
@@ -383,13 +386,7 @@ namespace pwiz.Osprey.Test
             // Mode 11: with both products deleted, asking for the report folds it from the
             // sidecars. Re-running the analysis would produce the right report too, which is
             // why the fold markers and the absence of analysis are what is asserted.
-            string[] noAnalysis =
-            {
-                PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty),
-                PathLine(LogKey.ROUTE_SCORED_ENTRIES, @"resident"),
-                @"[" + LogTag.STAGE_WALL + @"] second-pass-fdr",
-                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty)
-            };
+            string[] noAnalysis = NoAnalysisLines();
             string foldPass1 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass1");
             string foldPass2 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass2");
             DeleteDiagnosticsProducts(workDir, pass1, pass2);
@@ -432,6 +429,86 @@ namespace pwiz.Osprey.Test
             log = RunDiagnostics(SecondPassFdrTask.TASK_NAME);
             AssertLogShape(log, new[] { foldPass2 }, noAnalysis);
             Assert.IsTrue(File.Exists(pass2), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME) + @" folded nothing");
+
+            // --task SecondPassFDR owing the real second pass, on a node that was not shipped the
+            // pass-1 product - the bed an orchestrator builds without the optional relay. The
+            // second pass runs and only the report's pass-1 half is missing. It once died before
+            // loading a run: FirstPassFDR, which this process does not run, was asked whether it
+            // would "only fold its report", said yes, and sent the per-file scoring load down the
+            // fold route, which refuses a reconciled-input node.
+            DeleteSecondPassOutputs(blib);
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            log = RunDiagnostics(SecondPassFdrTask.TASK_NAME);
+            AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
+            AssertBlibsEqual(ReferenceOf(blib), blib);
+            Assert.IsFalse(File.Exists(pass1), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME) +
+                @" wrote the pass-1 product, which only FirstPassFDR owns");
+        }
+
+        /// <summary>
+        /// The report paid for later: an analysis run WITHOUT --model-diagnostics stores enough to
+        /// produce, with no analysis re-run, the same report an analysis run with the flag wrote
+        /// (doc 00, P16). Both <c>--task ModelDiagnostics</c> and the original command line with the
+        /// flag added must reproduce every view - calibration, model, feature histograms - not
+        /// only the ones the second pass happens to keep.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetDiagnosticsAddedLater()
+        {
+            string referenceDir = CreateDir(@"diagnostics-with-flag");
+            string workDir = CreateDir(@"diagnostics-added-later");
+            var withFlag = LibDecoyDiagnosticsArgs();
+            var withoutFlag = withFlag.Where(arg => arg != OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText).ToArray();
+            Assert.AreEqual(withFlag.Length - 1, withoutFlag.Length);
+            string RunIn(string dir, IEnumerable<string> args, string taskName = null)
+            {
+                var taskArgs = taskName == null ? args : args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, taskName });
+                return RunOspreyExpecting(InputArgs(DataInputs()).Concat(new[]
+                {
+                    OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, LIBDECOY_FILE),
+                    OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(dir, BLIB_FILE),
+                    OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, dir
+                }).Concat(CommonArgs()).Concat(taskArgs).ToArray(), Verifier(true), Program.EXIT_CODE_SUCCESS);
+            }
+            string[] products =
+            {
+                OutputArtifact(ModelDiagnosticsReport.EXT_PASS1),
+                OutputArtifact(ModelDiagnosticsReport.EXT_PASS2)
+            };
+            string pass1 = Path.Combine(workDir, products[0]);
+            string pass2 = Path.Combine(workDir, products[1]);
+            void AssertSameAsWithFlag(string entryPoint)
+            {
+                AssertSameFirstPassProduct(Path.Combine(referenceDir, products[0]), pass1);
+                CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(referenceDir, products[1])), File.ReadAllBytes(pass2),
+                    entryPoint + @" wrote a different pass-2 diagnostics product than the analysis run with the flag");
+            }
+
+            RunIn(referenceDir, withFlag);
+            RunIn(workDir, withoutFlag);
+            AssertBlibsEqual(Path.Combine(referenceDir, BLIB_FILE), Path.Combine(workDir, BLIB_FILE));
+            foreach (string product in products)
+                Assert.IsFalse(File.Exists(Path.Combine(workDir, product)), @"the analysis without the flag wrote " + product);
+
+            // --task ModelDiagnostics folds both products from what the analysis stored.
+            string log = RunIn(workDir, withFlag, ModelDiagnosticsTask.TASK_NAME);
+            AssertNoRecompute(log);
+            AssertLogShape(log, Array.Empty<string>(), NoAnalysisLines());
+            AssertSameAsWithFlag(OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME));
+
+            // The original command line with the flag added, products absent, folds them too.
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            log = RunIn(workDir, withFlag);
+            AssertNoRecompute(log);
+            AssertLogShape(log, Array.Empty<string>(), NoAnalysisLines());
+            AssertSameAsWithFlag(@"the whole pipeline");
+
+            // And run again with them present, it runs nothing and changes nothing.
+            var before = FingerprintDir(workDir);
+            log = RunIn(workDir, withFlag);
+            AssertTasks(log, ALL_TASKS, Array.Empty<string>());
+            CollectionAssert.AreEqual(Array.Empty<string>(), ChangedFiles(before, workDir),
+                @"a complete analysis with its report present changed files" + Environment.NewLine + log);
         }
 
         /// <summary>
@@ -657,7 +734,7 @@ namespace pwiz.Osprey.Test
             string blib = Path.Combine(straightDir, BLIB_FILE);
             int precursors = BlibComparer.CountRows(blib, @"RefSpectra");
             Assert.IsTrue(precursors >= MIN_ASTRAL_PRECURSORS, string.Format(@"{0} precursors reported", precursors));
-            Assert.AreEqual(precursors * ASTRAL_RUN_NAMES.Length, BlibComparer.CountRows(blib, @"RetentionTimes"));
+            AssertRetentionTimeRows(blib, precursors, ASTRAL_RUN_NAMES.Length);
             AssertRecoversFullRun(Path.Combine(dataDir, MANIFEST_FILE), blib, MIN_ASTRAL_RECOVERED_FRACTION);
 
             string parallelDir = CreateDir(@"astral-parallel");
@@ -667,23 +744,33 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Libraries whose generated decoys have no fragments of their own. A decoy is built by
-        /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of
-        /// another type is copied verbatim and one with no fragment number is dropped. A library
-        /// with no fragment number column must stop with one plain error; a library with a few
-        /// precursors of copied-only fragments must warn and still finish. A fragment number the
-        /// library HAS but states as 0 is not "missing": the loader refuses the library, naming
-        /// the lines. (A .blib states no fragment types at all, but Osprey types its peaks from
-        /// m/z, so its decoys are usable - see the blib library tests.)
+        /// Libraries whose fragment type columns are missing or wrong. Osprey types every peak
+        /// from m/z, a .tsv's as a .blib's, and the columns are a report against that typing, so
+        /// a library with no fragment number column and one that labels real b and y peaks as
+        /// a ions both search at full depth, with every decoy built from its own typed
+        /// fragments. A fragment number the library HAS but states as 0 is not "missing": the
+        /// loader refuses the library, naming the lines.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetUnusableDecoys()
         {
-            // No fragment number column, so every decoy fragment is dropped.
+            // No fragment number column: every stated type is an ion without a number, outside
+            // the model and reported as such, and the search runs on the typing alone.
             string noNumbers = WriteLibraryWithoutColumn(@"no-fragment-numbers.tsv", @"FragmentNumber");
-            int libraryPrecursors = CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE));
-            string output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
-            StringAssert.Contains(output, RefusalText(noNumbers, libraryPrecursors));
+            string noNumbersDir = CreateDir(@"no-fragment-numbers");
+            string noNumbersLog = RunOsprey(InputArgs(DataInputs()).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, noNumbers,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(noNumbersDir, BLIB_FILE),
+                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, noNumbersDir
+            }).Concat(CommonArgs()).ToArray(), Verifier(false));
+            Assert.AreEqual(0, SplitLines(noNumbersLog).Count(CommandStatusWriter.IsErrorLine), noNumbersLog);
+            int noNumbersPeaks = CountLibraryPeaks(noNumbers, _ => true);
+            StringAssert.Contains(noNumbersLog, string.Format(
+                OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
+                Path.GetFileName(noNumbers), 0, 0, 0, noNumbersPeaks, 0));
+            int noNumbersPrecursors = BlibComparer.CountRows(Path.Combine(noNumbersDir, BLIB_FILE), @"RefSpectra");
+            Assert.IsTrue(noNumbersPrecursors > 0, string.Format(@"{0} precursors reported", noNumbersPrecursors));
 
             // Two precursors whose fragment numbers read 0: the library is invalid, and the load
             // refuses it with every one of their lines counted.
@@ -693,12 +780,12 @@ namespace pwiz.Osprey.Test
                 @"FragmentNumber", @"0");
             int strayLines = File.ReadLines(Path.Combine(_dataDir, LIBRARY_FILE))
                 .Skip(1).Count(line => strayPeptides.Contains(line.Split('\t')[0]));
-            output = RunExpectingRefusal(@"zero-fragment-numbers", zeroNumbers);
+            string output = RunExpectingRefusal(@"zero-fragment-numbers", zeroNumbers);
             StringAssert.Contains(output, string.Format(
                 OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, strayLines));
 
-            // Two precursors of a-ion fragments, which a decoy copies verbatim: a warning naming
-            // the count, and a search.
+            // Two precursors whose real b and y peaks are labeled a ions: reported as stated types
+            // outside the model, and typed from m/z regardless, so the search is the same search.
             string strays = WriteLibraryWithCell(@"two-stray.tsv", strayPeptides.Contains, @"FragmentType", @"a");
             string strayDir = CreateDir(@"two-stray");
             string log = RunOsprey(InputArgs(DataInputs()).Concat(new[]
@@ -707,14 +794,26 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(strayDir, BLIB_FILE),
                 OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, strayDir
             }).Concat(CommonArgs()).ToArray(), Verifier(false));
+            int strayPeaks = CountLibraryPeaks(strays, strayPeptides.Contains);
+            int otherPeaks = CountLibraryPeaks(strays, peptide => !strayPeptides.Contains(peptide));
             StringAssert.Contains(log, string.Format(
-                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_,
-                strayPeptides.Count, libraryPrecursors, strayPeptides.Count / (double)libraryPrecursors, strays));
-            // The search finishes and reports. Not at the usual depth: those two decoys are
-            // identical to their targets, so they score as well as real detections, and on a
-            // subset reporting ~177 precursors two top-scoring decoys alone are over 1% FDR.
-            int strayPrecursors = BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra");
-            Assert.IsTrue(strayPrecursors > 0, string.Format(@"{0} precursors reported", strayPrecursors));
+                OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
+                Path.GetFileName(strays), otherPeaks, otherPeaks, 0, strayPeaks, 0));
+            Assert.IsFalse(log.Contains(OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_.Split('{')[0]), log);
+            Assert.AreEqual(noNumbersPrecursors, BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra"));
+        }
+
+        /// <summary>
+        /// Every reported precursor has a RetentionTimes row for at least one run and at most
+        /// one per run. Not one per run: a precursor passes the experiment on its best runs,
+        /// and a run with no acceptable peak writes no observation (the Stellar golden has
+        /// 93,758 rows for 31,253 precursors over 3 runs, one short of three each).
+        /// </summary>
+        private static void AssertRetentionTimeRows(string blib, int precursors, int runs)
+        {
+            int rows = BlibComparer.CountRows(blib, @"RetentionTimes");
+            Assert.IsTrue(rows >= precursors && rows <= precursors * runs,
+                string.Format(@"{0} RetentionTimes rows for {1} precursors over {2} runs", rows, precursors, runs));
         }
 
         /// <summary>
@@ -745,18 +844,6 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The refusal for a library none of whose <paramref name="decoyCount"/> generated decoys
-        /// has a fragment of its own.
-        /// </summary>
-        private static string RefusalText(string library, int decoyCount)
-        {
-            return string.Format(
-                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
-                decoyCount, decoyCount, 1.0, library, PerFileScoringTask.MAX_UNUSABLE_DECOY_FRACTION,
-                OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
-        }
-
-        /// <summary>
         /// The distinct precursors (modified peptide, charge) in a DIA-NN style .tsv library.
         /// </summary>
         private static int CountLibraryPrecursors(string library)
@@ -781,6 +868,25 @@ namespace pwiz.Osprey.Test
                 fields[column] = value;
                 return fields;
             });
+        }
+
+        /// <summary>
+        /// The peaks of the precursors <paramref name="peptideFilter"/> admits in a .tsv library
+        /// as the loader counts them: one per (modified peptide, charge, m/z), since rows at one
+        /// m/z of one precursor load as one peak.
+        /// </summary>
+        private static int CountLibraryPeaks(string path, Func<string, bool> peptideFilter)
+        {
+            var lines = File.ReadAllLines(path);
+            var header = lines[0].Split('\t');
+            int peptide = Array.IndexOf(header, @"ModifiedPeptide");
+            int charge = Array.IndexOf(header, @"PrecursorCharge");
+            int mz = Array.IndexOf(header, @"FragmentMz");
+            Assert.IsTrue(peptide >= 0 && charge >= 0 && mz >= 0, lines[0]);
+            return lines.Skip(1).Select(line => line.Split('\t'))
+                .Where(fields => peptideFilter(fields[peptide]))
+                .Select(fields => (fields[peptide], fields[charge], fields[mz]))
+                .Distinct().Count();
         }
 
         /// <summary>A copy of the subset library without column <paramref name="columnName"/>.</summary>
@@ -961,12 +1067,46 @@ namespace pwiz.Osprey.Test
             int precursors = BlibComparer.CountRows(blib, @"RefSpectra");
             Assert.IsTrue(precursors >= MIN_PRECURSORS, string.Format(@"{0} precursors reported", precursors));
             Assert.AreEqual(RUN_NAMES.Length, BlibComparer.CountRows(blib, @"SpectrumSourceFiles"));
-            Assert.AreEqual(precursors * RUN_NAMES.Length, BlibComparer.CountRows(blib, @"RetentionTimes"));
-            Assert.AreEqual(precursors, BlibComparer.CountRows(blib, @"OspreyExperimentScores"));
-            Assert.IsTrue(BlibComparer.CountRows(blib, @"OspreyPeakBoundaries") >= precursors);
+            AssertRetentionTimeRows(blib, precursors, RUN_NAMES.Length);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"Proteins") > 0);
+            // The library carries how it was made: the run's command line and its version.
+            StringAssert.StartsWith(BlibMetadata.Read(blib, OspreyBlibWriter.KEY_COMMAND), @"Osprey ");
+            Assert.AreEqual(OspreyVersion.Current, BlibMetadata.Read(blib, OspreyBlibWriter.KEY_VERSION));
 
             AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib, MIN_RECOVERED_FRACTION);
+            AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
+        }
+
+        /// <summary>
+        /// No <c>&lt;stem&gt;.&lt;ext&gt;</c> output holds the same bytes for every run. Content
+        /// that is the same for every run is experiment-wide, and belongs in one
+        /// <c>&lt;blib-stem&gt;.&lt;ext&gt;</c> file an orchestrator ships to every node - not in
+        /// a copy per run, which on an 82-run cohort was 82 copies of the first-pass model and
+        /// 790 MB of the protein-compact stratum. This sees whole files only; a replicated payload
+        /// inside an otherwise per-run file needs a reviewer.
+        /// </summary>
+        private static void AssertNoReplicatedPerRunOutputs(string workDir, IReadOnlyList<string> runs)
+        {
+            Assert.IsTrue(runs.Count >= 2, @"replication is only visible across two or more runs");
+            var hashesBySuffix = new Dictionary<string, List<string>>();
+            foreach (string path in Directory.GetFiles(workDir))
+            {
+                string name = Path.GetFileName(path);
+                string run = runs.FirstOrDefault(r => name.StartsWith(r + @".", StringComparison.Ordinal));
+                if (run == null)
+                    continue;
+                string suffix = name.Substring(run.Length);
+                if (!hashesBySuffix.TryGetValue(suffix, out var hashes))
+                    hashesBySuffix.Add(suffix, hashes = new List<string>());
+                hashes.Add(Convert.ToBase64String(HashFile(path)));
+            }
+            Assert.IsTrue(hashesBySuffix.Count > 0, @"no per-run outputs found in " + workDir);
+            var replicated = hashesBySuffix
+                .Where(kvp => kvp.Value.Count == runs.Count && kvp.Value.Distinct().Count() == 1)
+                .Select(kvp => @"<stem>" + kvp.Key)
+                .ToList();
+            Assert.AreEqual(0, replicated.Count,
+                @"identical in every run, so experiment-wide and owed a <blib-stem> name: " + string.Join(@", ", replicated));
         }
 
         /// <summary>
@@ -1025,9 +1165,12 @@ namespace pwiz.Osprey.Test
                 string phaseDir = CreateDir(dirPrefix + @"phase3_" + run);
                 ShipFiles(dirPrefix + @"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
                     run + CalibrationIO.EXT);
-                ShipFiles(dirPrefix + @"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT), run + ReconciliationFile.EXT,
-                    OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
-                ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM,
+                // No reconciliation.json: the worker plans its run from the consensus and writes
+                // the run's plan itself.
+                ShipFiles(dirPrefix + @"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT),
+                    OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
+                    OutputArtifact(FirstPassModelIO.EXT_MODEL), OutputArtifact(Stage6ConsensusFile.EXT));
+                ShipFilesIfPresent(dirPrefix + @"phase2", phaseDir, OutputArtifact(FirstPassModelIO.EXT_STRATUM),
                     ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
@@ -1040,7 +1183,6 @@ namespace pwiz.Osprey.Test
                 string phase3 = dirPrefix + @"phase3_" + run;
                 ShipFiles(phase3, phase4Dir, run + ParquetScoreCache.EXT_SCORES_RECONCILED, run + CalibrationIO.EXT,
                     run + ReconciliationFile.EXT);
-                ShipFilesIfPresent(phase3, phase4Dir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM);
                 // Every run's second-pass answer, and nothing from its first pass: PerFileRescoring
                 // writes the answer for every run (#4665), so a SecondPassFDR node needs no
                 // per-run 1st-pass file.
@@ -1049,9 +1191,10 @@ namespace pwiz.Osprey.Test
                 if (data.Pass2Mode == null)
                     ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT));
             }
-            ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
+            ShipFiles(dirPrefix + @"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT),
+                OutputArtifact(FirstPassModelIO.EXT_MODEL));
             ShipFilesIfPresent(dirPrefix + @"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
-                OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+                OutputArtifact(FirstPassModelIO.EXT_STRATUM), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
             string phase4Log = RunTask(data, phase4Dir, SecondPassFdrTask.TASK_NAME, data.Runs);
             AssertHasLine(phase4Log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             // Every run's per-file worker answer was folded - SecondPassFDR refuses to start
@@ -1371,22 +1514,40 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The pass-1 product folded later equals the one written with the analysis, except for
-        /// its generation time and the views no fold can rebuild today (each held privately by a
-        /// phase that has already exited).
+        /// Log lines any one of which means the analysis ran rather than only its report.
+        /// </summary>
+        private static string[] NoAnalysisLines()
+        {
+            return new[]
+            {
+                PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty),
+                PathLine(LogKey.ROUTE_SCORED_ENTRIES, @"resident"),
+                @"[" + LogTag.STAGE_WALL + @"] second-pass-fdr",
+                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty)
+            };
+        }
+
+        /// <summary>
+        /// The pass-1 product folded later equals the one written with the analysis in every view;
+        /// only its generation time may differ.
         /// </summary>
         private static void AssertSameFirstPassProduct(string expectedPath, string actualPath)
         {
-            string[] notComparable = { @"generatedUtc", @"cal", @"model", @"featureHistEdges", @"featureCount", @"modelComposite" };
+            // No view is exempt (doc 00, P16). Exempting the calibration view once is how every
+            // resume shipping a report with no calibration view passed this test, and exempting the
+            // model and feature views hid the same gap for them.
             JObject Comparable(string path)
             {
                 var json = JObject.Parse(File.ReadAllText(path));
-                foreach (string key in notComparable)
-                    json.Remove(key);
+                json.Remove(@"generatedUtc");
                 return json;
             }
-            Assert.IsTrue(JToken.DeepEquals(Comparable(expectedPath), Comparable(actualPath)),
-                @"the folded pass-1 product differs outside the views a fold cannot rebuild");
+            var expected = Comparable(expectedPath);
+            var actual = Comparable(actualPath);
+            var differing = expected.Properties().Select(p => p.Name).Union(actual.Properties().Select(p => p.Name))
+                .Where(name => !JToken.DeepEquals(expected[name], actual[name])).ToArray();
+            Assert.AreEqual(0, differing.Length,
+                @"the folded pass-1 product differs in: " + string.Join(@", ", differing));
         }
 
         /// <summary>

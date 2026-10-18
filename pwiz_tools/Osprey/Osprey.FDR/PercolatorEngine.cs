@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -159,6 +160,21 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// The feature report <see cref="RunFirstPassStreaming"/> hands its
+        /// <c>captureContributions</c>, rebuilt by a later process from the first-pass
+        /// <paramref name="model"/> and every run's <see cref="FeatureSums"/> share in run order
+        /// (each run's first-pass sidecar carries one). Null when there is no run or a run has
+        /// no share.
+        /// </summary>
+        public static FeatureContributions FirstPassContributionsFromShares(PercolatorResults model,
+            IEnumerable<FeatureSums> shares, OspreyFeatureInfo[] featureInfos)
+        {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+            return PercolatorScorer.ContributionsFromShares(model, shares, featureInfos);
+        }
+
+        /// <summary>
         /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
         /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
         /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],IOspreyLog,IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
@@ -178,7 +194,7 @@ namespace pwiz.Osprey.FDR
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             IOspreyLog log,
-            IFdrOutputSink sink,
+            IFdrFirstPassSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
@@ -186,7 +202,8 @@ namespace pwiz.Osprey.FDR
             CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
             FileRunScopeSink flushFileRunScope = null,
-            int fileLanes = 1)
+            int fileLanes = 1,
+            Func<string, FeatureSums> tryLoadFeatureSums = null)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -198,7 +215,7 @@ namespace pwiz.Osprey.FDR
             return PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, log, passLabel, sink,
                 captureContributions, captureModel, tryStreamCompletedScores, pretrainedModel,
-                flushFileRunScope, fileLanes);
+                flushFileRunScope, fileLanes, tryLoadFeatureSums);
         }
 
         /// <summary>
@@ -300,9 +317,9 @@ namespace pwiz.Osprey.FDR
                 CSelectionTolerance = OspreyEnvironment.SvmCSelectionTolerance,
                 // Honors --threads; drives only the tree score pass (see NThreads).
                 NThreads = config.NThreads,
-                // Collect per-feature target/decoy score histograms only for the
-                // model-diagnostics report (#4377); off the production path otherwise,
-                // so byte-neutral when --model-diagnostics is not requested.
+                // The training-time feature report's histograms, for --model-diagnostics
+                // (#4377). The score passes collect theirs on every run: each run's share is
+                // persisted in its first-pass sidecar (FeatureSums).
                 CollectFeatureHistograms = config.ModelDiagnostics,
                 Diagnostics = diagnostics
             };
@@ -613,7 +630,7 @@ namespace pwiz.Osprey.FDR
         ///
         /// The run floor is the entry's best (min) <em>combined</em> run q-value
         /// (<see cref="FdrLevel.Both"/> = max(precursor, peptide)), matching the blib ID line
-        /// and <c>OspreyRunScores.RunQValue</c> (both <c>EffectiveRunQvalue(Both)</c>): so
+        /// and <c>RetentionTimes.score</c> (both <c>EffectiveRunQvalue(Both)</c>): so
         /// "reported =&gt; some run passes at BOTH the precursor and peptide granularity",
         /// which is the exact invariant a Skyline ID line represents. Both floors key on the
         /// target/decoy-specific identity (never the shared base_id / bare sequence -- a target

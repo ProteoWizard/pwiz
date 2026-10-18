@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR.ModelDiagnostics
@@ -32,9 +33,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// first-pass FDR row into the SAME reduced structures the batch <see cref="Build"/>
         /// derives from the resident pool, WITHOUT ever holding the full pre-compaction
         /// <see cref="FdrEntry"/> pool resident. Fed one row at a time in nested (file, row)
-        /// order by a pre-compaction row source - the projection score-pass sink
-        /// (<c>FdrProjectionSinkBase.Accept</c>) as first-pass Percolator scores each row, or the
-        /// diagnostics-only fold over each run's parquet and first-pass sidecar;
+        /// order by a pre-compaction row source - the first-pass score's diagnostics row walk
+        /// (<c>FdrFirstPassSink.PrepareRowFold</c>), or the diagnostics-only fold over each run's
+        /// parquet and first-pass sidecar;
         /// <see cref="Build"/> then runs the identical downstream builders over the accumulated
         /// reductions.
         ///
@@ -490,11 +491,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// Assemble the pass-1 <see cref="ModelDiagnosticsData"/> from the accumulated
             /// reductions, running the SAME downstream builders the batch <see cref="Build"/> uses
             /// (only the reduction source differs). <paramref name="contributions"/> describes the
-            /// trained first-pass model: null on a resumed / rehydrated run (no Model tab), and for a
-            /// tree model the per-feature distributions with no weight-based contribution table
+            /// trained first-pass model: null when there is none (no Model tab), and for a tree
+            /// model the per-feature distributions with no weight-based contribution table
             /// (<see cref="FeatureContributions.IsTreeEnsemble"/>).
             /// </summary>
             public ModelDiagnosticsData Build(FeatureContributions contributions)
+            {
+                return BuildFromModelView(ModelView.From(contributions));
+            }
+
+            /// <summary>
+            /// <see cref="Build(FeatureContributions)"/> from the model's views as already reduced -
+            /// the form a later process reads back from disk (<see cref="ModelView"/>).
+            /// </summary>
+            public ModelDiagnosticsData BuildFromModelView(ModelView modelView)
             {
                 FlushOpenFile();
                 if (_pass != 1)
@@ -533,18 +543,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                 }
                 data.HasEntrapment = data.NPTarget > 0;
-                data.FeatureCount = contributions?.Features.Count ?? 0;
                 data.NClassifiedFromManifest = _nWithClass;
                 data.NUnclassified = _nWithoutClass;
-
-                if (contributions != null)
-                {
-                    data.ModelComposite = contributions.Composite;
-                    data.ModelDegenerate = contributions.IsDegenerate;
-                    data.ModelIsTreeEnsemble = contributions.IsTreeEnsemble;
-                    data.FeatureHistEdges = contributions.HistogramEdges;
-                    data.Model = BuildFeatureRows(contributions);
-                }
+                ModelView.ApplyTo(modelView, data);
 
                 data.Scores = BuildScoreHistogram(precs);
                 data.DensityRatio = BuildDensityRatio(data.Scores, data.HasEntrapment);

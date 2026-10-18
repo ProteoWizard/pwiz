@@ -22,12 +22,13 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using pwiz.Common.Pipeline;
 
 namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// Single source of truth for the logical "osprey version" -- the value
-    /// stamped into the blib (<c>osprey_version</c>), the parquet/sidecar score
+    /// stamped into the blib (<c>LibMetadata</c> key <c>osprey.version</c>), the parquet/sidecar score
     /// caches (<c>osprey.version</c>), and read back by
     /// <c>ParquetScoreCache.CheckParquetMetadata</c> to decide whether a cache is
     /// still compatible with the current binary. It follows the Skyline scheme
@@ -42,7 +43,7 @@ namespace pwiz.Osprey.Core
     ///
     /// Bit-parity override: the regression harness needs the stamped version to be
     /// deterministic so the committed blib golden (which compares the
-    /// <c>osprey_version</c> metadata cell exactly) does not go red on the
+    /// <c>osprey.version</c> metadata cell exactly) does not go red on the
     /// daily-changing build version. Setting <c>OSPREY_VERSION_OVERRIDE</c> pins
     /// <see cref="Current"/> to a canonical constant for every invocation in the
     /// run. This is a diagnostic seam (mirroring the OSPREY_* env vars in
@@ -90,6 +91,25 @@ namespace pwiz.Osprey.Core
         /// is stamped. Used by <c>--version</c> and the startup log.
         /// </summary>
         public static string DisplayVersion => FormatDisplay(InformationalVersion);
+
+        /// <summary>
+        /// The stamp a writer embeds in an artifact it is producing now: <paramref name="task"/>
+        /// and <paramref name="key"/> under this build's <see cref="Current"/>.
+        /// </summary>
+        public static ArtifactStamp Stamp(string task, string key)
+        {
+            return new ArtifactStamp(task, Current, key);
+        }
+
+        /// <summary>
+        /// True when <paramref name="stamp"/> says its artifact was written by <paramref name="task"/>,
+        /// by this build (<see cref="Current"/>), with <paramref name="key"/> - the only case in
+        /// which a run may reuse it instead of recomputing it.
+        /// </summary>
+        public static bool IsCurrent(this ArtifactStamp stamp, string task, string key)
+        {
+            return stamp.IsCurrent(task, Current, key);
+        }
 
         private static string ResolveVersion()
         {

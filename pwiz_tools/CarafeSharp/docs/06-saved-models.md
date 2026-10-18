@@ -130,6 +130,7 @@ file holds only the fine-tuned RT model:
 
 ```json
 {
+  "osprey_validity": "osprey-validity/1;task=Train;version=26.1.1.0;key=training=<sha256>;<exports...>",
   "format": "carafemodel-2",
   "creator": "CarafeSharp 26.1.1.0+<commit>",
   "created": "2026-10-01T00:31:50.7615831Z",
@@ -261,6 +262,7 @@ file holds only the fine-tuned RT model:
 | Field | Meaning |
 |---|---|
 | `format` | `carafemodel-2`. A reader refuses any value it does not know: a new value means a change old readers cannot read. Fields may be added within a format; readers ignore fields they do not know. `carafemodel-2` added each model's `model`, `model_version` and `start`, and `base_models[].models`, as its `rt.safetensors` can be a Chronologer, which a `carafemodel-1` reader would take for AlphaPeptDeep's; CarafeSharp still reads `carafemodel-1`, whose RT model is the one its `rt.safetensors` holds, else AlphaPeptDeep's pretrained one, whatever the default now is. A new network or release is a new `model` or `model_version` value, not a new format. |
+| `osprey_validity` | The validity stamp of the training run: its task (`Train`), the CarafeSharp version and a key over the settings and input files. Written first, as every stamped artifact places it; the shared pipeline driver reads it to skip a re-run whose model is current. Absent from a file written outside a task. |
 | `creator`, `created` | The CarafeSharp version that wrote the file, and when (UTC, ISO 8601). |
 | `training_type` | The training run's `-tf`: `all`, `ms2` or `rt`. |
 | `models.<ms2\|rt>.fine_tuned` | The training fine-tuned this model. |

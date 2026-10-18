@@ -234,10 +234,11 @@ function Get-RegressionData {
     harness so there is ONE definition of what "resume" invalidates. Every
     artifact carries its validity stamp inside itself, so invalidating a task
     means removing its products: FirstPassFDR's are every '*.1st-pass.*' file
-    (per-run score sidecars, model, stratum, the experiment sidecar and the
-    retained base ids) and every '*.reconciliation.json'; SecondPassFDR's is
-    output.blib. PerFileScoring's and PerFileRescoring's products stay, so
-    those tasks must report cache hits while the two joins re-run.
+    (per-run score sidecars, and the analysis-wide model, stratum, consensus,
+    experiment sidecar and retained base ids); SecondPassFDR's is output.blib.
+    PerFileScoring's and PerFileRescoring's products stay - the latter including
+    each run's '*.reconciliation.json', which it writes - so those tasks must
+    report cache hits while the two joins re-run.
 
     Deleting nothing is treated as a hard failure: if the artifact names ever
     drift, this throws instead of yielding a green "resume" leg that resumed
@@ -250,13 +251,12 @@ function Invoke-ResumeInvalidation {
     param([Parameter(Mandatory=$true)][string]$WorkDir)
 
     $targets = Get-ChildItem -Path $WorkDir -File | Where-Object {
-        $_.Name -like '*.1st-pass.*' -or $_.Name -like '*.reconciliation.json' -or
-        $_.Name -eq 'output.blib'
+        $_.Name -like '*.1st-pass.*' -or $_.Name -eq 'output.blib'
     }
     if (-not $targets) {
         throw (("Invoke-ResumeInvalidation matched no files in '{0}'. The resume leg " +
-                "would not have resumed. Expected FirstPassFDR's '*.1st-pass.*' and " +
-                "'*.reconciliation.json' products and SecondPassFDR's 'output.blib'; " +
+                "would not have resumed. Expected FirstPassFDR's '*.1st-pass.*' " +
+                "products and SecondPassFDR's 'output.blib'; " +
                 "check those artifact names have not changed.") -f $WorkDir)
     }
     $targets | Remove-Item -Force

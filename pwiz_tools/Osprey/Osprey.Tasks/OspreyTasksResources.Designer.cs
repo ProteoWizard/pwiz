@@ -634,32 +634,22 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not save the precursor candidates from proteins with 2 or more detections for &apos;{0}&apos;: {1}.
+        ///   Looks up a localized string similar to Could not save the precursor candidates from proteins with 2 or more detections to {0}: {1}.
         /// </summary>
-        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___ {
+        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0____1_ {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precurso" +
-                        "r_candidates_from_proteins_with_2_or_more_detections_for___0___", resourceCulture);
+                        "r_candidates_from_proteins_with_2_or_more_detections_to__0____1_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved the precursor candidates from proteins with 2 or more detections for {0:N0} files..
+        ///   Looks up a localized string similar to Saved the precursor candidates from proteins with 2 or more detections to {0}.
         /// </summary>
-        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_ {
+        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_to__0_ {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candida" +
-                        "tes_from_proteins_with_2_or_more_detections_for__0__files_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Saved the precursor candidates from proteins with 2 or more detections for 1 file..
-        /// </summary>
-        public static string FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candida" +
-                        "tes_from_proteins_with_2_or_more_detections_for_1_file_", resourceCulture);
+                        "tes_from_proteins_with_2_or_more_detections_to__0_", resourceCulture);
             }
         }
         
@@ -873,12 +863,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not save the first-pass model for &apos;{0}&apos;: {1}.
+        ///   Looks up a localized string similar to Could not save the first-pass model to {0}: {1}.
         /// </summary>
-        public static string FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_ {
+        public static string FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0____1_ {
             get {
-                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___" +
-                        "0_____1_", resourceCulture);
+                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_to__0_" +
+                        "___1_", resourceCulture);
             }
         }
         
@@ -892,27 +882,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved the trained first-pass model to {0} and for each of the other {1:N0} inputs.
-        /// </summary>
-        public static string FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__" +
-                        "and_for_each_of_the_other__1__inputs", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Saved the trained first-pass model to {0} and for the other input.
-        /// </summary>
-        public static string FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__" +
-                        "and_for_the_other_input", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {1} complete: first-pass FDR and reconciliation planning done for {0:N0} files. The next task, {2}, reads this output directory: the files written for each input and the analysis-wide first-pass files..
+        ///   Looks up a localized string similar to {1} complete: first-pass FDR and the cross-run consensus done for {0:N0} files. The next task, {2}, reads this output directory: the files written for each input and the analysis-wide first-pass files..
         /// </summary>
         public static string FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for__0__ {
             get {
@@ -922,7 +892,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {1} complete: first-pass FDR and reconciliation planning done for 1 file. The next task, {2}, reads this output directory: the files written for the input and the analysis-wide first-pass files..
+        ///   Looks up a localized string similar to {1} complete: first-pass FDR and the cross-run consensus done for 1 file. The next task, {2}, reads this output directory: the files written for the input and the analysis-wide first-pass files..
         /// </summary>
         public static string FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for_1_file__ {
             get {
@@ -1039,22 +1009,22 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to no list of precursors from proteins with 2 or more first-pass peptides ({0}) was found beside the inputs&apos; {1} files.
+        ///   Looks up a localized string similar to no list of precursors from proteins with 2 or more first-pass peptides was found at {0}.
         /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found {
+        public static string FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides_was_found_at__0_ {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_" +
-                        "2_or_more_first_pass_peptides___0___was_found", resourceCulture);
+                        "2_or_more_first_pass_peptides_was_found_at__0_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to no readable first-pass model file ({0}) was found beside the inputs&apos; {1} files.
+        ///   Looks up a localized string similar to no readable first-pass model file was found at {0}.
         /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___ {
+        public static string FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_found_at__0_ {
             get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_p" +
-                        "ass_model_json__was_found_beside_the_inputs___", resourceCulture);
+                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file_was_fou" +
+                        "nd_at__0_", resourceCulture);
             }
         }
         
@@ -1199,36 +1169,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to resolve first-pass protein q-values for {0}: {1}.
-        /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_pro" +
-                        "tein_q_values_for__0____1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Resolving first-pass protein q-values for {0:N0} files.
-        /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_v" +
-                        "alues_for__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Resolving first-pass protein q-values for 1 file.
-        /// </summary>
-        public static string FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_v" +
-                        "alues_for_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cannot locate the first-pass intermediate files for &apos;{0}&apos;..
         /// </summary>
         public static string FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_first_pass_intermediate_files_for___0___ {
@@ -1328,16 +1268,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not locate the intermediate files for {0}, so its cross-run reconciliation file was not written..
-        /// </summary>
-        public static string FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_ {
-            get {
-                return ResourceManager.GetString("FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_" +
-                        "for__0___so_its_cross_run_reconciliation_file_was_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not write the cross-run reconciliation file for {0}: {1}.
         /// </summary>
         public static string FirstPassFdrTask_WriteReconciliationFile_Could_not_write_the_cross_run_reconciliation_file_for__0____1_ {
@@ -1384,6 +1314,16 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_WriteRetainedBaseIdSummary_Wrote_the_list_of_kept_precursor_cand" +
                         "idates___1__target_decoy_pairs_in_1_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to write the cross-run consensus {0}: {1}. The next task, {2}, plans each file from it..
+        /// </summary>
+        public static string FirstPassFdrTask_WriteStage6Consensus_Failed_to_write_the_cross_run_consensus__0____1___The_next_task___2___plans_each_file_from_it_ {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_WriteStage6Consensus_Failed_to_write_the_cross_run_consensus__0_" +
+                        "___1___The_next_task___2___plans_each_file_from_it_", resourceCulture);
             }
         }
         
@@ -2575,16 +2515,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The library {3} is missing b or y fragment ion annotations or fragment numbers: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Use a library with annotated fragments, such as a DIA-NN or Carafe library, or one that already contains decoys, with {5}..
-        /// </summary>
-        public static string PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__ {
-            get {
-                return ResourceManager.GetString("PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_i" +
-                        "on_annotations_or_fragment_numbers___0__of__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Too few peaks of the library {3} are b or y ions within the fragment tolerance of {6} {7}: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Set a fragment tolerance that fits the library&apos;s m/z accuracy with {8} or {9}, or use a library that already contains decoys, with {5}..
         /// </summary>
         public static string PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance {
@@ -3107,16 +3037,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The {0} step could not reload its results from the intermediate files (exit code {1})..
-        /// </summary>
-        public static string RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___ {
-            get {
-                return ResourceManager.GetString("RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_inter" +
-                        "mediate_files__exit_code__1___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {1} ({0:N0} files).
         /// </summary>
         public static string RescoredEntries_StreamFiles__1____0__files_ {
@@ -3151,15 +3071,6 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model" +
                         "_diagnostics_report", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to read {0}: {1}.
-        /// </summary>
-        public static string RescoreHydration_LoadEnvelope_Failed_to_read__0____1_ {
-            get {
-                return ResourceManager.GetString("RescoreHydration_LoadEnvelope_Failed_to_read__0____1_", resourceCulture);
             }
         }
         
@@ -3838,6 +3749,24 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to read the cross-run consensus {0}: {1}.
+        /// </summary>
+        public static string Stage6ConsensusFile_Load_Failed_to_read_the_cross_run_consensus__0____1_ {
+            get {
+                return ResourceManager.GetString("Stage6ConsensusFile_Load_Failed_to_read_the_cross_run_consensus__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the file is incomplete or was written by another Osprey build.
+        /// </summary>
+        public static string Stage6ConsensusFile_Load_the_file_is_incomplete_or_from_another_build {
+            get {
+                return ResourceManager.GetString("Stage6ConsensusFile_Load_the_file_is_incomplete_or_from_another_build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cross-run consensus retention times computed for {0:N0} target and {1:N0} decoy peptides..
         /// </summary>
         public static string Stage6Planner_BuildConsensus_Cross_run_consensus_retention_times_computed_for__0__target_and__1__decoy_peptides_ {
@@ -3878,39 +3807,30 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multi-charge consensus planning (pass 2 of 2).
-        /// </summary>
-        public static string Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_ {
-            get {
-                return ResourceManager.GetString("Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 2 of 2) across {0:N0} files.
-        /// </summary>
-        public static string Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files {
-            get {
-                return ResourceManager.GetString("Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 2 of 2) for 1 file.
-        /// </summary>
-        public static string Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file {
-            get {
-                return ResourceManager.GetString("Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Refined the retention time calibration of {0:N0} of {1:N0} files using the cross-run consensus..
         /// </summary>
         public static string Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__files_using_the_cross_run_consensus_ {
             get {
                 return ResourceManager.GetString("Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__file" +
                         "s_using_the_cross_run_consensus_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cross-run consensus across {0:N0} files.
+        /// </summary>
+        public static string Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files {
+            get {
+                return ResourceManager.GetString("Stage6Planner_ScanFiles_Cross_run_consensus_across__0__files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cross-run consensus for 1 file.
+        /// </summary>
+        public static string Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file {
+            get {
+                return ResourceManager.GetString("Stage6Planner_ScanFiles_Cross_run_consensus_for_1_file", resourceCulture);
             }
         }
         
@@ -3935,29 +3855,11 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multi-charge consensus planning (pass 1 of 2).
+        ///   Looks up a localized string similar to Multi-charge consensus planning.
         /// </summary>
-        public static string Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_ {
+        public static string Stage6Planner_ScanFiles_Multi_charge_consensus_planning {
             get {
-                return ResourceManager.GetString("Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 1 of 2) across {0:N0} files.
-        /// </summary>
-        public static string Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files {
-            get {
-                return ResourceManager.GetString("Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning (pass 1 of 2) for 1 file.
-        /// </summary>
-        public static string Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file {
-            get {
-                return ResourceManager.GetString("Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file", resourceCulture);
+                return ResourceManager.GetString("Stage6Planner_ScanFiles_Multi_charge_consensus_planning", resourceCulture);
             }
         }
         

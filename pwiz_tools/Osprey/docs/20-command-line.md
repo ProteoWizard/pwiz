@@ -132,7 +132,6 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
 | `--decoy-pairing-manifest` | `<manifest.tsv>` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
-| `--write-pin` | — | Write PIN files for external tools (diagnostic only; the engine does not consume them). |
 
 ### Training Export
 

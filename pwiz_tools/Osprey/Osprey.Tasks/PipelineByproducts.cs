@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -222,20 +223,6 @@ namespace pwiz.Osprey.Tasks
     {
         public bool Value { get; }
         public PlanningPerformed(bool value) { Value = value; }
-    }
-
-    /// <summary>
-    /// How many peak re-picks and boundary imputations FirstPassFDR's Stage 6 planning
-    /// produced across the run - a COUNT, for the rescore summary. The actions themselves
-    /// travel in each run's own <c>.reconciliation.json</c>, which is where the per-run
-    /// rescore reads them; the whole-experiment action map that used to be published here
-    /// (30.8 M entries at 446 runs) had no other reader. Zero when planning did not run in
-    /// this process.
-    /// </summary>
-    internal sealed class PlannedActionCount
-    {
-        public int Value { get; }
-        public PlannedActionCount(int value) { Value = value; }
     }
 
     /// <summary>

@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -43,28 +44,41 @@ namespace pwiz.Osprey
     /// hand-maintained PrintUsage), and the help text is generated from the declarations
     /// so it cannot drift from the parser.
     ///
-    /// Osprey keeps its own <see cref="TokenizeAndDispatch"/> rather than adopting the
-    /// framework's strict <c>--name=value</c> grammar: it needs short aliases (<c>-i</c>),
-    /// space-separated values (<c>--name value</c>), variadic consumption (<c>-i a b c</c>),
-    /// and a positional-file fallback. It also accepts the framework's <c>--name=value</c> for
-    /// any argument that takes a value (see <see cref="MatchToken"/>). The framework is
+    /// Osprey parses with the shared <see cref="CommandLineParser{TContext}"/> under its own
+    /// <see cref="CommandLineGrammar"/> (<see cref="GRAMMAR"/>): short aliases (<c>-i</c>),
+    /// values as the next token (<c>--name value</c>) as well as the framework's
+    /// <c>--name=value</c>, variadic consumption (<c>-i a b c</c>), optional counts
+    /// (<c>--parallel-files [N]</c>) and a positional-file fallback. The framework is also
     /// reused for argument declaration, grouping, ascii/unicode/HTML help rendering, and
-    /// building tokens from the declared
-    /// instances (<c>ARG_THREADS + 8</c>, which the tests use). Value coercion and the exact
-    /// warning strings stay in the per-argument ProcessValue handlers so the parsed
-    /// <see cref="OspreyConfig"/> stays byte-identical with the former switch.
+    /// building tokens from the declared instances (<c>ARG_THREADS + 8</c>, which the tests
+    /// use). Value coercion and the exact warning strings stay in the per-argument
+    /// ProcessValue handlers so the parsed <see cref="OspreyConfig"/> stays byte-identical
+    /// with the former switch.
     /// </summary>
     internal class OspreyCommandArgs
     {
         private const int USAGE_WIDTH = 78;
 
-        // Install the host text the PortableUtil help renderer needs (descriptions + table
-        // headers). Osprey's tokenizer throws its own ArgumentExceptions for value errors, so
-        // at parse time the framework value-exception message methods are not reached; the
-        // token BUILDER (ArgumentBase.operator +) does reach ValueUnexpected / ValueInvalid
-        // when a test hands a flag a value or a fixed-list argument a value it does not list.
+        /// <summary>
+        /// Osprey's grammar: the standard <c>--name</c> with <c>-x</c> short aliases, a value
+        /// as the next token, any dash-prefixed token ending a value (<c>-o -l x</c> fails
+        /// fast), the last of a repeated argument winning, and listed values left to the
+        /// handlers, which warn and default rather than refuse.
+        /// </summary>
+        private static readonly CommandLineGrammar GRAMMAR = new CommandLineGrammar
+        {
+            ShortPrefix = @"-",
+            ValueMayFollow = true,
+            ValidatesListedValues = false,
+        };
+
+        // Install the host text the help renderer and the parser's errors need (descriptions,
+        // table headers, value and unknown-argument messages). The token BUILDER
+        // (ArgumentBase.operator +) reaches ValueUnexpected / ValueInvalid too, when a test
+        // hands a flag a value or a fixed-list argument a value it does not list.
         static OspreyCommandArgs()
         {
+            ArgUsage.Grammar = GRAMMAR;
             ArgUsage.Provider = new OspreyArgUsageProvider();
             // Osprey's grammar is space-separated (--name value); --name=value is accepted too, but
             // the generated help renders "--name <value>", the form every example uses, and a
@@ -91,8 +105,7 @@ namespace pwiz.Osprey
 
         // --- General I/O ------------------------------------------------------------------
         public static readonly OspreyArgument ARG_INPUT = new OspreyArgument(OspreyArgNames.INPUT,
-            () => @"<file1.mzML ...>", (c, p) => true) { ShortName = @"i", Variadic = true,
-            ProcessVariadic = (c, toks) => { c._inputFiles.AddRange(toks); return true; } };
+            () => @"<file1.mzML ...>", (c, p) => c._inputFiles.Add(p.Value)) { ShortName = @"i", Variadic = true };
         // The command line is a BOUNDED resource and -i consumes it at O(files). Measured on the
         // 446-run CHS cohort: 28,621 characters of the 32,767 a Windows CreateProcess accepts -
         // 87% of the limit, at ~62 characters per input path with a deliberately SHORT raw
@@ -215,12 +228,10 @@ namespace pwiz.Osprey
             (c, p) => c._config.DecoysInLibrary = true);
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => @"<manifest.tsv>", (c, p) => c._config.DecoyPairingManifestPath = p.Value) { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText } };
-        public static readonly OspreyArgument ARG_WRITE_PIN = new OspreyArgument(@"write-pin",
-            (c, p) => c._config.WritePin = true);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
-                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_WRITE_PIN);
+                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST);
 
         // --- Training Export ---------------------------------------------------------------
         // A PerFileRescoring product (docs/22-training-export.md; P17 in
@@ -246,8 +257,15 @@ namespace pwiz.Osprey
         // Declared so it appears in help.
         // The value list IS the task list, in its --help order, so the help and the
         // resolution cannot disagree; six trivial constructions, once, at type init.
+        // A missing task name lists the tasks: Program reads this argument first, so that error is
+        // the user's only guide to the names.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(OspreyArgNames.TASK,
-            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true) { DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText } };
+            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true)
+            {
+                DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText },
+                MissingValueMessage = argText => string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
+                    ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values))
+            };
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
         // --task plus each artifact's embedded validity stamp, and two seams answering one question is
@@ -262,27 +280,28 @@ namespace pwiz.Osprey
         // OUTER vs INNER parallelism, kept deliberately separate. --parallel-files is the
         // number of input files scored at once (each file's Stage 1-4 work is independent);
         // --threads is the per-file main-search thread budget, divided across whatever files
-        // run concurrently. --parallel-files takes an OPTIONAL value (handled specially in
-        // TokenizeAndDispatch): absent = one file at a time, no value = RAM/CPU-aware auto,
-        // <N> = exactly N. Unlike the rest of Osprey's in-process work this is not HPC
-        // (the Rust HPC split fans files across nodes, one file per process), so it gets its
-        // own group rather than sitting under Distributed / HPC.
+        // run concurrently. --parallel-files takes an OPTIONAL value, and only a non-negative
+        // integer counts as one (OptionalValueFilter), so a trailing positional mzML stays a
+        // file: absent = one file at a time, no value = RAM/CPU-aware auto, <N> = exactly N.
+        // Unlike the rest of Osprey's in-process work this is not HPC (the Rust HPC split fans
+        // files across nodes, one file per process), so it gets its own group rather than
+        // sitting under Distributed / HPC.
         public static readonly OspreyArgument ARG_PARALLEL_FILES = new OspreyArgument(OspreyArgNames.PARALLEL_FILES,
-            () => @"[<N>]", (c, p) => c._config.FileParallelism = ParseFileParallelism(p))
-            { DescriptionArgs = () => new object[] { ARG_THREADS.ArgumentText } };
+            () => @"<N>", (c, p) => c._config.FileParallelism = ParseFileParallelism(p))
+            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_THREADS.ArgumentText } };
         // Per-stage overrides of --parallel-files, in the same three forms. The per-file stages
         // do not scale alike (caching is bound by a single-threaded vendor decode, scoring by
         // CPU and a large per-file working set), so one count cannot suit all of them. Each
         // applies to its stage only and falls back to --parallel-files when absent.
         public static readonly OspreyArgument ARG_PARALLEL_FILES_CACHING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_CACHING,
-            () => @"[<N>]", (c, p) => c._config.CachingFileParallelism = ParseFileParallelism(p))
-            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME) } };
+            () => @"<N>", (c, p) => c._config.CachingFileParallelism = ParseFileParallelism(p))
+            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME) } };
         public static readonly OspreyArgument ARG_PARALLEL_FILES_SCORING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_SCORING,
-            () => @"[<N>]", (c, p) => c._config.ScoringFileParallelism = ParseFileParallelism(p))
-            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileScoringTask.TASK_NAME } };
+            () => @"<N>", (c, p) => c._config.ScoringFileParallelism = ParseFileParallelism(p))
+            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileScoringTask.TASK_NAME } };
         public static readonly OspreyArgument ARG_PARALLEL_FILES_RESCORING = new OspreyArgument(OspreyArgNames.PARALLEL_FILES_RESCORING,
-            () => @"[<N>]", (c, p) => c._config.RescoringFileParallelism = ParseFileParallelism(p))
-            { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileRescoreTask.TASK_NAME } };
+            () => @"<N>", (c, p) => c._config.RescoringFileParallelism = ParseFileParallelism(p))
+            { OptionalValue = true, OptionalValueFilter = IsNonNegativeInteger, DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText, PerFileRescoreTask.TASK_NAME } };
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
             () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p)) { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText } };
 
@@ -290,12 +309,6 @@ namespace pwiz.Osprey
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Performance, true,
                 ARG_PARALLEL_FILES, ARG_PARALLEL_FILES_CACHING, ARG_PARALLEL_FILES_SCORING, ARG_PARALLEL_FILES_RESCORING,
                 ARG_THREADS);
-
-        /// <summary>The arguments that take an OPTIONAL count (see TokenizeAndDispatch).</summary>
-        private static readonly OspreyArgument[] OPTIONAL_COUNT_ARGS =
-        {
-            ARG_PARALLEL_FILES, ARG_PARALLEL_FILES_CACHING, ARG_PARALLEL_FILES_SCORING, ARG_PARALLEL_FILES_RESCORING
-        };
 
         // --- Logging ----------------------------------------------------------------------
         // Per-line output decoration and redirection. --timestamp / --memstamp prefix each
@@ -318,9 +331,9 @@ namespace pwiz.Osprey
                 ARG_TIMESTAMP, ARG_MEMSTAMP, ARG_LOG_FILE, ARG_PERF_STATS, ARG_VERBOSE);
 
         // --- Diagnostics & Info -----------------------------------------------------------
-        // -h/--help and -v/--version are terminal: the tokenizer renders help / prints the
-        // version and exits 0. Their ProcessValue is never invoked. --help accepts an optional
-        // format/section value (ascii | unicode | sections | html | <Section>).
+        // -h/--help and -v/--version are terminal: their handlers render help / print the
+        // version and exit 0. --help accepts an optional format/section value
+        // (ascii | unicode | sections | html | <Section>); the description names the values.
         public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
             (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
         // One flag, everything we know how to show. An opt-in token per expensive panel was built
@@ -333,9 +346,17 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(OspreyArgNames.MODEL_DIAGNOSTICS,
             (c, p) => c._config.ModelDiagnostics = true);
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
-            (c, p) => true) { ShortName = @"h", DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|<Section>]" } };
+            () => @"<format|Section>", (c, p) =>
+            {
+                PrintUsage(p.Value);
+                Environment.Exit(0);
+            }) { ShortName = @"h", OptionalValue = true, DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|<Section>]" } };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
-            (c, p) => true) { ShortName = @"v" };
+            (c, p) =>
+            {
+                Console.WriteLine(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion);
+                Environment.Exit(0);
+            }) { ShortName = @"v" };
         // Skyline's internal --culture: run under a named culture instead of the OS one, for
         // formatting and for resource lookup. Program applies it before anything is written
         // (see Program.RunCommand), which also reports a name .NET does not know; the parser
@@ -370,6 +391,9 @@ namespace pwiz.Osprey
                     new ParaUsageBlock(@"  osprey -i *.mzML -l library.tsv -o results.blib " + (ARG_RESOLUTION + @"hram")),
                     new ParaUsageBlock(string.Format(OspreyResources.OspreyCommandArgs_UsageBlocks_HPC_SPLIT__one_node___one__0____see__0__above_,
                         ARG_TASK.ArgumentText)),
+                    // The other forms the parser accepts, after the reference, as CarafeSharp's help ends.
+                    new ParaUsageBlock(string.Format(OspreyResources.OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_to_its_option___0___and_a_file_that_exists_may_be_given_without__1__,
+                        ARG_OUTPUT.ArgumentText + @"=results.blib", ARG_INPUT.ShortArgumentText)),
                 };
             }
         }
@@ -401,175 +425,46 @@ namespace pwiz.Osprey
         internal static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel)
         {
             var parser = new OspreyCommandArgs();
-            parser.TokenizeAndDispatch(args);
-            return parser.ToConfig(fdrModel);
+            CreateParser().Parse(parser, args);
+            var config = parser.ToConfig(fdrModel);
+            config.CommandLine = CommandLineText.Format(@"Osprey", args);
+            return config;
         }
 
         /// <summary>
         /// The value given to <paramref name="arg"/> on the command line (the last one, if it is
-        /// repeated), or null when the argument is absent. Found the way
-        /// <see cref="TokenizeAndDispatch"/> finds it - both value forms, and the same
-        /// missing-value error - so Program can read <see cref="ARG_TASK"/> and
-        /// <see cref="ARG_INTERNAL_CULTURE"/> before the full parse without a second grammar.
+        /// repeated), or null when the argument is absent. Found the way the parser finds it -
+        /// both value forms, and the same missing-value error - so Program can read
+        /// <see cref="ARG_TASK"/> and <see cref="ARG_INTERNAL_CULTURE"/> before the full parse
+        /// without a second grammar.
         /// </summary>
         internal static string FindValue(string[] args, OspreyArgument arg)
         {
-            string value = null;
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (ReferenceEquals(MatchToken(args[i], out string flag, out string inlineValue), arg))
-                    value = TakeValue(args, ref i, arg, flag, inlineValue);
-            }
-            return value;
+            return CreateParser().FindValue(args, arg);
         }
 
         /// <summary>
-        /// The argument <paramref name="token"/> names, or null. Osprey's own grammar is
-        /// <c>--name value</c>; Skyline's <c>--name=value</c> is accepted too, for every argument
-        /// that takes a value, and then <paramref name="inlineValue"/> is the text after the
-        /// first '=' (possibly empty) - an explicit value, which the caller hands to the
-        /// argument and never re-reads as a token of its own. Otherwise it is null.
-        /// <paramref name="flag"/> is the argument as typed (<c>-o</c>, <c>--output</c>), for
-        /// messages. A flag written with a value (<c>--verbose=1</c>) matches nothing, so it is
-        /// reported as an unknown argument.
+        /// The shared parser over Osprey's declarations, with the positional fallback: a bare
+        /// token that exists on disk is an input file, and any other is reported and skipped.
+        /// A token starting with '-' that names no argument is an unknown argument, which the
+        /// parser refuses (caught by Main).
         /// </summary>
-        private static OspreyArgument MatchToken(string token, out string flag, out string inlineValue)
+        private static CommandLineParser<OspreyCommandArgs> CreateParser()
         {
-            flag = token;
-            inlineValue = null;
-            var arg = FindByToken(token);
-            if (arg != null)
-                return arg;
-            int separator = token.StartsWith(ArgumentBase.ARG_PREFIX, StringComparison.Ordinal)
-                ? token.IndexOf('=')
-                : -1;
-            if (separator <= 0)
-                return null;
-            arg = FindByToken(token.Substring(0, separator));
-            if (arg == null || !TakesValue(arg))
-                return null;
-            flag = token.Substring(0, separator);
-            inlineValue = token.Substring(separator + 1);
-            return arg;
+            return new CommandLineParser<OspreyCommandArgs>(AllArguments) { PositionalHandler = TakePositional };
         }
 
-        /// <summary>
-        /// True for an argument the tokenizer reads a value for: every declared value, plus the
-        /// optional help format (<c>--help ascii</c>).
-        /// </summary>
-        private static bool TakesValue(OspreyArgument arg)
+        private static bool TakePositional(OspreyCommandArgs c, string token)
         {
-            return arg.ValueExample != null || ReferenceEquals(arg, ARG_HELP);
-        }
-
-        private void TokenizeAndDispatch(string[] args)
-        {
-            int i = 0;
-            while (i < args.Length)
-            {
-                string arg = args[i];
-
-                OspreyArgument matched = MatchToken(arg, out string flag, out string inlineValue);
-                if (matched == null)
-                {
-                    // A non-flag token that exists on disk is a positional input file. Anything
-                    // else starting with '-' is unknown and fails fast (caught by Main).
-                    // Directory.Exists matters as much as File.Exists here: the vendor formats
-                    // that are DIRECTORIES (Agilent .d, Bruker .d, Waters .raw) would otherwise
-                    // fall through to "Unknown argument" and be silently dropped from the run,
-                    // while the same path passed with -i was accepted.
-                    if (!arg.StartsWith(@"-") && (File.Exists(arg) || Directory.Exists(arg)))
-                    {
-                        _inputFiles.Add(arg);
-                        i++;
-                        continue;
-                    }
-                    if (arg.StartsWith(@"-"))
-                        throw new ArgumentException(string.Format(
-                            OspreyResources.OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0___Run_with__1__to_see_valid_options_, arg,
-                            ARG_HELP.ArgumentText));
-                    Program.LogWarning(string.Format(OspreyResources.OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0_, arg));
-                    i++;
-                    continue;
-                }
-
-                if (ReferenceEquals(matched, ARG_HELP))
-                {
-                    i++;
-                    string fmt;
-                    if (inlineValue != null)
-                        fmt = inlineValue.Length > 0 ? inlineValue : null;
-                    else
-                        fmt = i < args.Length && !args[i].StartsWith(@"-") ? args[i] : null;
-                    PrintUsage(fmt);
-                    Environment.Exit(0);
-                    return;
-                }
-                if (ReferenceEquals(matched, ARG_VERSION))
-                {
-                    Console.WriteLine(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion);
-                    Environment.Exit(0);
-                    return;
-                }
-                if (ReferenceEquals(matched, ARG_TASK))
-                {
-                    // Consume + require the value; the selector itself is resolved in Program
-                    // (through FindValue, which reads it with this same TakeValue).
-                    TakeValue(args, ref i, matched, flag, inlineValue);
-                    i++;
-                    continue;
-                }
-                if (OPTIONAL_COUNT_ARGS.Any(countArg => ReferenceEquals(countArg, matched)))
-                {
-                    // Optional value: consume the next token as the count ONLY when
-                    // it is a non-flag non-negative integer (0 = sequential, N = N
-                    // files); otherwise this is auto mode and the token is left for
-                    // normal processing (e.g. a trailing positional mzML). Mirrors
-                    // the --help [fmt] lookahead. A value given inline (--parallel-files=N) is
-                    // explicit, so it must BE a count: anything else is an invalid value.
-                    i++;
-                    string parallelValue = null;
-                    if (inlineValue != null)
-                    {
-                        parallelValue = RequireInlineValue(matched, flag, inlineValue);
-                        if (!IsNonNegativeInteger(parallelValue))
-                            throw new ArgumentException(InvalidValueMessage(new NameValuePair(matched.Name, parallelValue)));
-                    }
-                    else if (i < args.Length && IsNonNegativeInteger(args[i]))
-                    {
-                        parallelValue = args[i];
-                        i++;
-                    }
-                    matched.ProcessValue(this, new NameValuePair(matched.Name, parallelValue));
-                    continue;
-                }
-                if (matched.Variadic)
-                {
-                    i++;
-                    var toks = new List<string>();
-                    if (inlineValue != null)
-                        toks.Add(RequireInlineValue(matched, flag, inlineValue));
-                    while (i < args.Length && !args[i].StartsWith(@"-"))
-                    {
-                        toks.Add(args[i]);
-                        i++;
-                    }
-                    matched.ProcessVariadic(this, toks);
-                    continue;
-                }
-
-                if (matched.ValueExample != null)
-                {
-                    string value = TakeValue(args, ref i, matched, flag, inlineValue);
-                    i++;
-                    matched.ProcessValue(this, new NameValuePair(matched.Name, value));
-                    continue;
-                }
-
-                // Pure flag (no value).
-                matched.ProcessValue(this, new NameValuePair(matched.Name, null));
-                i++;
-            }
+            // Directory.Exists matters as much as File.Exists here: the vendor formats that are
+            // DIRECTORIES (Agilent .d, Bruker .d, Waters .raw) would otherwise fall through to
+            // "Unknown argument" and be silently dropped from the run, while the same path passed
+            // with -i was accepted.
+            if (File.Exists(token) || Directory.Exists(token))
+                c._inputFiles.Add(token);
+            else
+                Program.LogWarning(string.Format(OspreyResources.OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0_, token));
+            return true;
         }
 
         private OspreyConfig ToConfig(FdrClassifier fdrModel)
@@ -731,60 +626,11 @@ namespace pwiz.Osprey
             return string.IsNullOrEmpty(Path.GetFileName(trimmed)) ? path : trimmed;
         }
 
-        private static OspreyArgument FindByToken(string token)
-        {
-            foreach (var arg in AllArguments)
-            {
-                if (string.Equals(token, arg.ArgumentText, StringComparison.Ordinal))
-                    return arg;
-                if (arg.ShortName != null && string.Equals(token, arg.ShortArgumentText, StringComparison.Ordinal))
-                    return arg;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// The value of a single-value option: <paramref name="inlineValue"/> when it was given
-        /// as <c>--name=value</c>, else the next token. For the next token, advances
-        /// <paramref name="i"/> to it, and throws if it is missing or looks like the next option
-        /// (starts with '-'), so e.g. <c>-o -l x</c> fails fast.
-        /// </summary>
-        private static string TakeValue(string[] args, ref int i, OspreyArgument arg, string flag, string inlineValue)
-        {
-            if (inlineValue != null)
-                return RequireInlineValue(arg, flag, inlineValue);
-            i++;
-            if (i >= args.Length || args[i].StartsWith(@"-", StringComparison.Ordinal))
-                throw new ArgumentException(ValueMissingMessage(arg, flag));
-            return args[i];
-        }
-
-        /// <summary>An inline value, which must not be empty (<c>--output=</c>).</summary>
-        private static string RequireInlineValue(OspreyArgument arg, string flag, string inlineValue)
-        {
-            if (inlineValue.Length == 0)
-                throw new ArgumentException(ValueMissingMessage(arg, flag));
-            return inlineValue;
-        }
-
-        /// <summary>
-        /// The missing-value error, naming <paramref name="flag"/> as typed (<c>-o</c> or
-        /// <c>--output</c>); a missing <see cref="ARG_TASK"/> value also lists the tasks.
-        /// </summary>
-        private static string ValueMissingMessage(OspreyArgument arg, string flag)
-        {
-            return ReferenceEquals(arg, ARG_TASK)
-                ? string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
-                    ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values))
-                : ArgUsage.Provider.ValueMissingMessage(flag);
-        }
-
         /// <summary>
         /// True when <paramref name="token"/> is a plain non-negative integer (no
-        /// sign, digits only). Used by the <c>--parallel-files</c> optional-value
-        /// lookahead to tell an explicit count (including <c>0</c> = sequential) from
-        /// auto-mode-plus-trailing-token; a leading '-' is therefore correctly treated
-        /// as the next flag, not a value.
+        /// sign, digits only). The <c>--parallel-files</c> optional-value filter: it tells
+        /// an explicit count (including <c>0</c> = sequential) from auto-mode-plus-trailing-token,
+        /// and a leading '-' is therefore correctly treated as the next flag, not a value.
         /// </summary>
         private static bool IsNonNegativeInteger(string token)
         {
@@ -827,6 +673,10 @@ namespace pwiz.Osprey
         {
             if (string.IsNullOrEmpty(p.Value))
                 return FileParallelism.Auto;
+            // A spaced value reaches here only through the IsNonNegativeInteger filter; an inline
+            // one (--parallel-files=N) is explicit, so it must BE a count, a negative one included.
+            if (!IsNonNegativeInteger(p.Value))
+                throw new ArgumentException(InvalidValueMessage(p));
             return FileParallelism.Explicit(Math.Max(1, ParseInt(p)));
         }
 
@@ -850,11 +700,12 @@ namespace pwiz.Osprey
         /// <summary>
         /// The one source of "Invalid value ... for --name" text: the same provider method the
         /// framework's own <see cref="ValueInvalidException"/> uses, with the flag spelled from
-        /// the pair, so no handler spells an option name or its value list a second time.
+        /// the argument the parser bound the pair to, so no handler spells an option name or its
+        /// value list a second time.
         /// </summary>
         private static string InvalidValueMessage(NameValuePair p, string[] expectedValues = null)
         {
-            return ArgUsage.Provider.ValueInvalidMessage(ArgumentBase.ARG_PREFIX + p.Name, p.Value, expectedValues);
+            return ArgUsage.Provider.ValueInvalidMessage(p.Match.ArgumentText, p.Value, expectedValues);
         }
 
         private static int ParseFdrBenchPass(NameValuePair p)
@@ -999,7 +850,7 @@ namespace pwiz.Osprey
             AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs));
             sb.AppendLine(HpcExampleCommandLine(FirstPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
             AppendExampleComment(sb, @"  " + Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_,
-                StemFile(FdrScoresSidecar.EXT_FIRST_PASS), StemFile(ReconciliationFile.EXT)));
+                StemFile(FdrScoresSidecar.EXT_FIRST_PASS), @"out." + FdrScoresSidecar.LABEL_FIRST_PASS + @".*"));
             sb.AppendLine();
             AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file));
             sb.AppendLine(HpcExampleCommandLine(PerFileRescoreTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));
@@ -1056,11 +907,9 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// Description + header provider for Osprey: argument descriptions from
-        /// <see cref="OspreyCommandArgUsage"/>, headers and value errors from OspreyResources.
-        /// Osprey's tokenizer raises its own value errors, but it formats them through <see cref="ValueInvalidMessage"/> (see
-        /// <see cref="OspreyCommandArgs.InvalidValueMessage"/>), and the token builder
-        /// <c>ArgumentBase.operator +</c> raises the framework's ValueUnexpected /
-        /// ValueInvalid exceptions, so these message members are live text.
+        /// <see cref="OspreyCommandArgUsage"/>, headers and the parser's errors from
+        /// OspreyResources. The handlers' own value errors go through
+        /// <see cref="OspreyCommandArgs.InvalidValueMessage"/> to the same text.
         /// </summary>
         private class OspreyArgUsageProvider : IArgUsageProvider
         {
@@ -1087,6 +936,11 @@ namespace pwiz.Osprey
             // ValueInvalidMessage is the text every "Invalid value" error in this file shows;
             // ValueUnexpected / ValueInvalid are what the token builder throws.
             public string ValueMissingMessage(string argText) { return string.Format(OspreyResources.OspreyArgUsageProvider_ValueMissingMessage__0__requires_a_value_, argText); }
+            public string UnknownArgumentMessage(string argText)
+            {
+                return string.Format(OspreyResources.OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0___Run_with__1__to_see_valid_options_,
+                    argText, ARG_HELP.ArgumentText);
+            }
             public string ValueUnexpectedMessage(string argText) { return string.Format(OspreyResources.OspreyArgUsageProvider_ValueUnexpectedMessage__0__does_not_take_a_value_, argText); }
             public string ValueInvalidMessage(string argText, string value, string[] argValues)
             {
@@ -1105,10 +959,8 @@ namespace pwiz.Osprey
     }
 
     /// <summary>
-    /// Osprey-local <see cref="Argument{TContext}"/> extension carrying the
-    /// <see cref="Variadic"/> quirk (greedy multi-token consumption like <c>-i a b c</c>),
-    /// which the shared grammar deliberately does not carry. <see cref="ProcessVariadic"/>
-    /// receives the whole run of consumed tokens for one flag occurrence.
+    /// Osprey-local <see cref="Argument{TContext}"/> extension carrying the values its usage
+    /// text is formatted with (<see cref="DescriptionArgs"/>).
     /// </summary>
     internal class OspreyArgument : Argument<OspreyCommandArgs>
     {
@@ -1148,8 +1000,5 @@ namespace pwiz.Osprey
         /// extensions - anything that must not be translated. Null when the text has none.
         /// </summary>
         public Func<object[]> DescriptionArgs { get; set; }
-
-        public bool Variadic { get; set; }
-        public Func<OspreyCommandArgs, IReadOnlyList<string>, bool> ProcessVariadic { get; set; }
     }
 }

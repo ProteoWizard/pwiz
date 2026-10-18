@@ -25,8 +25,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
-using pwiz.CarafeSharp.IO;
 
 namespace pwiz.CarafeSharp.Training
 {
@@ -190,9 +190,9 @@ namespace pwiz.CarafeSharp.Training
             _settings = settings;
         }
 
-        public MaskedSpectrum Apply(OspreyTrainingRecord record)
+        public MaskedSpectrum Apply(TrainingRecord record)
         {
-            int slots = record.SlotCount;
+            int slots = record.NSlots;
             int length = record.Sequence.Length;
             var result = new MaskedSpectrum
             {
@@ -207,8 +207,8 @@ namespace pwiz.CarafeSharp.Training
             {
                 int position = slot / AlphabaseFragmentMz.COLUMN_COUNT;
                 ordinals[slot] = IsB(slot) ? position + 1 : length - 1 - position;
-                matched[slot] = record.Has(slot, OspreyIonFlags.MATCHED_AT_APEX) && record.ApexIntensity[slot] > 0;
-                inRange[slot] = record.Has(slot, OspreyIonFlags.IN_SCAN_RANGE);
+                matched[slot] = record.Has(slot, TrainingIonFlags.MATCHED_AT_APEX) && record.ApexIntensity[slot] > 0;
+                inRange[slot] = record.Has(slot, TrainingIonFlags.IN_SCAN_RANGE);
                 if (matched[slot])
                 {
                     result.MatchedCount++;
@@ -230,7 +230,7 @@ namespace pwiz.CarafeSharp.Training
                 int invalid = 0;
                 // A charge 2 ion of a 1+ precursor is a valid zero, as Carafe trains it; only an
                 // ion without an m/z (a non-standard residue) is not applicable.
-                if (!record.Has(slot, OspreyIonFlags.APPLICABLE))
+                if (!record.Has(slot, TrainingIonFlags.APPLICABLE))
                 {
                     if (!IsNotApplicableByChargeOnly(record, slot))
                         invalid += Mask(result, RULE_NOT_APPLICABLE);
@@ -272,19 +272,19 @@ namespace pwiz.CarafeSharp.Training
             return result;
         }
 
-        private int MatchedRules(OspreyTrainingRecord record, int slot, int ordinal, int skew, bool selfShared,
+        private int MatchedRules(TrainingRecord record, int slot, int ordinal, int skew, bool selfShared,
             double topIntensity, MaskedSpectrum result)
         {
             int invalid = 0;
-            if (_settings.MaskSharedApex && record.SharedApexCount[slot] > 0 &&
-                (!_settings.SharedOnlyWhenBetterClaimant || record.Has(slot, OspreyIonFlags.BETTER_CLAIMANT_APEX)))
+            if (_settings.MaskSharedApex && record.SharedApexN[slot] > 0 &&
+                (!_settings.SharedOnlyWhenBetterClaimant || record.Has(slot, TrainingIonFlags.BETTER_CLAIMANT_APEX)))
             {
                 invalid += Mask(result, RULE_SHARED_APEX);
             }
             if (selfShared)
                 invalid += Mask(result, RULE_SELF_SHARED);
-            if (_settings.MaskSharedCoelution && record.SharedCoeluteCount[slot] > 0 &&
-                (!_settings.SharedOnlyWhenBetterClaimant || record.Has(slot, OspreyIonFlags.BETTER_CLAIMANT_COELUTE)))
+            if (_settings.MaskSharedCoelution && record.SharedCoeluteN[slot] > 0 &&
+                (!_settings.SharedOnlyWhenBetterClaimant || record.Has(slot, TrainingIonFlags.BETTER_CLAIMANT_COELUTE)))
             {
                 invalid += Mask(result, RULE_SHARED_COELUTION);
             }
@@ -314,7 +314,7 @@ namespace pwiz.CarafeSharp.Training
         /// that side's Lmed / Rmed and above f times its apex (f = 0.10 for an ion at least half of
         /// M, else 0.25). 2 = both sides, 1 = one side.
         /// </summary>
-        private static int[] BoundarySkew(OspreyTrainingRecord record, bool[] scored)
+        private static int[] BoundarySkew(TrainingRecord record, bool[] scored)
         {
             var skew = new int[scored.Length];
             var ions = Enumerable.Range(0, scored.Length).Where(s => scored[s]).ToArray();
@@ -338,7 +338,7 @@ namespace pwiz.CarafeSharp.Training
         /// Matched ions of this precursor that matched the same apex peak as another of its ions,
         /// found by the observed m/z (theoretical m/z plus the calibrated error).
         /// </summary>
-        private static bool[] SelfShared(OspreyTrainingRecord record, bool[] matched)
+        private static bool[] SelfShared(TrainingRecord record, bool[] matched)
         {
             var shared = new bool[matched.Length];
             var observed = Enumerable.Range(0, matched.Length)
@@ -362,9 +362,9 @@ namespace pwiz.CarafeSharp.Training
         /// asked for and the precursor has a fit (a matched ion always has a finite row effect),
         /// the apex intensity otherwise.
         /// </summary>
-        private double TrainingIntensity(OspreyTrainingRecord record, int slot)
+        private double TrainingIntensity(TrainingRecord record, int slot)
         {
-            if (_settings.IntensitySource == TrainingIntensitySource.polish && record.MedianPolishFitted)
+            if (_settings.IntensitySource == TrainingIntensitySource.polish && record.MpFitted)
             {
                 float rowEffect = record.PolishRowEffect[slot];
                 return float.IsNaN(rowEffect) ? 0 : Math.Exp(rowEffect);
@@ -381,11 +381,11 @@ namespace pwiz.CarafeSharp.Training
         /// True for a slot that is not applicable only because its fragment charge exceeds the
         /// precursor's: a charge 2 ion of a 1+ precursor whose charge 1 ion is applicable.
         /// </summary>
-        private static bool IsNotApplicableByChargeOnly(OspreyTrainingRecord record, int slot)
+        private static bool IsNotApplicableByChargeOnly(TrainingRecord record, int slot)
         {
             int column = slot % AlphabaseFragmentMz.COLUMN_COUNT;
             bool charge2 = column == AlphabaseFragmentMz.B_Z2 || column == AlphabaseFragmentMz.Y_Z2;
-            return charge2 && record.Charge < 2 && record.Has(slot - 1, OspreyIonFlags.APPLICABLE);
+            return charge2 && record.Charge < 2 && record.Has(slot - 1, TrainingIonFlags.APPLICABLE);
         }
 
         private static double Median(IEnumerable<double> values)

@@ -32,6 +32,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Parquet;
 using Parquet.Schema;
+using pwiz.CarafeSharp.Contracts;
+using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
@@ -847,7 +849,7 @@ namespace pwiz.Osprey.IO
             Dictionary<string, string> metadata, int totalRows,
             Func<int, int, List<ColumnWriter>> buildChunkColumns)
         {
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var progress = new ProgressReporter(
@@ -1164,10 +1166,9 @@ namespace pwiz.Osprey.IO
         /// Load only the columns needed for FDR stubs from a Parquet cache.
         /// Reads: entry_id, is_decoy, charge, scan_number, apex_rt, start_rt, end_rt,
         /// fragment_coelution_sum, bounds_area, modified_sequence.
-        /// Sets parquet_index = row index. <c>bounds_area</c> feeds the
-        /// .blib's <c>OspreyPeakBoundaries.IntegratedArea</c> column at
-        /// Stage 7 - without it, the stage-7 .blib write emits zero for
-        /// every IntegratedArea row and silently diverges from Rust.
+        /// Sets parquet_index = row index. <c>bounds_area</c> feeds the training export
+        /// (<c>TrainingEvidence</c>); the blib no longer carries it, since the <c>Osprey*</c>
+        /// tables were dropped (2026-10-15).
         /// </summary>
         public static List<FdrEntry> LoadFdrStubsFromParquet(string path)
         {
@@ -1859,7 +1860,7 @@ namespace pwiz.Osprey.IO
 
             using (var readStream = BlockReadStream.OpenRead(originalPath))
             using (var reader = OpenReader(readStream))
-            using (var saver = new FileSaver(reconciledPath))
+            using (var saver = new SimpleFileSaver(reconciledPath))
             {
                 var fieldsByName = BuildFieldLookup(reader);
                 int sourceRowCount = checked((int)(reader.Metadata?.NumRows ?? 0L));
