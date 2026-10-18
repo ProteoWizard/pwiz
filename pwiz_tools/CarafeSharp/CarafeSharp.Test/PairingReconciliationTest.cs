@@ -126,17 +126,18 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestDecoyPairsFromManifest()
         {
-            // Columns found by name in any order, trimmed values, a signed pair index, blank lines.
+            // Columns found by name in any order, trimmed values, a signed pair index, blank
+            // lines, and the entrapment method on the p_target row alone.
             string manifest = WriteLines(@"manifest.tsv",
-                "peptide_pair_index\tpeptide_type\tsequence\textra\tdecoy",
-                "+1\t target \tPEPTIDEK\tx\tNo",
-                "1\tdecoy\tEDITPEPK\tx\tyes",
-                "1\tp_target\tSAMPLERK\tx\tNo",
+                "peptide_pair_index\tpeptide_type\tsequence\textra\tdecoy\tentrapment_method",
+                "+1\t target \tPEPTIDEK\tx\tNo\t",
+                "1\tdecoy\tEDITPEPK\tx\tyes\t",
+                "1\tp_target\tSAMPLERK\tx\tNo\t shuffle ",
                 string.Empty,
-                "1\tp_decoy\tLPMSAERK\tx\tYES",
-                "0\ttarget\tLVNELTEFAK\tx\tNo",
-                "0\tdecoy\tAFETLENVLK\tx\tYes",
-                "2\ttarget\tDECQYK\tx\tNo");
+                "1\tp_decoy\tLPMSAERK\tx\tYES\t",
+                "0\ttarget\tLVNELTEFAK\tx\tNo\t",
+                "0\tdecoy\tAFETLENVLK\tx\tYes\t",
+                "2\ttarget\tDECQYK\tx\tNo\t");
             var entries = DecoyPairPlanner.ReadManifest(manifest);
             Assert.AreEqual(7, entries.Count);
             Assert.AreEqual(1, entries[0].PairIndex);
@@ -144,6 +145,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsFalse(entries[0].IsDecoy);
             Assert.IsTrue(entries[1].IsDecoy);
             Assert.IsTrue(entries[3].IsDecoy);
+            Assert.IsNull(entries[0].EntrapmentMethod);
+            Assert.AreEqual(PairingManifest.ENTRAPMENT_METHOD_SHUFFLE, entries[2].EntrapmentMethod);
 
             var precursors = new List<DecoyPairPlanner.Precursor>
             {
@@ -168,7 +171,9 @@ namespace pwiz.CarafeSharp.Test
             CollectionAssert.AreEqual(new[] { 1, 1, 1, 1, 1, 1 }, rows.Select(r => r.PairingId).ToArray());
             CollectionAssert.AreEqual(new int?[] { null, 3, null, 4, null, 8 }, rows.Select(r => r.TargetRefSpectraId).ToArray());
             CollectionAssert.AreEqual(new[] { false, false, false, false, true, true }, rows.Select(r => r.IsEntrapment).ToArray());
-            CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"cycle" }, rows.Select(r => r.Method).ToArray());
+            // Method is how each row was made from the row it was made from: the decoys' reverse
+            // or cycle, the entrapment target's shuffle from the manifest, nothing on an original.
+            CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", @"shuffle", @"cycle" }, rows.Select(r => r.Method).ToArray());
 
             // A decoy the I/L normalization makes the target's own sequence would pair a
             // precursor with itself, which is skipped.

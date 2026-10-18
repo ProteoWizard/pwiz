@@ -99,9 +99,16 @@ namespace pwiz.CarafeSharp.Proteome
         private static void WriteReconciled(List<List<PairingManifestRow>> groups, HashSet<string> librarySequences, string path,
             PairingReconciliationResult result)
         {
+            // The entrapment-method column is kept when the manifest read had it.
+            bool withMethod = false;
+            foreach (var group in groups)
+            {
+                foreach (var row in group)
+                    withMethod |= row.EntrapmentMethodText != null;
+            }
             using (var writer = EntrapmentFastaBuilder.CreateWriter(path))
             {
-                PairingManifest.WriteHeader(writer);
+                PairingManifest.WriteHeader(writer, withMethod);
                 int newPairIndex = 0;
                 foreach (var group in groups)
                 {
@@ -133,7 +140,7 @@ namespace pwiz.CarafeSharp.Proteome
                         PairingManifest.WriteRow(writer, row.Sequence,
                             row.DecoyText ?? (row.IsDecoy ? PairingManifest.DECOY_YES : PairingManifest.DECOY_NO),
                             row.ProteinsText ?? string.Join(PairingManifest.PROTEIN_SEPARATOR.ToString(), row.Proteins),
-                            row.KindText, newPairIndex);
+                            row.KindText, newPairIndex, withMethod ? row.EntrapmentMethodText ?? string.Empty : null);
                         result.RowsKept++;
                     }
                     if (!decoyKept)

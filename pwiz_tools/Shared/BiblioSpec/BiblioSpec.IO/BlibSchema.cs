@@ -333,8 +333,10 @@ namespace pwiz.BiblioSpec.IO
         /// <c>peptide_pair_index</c>, shared by a target, its entrapment target and both their
         /// decoys, which is what pairs an entrapment peptide with its original target;
         /// <c>TargetRefSpectraID</c> is a decoy's target spectrum at the same charge, null on a
-        /// target or a decoy with no target; <c>Method</c> names how a decoy was made
-        /// (<c>reverse</c>, <c>cycle</c>) and is null on a target. Written by CarafeSharp and by
+        /// target or a decoy with no target; <c>Method</c> names how the row's sequence was made
+        /// from the row it was made from - <c>reverse</c> or <c>cycle</c> on a decoy,
+        /// <c>shuffle</c> or <c>foreign</c> on an entrapment target - and is null on an original
+        /// target. Written by CarafeSharp and by
         /// Osprey's library export, read by Osprey, which pairs library decoys and entrapment
         /// from it with no manifest. Optional, as above.
         /// </summary>

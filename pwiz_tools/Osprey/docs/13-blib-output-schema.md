@@ -38,7 +38,9 @@ and partition (the four kinds of an FDRBench pairing manifest), `PairingID` is t
 `peptide_pair_index` - shared by a target, its entrapment target and both their decoys, which is
 what pairs an entrapment peptide with its original target - `TargetRefSpectraID` is a decoy's
 target spectrum at the same charge (a foreign key to `RefSpectra.id`, indexed), and `Method` how
-a decoy was made. A blib searched with its own decoys must carry it, and Osprey pairs decoys and
+the row's sequence was made from the row it was made from: `reverse` or `cycle` on a decoy,
+`shuffle` or `foreign` on an entrapment target (from the pairing manifest's `entrapment_method`
+column, which CarafeSharp's entrapment FASTA stage writes), null on an original target. A blib searched with its own decoys must carry it, and Osprey pairs decoys and
 entrapment from it alone, with no manifest, reading it on every load that finds it
 ([01](01-decoy-generation.md) step 2, [24](24-library-contract.md)). The search output blib has
 none: its decoys are not reported.
