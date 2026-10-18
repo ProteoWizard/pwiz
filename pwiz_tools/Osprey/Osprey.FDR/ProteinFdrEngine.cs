@@ -102,9 +102,8 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Second-pass / run-wide protein FDR (SecondPassFDR, post Stage-6): collects
         /// best peptide scores, gates the detected-peptide set on experiment-level
-        /// q-value, builds parsimony, and runs picked-protein FDR over every library
-        /// protein, scored from <paramref name="proteinScores"/> (the first pass's
-        /// scores; see <see cref="ProteinFdr.ComputeLibraryPickedProteinFdr"/>). The second-pass protein q reaches
+        /// q-value, builds parsimony, and runs picked-protein FDR at
+        /// <see cref="OspreyConfig.RunFdr"/>. The second-pass protein q reaches
         /// consumers through the caller's per-file sidecar patch, NOT the pool:
         /// <see cref="FdrEntry.ExperimentProteinQvalue"/> on the stubs keeps its
         /// first-pass value after this runs. Logs
@@ -126,7 +125,6 @@ namespace pwiz.Osprey.FDR
         public static SecondPassProteinFdrResult RunSecondPass(
             IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<LibraryEntry> fullLibrary,
-            LibraryProteinScores proteinScores,
             OspreyConfig config,
             IOspreyLog log)
         {
@@ -175,10 +173,11 @@ namespace pwiz.Osprey.FDR
             log?.LogInfo(string.Format(OspreyFDRResources.ProteinFdrEngine_RunSecondPass_Protein_parsimony___0__groups, parsimony.Groups.Count));
             log?.LogInfo(LogTag.COUNT, @"Protein parsimony groups: {0}", parsimony.Groups.Count);
 
-            // Scored from the first pass, not from bestScores: see LibraryProteinScores for why
-            // the second-pass pool cannot supply the decoy side. Rust still competes only the
-            // groups with a detected target, scored from this pool (pipeline.rs:4389).
-            var proteinFdr = ProteinFdr.ComputeLibraryPickedProteinFdr(parsimony, proteinScores.ByProtein());
+            // Compute protein FDR. Gate is config.RunFdr (1x) per Savitski's
+            // convention, matching Rust pipeline.rs:4389
+            // (compute_protein_fdr at config.run_fdr). The previous 2x gate
+            // was a divergence from Rust that has since been corrected.
+            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
 
             // Count passing proteins
             int passingProteins = 0;
