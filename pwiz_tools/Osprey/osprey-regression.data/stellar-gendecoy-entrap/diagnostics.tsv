@@ -58,11 +58,11 @@ pass2.coAssign.fdrCrossingDecoys	330
 pass2.coAssign.fdrCrossingNonDecoys	33044
 pass1.experiment.reportedQ	0.009831611311715706
 pass1.experiment.combinedFdp	0.01158895539213481
-pass1.experiment.pairedFdp	0.011624579726732956
+pass1.experiment.pairedFdp	0.010551541598111452
 pass1.experiment.accepted	27796
 pass1.experiment.entrapmentRatio	0.9999752175690914
 pass2.experiment.reportedQ	0.009852216748768473
 pass2.experiment.combinedFdp	0.009124030757770182
-pass2.experiment.pairedFdp	0.009154951432206808
+pass2.experiment.pairedFdp	0.008286006889488875
 pass2.experiment.accepted	32076
 pass2.experiment.entrapmentRatio	0.9999752175690914

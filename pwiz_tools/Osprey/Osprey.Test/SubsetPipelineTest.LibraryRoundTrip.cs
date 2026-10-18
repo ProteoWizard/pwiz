@@ -103,6 +103,16 @@ namespace pwiz.Osprey.Test
         {
             var tolerance = FragmentToleranceConfig.UnitResolution(0.5);
             string tsv = Path.Combine(_dataDir, LIBDECOY_FILE);
+            // An entrapment library that brings no pairing is refused, never paired by guesswork.
+            var refusal = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(new OspreyConfig
+            {
+                LibrarySource = LibrarySource.FromPath(tsv),
+                FragmentTolerance = tolerance,
+                DecoysInLibrary = true,
+            }, null, null));
+            Assert.AreEqual(string.Format(
+                OspreyIOResources.LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_,
+                tsv, OspreyArgNames.Text(OspreyArgNames.DECOY_PAIRING_MANIFEST)), refusal.Message);
             var fromTsv = LibraryLoader.Load(new OspreyConfig
             {
                 LibrarySource = LibrarySource.FromPath(tsv),

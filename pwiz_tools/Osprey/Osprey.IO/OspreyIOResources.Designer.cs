@@ -398,6 +398,17 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The library {0} has entrapment peptides (protein accessions marked _p_target) but nothing pairs them with their targets. Give the pairing manifest with {1}, or search a BiblioSpec library that carries a DecoyPairs table..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them" +
+                        "_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_ca" +
+                        "rries_a_DecoyPairs_table_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The library {0} supplies decoys but has no DecoyPairs table pairing each decoy with its target. A BiblioSpec library searched with its own decoys must carry the table, as CarafeSharp writes it; otherwise leave out {1} so Osprey generates its own decoys..
         /// </summary>
         public static string LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pairing_each_decoy_with_its_target_ {

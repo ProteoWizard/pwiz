@@ -43,9 +43,10 @@ namespace pwiz.Osprey.IO
     /// shares with the clip of its manifest target when the library holds that clip as an
     /// extra; a clipped entrapment alone in its group is the known orphan the FDRBench input
     /// and the diagnostics exclude. Any other peptide - an extra that is not a clip form,
-    /// every peptide of a library with neither table nor manifest - takes a standalone index.
-    /// A decoy takes the index of its own sequence when the manifest covers it, else its
-    /// target's, else a standalone one.</para>
+    /// every peptide of a library with neither table nor manifest (which the loader admits only
+    /// when it has no entrapment peptides) - takes a standalone index. A decoy takes the index
+    /// of its own sequence when the manifest covers it, else its target's, else a standalone
+    /// one.</para>
     /// </summary>
     public static class PairingIds
     {
@@ -193,9 +194,8 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// The entrapment sequences of <paramref name="library"/> that the FDRBench input and the
         /// diagnostics exclude: those whose <see cref="LibraryEntry.PairingId"/> no original
-        /// (non-entrapment) target shares, in a library that pairs entrapment with original
-        /// targets at all. A library with no such pair - a .tsv searched with no manifest - has no
-        /// pairing design to be an orphan of, and excludes nothing.
+        /// (non-entrapment) target shares. The loader refuses an entrapment library that brings
+        /// no pairing, so an entrapment peptide alone in its group is an orphan, never a guess.
         /// </summary>
         public static HashSet<string> ExcludedEntrapment(IEnumerable<LibraryEntry> library)
         {
@@ -211,8 +211,6 @@ namespace pwiz.Osprey.IO
                     entrapmentIdBySeq[entry.Sequence] = entry.PairingId;
             }
             var excluded = new HashSet<string>(StringComparer.Ordinal);
-            if (!entrapmentIdBySeq.Values.Any(originals.Contains))
-                return excluded;
             foreach (var kv in entrapmentIdBySeq)
             {
                 if (!originals.Contains(kv.Value))

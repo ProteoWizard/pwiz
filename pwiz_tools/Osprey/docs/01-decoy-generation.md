@@ -296,7 +296,9 @@ whose id no original target shares is the orphan `EntrapmentPairing.Build` exclu
 FDRBench input and the diagnostics. A library searched with generated decoys takes the same
 id assignment (its table, or the manifest given with it), so an entrapment library's pairing
 ids do not depend on where its decoys come from; the manifest's rewrite of accessions and decoy
-marks (`ApplyToLibrary`) stays the supplied-decoy route's, as before.
+marks (`ApplyToLibrary`) stays the supplied-decoy route's, as before. An entrapment library
+(`_p_target` accessions) that brings neither a table nor a manifest is refused at load: its
+paired FDP and FDRBench output would be guesses, and the message names what to supply.
 
 First, a **hard guard**: if there are no library decoys at all,
 the load returns that fault as `error` and the caller exits with code 1

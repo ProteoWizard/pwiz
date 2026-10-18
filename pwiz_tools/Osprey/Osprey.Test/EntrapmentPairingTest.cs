@@ -114,13 +114,16 @@ namespace pwiz.Osprey.Test
                 Assert.IsFalse(pairing.PairIndexBySeq.ContainsKey("WEIRDK"));
                 Assert.AreEqual(3, lib.Values.Where(e => pairing.ExcludedEntrapment.Contains(e.Sequence)).Select(e => e.PairingId).Distinct().Count());
 
-                // No manifest -> every peptide its own group and no entrapment paired with a target,
-                // so there is no design to be an orphan of: nothing is excluded.
-                var noManifestSummary = PairingIds.Assign(lib.Values.ToList(), null);
-                var noManifest = EntrapmentPairing.Build(lib);
+                // No manifest and no entrapment (the loader refuses an entrapment library without
+                // its pairing): every peptide its own group, nothing excluded.
+                var plain = lib.Where(kv => !EntrapmentLibraryClassifier.IsEntrapment(kv.Value.ProteinIds))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                var noManifestSummary = PairingIds.Assign(plain.Values.ToList(), null);
+                var noManifest = EntrapmentPairing.Build(plain);
                 Assert.AreEqual(0, noManifest.ExcludedEntrapment.Count);
                 Assert.AreEqual(0, noManifestSummary.MetClipDropped);
-                Assert.AreEqual(lib.Count, noManifest.PairIndexBySeq.Count);
+                Assert.AreEqual(plain.Count, noManifest.PairIndexBySeq.Count);
+                Assert.AreEqual(plain.Count, noManifest.PairIndexBySeq.Values.Distinct().Count());
             }
             finally
             {

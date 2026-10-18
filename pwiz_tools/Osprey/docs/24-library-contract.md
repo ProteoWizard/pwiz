@@ -145,7 +145,8 @@ searched with no manifest at all. The pairing manifest and the amino-acid compos
 stay for TSV libraries, which have no table to carry their pairing; a TSV's pairing ids are
 assigned from the manifest at load (`PairingIds.Assign`) and kept in the library cache. Every
 entry has a pairing id; an entrapment peptide whose id no original target shares is the orphan
-the FDRBench input and the diagnostics exclude. Osprey's own `--export-library` writes a
+the FDRBench input and the diagnostics exclude, and an entrapment library that brings neither
+table nor manifest is refused at load rather than paired by guesswork. Osprey's own `--export-library` writes a
 `DecoyPairs` row for every entry of a library with decoys or entrapment, so an exported library
 searches back exactly as the TSV with its manifest did
 (`SubsetPipelineTest.TestLibraryLoadsIdenticallyFromTsvAndBlib`).

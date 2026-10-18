@@ -340,6 +340,17 @@ namespace pwiz.Osprey.IO
                 if (error != null)
                     return null;
             }
+            // Entrapment peptides are never paired by guesswork: a library that has them must
+            // bring its pairing (the table or the manifest), or the paired FDP and the FDRBench
+            // output it was built for would be wrong with nothing in the run to show for it.
+            if (manifest == null && blibPairs == null &&
+                entries.Exists(e => EntrapmentLibraryClassifier.IsEntrapment(e.ProteinIds)))
+            {
+                error = string.Format(
+                    OspreyIOResources.LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_,
+                    path, OspreyArgNames.Text(OspreyArgNames.DECOY_PAIRING_MANIFEST));
+                return null;
+            }
             // Every entry's pairing id, once, whichever way the decoys come: from the DecoyPairs
             // rows for a .blib, from the manifest for a .tsv, else every peptide its own pairing,
             // as the FDRBench output and the diagnostics have always numbered them. The cache,

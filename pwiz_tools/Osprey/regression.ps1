@@ -506,6 +506,11 @@ $datasets = [ordered]@{
         NestedZip        = 'libdecoy-entrapment.zip'
         LibraryUrl       = $libDecoyV3Url
         Library          = 'carafe_spectral_library.tsv'
+        # The manifest pairs each entrapment peptide with its original target for the paired
+        # FDP and the FDRBench output; an entrapment library without it is refused at load.
+        # Until 2026-10-17 this dataset ran without one and its paired FDP was the no-pairing
+        # value.
+        Manifest         = 'osprey_library_db_pairing.tsv'
         StripDecoys      = $true
         Resolution       = 'unit'
         ModelDiagnostics = $true
