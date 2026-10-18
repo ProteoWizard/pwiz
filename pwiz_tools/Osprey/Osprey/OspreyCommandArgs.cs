@@ -228,12 +228,10 @@ namespace pwiz.Osprey
             (c, p) => c._config.DecoysInLibrary = true);
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => @"<manifest.tsv>", (c, p) => c._config.DecoyPairingManifestPath = p.Value) { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText } };
-        public static readonly OspreyArgument ARG_WRITE_PIN = new OspreyArgument(@"write-pin",
-            (c, p) => c._config.WritePin = true);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
-                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_WRITE_PIN);
+                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST);
 
         // --- Training Export ---------------------------------------------------------------
         // A PerFileRescoring product (docs/22-training-export.md; P17 in

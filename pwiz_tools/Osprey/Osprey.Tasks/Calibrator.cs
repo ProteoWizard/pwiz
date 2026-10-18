@@ -408,7 +408,7 @@ namespace pwiz.Osprey.Tasks
                 // env var is set (bisection mode - stop once we agree here). Rust
                 // dumps per attempt too; attempt 1 is the comparable one, and the
                 // *_ONLY abort fires there.
-                if (config.WritePin || (_ctx.Diagnostics?.DumpCalSample ?? false))
+                if (_ctx.Diagnostics?.DumpCalSample ?? false)
                 {
                     _ctx.Diagnostics?.WriteCalSampleDump(context.FileName, sampledEntries);
                     if (_ctx.Diagnostics?.CalSampleOnly ?? false)
