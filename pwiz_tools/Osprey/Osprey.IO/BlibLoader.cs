@@ -75,6 +75,17 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private const int MIN_SPECTRA_PER_PARTITION = 4000;
 
+        /// <summary>
+        /// The most partitions a load reads on, whatever the thread count. SQLite's row and blob
+        /// fetch does not scale past a few connections - on the 1.57M-precursor Astral library
+        /// the scan took 8.5s on 1 thread, 3.8s on 4, 2.8s on 8 and 4.4s on 16, with the time
+        /// outside typing growing from 4.8s to 61s summed over the threads - while the typing
+        /// on each thread's rows does scale. Eight is where the two cross on this hardware; the
+        /// next step, if the load must get nearer the old binary cache's read, is a few reader
+        /// threads feeding every core's typing rather than one thread doing both.
+        /// </summary>
+        private const int MAX_PARTITIONS = 8;
+
         private readonly FragmentToleranceConfig _fragmentTolerance;
         private readonly int _nThreads;
         // The last load's phases: the parallel scan (rows read, peaks decoded and typed), the
@@ -307,7 +318,7 @@ namespace pwiz.Osprey.IO
             FragmentTypingStats typingStats)
         {
             int count = reader.CountSpectra();
-            _partitionCount = Math.Max(1, Math.Min(_nThreads, count / MIN_SPECTRA_PER_PARTITION));
+            _partitionCount = Math.Max(1, Math.Min(Math.Min(_nThreads, MAX_PARTITIONS), count / MIN_SPECTRA_PER_PARTITION));
             var partitions = new List<ParsedSpectrum>[_partitionCount];
 
             _scan.Start();
