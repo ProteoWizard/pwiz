@@ -362,6 +362,10 @@ namespace pwiz.Osprey.IO
             const int progressBlock = 1024;
             var typing = new Stopwatch();
             var parsed = new List<ParsedSpectrum>(count / _partitionCount + 1);
+            // This thread's own pool, so the partition holds one instance of each sequence and
+            // modification name until the merge interns them into the library's pool; without it
+            // every row kept three strings of its own, a whole library's worth at the scan's end.
+            var interner = new LibraryStringInterner();
             int sinceReport = 0;
             using (var reader = new BlibReader(path))
             {
@@ -369,7 +373,7 @@ namespace pwiz.Osprey.IO
                 foreach (var spectrum in reader.ReadSpectra(!OmitFragments, _partitionCount, partition))
                 {
                     bool keepPeaks = _retainedRefIds == null || _retainedRefIds.Contains(spectrum.Id);
-                    parsed.Add(ParseSpectrum(spectrum, typingStats, typing, keepPeaks));
+                    parsed.Add(ParseSpectrum(spectrum, typingStats, typing, keepPeaks, interner));
                     if (++sinceReport == progressBlock)
                     {
                         progress.Report(Interlocked.Add(ref done, sinceReport));
@@ -395,17 +399,21 @@ namespace pwiz.Osprey.IO
         /// blobs and the fragments are a readable empty array.
         /// </summary>
         private ParsedSpectrum ParseSpectrum(BlibSpectrumRecord spectrum, FragmentTypingStats typingStats, Stopwatch typing,
-            bool keepPeaks)
+            bool keepPeaks, LibraryStringInterner partitionInterner)
         {
             // A row without a sequence (a small molecule) is refused as a peptide too
             // short to search; one without a modified sequence is the unmodified peptide.
             string peptideSeq = spectrum.PeptideSeq ?? string.Empty;
             string peptideModSeq = spectrum.PeptideModSeq ?? peptideSeq;
+            // The same bound the TSV loader enforces, checked before any work on the row so a
+            // library that will be refused is refused at once, not after every row is typed. An
+            // invariant only one format checks is not an invariant, and DecoyGenerator's
+            // fragment-overlap gate relies on this one whatever the library was built from.
+            LibraryValidation.ValidatePeptideLength(peptideSeq);
             var parsed = new ParsedSpectrum
             {
                 RefId = spectrum.Id,
-                PeptideSeq = peptideSeq,
-                PeptideModSeq = peptideModSeq,
+                PeptideSeq = partitionInterner.Intern(peptideSeq),
                 Charge = spectrum.PrecursorCharge,
                 PrecursorMz = spectrum.PrecursorMz,
                 RetentionTime = spectrum.RetentionTime ?? 0.0,
@@ -414,11 +422,14 @@ namespace pwiz.Osprey.IO
             if (modifications == null)
             {
                 parsed.Unidentified = unidentified;
+                parsed.PeptideModSeq = peptideModSeq;
                 return parsed;
             }
             parsed.Modifications = modifications.Count == 0 ? Array.Empty<Modification>() : modifications.ToArray();
-            parsed.ModifiedSequence = BlibSpectrum.FormatModifiedSequence(peptideSeq,
-                PeptideFragmentMass.ModMassesByPosition(parsed.Modifications));
+            foreach (var m in parsed.Modifications)
+                m.Name = partitionInterner.Intern(m.Name);
+            parsed.ModifiedSequence = partitionInterner.Intern(BlibSpectrum.FormatModifiedSequence(peptideSeq,
+                PeptideFragmentMass.ModMassesByPosition(parsed.Modifications)));
 
             if (!keepPeaks)
             {
@@ -445,10 +456,8 @@ namespace pwiz.Osprey.IO
         /// The partitions merged in RefSpectra id order - each is in id order already, so the
         /// smallest head is next - into entries numbered from 0 in that order, as the TSV
         /// loader's are (the RefSpectra id is kept beside the entry for the tables that refer to
-        /// it), with their strings interned. The peptide-length bound the TSV loader enforces is
-        /// checked here too: an invariant only one format checks is not an invariant, and
-        /// DecoyGenerator's fragment-overlap gate relies on this one whatever the library was
-        /// built from.
+        /// it), with their strings interned into the library's pool (each partition pooled its own
+        /// on its thread, so this is a lookup per distinct string rather than per row).
         /// </summary>
         private List<LibraryEntry> MergePartitions(List<ParsedSpectrum>[] partitions, LibraryStringInterner interner)
         {
@@ -469,7 +478,6 @@ namespace pwiz.Osprey.IO
                 }
                 var parsed = partitions[next][heads[next]++];
 
-                LibraryValidation.ValidatePeptideLength(parsed.PeptideSeq);
                 if (parsed.Unidentified != null)
                 {
                     unidentifiedMods.Add(parsed.Unidentified, parsed.RefId, parsed.PeptideModSeq);
@@ -703,7 +711,7 @@ namespace pwiz.Osprey.IO
         {
             public long RefId;
             public string PeptideSeq;
-            /// <summary>The file's own modified-sequence text, for naming an unidentified modification.</summary>
+            /// <summary>The file's own modified-sequence text, kept only for a row with an unidentified modification, which it names.</summary>
             public string PeptideModSeq;
             /// <summary>The modified sequence rebuilt from the modification masses; null when one could not be identified.</summary>
             public string ModifiedSequence;

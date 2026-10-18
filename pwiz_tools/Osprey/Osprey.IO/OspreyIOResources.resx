@@ -169,6 +169,9 @@
   <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
     <value>Failed to load the library cache: {0}. Reading the library file instead.</value>
   </data>
+  <data name="LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_" xml:space="preserve">
+    <value>Failed to read the derived library '{0}': {1} Reading the library file instead.</value>
+  </data>
   <data name="LibraryLoader_Load_Failed_to_save_the_derived_library___0_" xml:space="preserve">
     <value>Failed to save the derived library: {0}</value>
   </data>

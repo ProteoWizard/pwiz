@@ -269,10 +269,7 @@ namespace pwiz.Osprey.IO
             switch (format)
             {
                 case LibraryFormat.DiannTsv:
-                    var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
-                    entries = tsvLoader.Load(path, log.LogInfo);
-                    tsvLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
-                    parseDetail = @"tsv";
+                    entries = ParseTsv(path, config, log, logWarning, out parseDetail);
                     break;
 
                 case LibraryFormat.Blib:
@@ -286,7 +283,27 @@ namespace pwiz.Osprey.IO
                         blibLoader.OmitFragments = options.OmitFragments;
                         blibLoader.RetainFragmentsFor = options.OmitFragments ? null : options.RetainFragmentsFor;
                     }
-                    entries = blibLoader.Load(path, log.LogInfo);
+                    try
+                    {
+                        entries = blibLoader.Load(path, log.LogInfo);
+                    }
+                    catch (Exception ex) when (fromDerived && !(ex is OutOfMemoryException))
+                    {
+                        // The derived library's read faulted (a damaged blob, a partly relayed
+                        // file whose metadata row still matches): warn and parse the source, as
+                        // a failed .libcache read always fell back to the file. A derived library
+                        // exists only for a .tsv source.
+                        logWarning(string.Format(
+                            OspreyIOResources.LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_,
+                            path, ex.Message));
+                        fromDerived = false;
+                        path = config.LibrarySource.Path;
+                        format = config.LibrarySource.Format;
+                        log.LogInfo(string.Format(OspreyIOResources.LibraryLoader_Load_Loading_spectral_library_from__0____, path));
+                        swParse.Restart();
+                        entries = ParseTsv(path, config, log, logWarning, out parseDetail);
+                        break;
+                    }
                     parseDetail = string.Format(CultureInfo.InvariantCulture,
                         @"blib; {0} threads read, decoded and typed in {1:F2}s ({2:F2}s typing summed over threads), merged and interned in {3:F2}s, proteins {4:F2}s",
                         blibLoader.PartitionCount, blibLoader.ScanSeconds, blibLoader.TypingThreadSeconds,
@@ -372,9 +389,11 @@ namespace pwiz.Osprey.IO
             // above is unchanged - both still run first, which is what the cross-impl byte parity
             // rests on.
             // The pairing manifest, read once. A .blib with a DecoyPairs table carries its whole
-            // pairing design and reads no manifest, and says so when one was given.
+            // pairing design and reads no manifest, and says so when one was given - a .blib
+            // SOURCE, that is; the derived library's table was built from that manifest, which
+            // the hash has proven unchanged, so the line would mislead there.
             DecoyPairingManifest manifest = null;
-            if (blibPairs != null && !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            if (blibPairs != null && !fromDerived && !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
             {
                 log.LogInfo(string.Format(
                     OspreyIOResources.LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_,
@@ -422,7 +441,8 @@ namespace pwiz.Osprey.IO
             {
                 try
                 {
-                    LibraryBlibWriter.Write(derivedPath, entries, path, config.NThreads, config.DecoyPrefixes, null, derivedHash);
+                    LibraryBlibWriter.Write(derivedPath, entries, path, config.NThreads, config.DecoyPrefixes, null, derivedHash,
+                        prefixDecoyAccessions: false);
                     log.LogInfo(string.Format(
                         OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__,
                         entries.Count, derivedPath));
@@ -457,6 +477,17 @@ namespace pwiz.Osprey.IO
             // library therefore stays fat until the Stage 7 library-fragment release drops the
             // same set, and the two paths converge on the state every later reader sees.
 
+            return entries;
+        }
+
+        /// <summary>The .tsv parse: the DIA-NN reader, with its report on the fragment types the file states.</summary>
+        private static List<LibraryEntry> ParseTsv(string path, OspreyConfig config, IOspreyLog log, Action<string> logWarning,
+            out string parseDetail)
+        {
+            var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
+            var entries = tsvLoader.Load(path, log.LogInfo);
+            tsvLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
+            parseDetail = @"tsv";
             return entries;
         }
 

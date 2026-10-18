@@ -352,6 +352,16 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to read the derived library &apos;{0}&apos;: {1} Reading the library file instead..
+        /// </summary>
+        public static string LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_libra" +
+                        "ry_file_instead_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Failed to save the derived library: {0}.
         /// </summary>
         public static string LibraryLoader_Load_Failed_to_save_the_derived_library___0_ {
