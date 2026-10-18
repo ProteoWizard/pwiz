@@ -37,11 +37,13 @@ namespace pwiz.BiblioSpec.IO
     ///
     /// <para>The library's header (<see cref="Info"/>) and its small tables (source files,
     /// score types, proteins, metadata, decoy pairs) are read whole. The spectra and the
-    /// retention times stream, each as a scan that can be split into partitions by id
-    /// (<c>WHERE id % count = index</c>) so a caller can scan on several threads, one reader
-    /// on its own connection per thread. A spectrum's peaks, modifications and annotations are
-    /// also read singly by id, for a caller that keeps an index of the library and loads a
-    /// spectrum when it is asked for.</para>
+    /// retention times stream, each as a scan that can be split into partitions by id - the
+    /// span of RefSpectra ids cut into equal ranges, <c>WHERE id BETWEEN low AND high</c>, which
+    /// the rowid index serves, where a modulo partition is a full scan of the table per
+    /// partition - so a caller can scan on several threads, one reader on its own connection
+    /// per thread. A spectrum's peaks, modifications and annotations are also read singly by
+    /// id, for a caller that keeps an index of the library and loads a spectrum when it is
+    /// asked for.</para>
     ///
     /// <para>A library of an older schema reads through the same calls: a column or table the
     /// library lacks reads as the record's default, and a reader tests for a table
@@ -70,6 +72,9 @@ namespace pwiz.BiblioSpec.IO
         private BlibLibraryInfo _info;
         private SpectrumColumns _spectrumColumns;
         private RetentionTimeColumns _retentionTimeColumns;
+        // The lowest and highest RefSpectra id, read once for the partitioned scans; (1, 0) for
+        // a library with no spectra, an empty range.
+        private (long Low, long High)? _idSpan;
 
         /// <summary>Opens the library at <paramref name="path"/> read-only, on a connection of its own.</summary>
         public BlibReader(string path)
@@ -113,6 +118,22 @@ namespace pwiz.BiblioSpec.IO
         {
             using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM RefSpectra", _connection))
                 return Convert.ToInt32(command.ExecuteScalar());
+        }
+
+        /// <summary>
+        /// The <c>RefSpectra</c> ids in ascending order: the order <see cref="ReadSpectra(bool,int,int)"/> reads
+        /// the rows in, so a row's position in this list is its index in that order.
+        /// </summary>
+        public IReadOnlyList<long> ReadSpectrumIds()
+        {
+            var ids = new List<long>();
+            using (var command = new SQLiteCommand(@"SELECT id FROM RefSpectra ORDER BY id", _connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                    ids.Add(reader.GetInt64(0));
+            }
+            return ids;
         }
 
         /// <summary>The <c>SpectrumSourceFiles</c> rows in id order; empty in a library without the table.</summary>
@@ -234,43 +255,102 @@ namespace pwiz.BiblioSpec.IO
         /// modifications, proteins and annotations are not filled in: <see cref="ReadProteins"/>
         /// reads them for every spectrum at once, <see cref="ReadModifications"/> and
         /// <see cref="ReadAnnotations"/> for one. With <paramref name="partitionCount"/> above
-        /// one, only the rows whose id falls in partition <paramref name="partitionIndex"/>
-        /// (<c>id % count = index</c>), so the partitions together are the whole table and a
-        /// caller can scan them on several threads, each with a reader of its own.
+        /// one, only the rows whose id falls in partition <paramref name="partitionIndex"/> of
+        /// the id span cut into that many equal ranges, so the partitions together are the whole
+        /// table, each in id order and every id of one partition below every id of the next, and
+        /// a caller can scan them on several threads, each with a reader of its own.
         /// </summary>
         public IEnumerable<BlibSpectrumRecord> ReadSpectra(bool withPeaks, int partitionCount = 1, int partitionIndex = 0)
         {
-            ValidatePartition(partitionCount, partitionIndex);
-            var columns = _spectrumColumns ?? (_spectrumColumns = new SpectrumColumns(BlibSqlite.ColumnNames(_connection, TABLE_REF_SPECTRA)));
-            return EnumerateSpectra(columns, withPeaks && HasTable(TABLE_REF_SPECTRA_PEAKS), partitionCount, partitionIndex);
+            return ReadSpectra(withPeaks, null, partitionCount, partitionIndex);
         }
 
-        /// <summary>The scan of <see cref="ReadSpectra"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
-        private IEnumerable<BlibSpectrumRecord> EnumerateSpectra(SpectrumColumns columns, bool withPeaks, int partitionCount, int partitionIndex)
+        /// <summary>
+        /// <see cref="ReadSpectra(bool,int,int)"/> narrowed to the rows <paramref name="filter"/>
+        /// admits, in the SQL, so a search tool reads the candidates of one precursor m/z window
+        /// without scanning the library. A null filter admits every row.
+        /// </summary>
+        public IEnumerable<BlibSpectrumRecord> ReadSpectra(bool withPeaks, BlibSpectrumFilter filter, int partitionCount = 1, int partitionIndex = 0)
+        {
+            ValidatePartition(partitionCount, partitionIndex);
+            bool hasPeaksTable = HasTable(TABLE_REF_SPECTRA_PEAKS);
+            bool requirePeaksRow = filter != null && filter.RequirePeaksRow;
+            if (requirePeaksRow && !hasPeaksTable)
+                return Array.Empty<BlibSpectrumRecord>();
+            var where = new WhereClause();
+            if (partitionCount > 1)
+                where.AddPartition(@"r.id", IdSpan(), partitionCount, partitionIndex);
+            AddFilter(where, filter);
+            return EnumerateSpectra(SpectrumColumnsOfLibrary(), withPeaks && hasPeaksTable, requirePeaksRow, where);
+        }
+
+        /// <summary>
+        /// The <c>RefSpectra</c> row of id <paramref name="refId"/>, read as
+        /// <see cref="ReadSpectra(bool,int,int)"/> reads a row, or null when the library has no
+        /// such row.
+        /// </summary>
+        public BlibSpectrumRecord ReadSpectrum(long refId, bool withPeaks)
+        {
+            var where = new WhereClause();
+            where.Add(@"r.id = @id", @"@id", refId);
+            return EnumerateSpectra(SpectrumColumnsOfLibrary(), withPeaks && HasTable(TABLE_REF_SPECTRA_PEAKS), false, where).FirstOrDefault();
+        }
+
+        private SpectrumColumns SpectrumColumnsOfLibrary()
+        {
+            return _spectrumColumns ?? (_spectrumColumns = new SpectrumColumns(BlibSqlite.ColumnNames(_connection, TABLE_REF_SPECTRA)));
+        }
+
+        /// <summary>The conditions of <paramref name="filter"/>, each bound inclusive, on the <c>r</c> alias of <c>RefSpectra</c>.</summary>
+        private static void AddFilter(WhereClause where, BlibSpectrumFilter filter)
+        {
+            if (filter == null)
+                return;
+            if (filter.MinPrecursorMz.HasValue)
+                where.Add(@"r.precursorMZ >= @minMz", @"@minMz", filter.MinPrecursorMz.Value);
+            if (filter.MaxPrecursorMz.HasValue)
+                where.Add(@"r.precursorMZ <= @maxMz", @"@maxMz", filter.MaxPrecursorMz.Value);
+            if (filter.MinPrecursorCharge.HasValue)
+                where.Add(@"r.precursorCharge >= @minCharge", @"@minCharge", filter.MinPrecursorCharge.Value);
+            if (filter.MaxPrecursorCharge.HasValue)
+                where.Add(@"r.precursorCharge <= @maxCharge", @"@maxCharge", filter.MaxPrecursorCharge.Value);
+            if (filter.MinNumPeaks.HasValue)
+                where.Add(@"r.numPeaks >= @minPeaks", @"@minPeaks", filter.MinNumPeaks.Value);
+        }
+
+        /// <summary>
+        /// The scan of <see cref="ReadSpectra(bool,int,int)"/>, deferred until enumerated; the
+        /// arguments were checked by the caller. With <paramref name="requirePeaksRow"/> the
+        /// join to the peaks table is inner, so a spectrum without a peaks row is not returned.
+        /// </summary>
+        private IEnumerable<BlibSpectrumRecord> EnumerateSpectra(SpectrumColumns columns, bool withPeaks, bool requirePeaksRow, WhereClause where)
         {
             var sql = new StringBuilder(@"SELECT ");
             sql.Append(columns.SelectList(@"r."));
             if (withPeaks)
                 sql.Append(@", p.peakMZ, p.peakIntensity");
             sql.Append(@" FROM RefSpectra r");
-            if (withPeaks)
-                sql.Append(@" LEFT JOIN RefSpectraPeaks p ON r.id = p.RefSpectraID");
-            AppendPartition(sql, @"r.id", partitionCount, partitionIndex);
+            if (withPeaks || requirePeaksRow)
+                sql.Append(requirePeaksRow ? @" JOIN" : @" LEFT JOIN").Append(@" RefSpectraPeaks p ON r.id = p.RefSpectraID");
+            where.AppendTo(sql);
             sql.Append(@" ORDER BY r.id");
             using (var command = new SQLiteCommand(sql.ToString(), _connection))
-            using (var reader = command.ExecuteReader())
             {
-                int peakMz = columns.Count;
-                int peakIntensity = columns.Count + 1;
-                while (reader.Read())
+                where.Bind(command);
+                using (var reader = command.ExecuteReader())
                 {
-                    var spectrum = columns.Read(reader);
-                    if (withPeaks)
+                    int peakMz = columns.Count;
+                    int peakIntensity = columns.Count + 1;
+                    while (reader.Read())
                     {
-                        spectrum.MzBlob = GetBlob(reader, peakMz);
-                        spectrum.IntensityBlob = GetBlob(reader, peakIntensity);
+                        var spectrum = columns.Read(reader);
+                        if (withPeaks)
+                        {
+                            spectrum.MzBlob = GetBlob(reader, peakMz);
+                            spectrum.IntensityBlob = GetBlob(reader, peakIntensity);
+                        }
+                        yield return spectrum;
                     }
-                    yield return spectrum;
                 }
             }
         }
@@ -278,7 +358,7 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The <c>RetentionTimes</c> rows, in RefSpectra id order so one spectrum's observations
         /// come together; empty in a library without the table (a redundant library). Partitioned
-        /// by RefSpectra id as <see cref="ReadSpectra"/> is.
+        /// by RefSpectra id as <see cref="ReadSpectra(bool,int,int)"/> is.
         /// </summary>
         public IEnumerable<BlibRetentionTimeRecord> ReadRetentionTimes(int partitionCount = 1, int partitionIndex = 0)
         {
@@ -296,7 +376,10 @@ namespace pwiz.BiblioSpec.IO
             var sql = new StringBuilder(@"SELECT ");
             sql.Append(columns.SelectList(string.Empty));
             sql.Append(@" FROM RetentionTimes");
-            AppendPartition(sql, @"RefSpectraID", partitionCount, partitionIndex);
+            var where = new WhereClause();
+            if (partitionCount > 1)
+                where.AddPartition(@"RefSpectraID", IdSpan(), partitionCount, partitionIndex);
+            where.AppendTo(sql);
             sql.Append(@" ORDER BY RefSpectraID");
             using (var command = new SQLiteCommand(sql.ToString(), _connection))
             using (var reader = command.ExecuteReader())
@@ -369,7 +452,7 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
-        /// The peaks of a spectrum <see cref="ReadSpectra"/> read with its blobs, or null for a
+        /// The peaks of a spectrum <see cref="ReadSpectra(bool,int,int)"/> read with its blobs, or null for a
         /// spectrum without a peaks row (a null <see cref="BlibSpectrumRecord.MzBlob"/>).
         /// </summary>
         public static BlibPeaks DecodePeaks(BlibSpectrumRecord spectrum)
@@ -413,12 +496,19 @@ namespace pwiz.BiblioSpec.IO
                 throw new ArgumentOutOfRangeException(nameof(partitionIndex));
         }
 
-        private static void AppendPartition(StringBuilder sql, string idColumn, int partitionCount, int partitionIndex)
+        /// <summary>The lowest and highest RefSpectra id, read once; (1, 0) when the table is empty.</summary>
+        private (long Low, long High) IdSpan()
         {
-            if (partitionCount > 1)
+            if (_idSpan.HasValue)
+                return _idSpan.Value;
+            using (var command = new SQLiteCommand(@"SELECT MIN(id), MAX(id) FROM RefSpectra", _connection))
+            using (var reader = command.ExecuteReader())
             {
-                sql.AppendFormat(CultureInfo.InvariantCulture, @" WHERE {0} % {1} = {2}", idColumn, partitionCount, partitionIndex);
+                _idSpan = reader.Read() && !reader.IsDBNull(0)
+                    ? (reader.GetInt64(0), reader.GetInt64(1))
+                    : (1L, 0L);
             }
+            return _idSpan.Value;
         }
 
         private static string GetString(SQLiteDataReader reader, int ordinal)
@@ -444,6 +534,53 @@ namespace pwiz.BiblioSpec.IO
         private static byte[] GetBlob(SQLiteDataReader reader, int ordinal)
         {
             return reader.IsDBNull(ordinal) ? null : (byte[])reader.GetValue(ordinal);
+        }
+
+        /// <summary>
+        /// The conditions of a scan, joined by AND, with the values they compare to bound as
+        /// parameters of the command (new parameter objects per command, since a deferred scan
+        /// may be enumerated more than once); no conditions, no WHERE.
+        /// </summary>
+        private sealed class WhereClause
+        {
+            private readonly List<string> _conditions = new List<string>();
+            private readonly List<KeyValuePair<string, object>> _parameters = new List<KeyValuePair<string, object>>();
+
+            public void Add(string condition)
+            {
+                _conditions.Add(condition);
+            }
+
+            public void Add(string condition, string parameterName, object value)
+            {
+                _conditions.Add(condition);
+                _parameters.Add(new KeyValuePair<string, object>(parameterName, value));
+            }
+
+            /// <summary>
+            /// The rows whose <paramref name="idColumn"/> falls in partition <paramref name="partitionIndex"/>
+            /// of the id <paramref name="span"/> cut into <paramref name="partitionCount"/> equal ranges: a
+            /// range the rowid index serves, so a thread reads its own rows and no other's.
+            /// </summary>
+            public void AddPartition(string idColumn, (long Low, long High) span, int partitionCount, int partitionIndex)
+            {
+                long count = span.High - span.Low + 1;
+                long from = span.Low + count * partitionIndex / partitionCount;
+                long to = span.Low + count * (partitionIndex + 1) / partitionCount - 1;
+                Add(string.Format(CultureInfo.InvariantCulture, @"{0} BETWEEN {1} AND {2}", idColumn, from, to));
+            }
+
+            public void AppendTo(StringBuilder sql)
+            {
+                if (_conditions.Count > 0)
+                    sql.Append(@" WHERE ").Append(string.Join(@" AND ", _conditions));
+            }
+
+            public void Bind(SQLiteCommand command)
+            {
+                foreach (var parameter in _parameters)
+                    command.Parameters.AddWithValue(parameter.Key, parameter.Value);
+            }
         }
 
         /// <summary>
@@ -655,5 +792,25 @@ namespace pwiz.BiblioSpec.IO
                 return row;
             }
         }
+    }
+
+    /// <summary>
+    /// The <c>RefSpectra</c> rows a scan returns
+    /// (<see cref="BlibReader.ReadSpectra(bool,BlibSpectrumFilter,int,int)"/>): each bound
+    /// that is set narrows the scan in its SQL, inclusively, and one left null does not apply.
+    /// </summary>
+    public sealed class BlibSpectrumFilter
+    {
+        public double? MinPrecursorMz { get; set; }
+        public double? MaxPrecursorMz { get; set; }
+        public int? MinPrecursorCharge { get; set; }
+        public int? MaxPrecursorCharge { get; set; }
+        /// <summary>The fewest peaks (<c>RefSpectra.numPeaks</c>) a row may have.</summary>
+        public int? MinNumPeaks { get; set; }
+        /// <summary>
+        /// Only rows with a <c>RefSpectraPeaks</c> row, the join becoming inner, as BiblioSpec's
+        /// own tools select a library's spectra; none in a library without the table.
+        /// </summary>
+        public bool RequirePeaksRow { get; set; }
     }
 }

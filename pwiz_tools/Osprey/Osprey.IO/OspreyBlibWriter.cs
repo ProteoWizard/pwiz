@@ -58,6 +58,12 @@ namespace pwiz.Osprey.IO
         public const string KEY_EXPERIMENT_FDR = @"osprey.experiment_fdr";
         /// <summary>An exported library's source: the library file it was loaded from.</summary>
         public const string KEY_LIBRARY_SOURCE = @"osprey.library_source";
+        /// <summary>
+        /// A derived library's validity: the hash of the source library's composition and the
+        /// reader that reads the derived file back (<c>LibraryLoader.DerivedLibraryHash</c>).
+        /// The loader reuses the file only while the hash it computes equals this.
+        /// </summary>
+        public const string KEY_LIBRARY_HASH = @"osprey.library_hash";
 
         /// <summary>
         /// The validity stamp recorded in a blib's <c>LibMetadata</c> (or, for one release, its

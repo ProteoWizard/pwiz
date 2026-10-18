@@ -61,8 +61,8 @@ namespace pwiz.Osprey.Tasks
         /// blib's entries carry ion types and masses they did not before - which reach the
         /// scores, the generated decoys and every stage after them - so a directory scored
         /// before the change must not be adopted after. A TSV library keys exactly as before.
-        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the <c>.libcache</c> composition
-        /// term does, so a change to the reader moves both. The typing tolerance needs no term:
+        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the library composition term
+        /// (the derived .blib's validity hash) does, so a change to the reader moves both. The typing tolerance needs no term:
         /// it is the search's fragment tolerance, already in
         /// <see cref="SearchIdentity.SearchParameterHash"/>.
         /// </summary>

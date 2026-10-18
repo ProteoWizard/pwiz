@@ -347,7 +347,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The library's targets by entry id. The in-process map when an earlier stage of this
         /// run still holds it - the same artifact, already loaded - and a load from the library
-        /// (its <c>.libcache</c>) otherwise, which is every export written from disk.
+        /// (its derived <c>.blib</c>) otherwise, which is every export written from disk.
         ///
         /// <para>The load retains fragments only for the base_ids the first pass kept (the
         /// retained summary), as <c>--task SecondPassFDR</c> loads it: every row the export

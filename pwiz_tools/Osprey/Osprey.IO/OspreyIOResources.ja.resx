@@ -153,10 +153,6 @@
     <value>ライブラリキャッシュの読み込みに失敗しました：{0}。代わりにライブラリファイルを読み取ります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
-    <value>ライブラリキャッシュの保存に失敗しました：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
     <value>ライブラリキャッシュ「{0}」は別のバージョンのソースライブラリから構築されています。古いキャッシュを無視し、ソースから再構築します。</value>
     <comment>Needs Review:New resource</comment>
@@ -171,10 +167,6 @@
   </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
     <value>{0}からスペクトルライブラリを読み込み中...</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
-    <value>ライブラリキャッシュ（{0:N0}個のプリカーサー）を「{1}」に保存しました</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">

@@ -148,6 +148,16 @@ namespace pwiz.Osprey.Test
             string coldBlib = Path.Combine(straightDir, @"output_cold.blib");
             File.Copy(blib, coldBlib);
             byte[] coldHash = HashFile(blib);
+            // The library's finished form is kept in the work directory as a derived .blib, the
+            // library's transfer format, in place of the .libcache, which is no longer written.
+            string derivedLibrary = Path.Combine(straightDir, LIBRARY_FILE + LibraryLoader.DERIVED_LIBRARY_EXT);
+            Assert.IsTrue(File.Exists(derivedLibrary), @"no derived library at " + derivedLibrary);
+            Assert.IsFalse(File.Exists(Path.Combine(straightDir, LIBRARY_FILE + LibraryCache.EXT)), @"a .libcache was written");
+            int libraryPrecursors = BlibComparer.CountRows(derivedLibrary, @"RefSpectra");
+            AssertHasLine(log, string.Format(OspreyIOResources.LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__,
+                libraryPrecursors, derivedLibrary));
+            Assert.IsNotNull(BlibMetadata.Read(derivedLibrary, OspreyBlibWriter.KEY_LIBRARY_HASH), @"the derived library carries no validity hash");
+            byte[] derivedHash = HashFile(derivedLibrary);
 
             // Mode 4: the identical command again. Every task must report a cache hit, nothing
             // may be re-scored from spectra, and the library must not be rewritten.
@@ -157,7 +167,9 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(coldHash, HashFile(blib), @"warm re-run rewrote the library");
 
             // Mode 2: invalidate the join and the library, and resume from the spectra caches
-            // alone - the inputs are named in the work directory, where no mzML exists.
+            // alone - the inputs are named in the work directory, where no mzML exists. The
+            // first task to run reads the library from the derived .blib, which it does not
+            // rewrite.
             DeleteFiles(straightDir, @"*" + FdrScoresSidecar.EXT_FIRST_PASS);
             DeleteSecondPassOutputs(blib);
             log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(true));
@@ -165,6 +177,9 @@ namespace pwiz.Osprey.Test
                 new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
             AssertNoRecompute(log);
             AssertHasLine(log, PathLine(LogKey.ROUTE_INPUT_SOURCE, @"spectra-cache"));
+            AssertHasLine(log, string.Format(OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__,
+                libraryPrecursors, derivedLibrary));
+            CollectionAssert.AreEqual(derivedHash, HashFile(derivedLibrary), @"the resume rewrote the derived library");
             AssertBlibsEqual(coldBlib, blib);
 
             // Mode 5: invalidate only the second pass, so its bundle is rebuilt from the first
