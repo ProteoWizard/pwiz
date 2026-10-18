@@ -464,9 +464,9 @@ namespace pwiz.Osprey.Test
             }
 
             var peptMap = PercolatorQValues.ComputeExperimentPeptideQMap(
-                scores, labels, entryIds, peptides, out _, applyExperimentAgg);
+                scores, labels, entryIds, peptides, applyExperimentAgg);
             var peptRows = PercolatorQValues.ComputeExperimentPeptideQvalues(
-                scores, labels, entryIds, peptides, out _, applyExperimentAgg);
+                scores, labels, entryIds, peptides, applyExperimentAgg);
             for (int i = 0; i < scores.Length; i++)
             {
                 double expected = peptMap.TryGetValue(peptides[i], out double q) ? q : 1.0;

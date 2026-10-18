@@ -48,7 +48,7 @@ namespace pwiz.Osprey.Test
                 @"peptideSeq, prevAA, nextAA, copies, numPeaks, scoreType FROM RefSpectra"),
             // The search global columns, apart because a library export does not have them.
             new Projection(@"RefSpectraQValues", 2,
-                @"SELECT peptideModSeq, precursorCharge, PrecursorQValue, PrecursorPep, PeptideQValue, PeptidePep FROM RefSpectra"),
+                @"SELECT peptideModSeq, precursorCharge, PrecursorQValue, PrecursorPep, PeptideQValue FROM RefSpectra"),
             new Projection(@"RetentionTimes", 3,
                 @"SELECT r.peptideModSeq, r.precursorCharge, s.fileName, t.retentionTime, t.startTime, t.endTime, " +
                 @"t.score, t.bestSpectrum FROM RetentionTimes t JOIN RefSpectra r ON t.RefSpectraID = r.id " +
@@ -72,7 +72,7 @@ namespace pwiz.Osprey.Test
                 @"SELECT r.peptideModSeq, r.precursorCharge, m.position, m.mass FROM Modifications m " +
                 @"JOIN RefSpectra r ON m.RefSpectraID = r.id"),
             new Projection(@"Proteins", 1, @"SELECT accession FROM Proteins"),
-            new Projection(@"ProteinsQValue", 1, @"SELECT accession, QValue, Pep FROM Proteins"),
+            new Projection(@"ProteinsQValue", 1, @"SELECT accession, QValue FROM Proteins"),
             new Projection(@"SpectrumSourceFiles", 1,
                 @"SELECT fileName, idFileName, cutoffScore, workflowType FROM SpectrumSourceFiles"),
             // Without the validity stamp (ArtifactStamp.PARQUET_KEY, spelled out because the

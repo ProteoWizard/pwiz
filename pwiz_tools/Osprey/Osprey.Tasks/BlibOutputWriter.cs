@@ -40,8 +40,9 @@ namespace pwiz.Osprey.Tasks
     /// node (Stage 9): source-file IDs, a parallel zlib pre-compress pass, the
     /// sequential per-best-precursor RefSpectra + modifications + protein group +
     /// RetentionTimes + Osprey extension-table emission, then metadata and
-    /// finalize. Adds the experiment-level q-value and PEP columns
-    /// (<see cref="BlibWriter.AddSearchGlobalColumns"/>), and its
+    /// finalize. Adds the experiment-level <c>RefSpectra.PrecursorQValue</c>,
+    /// <c>RefSpectra.PrecursorPep</c>, <c>RefSpectra.PeptideQValue</c> and
+    /// <c>Proteins.QValue</c> columns, and its
     /// <c>Proteins</c> rows are protein groups. Drives the low-level <see cref="BlibWriter"/> (the SQLite layer);
     /// this type owns only the per-spectrum row composition.
     ///
@@ -331,11 +332,10 @@ namespace pwiz.Osprey.Tasks
                         sharedApex, sharedStart, sharedEnd,
                         scoreQvalue, fileId, nRunsDetected);
                     // The precursor q-value is the one in score. Pep is one value per entry for
-                    // the whole analysis, so any observation of the precursor carries it. The
-                    // peptide q-value and PEP are computed once per modified sequence, so every
-                    // charge state's row gets the same values.
-                    writer.SetGlobalValues(refId, scoreQvalue, entry.Pep,
-                        entry.ExperimentPeptideQvalue, entry.ExperimentPeptidePep);
+                    // the whole analysis, so any observation of the precursor carries it.
+                    // ExperimentPeptideQvalue is computed once per modified sequence, so every
+                    // charge state's row gets the same value.
+                    writer.SetGlobalValues(refId, scoreQvalue, entry.Pep, entry.ExperimentPeptideQvalue);
                     proteinGroups.AddMappings(refId, entry.ModifiedSequence);
 
                     refIdByPrecursor[lookupKey] = refId;
@@ -504,8 +504,7 @@ namespace pwiz.Osprey.Tasks
                 var accessions = new List<string>(_proteinFdr.Parsimony.Groups[(int)groupId].Accessions);
                 accessions.Sort(StringComparer.Ordinal); // Array.Sort OK: distinct accession strings, so the joined key is the same in any tie order
                 double qValue = _proteinFdr.ProteinFdr.GroupQvalues.TryGetValue(groupId, out double q) ? q : 1.0;
-                double pep = _proteinFdr.ProteinFdr.GroupPeps.TryGetValue(groupId, out double p) ? p : 1.0;
-                rowId = _writer.AddProteinGroup(string.Join(@";", accessions), qValue, pep);
+                rowId = _writer.AddProteinGroup(string.Join(@";", accessions), qValue);
                 _rowIdByGroup[groupId] = rowId;
                 return rowId;
             }

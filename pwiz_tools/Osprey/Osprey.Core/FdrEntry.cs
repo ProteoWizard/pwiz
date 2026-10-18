@@ -139,14 +139,6 @@ namespace pwiz.Osprey.Core
         public double ExperimentPrecursorQvalue { get; set; }
         public double ExperimentPeptideQvalue { get; set; }
         public double Pep { get; set; }
-
-        /// <summary>
-        /// Posterior error probability of this entry's PEPTIDE in the experiment-wide
-        /// peptide-level competition: one value per modified sequence and side, the same on
-        /// every charge state, 1.0 on the side that lost.
-        /// </summary>
-        public double ExperimentPeptidePep { get; set; }
-
         public string ModifiedSequence { get; set; }
 
         /// <summary>
@@ -253,7 +245,6 @@ namespace pwiz.Osprey.Core
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;
             Pep = 1.0;
-            ExperimentPeptidePep = 1.0;
         }
 
         /// <summary>
@@ -277,7 +268,6 @@ namespace pwiz.Osprey.Core
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;
             Pep = 1.0;
-            ExperimentPeptidePep = 1.0;
         }
     }
 }

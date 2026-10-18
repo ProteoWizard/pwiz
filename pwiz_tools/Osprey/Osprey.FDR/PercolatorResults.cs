@@ -49,9 +49,6 @@ namespace pwiz.Osprey.FDR
         /// <summary>Posterior error probability.</summary>
         public double Pep { get; set; }
 
-        /// <summary>Experiment-wide peptide-level posterior error probability.</summary>
-        public double ExperimentPeptidePep { get; set; }
-
         /// <summary>
         /// The per-entry score the experiment-scope competitions ranked this entry on
         /// (sidecar v4, issue #4522); see <see cref="Core.FdrEntry.ExperimentAggregateScore"/>.
@@ -65,7 +62,6 @@ namespace pwiz.Osprey.FDR
             ExperimentPrecursorQvalue = 1.0;
             ExperimentPeptideQvalue = 1.0;
             Pep = 1.0;
-            ExperimentPeptidePep = 1.0;
         }
     }
 

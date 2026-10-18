@@ -817,8 +817,8 @@ namespace pwiz.Osprey.IO
                 // entitled to the pass-1 protein q it already carries - which is exactly what
                 // the pre-split sidecar column held here too.
                 //
-                // The PEPs are applied with the q-values because the blib reports them side by
-                // side, and each of the record's PEPs comes from the same competition as its q.
+                // The PEP is applied with the precursor q because the blib reports the two side
+                // by side, and the record's PEP comes from the same competition as its q.
                 if (experimentRecords != null &&
                     experimentRecords.TryGetValue(recordEntryId, out var exp))
                 {
@@ -826,7 +826,6 @@ namespace pwiz.Osprey.IO
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
                     e.Pep                       = exp.Pep;
-                    e.ExperimentPeptidePep      = exp.PeptidePep;
                 }
                 return true;
             });

@@ -1007,8 +1007,7 @@ namespace pwiz.Osprey.Tasks
                 accumulator.Add(fileIdx, entry.ModifiedSequence, entry.Charge, entry.EntryId,
                     entry.IsDecoy, entry.Score,
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
-                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep,
-                        entry.ExperimentPeptidePep));
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
             }
         }
 

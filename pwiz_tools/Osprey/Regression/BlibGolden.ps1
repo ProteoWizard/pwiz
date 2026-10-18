@@ -68,11 +68,11 @@ $script:BlibTables = @(
         Sql = @'
 SELECT peptideModSeq, precursorCharge, peptideSeq, prevAA, nextAA, copies,
        numPeaks, ionMobility, retentionTime, startTime, endTime,
-       precursorMZ, score, scoreType, PrecursorQValue, PrecursorPep, PeptideQValue, PeptidePep
+       precursorMZ, score, scoreType, PrecursorQValue, PrecursorPep, PeptideQValue
 FROM RefSpectra
 '@
         Key = @('peptideModSeq', 'precursorCharge')
-        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility', 'PrecursorQValue', 'PrecursorPep', 'PeptideQValue', 'PeptidePep')
+        Numeric = @('precursorMZ', 'retentionTime', 'startTime', 'endTime', 'score', 'ionMobility', 'PrecursorQValue', 'PrecursorPep', 'PeptideQValue')
         Exact = @('peptideSeq', 'prevAA', 'nextAA', 'copies', 'numPeaks', 'scoreType')
     },
     @{
@@ -161,9 +161,9 @@ JOIN RefSpectra r ON m.RefSpectraID = r.id
     },
     @{
         Name = 'Proteins'; Scope = 'Full'
-        Sql = 'SELECT accession, QValue, Pep FROM Proteins'
+        Sql = 'SELECT accession, QValue FROM Proteins'
         Key = @('accession')
-        Numeric = @('QValue', 'Pep')
+        Numeric = @('QValue')
         Exact = @()
     },
     @{

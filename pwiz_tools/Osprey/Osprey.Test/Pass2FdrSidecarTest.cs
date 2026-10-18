@@ -194,7 +194,7 @@ namespace pwiz.Osprey.Test
             var exp = new FdrExperimentRecord(
                 entryId: 1, experimentPrecursorQvalue: 0.0005,
                 experimentPeptideQvalue: 0.0006, experimentProteinQvalue: 0.004,
-                experimentAggregateScore: 12.5, pep: 0.03, peptidePep: 0.04);
+                experimentAggregateScore: 12.5, pep: 0.03);
 
             // (a) UNCHANGED: recomputed score == the record's score -> carry the whole record.
             var unchanged = new FdrEntry { EntryId = 1 };
@@ -208,7 +208,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.0005, unchanged.ExperimentPrecursorQvalue, 1e-12);
             Assert.AreEqual(0.0006, unchanged.ExperimentPeptideQvalue, 1e-12);
             Assert.AreEqual(0.03, unchanged.Pep, 1e-12);
-            Assert.AreEqual(0.04, unchanged.ExperimentPeptidePep, 1e-12);
 
             // (b) MOVED: reconciliation dropped the score to 5.0 -> run q re-maps UP (worse), but
             // the experiment q is CARRIED from the 1st-pass record unchanged. This is the whole
@@ -222,7 +221,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.02, moved.RunPeptideQvalue, 1e-12);     // peptide table, distinct value
             Assert.AreEqual(0.0005, moved.ExperimentPrecursorQvalue, 1e-12); // CARRIED, not re-mapped
             Assert.AreEqual(0.0006, moved.ExperimentPeptideQvalue, 1e-12);   // CARRIED, not re-mapped
-            Assert.AreEqual(0.04, moved.ExperimentPeptidePep, 1e-12);       // CARRIED with it
             Assert.IsTrue(moved.RunPrecursorQvalue > rec.RunPrecursorQvalue,
                 "a moved peak's per-run q can only worsen");
 
@@ -237,7 +235,7 @@ namespace pwiz.Osprey.Test
             var gapExp = new FdrExperimentRecord(
                 entryId: 2, experimentPrecursorQvalue: 0.004,
                 experimentPeptideQvalue: 0.006, experimentProteinQvalue: 0.5,
-                experimentAggregateScore: 7.25, pep: 1.0, peptidePep: 1.0);
+                experimentAggregateScore: 7.25, pep: 1.0);
             var clsG = Pass2FdrSidecar.AssignPerRunQ(gap, 5.0, null, gapExp,
                 precScoresDesc, precQDesc, pepScoresDesc, pepQDesc);
             Assert.AreEqual(Pass2FdrSidecar.PerRunClass.GapFill, clsG);

@@ -35,7 +35,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
 {
@@ -105,11 +104,11 @@ namespace pwiz.Osprey.FDR
 
     /// <summary>
     /// Result of picked-protein FDR computation. Only target winners appear in
-    /// <see cref="GroupQvalues"/>, <see cref="GroupScores"/> and <see cref="GroupPeps"/>;
-    /// decoy winners are statistical machinery for the cumulative FDR computation and are not
-    /// exposed. Rust <c>ProteinFdrResult</c> computes no protein-level posterior error
-    /// probability; <see cref="GroupPeps"/> is a C# addition, filled only by
-    /// <see cref="ProteinFdr.ComputeLibraryPickedProteinFdr"/>.
+    /// <see cref="GroupQvalues"/> and <see cref="GroupScores"/>; decoy winners are
+    /// statistical machinery for the cumulative FDR computation and are not
+    /// exposed. Protein-level posterior error probability (PEP) is intentionally
+    /// not computed -- use peptide-level PEP for downstream confidence (matches
+    /// Rust <c>ProteinFdrResult</c>).
     /// </summary>
     public class ProteinFdrResult
     {
@@ -119,12 +118,6 @@ namespace pwiz.Osprey.FDR
         /// <summary>Protein group ID to best peptide SVM score (target winners only).</summary>
         public Dictionary<uint, double> GroupScores { get; set; }
 
-        /// <summary>
-        /// Protein group ID to posterior error probability (target winners only); a group absent
-        /// from it has PEP 1.0. See <see cref="ProteinFdr.ComputeLibraryPickedProteinFdr"/>.
-        /// </summary>
-        public Dictionary<uint, double> GroupPeps { get; set; }
-
         /// <summary>Peptide (modified_sequence) to best protein q-value among its groups.</summary>
         public Dictionary<string, double> PeptideQvalues { get; set; }
 
@@ -132,7 +125,6 @@ namespace pwiz.Osprey.FDR
         {
             GroupQvalues = new Dictionary<uint, double>();
             GroupScores = new Dictionary<uint, double>();
-            GroupPeps = new Dictionary<uint, double>();
             PeptideQvalues = new Dictionary<string, double>();
         }
     }
@@ -1011,10 +1003,6 @@ namespace pwiz.Osprey.FDR
         /// <item><description><b>Output</b> as <see cref="ComputeProteinFdr"/>: target-winning
         /// groups get a q-value and score, the rest of the units are the null only, and each
         /// peptide takes the best q-value of its groups.</description></item>
-        /// <item><description><b>PEP.</b> A <see cref="PepEstimator"/> fitted over every winner,
-        /// target and decoy, gives each target-winning group a posterior error probability at
-        /// its score. The competition treats both sides alike, so its winners are the right
-        /// population for the fit.</description></item>
         /// </list>
         ///
         /// <para>Measured with foreign-species entrapment (Arabidopsis peptides in a human
@@ -1111,35 +1099,8 @@ namespace pwiz.Osprey.FDR
             {
                 GroupQvalues = groupQvalues,
                 GroupScores = groupScores,
-                GroupPeps = ComputeLibraryGroupPeps(winners, groupScores),
                 PeptideQvalues = peptideQvalues
             };
-        }
-
-        /// <summary>
-        /// The posterior error probability of each target-winning group: a
-        /// <see cref="PepEstimator"/> fitted over all the competition's winners, evaluated at the
-        /// group's score. The winners are fed to the fit in sorted-accessions order, a key unique
-        /// to each unit, because the KDE sum is order-sensitive.
-        /// </summary>
-        private static Dictionary<uint, double> ComputeLibraryGroupPeps(
-            List<LibraryProteinWinner> winners, Dictionary<uint, double> groupScores)
-        {
-            var fitOrder = new List<LibraryProteinWinner>(winners);
-            fitOrder.Sort((a, b) => string.CompareOrdinal(a.SortKey, b.SortKey)); // Array.Sort OK: SortKey is unique per winner
-            var scores = new double[fitOrder.Count];
-            var isDecoy = new bool[fitOrder.Count];
-            for (int i = 0; i < fitOrder.Count; i++)
-            {
-                scores[i] = fitOrder[i].Score;
-                isDecoy[i] = fitOrder[i].IsDecoy;
-            }
-            var estimator = PepEstimator.FitDefault(scores, isDecoy);
-
-            var groupPeps = new Dictionary<uint, double>(groupScores.Count);
-            foreach (var kvp in groupScores)
-                groupPeps[kvp.Key] = estimator.PosteriorError(kvp.Value);
-            return groupPeps;
         }
 
         private static void AddLibraryProteinWinner(List<LibraryProteinWinner> winners,

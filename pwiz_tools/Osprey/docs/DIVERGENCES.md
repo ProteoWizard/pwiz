@@ -219,8 +219,6 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | No gbdt/FastTree method in either impl | Lab memory mentions Rust `--fdr-method gbdt` | At generation, no gbdt symbol anywhere. Since then C# gained the experimental gbdt classifier (`OSPREY_FDR_MODEL=gbdt`, a C#-only addition); Rust still has none | `OspreyConfig.cs` (`FdrClassifier`) | info |
 | UNVER | Simple scores on coelution_sum, not ROC-AUC best feature (**U4**) | Best single feature by ROC AUC | Resolved: Simple was deleted (#4543) | - | minor |
 | INTENT | Streaming-only Percolator (matches Rust v26.7.0) | Direct path removed v26.7.0 | `DispatchSvm` always streams; former direct branch removed for parity | `PercolatorEngine.cs:336` | info |
-| INTENT | Experiment peptide PEP | One experiment precursor PEP per base_id | Also a peptide-level PEP from the experiment peptide competition, both passes (`FdrExperimentRecord.PeptidePep`, experiment sidecar v4), written to the blib as `RefSpectra.PeptidePep` | `PercolatorQValues.ComputeWinnerPeps`; `StreamedCompetitionState.CompetePeptides` | minor |
-| INTENT | Second-pass experiment peptide q is a peptide-level competition | Pass-2 modes are off the parity-gated path | `protein-compact` competes each peptide's best target and decoy precursor over the pass-2 bests (`StreamedCompetitionState.CompetePeptides`), as pass 1 does; it used to copy the precursor q into the peptide field | `Pass2FdrSidecar.FinishRecord` | minor |
 
 ### [08-protein-parsimony.md](08-protein-parsimony.md) — **diverges**
 
@@ -231,7 +229,6 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | UNVER | No production protein report writer (**U5**, resolved: writer exists) | `write_protein_report()` → `*.proteins.csv` | `OspreyReportWriter` emits `<output>.protein_groups.tsv` + `<output>.stats.tsv` (DIA-NN shape) from Stage 7, default on, no CLI off switch | `OspreyReportWriter.cs`; `SecondPassFdrTask.cs` (`RunProteinFdr`); `OspreyConfig.cs:201,212` | minor |
 | STALE | Second-pass detected set gates on `config.fdr_level` | Gates on second-pass PEPTIDE FDR | Gates `EffectiveExperimentQvalue(FdrLevel)≤fdr` (precursor default); mirrors Rust `pipeline.rs`; doc stale | `ProteinFdrEngine.cs:171-183` | info |
 | INTENT | Second-pass picked-protein FDR competes every library protein, scored from the first pass (item 9 below) | Competes groups with a detected target; best second-pass peptide scores, target side gated at `run_fdr`; decoys found by `DECOY_` name | Every parsimony group plus every ungrouped library protein; best score per side from `.1st-pass.fdr_experiment.bin`, ungated; decoys paired by base id | `ProteinFdr.cs` (`ComputeLibraryPickedProteinFdr`, `LibraryProteinScores`); `SecondPassFdrTask.cs` (`ReadFirstPassProteinScores`) | major |
-| INTENT | Protein-group PEP | No protein-level PEP | `ProteinFdrResult.GroupPeps`: a `PepEstimator` fitted over all the second-pass library competition's winners, evaluated at each target winner's score; written to the blib as `Proteins.Pep` | `ProteinFdr.ComputeLibraryGroupPeps` | minor |
 
 ### [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md) — matches-with-notes
 
