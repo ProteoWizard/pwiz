@@ -3564,7 +3564,16 @@ namespace pwiz.Osprey.Tasks {
                 return ResourceManager.GetString("SecondPassFdrTask_RunProteinFdr_Collecting_best_scores_for_protein_FDR", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein FDR could not read the first-pass scores in {0}. Run the FirstPassFDR task again to rewrite it..
+        /// </summary>
+        public static string SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_ {
+            get {
+                return ResourceManager.GetString("SecondPassFdrTask_ReadFirstPassProteinScores_Protein_FDR_could_not_read_the_first_pass_scores_in__0___Run_the_FirstPassFDR_task_again_to_rewrite_it_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0:N0} peptides passed peptide-level FDR with no single charge state passing precursor-level FDR; their best charge state is reported..
         /// </summary>

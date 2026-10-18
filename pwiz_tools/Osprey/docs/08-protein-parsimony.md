@@ -36,9 +36,13 @@ as a consensus rescue gate.
 - `PeptideScore` (`ProteinFdr.cs:87`): per-peptide `Score` (best SVM
   discriminant), `IsDecoy`, and `BestQvalue` (best/lowest run-level **peptide**
   q-value across files — the Savitski target-side gate).
-- `ProteinFdrResult` (`ProteinFdr.cs:113`): `GroupQvalues` and `GroupScores`
-  (target winners only) + `PeptideQvalues`. There is intentionally **no**
-  `GroupPep` field — protein-level PEP is not computed (matches Rust).
+- `ProteinFdrResult` (`ProteinFdr.cs:113`): `GroupQvalues`, `GroupScores` and
+  `GroupPeps` (target winners only) + `PeptideQvalues`. `GroupPeps` is a C#
+  addition; Rust computes no protein-level PEP. Only the second-pass library
+  competition (`ComputeLibraryPickedProteinFdr`) fills it: a `PepEstimator`
+  fitted over all its winners, targets and decoys, evaluated at each target
+  winner's score. That competition gates neither side, so its winners are the
+  right population for the fit; the first pass's gated competition is not.
 
 Protein membership comes from `LibraryEntry.ProteinIds`
 (`Osprey.Core/LibraryEntry.cs:54`), a `List<string>` of accessions carried on
@@ -133,8 +137,10 @@ Controlled by `--shared-peptides {all|razor|unique}`
 
 When protein FDR runs (always, per above), the parsimony graph is rebuilt once
 per pass on the same library and same shared-peptide mode, but the peptide score
-pool differs. Both passes share the same picked-protein core,
-`ProteinFdr.ComputeProteinFdr` (`ProteinFdr.cs:536`).
+pool differs. The first pass runs the picked-protein core below,
+`ProteinFdr.ComputeProteinFdr`. The second pass, whose q-values are the ones reported, runs
+`ProteinFdr.ComputeLibraryPickedProteinFdr` over every library protein, scored from the first
+pass (see "Second pass" below).
 
 ### Collecting best-peptide scores
 
@@ -228,9 +234,31 @@ FDR, on the compacted + reconciled + rescored pool.
   explains this deliberately mirrors Rust's `config.fdr_level` gate, with Rust's
   `Protein → Peptide` remap being a no-op in C# because the C# `FdrLevel` enum
   has no `Protein` variant.
-- Parsimony rebuilt (`ProteinFdrEngine.cs:192`), picked-protein FDR again at
-  `config.RunFdr` (1×, `ProteinFdrEngine.cs:203`; the comment notes a previous 2×
-  gate was a corrected divergence).
+- Parsimony rebuilt (`ProteinFdrEngine.cs:192`).
+- Picked-protein FDR over **every library protein**
+  (`ProteinFdr.ComputeLibraryPickedProteinFdr`), not only the groups with a detected target:
+  - **Units**: each parsimony group, plus each library protein in no group. A group scores
+    the best of its accessions on each side.
+  - **Scores come from the first pass.** `SecondPassFdrTask.ReadFirstPassProteinScores` folds
+    the `ExperimentAggregateScore` of every record in `<blib-stem>.1st-pass.fdr_experiment.bin`
+    (every scored precursor, targets and decoys, before compaction) into
+    `LibraryProteinScores`: the best score of each library protein on each side. The
+    second-pass pool cannot supply this, because compaction dropped most decoys that lost
+    their competition, and decoy proteins scored from the survivors look weaker than they are.
+    A missing or unreadable sidecar stops the analysis.
+  - **Decoys are paired by base id**, filed under their target's accessions. A library-supplied
+    decoy (`--decoys-in-library`) is not named `DECOY_` + its target, so the name lookup the
+    first pass uses finds none of them.
+  - **Neither side is gated** on a q-value. One winner per unit, then the cumulative FDR and
+    backward sweep of the core above; only target-winning groups get a q-value.
+
+  Measured with foreign-species entrapment (Arabidopsis peptides in a CarafeSharp human
+  library, three runs each of Astral and Stellar HeLa, library decoys): groups at q ≤ 0.01
+  had a false discovery proportion of 0.82% (Astral) and 0.72% (Stellar). The previous
+  second pass - the core above on the second-pass pool, decoys found by `DECOY_` name - gave
+  every group q = 0 with library decoys, at a true FDP of 6.7% and 3.4%. Pairing by base id
+  and competing every protein, still scored from the second-pass pool, left Astral at 6.6%;
+  only the first-pass scores calibrate it.
 - Both `RunProteinQvalue` and `ExperimentProteinQvalue` are propagated
   (`PropagateProteinQvalues(..., true, true)`, `ProteinFdrEngine.cs:227`).
 
@@ -254,8 +282,9 @@ against `RunProteinQvalue <= EffectiveProteinFdr`.
   (`ProteinFdr.cs:230`), never appears in `PeptideToGroupMap`, cannot pass
   protein filtering.
 - **Decoy library entries**: excluded from the target parsimony graph
-  (`ProteinFdr.cs:226`); handled by the picked-protein pass via the `DECOY_`
-  prefix pairing (`ProteinFdr.cs:203`, `:574`).
+  (`ProteinFdr.cs:226`). The first-pass picked-protein pass finds them by the `DECOY_`
+  prefix (`ProteinFdr.cs:203`, `:574`), so it sees none of a library's own decoys; the
+  second pass pairs them by base id (`LibraryProteinScores`).
 - **Peptides not in the detected set**: skipped when a detected set is provided
   (`ProteinFdr.cs:228`).
 
@@ -377,7 +406,7 @@ max SVM discriminant, not a sum (`ProteinFdr.cs:549-590`,
 `CollectBestPeptideScores` max/min at `:735-750`); gated target side / ungated
 decoy side (`ProteinFdr.cs:556` vs `:573`); pairwise picking, cumulative FDR with
 sorted-accessions tiebreak, backward monotonicity sweep, and min-across-groups
-peptide propagation (`ProteinFdr.cs:599-700`); no protein-level PEP
-(`ProteinFdrResult` has no `GroupPep`, `ProteinFdr.cs:113`); and the 1× Savitski
+peptide propagation (`ProteinFdr.cs:599-700`); a protein-group PEP that Rust
+does not compute (`ProteinFdrResult.GroupPeps`, a C# addition); and the 1× Savitski
 gate at `config.RunFdr` in both passes (`ProteinFdr.cs:824`,
 `ProteinFdrEngine.cs:203`).

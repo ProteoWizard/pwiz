@@ -275,9 +275,11 @@ namespace pwiz.Osprey.FDR
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : PercolatorQValues.ComputeExperimentPrecursorQMap(
                     finalScores, labels, entryIds, applyExperimentAgg);
-            Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : PercolatorQValues.ComputeExperimentPeptideQMap(
-                    finalScores, labels, entryIds, peptides, applyExperimentAgg);
+            // The peptide competition runs either way, for its PEP; its q is used only when
+            // multi-file, as before.
+            var expPeptCompetition = PercolatorQValues.ComputeExperimentPeptideQMap(
+                finalScores, labels, entryIds, peptides, out var peptidePepByPeptide, applyExperimentAgg);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile ? null : expPeptCompetition;
 
             // The score those experiment competitions ranked each entry on (sidecar v4, issue
             // #4522), persisted beside the q-values they produced. Built even on the
@@ -365,6 +367,7 @@ namespace pwiz.Osprey.FDR
                         epe = floorPept;
 
                     double pep = pepByEntryId.TryGetValue(entryIds[g], out double pv) ? pv : 1.0;
+                    double peptidePep = peptidePepByPeptide.TryGetValue(pept, out double ppv) ? ppv : 1.0;
 
                     double ea = expAggByEntryId.TryGetValue(entryIds[g], out double eav)
                         ? eav : finalScores[g];
@@ -376,7 +379,7 @@ namespace pwiz.Osprey.FDR
                         : double.NaN;
                     sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
                         projRows[r].Charge, pept, finalScores[g], ea, apexRt,
-                        new FdrQValues(rp, rpe, ep, epe, pep));
+                        new FdrQValues(rp, rpe, ep, epe, pep, peptidePep));
                 }
                 wgi += count;
                 fileIdx++;
@@ -1107,8 +1110,10 @@ namespace pwiz.Osprey.FDR
             bool isSingleFile = nonEmptyFiles <= 1;
             Dictionary<uint, double> expPrecByWinnerId = isSingleFile
                 ? null : streamingQ.BuildExperimentPrecursorQMap();
-            Dictionary<string, double> expPeptByPeptide = isSingleFile
-                ? null : streamingQ.BuildExperimentPeptideQMap();
+            // The peptide competition runs either way, for its PEP; its q is used only when
+            // multi-file, as before.
+            var expPeptCompetition = streamingQ.BuildExperimentPeptideQMap(out var peptidePepByPeptide);
+            Dictionary<string, double> expPeptByPeptide = isSingleFile ? null : expPeptCompetition;
 
             // The score those competitions ranked each entry on (sidecar v4, issue #4522).
             // Built unconditionally -- see ScoreProjectionAndComputeFdrInPlace for why the
@@ -1117,7 +1122,7 @@ namespace pwiz.Osprey.FDR
             streamingQ.Release();
 
             var experimentScope = new ExperimentScope(isSingleFile, expPrecByWinnerId, expPeptByPeptide,
-                clampFloors, pepByEntryId, expAggByEntryId);
+                clampFloors, pepByEntryId, peptidePepByPeptide, expAggByEntryId);
 
             // ---- Experiment scope: one set of values per distinct entry ----
             // Every input to an entry's four experiment-scope values is a property of the entry,
@@ -1140,8 +1145,8 @@ namespace pwiz.Osprey.FDR
                         @"so it has no single experiment q-value.", entryId));
                 }
                 experimentScope.Resolve(entryId, facts.Peptide, facts.IsDecoy, facts.RunPrecursorQ, facts.RunPeptideQ,
-                    out double ep, out double epe, out double pep, out double ea);
-                sink.AcceptExperimentEntry(entryId, facts.Peptide, ea, ep, epe, pep);
+                    out double ep, out double epe, out double pep, out double peptidePep, out double ea);
+                sink.AcceptExperimentEntry(entryId, facts.Peptide, ea, ep, epe, pep, peptidePep);
             }
             entries.Release();
             wallEntries.Stop();
@@ -1224,14 +1229,15 @@ namespace pwiz.Osprey.FDR
                     var expPrec = new double[count];
                     var expPept = new double[count];
                     var peps = new double[count];
+                    var peptidePeps = new double[count];
                     for (int r = 0; r < count; r++)
                     {
                         experimentScope.Resolve(rows.EntryIds[r], rows.Peptides[r], rows.IsDecoys[r],
-                            runPrecFile[r], runPeptFile[r], out expPrec[r], out expPept[r], out peps[r], out _);
+                            runPrecFile[r], runPeptFile[r], out expPrec[r], out expPept[r], out peps[r], out peptidePeps[r], out _);
                     }
                     t = lane.Stop(FOLD_LOOKUPS, t);
                     var fileRows = new FdrFileRows(rows.EntryIds, rows.IsDecoys, rows.Charges, rows.Peptides, scores,
-                        runPrecFile, runPeptFile, expPrec, expPept, peps);
+                        runPrecFile, runPeptFile, expPrec, expPept, peps, peptidePeps);
                     var file = new FoldFile(count, sink.PrepareRowFold(f, fileRows));
                     lane.Stop(FOLD_PREPARE, t);
                     return file;
@@ -1723,22 +1729,30 @@ namespace pwiz.Osprey.FDR
             private readonly Dictionary<string, double> _peptideQByPeptide;
             private readonly PercolatorQValues.ExperimentQClampFloors _clampFloors;
             private readonly Dictionary<uint, double> _pepByWinnerId;
+            private readonly Dictionary<string, double> _peptidePepByPeptide;
             private readonly Dictionary<uint, double> _aggregateByEntryId;
 
             public ExperimentScope(bool isSingleFile, Dictionary<uint, double> precursorQByWinnerId,
                 Dictionary<string, double> peptideQByPeptide, PercolatorQValues.ExperimentQClampFloors clampFloors,
-                Dictionary<uint, double> pepByWinnerId, Dictionary<uint, double> aggregateByEntryId)
+                Dictionary<uint, double> pepByWinnerId, Dictionary<string, double> peptidePepByPeptide,
+                Dictionary<uint, double> aggregateByEntryId)
             {
                 _isSingleFile = isSingleFile;
                 _precursorQByWinnerId = precursorQByWinnerId;
                 _peptideQByPeptide = peptideQByPeptide;
                 _clampFloors = clampFloors;
                 _pepByWinnerId = pepByWinnerId;
+                _peptidePepByPeptide = peptidePepByPeptide;
                 _aggregateByEntryId = aggregateByEntryId;
             }
 
+            /// <summary>
+            /// The entry's experiment-scope values: its precursor and peptide q (the run's own on a
+            /// single-file run), its precursor PEP, its peptide PEP (from the peptide competition,
+            /// which runs on a single-file run too, where it is the run's own) and its aggregate score.
+            /// </summary>
             public void Resolve(uint entryId, string peptide, bool isDecoy, double runPrecursorQ, double runPeptideQ,
-                out double precursorQ, out double peptideQ, out double pep, out double aggregateScore)
+                out double precursorQ, out double peptideQ, out double pep, out double peptidePep, out double aggregateScore)
             {
                 precursorQ = _isSingleFile
                     ? runPrecursorQ
@@ -1754,6 +1768,7 @@ namespace pwiz.Osprey.FDR
                     peptideQ = floorPept;
 
                 pep = _pepByWinnerId.TryGetValue(entryId, out double pv) ? pv : 1.0;
+                peptidePep = !string.IsNullOrEmpty(peptide) && _peptidePepByPeptide.TryGetValue(peptide, out double ppv) ? ppv : 1.0;
 
                 // Every row pass 1 adds keys its (base_id, side) best, and a base_id plus its side
                 // IS the entry_id, so a miss means a row whose decoy flag disagrees with its

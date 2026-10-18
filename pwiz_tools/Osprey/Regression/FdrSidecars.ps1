@@ -36,7 +36,7 @@ Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v9: 32-byte header, 36-byte 
 Analysis-wide experiment-scope (Osprey.IO\FdrExperimentSidecar.cs), v1: 32-byte header,
   v2: 44-byte records, entry_id u32 @0, experiment_precursor_q f64 @4,
   experiment_peptide_q @12, experiment_protein_q @20, experiment_aggregate_score @28,
-  pep @36.
+  pep @36. v4: 52-byte records, adding peptide_pep @44.
   Magic OSPRYEXP. One record per DISTINCT entry_id, ONE file per pass per analysis, named
   after the output blib.
 
@@ -193,8 +193,8 @@ public static class OspreyFdrSidecarComparer
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
     // own version, one record per DISTINCT entry_id.
     public const int ExperimentHeaderLen = 32;
-    public const int ExperimentRecordLen = 44;
-    private const byte ExpectedExperimentVersion = 3;
+    public const int ExperimentRecordLen = 52;
+    private const byte ExpectedExperimentVersion = 4;
     private static readonly byte[] ExperimentMagic =
         { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x45, 0x58, 0x50 }; // OSPRYEXP
 
@@ -226,6 +226,7 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_protein_qvalue",   Offset = 20 },
         new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 28 },
         new FdrSidecarField { Name = "pep",                          Offset = 36 },
+        new FdrSidecarField { Name = "peptide_pep",                  Offset = 44 },
     };
 
     // Rust's FUSED per-file sidecar (write_fdr_scores_sidecar, pipeline.rs): the same nine
