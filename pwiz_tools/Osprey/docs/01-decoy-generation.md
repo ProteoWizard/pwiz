@@ -376,7 +376,6 @@ All flags parsed in `Osprey/OspreyCommandArgs.cs`; defaults in
 | `config.DecoyPrefixes` | `["DECOY_", "rev_", "decoy_"]` (`OspreyConfig.cs`) | Case-insensitive protein-accession prefixes used by marking and by composition-fallback stripping. No CLI flag; config-file only. |
 | `config.DecoyPairMinFraction` | `0.80` (`OspreyConfig.cs`) | Minimum fraction of decoys that must pair with a target in library-decoy mode; below it Osprey errors out. Config-file only. |
 | `--decoy-pairing-manifest <manifest.tsv>` (`config.DecoyPairingManifestPath`) | unset (`null`) | FDRBench 5-column manifest for authoritative pairing + classification + protein-ID substitution (`OspreyCommandArgs.cs`). Requires `--decoys-in-library`; setting it without that flag is rejected during validation (`OspreyCommandArgs.cs`). |
-| `--write-pin` (`config.WritePin`) | off (`false`) | Writes PIN files for external tools (`OspreyCommandArgs.cs`). Does not change decoy content; downstream of this stage. |
 
 Generation is not otherwise flag-gated: with none of the above set, Osprey
 generates reverse decoys with the cycling fallback (the default path). No decoy

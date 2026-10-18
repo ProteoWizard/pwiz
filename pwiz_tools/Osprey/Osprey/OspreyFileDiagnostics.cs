@@ -404,8 +404,7 @@ namespace pwiz.Osprey
         /// <summary>
         /// Dump the calibration sample (targets) to
         /// &lt;fileName&gt;.cs_cal_sample.txt, sorted ordinally by tuple
-        /// string for stable diff with the Rust dump. Also called when
-        /// config.WritePin is set (used by downstream dev tools).
+        /// string for stable diff with the Rust dump.
         /// </summary>
         public void WriteCalSampleDump(string fileName, IEnumerable<LibraryEntry> sampledEntries)
         {

@@ -1921,12 +1921,6 @@ namespace pwiz.Osprey.Tasks
             // captured live set is the true retained peak (arrays are live here, so kept).
             ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
 
-            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
-            if (config.WritePin)
-            {
-                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
-            }
-
             // Persist the full FdrEntry results (with features) to
             // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
             // CWT candidates per file, and (b) a subsequent --task FirstPassFDR
@@ -2363,77 +2357,6 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileScoringTask_EmitMassCalibrationLine____0__mass__correction__1___2___SD__3___2___tolerance_____4___2___n__5___6__matches_,
                 level, cal.Mean, MzCalibration.GetUnitText(cal.Unit), cal.SD, tolerance, cal.Count, matchNoun));
-        }
-
-        /// <summary>
-        /// Write a TSV dump of per-entry feature values for direct comparison with
-        /// the Rust implementation's PIN output. Format matches Rust's PIN columns:
-        /// psm_id, label, scan, + 21 features. Sorted by (modified_sequence, charge,
-        /// scan_number) for stable diffing against Rust's output.
-        /// </summary>
-        private void WriteFeatureDump(
-            string inputFile, string fileName,
-            List<FdrEntry> scoredEntries, PipelineContext ctx)
-        {
-            string dumpPath = Path.Combine(
-                Path.GetDirectoryName(inputFile) ?? @".",
-                fileName + @".cs_features.tsv");
-
-            var header = new[]
-            {
-                @"SpecId", @"Label", @"ScanNr", @"Charge",
-                @"fragment_coelution_sum", @"fragment_coelution_max", @"n_coeluting_fragments",
-                @"peak_apex", @"peak_area", @"peak_sharpness",
-                @"xcorr", @"consecutive_ions", @"explained_intensity",
-                @"mass_accuracy_deviation_mean", @"abs_mass_accuracy_deviation_mean",
-                @"rt_deviation", @"abs_rt_deviation",
-                @"ms1_precursor_coelution", @"ms1_isotope_cosine",
-                @"median_polish_cosine", @"median_polish_residual_ratio",
-                @"sg_weighted_xcorr", @"sg_weighted_cosine",
-                @"median_polish_min_fragment_r2", @"median_polish_residual_correlation",
-                @"Peptide"
-            };
-
-            var sorted = scoredEntries
-                .Where(e => e.Features != null && e.Features.Length == ScoringTaskShared.NUM_PIN_FEATURES)
-                .OrderBy(e => e.ModifiedSequence, StringComparer.Ordinal)
-                .ThenBy(e => e.Charge)
-                .ThenBy(e => e.ScanNumber)
-                .ToList();
-
-            using (var saver = new SimpleFileSaver(dumpPath))
-            {
-                using (var writer = new StreamWriter(saver.SafeName))
-                {
-                    // LF newlines so the dump is byte-stable across Windows and
-                    // Linux for cross-impl diffing against Rust's PIN output;
-                    // matches the convention used by OspreyDiagnosticsLog.
-                    var inv = CultureInfo.InvariantCulture;
-                    writer.NewLine = TextUtil.LF;
-                    writer.WriteLine(header.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    foreach (var e in sorted)
-                    {
-                        string psmId = string.Format(inv, @"{0}_{1}_{2}_{3}",
-                            fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
-                        int label = e.IsDecoy ? -1 : 1;
-                        var cols = new List<string>(26)
-                        {
-                            psmId,
-                            label.ToString(inv),
-                            e.ScanNumber.ToString(inv),
-                            e.Charge.ToString(inv)
-                        };
-                        for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
-                            cols.Add(e.Features[i].ToString(@"G17", inv));
-                        cols.Add(e.ModifiedSequence ?? string.Empty);
-                        writer.WriteLine(cols.ToDsvLine(TextUtil.SEPARATOR_TSV));
-                    }
-                }
-                saver.Commit();
-            }
-
-            ctx.LogInfo(LogTag.COUNT, @"Wrote feature dump: {0} ({1} peaks)",
-                dumpPath, sorted.Count);
         }
 
     }

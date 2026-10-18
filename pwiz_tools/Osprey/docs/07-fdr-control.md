@@ -814,7 +814,6 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--reconciliation-compaction-fdr <threshold>` | `0.01` (`OspreyConfig.cs:135`) | Peptide q-value gate for first-pass compaction; loosen (e.g. 0.05) to broaden the reconciliation pool. Protein rescue is additive. |
 | `--protein-fdr <threshold>` | unset → `EffectiveProteinFdr = 0.01` (`OspreyConfig.cs:271`) | Protein machinery **always runs** regardless; this only sets the passing-group threshold. |
 | `--shared-peptides {all\|razor\|unique}` | `all` (`OspreyConfig.cs:274`) | Protein-level shared-peptide handling (see `08-protein-parsimony.md`). |
-| `--write-pin` | off (`OspreyCommandArgs.cs:196`) | Writes PIN files for external tools; diagnostic only — the FDR engine does not consume them. |
 | `--fdrbench <tsv>` | off (`OspreyCommandArgs.cs:179`) | Emit an FDRBench-compatible input TSV (entrapment true-FDR). Level taken from `--fdr-level`. |
 | `--fdrbench-per-run` | off (`OspreyCommandArgs.cs:181`) | One row per (precursor, run) with run-level q-values; default is one row per precursor with experiment q-values. |
 | `--fdrbench-pass {1\|2\|both}` | `2` (`OspreyCommandArgs.cs:183`) | Which pass to emit: 2 = post-compaction second-pass survivors; 1 = full pre-compaction first-pass pool; both = both with `.pass1`/`.pass2` suffixes. |

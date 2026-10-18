@@ -243,8 +243,7 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
                 OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText,
                 OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
-                OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both",
-                OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText
+                OspreyCommandArgs.ARG_FDRBENCH_PASS.ArgumentText, @"both"
             };
             RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
@@ -258,7 +257,7 @@ namespace pwiz.Osprey.Test
             AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
             string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
-            // With every optional per-run output on (--write-pin), still nothing replicated.
+            // With the optional reports on (diagnostics, FDRBench), still nothing replicated.
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);
 
             // The report alone, from what the analysis left: every analysis task is cached.

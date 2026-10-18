@@ -86,7 +86,6 @@ durable artifact writer in the tree, as of this document's last verification:
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.html` and the diagnostics JSON products |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
-| `PerFileScoringTask.WriteFeatureDump` | `--write-pin`'s `<stem>.cs_features.tsv` |
 
 There is no separate validity-record writer. Each pipeline product in this table embeds its
 validity stamp (section 8) in the same commit as its content, so the stamp is exactly as
