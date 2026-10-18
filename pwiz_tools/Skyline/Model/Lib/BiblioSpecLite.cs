@@ -942,17 +942,33 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// The levels with global q-values, decided by which optional columns the library has.
+        /// The levels with global q-values: those whose optional column the library has with a
+        /// value in at least one row. A column that is NULL throughout would offer a cutoff every
+        /// entry fails.
         /// </summary>
         private IEnumerable<GlobalQValueLevel> ReadGlobalQValueLevels()
         {
             var connection = _sqliteConnection.Connection;
-            if (SqliteOperations.ColumnExists(connection, @"Proteins", @"QValue"))
+            if (SqliteOperations.TableExists(connection, @"RefSpectraProteins") && HasValues(connection, @"Proteins", @"QValue"))
                 yield return GlobalQValueLevel.protein;
-            if (SqliteOperations.ColumnExists(connection, @"RefSpectra", @"PeptideQValue"))
+            if (HasValues(connection, @"RefSpectra", @"PeptideQValue"))
                 yield return GlobalQValueLevel.peptide;
-            if (SqliteOperations.ColumnExists(connection, @"RefSpectra", @"PrecursorQValue"))
+            if (HasValues(connection, @"RefSpectra", @"PrecursorQValue"))
                 yield return GlobalQValueLevel.precursor;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="table"/> has <paramref name="column"/> with a value in some row.
+        /// The scan stops at the first value, so a library with values answers at once.
+        /// </summary>
+        private static bool HasValues(IDbConnection connection, string table, string column)
+        {
+            if (!SqliteOperations.ColumnExists(connection, table, column))
+                return false;
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"SELECT 1 FROM " + table + @" WHERE " + column + @" IS NOT NULL LIMIT 1";
+            using var reader = cmd.ExecuteReader();
+            return reader.Read();
         }
 
         private static LibraryGlobalScores GetGlobalScores(RefSpectraRow row, ImmutableList<LibraryProteinGroup> proteinGroups)

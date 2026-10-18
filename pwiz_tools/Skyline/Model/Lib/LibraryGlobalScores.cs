@@ -74,6 +74,8 @@ namespace pwiz.Skyline.Model.Lib
             PeptideQValue = peptideQValue;
             PeptidePep = peptidePep;
             ProteinGroups = ImmutableList.ValueOf(proteinGroups);
+            BestProteinGroup = ProteinGroups.Where(group => group.QValue.HasValue)
+                .OrderBy(group => group.QValue.Value).FirstOrDefault();
         }
 
         public double? PrecursorQValue { get; }
@@ -84,16 +86,9 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// The protein group with the lowest q-value, which is the one that decides whether the
-        /// entry passes a protein-level cutoff.
+        /// entry passes a protein-level cutoff. Found once: the filters ask for it per entry.
         /// </summary>
-        public LibraryProteinGroup BestProteinGroup
-        {
-            get
-            {
-                return ProteinGroups.Where(group => group.QValue.HasValue)
-                    .OrderBy(group => group.QValue.Value).FirstOrDefault();
-            }
-        }
+        public LibraryProteinGroup BestProteinGroup { get; }
 
         /// <summary>
         /// The q-value at <paramref name="level"/>, or null when the library does not report one.

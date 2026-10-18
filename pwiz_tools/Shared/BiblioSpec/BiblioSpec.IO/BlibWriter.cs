@@ -107,6 +107,8 @@ namespace pwiz.BiblioSpec.IO
         private readonly string _path;
         private IBlibExtensionTables _extensions;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
+        // The Proteins rows written or filled with an optional value, so AddProtein fills a row at most once.
+        private readonly HashSet<long> _proteinIdsWithValues = new HashSet<long>();
         // The INSERT of n annotation rows at index n, prepared when first needed.
         private readonly AnnotationInsert[] _insertAnnotations = new AnnotationInsert[MAX_ANNOTATIONS_PER_INSERT + 1];
         private SQLiteConnection _connection;
@@ -116,6 +118,8 @@ namespace pwiz.BiblioSpec.IO
         private PreparedInsert _insertPeaks;
         private PreparedInsert _insertModification;
         private PreparedInsert _insertProtein;
+        // The UPDATE filling a protein row's NULL optional values; null while the library has no Proteins column to fill.
+        private PreparedInsert _updateProtein;
         private PreparedInsert _insertSpectrumProtein;
         // The optional columns the library has (BlibSchema.OptionalRefSpectraColumns and
         // OptionalProteinsColumns): added by AddOptionalColumn, or found in an appended library.
@@ -400,16 +404,22 @@ namespace pwiz.BiblioSpec.IO
         /// group as its accessions joined by semicolons) with its optional global q-value and PEP
         /// (<see cref="BlibSchema.ProteinQValue"/>, <see cref="BlibSchema.ProteinPep"/>, written
         /// where <see cref="AddOptionalColumn"/> added them), and returns its id. The row an
-        /// accession already has is returned as it is, so a protein is written once however many
-        /// spectra map to it: <see cref="AddSpectrum"/> adds the record's accessions this way,
-        /// without values, and <see cref="AddSpectrumProtein"/> maps a spectrum to a row added here.
+        /// accession already has is returned, so a protein is written once however many spectra
+        /// map to it: <see cref="AddSpectrum"/> adds the record's accessions this way, without
+        /// values, and <see cref="AddSpectrumProtein"/> maps a spectrum to a row added here. A row
+        /// written without values takes the first values a later call supplies for it (a value it
+        /// already has is kept), so the order a reader meets a protein's spectra in does not decide
+        /// whether its value is written.
         /// </summary>
         public long AddProtein(string accession, double? qValue = null, double? pep = null)
         {
             if (string.IsNullOrEmpty(accession))
                 throw new ArgumentException(@"A protein needs an accession", nameof(accession));
             if (_proteinIds.TryGetValue(accession, out long proteinId))
+            {
+                FillProteinValues(proteinId, qValue, pep);
                 return proteinId;
+            }
             EnsurePrepared();
             var values = new List<object>(1 + _optionalProteinColumns.Count) { accession };
             foreach (var column in _optionalProteinColumns)
@@ -417,6 +427,8 @@ namespace pwiz.BiblioSpec.IO
             _insertProtein.Execute(values.ToArray());
             proteinId = _connection.LastInsertRowId;
             _proteinIds.Add(accession, proteinId);
+            if (qValue.HasValue || pep.HasValue)
+                _proteinIdsWithValues.Add(proteinId);
             return proteinId;
         }
 
@@ -706,6 +718,15 @@ namespace pwiz.BiblioSpec.IO
                 new[] { @"@id", @"@position", @"@mass" }, new[] { DbType.Int64, DbType.Int32, DbType.Double });
             _insertProtein = PrepareInsert(@"Proteins", new List<string> { @"accession" }, new List<DbType> { DbType.String },
                 _optionalProteinColumns);
+            if (_optionalProteinColumns.Count > 0)
+            {
+                // Each column takes the bound value only where the row has NULL.
+                var names = _optionalProteinColumns.Select(column => @"@" + column.Name).Concat(new[] { @"@id" }).ToArray();
+                var types = _optionalProteinColumns.Select(column => DbType.Double).Concat(new[] { DbType.Int64 }).ToArray();
+                _updateProtein = Prepare(@"UPDATE Proteins SET " + string.Join(@", ",
+                        _optionalProteinColumns.Select(column => column.Name + @" = IFNULL(" + column.Name + @", @" + column.Name + @")")) +
+                    @" WHERE id = @id", names, types);
+            }
             _insertSpectrumProtein = Prepare(@"INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES (@id, @protein)",
                 new[] { @"@id", @"@protein" }, new[] { DbType.Int64, DbType.Int64 });
         }
@@ -738,6 +759,8 @@ namespace pwiz.BiblioSpec.IO
             _insertModification = null;
             _insertProtein?.Dispose();
             _insertProtein = null;
+            _updateProtein?.Dispose();
+            _updateProtein = null;
             _insertSpectrumProtein?.Dispose();
             _insertSpectrumProtein = null;
         }
@@ -780,6 +803,26 @@ namespace pwiz.BiblioSpec.IO
             if (column == BlibSchema.ProteinPep)
                 return pep;
             throw new ArgumentOutOfRangeException(nameof(column), column.ToString(), null);
+        }
+
+        /// <summary>
+        /// Writes <paramref name="qValue"/> and <paramref name="pep"/> into the optional columns
+        /// of Proteins row <paramref name="proteinId"/> where it has NULL, the first time a value
+        /// is supplied for the row (<see cref="AddProtein"/> meeting an accession again). A row
+        /// written with a value, or filled once, is left as it is.
+        /// </summary>
+        private void FillProteinValues(long proteinId, double? qValue, double? pep)
+        {
+            if (_optionalProteinColumns.Count == 0 || !(qValue.HasValue || pep.HasValue))
+                return;
+            if (!_proteinIdsWithValues.Add(proteinId))
+                return;
+            EnsurePrepared();
+            var values = new List<object>(1 + _optionalProteinColumns.Count);
+            foreach (var column in _optionalProteinColumns)
+                values.Add(Nullable(OptionalValue(column, qValue, pep)));
+            values.Add(proteinId);
+            _updateProtein.Execute(values.ToArray());
         }
 
         private List<BlibOptionalColumn> OptionalColumnsOf(string table)
@@ -882,12 +925,13 @@ namespace pwiz.BiblioSpec.IO
             _insertPeaks?.Dispose();
             _insertModification?.Dispose();
             _insertProtein?.Dispose();
+            _updateProtein?.Dispose();
             _insertSpectrumProtein?.Dispose();
             _insertRetentionTime?.Dispose();
             _insertMetadata?.Dispose();
             _insertDecoyPair?.Dispose();
             _insertSpectrum = _insertPeaks = _insertModification = null;
-            _insertProtein = _insertSpectrumProtein = _insertRetentionTime = _insertMetadata = _insertDecoyPair = null;
+            _insertProtein = _updateProtein = _insertSpectrumProtein = _insertRetentionTime = _insertMetadata = _insertDecoyPair = null;
             for (int i = 0; i < _insertAnnotations.Length; i++)
             {
                 _insertAnnotations[i]?.Dispose();

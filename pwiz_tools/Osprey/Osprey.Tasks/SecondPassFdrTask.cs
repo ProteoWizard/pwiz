@@ -1067,6 +1067,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The refusal for runs whose <c>.scores-reconciled.parquet</c> Stage 7 cannot read
         /// (<see cref="UnusableReconciledParquets"/>), naming them, or null when every run's is
         /// readable. Missing files are reported before older ones, each with its own remedy.
         /// </summary>

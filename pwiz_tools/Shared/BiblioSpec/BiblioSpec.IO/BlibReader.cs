@@ -202,7 +202,10 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The protein accessions of every spectrum, by RefSpectra id and in the order the
         /// library maps them; empty in a library without the protein tables. A spectrum without
-        /// a protein is absent.
+        /// a protein is absent. The accessions only: a protein row's optional global q-value and
+        /// PEP (<see cref="BlibSchema.ProteinQValue"/>, <see cref="BlibSchema.ProteinPep"/>) are
+        /// not read, so a copy through this reader and <see cref="BlibWriter.AddSpectrum"/>
+        /// carries the spectrum values of <see cref="BlibSpectrumRecord"/> but not the protein ones.
         /// </summary>
         public ILookup<long, string> ReadProteins()
         {

@@ -128,6 +128,10 @@ public class BlibReaderTests
                 writer.AddMetadata("test.null", null);
                 writer.AddDecoyPair(peptideId, false, false, 7, null, null);
                 writer.AddDecoyPair(bareId, true, true, 7, peptideId, "reverse");
+                // P2 was written by the spectrum's accession loop without a value, so the first
+                // value supplied for it fills the row; P1's value stands against a later one.
+                Assert.AreEqual(writer.AddProtein("P2"), writer.AddProtein("P2", 0.04));
+                writer.AddProtein("P1", 0.5);
                 writer.CommitBatch();
                 writer.Complete();
             }
@@ -213,7 +217,9 @@ public class BlibReaderTests
             using (var command = new SQLiteCommand("SELECT QValue FROM Proteins WHERE accession = 'P1'", reader.Connection))
                 Assert.AreEqual(0.02, (double)command.ExecuteScalar());
             using (var command = new SQLiteCommand("SELECT QValue FROM Proteins WHERE accession = 'P2'", reader.Connection))
-                Assert.AreEqual(DBNull.Value, command.ExecuteScalar());
+                Assert.AreEqual(0.04, (double)command.ExecuteScalar());
+            using (var command = new SQLiteCommand("SELECT COUNT(*) FROM Proteins", reader.Connection))
+                Assert.AreEqual(2L, command.ExecuteScalar());
             Assert.AreEqual(mzs.Length, peptide.NumPeaks);
             Assert.IsNull(peptide.MzBlob);
             Assert.IsNull(peptide.IntensityBlob);
