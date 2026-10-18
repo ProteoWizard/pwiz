@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Newtonsoft.Json;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
@@ -384,12 +385,40 @@ namespace pwiz.Osprey.Tasks
             // product, and this one describes a single panel over an accumulator that was never
             // fed; stamping it would let a ten-minute measurement stand in for the hour-long
             // answer, silently and permanently.
-            ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null,
+            ModelDiagnosticsReport.WriteFromAccumulator(accumulator, ModelViewFromArtifacts(ctx, fileNames),
                 BuildCalibrationData(ctx, fileNames), config, ctx, coAssignment,
                 coAssignOnly ? null : ValidityKey(ctx));
             if (coAssignOnly)
                 MoveHarnessProductAside(ctx, config);
             return true;
+        }
+
+        /// <summary>
+        /// The pass-1 report's model views for a process that did not run the score pass, from
+        /// the analysis's first-pass model and every run's <see cref="FeatureSums"/> share in its
+        /// first-pass sidecar - the same reduction the score pass makes, so the same views (P16).
+        /// Null, which leaves the Model tab its explanatory note, when the model on disk is not
+        /// this analysis's or a run has no share.
+        /// </summary>
+        private ModelDiagnosticsData.ModelView ModelViewFromArtifacts(PipelineContext ctx,
+            IReadOnlyList<string> fileNames)
+        {
+            var config = ctx.Config;
+            var saved = FirstPassModelIO.LoadForAnalysis(config);
+            string stamp = OspreyVersion.Stamp(Name, ValidityKey(ctx)).ToString();
+            if (saved?.Model == null || !string.Equals(saved.Stamp?.ToString(), stamp, StringComparison.Ordinal))
+                return null;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            var shares = fileNames.Select(fileName =>
+            {
+                string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                return string.IsNullOrEmpty(sidecarBase)
+                    ? null
+                    : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(sidecarBase));
+            });
+            var contributions = PercolatorEngine.FirstPassContributionsFromShares(saved.Model, shares,
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES));
+            return ModelDiagnosticsData.ModelView.From(contributions);
         }
 
         /// <summary>
@@ -856,7 +885,7 @@ namespace pwiz.Osprey.Tasks
         /// Stage 3. The rows are ordered by <paramref name="orderedFileNames"/> (input-file
         /// order) so the report's file selector matches the rest of the page. A run whose row
         /// is not in the byproduct - one Stage 3 did not calibrate in this process, as on a
-        /// resume or an HPC join - is read from its <c>.calibration-diagnostics.json</c>.
+        /// resume or an HPC join - is read from its <c>.calibration.json</c>.
         /// Returns <c>null</c> when no run has a row, which hides the CAL tab. HasEntrapment is true when any
         /// row carries an entrapment FDP curve; MassUnit is the per-run unit the byproduct
         /// stashed at capture (the row does not carry it).
@@ -927,9 +956,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// One run's calibration-view row from its <c>.calibration-diagnostics.json</c>, when that
-        /// file carries the stamp of the run's <c>.calibration.json</c>; else null. Sets
-        /// <paramref name="massUnit"/> from the file when it is not yet known.
+        /// One run's calibration-view row from its <c>.calibration.json</c>
+        /// (<see cref="CalibrationParams.ModelDiagnostics"/>), or null when the file is missing,
+        /// unreadable or carries none. Sets <paramref name="massUnit"/> from the file when it is
+        /// not yet known.
         /// </summary>
         private static ModelDiagnosticsData.CalFileRow ReadCalibrationDiagnosticsFromDisk(string fileName,
             IReadOnlyDictionary<string, string> inputByName, ref string massUnit)
@@ -937,8 +967,16 @@ namespace pwiz.Osprey.Tasks
             if (!inputByName.TryGetValue(fileName, out string inputFile))
                 return null;
             string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
-            var row = ModelDiagnosticsReport.ReadCalibrationDiagnostics(inputFile,
-                ArtifactStamp.TryReadJsonHead(calPath), out string fileUnit);
+            CalibrationParams calibration;
+            try
+            {
+                calibration = File.Exists(calPath) ? CalibrationIO.LoadCalibration(calPath) : null;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is JsonException)
+            {
+                calibration = null;
+            }
+            var row = ModelDiagnosticsReport.CalibrationDiagnosticsFromJson(calibration, out string fileUnit);
             if (row != null && string.IsNullOrEmpty(massUnit))
                 massUnit = fileUnit;
             return row;
@@ -1598,7 +1636,7 @@ namespace pwiz.Osprey.Tasks
             string sidecarValidityKey = ValidityKey(ctx);
             var sidecarStamp = OspreyVersion.Stamp(Name, sidecarValidityKey);
 
-            int FlushPartialSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
+            int FlushPartialSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records, FeatureSums featureSums)
             {
                 string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
@@ -1617,7 +1655,7 @@ namespace pwiz.Osprey.Tasks
                 // proportional to the files it finished, not to the phase.
                 try
                 {
-                    FdrScoresSidecar.Write(fdrPath, records, FdrScoresSidecar.Pass.FirstPass, sidecarStamp);
+                    FdrScoresSidecar.Write(fdrPath, records, FdrScoresSidecar.Pass.FirstPass, sidecarStamp, featureSums);
                 }
                 catch (Exception ex)
                 {
@@ -1834,13 +1872,13 @@ namespace pwiz.Osprey.Tasks
             // have been walked, and no later phase revises them.
             int pass1WriteFailures = 0;
             FileRunScopeSink flushFileRunScope =
-                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts, featureSums) =>
                 {
                     var records = new List<FdrScoreRecord>(rowCount);
                     for (int r = 0; r < rowCount; r++)
                         records.Add(new FdrScoreRecord(
                             entryIds[r], scores[r], runPrecQ[r], runPeptQ[r], apexRts[r]));
-                    int failures = FlushPartialSidecar(fileName, records);
+                    int failures = FlushPartialSidecar(fileName, records, featureSums);
                     if (failures == 0)
                     {
                         lock (scoresOnDisk)
@@ -1902,6 +1940,13 @@ namespace pwiz.Osprey.Tasks
                         rec => onRecord(rec.EntryId, rec.Score,
                             rec.RunPrecursorQvalue, rec.RunPeptideQvalue));
                 };
+            // A resumed file's share of the feature report, off the same sidecar its scores came
+            // from, so the report covers every run whether or not this process scored it.
+            Func<string, FeatureSums> tryLoadFeatureSums = fileName =>
+            {
+                string doneBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                return string.IsNullOrEmpty(doneBase) ? null : FdrScoresSidecar.ReadFeatureSums(FdrScoresSidecar.Pass1Path(doneBase));
+            };
             // The adopted model is reused rather than skipped: the scorer still publishes it
             // through captureModel, so a second pass that needs the frozen first-pass model
             // gets the SAME model the scores on disk were produced by. Synthesising a stub to
@@ -1924,7 +1969,7 @@ namespace pwiz.Osprey.Tasks
                 projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
                 config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
-                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes);
+                pretrainedModel, flushFileRunScope, ctx.RunPlan.FirstPassFdrLanes, tryLoadFeatureSums);
             // How many files' 1st-pass sidecars are on disk after the score pass - written by it
             // or adopted from an earlier run. flushFileRunScope is the only writer of these files
             // on this path, so a shortfall here is a file the compaction gate will fail to read.
@@ -1971,7 +2016,7 @@ namespace pwiz.Osprey.Tasks
                     mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value,
                     experiment.Records, ctx);
                 ModelDiagnosticsReport.WriteFromAccumulator(
-                    mdiagAccumulator, mdiagContributions, cal, config, ctx, coAssignment,
+                    mdiagAccumulator, ModelDiagnosticsData.ModelView.From(mdiagContributions), cal, config, ctx, coAssignment,
                     ValidityKey(ctx));
             }
 

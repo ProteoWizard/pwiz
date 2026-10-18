@@ -25,14 +25,13 @@ experiment-wide. There is no third scope: experiment-wide content is written onc
 
 | File pattern | Scope | Format | C# writer/reader | Purpose |
 |---|---|---|---|---|
-| `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
-| `<stem>.calibration-diagnostics.json` | run | JSON, stamp first | `Osprey.Tasks/ModelDiagnostics/ModelDiagnosticsReport.cs` | `--model-diagnostics` only: the run's calibration-view row (`CalFileRow`) and mass unit, written at Stage 3 under the same stamp as the run's `.calibration.json` and read only when that stamp matches. A separate file because `.calibration.json` keeps Rust's schema and its project cannot see the row type. Not a declared output: adding the flag to a finished analysis does not re-run Stage 3, so such an analysis has no calibration view |
+| `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters, and `model_diagnostics`: the run's row of the report's calibration view (`CalFileRow`) and mass unit, written by `ModelDiagnosticsReport.CalibrationDiagnosticsToJson` on every calibrated run, with or without `--model-diagnostics`, because only Stage 3 holds the calibration matches it is binned from (00, P16). Opaque to `Osprey.Chromatography`, which cannot see the row type |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.demux.spectra.bin` | run | Custom binary v4, own magic + descriptor | `Osprey.IO/SpectraCache.cs`, `Osprey.Tasks/DemuxCache.cs` | `--demux auto` on a multiplexed run only: the demultiplexed spectra the search reads in place of `.spectra.bin`, built from the source (section 2, [23-demultiplexing](23-demultiplexing.md)) |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v8**, 32-byte header + 36-byte records + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8) |
-| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v8**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v9**, 32-byte header + 36-byte records + feature sums + validity stamp trailer | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it; the embedded validity stamp at v8 (section 8). At v9 the run's `FeatureSums` (`Osprey.Core/FeatureSums.cs`, ~10 KB): its share of the report's Model tab - class counts, standardized feature sums in row order, fixed-bin histograms - written on every run, so a report asked for later, or over runs that resumed, adds the shares in run order and needs no re-scoring (00, P16) |
+| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v9**, same layout, no feature sums | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary **v2** (v2 adds the validity stamp trailer) | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) v4 | `Osprey.IO/ReconciliationFile.cs` | The run's Stage 6 plan, written by `PerFileRescoring` as it plans the run: actions, gap-fill targets, refined RT calibration (section 5) |
 | `<blib-stem>.1st-pass.consensus.json` | exp | JSON | `Osprey.Tasks/Stage6ConsensusFile.cs` | The cross-run consensus every run's plan reads: consensus RTs and the two passing sets (section 5a) |
@@ -84,7 +83,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `FirstPassModelIO` (2 sites) | `<blib-stem>.1st-pass.model.json`, `<blib-stem>.1st-pass.stratum.json` |
 | `BlibOutputWriter` | `<output>.blib` |
 | `TrainingExportWriter` | `<stem>.training.parquet` |
-| `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.html`, the diagnostics JSON products and `<stem>.calibration-diagnostics.json` |
+| `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.html` and the diagnostics JSON products |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
 | `PerFileScoringTask.WriteFeatureDump` | `--write-pin`'s `<stem>.cs_features.tsv` |
@@ -434,12 +433,13 @@ second-pass FDR. Carries the SVM discriminant plus every q-value needed for down
 and protein-FDR-aware compaction.
 
 > **STALE - do not implement a reader from the layout below.** It documents v4: a 68-byte
-> record carrying the experiment-scope columns. The current format is **v8 with 36-byte
+> record carrying the experiment-scope columns. The current format is **v9 with 36-byte
 > records** (`FdrScoresSidecar.FormatVersion`, `RecordLength`), holding entry_id, SVM
 > score, run precursor q, run peptide q and the detection apex RT - the experiment columns moved to
 > `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` at v5 (issue #4486). The header is still
 > 32 bytes; since v8 its bytes [24..28] hold the length of the validity stamp that follows
-> the records (Section 8). Re-verifying and rewriting this subsection against `WriteRecord` is tracked as
+> the records (Section 8), and since v9 bytes [28..32] the length of the run's feature sums,
+> which sit between the records and the stamp. Re-verifying and rewriting this subsection against `WriteRecord` is tracked as
 > follow-up work; it was not rewritten in the PR that added this warning because that PR
 > changed no code and could not test a reader.
 
@@ -632,7 +632,7 @@ artifact's format:
 | Family | Artifacts | Where the stamp is |
 |---|---|---|
 | Parquet | `.scores.parquet`, `.scores-reconciled.parquet`, `.training.parquet` | footer key/value `osprey.validity`, read from the footer alone |
-| OSPRY binary sidecars | `.{1st,2nd}-pass.fdr_scores.bin` (v8), `.2nd-pass.fdr_decoys.bin` (v2), `.fdr_experiment.bin` (v3), `.1st-pass.retained_base_ids.bin` (v2) | UTF-8 trailer after the records; header bytes [24..28] hold its byte length (u32). Records keep their fixed offsets, and the exact-length check becomes `32 + count * recordLength + stampLength` |
+| OSPRY binary sidecars | `.{1st,2nd}-pass.fdr_scores.bin` (v9), `.2nd-pass.fdr_decoys.bin` (v2), `.fdr_experiment.bin` (v3), `.1st-pass.retained_base_ids.bin` (v2) | UTF-8 trailer after the records; header bytes [24..28] hold its byte length (u32), and bytes [28..32] the length of a format's extension section between the records and the stamp (u32; only the first-pass `fdr_scores.bin` writes one, its feature sums). Records keep their fixed offsets, and the exact-length check becomes `32 + count * recordLength + extensionLength + stampLength` |
 | JSON | `.calibration.json`, `.reconciliation.json`, `.1st-pass.model.json`, `.1st-pass.stratum.json`, the model-diagnostics data JSONs | FIRST property, `osprey_validity`; `ArtifactStamp.TryReadJsonHead` reads only the first 64 KB, because `reconciliation.json` is ~25 MB per run |
 | HTML | `<output>.model-diagnostics.html` | an opening `<!--osprey-validity/1;...-->` comment before the DOCTYPE |
 | blib | `<output>.blib` | `LibMetadata` row with key `osprey.validity` (`OspreyBlibWriter.AddStamp` / `ReadStamp`; read from `OspreyMetadata`, the table's name before 2026-10-15, for one release) |

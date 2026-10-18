@@ -387,13 +387,7 @@ namespace pwiz.Osprey.Test
             // Mode 11: with both products deleted, asking for the report folds it from the
             // sidecars. Re-running the analysis would produce the right report too, which is
             // why the fold markers and the absence of analysis are what is asserted.
-            string[] noAnalysis =
-            {
-                PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty),
-                PathLine(LogKey.ROUTE_SCORED_ENTRIES, @"resident"),
-                @"[" + LogTag.STAGE_WALL + @"] second-pass-fdr",
-                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty)
-            };
+            string[] noAnalysis = NoAnalysisLines();
             string foldPass1 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass1");
             string foldPass2 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass2");
             DeleteDiagnosticsProducts(workDir, pass1, pass2);
@@ -450,6 +444,72 @@ namespace pwiz.Osprey.Test
             AssertBlibsEqual(ReferenceOf(blib), blib);
             Assert.IsFalse(File.Exists(pass1), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME) +
                 @" wrote the pass-1 product, which only FirstPassFDR owns");
+        }
+
+        /// <summary>
+        /// The report paid for later: an analysis run WITHOUT --model-diagnostics stores enough to
+        /// produce, with no analysis re-run, the same report an analysis run with the flag wrote
+        /// (doc 00, P16). Both <c>--task ModelDiagnostics</c> and the original command line with the
+        /// flag added must reproduce every view - calibration, model, feature histograms - not
+        /// only the ones the second pass happens to keep.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetDiagnosticsAddedLater()
+        {
+            string referenceDir = CreateDir(@"diagnostics-with-flag");
+            string workDir = CreateDir(@"diagnostics-added-later");
+            var withFlag = LibDecoyDiagnosticsArgs();
+            var withoutFlag = withFlag.Where(arg => arg != OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText).ToArray();
+            Assert.AreEqual(withFlag.Length - 1, withoutFlag.Length);
+            string RunIn(string dir, IEnumerable<string> args, string taskName = null)
+            {
+                var taskArgs = taskName == null ? args : args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, taskName });
+                return RunOspreyExpecting(InputArgs(DataInputs()).Concat(new[]
+                {
+                    OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, LIBDECOY_FILE),
+                    OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(dir, BLIB_FILE),
+                    OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, dir
+                }).Concat(CommonArgs()).Concat(taskArgs).ToArray(), Verifier(true), Program.EXIT_CODE_SUCCESS);
+            }
+            string[] products =
+            {
+                OutputArtifact(ModelDiagnosticsReport.EXT_PASS1),
+                OutputArtifact(ModelDiagnosticsReport.EXT_PASS2)
+            };
+            string pass1 = Path.Combine(workDir, products[0]);
+            string pass2 = Path.Combine(workDir, products[1]);
+            void AssertSameAsWithFlag(string entryPoint)
+            {
+                AssertSameFirstPassProduct(Path.Combine(referenceDir, products[0]), pass1);
+                CollectionAssert.AreEqual(File.ReadAllBytes(Path.Combine(referenceDir, products[1])), File.ReadAllBytes(pass2),
+                    entryPoint + @" wrote a different pass-2 diagnostics product than the analysis run with the flag");
+            }
+
+            RunIn(referenceDir, withFlag);
+            RunIn(workDir, withoutFlag);
+            AssertBlibsEqual(Path.Combine(referenceDir, BLIB_FILE), Path.Combine(workDir, BLIB_FILE));
+            foreach (string product in products)
+                Assert.IsFalse(File.Exists(Path.Combine(workDir, product)), @"the analysis without the flag wrote " + product);
+
+            // --task ModelDiagnostics folds both products from what the analysis stored.
+            string log = RunIn(workDir, withFlag, ModelDiagnosticsTask.TASK_NAME);
+            AssertNoRecompute(log);
+            AssertLogShape(log, Array.Empty<string>(), NoAnalysisLines());
+            AssertSameAsWithFlag(OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME));
+
+            // The original command line with the flag added, products absent, folds them too.
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            log = RunIn(workDir, withFlag);
+            AssertNoRecompute(log);
+            AssertLogShape(log, Array.Empty<string>(), NoAnalysisLines());
+            AssertSameAsWithFlag(@"the whole pipeline");
+
+            // And run again with them present, it runs nothing and changes nothing.
+            var before = FingerprintDir(workDir);
+            log = RunIn(workDir, withFlag);
+            AssertTasks(log, ALL_TASKS, Array.Empty<string>());
+            CollectionAssert.AreEqual(Array.Empty<string>(), ChangedFiles(before, workDir),
+                @"a complete analysis with its report present changed files" + Environment.NewLine + log);
         }
 
         /// <summary>
@@ -1068,7 +1128,6 @@ namespace pwiz.Osprey.Test
             foreach (string run in data.Runs)
             {
                 ShipFiles(dirPrefix + @"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
-                ShipFilesIfPresent(dirPrefix + @"phase1_" + run, phase2Dir, run + ModelDiagnosticsReport.EXT_CALIBRATION_DIAGNOSTICS);
             }
             RunTask(data, phase2Dir, FirstPassFdrTask.TASK_NAME, data.Runs);
 
@@ -1427,25 +1486,40 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The pass-1 product folded later equals the one written with the analysis, except for
-        /// its generation time and the views no fold can rebuild today (each held privately by a
-        /// phase that has already exited).
+        /// Log lines any one of which means the analysis ran rather than only its report.
+        /// </summary>
+        private static string[] NoAnalysisLines()
+        {
+            return new[]
+            {
+                PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty),
+                PathLine(LogKey.ROUTE_SCORED_ENTRIES, @"resident"),
+                @"[" + LogTag.STAGE_WALL + @"] second-pass-fdr",
+                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty)
+            };
+        }
+
+        /// <summary>
+        /// The pass-1 product folded later equals the one written with the analysis in every view;
+        /// only its generation time may differ.
         /// </summary>
         private static void AssertSameFirstPassProduct(string expectedPath, string actualPath)
         {
-            // The calibration view IS comparable: Stage 3 writes each run's rows to its
-            // .calibration-diagnostics.json, so a fold rebuilds them. It was listed here once, which
-            // is how every resume shipping a report with no calibration view passed this test.
-            string[] notComparable = { @"generatedUtc", @"model", @"featureHistEdges", @"featureCount", @"modelComposite" };
+            // No view is exempt (doc 00, P16). Exempting the calibration view once is how every
+            // resume shipping a report with no calibration view passed this test, and exempting the
+            // model and feature views hid the same gap for them.
             JObject Comparable(string path)
             {
                 var json = JObject.Parse(File.ReadAllText(path));
-                foreach (string key in notComparable)
-                    json.Remove(key);
+                json.Remove(@"generatedUtc");
                 return json;
             }
-            Assert.IsTrue(JToken.DeepEquals(Comparable(expectedPath), Comparable(actualPath)),
-                @"the folded pass-1 product differs outside the views a fold cannot rebuild");
+            var expected = Comparable(expectedPath);
+            var actual = Comparable(actualPath);
+            var differing = expected.Properties().Select(p => p.Name).Union(actual.Properties().Select(p => p.Name))
+                .Where(name => !JToken.DeepEquals(expected[name], actual[name])).ToArray();
+            Assert.AreEqual(0, differing.Length,
+                @"the folded pass-1 product differs in: " + string.Join(@", ", differing));
         }
 
         /// <summary>

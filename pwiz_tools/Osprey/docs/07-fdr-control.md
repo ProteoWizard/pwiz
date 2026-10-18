@@ -189,11 +189,12 @@ iteration cap, ignoring `OSPREY_GBT_*`) and pass 2 froze that SVM.
 `FdrTest.TestStreamingFirstPassTrainsGbdt` pins the fix against the resident projection path,
 byte for byte.
 
-Under `--model-diagnostics` the tree paths also bin each scored row's standardized features,
-so the report's per-feature target/decoy distributions exist for trees as for the SVM. A tree
-ensemble has no coefficients, so the contribution table itself is marked not applicable
-(`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the model
-was not retrained.
+The tree paths also bin each scored row's standardized features - on every run, into the
+run's `FeatureSums` share in its first-pass FDR file - so the report's per-feature
+target/decoy distributions exist for trees as for the SVM. A tree ensemble has no
+coefficients, so the contribution table itself is marked not applicable
+(`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the
+feature report is unavailable.
 
 The trained ensembles persist in `<blib-stem>.1st-pass.model.json` (`FirstPassModelIO`, as
 `GbtModelData`, which round-trips exactly), so a resume, the Stage 6 per-file competition and

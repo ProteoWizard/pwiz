@@ -809,9 +809,8 @@ node running that task needs a copy, whatever batch it was handed.
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on a multiplexed run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, read demultiplexed from the source | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, and it can be rebuilt only from the source, so keep the source to absorb a demux settings change |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
-| `<stem>.calibration-diagnostics.json` | per-run product (`--model-diagnostics`) | `PerFileScoring` (Stage 3), under the calibration's own stamp | `FirstPassFDR` (the report's calibration view) | with the run, to the `FirstPassFDR` node |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
-| `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
+| `<stem>.1st-pass.fdr_scores.bin` | per-run product, carrying the run's share of the report's Model tab (`FeatureSums`) | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `FirstPassFDR`'s pay-later report; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
 | `<stem>.reconciliation.json` | per-run product | `PerFileRescoring` (the run's Stage 6 plan, written just before it is rescored) | `SecondPassFDR` (gap-fill entry ids) | with the run, from the rescore node to `SecondPassFDR` |
 | `<blib-stem>.1st-pass.consensus.json` | experiment product | `FirstPassFDR` (end of the consensus pass) | `PerFileRescoring` (every run's plan) | **every node** running `PerFileRescoring` |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
@@ -1180,10 +1179,9 @@ The join needs every run's Stage 1-4 output, since training and experiment-wide 
 are functions of all runs:
 
 - `<stem>.scores.parquet` for **every** run in the cohort
-- `<stem>.calibration.json` for **every** run
-- `<stem>.calibration-diagnostics.json` for every run, when `--model-diagnostics` is on - the
-  report's calibration view. Only Stage 3 holds the calibration matches it is binned from, so
-  a join node without it renders a report with no calibration view
+- `<stem>.calibration.json` for **every** run. It also carries the run's row of the report's
+  calibration view (`model_diagnostics`), written on every run because only Stage 3 holds the
+  calibration matches it is binned from
 - the library, and `-i` naming the runs whose parquets it reads
 
 `.calibration.json` must travel, which is easy to get wrong because the join reads
