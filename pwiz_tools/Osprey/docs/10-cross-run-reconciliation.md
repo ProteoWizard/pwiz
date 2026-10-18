@@ -1,11 +1,11 @@
 # 10. Cross-Run Reconciliation (C#)
 
-> Pipeline stage: Stage 5 (plan) / Stage 6 (apply). C# port of Rust docs/10-cross-run-reconciliation.md. Corresponds to Rust osprey cross-run peak reconciliation (`crates/osprey/src/reconciliation.rs`).
+> Pipeline stage: Stage 5 (consensus) / Stage 6 (per-run plan and apply). C# port of Rust docs/10-cross-run-reconciliation.md. Corresponds to Rust osprey cross-run peak reconciliation (`crates/osprey/src/reconciliation.rs`).
 
-Cross-run reconciliation aligns peak integration boundaries across replicate files so that the same peptide is quantified at a consistent chromatographic position in every run. It runs after first-pass (run-level) FDR and before the final experiment-level FDR, and only applies to multi-file experiments. The C# port keeps the algorithm identical to Rust but splits it across two HPC stages joined by a per-file `<stem>.reconciliation.json` envelope:
+Cross-run reconciliation aligns peak integration boundaries across replicate files so that the same peptide is quantified at a consistent chromatographic position in every run. It runs after first-pass (run-level) FDR and before the final experiment-level FDR, and only applies to multi-file experiments. The C# port keeps the algorithm identical to Rust but splits it across HPC stages. An analysis-wide `<blib-stem>.1st-pass.consensus.json` joins the cross-run half to the per-run half, and each run's plan is saved as its own `<stem>.reconciliation.json`:
 
-- **Stage 5 — planning** (`Osprey.Tasks/Stage6Planner.cs`, driven by `FirstPassFdrTask` / `--task FirstPassFDR`): computes consensus RTs, refits per-file calibration, and produces the Keep / UseCwtPeak / ForcedIntegration action plan plus gap-fill targets. Writes them to `reconciliation.json`.
-- **Stage 6 — apply** (`Osprey.Tasks/PerFileRescoreTask.cs`, `--task PerFileRescoring`): re-scores the flagged entries at the planned boundaries.
+- **Stage 5 - consensus** (`Osprey.Tasks/Stage6Planner.cs`, driven by `FirstPassFdrTask` / `--task FirstPassFDR`): one pass over every run's survivors, then the cross-run consensus RTs. Writes them, with the two passing sets planning needs, to `<blib-stem>.1st-pass.consensus.json`. Writes no per-run plan.
+- **Stage 6 - plan and apply** (`Osprey.Tasks/PerFileRescoreTask.cs`, `--task PerFileRescoring`): for each run, `RunReconciliationPlanner.PlanRun` refits the run's calibration and produces its Keep / UseCwtPeak / ForcedIntegration action plan plus gap-fill targets. The plan is saved to the run's `<stem>.reconciliation.json`, and then the run's flagged entries are re-scored at the planned boundaries.
 - **Stage 7 — second-pass FDR** (`SecondPassFdrTask`, `--task SecondPassFDR`): recomputes experiment-level q-values on the reconciled pool.
 
 The core planning/consensus code lives in `Osprey.FDR/Reconciliation/`. See also 09-multi-charge-consensus.md (the sibling post-FDR alignment that shares the same rescore pass), 07-fdr-control.md (the two FDR passes bracketing reconciliation), 08-protein-parsimony.md (first-pass protein q-values used as a rescue gate), 11-boundary-overrides.md (the rescore mechanism), and 15-hpc-scoring-split.md (the `--task` worker split).
@@ -22,20 +22,26 @@ The first line of defense is RT-penalized peak selection during the first-pass s
 
 ## Algorithm Overview
 
-The four planning phases run in `Stage6Planner.Plan` (`Osprey.Tasks/Stage6Planner.cs:80`), in this order:
+The planning phases keep Rust's order but are split between two tasks. The cross-run half runs once in FirstPassFDR (`Stage6Planner.Plan`, `Osprey.Tasks/Stage6Planner.cs`). The per-run half runs in PerFileRescoring, one run at a time, just before that run is rescored (`RunReconciliationPlanner.PlanRun`, `Osprey.Tasks/RunReconciliationPlanner.cs`):
 
 ```text
 After per-run (first-pass) FDR:
-  1. MultiChargeConsensus.SelectRescoreTargets  — intra-file multi-charge leaders (09-multi-charge-consensus.md)
-  2. ConsensusRts.Compute                        — sigmoid(score)-weighted median library RT across runs
-  3. CalibrationRefit.Refit                      — tighter per-run LOESS from consensus points
-  4. ReconciliationPlanner.Plan                  — Keep | UseCwtPeak | ForcedIntegration per entry
-  (then) GapFillTargetIdentifier.Identify        — precursors missing from a file (FirstPassFdrTask)
-  (then) PerFileRescoreTask                       — re-score via boundary overrides (Stage 6)
-  (then) SecondPassFdrTask                            — second-pass experiment-level FDR (Stage 7)
+  FirstPassFDR, Stage6Planner.Plan - one pass over every run (ScanFiles), then BuildConsensus:
+  1. MultiChargeConsensus.SelectRescoreTargets  - intra-file multi-charge leaders, counted only (09-multi-charge-consensus.md)
+  2. ConsensusRts.Accumulator                    - sigmoid(score)-weighted median library RT across runs
+     -> <blib-stem>.1st-pass.consensus.json
+  PerFileRescoring, RunReconciliationPlanner.PlanRun - per run:
+  3. CalibrationRefit.Refit                      - tighter per-run LOESS from consensus points
+  4. ReconciliationPlanner.FilePlanner.PlanFile  - Keep | UseCwtPeak | ForcedIntegration per entry
+  5. GapFillTargetIdentifier.FileIdentifier.IdentifyFile - precursors missing from the run
+     -> <stem>.reconciliation.json
+  (then) PerFileRescoreTask                      - re-score via boundary overrides (Stage 6)
+  (then) SecondPassFdrTask                       - second-pass experiment-level FDR (Stage 7)
 ```
 
-Cross-run consensus, refit, and reconciliation planning only run when there is more than one file: `ConsensusRts.Compute` is called only when `perFileEntries.Count > 1` (`Stage6Planner.cs:171-178`); with a single file the consensus list is empty and phases 3-4 degenerate to no work, leaving multi-charge consensus rescore as the only Stage 6 work. Multi-charge consensus (phase 1) runs unconditionally.
+`PlanRun` plans over a canonically sorted copy of the run's survivors. That is the order the planner saw when planning ran in FirstPassFDR, and the refit's LOESS input is built in entry order, so the order is part of the answer.
+
+Cross-run consensus, refit, and reconciliation planning only run when there is more than one file: `Stage6Planner.ScanFiles` creates the consensus accumulator only when there is more than one file. With a single file the consensus list is empty; the run is still refit (which falls back for lack of points), and planning and gap-fill do no work, leaving multi-charge consensus rescore as the only Stage 6 work. Multi-charge consensus (phase 1) runs unconditionally.
 
 ---
 
@@ -45,7 +51,7 @@ Cross-run consensus, refit, and reconciliation planning only run when there is m
 
 1. A detection must **not** be a decoy.
 2. Its **per-entry run precursor q-value** must be `<= consensusFdr` (default 0.01). This is a **hard gate** (`ConsensusRts.cs:246`) — protein FDR cannot rescue poor precursor evidence.
-3. EITHER its run peptide-level q-value is `<= consensusFdr`, OR (protein-rescue) `proteinFdrThreshold > 0` AND its first-pass run protein q-value is `<= proteinFdrThreshold` (`ConsensusRts.cs:248-249`). The threshold passed in is `config.EffectiveProteinFdr` (`Stage6Planner.cs:176`); when protein FDR is disabled it is 0 and the rescue branch is off.
+3. EITHER its run peptide-level q-value is `<= consensusFdr`, OR (protein-rescue) `proteinFdrThreshold > 0` AND its first-pass run protein q-value is `<= proteinFdrThreshold` (`ConsensusRts.cs:248-249`). The threshold passed in is `config.EffectiveProteinFdr` (`Stage6Planner.ScanFiles`); when protein FDR is disabled it is 0 and the rescue branch is off.
 
 ### Why precursor-level evidence is a hard gate
 
@@ -97,7 +103,7 @@ The refit configuration (`CalibrationRefit.cs:92-98`):
 - `MinPoints = MIN_CONSENSUS_POINTS = 20`
 - `ClassicalRobustIterations = OspreyEnvironment.LoessClassicalRobust` — mirrors the Stage 4 initial calibration so refit fitted values stay cross-impl identical
 
-If fewer than 20 consensus points exist for a run, or the fit throws, `Refit` returns null and that run falls back to its original first-pass calibration (`CalibrationRefit.cs:81-82, 104-110`; consumed at `Stage6Planner.cs:222-225` and `ReconciliationPlanner.cs:156-157`).
+If fewer than 20 consensus points exist for a run, or the fit throws, `Refit` returns null and that run falls back to its original first-pass calibration (`CalibrationRefit.cs:81-82, 104-110`; consumed in `RunReconciliationPlanner.PlanRun` and `ReconciliationPlanner.cs:156-157`).
 
 ---
 
@@ -121,7 +127,7 @@ If fewer than 20 consensus points exist for a run, or the fit throws, `Refit` re
 
 Two filters run before an entry is planned:
 1. The entry's `(ModifiedSequence, IsDecoy)` must be in the consensus map (`ReconciliationPlanner.cs:200-202`).
-2. The entry's `(EntryId & 0x7FFFFFFF, Charge)` must be in `passingBaseIds` — precursors where the minimum of the four q-values (run/experiment × precursor/peptide) clears `experimentFdr` (`ReconciliationPlanner.cs:131-144, 209`). Reconciliation must include a passing precursor (and its paired decoy, matched by base_id) in every file to keep per-file boundaries self-consistent. Note the planner receives `config.Reconciliation.ConsensusFdr` as its `experimentFdr` argument (`Stage6Planner.cs:285`), which defaults to 0.01.
+2. The entry's `(EntryId & 0x7FFFFFFF, Charge)` must be in `passingBaseIds` — precursors where the minimum of the four q-values (run/experiment × precursor/peptide) clears `experimentFdr` (`ReconciliationPlanner.cs:131-144, 209`). Reconciliation must include a passing precursor (and its paired decoy, matched by base_id) in every file to keep per-file boundaries self-consistent. Note `passingBaseIds` is collected in FirstPassFDR (`Stage6Planner.ScanFiles`, via `ReconciliationPlanner.CollectPassingBaseIds`) with `config.Reconciliation.ConsensusFdr` as its `experimentFdr`, which defaults to 0.01, and reaches each run's planner through `<blib-stem>.1st-pass.consensus.json`.
 
 ### RT tolerance: global within-peptide MAD
 
@@ -155,7 +161,7 @@ ceiling        = min(refinedTol, cap)
 
 ### CWT candidates
 
-CWT candidates were stored during the first-pass search (default 5 per precursor, `ReconciliationConfig.TopNPeaks`) and persisted in the per-file Parquet score cache. During planning they are loaded selectively via `CwtCandidateLoader.Load` (`Stage6Planner.cs:267`), keyed per entry by `ParquetIndex` (`ReconciliationPlanner.cs:214-218`) — avoiding a full re-extraction. `ForcedIntegration` is the last resort when no stored candidate's apex lands within tolerance.
+CWT candidates were stored during the first-pass search (default 5 per precursor, `ReconciliationConfig.TopNPeaks`) and persisted in the per-file Parquet score cache. During planning they are loaded one run at a time via `CwtCandidateLoader.LoadOneFile` (in `RunReconciliationPlanner.PlanRun`) and released with the run's plan, keyed per entry by `ParquetIndex` (`ReconciliationPlanner.cs:214-218`) — avoiding a full re-extraction. `ForcedIntegration` is the last resort when no stored candidate's apex lands within tolerance.
 
 ---
 
@@ -180,11 +186,11 @@ After reconciliation and gap-fill, `SecondPassFdrTask` (`--task SecondPassFDR`) 
 
 ## Gap-Fill
 
-If a precursor passed run-level FDR in one replicate but was never scored in another, reconciliation alone would leave that file with no integration and the blib missing a per-file boundary. `GapFillTargetIdentifier.Identify` (`Osprey.FDR/Reconciliation/GapFillTargetIdentifier.cs:68`) closes this hole.
+If a precursor passed run-level FDR in one replicate but was never scored in another, reconciliation alone would leave that file with no integration and the blib missing a per-file boundary. `GapFillTargetIdentifier` (`Osprey.FDR/Reconciliation/GapFillTargetIdentifier.cs`) closes this hole. In the pipeline it runs per run, as `FileIdentifier.IdentifyFile` called from `RunReconciliationPlanner.PlanRun` in PerFileRescoring.
 
 ### Identification
 
-It builds the set of passing precursors `(ModifiedSequence, Charge)` — any target whose minimum of the four q-values is `<= experimentFdr` (`GapFillTargetIdentifier.cs:98-111`; called with `config.Reconciliation.ConsensusFdr` at `FirstPassFdrTask.cs:947`). For each file it finds passing precursors absent from that file's entries (`GapFillTargetIdentifier.cs:144-155`) and emits a `GapFillTarget` (`Osprey.FDR/Reconciliation/GapFillTarget.cs`) carrying `TargetEntryId` / `DecoyEntryId` (from the library lookup), `ExpectedRt` = `cal.Predict(consensusLibraryRt)`, `HalfWidth` = `MedianPeakWidth / 2`, and `ModifiedSequence` / `Charge` (`GapFillTargetIdentifier.cs:186-197`). Target and decoy are emitted together for symmetric competition. Results are sorted by `TargetEntryId` for deterministic, byte-parity JSON output (`GapFillTargetIdentifier.cs:207`).
+It builds the set of passing precursors `(ModifiedSequence, Charge)` — any target whose minimum of the four q-values is `<= experimentFdr` (`GapFillTargetIdentifier.cs:98-111`; `CollectPassingPrecursors`, called with `config.Reconciliation.ConsensusFdr` in FirstPassFDR's `Stage6Planner.ScanFiles` and carried to each run in `<blib-stem>.1st-pass.consensus.json`). For each file it finds passing precursors absent from that file's entries (`GapFillTargetIdentifier.cs:144-155`) and emits a `GapFillTarget` (`Osprey.FDR/Reconciliation/GapFillTarget.cs`) carrying `TargetEntryId` / `DecoyEntryId` (from the library lookup), `ExpectedRt` = `cal.Predict(consensusLibraryRt)`, `HalfWidth` = `MedianPeakWidth / 2`, and `ModifiedSequence` / `Charge` (`GapFillTargetIdentifier.cs:186-197`). Target and decoy are emitted together for symmetric competition. Results are sorted by `TargetEntryId` for deterministic, byte-parity JSON output (`GapFillTargetIdentifier.cs:207`).
 
 ### Isolation-window m/z filter (GPF-aware)
 
@@ -196,9 +202,14 @@ Surviving gap-fill targets are re-scored by the same `PerFileRescoreTask` bounda
 
 ---
 
-## The reconciliation.json envelope (Stage 5 → Stage 6)
+## The consensus file and the per-run plan (Stage 5 -> Stage 6 -> Stage 7)
 
-Because the C# port runs as HPC stages, the Stage 5 plan is serialized per-file to `<stem>.reconciliation.json` (`Osprey.IO/ReconciliationFile.cs`) and read back by the Stage 6 worker. The envelope (schema `format_version = 3`) carries the non-Keep actions split into two homogeneous arrays (`use_cwt_peak_actions`, `forced_integration_actions`), `gap_fill_targets`, the `refined_rt_calibration`, the join-wide `file_stems` and `first_pass_base_ids`, and `library_hash` / `search_hash` for cache validation. All doubles route through `RoundtripDoubleConverter` and the file is normalized to LF with a trailing newline so it is byte-identical to the Rust `serde_json` output. This envelope has no counterpart in the Rust doc, which describes reconciliation as an in-process step; it is the port's HPC-split infrastructure (see 14-intermediate-files.md, 15-hpc-scoring-split.md).
+Because the C# port runs as HPC stages, the two halves of planning are joined by files:
+
+- `<blib-stem>.1st-pass.consensus.json` (`Osprey.Tasks/Stage6ConsensusFile.cs`) is written once by FirstPassFDR. It holds the consensus RT list and the two passing sets (`PassingBaseIds`, `PassingPrecursors`). Every PerFileRescoring node reads it before its run loop (`PerFileRescoreTask.CreateRunPlanner`); a missing one fails the rescore.
+- `<stem>.reconciliation.json` (`Osprey.IO/ReconciliationFile.cs`) is each run's plan. PerFileRescoring writes it (`PerFileRescoreTask.PlanAndWriteRun`) from inside the run's hydrate, before the run is rescored, under the same stamp as the run's reconciled parquet. It is part of that task's per-run "done" predicate (`Pass2FdrSidecar.HasWorkerStamp`). SecondPassFDR reads it for the run's gap-fill entry ids, and fails if it is missing.
+
+The plan (`format_version = 4`) carries the validity stamp, the non-Keep actions split into two homogeneous arrays (`use_cwt_peak_actions`, `forced_integration_actions`), `gap_fill_targets`, and the run's `refined_rt_calibration`. Nothing cross-run rides in it. Rust still writes the v3 envelope, so the two files no longer match byte for byte; a cross-impl comparison parses both and drops the fields only one side has. See 14-intermediate-files.md sections 5 and 5a for the formats and the comparison recipe. These files have no counterpart in the Rust doc, which describes reconciliation as an in-process step; they are the port's HPC-split infrastructure (see also 00-pipeline-architecture.md and 15-hpc-scoring-split.md).
 
 ---
 
@@ -206,22 +217,22 @@ Because the C# port runs as HPC stages, the Stage 5 plan is serialized per-file 
 
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
-| `ReconciliationConfig.Enabled` (`Osprey.Core/ReconciliationConfig.cs:33`) | `true` | Master switch. `FirstPassFdrTask.cs:387` and `PerFileRescoreTask.cs:158, 963` gate reconciliation on it. **There is no CLI flag to toggle it** — no `--no-reconciliation`; only a config/YAML `Reconciliation.Enabled = false` disables it. `--task FirstPassFDR` requires it enabled (`FirstPassFdrTask.ValidateSelection`). |
-| `ReconciliationConfig.ConsensusFdr` (`ReconciliationConfig.cs:39`) | `0.01` | The consensus qualification threshold (Step 1 hard precursor gate + peptide/protein rescue), the refit experiment-q gate, the planner `experimentFdr` (`Stage6Planner.cs:285`), and the gap-fill passing threshold (`FirstPassFdrTask.cs:947`). |
+| `ReconciliationConfig.Enabled` (`Osprey.Core/ReconciliationConfig.cs:33`) | `true` | Master switch. FirstPassFDR runs `PlanStage6` (and writes `<blib-stem>.1st-pass.consensus.json`) only when it is on; PerFileRescoring declares and reads the consensus file only when it is on (`PerFileRescoreTask.Inputs`, `CreateRunPlanner`). When off, each run is planned with no consensus, so its plan has no actions or gap-fill targets. **There is no CLI flag to toggle it** — no `--no-reconciliation`; only a config/YAML `Reconciliation.Enabled = false` disables it. `--task FirstPassFDR` requires it enabled (`FirstPassFdrTask.ValidateSelection`). |
+| `ReconciliationConfig.ConsensusFdr` (`ReconciliationConfig.cs:39`) | `0.01` | The consensus qualification threshold (Step 1 hard precursor gate + peptide/protein rescue), the refit experiment-q gate (`RunReconciliationPlanner.PlanRun`), and the `experimentFdr` of both passing sets, `passingBaseIds` for the planner and the gap-fill passing precursors (`Stage6Planner.ScanFiles`). |
 | `ReconciliationConfig.TopNPeaks` (`ReconciliationConfig.cs:36`) | `5` | Number of CWT candidate peaks stored per precursor for later UseCwtPeak selection. |
 | `--reconciliation-compaction-fdr <threshold>` (`OspreyCommandArgs.cs:116-117`) | `0.01` | Peptide-q gate for first-pass compaction, which sets the pool reconciliation operates on. Loosen (e.g. 0.05) to broaden the reconciliation pool. Not the consensus gate itself. |
-| `--protein-fdr <threshold>` (`config.EffectiveProteinFdr`, passed at `Stage6Planner.cs:176`) | protein machinery always runs; threshold 0.01 | Enables the Step 1 protein-rescue branch for borderline peptide-level evidence. When 0 / disabled, the rescue branch is off (`ConsensusRts.cs:249`). |
+| `--protein-fdr <threshold>` (`config.EffectiveProteinFdr`, passed in `Stage6Planner.ScanFiles`) | protein machinery always runs; threshold 0.01 | Enables the Step 1 protein-rescue branch for borderline peptide-level evidence. When 0 / disabled, the rescue branch is off (`ConsensusRts.cs:249`). |
 | `--experiment-fdr <threshold>` | `0.01` | The second-pass (Stage 7) experiment FDR threshold; not consumed by planning itself. |
 | `OspreyEnvironment.LoessClassicalRobust` (`CalibrationRefit.cs:97`) | `true` | Must match Stage 4 initial calibration; drives refit robustness iterations for cross-impl parity. |
-| `OSPREY_DUMP_INV_PREDICT` (+ `_ONLY`) | off | Diagnostic: dumps one `InvPredictRecord` per consensus detection (apex_rt, library_rt, weight) for cross-impl bisection (`Stage6Planner.cs:168-184`). |
-| `OSPREY_DUMP_CONSENSUS`, `OSPREY_DUMP_LOESS_FIT`, `OSPREY_DUMP_REFIT` (+ each `_ONLY`) | off | Stage 6 cross-impl bisection dumps for each planning phase (`Stage6Planner.cs`). `OSPREY_DUMP_RECONCILIATION` and `OSPREY_DUMP_MULTICHARGE` (+ `_ONLY`) are Rust-only: removed from C# on 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic). |
+| `OSPREY_DUMP_INV_PREDICT` (+ `_ONLY`) | off | Diagnostic: dumps one `InvPredictRecord` per consensus detection (apex_rt, library_rt, weight) for cross-impl bisection (`Stage6Planner.BuildConsensus`). |
+| `OSPREY_DUMP_CONSENSUS` (+ `_ONLY`) | off | Stage 6 cross-impl bisection dump of the consensus RT table (`Stage6Planner.BuildConsensus`, in FirstPassFDR). `OSPREY_DUMP_RECONCILIATION` and `OSPREY_DUMP_MULTICHARGE` (+ `_ONLY`) are Rust-only: removed from C# on 2026-10-11 (each held or pulled every run's entries at once (O(files x entries)) only to serve a diagnostic). `OSPREY_DUMP_REFIT` and `OSPREY_DUMP_LOESS_FIT` (+ `_ONLY`) are Rust-only too: removed from C# on 2026-10-16 (each wrote every run's refit at once; each run's refit is now in its own `<stem>.reconciliation.json` as `refined_rt_calibration`). Setting a removed name fails at startup like any unknown `OSPREY_*` name. |
 | `OSPREY_TRACE_PEPTIDE` | off | Per-peptide trace through consensus, planning, and gap-fill (18-peptide-trace.md). |
 
 ---
 
 ## Divergences from the Rust documentation
 
-- **[INTENTIONAL-CSHARP-DESIGN] HPC stage split with a JSON envelope** - Rust doc describes reconciliation as an in-process step inside `run_analysis` (consensus → refit → plan → re-score → second-pass FDR, all in memory). C# splits it into Stage 5 planning (`Stage6Planner`/`FirstPassFdrTask`), a serialized `<stem>.reconciliation.json` handoff (`Osprey.IO/ReconciliationFile.cs`, `format_version` 3), Stage 6 apply (`PerFileRescoreTask`), and Stage 7 second-pass FDR (`SecondPassFdrTask`). Behavior/outputs match; the envelope is byte-parity with Rust. Evidence: Osprey.IO/ReconciliationFile.cs:52-107; Osprey.Tasks/Stage6Planner.cs:48-100. Severity: info.
+- **[INTENTIONAL-CSHARP-DESIGN] HPC stage split with a JSON envelope** - Rust doc describes reconciliation as an in-process step inside `run_analysis` (consensus → refit → plan → re-score → second-pass FDR, all in memory). C# splits it into Stage 5 consensus (`Stage6Planner`/`FirstPassFdrTask`), a serialized `<blib-stem>.1st-pass.consensus.json` handoff (`Osprey.Tasks/Stage6ConsensusFile.cs`), Stage 6 per-run planning and apply (`RunReconciliationPlanner`/`PerFileRescoreTask`, which writes each run's `<stem>.reconciliation.json`, `format_version` 4), and Stage 7 second-pass FDR (`SecondPassFdrTask`). Behavior/outputs match. The C# envelope no longer byte-matches Rust's v3 envelope; a cross-impl comparison parses both and drops the fields only one side has (14-intermediate-files.md section 5). Evidence: Osprey.IO/ReconciliationFile.cs; Osprey.Tasks/Stage6Planner.cs; Osprey.Tasks/RunReconciliationPlanner.cs. Severity: info.
 
 - **[STALE-RUST-DOC] `--no-reconciliation` CLI flag not present in C#** - Rust doc (Configuration section) says "CLI flag: `--no-reconciliation` disables it entirely." The C# CLI has no such argument; the only reconciliation-related CLI flag is `--reconciliation-compaction-fdr`. Reconciliation can only be disabled via the config object's `Reconciliation.Enabled = false`, not from the command line. Evidence: Osprey/OspreyCommandArgs.cs:116-117 (only reconciliation CLI arg); Osprey.Core/ReconciliationConfig.cs:33 (config-only switch). Severity: minor.
 
@@ -235,4 +246,4 @@ Because the C# port runs as HPC stages, the Stage 5 plan is serialized per-file 
 
 - **[INTENTIONAL-CSHARP-DESIGN] Second-pass FDR engine is native Percolator only** - Rust doc Step 6 says "the same Percolator/Mokapot/Simple FDR pipeline applies." The C# port has no Python Mokapot dependency; second-pass FDR applies the frozen first-pass Percolator model (the linear SVM, or the experimental `OSPREY_FDR_MODEL=gbdt` trees). There is no Mokapot and no Simple method: both were deleted from the `FdrMethod` enum with `--fdr-method` (#4543). Evidence: SecondPassFdrTask (`--task SecondPassFDR`); see 07-fdr-control.md. Severity: info.
 
-Everything else verified matches step for step: the hard run-precursor-q consensus gate (`ConsensusRts.cs:246`), the protein-FDR rescue branch (`ConsensusRts.cs:248-249`), sigmoid(score) weighted median with a 1e-6 floor and a `CoelutionSum > 0` filter (`ConsensusRts.cs:172-197`), within-peptide MAD requiring ≥3 detections (`ConsensusRts.cs:203-214`), the global-within-peptide-MAD RT tolerance with a 0.1-min floor and 3σ×1.4826 factor (`ReconciliationPlanner.cs:96-190`), apex-proximity (not boundary-containment) Keep/UseCwtPeak/ForcedIntegration selection picking the closest CWT candidate (`ReconciliationPlanner.cs:248-291`), calibration refit at 20-point minimum with outlier removal disabled (`CalibrationRefit.cs:39, 92-98`), the GPF isolation-window m/z filter with a strict upper bound and graceful fallback (`GapFillTargetIdentifier.cs:165-181`), single-file skip (`Stage6Planner.cs:171-178`), reconciliation-wins-on-conflict merge (`PerFileRescoreTask.cs:904-908`), and deterministic sorting of consensus and gap-fill output (`ConsensusRts.cs:231-237`, `GapFillTargetIdentifier.cs:207`).
+Everything else verified matches step for step: the hard run-precursor-q consensus gate (`ConsensusRts.cs:246`), the protein-FDR rescue branch (`ConsensusRts.cs:248-249`), sigmoid(score) weighted median with a 1e-6 floor and a `CoelutionSum > 0` filter (`ConsensusRts.cs:172-197`), within-peptide MAD requiring ≥3 detections (`ConsensusRts.cs:203-214`), the global-within-peptide-MAD RT tolerance with a 0.1-min floor and 3σ×1.4826 factor (`ReconciliationPlanner.cs:96-190`), apex-proximity (not boundary-containment) Keep/UseCwtPeak/ForcedIntegration selection picking the closest CWT candidate (`ReconciliationPlanner.cs:248-291`), calibration refit at 20-point minimum with outlier removal disabled (`CalibrationRefit.cs:39, 92-98`), the GPF isolation-window m/z filter with a strict upper bound and graceful fallback (`GapFillTargetIdentifier.cs:165-181`), single-file skip (`Stage6Planner.ScanFiles`), reconciliation-wins-on-conflict merge (`PerFileRescoreTask.cs:904-908`), and deterministic sorting of consensus and gap-fill output (`ConsensusRts.cs:231-237`, `GapFillTargetIdentifier.cs:207`).

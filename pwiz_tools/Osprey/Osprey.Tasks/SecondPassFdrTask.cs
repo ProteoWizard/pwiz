@@ -735,7 +735,7 @@ namespace pwiz.Osprey.Tasks
             // protein-compact it SPLITS the pass-2 acceptance boundary in two (#4573), so a
             // fold without it would draw one boundary where the join drew two and produce a
             // different - complete, plausible, wrong - co-assignment panel.
-            Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
+            Pass2FdrSidecar.EnsureFrozenFirstPassPublished(ctx);
             HashSet<uint> stratumBaseIds = null;
             if (OspreyEnvironment.Pass2ProteinCompact &&
                 ctx.TryGet<ProteinCompactStratum>(out var pcStratum))

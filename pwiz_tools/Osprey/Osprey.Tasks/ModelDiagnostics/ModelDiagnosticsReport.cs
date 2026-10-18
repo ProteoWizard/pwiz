@@ -23,11 +23,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 
@@ -72,12 +73,14 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
 
-        /// <summary>Logged when no first-pass model was trained on this run, so the Model tab
-        /// has nothing to show: a resumed or rehydrated run takes its q-values from sidecars.</summary>
+        /// <summary>Logged when no first-pass model views are available, so the Model tab has
+        /// nothing to show: the analysis's first-pass model, or a run's share of the feature
+        /// report in its first-pass FDR file, is missing or belongs to another analysis.</summary>
         internal const string MODEL_NOT_RETRAINED_NOTE =
-            "The first-pass model was not retrained on this run (it resumed from saved first-pass " +
-            "results), so the Model tab has no feature table or per-feature distributions. Delete " +
-            "the .1st-pass.* intermediate files to retrain it.";
+            "The first-pass model's feature report is not available: the first-pass model or a " +
+            "run's first-pass FDR file is missing or from another analysis, so the Model tab has no " +
+            "feature table or per-feature distributions. Delete the .1st-pass.* intermediate files " +
+            "to rebuild them.";
 
         /// <summary>Logged for a gradient-boosted-tree first pass: the model was trained, but a tree
         /// ensemble has no coefficients for the contribution table to decompose.</summary>
@@ -117,7 +120,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public static void WriteFromAccumulator(
             ModelDiagnosticsData.Accumulator accumulator,
-            FeatureContributions contributions,
+            ModelDiagnosticsData.ModelView modelView,
             ModelDiagnosticsData.CalibrationData cal,
             OspreyConfig config,
             IOspreyLog log,
@@ -126,14 +129,14 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             try
             {
-                var data = accumulator.Build(contributions);
+                var data = accumulator.BuildFromModelView(modelView);
                 data.CoAssignment = coAssignment;
                 // The CAL view: per-file calibration diagnostics captured at Stage 3 (null when
                 // none were captured -- a resumed run, or no files calibrated). Serialized into the
                 // pass-1 data sidecar below so it round-trips into the object graph
                 // WritePass2AndFinalizeFromAccumulator reloads and survives to the final page.
                 data.Cal = cal;
-                LogModelTabNote(contributions, log);
+                LogModelTabNote(modelView, log);
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
                     @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                 data.OspreyVersion = OspreyVersion.DisplayVersion;
@@ -156,23 +159,23 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// What the report says about its Model tab, or null when the tab is complete (a linear
-        /// model). A null <paramref name="contributions"/> means no model was trained on this run;
-        /// a tree ensemble's was trained and has no contribution table. Kept apart because the
-        /// first note tells the operator to clear sidecars and force a retrain, which for a fresh
-        /// gbdt run would be both false and a wasted re-run.
+        /// model). A null <paramref name="modelView"/> means no model views are available; a tree
+        /// ensemble's were and it has no contribution table. Kept apart because the first note
+        /// tells the operator to clear sidecars and force a retrain, which for a fresh gbdt run
+        /// would be both false and a wasted re-run.
         /// </summary>
-        internal static string ModelTabNote(FeatureContributions contributions)
+        internal static string ModelTabNote(ModelDiagnosticsData.ModelView modelView)
         {
-            if (contributions == null)
+            if (modelView == null)
                 return MODEL_NOT_RETRAINED_NOTE;
-            return contributions.IsTreeEnsemble ? TREE_MODEL_NOTE : null;
+            return modelView.ModelIsTreeEnsemble ? TREE_MODEL_NOTE : null;
         }
 
         /// <summary>Log <see cref="ModelTabNote"/> when there is one, rather than silently emitting a
         /// Model tab that is blank or half-empty.</summary>
-        private static void LogModelTabNote(FeatureContributions contributions, IOspreyLog log)
+        private static void LogModelTabNote(ModelDiagnosticsData.ModelView modelView, IOspreyLog log)
         {
-            string note = ModelTabNote(contributions);
+            string note = ModelTabNote(modelView);
             if (note != null)
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, note);
         }
@@ -749,6 +752,53 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         public static string Pass2SidecarPath(OspreyConfig config)
         {
             return ResolvePass2SidecarPath(config);
+        }
+
+        /// <summary>
+        /// One run's calibration-view row and its mass-error unit (the row does not carry it), as
+        /// the <see cref="CalibrationParams.ModelDiagnostics"/> member of the run's
+        /// <c>.calibration.json</c>. PerFileScoring sets it on every run, because only Stage 3
+        /// holds the calibration matches the row is binned from; FirstPassFDR reads it back when
+        /// the in-memory byproduct is absent - a resume past Stage 3, an HPC join, or
+        /// <c>--model-diagnostics</c> added after the analysis ran without it (P16). Null for a null
+        /// row.
+        /// </summary>
+        public static JObject CalibrationDiagnosticsToJson(ModelDiagnosticsData.CalFileRow row, string massUnit)
+        {
+            if (row == null)
+                return null;
+            return JObject.FromObject(new CalibrationDiagnosticsMember { MassUnit = massUnit, Row = row },
+                JsonSerializer.Create(SidecarSettings));
+        }
+
+        /// <summary>
+        /// The run's calibration-view row from its loaded <c>.calibration.json</c>, or null when
+        /// the file carries none or it is unreadable.
+        /// </summary>
+        public static ModelDiagnosticsData.CalFileRow CalibrationDiagnosticsFromJson(CalibrationParams calibration,
+            out string massUnit)
+        {
+            massUnit = null;
+            if (calibration?.ModelDiagnostics == null)
+                return null;
+            try
+            {
+                var member = calibration.ModelDiagnostics.ToObject<CalibrationDiagnosticsMember>(
+                    JsonSerializer.Create(SidecarSettings));
+                massUnit = member?.MassUnit;
+                return member?.Row;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>The form of <see cref="CalibrationParams.ModelDiagnostics"/>.</summary>
+        private sealed class CalibrationDiagnosticsMember
+        {
+            public string MassUnit { get; set; }
+            public ModelDiagnosticsData.CalFileRow Row { get; set; }
         }
 
         private static string ResolvePass1SidecarPath(OspreyConfig config)
