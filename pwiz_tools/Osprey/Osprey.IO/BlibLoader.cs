@@ -43,7 +43,7 @@ namespace pwiz.Osprey.IO
     /// modifications parsed from the modified sequence, the peaks typed from m/z, and the
     /// intensities scaled to the base peak. Ported from osprey-io/src/library/blib.rs.
     ///
-    /// <para>The spectra are read in partitions by RefSpectra id (<see cref="BlibReader.ReadSpectra"/>),
+    /// <para>The spectra are read in partitions by RefSpectra id (<see cref="BlibReader.ReadSpectra(bool,int,int)"/>),
     /// one reader on its own connection per thread, each thread decoding and typing its rows;
     /// the partitions are then merged in id order, so the entries, their ids and the interned
     /// strings are the same whatever the thread count. The .blib is the library's transfer
@@ -125,7 +125,7 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// When true, the scan reads no peak blob at all (<see cref="BlibReader.ReadSpectra"/>
+        /// When true, the scan reads no peak blob at all (<see cref="BlibReader.ReadSpectra(bool,int,int)"/>
         /// without peaks) and every entry is returned with a readable empty
         /// <see cref="LibraryEntry.Fragments"/>: the lean load of a FirstPassFDR /
         /// <c>StopAfterStage5</c> worker, whose FDR stages read only the scalars. Set it only

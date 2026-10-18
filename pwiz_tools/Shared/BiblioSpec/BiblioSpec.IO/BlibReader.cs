@@ -121,7 +121,7 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
-        /// The <c>RefSpectra</c> ids in ascending order: the order <see cref="ReadSpectra"/> reads
+        /// The <c>RefSpectra</c> ids in ascending order: the order <see cref="ReadSpectra(bool,int,int)"/> reads
         /// the rows in, so a row's position in this list is its index in that order.
         /// </summary>
         public IReadOnlyList<long> ReadSpectrumIds()
