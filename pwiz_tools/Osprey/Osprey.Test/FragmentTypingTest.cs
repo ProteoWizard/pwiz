@@ -18,7 +18,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -49,6 +51,62 @@ namespace pwiz.Osprey.Test
             AssertNearerIonWinsOverLowerCharge();
             AssertStackedModificationsType();
             AssertNonFinitePeakIsUntyped();
+            AssertLadderMatchesFragmentMz();
+        }
+
+        /// <summary>
+        /// The ladder the typing reads its candidates from (<see cref="FragmentLadder.Build"/>,
+        /// which sums each ion's residues once per peptide) is bit-identical, slot by slot, to the
+        /// ion-at-a-time <see cref="PeptideFragmentMass.CalculateFragmentMz"/>: the same
+        /// additions in the same order. Checked on unmodified, modified (stacked at one residue,
+        /// and at a position past the end, which the ion sum ignores) and selenocysteine peptides,
+        /// one with a residue of no standard mass (every ion spanning it has no m/z), at every
+        /// precursor charge the ladder distinguishes.
+        /// </summary>
+        private static void AssertLadderMatchesFragmentMz()
+        {
+            var cases = new[]
+            {
+                (SEQUENCE, new Modification[0]),
+                (REPEAT, new Modification[0]),
+                (@"MPEPTIDEK", new[]
+                {
+                    new Modification { Position = 0, MassDelta = 42.010565 },
+                    new Modification { Position = 0, MassDelta = 15.994915 },
+                    new Modification { Position = 8, MassDelta = 8.014199 },
+                    new Modification { Position = 9, MassDelta = 1.0 },
+                }),
+                (@"GIRSHNETPEK", new[] { new Modification { Position = 4, MassDelta = 79.966331 } }),
+                (@"SECUIDEK", new[] { new Modification { Position = 2, MassDelta = 57.021464 } }),
+                (@"PEPBTIDEK", new Modification[0]),
+                (@"XPEPTIDEK", new Modification[0]),
+                (@"PEPTIDEX", new Modification[0]),
+                (@"AK", new Modification[0]),
+                (@"K", new Modification[0]),
+            };
+            foreach (var (sequence, mods) in cases)
+            {
+                var modMasses = PeptideFragmentMass.ModMassesByPosition(mods);
+                for (int precursorCharge = 1; precursorCharge <= 3; precursorCharge++)
+                {
+                    var ladder = FragmentLadder.Build(sequence, mods, precursorCharge);
+                    Assert.AreEqual(FragmentLadder.SlotCount(sequence.Length), ladder.Length);
+                    for (int slot = 0; slot < ladder.Length; slot++)
+                    {
+                        int charge = FragmentLadder.ChargeOf(slot);
+                        double? expected = charge > Math.Min(precursorCharge, FragmentLadder.MAX_FRAGMENT_CHARGE)
+                            ? null
+                            : PeptideFragmentMass.CalculateFragmentMz(FragmentLadder.IonTypeOf(slot),
+                                FragmentLadder.OrdinalOf(slot, sequence.Length), (byte)charge, sequence, modMasses, null);
+                        string where = string.Format(@"{0} z{1} slot {2} ({3}{4}^{5})", sequence, precursorCharge, slot,
+                            FragmentLadder.IonTypeOf(slot), FragmentLadder.OrdinalOf(slot, sequence.Length), charge);
+                        if (expected == null)
+                            Assert.IsTrue(double.IsNaN(ladder[slot]), where);
+                        else
+                            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected.Value), BitConverter.DoubleToInt64Bits(ladder[slot]), where);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -224,7 +282,7 @@ namespace pwiz.Osprey.Test
 
             // A library whose statements all agree reports a line of information, not a warning.
             var agreeing = new DiannTsvLoader(2, FragmentToleranceConfig.Hram(10));
-            using (var reader = new StringReader(tsv.Substring(0, tsv.IndexOf(Line(b3, @"y", 6, @"noloss"), System.StringComparison.Ordinal))))
+            using (var reader = new StringReader(tsv.Substring(0, tsv.IndexOf(Line(b3, @"y", 6, @"noloss"), StringComparison.Ordinal))))
             {
                 agreeing.ParseReader(reader);
             }
@@ -327,7 +385,7 @@ namespace pwiz.Osprey.Test
 
         private static string Line(double mz, string type, int number, string loss, int fragmentCharge = 1)
         {
-            var invariant = System.Globalization.CultureInfo.InvariantCulture;
+            var invariant = CultureInfo.InvariantCulture;
             return string.Join("\t", @"_PEPTIDEK_", SEQUENCE, @"466.7", @"2", @"10.5", @"P1", mz.ToString(invariant),
                 @"1.0", type, number.ToString(invariant), fragmentCharge.ToString(invariant), loss) + "\n";
         }

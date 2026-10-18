@@ -87,7 +87,16 @@ namespace pwiz.Osprey.IO {
                         "_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0:N0} library spectra.
+        /// </summary>
+        public static string BlibLoader_LoadSpectra_Reading__0_N0__library_spectra {
+            get {
+                return ResourceManager.GetString("BlibLoader_LoadSpectra_Reading__0_N0__library_spectra", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to ... and {0:N0} more modifications.
         /// </summary>

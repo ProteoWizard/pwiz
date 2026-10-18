@@ -27,8 +27,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using pwiz.BiblioSpec.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -38,6 +42,13 @@ namespace pwiz.Osprey.IO
     /// which reads the file; this class makes Osprey's library entries of its records: the
     /// modifications parsed from the modified sequence, the peaks typed from m/z, and the
     /// intensities scaled to the base peak. Ported from osprey-io/src/library/blib.rs.
+    ///
+    /// <para>The spectra are read in partitions by RefSpectra id (<see cref="BlibReader.ReadSpectra"/>),
+    /// one reader on its own connection per thread, each thread decoding and typing its rows;
+    /// the partitions are then merged in id order, so the entries, their ids and the interned
+    /// strings are the same whatever the thread count. The .blib is the library's transfer
+    /// format and its derived form, so its load has to be close to a binary cache read: a
+    /// 242,841-precursor library read on one thread spent 2.4 of its 3.4 seconds typing peaks.</para>
     /// </summary>
     public class BlibLoader
     {
@@ -56,22 +67,36 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public const string READER_VERSION = @"4";
 
+        /// <summary>
+        /// Spectra per partition below which fewer threads than asked for are used: a reader per
+        /// thread is a connection and a scan of the id column each, which a small library does
+        /// not repay.
+        /// </summary>
+        private const int MIN_SPECTRA_PER_PARTITION = 4000;
+
         private readonly FragmentToleranceConfig _fragmentTolerance;
-        // The whole of the last load's row and protein work, and the part of it spent making
-        // entries of the rows; the rest is the reader's.
-        private readonly Stopwatch _total = new Stopwatch();
-        private readonly Stopwatch _type = new Stopwatch();
+        private readonly int _nThreads;
+        // The last load's phases: the parallel scan (rows read, peaks decoded and typed), the
+        // typing within it summed over the threads, the serial merge that interns and numbers
+        // the entries, and the protein mapping.
+        private readonly Stopwatch _scan = new Stopwatch();
+        private long _typingTicks;
+        private readonly Stopwatch _merge = new Stopwatch();
+        private readonly Stopwatch _proteins = new Stopwatch();
+        private int _partitionCount;
         // The RefSpectra id of each entry of the last load, in the entries' order.
         private readonly List<long> _refSpectraIds = new List<long>();
 
         /// <summary>
         /// A reader that types each spectrum's peaks within <paramref name="fragmentTolerance"/>,
         /// the search's fragment tolerance, so a peak it calls y6 is one chromatogram extraction
-        /// would count as y6.
+        /// would count as y6, reading on up to <paramref name="nThreads"/> threads (the
+        /// processor count when 0 or less).
         /// </summary>
-        public BlibLoader(FragmentToleranceConfig fragmentTolerance)
+        public BlibLoader(FragmentToleranceConfig fragmentTolerance, int nThreads = 0)
         {
             _fragmentTolerance = fragmentTolerance;
+            _nThreads = nThreads > 0 ? nThreads : Environment.ProcessorCount;
         }
 
         /// <summary>
@@ -84,16 +109,34 @@ namespace pwiz.Osprey.IO
             get { return _refSpectraIds; }
         }
 
-        /// <summary>Seconds of the last <see cref="Load"/> spent in <see cref="BlibReader"/>: reading the rows and decoding the peak blobs.</summary>
-        public double ReadSeconds
+        /// <summary>Threads the last <see cref="Load"/> read on.</summary>
+        public int PartitionCount
         {
-            get { return (_total.Elapsed - _type.Elapsed).TotalSeconds; }
+            get { return _partitionCount; }
         }
 
-        /// <summary>Seconds of the last <see cref="Load"/> spent making entries of the rows: parsing modifications, typing and interning.</summary>
-        public double TypeSeconds
+        /// <summary>Seconds of the last <see cref="Load"/> in the parallel scan: rows read, peaks decoded and typed, on every thread at once.</summary>
+        public double ScanSeconds
         {
-            get { return _type.Elapsed.TotalSeconds; }
+            get { return _scan.Elapsed.TotalSeconds; }
+        }
+
+        /// <summary>Seconds of the last <see cref="Load"/> spent typing peaks, summed over the threads.</summary>
+        public double TypingThreadSeconds
+        {
+            get { return TimeSpan.FromTicks(_typingTicks).TotalSeconds; }
+        }
+
+        /// <summary>Seconds of the last <see cref="Load"/> merging the partitions in id order and interning the strings.</summary>
+        public double MergeSeconds
+        {
+            get { return _merge.Elapsed.TotalSeconds; }
+        }
+
+        /// <summary>Seconds of the last <see cref="Load"/> mapping the protein accessions onto the entries; the tables themselves are read during the scan.</summary>
+        public double ProteinSeconds
+        {
+            get { return _proteins.Elapsed.TotalSeconds; }
         }
 
         /// <summary>
@@ -116,8 +159,10 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
-            _total.Reset();
-            _type.Reset();
+            _scan.Reset();
+            _typingTicks = 0;
+            _merge.Reset();
+            _proteins.Reset();
             _refSpectraIds.Clear();
             using (var reader = new BlibReader(path))
             {
@@ -132,11 +177,15 @@ namespace pwiz.Osprey.IO
                 // protein accessions) as the interned arrays are filled, so no
                 // member is mutated after assignment. One pool spans both the
                 // spectra and the protein-mapping pass; only object identity
-                // changes, so output is unchanged.
+                // changes, so output is unchanged. The pool is single-threaded, so
+                // the interning is the merge's, after the parallel scan.
                 var interner = new LibraryStringInterner();
                 var typingStats = new FragmentTypingStats();
-                var entries = LoadSpectra(reader, interner, typingStats);
-                LoadProteinMappings(reader, entries, interner);
+                // The protein tables are read on a connection of their own while the spectra
+                // scan runs: the two meet only at the mapping, after the merge.
+                var proteins = Task.Run(() => ReadProteins(path));
+                var entries = LoadSpectra(path, reader, interner, typingStats);
+                LoadProteinMappings(proteins.GetAwaiter().GetResult(), entries, interner);
                 interner.LogSummary(logInfo);
                 logInfo?.Invoke(string.Format(
                     OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
@@ -149,80 +198,183 @@ namespace pwiz.Osprey.IO
         #region Private helpers
 
         /// <summary>
-        /// Reads every spectrum with its peaks, typing them as they are read. A library with any
-        /// modification that cannot be identified is refused, listing every such modification.
-        /// The time goes into two buckets, <see cref="ReadSeconds"/> for the reader's row and
-        /// blob work and <see cref="TypeSeconds"/> for everything made of the row, so a slow
-        /// load says which side it is on.
+        /// Reads every spectrum with its peaks: in partitions by id on the threads, each
+        /// decoding and typing its own rows (<see cref="ParseSpectrum"/>), then merged in id
+        /// order on this thread, where the entries are numbered and their strings interned
+        /// (<see cref="MergePartitions"/>). A library with any modification that cannot be
+        /// identified is refused, listing every such modification.
         /// </summary>
-        private List<LibraryEntry> LoadSpectra(BlibReader reader, LibraryStringInterner interner,
+        private List<LibraryEntry> LoadSpectra(string path, BlibReader reader, LibraryStringInterner interner,
             FragmentTypingStats typingStats)
         {
-            var entries = new List<LibraryEntry>();
-            var unidentifiedMods = new UnidentifiedModifications();
+            int count = reader.CountSpectra();
+            _partitionCount = Math.Max(1, Math.Min(_nThreads, count / MIN_SPECTRA_PER_PARTITION));
+            var partitions = new List<ParsedSpectrum>[_partitionCount];
 
-            _total.Start();
-            foreach (var spectrum in reader.ReadSpectra(true))
+            _scan.Start();
+            // A 6.2M-precursor library takes seconds here with nothing else on the console.
+            using (var progress = new ProgressReporter(
+                       string.Format(OspreyIOResources.BlibLoader_LoadSpectra_Reading__0_N0__library_spectra, count), count,
+                       string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                // A row without a sequence (a small molecule) is refused as a peptide too
-                // short to search; one without a modified sequence is the unmodified peptide.
-                string peptideSeq = spectrum.PeptideSeq ?? string.Empty;
-                string peptideModSeq = spectrum.PeptideModSeq ?? peptideSeq;
-
-                _type.Start();
-                // The same bound the TSV loader enforces. An invariant only one
-                // format checks is not an invariant, and DecoyGenerator's
-                // fragment-overlap gate relies on this one whatever the library
-                // was built from.
-                LibraryValidation.ValidatePeptideLength(peptideSeq);
-
-                var parsed = ParseBlibModifications(peptideModSeq, out string unidentified);
-                if (parsed == null)
+                long done = 0;
+                var options = new ParallelOptions { MaxDegreeOfParallelism = _partitionCount };
+                try
                 {
-                    unidentifiedMods.Add(unidentified, spectrum.Id, peptideModSeq);
-                    _type.Stop();
+                    Parallel.For(0, _partitionCount, options, partition =>
+                    {
+                        partitions[partition] = ReadPartition(path, partition, count, typingStats, progress, ref done);
+                    });
+                }
+                catch (AggregateException ex) when (ex.InnerExceptions.Count > 0)
+                {
+                    // The fault as the row reader threw it, not wrapped: a corrupt peak blob is
+                    // reported as the file problem it is, as a one-thread read reported it.
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+            }
+            _scan.Stop();
+
+            _merge.Start();
+            var entries = MergePartitions(partitions, interner);
+            _merge.Stop();
+            return entries;
+        }
+
+        /// <summary>
+        /// One partition's rows, in id order, each decoded and typed, read on a reader of this
+        /// thread's own. Progress is reported in blocks, since the reporter's lock is shared by
+        /// every thread.
+        /// </summary>
+        private List<ParsedSpectrum> ReadPartition(string path, int partition, int count, FragmentTypingStats typingStats,
+            ProgressReporter progress, ref long done)
+        {
+            const int progressBlock = 1024;
+            var typing = new Stopwatch();
+            var parsed = new List<ParsedSpectrum>(count / _partitionCount + 1);
+            int sinceReport = 0;
+            using (var reader = new BlibReader(path))
+            {
+                foreach (var spectrum in reader.ReadSpectra(true, _partitionCount, partition))
+                {
+                    parsed.Add(ParseSpectrum(spectrum, typingStats, typing));
+                    if (++sinceReport == progressBlock)
+                    {
+                        progress.Report(Interlocked.Add(ref done, sinceReport));
+                        sinceReport = 0;
+                    }
+                }
+            }
+            if (sinceReport > 0)
+                progress.Report(Interlocked.Add(ref done, sinceReport));
+            Interlocked.Add(ref _typingTicks, typing.Elapsed.Ticks);
+            return parsed;
+        }
+
+        /// <summary>
+        /// A spectrum's row made into the parts of an entry: its modifications parsed, its peaks
+        /// decoded, in m/z order and typed, and its modified sequence rebuilt from the
+        /// modification masses in the one text every loader gives it, whatever precision the
+        /// file printed. Nothing is interned or numbered here, since the threads share neither.
+        /// A modification that cannot be identified leaves <see cref="ParsedSpectrum.Unidentified"/>
+        /// naming it, for the merge to collect.
+        /// </summary>
+        private ParsedSpectrum ParseSpectrum(BlibSpectrumRecord spectrum, FragmentTypingStats typingStats, Stopwatch typing)
+        {
+            // A row without a sequence (a small molecule) is refused as a peptide too
+            // short to search; one without a modified sequence is the unmodified peptide.
+            string peptideSeq = spectrum.PeptideSeq ?? string.Empty;
+            string peptideModSeq = spectrum.PeptideModSeq ?? peptideSeq;
+            var parsed = new ParsedSpectrum
+            {
+                RefId = spectrum.Id,
+                PeptideSeq = peptideSeq,
+                PeptideModSeq = peptideModSeq,
+                Charge = spectrum.PrecursorCharge,
+                PrecursorMz = spectrum.PrecursorMz,
+                RetentionTime = spectrum.RetentionTime ?? 0.0,
+            };
+            var modifications = ParseBlibModifications(peptideModSeq, out string unidentified);
+            if (modifications == null)
+            {
+                parsed.Unidentified = unidentified;
+                return parsed;
+            }
+            parsed.Modifications = modifications.Count == 0 ? Array.Empty<Modification>() : modifications.ToArray();
+
+            // A spectrum without a peaks row has no fragments.
+            var peaks = BlibReader.DecodePeaks(spectrum);
+            typing.Start();
+            var fragments = peaks != null ? ToFragments(peaks) : Array.Empty<LibraryFragment>();
+            FragmentTyping.TypeFragments(peptideSeq, parsed.Modifications, spectrum.PrecursorCharge, fragments,
+                _fragmentTolerance, typingStats);
+            typing.Stop();
+            parsed.Fragments = fragments;
+            parsed.ModifiedSequence = BlibSpectrum.FormatModifiedSequence(peptideSeq,
+                PeptideFragmentMass.ModMassesByPosition(parsed.Modifications));
+            return parsed;
+        }
+
+        /// <summary>
+        /// The partitions merged in RefSpectra id order - each is in id order already, so the
+        /// smallest head is next - into entries numbered from 0 in that order, as the TSV
+        /// loader's are (the RefSpectra id is kept beside the entry for the tables that refer to
+        /// it), with their strings interned. The peptide-length bound the TSV loader enforces is
+        /// checked here too: an invariant only one format checks is not an invariant, and
+        /// DecoyGenerator's fragment-overlap gate relies on this one whatever the library was
+        /// built from.
+        /// </summary>
+        private List<LibraryEntry> MergePartitions(List<ParsedSpectrum>[] partitions, LibraryStringInterner interner)
+        {
+            int total = partitions.Sum(p => p.Count);
+            var entries = new List<LibraryEntry>(total);
+            var heads = new int[partitions.Length];
+            var unidentifiedMods = new UnidentifiedModifications();
+            for (int n = 0; n < total; n++)
+            {
+                int next = -1;
+                for (int p = 0; p < partitions.Length; p++)
+                {
+                    if (heads[p] < partitions[p].Count &&
+                        (next < 0 || partitions[p][heads[p]].RefId < partitions[next][heads[next]].RefId))
+                    {
+                        next = p;
+                    }
+                }
+                var parsed = partitions[next][heads[next]++];
+
+                LibraryValidation.ValidatePeptideLength(parsed.PeptideSeq);
+                if (parsed.Unidentified != null)
+                {
+                    unidentifiedMods.Add(parsed.Unidentified, parsed.RefId, parsed.PeptideModSeq);
                     continue;
                 }
-                var modifications = BuildInternedModifications(parsed, interner);
-                _type.Stop();
-
-                // A spectrum without a peaks row has no fragments.
-                var peaks = BlibReader.DecodePeaks(spectrum);
-
-                _type.Start();
-                var fragments = peaks != null ? ToFragments(peaks) : Array.Empty<LibraryFragment>();
-                FragmentTyping.TypeFragments(peptideSeq, modifications, spectrum.PrecursorCharge, fragments,
-                    _fragmentTolerance, typingStats);
-
-                // Ids run from 0 in reading order, as the TSV loader's do (the RefSpectra id is
-                // kept beside the entry for the tables that refer to it), and the modified
-                // sequence is rebuilt from the modification masses in the one text every loader
-                // gives it, whatever precision the file printed.
                 var entry = new LibraryEntry((uint)entries.Count,
-                    interner.Intern(peptideSeq),
-                    interner.Intern(BlibSpectrum.FormatModifiedSequence(peptideSeq,
-                        PeptideFragmentMass.ModMassesByPosition(modifications))),
-                    (byte)spectrum.PrecursorCharge, spectrum.PrecursorMz, spectrum.RetentionTime ?? 0.0);
-                _refSpectraIds.Add(spectrum.Id);
-                entry.Modifications = modifications;
-                entry.Fragments = fragments;
-
+                    interner.Intern(parsed.PeptideSeq),
+                    interner.Intern(parsed.ModifiedSequence),
+                    (byte)parsed.Charge, parsed.PrecursorMz, parsed.RetentionTime);
+                _refSpectraIds.Add(parsed.RefId);
+                entry.Modifications = InternModificationNames(parsed.Modifications, interner);
+                entry.Fragments = parsed.Fragments;
                 entries.Add(entry);
-                _type.Stop();
             }
-            _total.Stop();
 
             if (unidentifiedMods.Any)
                 throw unidentifiedMods.ToException();
             return entries;
         }
 
-        private void LoadProteinMappings(BlibReader reader, List<LibraryEntry> entries,
+        /// <summary>The protein accessions of every spectrum (<see cref="BlibReader.ReadProteins"/>), read on a reader of its own.</summary>
+        private static ILookup<long, string> ReadProteins(string path)
+        {
+            using (var reader = new BlibReader(path))
+                return reader.ReadProteins();
+        }
+
+        private void LoadProteinMappings(ILookup<long, string> proteins, List<LibraryEntry> entries,
             LibraryStringInterner interner)
         {
-            _total.Start();
-            var proteins = reader.ReadProteins();
-            _total.Stop();
+            _proteins.Start();
             for (int i = 0; i < entries.Count; i++)
             {
                 var entry = entries[i];
@@ -231,26 +383,18 @@ namespace pwiz.Osprey.IO
                 if (accessions.Length > 0)
                     entry.ProteinIds = accessions;
             }
+            _proteins.Stop();
         }
 
         /// <summary>
-        /// Intern each modification's <see cref="Modification.Name"/> and return
-        /// the mods as an array (empty -> shared empty array). Only string
-        /// identity changes.
+        /// Intern each modification's <see cref="Modification.Name"/>, in place; the array is
+        /// this load's own until the entry is published. Only string identity changes.
         /// </summary>
-        private static Modification[] BuildInternedModifications(
-            List<Modification> mods, LibraryStringInterner interner)
+        private static Modification[] InternModificationNames(Modification[] mods, LibraryStringInterner interner)
         {
-            if (mods == null || mods.Count == 0)
-                return Array.Empty<Modification>();
-            var result = new Modification[mods.Count];
-            for (int i = 0; i < mods.Count; i++)
-            {
-                var m = mods[i];
+            foreach (var m in mods)
                 m.Name = interner.Intern(m.Name);
-                result[i] = m;
-            }
-            return result;
+            return mods;
         }
 
         /// <summary>
@@ -417,6 +561,27 @@ namespace pwiz.Osprey.IO
                 }
             }
             return FragmentPeaks.MergeEqualMz(fragments);
+        }
+
+        /// <summary>
+        /// One <c>RefSpectra</c> row read, decoded and typed on its partition's thread: the parts
+        /// of a <see cref="LibraryEntry"/> before the merge numbers it and interns its strings.
+        /// </summary>
+        private sealed class ParsedSpectrum
+        {
+            public long RefId;
+            public string PeptideSeq;
+            /// <summary>The file's own modified-sequence text, for naming an unidentified modification.</summary>
+            public string PeptideModSeq;
+            /// <summary>The modified sequence rebuilt from the modification masses; null when one could not be identified.</summary>
+            public string ModifiedSequence;
+            public Modification[] Modifications;
+            public LibraryFragment[] Fragments;
+            public int Charge;
+            public double PrecursorMz;
+            public double RetentionTime;
+            /// <summary>The first bracket of the modified sequence that names no known modification, or null.</summary>
+            public string Unidentified;
         }
 
         /// <summary>

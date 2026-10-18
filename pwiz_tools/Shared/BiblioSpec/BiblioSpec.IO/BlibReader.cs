@@ -37,11 +37,13 @@ namespace pwiz.BiblioSpec.IO
     ///
     /// <para>The library's header (<see cref="Info"/>) and its small tables (source files,
     /// score types, proteins, metadata, decoy pairs) are read whole. The spectra and the
-    /// retention times stream, each as a scan that can be split into partitions by id
-    /// (<c>WHERE id % count = index</c>) so a caller can scan on several threads, one reader
-    /// on its own connection per thread. A spectrum's peaks, modifications and annotations are
-    /// also read singly by id, for a caller that keeps an index of the library and loads a
-    /// spectrum when it is asked for.</para>
+    /// retention times stream, each as a scan that can be split into partitions by id - the
+    /// span of RefSpectra ids cut into equal ranges, <c>WHERE id BETWEEN low AND high</c>, which
+    /// the rowid index serves, where a modulo partition is a full scan of the table per
+    /// partition - so a caller can scan on several threads, one reader on its own connection
+    /// per thread. A spectrum's peaks, modifications and annotations are also read singly by
+    /// id, for a caller that keeps an index of the library and loads a spectrum when it is
+    /// asked for.</para>
     ///
     /// <para>A library of an older schema reads through the same calls: a column or table the
     /// library lacks reads as the record's default, and a reader tests for a table
@@ -70,6 +72,9 @@ namespace pwiz.BiblioSpec.IO
         private BlibLibraryInfo _info;
         private SpectrumColumns _spectrumColumns;
         private RetentionTimeColumns _retentionTimeColumns;
+        // The lowest and highest RefSpectra id, read once for the partitioned scans; (1, 0) for
+        // a library with no spectra, an empty range.
+        private (long Low, long High)? _idSpan;
 
         /// <summary>Opens the library at <paramref name="path"/> read-only, on a connection of its own.</summary>
         public BlibReader(string path)
@@ -231,9 +236,10 @@ namespace pwiz.BiblioSpec.IO
         /// modifications, proteins and annotations are not filled in: <see cref="ReadProteins"/>
         /// reads them for every spectrum at once, <see cref="ReadModifications"/> and
         /// <see cref="ReadAnnotations"/> for one. With <paramref name="partitionCount"/> above
-        /// one, only the rows whose id falls in partition <paramref name="partitionIndex"/>
-        /// (<c>id % count = index</c>), so the partitions together are the whole table and a
-        /// caller can scan them on several threads, each with a reader of its own.
+        /// one, only the rows whose id falls in partition <paramref name="partitionIndex"/> of
+        /// the id span cut into that many equal ranges, so the partitions together are the whole
+        /// table, each in id order and every id of one partition below every id of the next, and
+        /// a caller can scan them on several threads, each with a reader of its own.
         /// </summary>
         public IEnumerable<BlibSpectrumRecord> ReadSpectra(bool withPeaks, int partitionCount = 1, int partitionIndex = 0)
         {
@@ -410,12 +416,35 @@ namespace pwiz.BiblioSpec.IO
                 throw new ArgumentOutOfRangeException(nameof(partitionIndex));
         }
 
-        private static void AppendPartition(StringBuilder sql, string idColumn, int partitionCount, int partitionIndex)
+        /// <summary>
+        /// Restricts a scan to partition <paramref name="partitionIndex"/> of the RefSpectra id
+        /// span cut into <paramref name="partitionCount"/> equal ranges: a range the rowid index
+        /// serves, so a thread reads its own rows and no other's.
+        /// </summary>
+        private void AppendPartition(StringBuilder sql, string idColumn, int partitionCount, int partitionIndex)
         {
-            if (partitionCount > 1)
+            if (partitionCount <= 1)
+                return;
+            var (low, high) = IdSpan();
+            long span = high - low + 1;
+            long from = low + span * partitionIndex / partitionCount;
+            long to = low + span * (partitionIndex + 1) / partitionCount - 1;
+            sql.AppendFormat(CultureInfo.InvariantCulture, @" WHERE {0} BETWEEN {1} AND {2}", idColumn, from, to);
+        }
+
+        /// <summary>The lowest and highest RefSpectra id, read once; (1, 0) when the table is empty.</summary>
+        private (long Low, long High) IdSpan()
+        {
+            if (_idSpan.HasValue)
+                return _idSpan.Value;
+            using (var command = new SQLiteCommand(@"SELECT MIN(id), MAX(id) FROM RefSpectra", _connection))
+            using (var reader = command.ExecuteReader())
             {
-                sql.AppendFormat(CultureInfo.InvariantCulture, @" WHERE {0} % {1} = {2}", idColumn, partitionCount, partitionIndex);
+                _idSpan = reader.Read() && !reader.IsDBNull(0)
+                    ? (reader.GetInt64(0), reader.GetInt64(1))
+                    : (1L, 0L);
             }
+            return _idSpan.Value;
         }
 
         private static string GetString(SQLiteDataReader reader, int ordinal)

@@ -246,11 +246,12 @@ namespace pwiz.Osprey.IO
                     break;
 
                 case LibraryFormat.Blib:
-                    var blibLoader = new BlibLoader(config.FragmentTolerance);
+                    var blibLoader = new BlibLoader(config.FragmentTolerance, config.NThreads);
                     entries = blibLoader.Load(path, log.LogInfo);
                     parseDetail = string.Format(CultureInfo.InvariantCulture,
-                        @"blib; file read and peak decode {0:F2}s, modifications and peak typing {1:F2}s",
-                        blibLoader.ReadSeconds, blibLoader.TypeSeconds);
+                        @"blib; {0} threads read, decoded and typed in {1:F2}s ({2:F2}s typing summed over threads), merged and interned in {3:F2}s, proteins {4:F2}s",
+                        blibLoader.PartitionCount, blibLoader.ScanSeconds, blibLoader.TypingThreadSeconds,
+                        blibLoader.MergeSeconds, blibLoader.ProteinSeconds);
                     // The table is the library's pairing design - each decoy's target, and the
                     // pairing id that pairs an entrapment peptide with its original target - so
                     // it is read whenever the library has one, whichever way the decoys come.

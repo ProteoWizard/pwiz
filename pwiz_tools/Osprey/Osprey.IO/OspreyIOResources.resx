@@ -112,6 +112,9 @@
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>Invalid BiblioSpec library: the {0} table was not found.</value>
   </data>
+  <data name="BlibLoader_LoadSpectra_Reading__0_N0__library_spectra" xml:space="preserve">
+    <value>Reading {0:N0} library spectra</value>
+  </data>
   <data name="CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_" xml:space="preserve">
     <value>Library protein accessions carry the per-peptide '{4}' suffix that Carafe adds (e.g. '{2}' -&gt; '{3}'); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein.</value>
   </data>
