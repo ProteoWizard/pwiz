@@ -128,7 +128,7 @@ namespace pwiz.BiblioSpec.IO
     /// </summary>
     public readonly struct BlibDecoyPair
     {
-        public const string TABLE = @"DecoyPairs";
+        public const string TABLE = BlibSchema.TABLE_DECOY_PAIRS;
 
         public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId = null, string method = null)
         {

@@ -53,16 +53,17 @@ namespace pwiz.BiblioSpec.IO
     /// </summary>
     public sealed class BlibReader : IDisposable
     {
-        public const string TABLE_LIB_INFO = @"LibInfo";
-        public const string TABLE_REF_SPECTRA = @"RefSpectra";
-        public const string TABLE_REF_SPECTRA_PEAKS = @"RefSpectraPeaks";
-        public const string TABLE_REF_SPECTRA_PEAK_ANNOTATIONS = @"RefSpectraPeakAnnotations";
-        public const string TABLE_MODIFICATIONS = @"Modifications";
-        public const string TABLE_PROTEINS = @"Proteins";
-        public const string TABLE_REF_SPECTRA_PROTEINS = @"RefSpectraProteins";
-        public const string TABLE_SPECTRUM_SOURCE_FILES = @"SpectrumSourceFiles";
-        public const string TABLE_SCORE_TYPES = @"ScoreTypes";
-        public const string TABLE_RETENTION_TIMES = @"RetentionTimes";
+        // The table names a tool asks the reader about, spelled once in BlibSchema.
+        public const string TABLE_LIB_INFO = BlibSchema.TABLE_LIB_INFO;
+        public const string TABLE_REF_SPECTRA = BlibSchema.TABLE_REF_SPECTRA;
+        public const string TABLE_REF_SPECTRA_PEAKS = BlibSchema.TABLE_REF_SPECTRA_PEAKS;
+        public const string TABLE_REF_SPECTRA_PEAK_ANNOTATIONS = BlibSchema.TABLE_REF_SPECTRA_PEAK_ANNOTATIONS;
+        public const string TABLE_MODIFICATIONS = BlibSchema.TABLE_MODIFICATIONS;
+        public const string TABLE_PROTEINS = BlibSchema.TABLE_PROTEINS;
+        public const string TABLE_REF_SPECTRA_PROTEINS = BlibSchema.TABLE_REF_SPECTRA_PROTEINS;
+        public const string TABLE_SPECTRUM_SOURCE_FILES = BlibSchema.TABLE_SPECTRUM_SOURCE_FILES;
+        public const string TABLE_SCORE_TYPES = BlibSchema.TABLE_SCORE_TYPES;
+        public const string TABLE_RETENTION_TIMES = BlibSchema.TABLE_RETENTION_TIMES;
 
         private readonly SQLiteConnection _connection;
         private readonly bool _ownsConnection;
