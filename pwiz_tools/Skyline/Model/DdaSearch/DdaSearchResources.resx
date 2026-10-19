@@ -130,6 +130,12 @@
   <data name="DdaSearch_MSAmandaSearchWrapper_unimod_file__0__not_found" xml:space="preserve">
     <value>Unimod file {0} not found</value>
   </data>
+  <data name="DdaSearch_SageSearchEngine_Sage_did_not_produce_a_valid_Percolator_input_file___0__" xml:space="preserve">
+    <value>Sage did not produce a valid Percolator input file ({0}).</value>
+  </data>
+  <data name="DdaSearch_SageSearchEngine_Sage_produced_Percolator_scores__but_no_search_results_could_be_matched_to_them__This_may_indicate_an_unsupported_Sage_version_" xml:space="preserve">
+    <value>Sage produced Percolator scores, but no search results could be matched to them. This may indicate an unsupported Sage version.</value>
+  </data>
   <data name="DdaSearch_Search_failed__0" xml:space="preserve">
     <value>Search failed: {0}</value>
   </data>
