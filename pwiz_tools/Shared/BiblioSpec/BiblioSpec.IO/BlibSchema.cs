@@ -92,6 +92,39 @@ namespace pwiz.BiblioSpec.IO
             "-- Version 3 added product ion mobility offset information for Waters Mse IMS\n" +
             "-- Version 2 added ion mobility information\n";
 
+        // --- table names ---------------------------------------------------------------------------
+        // The one spelling of each table, for the writer's and reader's probes and statements and
+        // for a tool asking the reader about a table; the CREATE statements below spell them again
+        // as the literal SQL BiblioSpec has always written.
+
+        public const string TABLE_LIB_INFO = "LibInfo";
+        public const string TABLE_REF_SPECTRA = "RefSpectra";
+        public const string TABLE_MODIFICATIONS = "Modifications";
+        public const string TABLE_REF_SPECTRA_PEAKS = "RefSpectraPeaks";
+        public const string TABLE_PROTEINS = "Proteins";
+        public const string TABLE_REF_SPECTRA_PROTEINS = "RefSpectraProteins";
+        public const string TABLE_REF_SPECTRA_PEAK_ANNOTATIONS = "RefSpectraPeakAnnotations";
+        public const string TABLE_SPECTRUM_SOURCE_FILES = "SpectrumSourceFiles";
+        public const string TABLE_SCORE_TYPES = "ScoreTypes";
+        public const string TABLE_ION_MOBILITY_TYPES = "IonMobilityTypes";
+        /// <summary>The per-observation table of a non-redundant library; a redundant library has none.</summary>
+        public const string TABLE_RETENTION_TIMES = "RetentionTimes";
+        /// <summary>Optional: the library's key-value metadata (<see cref="BlibMetadata"/>).</summary>
+        public const string TABLE_LIB_METADATA = "LibMetadata";
+        /// <summary>Optional: the decoy and entrapment design of a library that supplies its own decoys.</summary>
+        public const string TABLE_DECOY_PAIRS = "DecoyPairs";
+
+        /// <summary>
+        /// Every table of the format, the optional ones included, in creation order: what a
+        /// writer making a library anew in a file drops first.
+        /// </summary>
+        public static IReadOnlyList<string> AllTableNames { get; } = new[]
+        {
+            TABLE_LIB_INFO, TABLE_REF_SPECTRA, TABLE_MODIFICATIONS, TABLE_REF_SPECTRA_PEAKS, TABLE_PROTEINS,
+            TABLE_REF_SPECTRA_PROTEINS, TABLE_REF_SPECTRA_PEAK_ANNOTATIONS, TABLE_SPECTRUM_SOURCE_FILES, TABLE_SCORE_TYPES,
+            TABLE_ION_MOBILITY_TYPES, TABLE_RETENTION_TIMES, TABLE_LIB_METADATA, TABLE_DECOY_PAIRS,
+        };
+
         // --- small-molecule columns ---------------------------------------------------------------
 
         /// <summary>
@@ -356,22 +389,22 @@ namespace pwiz.BiblioSpec.IO
         // Discoverer's peptide groups and master proteins, Osprey's experiment-level FDR.
 
         /// <summary>Global (experiment-wide) precursor q-value.</summary>
-        public static readonly BlibOptionalColumn PrecursorQValue = new BlibOptionalColumn("RefSpectra", "PrecursorQValue", "REAL");
+        public static readonly BlibOptionalColumn PrecursorQValue = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PrecursorQValue", "REAL");
 
         /// <summary>Global precursor posterior error probability.</summary>
-        public static readonly BlibOptionalColumn PrecursorPep = new BlibOptionalColumn("RefSpectra", "PrecursorPep", "REAL");
+        public static readonly BlibOptionalColumn PrecursorPep = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PrecursorPep", "REAL");
 
         /// <summary>Global peptide q-value, from a peptide-level competition: one value per modified sequence.</summary>
-        public static readonly BlibOptionalColumn PeptideQValue = new BlibOptionalColumn("RefSpectra", "PeptideQValue", "REAL");
+        public static readonly BlibOptionalColumn PeptideQValue = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PeptideQValue", "REAL");
 
         /// <summary>Global peptide posterior error probability.</summary>
-        public static readonly BlibOptionalColumn PeptidePep = new BlibOptionalColumn("RefSpectra", "PeptidePep", "REAL");
+        public static readonly BlibOptionalColumn PeptidePep = new BlibOptionalColumn(TABLE_REF_SPECTRA, "PeptidePep", "REAL");
 
         /// <summary>Global protein-group q-value; a <c>Proteins</c> row with it is a protein group.</summary>
-        public static readonly BlibOptionalColumn ProteinQValue = new BlibOptionalColumn("Proteins", "QValue", "REAL");
+        public static readonly BlibOptionalColumn ProteinQValue = new BlibOptionalColumn(TABLE_PROTEINS, "QValue", "REAL");
 
         /// <summary>Global protein-group posterior error probability.</summary>
-        public static readonly BlibOptionalColumn ProteinPep = new BlibOptionalColumn("Proteins", "Pep", "REAL");
+        public static readonly BlibOptionalColumn ProteinPep = new BlibOptionalColumn(TABLE_PROTEINS, "Pep", "REAL");
 
         /// <summary>The optional <c>RefSpectra</c> columns, in the order they are written.</summary>
         public static IReadOnlyList<BlibOptionalColumn> OptionalRefSpectraColumns { get; } = new[]
