@@ -14,6 +14,7 @@
     <disabled-settings>
       <setting-ref ref="BUILD_EXT_13" />
       <setting-ref ref="BUILD_EXT_21" />
+      <setting-ref ref="RUNNER_343" />
       <setting-ref ref="RUNNER_385" />
       <setting-ref ref="TRIGGER_1024" />
       <setting-ref ref="vcsTrigger" />
