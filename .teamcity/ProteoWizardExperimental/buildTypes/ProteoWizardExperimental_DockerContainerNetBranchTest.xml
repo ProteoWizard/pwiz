@@ -14,6 +14,7 @@
     <disabled-settings>
       <setting-ref ref="RUNNER_385" />
       <setting-ref ref="TRIGGER_1024" />
+      <setting-ref ref="vcsTrigger" />
     </disabled-settings>
     <parameters>
       <param name="env.MSPARSER_HOME" value="" />
