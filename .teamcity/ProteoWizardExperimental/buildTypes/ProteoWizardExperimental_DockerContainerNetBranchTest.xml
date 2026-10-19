@@ -123,9 +123,6 @@ docker-entrypoint.sh /docker2singularity.sh chambm/pwiz-skyline-i-agree-to-the-v
       </runner>
     </build-runners>
     <vcs-settings>
-      <vcs-entry-ref root-id="ProteoWizard_GithubContainer">
-        <checkout-rule rule="+:. =&gt; container" />
-      </vcs-entry-ref>
       <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
     </vcs-settings>
     <requirements>
