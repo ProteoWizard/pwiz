@@ -237,8 +237,4 @@
     <value>中間ファイルとスペクトルキャッシュをここに書き込みます（入力データを読み取り専用にできます）。デフォルト：入力の横</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_write_pin" xml:space="preserve">
-    <value>外部ツール用のPINファイルを書き込みます</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
 </root>

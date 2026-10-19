@@ -235,6 +235,17 @@ namespace pwiz.CarafeSharp.IO
             return converted;
         }
 
+        /// <summary>
+        /// The column as read, whatever its element type, for a test that rewrites a file
+        /// column by column through <see cref="Write"/>.
+        /// </summary>
+        internal Array GetRaw(string name)
+        {
+            if (!_columns.TryGetValue(name, out var column))
+                throw new ArgumentException(string.Format(@"Column {0} was not read.", name), nameof(name));
+            return column;
+        }
+
         private static Array Concatenate(List<Array> parts, DataField field)
         {
             if (parts.Count == 1)

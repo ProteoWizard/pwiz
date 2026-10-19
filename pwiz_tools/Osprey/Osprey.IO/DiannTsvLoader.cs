@@ -40,11 +40,32 @@ namespace pwiz.Osprey.IO
     public class DiannTsvLoader
     {
         /// <summary>
-        /// The reader's version, in the <c>.libcache</c> composition hash. 2: an invalid value in
-        /// any column the library has (or a modification with no known mass) refuses the whole
-        /// library, where version 1 read it as a default or dropped it.
+        /// The reader's version, in the library composition hash (the derived .blib's and the
+        /// <c>.libcache</c>'s). 4: one peak per m/z,
+        /// scaled to the base peak (<see cref="FragmentPeaks"/>); the modified sequence in the
+        /// blib writer's text (<c>C[+57.0215]</c>) and modifications named by their UniMod
+        /// entry, as the blib loader reads them, so an entry reads the same from either file.
+        /// 3: fragments in m/z
+        /// order and typed from m/z within the search's fragment tolerance, as a .blib's are, the
+        /// stated types a report only, and residue masses from the shared chemistry; version 2
+        /// kept the row order and the stated types. 2: an invalid value in any column the library
+        /// has (or a modification with no known mass) refuses the whole library, where version 1
+        /// read it as a default or dropped it.
         /// </summary>
-        public const int READER_VERSION = 2;
+        public const int READER_VERSION = 4;
+
+        /// <summary>
+        /// The library composition term of a .tsv read by this reader: its version and
+        /// the tolerance it types within, which the derived library's typed fragments carry, as
+        /// <see cref="BlibLoader.CacheTerm"/> does for a .blib.
+        /// </summary>
+        public static string CacheTerm(FragmentToleranceConfig fragmentTolerance)
+        {
+            // ReSharper disable LocalizableElement
+            return string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0},{1},{2}\n",
+                READER_VERSION, fragmentTolerance.Tolerance, fragmentTolerance.Unit);
+            // ReSharper restore LocalizableElement
+        }
 
         private const int DEFAULT_MIN_FRAGMENTS = 3;
 
@@ -196,14 +217,24 @@ namespace pwiz.Osprey.IO
 
                 var modifications = BuildInternedModifications(data.Modifications, interner);
 
+                // The modified sequence in the one text every loader gives it, built from the
+                // modification masses as the blib writer builds it (C[+57.0215], not
+                // C[UniMod:4]), so an entry reads the same from a .tsv and from its .blib.
                 var entry = new LibraryEntry(id,
                     interner.Intern(data.Sequence),
-                    interner.Intern(data.ModifiedSequence),
+                    interner.Intern(BlibSpectrum.FormatModifiedSequence(data.Sequence,
+                        PeptideFragmentMass.ModMassesByPosition(modifications))),
                     data.Charge, data.PrecursorMz, data.RetentionTime);
                 entry.Modifications = modifications;
-                entry.Fragments = data.Fragments.ToArray();
+                // In m/z order, as a .blib stores peaks and the blib loader reads them, so the
+                // library is the same object whichever file it came from: the order of an entry's
+                // fragments reaches the search (the top-fragment selection returns a short entry
+                // in it), and a .tsv's row order is the writer's, not a property of the library.
+                // Then one peak per m/z, as a spectrum has (FragmentPeaks).
+                var fragments = FragmentPeaks.MergeEqualMz(data.Fragments.OrderBy(f => f.Mz).ToArray());
                 if (_fragmentTolerance != null)
-                    CheckStatedTypes(entry, _fragmentTolerance, TypeCheck);
+                    ApplyTyping(entry, fragments, _fragmentTolerance, TypeCheck);
+                entry.Fragments = fragments;
                 entry.ProteinIds = interner.InternToArray(data.ProteinIds);
                 entry.GeneNames = interner.InternToArray(data.GeneNames);
                 entry.IsDecoy = data.IsDecoy;
@@ -218,25 +249,39 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Add each fragment of <paramref name="entry"/> whose type the library's columns state
-        /// to <paramref name="check"/>, against the type Osprey's own typing gives its m/z. A
-        /// library with no fragment type column states none, and costs no typing.
+        /// Type <paramref name="fragments"/> as Osprey's own typing types them from m/z, exactly
+        /// as <see cref="BlibLoader"/> types a .blib's peaks, so a library read from a .tsv is
+        /// the library its .blib export reads back. The types the library's columns state are a
+        /// report, counted against the typing in <paramref name="check"/>, and nothing more: a
+        /// peak the typing names an ion for takes that ion, and a peak it cannot - no primary ion
+        /// in reach, a selenocysteine peptide with no residue mass to compute from - is Unknown,
+        /// whatever the column said, since the .blib route has no column to say it. What the
+        /// labels would otherwise change: the 90 selenocysteine peptides of the Astral library,
+        /// enough to move every q-value of a search through its decoys. A library with no
+        /// fragment type column states none, and costs no comparison. Two rows at one m/z are
+        /// one peak by now, carrying the first row's stated type: which of the two the report
+        /// counts depends on the writer's row order, the typing does not.
         /// </summary>
-        private static void CheckStatedTypes(LibraryEntry entry, FragmentToleranceConfig tolerance,
+        private static void ApplyTyping(LibraryEntry entry, LibraryFragment[] fragments, FragmentToleranceConfig tolerance,
             FragmentTypeCheck check)
         {
-            if (entry.Fragments.All(f => f.Annotation.IonType == IonType.Unknown))
+            if (fragments.Length == 0)
                 return;
-            var candidates = new FragmentCandidates(entry.Sequence, entry.Modifications, entry.Charge);
+            // Typed from m/z whether or not the library states types; the candidates are only
+            // for the comparison, and a library stating nothing costs no comparison.
+            bool anyStated = fragments.Any(f => f.Annotation.IonType != IonType.Unknown);
+            var candidates = anyStated ? new FragmentCandidates(entry.Sequence, entry.Modifications, entry.Charge) : null;
             var ospreyChoice = FragmentTyping.Compute(entry.Sequence, entry.Modifications, entry.Charge,
-                entry.Fragments, tolerance);
-            for (int i = 0; i < entry.Fragments.Count; i++)
+                fragments, tolerance);
+            for (int i = 0; i < fragments.Length; i++)
             {
-                var fragment = entry.Fragments[i];
-                if (fragment.Annotation.IonType == IonType.Unknown)
-                    continue;
-                check.AddPeak(fragment.Annotation, ospreyChoice[i], candidates, tolerance, entry.Sequence, entry.Charge,
-                    fragment.Mz);
+                var stated = fragments[i].Annotation;
+                if (stated.IonType != IonType.Unknown)
+                {
+                    check.AddPeak(stated, ospreyChoice[i], candidates, tolerance, entry.Sequence, entry.Charge,
+                        fragments[i].Mz);
+                }
+                fragments[i].Annotation = ospreyChoice[i] ?? new FragmentAnnotation { IonType = IonType.Unknown };
             }
         }
 
@@ -356,7 +401,6 @@ namespace pwiz.Osprey.IO
                 precursor = new PrecursorData
                 {
                     Sequence = strippedSequence,
-                    ModifiedSequence = modifiedSequence,
                     Modifications = modifications,
                     Charge = charge,
                     PrecursorMz = precursorMz,
@@ -416,20 +460,24 @@ namespace pwiz.Osprey.IO
                     if (i < modified.Length && modified[i] == '[')
                     {
                         string modStr = ReadEnclosed(modified, ref i, ']');
-                        AddModification(modifications, unrecognized, modStr, position);
+                        AddModification(modifications, unrecognized, modStr, position, c, position == 0, i >= modified.Length);
                     }
                     position++;
                 }
                 else if (c == '(')
                 {
+                    // On the residue before it, or the first residue for a prefix.
+                    char residue = position > 0 ? modified[i - 1] : NextLetter(modified, i);
                     string modStr = ReadEnclosed(modified, ref i, ')');
-                    AddModification(modifications, unrecognized, modStr, Math.Max(0, position - 1));
+                    AddModification(modifications, unrecognized, modStr, Math.Max(0, position - 1), residue,
+                        position <= 1, i >= modified.Length);
                 }
                 else if (c == '[')
                 {
                     // N-terminal bracket modification before any residue
+                    char residue = NextLetter(modified, i);
                     string modStr = ReadEnclosed(modified, ref i, ']');
-                    AddModification(modifications, unrecognized, modStr, 0);
+                    AddModification(modifications, unrecognized, modStr, 0, residue, true, i >= modified.Length);
                 }
                 else
                 {
@@ -457,8 +505,27 @@ namespace pwiz.Osprey.IO
             return enclosed;
         }
 
+        /// <summary>The first letter of <paramref name="text"/> at or after <paramref name="i"/>, or NUL.</summary>
+        private static char NextLetter(string text, int i)
+        {
+            for (; i < text.Length; i++)
+            {
+                if (char.IsLetter(text[i]))
+                    return text[i];
+            }
+            return '\0';
+        }
+
+        /// <summary>
+        /// Adds the modification <paramref name="modStr"/> names on <paramref name="residue"/> at
+        /// <paramref name="position"/>, identified as the blib loader identifies one, so an entry
+        /// reads the same from either file: by UniMod id when the text gives one, else a mass
+        /// bracket (<c>C[+57.0215]</c>, as DIA-NN and BiblioSpec print them) is matched against the
+        /// known modifications allowed on the residue at the precision printed, and takes the
+        /// match's exact mass, id and name. A mass matching nothing is used as printed.
+        /// </summary>
         private static void AddModification(List<Modification> modifications, List<string> unrecognized,
-            string modStr, int position)
+            string modStr, int position, char residue, bool isNTerm, bool isCTerm)
         {
             double? mass = ParseModMass(modStr);
             if (!mass.HasValue)
@@ -466,12 +533,17 @@ namespace pwiz.Osprey.IO
                 unrecognized?.Add(modStr);
                 return;
             }
+            int? unimodId = ParseUnimodId(modStr);
+            var known = unimodId.HasValue ? UniMod.Find(unimodId.Value) : null;
+            string number = modStr.TrimStart('+');
+            if (!unimodId.HasValue && double.TryParse(number, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                known = UniMod.Match(mass.Value, BlibLoader.PrintedDecimals(number), residue, isNTerm, isCTerm);
             modifications.Add(new Modification
             {
                 Position = position,
-                UnimodId = ParseUnimodId(modStr),
-                MassDelta = mass.Value,
-                Name = modStr
+                UnimodId = known?.Id ?? unimodId,
+                MassDelta = known?.Mass ?? mass.Value,
+                Name = known?.Name ?? modStr
             });
         }
 
@@ -616,11 +688,15 @@ namespace pwiz.Osprey.IO
         {
             string trimmed = seq.Trim('_', '.', '-');
 
-            // Handle internal patterns like "K.PEPTIDE.R" -> "PEPTIDE"
-            int firstDot = trimmed.IndexOf('.');
-            int lastDot = trimmed.LastIndexOf('.');
-            if (firstDot >= 0 && lastDot > firstDot)
-                return trimmed.Substring(firstDot + 1, lastDot - firstDot - 1);
+            // Flanking residues, "K.PEPTIDE.R" -> "PEPTIDE": one residue and a dot at each end.
+            // Only there: a mass bracket has a dot of its own (C[+57.021464]), and taking the
+            // text between the first and last dot cut a peptide with two such brackets down to
+            // what lay between its two masses.
+            if (trimmed.Length > 4 && trimmed[1] == '.' && trimmed[trimmed.Length - 2] == '.' &&
+                char.IsLetter(trimmed[0]) && char.IsLetter(trimmed[trimmed.Length - 1]))
+            {
+                return trimmed.Substring(2, trimmed.Length - 4);
+            }
 
             return trimmed;
         }
@@ -916,7 +992,6 @@ namespace pwiz.Osprey.IO
         private class PrecursorData
         {
             public string Sequence;
-            public string ModifiedSequence;
             public List<Modification> Modifications;
             public byte Charge;
             public double PrecursorMz;

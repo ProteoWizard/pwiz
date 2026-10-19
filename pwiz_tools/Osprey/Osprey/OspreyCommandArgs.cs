@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -227,12 +228,10 @@ namespace pwiz.Osprey
             (c, p) => c._config.DecoysInLibrary = true);
         public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
             () => @"<manifest.tsv>", (c, p) => c._config.DecoyPairingManifestPath = p.Value) { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText } };
-        public static readonly OspreyArgument ARG_WRITE_PIN = new OspreyArgument(@"write-pin",
-            (c, p) => c._config.WritePin = true);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_DECOYS =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
-                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_WRITE_PIN);
+                ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST);
 
         // --- Training Export ---------------------------------------------------------------
         // A PerFileRescoring product (docs/22-training-export.md; P17 in
@@ -427,7 +426,9 @@ namespace pwiz.Osprey
         {
             var parser = new OspreyCommandArgs();
             CreateParser().Parse(parser, args);
-            return parser.ToConfig(fdrModel);
+            var config = parser.ToConfig(fdrModel);
+            config.CommandLine = CommandLineText.Format(@"Osprey", args);
+            return config;
         }
 
         /// <summary>
@@ -849,7 +850,7 @@ namespace pwiz.Osprey
             AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs));
             sb.AppendLine(HpcExampleCommandLine(FirstPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
             AppendExampleComment(sb, @"  " + Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_,
-                StemFile(FdrScoresSidecar.EXT_FIRST_PASS), StemFile(ReconciliationFile.EXT)));
+                StemFile(FdrScoresSidecar.EXT_FIRST_PASS), @"out." + FdrScoresSidecar.LABEL_FIRST_PASS + @".*"));
             sb.AppendLine();
             AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file));
             sb.AppendLine(HpcExampleCommandLine(PerFileRescoreTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));

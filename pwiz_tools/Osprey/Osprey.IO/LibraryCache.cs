@@ -33,6 +33,13 @@ namespace pwiz.Osprey.IO
     /// <summary>
     /// Binary cache for fast reload of parsed spectral libraries.
     /// Ported from osprey-io/src/library/cache.rs.
+    ///
+    /// <para>READ ONLY from the 2026-10 release: <c>LibraryLoader</c> keeps a .tsv library's
+    /// finished form as a derived <c>.blib</c> instead (the library's transfer format, read by
+    /// <see cref="BlibLoader"/>), and writes no <c>.libcache</c>. <see cref="LoadCache(string)"/>
+    /// stays for one release so a valid cache an earlier build left is still honoured, and
+    /// <see cref="SaveCache"/> stays for its tests; both go when the release after this one
+    /// ships.</para>
     /// </summary>
     public static class LibraryCache
     {
@@ -65,8 +72,15 @@ namespace pwiz.Osprey.IO
         /// finished, colliding state, and the composition hash does not change with the build.
         /// The cached-path backstop would still refuse it, but only with the generic shared-id
         /// message; the bump forces the rebuild that produces the per-row listing.</para>
+        ///
+        /// <para>v5: each entry carries its <see cref="LibraryEntry.PairingId"/> (the pairing
+        /// manifest's group, assigned at load), so a cached library pairs entrapment with no
+        /// manifest, as a .blib's <c>DecoyPairs</c> does.</para>
+        ///
+        /// <para>v6: every entry has a pairing id, written as the plain uint; v5 wrote a
+        /// has-value byte before it, for the entrapment orphans that then had none.</para>
         /// </remarks>
-        private const uint VERSION = 4;
+        private const uint VERSION = 6;
 
         /// <summary>
         /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
@@ -122,6 +136,7 @@ namespace pwiz.Osprey.IO
                         w.Write(entry.RetentionTime);
                         w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
                         w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
+                        w.Write(entry.PairingId);
 
                         // Modifications
                         w.Write((uint)entry.Modifications.Count);
@@ -290,6 +305,7 @@ namespace pwiz.Osprey.IO
                         double retentionTime = r.ReadDouble();
                         bool rtCalibrated = r.ReadByte() != 0;
                         bool isDecoy = r.ReadByte() != 0;
+                        uint pairingId = r.ReadUInt32();
 
                         // Modifications (share one empty array when none).
                         uint nMods = r.ReadUInt32();
@@ -401,6 +417,7 @@ namespace pwiz.Osprey.IO
                             charge, precursorMz, retentionTime);
                         entry.RtCalibrated = rtCalibrated;
                         entry.IsDecoy = isDecoy;
+                        entry.PairingId = pairingId;
                         entry.Modifications = modifications;
                         entry.Fragments = fragments;
                         // A spectrum skipped by the retain set is RELEASED, not empty. The two

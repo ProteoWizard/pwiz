@@ -58,13 +58,11 @@ namespace pwiz.Osprey
             @"OSPREY_DUMP_LOESS_INPUT",
             @"OSPREY_DUMP_CWT_PATH",
             @"OSPREY_DUMP_CONSENSUS",
-            @"OSPREY_DUMP_REFIT",
             @"OSPREY_DUMP_CALIBRATION",
             @"OSPREY_DUMP_INV_PREDICT",
             @"OSPREY_DUMP_PROTEIN_FDR",
             @"OSPREY_DUMP_STAGE7_PROTEIN_FDR",
             @"OSPREY_DUMP_DETECTED_PEPTIDES",
-            @"OSPREY_DUMP_LOESS_FIT",
         };
 
         /// <summary>

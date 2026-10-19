@@ -19,8 +19,8 @@
  */
 
 using System;
-using System.Data.SQLite;
 using System.IO;
+using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
@@ -51,22 +51,8 @@ namespace pwiz.CarafeSharp
 
         private static ArtifactStamp ReadBlib(string path)
         {
-            try
-            {
-                using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = path, ReadOnly = true }.ToString()))
-                {
-                    connection.Open();
-                    using (var command = new SQLiteCommand(ArtifactStamp.BLIB_SELECT_SQL, connection))
-                    {
-                        command.Parameters.AddWithValue(@"@key", ArtifactStamp.PARQUET_KEY);
-                        return ArtifactStamp.Parse(command.ExecuteScalar() as string);
-                    }
-                }
-            }
-            catch (Exception e) when (!(e is OutOfMemoryException))
-            {
-                return null;
-            }
+            // The one blib writer's metadata reader never throws, and reads the table's old name too.
+            return ArtifactStamp.Parse(BlibMetadata.Read(path, ArtifactStamp.PARQUET_KEY));
         }
     }
 }

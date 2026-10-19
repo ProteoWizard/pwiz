@@ -226,20 +226,6 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// How many peak re-picks and boundary imputations FirstPassFDR's Stage 6 planning
-    /// produced across the run - a COUNT, for the rescore summary. The actions themselves
-    /// travel in each run's own <c>.reconciliation.json</c>, which is where the per-run
-    /// rescore reads them; the whole-experiment action map that used to be published here
-    /// (30.8 M entries at 446 runs) had no other reader. Zero when planning did not run in
-    /// this process.
-    /// </summary>
-    internal sealed class PlannedActionCount
-    {
-        public int Value { get; }
-        public PlannedActionCount(int value) { Value = value; }
-    }
-
-    /// <summary>
     /// Base_ids of the protein-compact stratum (OSPREY_PASS2_QVALUE=protein-compact):
     /// every library precursor whose peptide maps to a protein detected in the 1st pass
     /// by &gt;=2 DISTINCT peptides (the honest anchor -- single-hit proteins break the
