@@ -317,18 +317,6 @@
     <value>{0} Percolator 结果：{1:N0} 个目标、{2:N0} 个诱饵通过 {3:P1} FDR</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___" xml:space="preserve">
-    <value>无法为“{0}”保存来自检测数不少于 2 的蛋白质的母离子候选：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_" xml:space="preserve">
-    <value>已为 1 个文件保存来自检测数不少于 2 的蛋白质的母离子候选。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_" xml:space="preserve">
-    <value>已为 {0:N0} 个文件保存来自检测数不少于 2 的蛋白质的母离子候选。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_BuildCalibrationData_Calibration_report___0__of__1__files_have_no_calibration_diagnostics_and_are_left_out_of_" xml:space="preserve">
     <value>校准报告：{1:N0} 个文件中有 {0:N0} 个没有校准诊断信息，未纳入报告：[{2}]</value>
     <comment>Needs Review:New resource</comment>
@@ -413,20 +401,8 @@
     <value>模型诊断：{0} 对于此分析已过期，因此重新运行第一轮以构建报告。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_" xml:space="preserve">
-    <value>无法保存“{0}”的第一轮模型：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
     <value>已将训练好的第一轮模型保存到 {0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs" xml:space="preserve">
-    <value>已将训练好的第一轮模型保存到 {0}，并为其他 {1:N0} 个输入各保存一份</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input" xml:space="preserve">
-    <value>已将训练好的第一轮模型保存到 {0}，并为另一个输入保存一份</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
@@ -509,14 +485,6 @@
     <value>最新：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found" xml:space="preserve">
-    <value>在输入的 {1} 文件旁未找到来自第一轮肽段数不少于 2 的蛋白质的母离子列表（{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___" xml:space="preserve">
-    <value>在输入的 {1} 文件旁未找到可读取的第一轮模型文件（{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">
     <value>第一轮模型文件（{0}）中没有模型</value>
     <comment>Needs Review:New resource</comment>
@@ -535,18 +503,6 @@
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Computing_first_pass_protein_FDR_for__0__files" xml:space="preserve">
     <value>正在为 {0:N0} 个文件计算第一轮蛋白质 FDR</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_" xml:space="preserve">
-    <value>无法确定 {0} 的第一轮蛋白质 q 值：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file" xml:space="preserve">
-    <value>正在为 1 个文件确定第一轮蛋白质 q 值</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files" xml:space="preserve">
-    <value>正在为 {0:N0} 个文件确定第一轮蛋白质 q 值</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
@@ -591,10 +547,6 @@
   </data>
   <data name="FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files" xml:space="preserve">
     <value>正在为 {0:N0} 个文件写入第一轮 FDRBench 输入</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_" xml:space="preserve">
-    <value>无法找到 {0} 的中间文件，因此未写入其跨运行协调文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_write_the_cross_run_reconciliation_file_for__0____1_" xml:space="preserve">
@@ -1309,10 +1261,6 @@
     <value>正在为模型诊断报告读取第一轮结果</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="RescoreHydration_LoadEnvelope_Failed_to_read__0____1_" xml:space="preserve">
-    <value>读取 {0} 失败：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_" xml:space="preserve">
     <value>{0} 引用了母离子候选 {1}，但该候选不在该运行的得分文件中。得分文件在第一轮之后发生了更改：请删除此分析的 {2} 文件，然后重新运行第一轮。</value>
     <comment>Needs Review:New resource</comment>
@@ -1569,18 +1517,6 @@
     <value>跨运行协调：已跳过，因为只有一个文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_" xml:space="preserve">
-    <value>多电荷共识规划（第 2 轮，共 2 轮）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files" xml:space="preserve">
-    <value>协调规划（第 2 轮，共 2 轮），{0:N0} 个文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file" xml:space="preserve">
-    <value>协调规划（第 2 轮，共 2 轮），1 个文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__files_using_the_cross_run_consensus_" xml:space="preserve">
     <value>已使用跨运行共识优化了 {1:N0} 个文件中 {0:N0} 个文件的保留时间校准。</value>
     <comment>Needs Review:New resource</comment>
@@ -1591,18 +1527,6 @@
   </data>
   <data name="Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_will_be_re_scored_at_the_peak_boundaries_of_the_" xml:space="preserve">
     <value>多电荷共识：{1:N0} 个电荷态将在同一肽段最佳电荷态的峰边界处重新评分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_" xml:space="preserve">
-    <value>多电荷共识规划（第 1 轮，共 2 轮）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files" xml:space="preserve">
-    <value>协调规划（第 1 轮，共 2 轮），{0:N0} 个文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file" xml:space="preserve">
-    <value>协调规划（第 1 轮，共 2 轮），1 个文件</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

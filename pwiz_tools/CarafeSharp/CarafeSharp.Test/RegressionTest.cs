@@ -29,6 +29,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
@@ -305,8 +306,8 @@ namespace pwiz.CarafeSharp.Test
             string fasta = Path.Combine(inputs, @"library_subset_peptides.fasta");
             string pairing = Path.Combine(inputs, @"library_subset_pairing.tsv");
             string exportFolder = Path.Combine(inputs, @"stellar");
-            string export = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).Single();
-            string runFile = Path.GetFileName(export).Substring(0, Path.GetFileName(export).Length - OspreyTrainingExport.FILE_SUFFIX.Length) + @".raw";
+            string export = Directory.GetFiles(exportFolder, @"*" + TrainingExportParquet.EXT).Single();
+            string runFile = Path.GetFileName(export).Substring(0, Path.GetFileName(export).Length - TrainingExportParquet.EXT.Length) + @".raw";
             var args = new List<string>
             {
                 @"-db", fasta, @"-i", exportFolder, @"-ms", Path.Combine(exportFolder, runFile), @"-o", Path.Combine(runFolder, OUTPUT_FOLDER),
@@ -493,12 +494,12 @@ namespace pwiz.CarafeSharp.Test
                 }
             }
 
-            var exports = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).OrderBy(p => p, StringComparer.Ordinal).ToList();
+            var exports = Directory.GetFiles(exportFolder, @"*" + TrainingExportParquet.EXT).OrderBy(p => p, StringComparer.Ordinal).ToList();
             Check(exports.Count == runs, @"training exports: {0} for {1} runs", exports.Count, runs);
             long exported = 0;
             foreach (string path in exports)
             {
-                var export = OspreyTrainingExport.Read(path);
+                var export = TrainingExport.Read(path);
                 exported += export.Records.Count;
                 string name = Path.GetFileName(path);
                 Check(export.Records.Count >= CHAINED_MIN_EXPORTED, @"{0}: {1} precursors (at least {2})", name, export.Records.Count, CHAINED_MIN_EXPORTED);
@@ -1133,27 +1134,30 @@ namespace pwiz.CarafeSharp.Test
                 var written = new HashSet<string>(precursors.Values.Select(p => p.Key), StringComparer.Ordinal);
                 summary.Rows = pairRows.Count;
 
-                // Each pair: a target and the decoy of its group, of one charge.
-                foreach (var pair in pairRows.GroupBy(r => r.PairId))
+                // Each pair: a decoy row naming a target row of its pairing and side (the pairing
+                // holds the entrapment pair too, and every charge and modification form of the
+                // sequence), of one charge, the pairing being the manifest's index of both.
+                var rowById = pairRows.ToDictionary(r => r.RefSpectraId);
+                foreach (var decoyRow in pairRows.Where(r => r.IsDecoy))
                 {
                     summary.Pairs++;
-                    var rows = pair.ToList();
-                    bool entrapment = rows.Any(r => r.IsEntrapment);
+                    bool entrapment = decoyRow.IsEntrapment;
                     if (entrapment)
                         summary.EntrapmentPairs++;
-                    var target = rows.Where(r => !r.IsDecoy).Select(r => precursors.TryGetValue(r.RefSpectraId, out var p) ? p : null).ToList();
-                    var decoy = rows.Where(r => r.IsDecoy).Select(r => precursors.TryGetValue(r.RefSpectraId, out var p) ? p : null).ToList();
-                    if (rows.Count != 2 || target.Count != 1 || decoy.Count != 1 || target[0] == null || decoy[0] == null ||
-                        rows.Any(r => r.IsEntrapment != entrapment) || target[0].Charge != decoy[0].Charge)
+                    var targetRow = decoyRow.TargetRefSpectraId.HasValue && rowById.TryGetValue(decoyRow.TargetRefSpectraId.Value, out var tr) ? tr : null;
+                    var target = targetRow != null && precursors.TryGetValue(targetRow.RefSpectraId, out var tp) ? tp : null;
+                    var decoy = precursors.TryGetValue(decoyRow.RefSpectraId, out var dp) ? dp : null;
+                    if (targetRow == null || targetRow.IsDecoy || targetRow.IsEntrapment != entrapment || targetRow.PairingId != decoyRow.PairingId ||
+                        target == null || decoy == null || target.Charge != decoy.Charge)
                     {
                         summary.MalformedPairs++;
                         continue;
                     }
-                    if (ambiguous.Contains(target[0].Sequence) || ambiguous.Contains(decoy[0].Sequence))
+                    if (ambiguous.Contains(target.Sequence) || ambiguous.Contains(decoy.Sequence))
                         continue;
-                    bool knownTarget = membership.TryGetValue(target[0].Sequence, out var targetGroup);
-                    bool knownDecoy = membership.TryGetValue(decoy[0].Sequence, out var decoyGroup);
-                    if (!knownTarget || !knownDecoy || targetGroup.PairIndex != decoyGroup.PairIndex ||
+                    bool knownTarget = membership.TryGetValue(target.Sequence, out var targetGroup);
+                    bool knownDecoy = membership.TryGetValue(decoy.Sequence, out var decoyGroup);
+                    if (!knownTarget || !knownDecoy || targetGroup.PairIndex != decoyGroup.PairIndex || targetGroup.PairIndex != decoyRow.PairingId ||
                         targetGroup.Type != (entrapment ? ENTRAPMENT_TARGET : TARGET) || decoyGroup.Type != (entrapment ? ENTRAPMENT_DECOY : DECOY))
                     {
                         summary.MalformedPairs++;
@@ -1246,11 +1250,14 @@ namespace pwiz.CarafeSharp.Test
                         if (Convert.ToInt64(command.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
                             return precursors;
                     }
-                    using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID FROM DecoyPairs", connection))
+                    using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairingID, TargetRefSpectraID FROM DecoyPairs", connection))
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
-                            pairRows.Add(new PairRow(reader.GetInt64(0), reader.GetInt64(1) != 0, reader.GetInt64(2) != 0, reader.GetInt64(3)));
+                        {
+                            pairRows.Add(new PairRow(reader.GetInt64(0), reader.GetInt64(1) != 0, reader.GetInt64(2) != 0, reader.GetInt64(3),
+                                reader.IsDBNull(4) ? null : reader.GetInt64(4)));
+                        }
                     }
                 }
                 return precursors;
@@ -1283,18 +1290,21 @@ namespace pwiz.CarafeSharp.Test
 
             private sealed class PairRow
             {
-                public PairRow(long refSpectraId, bool isDecoy, bool isEntrapment, long pairId)
+                public PairRow(long refSpectraId, bool isDecoy, bool isEntrapment, long pairingId, long? targetRefSpectraId)
                 {
                     RefSpectraId = refSpectraId;
                     IsDecoy = isDecoy;
                     IsEntrapment = isEntrapment;
-                    PairId = pairId;
+                    PairingId = pairingId;
+                    TargetRefSpectraId = targetRefSpectraId;
                 }
+
+                public long? TargetRefSpectraId { get; }
 
                 public long RefSpectraId { get; }
                 public bool IsDecoy { get; }
                 public bool IsEntrapment { get; }
-                public long PairId { get; }
+                public long PairingId { get; }
             }
         }
 

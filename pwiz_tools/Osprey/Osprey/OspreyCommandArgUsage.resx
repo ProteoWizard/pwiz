@@ -229,7 +229,4 @@
   <data name="_work_dir" xml:space="preserve">
     <value>Write intermediate files AND the spectra cache here (so input data can be read-only); default: beside input</value>
   </data>
-  <data name="_write_pin" xml:space="preserve">
-    <value>Write PIN files for external tools</value>
-  </data>
 </root>

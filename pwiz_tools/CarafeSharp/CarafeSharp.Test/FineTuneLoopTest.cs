@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
@@ -357,7 +358,7 @@ namespace pwiz.CarafeSharp.Test
             // Every MS2 row of the run carries its calibrated NCE.
             using (var model = Ms2Model.FromSafetensors(start, CPU))
             {
-                var read = OspreyTrainingExport.Read(export);
+                var read = TrainingExport.Read(export);
                 var set = OspreyTrainingSet.Build(new[] { read }, new OspreyTrainingSetOptions { CalibrateNce = r => NceCalibration.Calibrate(model, r) });
                 var energy = set.GetCollisionEnergy(read);
                 Assert.AreEqual(RunCollisionEnergy.CALIBRATED, energy.Source);
@@ -947,7 +948,7 @@ namespace pwiz.CarafeSharp.Test
         /// </summary>
         private string WriteCleanExport(string run, string searchHash = null, string runQPass = null, IReadOnlyDictionary<string, string> footerValues = null)
         {
-            var records = new List<OspreyTrainingRecord>();
+            var records = new List<TrainingRecord>();
             foreach (string sequence in MS2_PEPTIDES)
             {
                 foreach (int charge in new[] { 2, 3 })
@@ -962,7 +963,7 @@ namespace pwiz.CarafeSharp.Test
             }
             var footer = new Dictionary<string, string>
             {
-                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                { @"osprey.training_export.format_version", TrainingExportParquet.FORMAT_VERSION_TEXT },
                 { @"osprey.rt_max", @"12" },
                 { @"osprey.instrument_model", @"Orbitrap Astral" },
                 { @"osprey.isolation_mz_min", @"380" },
@@ -970,12 +971,12 @@ namespace pwiz.CarafeSharp.Test
                 { @"osprey.ms2_scan_window", @"150,2000" },
             };
             if (searchHash != null)
-                footer[OspreyTrainingExport.SEARCH_HASH_KEY] = searchHash;
+                footer[TrainingExportKeys.SEARCH_HASH] = searchHash;
             if (runQPass != null)
                 footer[@"osprey.training_export.run_q_pass"] = runQPass;
             foreach (var pair in footerValues ?? new Dictionary<string, string>())
                 footer[pair.Key] = pair.Value;
-            string export = Path.Combine(_folder, run + OspreyTrainingExport.FILE_SUFFIX);
+            string export = Path.Combine(_folder, run + TrainingExportParquet.EXT);
             OspreyTestRecords.WriteExport(export, records, footer, 4);
             return export;
         }
@@ -1000,7 +1001,7 @@ namespace pwiz.CarafeSharp.Test
             var exports = new List<string>();
             foreach (var (run, runScale, runDelay) in new[] { (@"drift_a", 1.0, 0.0), (@"drift_b", scale, delay) })
             {
-                var records = new List<OspreyTrainingRecord>();
+                var records = new List<TrainingRecord>();
                 for (int i = 0; i < sequences.Length; i++)
                 {
                     var record = OspreyTestRecords.CleanRecord(sequences[i], 2);
@@ -1012,14 +1013,14 @@ namespace pwiz.CarafeSharp.Test
                 }
                 var footer = new Dictionary<string, string>
                 {
-                    { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                    { @"osprey.training_export.format_version", TrainingExportParquet.FORMAT_VERSION_TEXT },
                     { @"osprey.rt_max", @"30" },
                     { @"osprey.instrument_model", @"Orbitrap Astral" },
                     { @"osprey.isolation_mz_min", @"380" },
                     { @"osprey.isolation_mz_max", @"980" },
                     { @"osprey.ms2_scan_window", @"150,2000" },
                 };
-                string export = Path.Combine(_folder, run + OspreyTrainingExport.FILE_SUFFIX);
+                string export = Path.Combine(_folder, run + TrainingExportParquet.EXT);
                 OspreyTestRecords.WriteExport(export, records, footer, 16);
                 exports.Add(export);
             }

@@ -95,12 +95,11 @@ namespace pwiz.Osprey.Test
 
                 var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
                 var tsvKeys = TaskKeys(tsvConfig);
-                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig), tsvKeys[PerFileScoringTask.TASK_NAME],
-                    @"a TSV search keys as before the reader change");
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig) + OspreyTask.TSV_READER_TERM, tsvKeys[PerFileScoringTask.TASK_NAME],
+                    @"a TSV search keys on its reader version, as a blib search does");
                 foreach (var key in tsvKeys)
                     Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
-                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION),
-                    LibraryLoader.LibraryReaderTerms(tsvConfig));
+                Assert.AreEqual(DiannTsvLoader.CacheTerm(tsvConfig.FragmentTolerance), LibraryLoader.LibraryReaderTerms(tsvConfig));
 
                 var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
                 var blibKeys = TaskKeys(blibConfig);
@@ -187,7 +186,7 @@ namespace pwiz.Osprey.Test
                 var ctx = TaskConfigs.ContextFor(config);
                 var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
                 string key = task.ValidityKey(ctx);
-                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportParquet.PathFor(input));
+                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportWriter.PathFor(input));
 
                 string otherRun = RunKey(runB);
                 string current = RunKey(runA);
@@ -242,7 +241,13 @@ namespace pwiz.Osprey.Test
                     @"decoys stamped by a run under another key are not this run's worker answer");
                 Pass2CompetitionDecoys.Write(Pass2CompetitionDecoys.PathFor(runA),
                     new Dictionary<uint, (double score, uint entryId)>(), workerStamp);
-                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
+                // The run's plan is part of the same answer: the worker writes it, under the same
+                // stamp, just before the rescore it describes.
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass),
+                    @"a worker answer without the run's reconciliation plan is not complete");
+                ReconciliationFile.Save(ReconciliationFile.PathForInput(runA),
+                    new ReconciliationFile { FormatVersion = ReconciliationFile.CurrentFormatVersion }, workerStamp);
+                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp, decoys and plan make the second pass the one read");
                 Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
                 Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
                 current = RunKey(runA);
@@ -309,7 +314,7 @@ namespace pwiz.Osprey.Test
             off.OutputBlib = @"out.blib";
             var offCtx = TaskConfigs.ContextFor(off);
             var offTask = off.Pipeline.OfType<PerFileRescoreTask>().Single();
-            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            string export = TrainingExportWriter.PathFor(@"a.mzML");
             Assert.IsFalse(offTask.Outputs(offCtx).Contains(export), @"no export is declared with the flag off");
 
             string straight = ExportKey(TaskConfigs.StraightThrough(), c => { }, out string taskKeyOn, out bool declared);
@@ -341,7 +346,7 @@ namespace pwiz.Osprey.Test
             mutate(config);
             var ctx = TaskConfigs.ContextFor(config);
             var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
-            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            string export = TrainingExportWriter.PathFor(@"a.mzML");
             taskKey = task.ValidityKey(ctx);
             declared = task.Outputs(ctx).Contains(export);
             return task.OutputValidityKey(ctx, taskKey, export);

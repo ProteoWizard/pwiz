@@ -3,6 +3,7 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Reflection;
+using pwiz.BiblioSpec.IO;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -100,18 +101,6 @@ public enum PsmScoreType
 }
 
 /// <summary>
-/// How a score should be interpreted — as a probability of identification being correct,
-/// incorrect, or as a raw (non-probability) score. Port of <c>BiblioSpec::PROBABILITY_TYPE</c>
-/// (anonymously declared in BlibUtils.cpp).
-/// </summary>
-internal enum ProbabilityType
-{
-    None = 0,
-    ProbabilityCorrect = 1,
-    ProbabilityIncorrect = 2,
-}
-
-/// <summary>
 /// Miscellaneous BiblioSpec helpers. Anything that maps cleanly to BCL
 /// (<see cref="System.IO.Path"/>, <see cref="string"/> ops) uses BCL directly; this class only
 /// hosts the genuinely BiblioSpec-specific helpers + the enum-to-string lookup tables.
@@ -121,31 +110,8 @@ public static class BlibUtils
 {
     private static readonly SearchValues<char> _pathSeparators = SearchValues.Create("/\\");
 
-    // Lookup tables mirroring BlibUtils.cpp:37 — strict ordering matches PsmScoreType ordinals.
-    private static readonly (string Name, ProbabilityType Probability)[] _scoreTypes =
-    {
-        ("UNKNOWN", ProbabilityType.None),
-        ("PERCOLATOR QVALUE", ProbabilityType.ProbabilityIncorrect),
-        ("PEPTIDE PROPHET SOMETHING", ProbabilityType.ProbabilityCorrect),
-        ("SPECTRUM MILL", ProbabilityType.None),
-        ("IDPICKER FDR", ProbabilityType.ProbabilityIncorrect),
-        ("MASCOT IONS SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("TANDEM EXPECTATION VALUE", ProbabilityType.ProbabilityIncorrect),
-        ("PROTEIN PILOT CONFIDENCE", ProbabilityType.ProbabilityCorrect),
-        ("SCAFFOLD SOMETHING", ProbabilityType.ProbabilityCorrect),
-        ("WATERS MSE PEPTIDE SCORE", ProbabilityType.None),
-        ("OMSSA EXPECTATION SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("PROTEIN PROSPECTOR EXPECTATION SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("SEQUEST XCORR", ProbabilityType.ProbabilityIncorrect),
-        ("MAXQUANT SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("MORPHEUS SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("MSGF+ SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("PEAKS CONFIDENCE SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("BYONIC SCORE", ProbabilityType.ProbabilityIncorrect),
-        ("PEPTIDE SHAKER CONFIDENCE", ProbabilityType.ProbabilityCorrect),
-        ("GENERIC Q-VALUE", ProbabilityType.ProbabilityIncorrect),
-        ("HARDKLOR IDOTP", ProbabilityType.ProbabilityCorrect),
-    };
+    // The score type names and their probability types are BlibSchema.ScoreTypes, the rows the
+    // ScoreTypes table is seeded with (cpp BlibUtils.cpp:37); PsmScoreType ordinals index it.
 
     /// <summary>
     /// Translate a string value into its corresponding score type. Returns
@@ -154,9 +120,9 @@ public static class BlibUtils
     public static PsmScoreType StringToScoreType(string scoreName)
     {
         ArgumentNullException.ThrowIfNull(scoreName);
-        for (var i = 0; i < _scoreTypes.Length; i++)
+        for (var i = 0; i < BlibSchema.ScoreTypes.Length; i++)
         {
-            if (string.Equals(_scoreTypes[i].Name, scoreName, StringComparison.Ordinal))
+            if (string.Equals(BlibSchema.ScoreTypes[i].ScoreType, scoreName, StringComparison.Ordinal))
                 return (PsmScoreType)i;
         }
         return PsmScoreType.UnknownScoreType;
@@ -166,24 +132,18 @@ public static class BlibUtils
     public static string ScoreTypeToString(PsmScoreType scoreType)
     {
         var idx = (int)scoreType;
-        if (idx < 0 || idx >= _scoreTypes.Length)
+        if (idx < 0 || idx >= BlibSchema.ScoreTypes.Length)
             return "UNKNOWN";
-        return _scoreTypes[idx].Name;
+        return BlibSchema.ScoreTypes[idx].ScoreType;
     }
 
     /// <summary>Returns the string representation of the score's cutoff / probability type.</summary>
     public static string ScoreTypeToProbabilityTypeString(PsmScoreType scoreType)
     {
         var idx = (int)scoreType;
-        if (idx < 0 || idx >= _scoreTypes.Length)
+        if (idx < 0 || idx >= BlibSchema.ScoreTypes.Length)
             return "UNKNOWN";
-        return _scoreTypes[idx].Probability switch
-        {
-            ProbabilityType.None => "NOT_A_PROBABILITY_VALUE",
-            ProbabilityType.ProbabilityCorrect => "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT",
-            ProbabilityType.ProbabilityIncorrect => "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT",
-            _ => "UNKNOWN",
-        };
+        return BlibSchema.ScoreTypes[idx].ProbabilityType;
     }
 
     /// <summary>
@@ -202,14 +162,15 @@ public static class BlibUtils
     /// Translate an <see cref="IonMobilityType"/> to its display string. Throws
     /// <see cref="BlibException"/> on unknown input, matching cpp.
     /// </summary>
-    public static string IonMobilityTypeToString(IonMobilityType ionMobilityType) => ionMobilityType switch
+    public static string IonMobilityTypeToString(IonMobilityType ionMobilityType)
     {
-        IonMobilityType.None => "none",
-        IonMobilityType.DriftTimeMsec => "driftTime(msec)",
-        IonMobilityType.InverseReducedVsecPerCm2 => "inverseK0(Vsec/cm^2)",
-        IonMobilityType.CompensationV => "compensation(V)",
-        _ => throw new BlibException(true, "unknown ion mobility type"),
-    };
+        // The names are BlibSchema.IonMobilityTypes, the rows the IonMobilityTypes table is
+        // seeded with; the enum's ordinals index them.
+        var idx = (int)ionMobilityType;
+        if (idx < 0 || idx >= BlibSchema.IonMobilityTypes.Length)
+            throw new BlibException(true, "unknown ion mobility type");
+        return BlibSchema.IonMobilityTypes[idx];
+    }
 
     /// <summary>
     /// Parse a display string back into an <see cref="IonMobilityType"/>. Accepts the canonical

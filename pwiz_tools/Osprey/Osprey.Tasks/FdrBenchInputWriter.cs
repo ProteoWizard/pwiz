@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -430,7 +431,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (lib == null || lib.Sequence == null)
                     continue;
-                if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                if (EntrapmentLibraryClassifier.IsDecoySide(lib))
                     continue;
                 if (!pairing.PairIndexBySeq.ContainsKey(lib.Sequence))
                     continue;
@@ -447,21 +448,15 @@ namespace pwiz.Osprey.Tasks
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {
                     writer.NewLine = TextUtil.LF;
-                    writer.WriteLine(new[] { @"sequence", @"decoy", @"proteins", @"peptide_type", @"peptide_pair_index" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                    PairingManifest.WriteHeader(writer);
                     foreach (var kv in rows)
                     {
                         var lib = kv.Value;
                         bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
                         uint pair = pairing.PairIndexBySeq[lib.Sequence];
                         string protein = FormatProteinField(lib.ProteinIds, out _);
-                        writer.WriteLine(new[]
-                        {
-                            lib.Sequence,
-                            @"No",
-                            protein,
-                            entrap ? @"p_target" : @"target",
-                            pair.ToString(CultureInfo.InvariantCulture)
-                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        PairingManifest.WriteRow(writer, lib.Sequence, false, protein,
+                            entrap ? PeptideKind.PTarget : PeptideKind.Target, (int)pair);
                         written++;
                     }
                 }

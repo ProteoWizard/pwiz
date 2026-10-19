@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Contracts;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -115,9 +116,9 @@ namespace pwiz.CarafeSharp.Proteome
             foreach (var pair in manifestPairs)
             {
                 manifestTypes.TryGetValue(pair.Key, out string type);
-                if (type == EntrapmentFastaBuilder.PEPTIDE_TYPE_TARGET)
+                if (type == PairingManifest.KIND_TARGET)
                     targetOfPair[pair.Value] = pair.Key;
-                else if (type == EntrapmentFastaBuilder.PEPTIDE_TYPE_P_TARGET)
+                else if (type == PairingManifest.KIND_P_TARGET)
                     entrapmentOfPair[pair.Value] = pair.Key;
             }
             var entrapmentList = libraryEntrapment.ToList();

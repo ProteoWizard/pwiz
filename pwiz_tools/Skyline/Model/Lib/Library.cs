@@ -1094,6 +1094,23 @@ namespace pwiz.Skyline.Model.Lib
             get { return false; }
         }
 
+        /// <summary>
+        /// The levels at which this library reports global (experiment-wide) q-values. Empty for
+        /// a library that has none.
+        /// </summary>
+        public virtual ImmutableList<GlobalQValueLevel> GlobalQValueLevels
+        {
+            get { return ImmutableList<GlobalQValueLevel>.EMPTY; }
+        }
+
+        /// <summary>
+        /// The global statistics of the entry with the given key, or <see cref="LibraryGlobalScores.EMPTY"/>.
+        /// </summary>
+        public virtual LibraryGlobalScores GetGlobalScores(LibKey key)
+        {
+            return LibraryGlobalScores.EMPTY;
+        }
+
         public Dictionary<Target, double> GetMedianRetentionTimes()
         {
             var allRetentionTimes = GetAllRetentionTimes();
@@ -2872,6 +2889,16 @@ namespace pwiz.Skyline.Model.Lib
                     res.ScoreType = biblioAdditionalInfo.ScoreType ?? res.ScoreType;
                 }
             }
+
+            // Global statistics describe the library entry, so a redundant spectrum shows its entry's values
+            var globalScores = _library?.GetGlobalScores(pepInfo.Key) ?? LibraryGlobalScores.EMPTY;
+            res.PrecursorQValue = globalScores.PrecursorQValue;
+            res.PrecursorPep = globalScores.PrecursorPep;
+            res.PeptideQValue = globalScores.PeptideQValue;
+            res.PeptidePep = globalScores.PeptidePep;
+            var bestProteinGroup = globalScores.BestProteinGroup;
+            res.ProteinQValue = bestProteinGroup?.QValue;
+            res.ProteinPep = bestProteinGroup?.Pep;
             return res;
         }
     }
