@@ -234,8 +234,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public bool WriteSummaryReport { get; set; } = true;
 
-        /// <summary>Write PIN files for external tools.</summary>
-        public bool WritePin { get; set; }
 
         /// <summary>
         /// -d / --diagnostics: master switch that turns on the cross-impl

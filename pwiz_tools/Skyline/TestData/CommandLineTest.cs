@@ -4269,7 +4269,9 @@ namespace pwiz.SkylineTestData
                     @"ValueMissingException_ValueMissingException_", new CultureInfo(deprecatedChinese));
                 Assert.IsNotNull(valueMissingChinese);
                 AssertEx.AreNotEqual(valueMissingEnglish, valueMissingChinese, "Test requires a translated message");
-                output = RunCommand(false, argCulture.ArgumentText + '=' + deprecatedChinese, CommandArgs.ARG_IN.ArgumentText);
+                // Built with + so the in-process check of a token is held to the parser's rule: a test run in
+                // Chinese under that name builds its own culture token this way.
+                output = RunCommand(false, argCulture + deprecatedChinese, CommandArgs.ARG_IN.ArgumentText);
                 AssertEx.Contains(output, string.Format(valueMissingChinese, CommandArgs.ARG_IN.ArgumentText));
 
                 // The culture applies only to its own command, so the in-process Skyline MCP and Immediate

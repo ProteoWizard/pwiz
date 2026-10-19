@@ -199,7 +199,6 @@ namespace pwiz.Osprey.Test
             // Decoys.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
-            Assert.IsTrue(Parse(OspreyCommandArgs.ARG_WRITE_PIN).WritePin);
 
             // Training export: off by default, and each setting lands where the task reads it.
             var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
@@ -606,7 +605,7 @@ namespace pwiz.Osprey.Test
 
             // section filter: only the matching group.
             string filtered = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Decoys);
-            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText);
+            StringAssert.Contains(filtered, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText);
             Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
 
             // unknown section: a helpful message, no crash.

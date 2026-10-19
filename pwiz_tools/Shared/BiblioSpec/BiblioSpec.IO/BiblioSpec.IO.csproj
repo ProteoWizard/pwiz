@@ -1,13 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- BiblioSpec.IO: the .blib file format as a DLL every tool imports - the schema (BlibSchema,
-       the one definition with its version history), the neutral spectrum record and the one
+       the one definition with its version history), the neutral spectrum record, the one
        BlibWriter that Osprey's search output and CarafeSharp's predicted libraries are written
-       through, with a hook for a host's own tables in the same transaction. The .blib format is
-       this lab's own file type, so no project of ours writes it from scratch: a new writer is a
-       new set of quirks for every reader to absorb, and this project is where the one writer
-       lives (the BiblioSpec port's BlibMaker and Skyline's NHibernate BlibDb are the two still
-       to come onto it). Plain net10.0, not
+       through, with a hook for a host's own tables in the same transaction, and the one
+       BlibReader (since 2026-10-16) that Osprey's library load and CarafeSharp's manifest
+       reconciliation read through, returning the writer's records. The .blib format is
+       this lab's own file type, so no project of ours reads or writes it from scratch: a new
+       writer is a new set of quirks for every reader to absorb, and this project is where the
+       one writer lives: the BiblioSpec port's BlibMaker (BlibBuild, BlibFilter) writes through
+       it too, since 2026-10-16, leaving Skyline's NHibernate BlibDb the one writer not on it,
+       and Skyline's BiblioSpecLiteLibrary and the port's LibReader the readers not yet on
+       BlibReader. Plain net10.0, not
        net10.0-windows: Osprey and CarafeSharp run on Linux, and nothing here needs a window. No
        process wrapper: the BlibBuild / BlibFilter runners Skyline uses are the sibling
        BiblioSpecUtil project. Depends on CommonUtil (the atomic file writer), System.Data.SQLite

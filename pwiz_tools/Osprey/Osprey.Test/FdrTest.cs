@@ -1338,9 +1338,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(projSet.TotalRows, sinkLong.RowFoldsChecked);
 
             // Fifth arm: file lanes. Files share precursors and tie exactly, so the competition,
-            // the clamp floors and first-seen tie-breaks all cross files; with histograms on, the
-            // contribution accumulator's order-free half is merged per file while its sums are
-            // replayed in row order. Production shape throughout: pass 1 writes the sidecar and
+            // the clamp floors and first-seen tie-breaks all cross files; each file's feature-report
+            // share is reduced on its lane and the shares added in file order. Production shape
+            // throughout: pass 1 writes the sidecar and
             // pass 2 reads it back.
             const int laneFiles = 6;
             var lanesConfig = new PercolatorConfig
@@ -1514,8 +1514,8 @@ namespace pwiz.Osprey.Test
 
             // The same on file lanes, the sidecar written by pass 1 and read back by the
             // --model-diagnostics row walk as in production: the trees score each file on its
-            // lane, and the distributions' sums are replayed in row order while their histograms
-            // merge per file.
+            // lane and reduces its share of the distributions there, and the shares are added in
+            // file order.
             FeatureContributions laneContributions = null;
             var fixtureLanes = BuildNonMonotoneFirstPassFixture(out var featuresLanes);
             var sidecarLanes = new SidecarStandIn();
@@ -1594,6 +1594,7 @@ namespace pwiz.Osprey.Test
             var featuresLoaded = new List<string>();
             var flushes = new RunScopeFlushes();
             var sink = new CapturingSink();
+            FeatureContributions resumedContributions = null;
             Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
                 fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture),
                 f =>
@@ -1601,11 +1602,35 @@ namespace pwiz.Osprey.Test
                     featuresLoaded.Add(f);
                     return features[f];
                 },
-                config, OspreyLog.None, "First-pass", sink,
+                config, OspreyLog.None, "First-pass", sink, c => resumedContributions = c,
                 tryStreamCompletedScores: (fileName, onScore) =>
                     fileName == resumedFile && freshFlushes.Replay(fileName, onScore),
-                pretrainedModel: model, flushFileRunScope: flushes.Flush));
+                pretrainedModel: model, flushFileRunScope: flushes.Flush,
+                tryLoadFeatureSums: freshFlushes.FeatureSumsOf));
             AssertSinksIdentical(fixture, freshSink, sink);
+            // The feature report covers the resumed file too, from its sidecar's share: the same
+            // report as scoring every file. It once covered only the files scored in the process.
+            FeatureContributions scoredContributions = null;
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f],
+                config, OspreyLog.None, "First-pass", new CapturingSink(), c => scoredContributions = c,
+                pretrainedModel: model));
+            AssertContributionsEqual(scoredContributions, resumedContributions);
+            // A resumed file with no share leaves no honest report rather than a partial one.
+            bool captured = false;
+            FeatureContributions withoutShare = null;
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture), f => features[f],
+                config, OspreyLog.None, "First-pass", new CapturingSink(), c =>
+                {
+                    captured = true;
+                    withoutShare = c;
+                },
+                tryStreamCompletedScores: (fileName, onScore) =>
+                    fileName == resumedFile && freshFlushes.Replay(fileName, onScore),
+                pretrainedModel: model));
+            Assert.IsTrue(captured, "the feature report is always handed to the caller");
+            Assert.IsNull(withoutShare, "a resumed file without a share must not yield a partial feature report");
             Assert.IsFalse(featuresLoaded.Contains(resumedFile), "a resumed file's features are not loaded");
             CollectionAssert.AreEqual(fixture.Skip(1).Select(kv => kv.Key).ToList(), flushes.FileNames,
                 "only the files actually scored are flushed");
@@ -1674,7 +1699,7 @@ namespace pwiz.Osprey.Test
 
             public void Flush(string fileName, int fileIndex, int rowCount, uint[] entryIds,
                 double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
-                double[] apexRts)
+                double[] apexRts, FeatureSums featureSums)
             {
                 _flushes.Add(new Flushed
                 {
@@ -1684,8 +1709,16 @@ namespace pwiz.Osprey.Test
                     Scores = scores.Take(rowCount).ToArray(),
                     RunPrecursorQvalues = runPrecursorQvalues.Take(rowCount).ToArray(),
                     RunPeptideQvalues = runPeptideQvalues.Take(rowCount).ToArray(),
-                    ApexRts = apexRts.Take(rowCount).ToArray()
+                    ApexRts = apexRts.Take(rowCount).ToArray(),
+                    FeatureSums = featureSums
                 });
+            }
+
+            /// <summary>The flushed file's feature-report share, as <c>tryLoadFeatureSums</c> would
+            /// read it off that file's sidecar; null when the file was never flushed.</summary>
+            public FeatureSums FeatureSumsOf(string fileName)
+            {
+                return _flushes.Find(fl => fl.FileName == fileName)?.FeatureSums;
             }
 
             /// <summary>Feed one flushed file back as <c>tryStreamCompletedScores</c> would read
@@ -1736,6 +1769,7 @@ namespace pwiz.Osprey.Test
                 public double[] RunPrecursorQvalues;
                 public double[] RunPeptideQvalues;
                 public double[] ApexRts;
+                public FeatureSums FeatureSums;
             }
         }
 
@@ -1832,7 +1866,8 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Exact equality of two feature-contribution reports: the per-feature values derived from
-        /// the floating-point target/decoy sums, and the histogram counts.
+        /// the floating-point target/decoy sums, and the histogram counts. Bit for bit, so the NaN
+        /// a tree ensemble reports for every weight-based value compares equal to itself.
         /// </summary>
         private static void AssertContributionsEqual(FeatureContributions expected, FeatureContributions actual)
         {
@@ -1841,16 +1876,22 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(expected.Features.Count, actual.Features.Count);
             for (int i = 0; i < expected.Features.Count; i++)
             {
-                Assert.AreEqual(expected.Features[i].Coefficient, actual.Features[i].Coefficient, 0.0);
-                Assert.AreEqual(expected.Features[i].TargetDecoyMeanGap, actual.Features[i].TargetDecoyMeanGap, 0.0);
-                Assert.AreEqual(expected.Features[i].Weighted, actual.Features[i].Weighted, 0.0);
-                Assert.AreEqual(expected.Features[i].Percent, actual.Features[i].Percent, 0.0);
+                AssertSameBits(expected.Features[i].Coefficient, actual.Features[i].Coefficient);
+                AssertSameBits(expected.Features[i].TargetDecoyMeanGap, actual.Features[i].TargetDecoyMeanGap);
+                AssertSameBits(expected.Features[i].Weighted, actual.Features[i].Weighted);
+                AssertSameBits(expected.Features[i].Percent, actual.Features[i].Percent);
             }
-            Assert.AreEqual(expected.Composite, actual.Composite, 0.0);
+            AssertSameBits(expected.Composite, actual.Composite);
             // Collected, or the merge they test was never exercised.
             Assert.IsNotNull(expected.TargetHistograms);
             AssertHistogramsEqual(expected.TargetHistograms, actual.TargetHistograms);
             AssertHistogramsEqual(expected.DecoyHistograms, actual.DecoyHistograms);
+        }
+
+        private static void AssertSameBits(double expected, double actual)
+        {
+            Assert.AreEqual(BitConverter.DoubleToInt64Bits(expected), BitConverter.DoubleToInt64Bits(actual),
+                string.Format(CultureInfo.InvariantCulture, "expected {0:R}, actual {1:R}", expected, actual));
         }
 
         private static void AssertHistogramsEqual(IReadOnlyList<int[]> expected, IReadOnlyList<int[]> actual)
@@ -1900,7 +1941,7 @@ namespace pwiz.Osprey.Test
             public int ReadBacks => Volatile.Read(ref _readBacks);
 
             public FileRunScopeSink Write =>
-                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts, featureSums) =>
                 {
                     // Copied out, not retained: the sink contract says these arrays are the
                     // pass's own scratch and are reused after this returns.

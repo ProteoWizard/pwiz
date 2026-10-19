@@ -99,7 +99,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `-o`, `--output` | `<output.blib>` | Output `.blib` (see [13-blib-output-schema.md](13-blib-output-schema.md)). |
 | `--work-dir` | `<dir>` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `<dir>` | Directory for derived artifacts (overrides `--work-dir`). |
-| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the `<library-leaf>.libcache` (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
+| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the derived `<library-leaf>.blib` of a `.tsv` library (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
 | `--report` | `<report.tsv>` | Also write a TSV report. |
 
 ### Scoring & Tolerance
@@ -132,7 +132,6 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
 | `--decoy-pairing-manifest` | `<manifest.tsv>` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
-| `--write-pin` | — | Write PIN files for external tools (diagnostic only; the engine does not consume them). |
 
 ### Training Export
 

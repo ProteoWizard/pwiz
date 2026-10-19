@@ -10,6 +10,7 @@
 using System.Data.SQLite;
 using System.Globalization;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 
 namespace Pwiz.Tools.BiblioSpec;
 
@@ -85,6 +86,12 @@ public enum BuildInput
 /// </remarks>
 public class BlibBuilder : BlibMaker
 {
+    /// <summary>
+    /// The <c>LibMetadata</c> key under which BlibBuild records the command line it was run
+    /// with (see <see cref="BlibMaker.RecordCommandLine"/>).
+    /// </summary>
+    public const string CommandMetadataKey = "bibliospec.blibbuild.command";
+
     // cpp BlibBuilder.cpp:41 — defaults from the cpp constructor initializer list.
     private const int DefaultLevelCompress = 3;
     private const long DefaultFileSizeThresholdForCaching = 800_000_000L;
@@ -211,6 +218,25 @@ public class BlibBuilder : BlibMaker
     /// </summary>
     public IReadOnlyList<string> InputFiles => _inputFiles;
 
+    /// <summary>
+    /// True when readers may add the optional columns of experiment-wide values: the library is
+    /// new and built from a single input. Values from different inputs or an appended library
+    /// would come from different experiments, which mean nothing next to each other.
+    /// </summary>
+    public bool AllowsOptionalColumns => Overwrite && _inputFiles.Count <= 1;
+
+    /// <summary>
+    /// Opens the library, and drops the optional columns an appended library already has when
+    /// <see cref="AllowsOptionalColumns"/> is false, so its global values do not sit next to
+    /// spectra from another experiment.
+    /// </summary>
+    public override void Init()
+    {
+        base.Init();
+        if (!IsScoreLookupMode && !AllowsOptionalColumns)
+            RemoveOptionalColumns();
+    }
+
     /// <summary>Append an input file with no per-file score threshold override.</summary>
     public void AddInputFile(string file)
     {
@@ -314,30 +340,29 @@ public class BlibBuilder : BlibMaker
     }
 
     /// <summary>
-    /// cpp <c>commit</c>. After the BlibMaker commit, DETACH every <c>.blib</c> source library
-    /// that was ATTACHed during transfer. cpp BlibBuilder.cpp:491.
+    /// cpp <c>commit</c>'s second half: DETACH every <c>.blib</c> source library that was
+    /// ATTACHed during transfer, before the writer closes the connection. cpp BlibBuilder.cpp:491.
     /// </summary>
-    public override void Commit()
+    protected override void DetachAll()
     {
-        base.Commit();
-
         for (var i = 0; i < _inputFiles.Count; i++)
         {
             if (HasExtensionCi(_inputFiles[i], ".blib"))
             {
-                SqlStmt(string.Format(CultureInfo.InvariantCulture, "DETACH DATABASE tmp{0}", i));
+                // A .blib input that failed before its ATTACH (missing, unreadable) was logged
+                // and skipped by BuildLibrary; its DETACH fails, and must not take the library
+                // the other inputs built with it.
+                SqlStmt(string.Format(CultureInfo.InvariantCulture, "DETACH DATABASE tmp{0}", i), ignoreFailure: true);
             }
         }
     }
 
     /// <summary>
-    /// cpp <c>insertPeaks</c>. Forwards to <see cref="BlibMaker.InsertPeaks"/> with the
-    /// configured <see cref="LevelCompress"/>. cpp BlibBuilder.cpp:741.
+    /// Whether peak blobs are compressed: cpp <c>insertPeaks</c> passed <see cref="LevelCompress"/>
+    /// through to zlib's <c>compress()</c>, which compresses at its default level for any
+    /// level but 0 (cpp BlibBuilder.cpp:741); the writer compresses at that level.
     /// </summary>
-    public void InsertPeaks(int spectraId, int peaksCount, ReadOnlySpan<double> mz, ReadOnlySpan<float> intensity)
-    {
-        InsertPeaks(spectraId, LevelCompress, peaksCount, mz, intensity);
-    }
+    public bool CompressPeaks => LevelCompress != 0;
 
     /// <summary>
     /// cpp <c>generateModifiedSeq</c>. Combine an unmodified sequence and a list of mods into
@@ -843,7 +868,7 @@ public class BlibBuilder : BlibMaker
         // transfers the library's rows (needs the output Db open); in score-lookup mode it reports
         // the .blib's OWN score types via BlibHandler::getScoreTypes (BlibBuild.cpp:49-72). Score
         // lookup must NOT transfer: the output Db is never opened in that mode, so TransferLibrary
-        // would throw "Db not open. Call OpenDb first." — which the C# port previously did for every
+        // would throw "Db not open. Call Init first." — which the C# port previously did for every
         // .blib, erroring the score-type probe and hanging Skyline's Build Spectral Library page.
         if (HasExtensionCi(resultFile, ".blib"))
         {

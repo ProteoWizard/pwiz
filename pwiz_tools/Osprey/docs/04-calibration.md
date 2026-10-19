@@ -373,8 +373,7 @@ console report the same window number (issue #4364).
 `OSPREY_DUMP_LOESS_INPUT` (the `(libRt, measuredRt)` pairs actually fed to the
 accepted fit, `Calibrator.cs:274, 343`), `OSPREY_DUMP_MS2_CAL_ERRORS`
 (`Calibrator.cs:731`), and the per-entry XIC trace via
-`OSPREY_DIAG_XIC_ENTRY_ID` / `OSPREY_DIAG_XIC_PASS` (`Calibrator.cs:1060`). `--write-pin`
-also forces the cal-sample dump (`Calibrator.cs:203`).
+`OSPREY_DIAG_XIC_ENTRY_ID` / `OSPREY_DIAG_XIC_PASS` (`Calibrator.cs:1060`).
 
 ---
 

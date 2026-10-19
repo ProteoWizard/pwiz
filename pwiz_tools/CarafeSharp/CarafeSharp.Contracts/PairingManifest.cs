@@ -55,9 +55,24 @@ namespace pwiz.CarafeSharp.Contracts
         public const string COLUMN_PEPTIDE_TYPE = @"peptide_type";
         public const string COLUMN_PEPTIDE_PAIR_INDEX = @"peptide_pair_index";
 
+        /// <summary>
+        /// Optional sixth column: how an entrapment target was made from its original target -
+        /// <see cref="ENTRAPMENT_METHOD_SHUFFLE"/> or <see cref="ENTRAPMENT_METHOD_FOREIGN"/> - on
+        /// the <c>p_target</c> rows, empty on the rest. CarafeSharp's entrapment FASTA stage
+        /// writes it and its library build copies it to <c>DecoyPairs.Method</c>, beside the
+        /// <c>reverse</c> / <c>cycle</c> it computes for a decoy. Every reader finds columns by
+        /// name, so a manifest without it reads as before.
+        /// </summary>
+        public const string COLUMN_ENTRAPMENT_METHOD = @"entrapment_method";
+        public const string ENTRAPMENT_METHOD_SHUFFLE = @"shuffle";
+        public const string ENTRAPMENT_METHOD_FOREIGN = @"foreign";
+
         /// <summary>The header line, the five columns in FDRBench's order.</summary>
         public const string HEADER = COLUMN_SEQUENCE + "\t" + COLUMN_DECOY + "\t" + COLUMN_PROTEINS + "\t" +
                                      COLUMN_PEPTIDE_TYPE + "\t" + COLUMN_PEPTIDE_PAIR_INDEX;
+
+        /// <summary>The header line with <see cref="COLUMN_ENTRAPMENT_METHOD"/> after FDRBench's five.</summary>
+        public const string HEADER_WITH_ENTRAPMENT_METHOD = HEADER + "\t" + COLUMN_ENTRAPMENT_METHOD;
 
         /// <summary>The <c>peptide_type</c> spellings; <see cref="PeptideKinds"/> maps them to <see cref="PeptideKind"/>.</summary>
         public const string KIND_TARGET = @"target";
@@ -75,24 +90,34 @@ namespace pwiz.CarafeSharp.Contracts
         private const char SEPARATOR = '\t';
         private const string NO_PROTEINS = @"-";
 
-        /// <summary>Writes the header line with the writer's own line ending.</summary>
-        public static void WriteHeader(TextWriter writer)
+        /// <summary>
+        /// Writes the header line with the writer's own line ending: FDRBench's five columns,
+        /// and <see cref="COLUMN_ENTRAPMENT_METHOD"/> after them when
+        /// <paramref name="withEntrapmentMethod"/>.
+        /// </summary>
+        public static void WriteHeader(TextWriter writer, bool withEntrapmentMethod = false)
         {
-            writer.WriteLine(HEADER);
+            writer.WriteLine(withEntrapmentMethod ? HEADER_WITH_ENTRAPMENT_METHOD : HEADER);
         }
 
-        /// <summary>Writes one row with the writer's own line ending.</summary>
-        public static void WriteRow(TextWriter writer, string sequence, bool isDecoy, string proteins, PeptideKind kind, int pairIndex)
+        /// <summary>
+        /// Writes one row with the writer's own line ending. <paramref name="entrapmentMethod"/>
+        /// is the sixth cell of a manifest whose header has the column (empty on a row that is
+        /// not an entrapment target); null writes FDRBench's five.
+        /// </summary>
+        public static void WriteRow(TextWriter writer, string sequence, bool isDecoy, string proteins, PeptideKind kind, int pairIndex,
+            string entrapmentMethod = null)
         {
-            WriteRow(writer, sequence, isDecoy ? DECOY_YES : DECOY_NO, proteins, PeptideKinds.Name(kind), pairIndex);
+            WriteRow(writer, sequence, isDecoy ? DECOY_YES : DECOY_NO, proteins, PeptideKinds.Name(kind), pairIndex, entrapmentMethod);
         }
 
         /// <summary>
         /// Writes one row from its column texts as given - how a reconciler copies rows of a
-        /// manifest it read, whatever their spelling - with the writer's own line ending.
+        /// manifest it read, whatever their spelling - with the writer's own line ending. A
+        /// non-null <paramref name="entrapmentMethodText"/> is the sixth cell.
         /// </summary>
         public static void WriteRow(TextWriter writer, string sequence, string decoyText, string proteinsText, string kindText,
-            int pairIndex)
+            int pairIndex, string entrapmentMethodText = null)
         {
             writer.Write(sequence);
             writer.Write(SEPARATOR);
@@ -102,7 +127,13 @@ namespace pwiz.CarafeSharp.Contracts
             writer.Write(SEPARATOR);
             writer.Write(kindText);
             writer.Write(SEPARATOR);
-            writer.WriteLine(pairIndex.ToString(CultureInfo.InvariantCulture));
+            writer.Write(pairIndex.ToString(CultureInfo.InvariantCulture));
+            if (entrapmentMethodText != null)
+            {
+                writer.Write(SEPARATOR);
+                writer.Write(entrapmentMethodText);
+            }
+            writer.WriteLine();
         }
 
         /// <summary>
@@ -130,15 +161,16 @@ namespace pwiz.CarafeSharp.Contracts
                 int iProteins = IndexOf(columns, COLUMN_PROTEINS);
                 int iKind = IndexOf(columns, COLUMN_PEPTIDE_TYPE);
                 int iPair = IndexOf(columns, COLUMN_PEPTIDE_PAIR_INDEX);
+                int iMethod = IndexOf(columns, COLUMN_ENTRAPMENT_METHOD);
                 if (iSequence < 0 || iKind < 0 || iPair < 0)
                 {
                     throw new InvalidDataException(string.Format(
                         ContractsResources.PairingManifest_Read_The_decoy_pairing_manifest_is_missing_required_columns__it_needs__1____2__and__3____Found___0_,
                         header, COLUMN_SEQUENCE, COLUMN_PEPTIDE_TYPE, COLUMN_PEPTIDE_PAIR_INDEX));
                 }
-                // A row must reach the last of the columns the header names among the five, so a
-                // row truncated short of its proteins is malformed rather than read as having none.
-                int minColumns = Math.Max(Math.Max(Math.Max(iSequence, iKind), Math.Max(iPair, iDecoy)), iProteins) + 1;
+                // A row must reach the last of the columns the header names, so a row truncated
+                // short of its proteins is malformed rather than read as having none.
+                int minColumns = Math.Max(Math.Max(Math.Max(iSequence, iKind), Math.Max(iPair, iDecoy)), Math.Max(iProteins, iMethod)) + 1;
                 int lineNumber = 1;
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -178,7 +210,8 @@ namespace pwiz.CarafeSharp.Contracts
                     }
                     string decoyText = iDecoy >= 0 ? fields[iDecoy] : null;
                     string proteinsText = iProteins >= 0 ? fields[iProteins] : null;
-                    rows.Add(new PairingManifestRow(fields[iSequence], decoyText, proteinsText, kindText, kind, pairIndex));
+                    string methodText = iMethod >= 0 ? fields[iMethod] : null;
+                    rows.Add(new PairingManifestRow(fields[iSequence], decoyText, proteinsText, kindText, kind, pairIndex, methodText));
                 }
             }
             return rows;
@@ -217,7 +250,8 @@ namespace pwiz.CarafeSharp.Contracts
     /// </summary>
     public sealed class PairingManifestRow
     {
-        public PairingManifestRow(string sequence, string decoyText, string proteinsText, string kindText, PeptideKind? kind, int pairIndex)
+        public PairingManifestRow(string sequence, string decoyText, string proteinsText, string kindText, PeptideKind? kind, int pairIndex,
+            string entrapmentMethodText = null)
         {
             Sequence = sequence;
             DecoyText = decoyText;
@@ -225,6 +259,9 @@ namespace pwiz.CarafeSharp.Contracts
             KindText = kindText;
             Kind = kind;
             PairIndex = pairIndex;
+            EntrapmentMethodText = entrapmentMethodText;
+            string method = entrapmentMethodText?.Trim();
+            EntrapmentMethod = string.IsNullOrEmpty(method) ? null : method;
             Proteins = PairingManifest.ParseProteins(proteinsText);
             IsDecoy = decoyText != null
                 ? string.Equals(decoyText.Trim(), PairingManifest.DECOY_YES, StringComparison.OrdinalIgnoreCase)
@@ -253,5 +290,11 @@ namespace pwiz.CarafeSharp.Contracts
         public PeptideKind? Kind { get; }
 
         public int PairIndex { get; }
+
+        /// <summary>The <c>entrapment_method</c> cell as written, or null when the manifest has no such column.</summary>
+        public string EntrapmentMethodText { get; }
+
+        /// <summary>How this entrapment target was made (<c>shuffle</c>, <c>foreign</c>), or null on any other row or without the column.</summary>
+        public string EntrapmentMethod { get; }
     }
 }

@@ -124,8 +124,9 @@ Carafe parity; contract mode needs a FASTA built without it, which the one-comma
 file and before any repair (accession normalizing, dedup, decoy marking, pairing), a library
 carrying the key (`BlibMetadata.Read`) is validated with its `DecoyPairs` marking and pairing
 (`BlibDecoyPairs.Read`) against the manifest `--decoy-pairing-manifest` names (rules 1 to 6;
-without a manifest rules 1 to 4 from the rows and rule 6 from the table's pair ids, each of
-which must name one decoy and one target at one charge, which the report says). A violation
+without a manifest rules 1 to 4 from the rows and rule 6 from the table itself: every decoy
+row names a target row of its charge in `TargetRefSpectraID`, and every target row is named
+by exactly one decoy, which the report says). A violation
 fails the load with the report; nothing is repaired or cached. A library without the key takes
 the tolerant route. A library cache is written only after the check, and its composition hash
 covers the manifest, so a cached load is of a library that passed.
@@ -133,13 +134,22 @@ covers the manifest, so a cached load is of a library that passed.
 **Osprey, pairing a blib's decoys** (`LibraryLoader.TryFinishSuppliedDecoys`, decision of
 2026-10-15): a `.blib` searched with its own decoys (`--decoys-in-library`) must carry
 `DecoyPairs`, and Osprey pairs its decoys from the table alone (`BlibDecoyPairs.Pair`: the
-table's side is authoritative over the accession prefixes, and each pair gives the decoy its
-target's id with the decoy bit). A decoy-bearing blib without the table is refused with the
-message to search with generated decoys instead. The pairing manifest and the amino-acid
-composition fallback stay for TSV libraries, which have no table to carry their pairing; the
-manifest still serves a blib's entrapment pairing and FDRBench output, which the table does not
-cover. Osprey's own `--export-library` writes `DecoyPairs` for the decoys the load paired, so an
-exported decoy library searches back.
+table's side is authoritative over the accession prefixes, and each decoy row's
+`TargetRefSpectraID` gives the decoy its target's id with the decoy bit). A decoy-bearing blib
+without the table is refused with the message to search with generated decoys instead. The
+table carries the whole pairing design (decision of 2026-10-17): its `PairingID` is the
+manifest's `peptide_pair_index`, shared by a target, its entrapment target and both their
+decoys, read into `LibraryEntry.PairingId`, so a blib's entrapment pairing - the model
+diagnostics' paired FDP and the FDRBench output - comes from the library too, and a blib is
+searched with no manifest at all. The pairing manifest and the amino-acid composition fallback
+stay for TSV libraries, which have no table to carry their pairing; a TSV's pairing ids are
+assigned from the manifest at load (`PairingIds.Assign`) and kept in the library cache. Every
+entry has a pairing id; an entrapment peptide whose id no original target shares is the orphan
+the FDRBench input and the diagnostics exclude, and an entrapment library that brings neither
+table nor manifest is refused at load rather than paired by guesswork. Osprey's own `--export-library` writes a
+`DecoyPairs` row for every entry of a library with decoys or entrapment, so an exported library
+searches back exactly as the TSV with its manifest did
+(`SubsetPipelineTest.TestLibraryLoadsIdenticallyFromTsvAndBlib`).
 
 ---
 

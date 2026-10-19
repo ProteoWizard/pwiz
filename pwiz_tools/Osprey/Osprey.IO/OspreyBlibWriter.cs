@@ -58,6 +58,12 @@ namespace pwiz.Osprey.IO
         public const string KEY_EXPERIMENT_FDR = @"osprey.experiment_fdr";
         /// <summary>An exported library's source: the library file it was loaded from.</summary>
         public const string KEY_LIBRARY_SOURCE = @"osprey.library_source";
+        /// <summary>
+        /// A derived library's validity: the hash of the source library's composition and the
+        /// reader that reads the derived file back (<c>LibraryLoader.DerivedLibraryHash</c>).
+        /// The loader reuses the file only while the hash it computes equals this.
+        /// </summary>
+        public const string KEY_LIBRARY_HASH = @"osprey.library_hash";
 
         /// <summary>
         /// The validity stamp recorded in a blib's <c>LibMetadata</c> (or, for one release, its
@@ -100,18 +106,38 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Adds the experiment-level columns a search result fills, the optional BiblioSpec
+        /// columns Skyline filters on: the precursor's q-value and PEP
+        /// (<see cref="BlibSchema.PrecursorQValue"/>, <see cref="BlibSchema.PrecursorPep"/>), the
+        /// peptide's q-value (<see cref="BlibSchema.PeptideQValue"/>) and the protein group's
+        /// q-value (<see cref="BlibSchema.ProteinQValue"/>). A blib gets these columns only when
+        /// it has values for them, so a library export never calls this. Once it is called, every
+        /// <c>Proteins</c> row is a protein group written by <see cref="AddProteinGroup"/> and
+        /// every spectrum carries its <see cref="SearchGlobalValues"/>. Call before
+        /// <see cref="BeginBatch"/>.
+        /// </summary>
+        public void AddSearchGlobalColumns()
+        {
+            _writer.AddOptionalColumn(BlibSchema.PrecursorQValue);
+            _writer.AddOptionalColumn(BlibSchema.PrecursorPep);
+            _writer.AddOptionalColumn(BlibSchema.PeptideQValue);
+            _writer.AddOptionalColumn(BlibSchema.ProteinQValue);
+        }
+
+        /// <summary>
         /// Writes a library precursor prepared by <see cref="BlibSpectrum.FromLibraryEntry"/>: its
         /// <c>RefSpectra</c> and peak rows, then its modification and protein rows. The retention
         /// times, score, source file and copy count are what the caller knows about this row - a
         /// search result's apex, bounds, q-value and run count, or a library's own retention time.
-        /// Returns the <c>RefSpectra</c> id.
+        /// A search result also gives its <paramref name="globalValues"/>, for the columns
+        /// <see cref="AddSearchGlobalColumns"/> added. Returns the <c>RefSpectra</c> id.
         /// </summary>
         public long AddSpectrum(BlibSpectrum spectrum, double retentionTime, double startTime, double endTime,
-            double score, long fileId, int copies)
+            double score, long fileId, int copies, SearchGlobalValues globalValues = null)
         {
             return AddSpectrum(spectrum.PeptideSeq, spectrum.ModifiedSequence, spectrum.PrecursorMz, spectrum.Charge,
                 retentionTime, startTime, endTime, spectrum.MzBlob, spectrum.IntensityBlob, spectrum.NumPeaks,
-                score, fileId, copies, 0.0, spectrum.Modifications, spectrum.ProteinIds);
+                score, fileId, copies, 0.0, spectrum.Modifications, spectrum.ProteinIds, globalValues);
         }
 
         /// <summary>
@@ -124,12 +150,30 @@ namespace pwiz.Osprey.IO
             double retentionTime, double startTime, double endTime,
             double[] mzs, float[] intensities,
             double score, long fileId, int copies, double totalIonCurrent,
-            IReadOnlyList<Modification> modifications = null, IReadOnlyList<string> proteins = null)
+            IReadOnlyList<Modification> modifications = null, IReadOnlyList<string> proteins = null,
+            SearchGlobalValues globalValues = null)
         {
             return AddSpectrum(peptideSeq, peptideModSeq, precursorMz, precursorCharge,
                 retentionTime, startTime, endTime,
                 BlibWriter.CompressMzs(mzs), BlibWriter.CompressIntensities(intensities), mzs.Length,
-                score, fileId, copies, totalIonCurrent, modifications, proteins);
+                score, fileId, copies, totalIonCurrent, modifications, proteins, globalValues);
+        }
+
+        /// <summary>
+        /// Adds a protein group as one <c>Proteins</c> row: <paramref name="accessions"/> is the
+        /// group's members joined by semicolons, <paramref name="qValue"/> its experiment-level
+        /// protein group q-value. Returns the row id, for <see cref="AddSpectrumProtein"/>; a
+        /// group already added is returned as it is. Requires <see cref="AddSearchGlobalColumns"/>.
+        /// </summary>
+        public long AddProteinGroup(string accessions, double qValue)
+        {
+            return _writer.AddProtein(accessions, qValue);
+        }
+
+        /// <summary>Links a spectrum to a <c>Proteins</c> row; a spectrum may link to several rows and a row to several spectra.</summary>
+        public void AddSpectrumProtein(long refId, long proteinId)
+        {
+            _writer.AddSpectrumProtein(refId, proteinId);
         }
 
         /// <summary>
@@ -158,11 +202,12 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Adds a <c>DecoyPairs</c> row (see <see cref="BlibWriter.AddDecoyPair"/>): the library
-        /// supplies this spectrum as a decoy or a target of pair <paramref name="pairId"/>.
+        /// supplies this spectrum as a decoy or a target of the pairing
+        /// <paramref name="pairingId"/>, a decoy naming its target spectrum.
         /// </summary>
-        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairId)
+        public void AddDecoyPair(long refId, bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId, string method = null)
         {
-            _writer.AddDecoyPair(refId, isDecoy, isEntrapment, pairId, null);
+            _writer.AddDecoyPair(refId, isDecoy, isEntrapment, pairingId, targetRefSpectraId, method);
         }
 
         /// <summary>Adds or replaces a <c>LibMetadata</c> row; <paramref name="key"/> is one of the <c>KEY_</c> constants or a shared key.</summary>
@@ -201,10 +246,14 @@ namespace pwiz.Osprey.IO
             double retentionTime, double startTime, double endTime,
             byte[] mzBlob, byte[] intensityBlob, int numPeaks,
             double score, long fileId, int copies, double totalIonCurrent,
-            IReadOnlyList<Modification> modifications, IReadOnlyList<string> proteins)
+            IReadOnlyList<Modification> modifications, IReadOnlyList<string> proteins,
+            SearchGlobalValues globalValues)
         {
             var record = new BlibSpectrumRecord
             {
+                PrecursorQValue = globalValues?.PrecursorQValue,
+                PrecursorPep = globalValues?.PrecursorPep,
+                PeptideQValue = globalValues?.PeptideQValue,
                 PeptideSeq = BlibPeptideText.StripFlankingChars(peptideSeq),
                 PeptideModSeq = BlibPeptideText.ConvertUnimodToMass(BlibPeptideText.StripFlankingChars(peptideModSeq)),
                 PrecursorMz = precursorMz,
@@ -242,5 +291,26 @@ namespace pwiz.Osprey.IO
                 result[i] = new BlibModification(modifications[i].Position + 1, modifications[i].MassDelta);
             return result;
         }
+    }
+
+    /// <summary>
+    /// A search result's experiment-level values for one spectrum, written to the columns
+    /// <see cref="OspreyBlibWriter.AddSearchGlobalColumns"/> adds: the precursor q-value (the
+    /// same value as <c>score</c>), the precursor PEP (one value per entry for the whole
+    /// analysis) and the peptide q-value (one value per modified sequence, the same on every
+    /// charge state's row).
+    /// </summary>
+    public sealed class SearchGlobalValues
+    {
+        public SearchGlobalValues(double precursorQValue, double precursorPep, double peptideQValue)
+        {
+            PrecursorQValue = precursorQValue;
+            PrecursorPep = precursorPep;
+            PeptideQValue = peptideQValue;
+        }
+
+        public double PrecursorQValue { get; }
+        public double PrecursorPep { get; }
+        public double PeptideQValue { get; }
     }
 }

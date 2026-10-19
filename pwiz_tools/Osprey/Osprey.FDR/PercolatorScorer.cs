@@ -153,14 +153,13 @@ namespace pwiz.Osprey.FDR
             var standardizer = trainResults.Standardizer;
             var finalScores = new double[n];
             var featureBuf = new double[nFeatures];
-            // Collect the per-feature target/decoy standardized-value histograms when
-            // --model-diagnostics asked for them (config.CollectFeatureHistograms == ModelDiagnostics,
-            // set in BuildProjectionPercolatorConfig). The full-population Add loop below feeds the
-            // identical standardized featureBuf the resident path bins, so the Model tab's
-            // per-feature distributions are byte-identical to the resident build's; off the
-            // production path this stays a plain (no-histogram) accumulator.
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
-            bool accumulateTreeFeatures = AccumulatesTreeFeatures(gbtModels, config);
+            // The feature report: each file's share (sums in row order, histograms) added in file
+            // order - the same reduction the streaming first pass makes, so the two report the
+            // same contributions for the same rows (FeatureSums). Only when it has a reader: this
+            // path persists no share, and under a tree model the report is a serial
+            // standardization of every row, which the second pass would otherwise pay for nothing.
+            bool reportContributions = captureContributions != null || OspreyOutput.Verbose;
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures, true);
 
             // Streaming score pass over the projection, one file at a time. The
             // per-entry math and the per-file iteration order match the
@@ -177,6 +176,7 @@ namespace pwiz.Osprey.FDR
                 {
                     IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
                     var projRows = kvp.Value;
+                    var share = reportContributions ? new FeatureContributions.Accumulator(nFeatures, true) : null;
                     if (gbtModels != null)
                     {
                         // Tree path: parallel over contiguous row chunks. A tree score is a
@@ -190,12 +190,12 @@ namespace pwiz.Osprey.FDR
                             r => ResolveFeatureRow(rows, projRows[r].ParquetIndex, projRows[r].CoelutionSum, nFeatures),
                             gbtModels, standardizer, nFeatures, finalScores, gi, config.NThreads);
                         // The per-feature report IS a cross-row accumulation, so it stays serial and
-                        // in row order, after the parallel pass, and only when it was asked for.
-                        if (accumulateTreeFeatures)
+                        // in row order, after the parallel pass.
+                        if (share != null)
                         {
                             foreach (var proj in projRows)
                             {
-                                contribAcc.Add(StandardizeFeatureRow(standardizer, featureBuf, rows,
+                                share.Add(StandardizeFeatureRow(standardizer, featureBuf, rows,
                                     proj.ParquetIndex, proj.CoelutionSum, nFeatures), proj.IsDecoy);
                             }
                         }
@@ -203,8 +203,7 @@ namespace pwiz.Osprey.FDR
                     }
                     else
                     {
-                        // Linear path: UNCHANGED and serial. contribAcc.Add is a running
-                        // float sum, so its row order is byte-parity-locked to Rust.
+                        // Linear path: serial. share.Add is a running float sum in row order.
                         for (int r = 0; r < projRows.Count; r++)
                         {
                             var proj = projRows[r];
@@ -214,15 +213,19 @@ namespace pwiz.Osprey.FDR
                             standardizer.TransformSlice(featureBuf);
                             finalScores[gi] = ScoreStandardizedRow(null, avgWeights, avgBias, featureBuf);
 
-                            contribAcc.Add(featureBuf, proj.IsDecoy);
+                            share?.Add(featureBuf, proj.IsDecoy);
                             gi++;
                         }
                     }
+                    if (share != null)
+                        contribAcc.Add(share.ToFeatureSums());
                     scoreProgress.Report(gi);
                 }
             }
 
-            var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config);
+            var contributions = reportContributions
+                ? BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, config)
+                : null;
             // Surface the trained model's contributions to the caller (the projection-path
             // --model-diagnostics report reads them). No-op (null) on every path that does not
             // request them; a pure hand-off, so scoring stays byte-identical.
@@ -576,7 +579,8 @@ namespace pwiz.Osprey.FDR
             CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
             FileRunScopeSink flushFileRunScope = null,
-            int fileLanes = 1)
+            int fileLanes = 1,
+            Func<string, FeatureSums> tryLoadFeatureSums = null)
         {
             if (streamFileRows == null)
                 throw new ArgumentNullException(nameof(streamFileRows));
@@ -822,7 +826,7 @@ namespace pwiz.Osprey.FDR
             // Training exists to score entries; when every entry's score is already on disk
             // there is nothing for a model to do, and loading the training subset's feature
             // vectors is the single most expensive thing left - 21 minutes at 446 files, spent
-            // to reproduce a model that was already persisted per file as .1st-pass.model.json.
+            // to reproduce a model that was already persisted as the analysis's .1st-pass.model.json.
             if (pretrainedModel == null)
             {
                 // Each file fills only its own subset entries, so the files need no ordering. The
@@ -931,12 +935,13 @@ namespace pwiz.Osprey.FDR
             var firstOrdinal = new int[nFiles];
             for (int f = 1; f < nFiles; f++)
                 firstOrdinal[f] = firstOrdinal[f - 1] + rowCounts[f - 1];
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
-            bool accumulateTreeFeatures = AccumulatesTreeFeatures(gbtModels, percConfig);
-            // The linear contribution report has two readers: --model-diagnostics, which
-            // captures it, and --verbose, which prints it. With neither, the per-row vectors
-            // it is summed from are not kept.
-            bool keepLinearVectors = captureContributions != null || OspreyOutput.Verbose;
+            // The feature report: each file's FeatureSums share, computed on its lane in row order
+            // (or read back from its sidecar when the file resumed) and added here in file order,
+            // so the result does not depend on the lanes and a resumed file contributes exactly as
+            // a scored one. False when a resumed file had no share to read, and then there is no
+            // honest report to give.
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures, true);
+            bool sharesComplete = true;
             // Every distinct entry_id pass 1 sees, with what the experiment scope needs to know
             // about it. O(distinct entries) - 6.2 M on the 446-run cohort - and the peptide
             // strings are the ones the rows already share.
@@ -976,14 +981,15 @@ namespace pwiz.Osprey.FDR
                     double[] scores = TryLoadCompletedScores(
                         tryStreamCompletedScores, fileName, count, rows.EntryIds, out _, out _);
                     var file = new Pass1File { Rows = rows, Scores = scores };
-                    t = lane1.Stop(LANE1_SIDECAR, t);
                     bool scoredHere = scores == null;
+                    if (!scoredHere)
+                        file.Sums = tryLoadFeatureSums?.Invoke(fileName);
+                    t = lane1.Stop(LANE1_SIDECAR, t);
                     if (scoredHere)
                     {
                         IReadOnlyList<double[]> featureRows = loadFileFeatures(fileName);
                         t = lane1.Stop(LANE1_FEATURES, t);
                         scores = ScoreRows(file, featureRows, gbtModels, avgWeights, avgBias, standardizer, nFeatures,
-                            percConfig.CollectFeatureHistograms, accumulateTreeFeatures, keepLinearVectors,
                             percConfig.NThreads);
                         t = lane1.Stop(LANE1_SCORE, t);
                     }
@@ -1034,7 +1040,7 @@ namespace pwiz.Osprey.FDR
                     if (scoredHere)
                     {
                         flushFileRunScope?.Invoke(fileName, f, count, entryIds, file.Scores,
-                            runPrecFile, runPeptFile, apexRts);
+                            runPrecFile, runPeptFile, apexRts, file.Sums);
                     }
                     t = lane1.Stop(LANE1_FLUSH, t);
                     // The sink's run-scope share - the passing tallies - reads only these values,
@@ -1046,7 +1052,8 @@ namespace pwiz.Osprey.FDR
                 }
 
                 // On this thread, in file order: merging the competition (a tie goes to the first-seen
-                // ordinal) and the contribution sums (floating-point, so row order IS the sum).
+                // ordinal) and adding the files' feature-report shares (floating-point, so the order
+                // is part of the sum).
                 void ApplyScoredFile(int f, Pass1File file)
                 {
                     long t = Stopwatch.GetTimestamp();
@@ -1063,18 +1070,15 @@ namespace pwiz.Osprey.FDR
                     sink.AcceptRunScope(f, file.RunScope);
                     for (int r = 0; r < count; r++)
                     {
-                        bool isDecoy = rows.IsDecoys[r];
                         if (!merge)
-                            streamingQ.Add(g1, file.Scores[r], rows.EntryIds[r], isDecoy, rows.Peptides[r]);
-                        // A resumed file has no standardized vectors: nothing was scored, so there
-                        // is nothing honest to contribute, and the report covers the files actually
-                        // scored.
-                        if (file.Standardized != null)
-                            contribAcc.AddSums(file.Standardized, r * nFeatures, isDecoy);
+                            streamingQ.Add(g1, file.Scores[r], rows.EntryIds[r], rows.IsDecoys[r], rows.Peptides[r]);
                         g1++;
                     }
                     scoreProgress.Report(g1);
-                    contribAcc.MergeHistograms(file.Histograms);
+                    if (file.Sums != null)
+                        contribAcc.Add(file.Sums);
+                    else
+                        sharesComplete = false;
                     order1.Stop(ORDER1_COMPETITION, t);
                 }
 
@@ -1089,7 +1093,11 @@ namespace pwiz.Osprey.FDR
                 lane1.Seconds(LANE1_FLUSH), lane1.Seconds(LANE1_SINK), order1.Seconds(ORDER1_COMPETITION));
             LogBlockReads(log, passLabel, @"pass 1");
 
-            var contributions = BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig);
+            // A report over only the files this process scored would describe a different
+            // population than the run's, with nothing on the page to say so.
+            var contributions = sharesComplete
+                ? BuildContributions(contribAcc, gbtModels, trainResults.FoldWeights, percConfig)
+                : null;
             captureContributions?.Invoke(contributions);
 
             // Finalize the bounded lookups. PEP is global (built always); the experiment maps use
@@ -1354,32 +1362,39 @@ namespace pwiz.Osprey.FDR
         /// The feature-contribution report a score pass hands on. For the linear model it is the
         /// full decomposition, printed as it always was. A tree ensemble has no weights to
         /// decompose, so its report carries only the per-feature target/decoy distributions
-        /// (<see cref="FeatureContributions.Accumulator.BuildForTreeEnsemble"/>), and only when
-        /// <c>--model-diagnostics</c> asked for them (<see cref="AccumulatesTreeFeatures"/>);
-        /// otherwise null, as it always was for trees.
+        /// (<see cref="FeatureContributions.Accumulator.BuildForTreeEnsemble"/>).
         /// </summary>
         private static FeatureContributions BuildContributions(FeatureContributions.Accumulator contribAcc,
             IReadOnlyList<GradientBoostedTrees> gbtModels, IReadOnlyList<double[]> foldWeights,
             PercolatorConfig config)
         {
             if (gbtModels != null)
-                return AccumulatesTreeFeatures(gbtModels, config) ? contribAcc.BuildForTreeEnsemble(config.FeatureInfos) : null;
+                return contribAcc.BuildForTreeEnsemble(config.FeatureInfos);
             var contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
             PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
             return contributions;
         }
 
         /// <summary>
-        /// Whether a score pass under a tree model standardizes each row for the feature report.
-        /// Only when the distributions were asked for (<see cref="PercolatorConfig.CollectFeatureHistograms"/>,
-        /// set by <c>--model-diagnostics</c>): the parallel tree score pass keeps no standardized
-        /// vector per row, so this is extra serial work the production gbdt run should not pay.
-        /// The linear path always accumulates, as it always has.
+        /// The first-pass feature report <see cref="RunStreamingFirstPass"/> builds, from the model
+        /// it scored with and every run's <see cref="FeatureSums"/> share in run order - for a
+        /// report written by a later process. Null when there is no run or a run has no share.
         /// </summary>
-        private static bool AccumulatesTreeFeatures(IReadOnlyList<GradientBoostedTrees> gbtModels,
-            PercolatorConfig config)
+        internal static FeatureContributions ContributionsFromShares(PercolatorResults model,
+            IEnumerable<FeatureSums> shares, OspreyFeatureInfo[] featureInfos)
         {
-            return gbtModels != null && config.CollectFeatureHistograms;
+            FeatureContributions.Accumulator contribAcc = null;
+            foreach (var share in shares)
+            {
+                if (share == null)
+                    return null;
+                contribAcc = contribAcc ?? new FeatureContributions.Accumulator(share.FeatureCount, true);
+                contribAcc.Add(share);
+            }
+            if (contribAcc == null)
+                return null;
+            return BuildContributions(contribAcc, ResolveGbtModels(model), model.FoldWeights,
+                new PercolatorConfig { FeatureInfos = featureInfos });
         }
 
         /// <summary>
@@ -1475,20 +1490,15 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Scores every row of a pass-1 file on its lane, keeping each row's standardized feature
-        /// vector for the in-order contribution sums and binning the order-free histograms here.
-        /// A tree ensemble scores the whole file first (<see cref="ScoresBeforeRowLoop"/>) and keeps
-        /// the vectors only when the report asked for its per-feature distributions
-        /// (<paramref name="accumulateTreeFeatures"/>); otherwise the file contributes nothing.
-        /// The linear model keeps them only when the report has a reader
-        /// (<paramref name="keepLinearVectors"/>) - 168 bytes a row, ~0.5 GB for a cohort file,
-        /// held until the consumer reaches the file. Returns the scores it also stores on
-        /// <paramref name="file"/>.
+        /// Scores every row of a pass-1 file on its lane and reduces the file's share of the
+        /// feature report (<see cref="FeatureSums"/>) from each row's standardized vector, in row
+        /// order, as it goes - so no vector outlives its row. A tree ensemble scores the whole file
+        /// first (<see cref="ScoresBeforeRowLoop"/>) and standardizes each row here for the share.
+        /// Returns the scores it also stores on <paramref name="file"/>.
         /// </summary>
         private static double[] ScoreRows(Pass1File file, IReadOnlyList<double[]> featureRows,
             IReadOnlyList<GradientBoostedTrees> gbtModels, double[] avgWeights, double avgBias,
-            FeatureStandardizer standardizer, int nFeatures, bool collectHistograms,
-            bool accumulateTreeFeatures, bool keepLinearVectors, int nThreads)
+            FeatureStandardizer standardizer, int nFeatures, int nThreads)
         {
             RowBuffer rows = file.Rows;
             int count = rows.Count;
@@ -1496,12 +1506,7 @@ namespace pwiz.Osprey.FDR
             bool linear = ScoresBeforeRowLoop(null, featureRows, rows.CoelutionSums, gbtModels,
                 standardizer, nFeatures, nThreads, scores) == null;
             file.Scores = scores;
-            if (!linear && !accumulateTreeFeatures)
-                return scores;
-            // checked: one flat array per file, so a file past ~100M rows must fail loudly here
-            // rather than wrap the index and overwrite its own vectors.
-            var standardized = !linear || keepLinearVectors ? new double[checked(count * nFeatures)] : null;
-            var histograms = collectHistograms ? new FeatureContributions.Accumulator(nFeatures, true) : null;
+            var share = new FeatureContributions.Accumulator(nFeatures, true);
             var featureBuf = new double[nFeatures];
             for (int r = 0; r < count; r++)
             {
@@ -1516,12 +1521,9 @@ namespace pwiz.Osprey.FDR
                 {
                     StandardizeFeatureRow(standardizer, featureBuf, featureRows, (uint)r, rows.CoelutionSums[r], nFeatures);
                 }
-                if (standardized != null)
-                    Array.Copy(featureBuf, 0, standardized, r * nFeatures, nFeatures);
-                histograms?.AddHistogram(featureBuf, 0, rows.IsDecoys[r]);
+                share.Add(featureBuf, rows.IsDecoys[r]);
             }
-            file.Standardized = standardized;
-            file.Histograms = histograms;
+            file.Sums = share.ToFeatureSums();
             return scores;
         }
 
@@ -1548,10 +1550,9 @@ namespace pwiz.Osprey.FDR
         {
             public RowBuffer Rows;
             public double[] Scores;
-            // Row-major, nFeatures per row; null for a file whose scores came off its sidecar.
-            public double[] Standardized;
-            // Null unless histograms are collected and the file was scored here.
-            public FeatureContributions.Accumulator Histograms;
+            // The file's share of the feature report: reduced on the lane when the file was scored
+            // here, read back from its sidecar when it resumed; null when it resumed without one.
+            public FeatureSums Sums;
             // This file's share of the competition, or null when the consumer adds its rows.
             public StreamingFdr.StreamingFirstPassQ.FileReduction Competition;
             // What IFdrFirstPassSink.PrepareRunScope returned for this file.

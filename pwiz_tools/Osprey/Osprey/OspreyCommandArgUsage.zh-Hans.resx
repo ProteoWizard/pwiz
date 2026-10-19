@@ -237,8 +237,4 @@
     <value>将中间文件和谱图缓存写入此处（使输入数据可以是只读的）；默认：输入旁</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_write_pin" xml:space="preserve">
-    <value>为外部工具写入 PIN 文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
 </root>
