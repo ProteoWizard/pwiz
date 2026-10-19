@@ -392,104 +392,17 @@ public class BlibMaker : IDisposable
     protected virtual void CloseSources()
     {
     }
-
     /// <summary>
-    /// cpp <c>createTables</c>. Generates the canonical schema as the statements that create
-    /// it, for the <c>-d</c> switch's documentation dump; the library itself gets its schema
-    /// from <see cref="BlibWriter.CreateSchema"/>, from the same <see cref="BlibSchema"/>.
+    /// cpp <c>createTables</c>. The statements that create and seed an empty library, for the
+    /// <c>-d</c> switch's documentation dump: <see cref="BlibSchema.CreateScript"/>, the tables
+    /// and seeds <see cref="BlibWriter.CreateSchema"/> gives the library itself.
     /// </summary>
     public virtual void CreateTables(List<string> commands)
     {
         ArgumentNullException.ThrowIfNull(commands);
-
-        // LibInfo + bootstrap INSERT (matches cpp order: CREATE LibInfo, INSERT LibInfo,
-        // CREATE RefSpectra, CREATE Modifications, CREATE RefSpectraPeaks, then the
-        // named tables via createTable).
-        commands.Add(BlibSchema.CreateLibInfo);
-
-        var blibLsid = GetLsid();
-        // cpp parity: BlibMaker.cpp:353 uses sprintf with %s; we escape apostrophes defensively
-        // because the LSID derives from the (user-supplied) library file basename.
-        commands.Add(string.Format(
-            CultureInfo.InvariantCulture,
-            "INSERT INTO LibInfo values('{0}','{1}',{2},{3},{4})",
-            SqliteRoutine.EscapeApostrophes(blibLsid),
-            SqliteRoutine.EscapeApostrophes(BlibSchema.FormatCreateTime(DateTime.Now)),
-            -1, // cpp parity: -1 means 'not counted yet'
-            BlibSchema.CurrentMajorVersion,
-            BlibSchema.CurrentMinorVersion));
-
-        commands.Add(BlibSchema.CreateRefSpectra);
-        commands.Add(BlibSchema.CreateModifications);
-        commands.Add(BlibSchema.CreateRefSpectraPeaks);
-
-        CreateTable("Proteins", commands);
-        CreateTable("RefSpectraProteins", commands);
-        CreateTable("RefSpectraPeakAnnotations", commands);
-        CreateTable("SpectrumSourceFiles", commands);
-        CreateTable("ScoreTypes", commands);
-        CreateTable("IonMobilityTypes", commands);
-    }
-
-    /// <summary>
-    /// cpp <c>createTable</c>. Emits the CREATE for one named table plus, for ScoreTypes and
-    /// IonMobilityTypes, the seed INSERTs, for the <c>-d</c> switch's documentation dump; the
-    /// writer creates the tables an older library lacks (<see cref="BlibWriter.UpgradeSchema"/>).
-    /// </summary>
-    public virtual void CreateTable(string tableName, List<string> commands)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(tableName);
-        ArgumentNullException.ThrowIfNull(commands);
-
-        switch (tableName)
-        {
-            case "SpectrumSourceFiles":
-                commands.Add(BlibSchema.CreateSpectrumSourceFiles);
-                break;
-
-            case "ScoreTypes":
-                commands.Add(BlibSchema.CreateScoreTypes);
-                // Seed: one row per score type. cpp BlibMaker.cpp:441-446.
-                for (var i = 0; i < BlibSchema.ScoreTypes.Length; i++)
-                {
-                    commands.Add(string.Format(
-                        CultureInfo.InvariantCulture,
-                        "INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES({0}, '{1}', '{2}')",
-                        i,
-                        BlibSchema.ScoreTypes[i].ScoreType,
-                        BlibSchema.ScoreTypes[i].ProbabilityType));
-                }
-                break;
-
-            case "IonMobilityTypes":
-                commands.Add(BlibSchema.CreateIonMobilityTypes);
-                // Seed: one row per ion mobility type. cpp BlibMaker.cpp:456-460.
-                for (var i = 0; i < BlibSchema.IonMobilityTypes.Length; i++)
-                {
-                    commands.Add(string.Format(
-                        CultureInfo.InvariantCulture,
-                        "INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES({0}, '{1}')",
-                        i,
-                        BlibSchema.IonMobilityTypes[i]));
-                }
-                break;
-
-            case "RefSpectraPeakAnnotations":
-                commands.Add(BlibSchema.CreateRefSpectraPeakAnnotations);
-                break;
-
-            case "Proteins":
-                commands.Add(BlibSchema.CreateProteins);
-                break;
-
-            case "RefSpectraProteins":
-                commands.Add(BlibSchema.CreateRefSpectraProteins);
-                break;
-
-            default:
-                Verbosity.Error($"Cannot create '{tableName}' table. Unknown name.");
-                return; // unreachable; Verbosity.Error throws
-        }
+        // cpp parity: BlibMaker.cpp:353 - the LSID derives from the (user-supplied) library file
+        // basename; the script escapes it.
+        commands.AddRange(BlibSchema.CreateScript(GetLsid(), BlibSchema.FormatCreateTime(DateTime.Now)));
     }
 
     /// <summary>
