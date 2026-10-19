@@ -124,6 +124,9 @@ docker-entrypoint.sh /docker2singularity.sh chambm/pwiz-skyline-i-agree-to-the-v
     </build-runners>
     <vcs-settings>
       <vcs-entry-ref root-id="ProteoWizard_PwizGithubMasterWithPRs" />
+      <vcs-entry-ref root-id="ProteoWizardExperimental_GithubContainerBranchTest">
+        <checkout-rule rule="+:. =&gt; container" />
+      </vcs-entry-ref>
     </vcs-settings>
     <requirements>
       <contains id="RQ_471" name="teamcity.agent.jvm.os.name" value="Linux" />
