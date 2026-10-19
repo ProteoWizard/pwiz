@@ -72,6 +72,17 @@ namespace pwiz.BiblioSpec.IO
         public int ScoreType { get; set; } = BlibWriter.SCORE_TYPE_UNKNOWN;
 
         /// <summary>
+        /// The experiment-wide (global) precursor q-value, written to the optional
+        /// <see cref="BlibSchema.PrecursorQValue"/> column when the writer added it
+        /// (<see cref="BlibWriter.AddOptionalColumn"/>) and read from it when the library has it;
+        /// null where unknown. The three below are its PEP and the peptide's q-value and PEP.
+        /// </summary>
+        public double? PrecursorQValue { get; set; }
+        public double? PrecursorPep { get; set; }
+        public double? PeptideQValue { get; set; }
+        public double? PeptidePep { get; set; }
+
+        /// <summary>
         /// The peak m/z values as <see cref="BlibWriter.CompressMzs"/> encodes them; null for a
         /// spectrum with no <c>RefSpectraPeaks</c> row at all, as BiblioSpec writes a
         /// precursor-only entry (an empty array is a row of empty blobs).

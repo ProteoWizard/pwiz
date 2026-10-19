@@ -223,7 +223,10 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The protein accessions of every spectrum, by RefSpectra id and in the order the
         /// library maps them; empty in a library without the protein tables. A spectrum without
-        /// a protein is absent.
+        /// a protein is absent. The accessions only: a protein row's optional global q-value and
+        /// PEP (<see cref="BlibSchema.ProteinQValue"/>, <see cref="BlibSchema.ProteinPep"/>) are
+        /// not read, so a copy through this reader and <see cref="BlibWriter.AddSpectrum"/>
+        /// carries the spectrum values of <see cref="BlibSpectrumRecord"/> but not the protein ones.
         /// </summary>
         public ILookup<long, string> ReadProteins()
         {
@@ -658,14 +661,17 @@ namespace pwiz.BiblioSpec.IO
             private const int ID = 0, PEPTIDE_SEQ = 1, PRECURSOR_MZ = 2, PRECURSOR_CHARGE = 3, PEPTIDE_MOD_SEQ = 4, PREV_AA = 5, NEXT_AA = 6,
                 COPIES = 7, NUM_PEAKS = 8, ION_MOBILITY = 9, CCS = 10, ION_MOBILITY_HIGH_ENERGY_OFFSET = 11, ION_MOBILITY_TYPE = 12,
                 RETENTION_TIME = 13, START_TIME = 14, END_TIME = 15, TOTAL_ION_CURRENT = 16, MOLECULE_NAME = 17, CHEMICAL_FORMULA = 18,
-                PRECURSOR_ADDUCT = 19, INCHI_KEY = 20, OTHER_KEYS = 21, FILE_ID = 22, SPEC_ID_IN_FILE = 23, SCORE = 24, SCORE_TYPE = 25;
+                PRECURSOR_ADDUCT = 19, INCHI_KEY = 20, OTHER_KEYS = 21, FILE_ID = 22, SPEC_ID_IN_FILE = 23, SCORE = 24, SCORE_TYPE = 25,
+                PRECURSOR_Q_VALUE = 26, PRECURSOR_PEP = 27, PEPTIDE_Q_VALUE = 28, PEPTIDE_PEP = 29;
 
+            // The standard columns, then the optional ones (BlibSchema.OptionalRefSpectraColumns).
             private static readonly string[] NAMES =
             {
                 @"id", @"peptideSeq", @"precursorMZ", @"precursorCharge", @"peptideModSeq", @"prevAA", @"nextAA", @"copies", @"numPeaks",
                 @"ionMobility", @"collisionalCrossSectionSqA", @"ionMobilityHighEnergyOffset", @"ionMobilityType", @"retentionTime",
                 @"startTime", @"endTime", @"totalIonCurrent", @"moleculeName", @"chemicalFormula", @"precursorAdduct", @"inchiKey",
                 @"otherKeys", @"fileID", @"SpecIDinFile", @"score", @"scoreType",
+                BlibSchema.PrecursorQValue.Name, BlibSchema.PrecursorPep.Name, BlibSchema.PeptideQValue.Name, BlibSchema.PeptidePep.Name,
             };
 
             public SpectrumColumns(HashSet<string> present)
@@ -728,6 +734,14 @@ namespace pwiz.BiblioSpec.IO
                     spectrum.Score = Real(reader, SCORE) ?? 0;
                 if (Has(SCORE_TYPE))
                     spectrum.ScoreType = Integer(reader, SCORE_TYPE) ?? BlibWriter.SCORE_TYPE_UNKNOWN;
+                if (Has(PRECURSOR_Q_VALUE))
+                    spectrum.PrecursorQValue = Real(reader, PRECURSOR_Q_VALUE);
+                if (Has(PRECURSOR_PEP))
+                    spectrum.PrecursorPep = Real(reader, PRECURSOR_PEP);
+                if (Has(PEPTIDE_Q_VALUE))
+                    spectrum.PeptideQValue = Real(reader, PEPTIDE_Q_VALUE);
+                if (Has(PEPTIDE_PEP))
+                    spectrum.PeptidePep = Real(reader, PEPTIDE_PEP);
                 return spectrum;
             }
         }

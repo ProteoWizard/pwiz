@@ -148,4 +148,34 @@ namespace pwiz.BiblioSpec.IO
             get { return Mzs.Length; }
         }
     }
+
+    /// <summary>
+    /// A column a library has only when its writer had values for it, so a library without
+    /// them pays no size or read cost: the experiment-wide (global) q-values and PEPs of
+    /// <see cref="BlibSchema.OptionalRefSpectraColumns"/> and
+    /// <see cref="BlibSchema.OptionalProteinsColumns"/>. Added with <c>ALTER TABLE</c> by
+    /// <see cref="BlibWriter.AddOptionalColumn"/>; a reader tests for the column, never for a
+    /// schema version, and BlibFilter carries it from the redundant library to the non-redundant
+    /// one while a BlibBuild merge drops it, since a global value from one experiment means
+    /// nothing next to one from another.
+    /// </summary>
+    public sealed class BlibOptionalColumn
+    {
+        public BlibOptionalColumn(string table, string name, string type)
+        {
+            Table = table;
+            Name = name;
+            Type = type;
+        }
+
+        public string Table { get; }
+        public string Name { get; }
+        /// <summary>The SQLite type the column is added with.</summary>
+        public string Type { get; }
+
+        public override string ToString()
+        {
+            return Table + @"." + Name;
+        }
+    }
 }

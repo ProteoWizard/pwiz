@@ -1054,6 +1054,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     // Decoy options enabled only for DIA
                     ImportFastaControl.RequirePrecursorTransition = WorkflowType != Workflow.dia;
                     ImportFastaControl.DecoyGenerationEnabled = WorkflowType == Workflow.dia && !HasPeakBoundaries;
+                    ImportFastaControl.UpdateQValueFilterControls();
                 }
                     break;
 

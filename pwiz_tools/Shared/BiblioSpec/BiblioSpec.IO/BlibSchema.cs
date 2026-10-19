@@ -349,6 +349,42 @@ namespace pwiz.BiblioSpec.IO
         public const string IdxDecoyPairsTargetName = "idx_DecoyPairs_TargetRefSpectraID";
         public const string CreateIdxDecoyPairsTarget = "CREATE INDEX " + IdxDecoyPairsTargetName + " ON DecoyPairs(TargetRefSpectraID)";
 
+        // --- optional columns (BlibOptionalColumn) ---------------------------------------------
+        // Not versioned: adding one does not change CurrentMinorVersion, and readers test for the
+        // column instead of the version. Each is written only by a source whose value is known to
+        // be experiment-wide (global): DIA-NN's Global.Q.Value and Global.PG.Q.Value, Proteome
+        // Discoverer's peptide groups and master proteins, Osprey's experiment-level FDR.
+
+        /// <summary>Global (experiment-wide) precursor q-value.</summary>
+        public static readonly BlibOptionalColumn PrecursorQValue = new BlibOptionalColumn("RefSpectra", "PrecursorQValue", "REAL");
+
+        /// <summary>Global precursor posterior error probability.</summary>
+        public static readonly BlibOptionalColumn PrecursorPep = new BlibOptionalColumn("RefSpectra", "PrecursorPep", "REAL");
+
+        /// <summary>Global peptide q-value, from a peptide-level competition: one value per modified sequence.</summary>
+        public static readonly BlibOptionalColumn PeptideQValue = new BlibOptionalColumn("RefSpectra", "PeptideQValue", "REAL");
+
+        /// <summary>Global peptide posterior error probability.</summary>
+        public static readonly BlibOptionalColumn PeptidePep = new BlibOptionalColumn("RefSpectra", "PeptidePep", "REAL");
+
+        /// <summary>Global protein-group q-value; a <c>Proteins</c> row with it is a protein group.</summary>
+        public static readonly BlibOptionalColumn ProteinQValue = new BlibOptionalColumn("Proteins", "QValue", "REAL");
+
+        /// <summary>Global protein-group posterior error probability.</summary>
+        public static readonly BlibOptionalColumn ProteinPep = new BlibOptionalColumn("Proteins", "Pep", "REAL");
+
+        /// <summary>The optional <c>RefSpectra</c> columns, in the order they are written.</summary>
+        public static IReadOnlyList<BlibOptionalColumn> OptionalRefSpectraColumns { get; } = new[]
+        {
+            PrecursorQValue, PrecursorPep, PeptideQValue, PeptidePep,
+        };
+
+        /// <summary>The optional <c>Proteins</c> columns, in the order they are written.</summary>
+        public static IReadOnlyList<BlibOptionalColumn> OptionalProteinsColumns { get; } = new[]
+        {
+            ProteinQValue, ProteinPep,
+        };
+
         /// <summary>
         /// All CREATE TABLE statements that <c>BlibMaker.CreateTables</c> emits, in the
         /// same order as cpp <c>BlibMaker::createTables</c>. The LibInfo INSERT is NOT in this

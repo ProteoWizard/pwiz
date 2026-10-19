@@ -1087,6 +1087,23 @@ namespace pwiz.Osprey.Test
             // The library carries how it was made: the run's command line and its version.
             StringAssert.StartsWith(BlibMetadata.Read(blib, OspreyBlibWriter.KEY_COMMAND), @"Osprey ");
             Assert.AreEqual(OspreyVersion.Current, BlibMetadata.Read(blib, OspreyBlibWriter.KEY_VERSION));
+            // The experiment-level q-values: one per spectrum and one per protein group, and a
+            // peptide's value is the same on every charge state.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorQValue IS NULL"));
+            // The precursor q-value is the one in score.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorQValue <> score"));
+            // The precursor PEP is a probability, and the reported precursors are not all at the
+            // default of 1.0 a PEP that never reached the entry would leave.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 0 OR PrecursorPep > 1"));
+            Assert.IsTrue(BlibComparer.CountWhere(blib, @"RefSpectra", @"PrecursorPep < 1") > 0);
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"PeptideQValue IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins", @"QValue IS NULL"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"RefSpectra", @"peptideModSeq IN (" +
+                @"SELECT peptideModSeq FROM RefSpectra GROUP BY peptideModSeq HAVING COUNT(DISTINCT PeptideQValue) > 1)"));
+            // Every protein group row is linked to a spectrum.
+            Assert.AreEqual(0, BlibComparer.CountWhere(blib, @"Proteins",
+                @"id NOT IN (SELECT ProteinID FROM RefSpectraProteins)"));
 
             AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib, MIN_RECOVERED_FRACTION);
             AssertNoReplicatedPerRunOutputs(workDir, RUN_NAMES);

@@ -483,6 +483,108 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Verifies the experiment-level columns of a search blib: absent from a library export,
+        /// present once <see cref="OspreyBlibWriter.AddSearchGlobalColumns"/> asks for them, then
+        /// a precursor q-value, precursor PEP and peptide q-value on each spectrum and a q-value
+        /// on each protein group, with a group shared by two spectra written once and a spectrum
+        /// linked to two groups.
+        /// </summary>
+        [TestMethod]
+        public void TestSearchGlobalColumns()
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                using (var writer = new OspreyBlibWriter(path))
+                {
+                    long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    AddTestSpectrum(writer, fileId, 2);
+                    writer.Complete();
+                }
+                using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorQValue"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PrecursorPep"));
+                    Assert.IsFalse(HasColumn(conn, "RefSpectra", "PeptideQValue"));
+                    Assert.IsFalse(HasColumn(conn, "Proteins", "QValue"));
+                }
+
+                long refId2, refId3;
+                using (var writer = new OspreyBlibWriter(path))
+                {
+                    writer.AddSearchGlobalColumns();
+                    writer.BeginBatch();
+                    long fileId = writer.AddSourceFile("test.mzML", "library.tsv", 0.01);
+                    refId2 = AddTestSpectrum(writer, fileId, 2, new SearchGlobalValues(0.003, 0.02, 0.004));
+                    refId3 = AddTestSpectrum(writer, fileId, 3, new SearchGlobalValues(0.006, 0.05, 0.004));
+                    long groupA = writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002);
+                    long groupC = writer.AddProteinGroup("sp|P33333|C_HUMAN", 1.0);
+                    Assert.AreEqual(groupA, writer.AddProteinGroup("sp|P11111|A_HUMAN;sp|P22222|B_HUMAN", 0.002));
+                    writer.AddSpectrumProtein(refId2, groupA);
+                    writer.AddSpectrumProtein(refId2, groupC);
+                    writer.AddSpectrumProtein(refId3, groupA);
+                    writer.CommitBatch();
+                    writer.Complete();
+                }
+
+                using (var conn = new SQLiteConnection("Data Source=" + path + ";Version=3;Read Only=True;"))
+                {
+                    conn.Open();
+                    Assert.AreEqual(0.003, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.006, QueryDouble(conn, "SELECT PrecursorQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.02, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.05, QueryDouble(conn, "SELECT PrecursorPep FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId2), 1e-12);
+                    Assert.AreEqual(0.004, QueryDouble(conn, "SELECT PeptideQValue FROM RefSpectra WHERE id = " + refId3), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM Proteins"));
+                    Assert.AreEqual(0.002, QueryDouble(conn,
+                        "SELECT QValue FROM Proteins WHERE accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"), 1e-12);
+                    Assert.AreEqual(2L, QueryLong(conn, "SELECT COUNT(*) FROM RefSpectraProteins WHERE RefSpectraID = " + refId2));
+                    Assert.AreEqual(2L, QueryLong(conn,
+                        "SELECT COUNT(*) FROM RefSpectraProteins rp JOIN Proteins p ON p.id = rp.ProteinID " +
+                        "WHERE p.accession = 'sp|P11111|A_HUMAN;sp|P22222|B_HUMAN'"));
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        private static long AddTestSpectrum(OspreyBlibWriter writer, long fileId, int charge, SearchGlobalValues globalValues = null)
+        {
+            return writer.AddSpectrum("PEPTIDE", "PEPTIDE", 800.0 / charge, charge,
+                10.0, 9.0, 11.0, new[] { 300.0 }, new[] { 100.0f }, 0.01, fileId, 1, 0.0, null, null, globalValues);
+        }
+
+        private static bool HasColumn(SQLiteConnection conn, string table, string column)
+        {
+            using (var cmd = new SQLiteCommand("PRAGMA table_info(" + table + ")", conn))
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    if (reader.GetString(1) == column)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static double QueryDouble(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToDouble(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        private static long QueryLong(SQLiteConnection conn, string sql)
+        {
+            using (var cmd = new SQLiteCommand(sql, conn))
+                return Convert.ToInt64(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// Verifies that StripFlankingChars correctly removes flanking amino acid notation.
         /// </summary>
         [TestMethod]

@@ -55,6 +55,14 @@ public class BlibReaderTests
             {
                 fileA = writer.AddSourceFile("a.mzML", "a.ssl", 0.95, BlibWriter.WORKFLOW_TYPE_DIA);
                 fileB = writer.AddSourceFile("b.mzML", null, null, BlibWriter.WORKFLOW_TYPE_DDA);
+                // Three of the optional columns, added before the rows that carry values, and a
+                // protein with its value written ahead of the spectra that map to it by accession.
+                writer.AddOptionalColumn(BlibSchema.PrecursorQValue);
+                writer.AddOptionalColumn(BlibSchema.PeptidePep);
+                writer.AddOptionalColumn(BlibSchema.ProteinQValue);
+                Assert.IsTrue(writer.HasOptionalColumn(BlibSchema.PeptidePep));
+                Assert.IsFalse(writer.HasOptionalColumn(BlibSchema.PrecursorPep));
+                writer.AddProtein("P1", 0.02);
                 writer.BeginBatch();
                 peptideId = writer.AddSpectrum(new BlibSpectrumRecord
                 {
@@ -77,6 +85,9 @@ public class BlibReaderTests
                     SpecIdInFile = "scan=17",
                     Score = 0.001,
                     ScoreType = BlibWriter.SCORE_TYPE_GENERIC_QVALUE,
+                    PrecursorQValue = 0.001,
+                    PrecursorPep = 0.05,
+                    PeptidePep = 0.3,
                     MzBlob = mzBlob,
                     IntensityBlob = intensityBlob,
                     NumPeaks = mzs.Length,
@@ -117,6 +128,10 @@ public class BlibReaderTests
                 writer.AddMetadata("test.null", null);
                 writer.AddDecoyPair(peptideId, false, false, 7, null, null);
                 writer.AddDecoyPair(bareId, true, true, 7, peptideId, "reverse");
+                // P2 was written by the spectrum's accession loop without a value, so the first
+                // value supplied for it fills the row; P1's value stands against a later one.
+                Assert.AreEqual(writer.AddProtein("P2"), writer.AddProtein("P2", 0.04));
+                writer.AddProtein("P1", 0.5);
                 writer.CommitBatch();
                 writer.Complete();
             }
@@ -193,6 +208,18 @@ public class BlibReaderTests
             Assert.AreEqual("scan=17", peptide.SpecIdInFile);
             Assert.AreEqual(0.001, peptide.Score);
             Assert.AreEqual(BlibWriter.SCORE_TYPE_GENERIC_QVALUE, peptide.ScoreType);
+            // The optional columns the library has read back; the one it lacks reads as null,
+            // as does the record's PrecursorPep, which had no column to go to.
+            Assert.AreEqual(0.001, peptide.PrecursorQValue);
+            Assert.AreEqual(0.3, peptide.PeptidePep);
+            Assert.IsNull(peptide.PrecursorPep);
+            Assert.IsNull(peptide.PeptideQValue);
+            using (var command = new SQLiteCommand("SELECT QValue FROM Proteins WHERE accession = 'P1'", reader.Connection))
+                Assert.AreEqual(0.02, (double)command.ExecuteScalar());
+            using (var command = new SQLiteCommand("SELECT QValue FROM Proteins WHERE accession = 'P2'", reader.Connection))
+                Assert.AreEqual(0.04, (double)command.ExecuteScalar());
+            using (var command = new SQLiteCommand("SELECT COUNT(*) FROM Proteins", reader.Connection))
+                Assert.AreEqual(2L, command.ExecuteScalar());
             Assert.AreEqual(mzs.Length, peptide.NumPeaks);
             Assert.IsNull(peptide.MzBlob);
             Assert.IsNull(peptide.IntensityBlob);
@@ -207,6 +234,7 @@ public class BlibReaderTests
             Assert.IsNull(molecule.RetentionTime);
             Assert.IsNull(molecule.SpecIdInFile);
             Assert.AreEqual(BlibWriter.SCORE_TYPE_UNKNOWN, molecule.ScoreType);
+            Assert.IsNull(molecule.PrecursorQValue);
             var bare = index[2];
             Assert.AreEqual(0, bare.NumPeaks);
             Assert.AreEqual(1, bare.Copies);

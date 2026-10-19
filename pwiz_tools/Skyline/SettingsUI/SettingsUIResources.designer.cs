@@ -2185,7 +2185,43 @@ namespace pwiz.Skyline.SettingsUI {
                         "n_any_spectral_libraries_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Peptide q-value.
+        /// </summary>
+        public static string GlobalQValueFilterControls_LevelItem_Peptide_q_value {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Peptide_q_value", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor q-value.
+        /// </summary>
+        public static string GlobalQValueFilterControls_LevelItem_Precursor_q_value {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Precursor_q_value", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Protein q-value.
+        /// </summary>
+        public static string GlobalQValueFilterControls_LevelItem_Protein_q_value {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_LevelItem_Protein_q_value", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The q-value cutoff must be a number between 0 and 1, or empty to add every entry..
+        /// </summary>
+        public static string GlobalQValueFilterControls_TryGetFilter_The_q_value_cutoff_must_be_a_number_between_0_and_1__or_empty_to_add_every_entry {
+            get {
+                return ResourceManager.GetString("GlobalQValueFilterControls_TryGetFilter_The_q_value_cutoff_must_be_a_number_between_0_and_1__or_empty_to_add_every_entry", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to on line {0}.
         /// </summary>
@@ -2971,7 +3007,16 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__existing", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} library entries fail the global cutoff and will not be added..
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides__0__library_entries_fail_the_global_cutoff_and_will_not_be_added", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to {0} proteins,.
         /// </summary>
@@ -3251,7 +3296,7 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("ViewLibraryDlg_MatchModifications_Yes", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Updating list of peptides.
         /// </summary>
