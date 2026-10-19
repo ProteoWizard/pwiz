@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,6 +31,8 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData.Results
@@ -101,6 +104,7 @@ namespace pwiz.SkylineTestData.Results
             string docPath;
             SrmDocument document = InitWatersImsMseDocument(TestFilesDir, driftWindowWidthCalcType, withDriftTimeFilter, out docPath);
             AssertEx.IsDocumentState(document, null, 1, 1, 1, 8); // Drift time lib load bumps the doc version, so does small mol conversion
+            var documentNoResults = document;
             var listChromatograms = new List<ChromatogramSet>();
             // A small subset of the QC_HDMSE_02_UCA168_3495_082213 data set (RT 21.5-22.5) from Will Thompson
             string mz5Path = "waters-mobility" + ExtensionTestContext.ExtMz5;
@@ -166,6 +170,8 @@ namespace pwiz.SkylineTestData.Results
 
                 if (withDriftTimeFilter)
                 {
+                    AssertPrecursorHighEnergyOffset(document, testModeStr);
+
                     // Verify that the .imsdb or .blib file goes out in the share zipfile
                     for (int complete = 0; complete <= 1; complete++)
                     {
@@ -212,9 +218,133 @@ namespace pwiz.SkylineTestData.Results
                     }
                 }
             }
+
+            if (withDriftTimeFilter && asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.none)
+            {
+                AssertObservedPeakValuesSurviveCacheRewrites(documentNoResults, mz5Path);
+            }
+        }
+
+        /// <summary>
+        /// The .skyd keeps the observed IM/CCS of peaks in a block separate from the peaks, located only by
+        /// the order of the peaks, so every path that rewrites a cache must carry it along: joining the
+        /// partial caches of an import, removing a file, and minimizing - into the current format, and into
+        /// one from before the block existed, which drops the values but must keep the peaks.
+        /// </summary>
+        private void AssertObservedPeakValuesSurviveCacheRewrites(SrmDocument documentNoResults, string mz5Path)
+        {
+            var dataPaths = new[] { TestFilesDir.GetTestPath(mz5Path), TestFilesDir.GetTestPath("waters-mobility-copy" + ExtensionTestContext.ExtMz5) };
+            File.Copy(dataPaths[0], dataPaths[1]);
+            var chromatogramSets = dataPaths.Select(path =>
+                new ChromatogramSet(Path.GetFileNameWithoutExtension(path), new[] { new MsDataFilePath(path) })).ToList();
+            using var docContainer = new ResultsTestDocumentContainer(documentNoResults, TestFilesDir.GetTestPath("observed_peak_values.sky"));
+            var docResults = documentNoResults.ChangeMeasuredResults(new MeasuredResults(chromatogramSets));
+            AssertEx.IsTrue(docContainer.SetDocument(docResults, documentNoResults, true));
+            docContainer.AssertComplete();
+            var document = docContainer.Document;
+
+            // Joined from one partial cache per file, each with its own block of values
+            var cache = document.Settings.MeasuredResults.CacheFinal;
+            var expectedLines = GetPeakLines(cache, true);
+            foreach (var dataPath in dataPaths)
+            {
+                var fileLines = expectedLines.Where(line => line.StartsWith(Path.GetFileName(dataPath))).ToList();
+                AssertEx.IsTrue(fileLines.Any(line => !line.EndsWith(@"|-|-")), "no observed IM in " + dataPath);
+            }
+
+            // Removing a file rewrites the cache from the groups of the file kept
+            var keepFilePath = cache.CachedFiles.First(file => Equals(file.FilePath.GetFileName(), Path.GetFileName(dataPaths[0]))).FilePath;
+            var expectedKeptLines = expectedLines.Where(line => line.StartsWith(Path.GetFileName(dataPaths[0]))).ToList();
+            string optimizedPath = TestFilesDir.GetTestPath("optimized" + ChromatogramCache.EXT);
+            using (var optimizedCache = cache.OptimizeToPath(optimizedPath, new[] { keepFilePath }, FileStreamManager.Default, null))
+            {
+                AssertEx.AreEqual(TextUtil.LineSeparate(expectedKeptLines), TextUtil.LineSeparate(GetPeakLines(optimizedCache, true)));
+            }
+            using (var reloadedCache = LoadCache(optimizedPath, document))
+            {
+                AssertEx.AreEqual(TextUtil.LineSeparate(expectedKeptLines), TextUtil.LineSeparate(GetPeakLines(reloadedCache, true)));
+            }
+
+            using (var minimizedCache = MinimizeCache(document, CacheFormat.CURRENT, "minimized" + ChromatogramCache.EXT))
+            {
+                AssertEx.AreEqual(TextUtil.LineSeparate(expectedLines), TextUtil.LineSeparate(GetPeakLines(minimizedCache, true)));
+            }
+            using (var olderFormatCache = MinimizeCache(document, CacheFormat.FromVersion(CacheFormatVersion.Nineteen), "older" + ChromatogramCache.EXT))
+            {
+                AssertEx.AreEqual(TextUtil.LineSeparate(GetPeakLines(cache, false)), TextUtil.LineSeparate(GetPeakLines(olderFormatCache, true)));
+            }
+        }
+
+        /// <summary>
+        /// One line per peak in the cache: file, precursor, retention time, observed IM and observed CCS
+        /// ("-" when not known, or when observed values are not requested).
+        /// </summary>
+        private static List<string> GetPeakLines(ChromatogramCache cache, bool withObservedValues)
+        {
+            var lines = new List<string>();
+            foreach (var header in cache.ChromGroupHeaderInfos)
+            {
+                string fileName = cache.CachedFiles[header.FileIndex].FilePath.GetFileName();
+                foreach (var peak in cache.ReadPeaks(header))
+                {
+                    lines.Add(string.Join(@"|", fileName,
+                        header.Precursor.RawValue.ToString(@"R", CultureInfo.InvariantCulture),
+                        peak.RetentionTime.ToString(@"R", CultureInfo.InvariantCulture),
+                        FormatObservedValue(withObservedValues ? peak.ObservedIonMobility : null),
+                        FormatObservedValue(withObservedValues ? peak.ObservedCcs : null)));
+                }
+            }
+            return lines;
+        }
+
+        private static string FormatObservedValue(float? value)
+        {
+            return value?.ToString(@"R", CultureInfo.InvariantCulture) ?? @"-";
+        }
+
+        private ChromatogramCache MinimizeCache(SrmDocument document, CacheFormat cacheFormat, string fileName)
+        {
+            string skydPath = TestFilesDir.GetTestPath(fileName);
+            var minimizer = document.Settings.MeasuredResults.GetChromCacheMinimizer(document);
+            using (var fs = new FileSaver(skydPath))
+            using (var fsScans = new FileSaver(skydPath + ChromatogramCache.SCANS_EXT, true))
+            using (var fsPeaks = new FileSaver(skydPath + ChromatogramCache.PEAKS_EXT, true))
+            using (var fsObservedPeakValues = new FileSaver(skydPath + ChromatogramCache.OBSERVED_PEAK_VALUES_EXT, true))
+            using (var fsScores = new FileSaver(skydPath + ChromatogramCache.SCORES_EXT, true))
+            {
+                fs.Stream = File.OpenWrite(fs.SafeName);
+                minimizer.Minimize(new ChromCacheMinimizer.Settings().ChangeCacheFormat(cacheFormat), null, fs.Stream,
+                    fsScans.FileStream, fsPeaks.FileStream, fsObservedPeakValues.FileStream, fsScores.FileStream);
+                fs.Commit();
+            }
+            return LoadCache(skydPath, document);
+        }
+
+        private static ChromatogramCache LoadCache(string skydPath, SrmDocument document)
+        {
+            return ChromatogramCache.Load(skydPath, new ProgressStatus(),
+                new DefaultFileLoadMonitor(new SilentProgressMonitor()), document);
         }
 
         private static double driftTimeMax = 13.799765403988133; // Known max drift time for this file - use to mimic resolving power logic for test purposes
+
+        /// <summary>
+        /// The high-energy IM offset reports use to put MS2 observed IM back in the precursor frame
+        /// must be the one extraction applied, in every window mode - including linear range, whose
+        /// width math needs the file's maximum IM, which reports do not have.
+        /// </summary>
+        private static void AssertPrecursorHighEnergyOffset(SrmDocument document, string testModeStr)
+        {
+            var filePath = document.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath;
+            var libraryIonMobilities = document.Settings.GetIonMobilities(document.MoleculeLibKeys.ToArray(), filePath);
+            foreach (var pair in document.MoleculePrecursorPairs)
+            {
+                double expected = document.Settings.GetIonMobilityFilter(pair.NodePep, pair.NodeGroup, null,
+                    libraryIonMobilities, null, driftTimeMax).HighEnergyIonMobilityOffset ?? 0;
+                AssertEx.AreEqual(expected, ObservedIonMobilityCalculator.GetPrecursorHighEnergyOffset(
+                    document.Settings, pair.NodePep, pair.NodeGroup, filePath), testModeStr + " high-energy offset");
+            }
+        }
 
         private static SrmDocument InitWatersImsMseDocument(TestFilesDir testFilesDir,
             IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType driftWindowWidthCalcType,

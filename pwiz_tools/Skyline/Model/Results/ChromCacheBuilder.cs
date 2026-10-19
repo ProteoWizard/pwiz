@@ -60,6 +60,13 @@ namespace pwiz.Skyline.Model.Results
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
 
+        // The data reader's native ion mobility units, captured from the provider.
+        // Always available when IM data is present, independent of whether the file
+        // provides a vendor IM to CCS conversion. Drives the scale used to encode
+        // per-time-point observed IM (see WriteChromDataSet), so IM files with no
+        // vendor CCS calibration, e.g. drift time or 1/K0 imported as mzML/mz5, keep it.
+        private eIonMobilityUnits _ionMobilityUnits;
+
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
@@ -256,6 +263,7 @@ namespace pwiz.Skyline.Model.Results
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
                     _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
                     _currentFileInfo.IsSrm = provider.IsSrm;
+                    _ionMobilityUnits = provider.IonMobilityUnits;
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
@@ -1318,7 +1326,8 @@ namespace pwiz.Skyline.Model.Results
         private void WriteChromDataSet(int indexInFile, ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
         {
             long location = _fs.Stream.Position;
-            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes);
+            int observedIonMobilityScale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(_ionMobilityUnits);
+            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes, observedIonMobilityScale);
             // Write the raw chromatogram points
             MemoryStream pointsMemoryStream = new MemoryStream();
             groupOfTimeIntensities.WriteToStream(pointsMemoryStream);
@@ -1393,6 +1402,15 @@ namespace pwiz.Skyline.Model.Results
                         chromData.Peaks[i] = chromData.Peaks[i].RemoveMassError();
                 }
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
+            }
+
+            // Written in the same order as the peaks, which is all that locates them
+            if (CacheFormat.HasObservedPeakValues &&
+                chromDataSet.Chromatograms.Any(chromData => chromData.Peaks.Any(peak => peak.HasObservedValues)))
+            {
+                var groupPeaks = chromDataSet.Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
+                PrimitiveArrays.Write(_fsObservedPeakValues.FileStream, ChromPeak.GetObservedValues(groupPeaks));
+                header = header.ChangeHasObservedPeakValues(true);
             }
 
             AddChromGroup(new ChromGroupHeaderEntry(indexInFile, header));
