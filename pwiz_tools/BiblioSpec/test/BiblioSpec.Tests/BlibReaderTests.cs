@@ -554,6 +554,66 @@ public class BlibReaderTests
         }
     }
 
+    /// <summary>
+    /// The schema script (<c>blibbuild -d</c>) and the writer agree: a library made by running
+    /// the script has the writer's tables and seed rows, and the writer's library has the
+    /// script's, apart from the tables the writer adds to a new library (RetentionTimes,
+    /// LibMetadata) and the indexes it builds on completion.
+    /// </summary>
+    [TestMethod]
+    public void Schema_CreateScriptMatchesTheWriter()
+    {
+        string scriptPath = TempPath();
+        string writerPath = TempPath();
+        try
+        {
+            const string lsid = "urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:it's.blib";
+            var connectionString = new SQLiteConnectionStringBuilder { DataSource = scriptPath, Version = 3 };
+            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            {
+                connection.Open();
+                foreach (string statement in BlibSchema.CreateScript(lsid, "Thu Nov  3 17:02:18 2011"))
+                    Execute(connection, statement);
+            }
+            using (var writer = new BlibWriter(writerPath, "writer.blib"))
+                writer.Complete();
+
+            using var fromScript = new BlibReader(scriptPath);
+            using var fromWriter = new BlibReader(writerPath);
+            Assert.AreEqual(lsid, fromScript.Info.Lsid, "The script escapes the LSID's apostrophe.");
+            Assert.AreEqual(-1, fromScript.Info.SpectrumCount);
+            Assert.AreEqual(BlibSchema.CurrentMinorVersion, fromScript.Info.SchemaVersion);
+            var scriptTables = TableNames(fromScript.Connection);
+            var writerTables = TableNames(fromWriter.Connection);
+            writerTables.Remove(BlibReader.TABLE_RETENTION_TIMES);
+            writerTables.Remove(BlibMetadata.TABLE);
+            CollectionAssert.AreEquivalent(scriptTables, writerTables);
+            CollectionAssert.AreEqual(fromWriter.ReadScoreTypes().OrderBy(t => t.Key).Select(t => t.Key + "=" + t.Value).ToList(),
+                fromScript.ReadScoreTypes().OrderBy(t => t.Key).Select(t => t.Key + "=" + t.Value).ToList());
+            using var mobilityTypes = new SQLiteCommand("SELECT id || '=' || ionMobilityType FROM IonMobilityTypes ORDER BY id", fromScript.Connection);
+            using var reader = mobilityTypes.ExecuteReader();
+            var scripted = new List<string>();
+            while (reader.Read())
+                scripted.Add(reader.GetString(0));
+            CollectionAssert.AreEqual(BlibSchema.IonMobilityTypes.Select((name, i) => i + "=" + name).ToList(), scripted);
+        }
+        finally
+        {
+            DeleteTemp(scriptPath);
+            DeleteTemp(writerPath);
+        }
+    }
+
+    private static List<string> TableNames(SQLiteConnection connection)
+    {
+        var names = new List<string>();
+        using var command = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'", connection);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            names.Add(reader.GetString(0));
+        return names;
+    }
+
     private static string TempPath()
     {
         return Path.Combine(Path.GetTempPath(), $"pwiz-sharp-blibreader-{Guid.NewGuid():N}.blib");

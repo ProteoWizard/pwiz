@@ -408,6 +408,58 @@ namespace pwiz.BiblioSpec.IO
         };
 
         /// <summary>
+        /// The statements that create an empty library and seed it, in the order
+        /// <see cref="AllCreateTableStatements"/> lists the tables: the <c>LibInfo</c> row under
+        /// <paramref name="lsid"/> and <paramref name="createTime"/> (<see cref="FormatCreateTime"/>),
+        /// then one <c>ScoreTypes</c> row per <see cref="ScoreTypes"/> entry and one
+        /// <c>IonMobilityTypes</c> row per <see cref="IonMobilityTypes"/> entry, as literal SQL for
+        /// a documentation dump (<c>blibbuild -d</c>) or a tool creating a library by hand. The
+        /// tables and seeds are the ones <see cref="BlibWriter.CreateSchema"/> writes.
+        /// </summary>
+        public static IReadOnlyList<string> CreateScript(string lsid, string createTime)
+        {
+            if (lsid == null)
+                throw new ArgumentNullException(nameof(lsid));
+            if (createTime == null)
+                throw new ArgumentNullException(nameof(createTime));
+            var script = new List<string>();
+            foreach (string create in AllCreateTableStatements)
+            {
+                script.Add(create);
+                if (create == CreateLibInfo)
+                {
+                    // -1 spectra and revision 0: a library not yet counted, as BiblioSpec has always begun one
+                    script.Add(string.Format(CultureInfo.InvariantCulture, "INSERT INTO LibInfo values('{0}','{1}',{2},{3},{4})",
+                        EscapeApostrophes(lsid), EscapeApostrophes(createTime), -1, CurrentMajorVersion, CurrentMinorVersion));
+                }
+                else if (create == CreateScoreTypes)
+                {
+                    for (int i = 0; i < ScoreTypes.Length; i++)
+                    {
+                        script.Add(string.Format(CultureInfo.InvariantCulture,
+                            "INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES({0}, '{1}', '{2}')",
+                            i, ScoreTypes[i].ScoreType, ScoreTypes[i].ProbabilityType));
+                    }
+                }
+                else if (create == CreateIonMobilityTypes)
+                {
+                    for (int i = 0; i < IonMobilityTypes.Length; i++)
+                    {
+                        script.Add(string.Format(CultureInfo.InvariantCulture,
+                            "INSERT INTO IonMobilityTypes(id, ionMobilityType) VALUES({0}, '{1}')", i, IonMobilityTypes[i]));
+                    }
+                }
+            }
+            return script;
+        }
+
+        /// <summary>A text value as a SQL literal's body: each apostrophe doubled.</summary>
+        private static string EscapeApostrophes(string value)
+        {
+            return value.Replace("'", "''");
+        }
+
+        /// <summary>
         /// All CREATE INDEX statements that <c>BlibMaker.Commit</c> emits, in the
         /// same order as cpp <c>BlibMaker::commit</c>.
         /// </summary>
