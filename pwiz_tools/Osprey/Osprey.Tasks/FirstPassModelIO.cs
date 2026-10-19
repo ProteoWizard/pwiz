@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using pwiz.Common.Pipeline;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
@@ -61,9 +63,15 @@ namespace pwiz.Osprey.Tasks
     /// would mean holding the model in memory for the whole first pass and persisting it at
     /// the end - which is what made a run killed in the score passes unrecoverable, since the
     /// model it had already trained was nowhere on disk. Each artifact is written when the
-    /// phase that produces it ends, and <see cref="LoadFromAny"/> merges the two on read, so
+    /// phase that produces it ends, and <see cref="LoadForAnalysis"/> merges the two on read, so
     /// a consumer still sees one <see cref="Sidecar"/>. The stratum file is absent under every
     /// mode but protein-compact, which is what the mode gate below expects.
+    ///
+    /// <para>Both are experiment-wide, so each is written ONCE under the analysis name
+    /// (<c>&lt;blib-stem&gt;.1st-pass.model.json</c>, <c>&lt;blib-stem&gt;.1st-pass.stratum.json</c>),
+    /// never copied beside every run. They used to be: 82 identical copies of each on an 82-run
+    /// cohort, 790 MB of them stratum. An HPC orchestrator ships one file to every node, as it
+    /// already does for the experiment sidecar and the retained summary.</para>
     /// </summary>
     internal static class FirstPassModelIO
     {
@@ -74,6 +82,10 @@ namespace pwiz.Osprey.Tasks
         /// plus the pass-1 provenance a SecondPassFDR node cannot otherwise know.</summary>
         private sealed class ModelDto
         {
+            /// <summary>The writing task's <see cref="ArtifactStamp"/>, serialized first.</summary>
+            [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+            public string OspreyValidity { get; set; }
+
             public int SchemaVersion { get; set; }
             public int NumFeatures { get; set; }
             public double[] Means { get; set; }
@@ -95,20 +107,16 @@ namespace pwiz.Osprey.Tasks
             /// unreadable, which on a SecondPassFDR node is the hard fail-fast, not a graceful
             /// degradation.</summary>
             public string ExperimentAgg { get; set; }
-
-            /// <summary>The <see cref="ProteinCompactStratum"/> base ids. NO LONGER WRITTEN
-            /// here - the stratum moved to its own <c>.1st-pass.stratum.json</c> when the phase
-            /// artifacts were split, because protein FDR computes it and training does not.
-            /// Still READ, so a directory written before the split keeps its fast-path resume
-            /// instead of needing a fresh multi-hour run; <see cref="LoadFromAny"/> prefers the
-            /// dedicated file and falls back to this. Removable at the next format bump.</summary>
-            public uint[] StratumBaseIds { get; set; }
         }
 
         /// <summary>Serializable form of the protein-compact stratum: the base ids of every
         /// library precursor belonging to a protein with at least two detected peptides.</summary>
         private sealed class StratumDto
         {
+            /// <summary>The writing task's <see cref="ArtifactStamp"/>, serialized first.</summary>
+            [JsonProperty(ArtifactStamp.JSON_PROPERTY, Order = -100)]
+            public string OspreyValidity { get; set; }
+
             public int SchemaVersion { get; set; }
 
             /// <summary>Sorted ascending on write: the in-memory source is a
@@ -127,98 +135,74 @@ namespace pwiz.Osprey.Tasks
             public PercolatorResults Model { get; set; }
             public string ExperimentAgg { get; set; }
             public HashSet<uint> StratumBaseIds { get; set; }
+            /// <summary>The model file's own stamp, when <see cref="LoadForAnalysis"/> loaded it.</summary>
+            public ArtifactStamp Stamp { get; set; }
         }
 
         /// <summary>
-        /// Per-file model sidecar path <c>&lt;parquetDir&gt;/&lt;fileStem&gt;.1st-pass.model.json</c>,
-        /// sitting beside the file's other Stage-5 sidecars (<c>.calibration.json</c>,
-        /// <c>.1st-pass.fdr_scores.bin</c>, <c>.reconciliation.json</c>). Per-file (not
-        /// join-wide) so a distributed <c>--task SecondPassFDR</c> node finds it by the
-        /// SAME input-file-stem derivation it uses for every other reconciled sidecar -- the
-        /// model is identical across files, so any one copy serves. <paramref name="parquetPath"/>
-        /// is the file's score parquet; only its directory is used.
+        /// The analysis's model path, <c>&lt;blib-stem&gt;.1st-pass.model.json</c>: named for the
+        /// output blib, in the directory the per-run artifacts resolve to - the same resolution
+        /// as <see cref="RetainedBaseIdSidecar.PathFor"/>, for the reasons doc 00 gives under
+        /// "Where blib-named experiment-wide artifacts live". Null when the configuration has no
+        /// output blib or no input to resolve the directory from.
         /// </summary>
-        public static string PathFor(string parquetPath, string fileStem)
+        public static string PathFor(OspreyConfig config)
         {
-            string dir = Path.GetDirectoryName(Path.GetFullPath(parquetPath)) ?? string.Empty;
-            return Path.Combine(dir, fileStem + EXT_MODEL);
+            return ScoringTaskShared.AnalysisArtifactPath(config, EXT_MODEL);
         }
 
         /// <summary>
-        /// Per-file protein-compact stratum path
-        /// <c>&lt;parquetDir&gt;/&lt;fileStem&gt;.1st-pass.stratum.json</c>, resolved exactly as
-        /// <see cref="PathFor"/> resolves the model so the two land together and every phase
-        /// agrees on where.
+        /// The analysis's protein-compact stratum path, <c>&lt;blib-stem&gt;.1st-pass.stratum.json</c>,
+        /// resolved exactly as <see cref="PathFor"/> resolves the model so every phase agrees on
+        /// where.
         /// </summary>
-        public static string StratumPathFor(string parquetPath, string fileStem)
+        public static string StratumPathFor(OspreyConfig config)
         {
-            string dir = Path.GetDirectoryName(Path.GetFullPath(parquetPath)) ?? string.Empty;
-            return Path.Combine(dir, fileStem + EXT_STRATUM);
+            return ScoringTaskShared.AnalysisArtifactPath(config, EXT_STRATUM);
         }
 
         /// <summary>
-        /// Load from the per-file sidecars among <paramref name="perFileParquetPaths"/>
-        /// (stem -&gt; score parquet path), or null when none is readable. The copies are
-        /// identical, so ONE model is parsed: the first stem that also has its stratum file, or
-        /// failing that the first readable model.
+        /// Load the analysis's model, with its stratum when the stratum file pairs with it, or null
+        /// when the model is absent or unreadable.
         ///
         /// <para>The stratum is a SEPARATE artifact written by a later phase, so a run killed
         /// between training and protein FDR legitimately has the model and no stratum - that is
-        /// not a reason to reject the model. But the two must come from the SAME stem: splitting
-        /// them removed the structural guarantee that they matched, and with parquets spanning
-        /// directories (-LinkFrom junctions, per-file worker dirs, a partly-rewritten directory)
-        /// an independent scan for each could pair one run's model with another run's stratum
-        /// and publish that as the frozen first-pass state.</para>
-        ///
-        /// <para>The stem is found by file EXISTENCE before anything is parsed. This used to
-        /// parse every stem's model in turn while looking for one with a stratum, and under every
-        /// mode but protein-compact no stem has one, so it parsed every copy - 446 of them at 446
-        /// files, 3.4 MB each for a tree model - to return the first.</para>
+        /// not a reason to reject the model. The two pair only when their stamps match: the same
+        /// FirstPassFDR run stamps both alike, and a stratum left by an earlier run under another
+        /// key - this run computed an empty one and wrote none, or its write failed - would
+        /// otherwise be published with this run's model. An unpaired model loads with no stratum,
+        /// and the caller's mode gate decides whether that is fatal.</para>
         /// </summary>
-        public static Sidecar LoadFromAny(IReadOnlyDictionary<string, string> perFileParquetPaths)
+        public static Sidecar LoadForAnalysis(OspreyConfig config)
         {
-            if (perFileParquetPaths == null)
+            string modelPath = PathFor(config);
+            var sidecar = Load(modelPath);
+            if (sidecar == null)
                 return null;
-            foreach (var kvp in perFileParquetPaths)
+            sidecar.Stamp = ArtifactStamp.TryReadJsonHead(modelPath);
+            string stratumPath = StratumPathFor(config);
+            if (sidecar.Stamp != null &&
+                string.Equals(sidecar.Stamp.ToString(), ArtifactStamp.TryReadJsonHead(stratumPath)?.ToString(), StringComparison.Ordinal))
             {
-                string stratumPath = StratumPathFor(kvp.Value, kvp.Key);
-                if (!File.Exists(stratumPath))
-                    continue;
-                var stratum = LoadStratum(stratumPath);
-                var sidecar = stratum != null ? Load(PathFor(kvp.Value, kvp.Key)) : null;
-                if (sidecar == null)
-                    continue;
-                // The dedicated file wins over anything the model file itself carried.
-                sidecar.StratumBaseIds = stratum;
-                return sidecar;
+                sidecar.StratumBaseIds = LoadStratum(stratumPath);
             }
-            // No stem pairs a model with a readable stratum file. Return the first readable
-            // model, with whatever stratum it carries itself - non-null only in a directory
-            // written before the split, where every copy was written together - and let the
-            // caller's mode gate decide whether a missing stratum is fatal.
-            foreach (var kvp in perFileParquetPaths)
-            {
-                var sidecar = Load(PathFor(kvp.Value, kvp.Key));
-                if (sidecar != null)
-                    return sidecar;
-            }
-            return null;
+            return sidecar;
         }
 
         /// <summary>
         /// Write the frozen-scorer slice of <paramref name="model"/> to <paramref name="path"/>:
         /// its tree ensembles when it has them, otherwise its linear weights. Returns false
         /// (writing nothing) when <see cref="Serialize"/> declines the model, so the caller does
-        /// not advertise a sidecar SecondPassFDR cannot use. A caller writing the identical copy
-        /// beside every input serializes once and writes each copy with <see cref="WriteText"/>.
+        /// not advertise a sidecar SecondPassFDR cannot use.
         /// </summary>
         /// <param name="path">Sidecar path to write.</param>
         /// <param name="model">The trained 1st-pass model.</param>
         /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process;
         ///   see <see cref="Serialize"/>.</param>
-        public static bool Save(string path, PercolatorResults model, string experimentAgg)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static bool Save(string path, PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
         {
-            string json = Serialize(model, experimentAgg);
+            string json = Serialize(model, experimentAgg, stamp);
             if (json == null)
                 return false;
             WriteText(path, json);
@@ -229,22 +213,25 @@ namespace pwiz.Osprey.Tasks
         /// The model file's serialized form, or null when there is nothing <see cref="Load"/>
         /// could read back: no standardizer, neither linear weights nor trees (an empty or
         /// degenerate model), or trees <see cref="Load"/> would refuse. Separate from
-        /// <see cref="Save"/> so the caller writing a copy beside every input clones and renders
-        /// the model ONCE: a tree model is ~3.4 MB of JSON and took 1.15 s to render per copy,
-        /// measured, for byte-identical output.
+        /// <see cref="Save"/> so a caller can report a model that cannot be rendered apart from a
+        /// file that cannot be written.
         /// </summary>
         /// <param name="model">The trained 1st-pass model.</param>
         /// <param name="experimentAgg">Normalized OSPREY_EXPERIMENT_AGG of the training process,
         ///   stamped so a SecondPassFDR node reads the pass-1 arm instead of guessing it from its own
         ///   environment. Comes from the caller (which holds the byproduct) rather than being
         ///   re-read here, so this stays a pure serializer.</param>
-        public static string Serialize(PercolatorResults model, string experimentAgg)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static string Serialize(PercolatorResults model, string experimentAgg, ArtifactStamp stamp)
         {
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
             if (model?.Standardizer == null)
                 return null;
 
             var dto = new ModelDto
             {
+                OspreyValidity = stamp.ToString(),
                 SchemaVersion = 1,
                 NumFeatures = model.Standardizer.NumFeatures,
                 Means = model.Standardizer.Means,
@@ -254,7 +241,7 @@ namespace pwiz.Osprey.Tasks
             if (model.IsGradientBoostedTrees)
             {
                 // Declined rather than written when any fold would fail Load's own check, since
-                // the marker stamped beside the file would then attest a model nobody can read.
+                // the stamp embedded in the file would then attest a model nobody can read.
                 var foldData = new GbtModelData[model.FoldGbtModels.Count];
                 for (int f = 0; f < foldData.Length; f++)
                 {
@@ -292,40 +279,33 @@ namespace pwiz.Osprey.Tasks
         /// <param name="path">Stratum sidecar path to write.</param>
         /// <param name="stratumBaseIds">The protein-compact stratum base ids. Sorted here so
         ///   the artifact is stable across runs.</param>
-        public static bool SaveStratum(string path, HashSet<uint> stratumBaseIds)
+        /// <param name="stamp">The writing task's validity stamp, embedded as the first property.</param>
+        public static bool SaveStratum(string path, HashSet<uint> stratumBaseIds, ArtifactStamp stamp)
         {
-            string json = SerializeStratum(stratumBaseIds);
-            if (json == null)
-                return false;
-            WriteText(path, json);
-            return true;
-        }
-
-        /// <summary>
-        /// The stratum's serialized form, or null when there is nothing to persist. Separate
-        /// from <see cref="SaveStratum"/> so a caller writing the identical copy beside every
-        /// input file sorts and serializes ONCE: the set reaches ~0.9 M ids on a 446-file
-        /// cohort, which is ~12 MB of indented JSON, and re-rendering it per file spends
-        /// several GB of writes plus 446 sorts producing byte-identical output.
-        /// </summary>
-        public static string SerializeStratum(HashSet<uint> stratumBaseIds)
-        {
+            if (stamp == null)
+                throw new ArgumentNullException(nameof(stamp));
             if (stratumBaseIds == null || stratumBaseIds.Count == 0)
-                return null;
+                return false;
 
             var sortedBaseIds = new uint[stratumBaseIds.Count];
             stratumBaseIds.CopyTo(sortedBaseIds);
             Array.Sort(sortedBaseIds); // Array.Sort OK: distinct uint keys, so stability cannot change the result
-            return SerializeJson(new StratumDto { SchemaVersion = 1, StratumBaseIds = sortedBaseIds });
+            WriteText(path, SerializeJson(new StratumDto
+            {
+                OspreyValidity = stamp.ToString(),
+                SchemaVersion = 1,
+                StratumBaseIds = sortedBaseIds,
+            }));
+            return true;
         }
 
-        /// <summary>Write an already-serialized artifact through <see cref="FileSaver"/>.</summary>
+        /// <summary>Write an already-serialized artifact through <see cref="SimpleFileSaver"/>.</summary>
         public static void WriteText(string path, string json)
         {
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
-            using (var saver = new FileSaver(path))
+            using (var saver = new SimpleFileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
                 saver.Commit();
@@ -372,9 +352,6 @@ namespace pwiz.Osprey.Tasks
                 {
                     Model = model,
                     ExperimentAgg = dto.ExperimentAgg,
-                    StratumBaseIds = dto.StratumBaseIds == null || dto.StratumBaseIds.Length == 0
-                        ? null
-                        : new HashSet<uint>(dto.StratumBaseIds),
                 };
             }
             catch (Exception)

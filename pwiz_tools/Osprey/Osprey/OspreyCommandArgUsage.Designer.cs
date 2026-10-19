@@ -88,6 +88,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: {0}).
+        /// </summary>
+        public static string _demux {
+            get {
+                return ResourceManager.GetString("_demux", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Write developer diagnostic dump files, for comparison with the Rust implementation.
         /// </summary>
         public static string _diagnostics {
@@ -259,14 +268,41 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}..
+        ///   Looks up a localized string similar to Input files run concurrently by each per-file stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}..
         /// </summary>
         public static string _parallel_files {
             get {
                 return ResourceManager.GetString("_parallel_files", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Files {1} caches concurrently, overriding {0} for that stage only, in the same forms (a full run caches inside scoring, at its count). A vendor decode runs on one thread, so this can exceed the scoring count; mzML parses still run one at a time..
+        /// </summary>
+        public static string _parallel_files_caching {
+            get {
+                return ResourceManager.GetString("_parallel_files_caching", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Files re-scored concurrently ({1}, and the second-pass per-file phases), overriding {0} for that stage only, in the same forms..
+        /// </summary>
+        public static string _parallel_files_rescoring {
+            get {
+                return ResourceManager.GetString("_parallel_files_rescoring", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Files scored concurrently ({1}), overriding {0} for that stage only, in the same forms..
+        /// </summary>
+        public static string _parallel_files_scoring {
+            get {
+                return ResourceManager.GetString("_parallel_files_scoring", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Emit the machine-parseable {0} lines that scripts and performance tools read (off by default).
         /// </summary>
@@ -340,7 +376,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by {0}.
+        ///   Looks up a localized string similar to Per-file main-search threads (INNER; default: all cores), divided across the files a scoring or re-scoring stage runs concurrently ({0} or its per-stage forms).
         /// </summary>
         public static string _threads {
             get {
@@ -417,15 +453,6 @@ namespace pwiz.Osprey {
         public static string _work_dir {
             get {
                 return ResourceManager.GetString("_work_dir", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Write PIN files for external tools.
-        /// </summary>
-        public static string _write_pin {
-            get {
-                return ResourceManager.GetString("_write_pin", resourceCulture);
             }
         }
     }

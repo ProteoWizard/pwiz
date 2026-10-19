@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 
@@ -379,18 +380,18 @@ namespace pwiz.Osprey.Scoring
             if (_diagnostics?.ShouldDumpSearchXicFor(candidate.Id) ?? false)
             {
                 string peakDumpPath = @"cs_search_xic_entry_" + candidate.Id + @".txt";
-                // A fresh FileSaver per call: "append" becomes read-existing,
+                // A fresh SimpleFileSaver per call: "append" becomes read-existing,
                 // write-existing-plus-new-section, commit. DiagnosticFileLock.For is
                 // keyed by path and shared with OspreyFileDiagnostics.WriteSearchXicDump,
                 // which writes this SAME file earlier in one candidate's scoring - without
-                // a shared lock, two independent FileSaver commits to one path race
+                // a shared lock, two independent SimpleFileSaver commits to one path race
                 // silently instead of the OS-level open conflict a plain writer would have
                 // thrown. Gated to specific candidate ids via OSPREY_DUMP_SEARCH_XIC, so
                 // call volume and the re-read cost are both small.
                 lock (DiagnosticFileLock.For(peakDumpPath))
                 {
                     string existing = File.Exists(peakDumpPath) ? File.ReadAllText(peakDumpPath) : null;
-                    using (var saver = new FileSaver(peakDumpPath))
+                    using (var saver = new SimpleFileSaver(peakDumpPath))
                     {
                         using (var dw = new StreamWriter(saver.SafeName))
                         {

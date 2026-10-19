@@ -23,15 +23,14 @@
     <ReferenceParquetNet>true</ReferenceParquetNet>
   </PropertyGroup>
 
-  <!-- Fixtures + app config land next to the assembly for AbstractUnitTest.GetTestPath. -->
+  <!-- Fixtures land next to the assembly for AbstractUnitTest.GetTestPath. -->
   <ItemGroup>
     <None Include="*.zip" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="App.config" />
     <EmbeddedResource Include="ExportMethodDialogThermoTest.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
@@ -77,6 +76,6 @@
       <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Agilent</Parent>
     </VendorTestArchives>
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\build\ExtractTestData.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\build\ExtractTestData.targets" />
 
 </Project>

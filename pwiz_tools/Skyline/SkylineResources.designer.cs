@@ -251,15 +251,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Unexpected argument --{0}.
-        /// </summary>
-        public static string CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_ {
-            get {
-                return ResourceManager.GetString("CommandArgs_ParseArgsInternal_Error__Unexpected_argument____0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to No isolation list will be exported..
         /// </summary>
         public static string CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_ {
@@ -354,7 +345,16 @@ namespace pwiz.Skyline {
                         "sition_list_export", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected argument {0}.
+        /// </summary>
+        public static string CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_ {
+            get {
+                return ResourceManager.GetString("CommandArgs_UnknownArgumentMessage_Unexpected_argument__0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Error: Model cutoffs ({0}) must be in decreasing order greater than zero and less than {1}..
         /// </summary>
@@ -1809,15 +1809,6 @@ namespace pwiz.Skyline {
         public static string Program_CheckNativeLibraries_Troubleshooting {
             get {
                 return ResourceManager.GetString("Program_CheckNativeLibraries_Troubleshooting", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error copying external tools from previous installation.
-        /// </summary>
-        public static string Program_CopyOldTools_Error_copying_external_tools_from_previous_installation {
-            get {
-                return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
             }
         }
         
@@ -3701,23 +3692,14 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Upgrading to {0} (downloading {1} of {2}).
+        ///   Looks up a localized string similar to The update information at {0} could not be read..
         /// </summary>
-        public static string UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__ {
+        public static string UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_ {
             get {
-                return ResourceManager.GetString("UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__", resourceCulture);
+                return ResourceManager.GetString("UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Upgrading {0}.
-        /// </summary>
-        public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
-            get {
-                return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}..
         /// </summary>

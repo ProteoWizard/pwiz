@@ -127,9 +127,6 @@
   <data name="AnalysisPipeline_Run_Pipeline_failed___0_" xml:space="preserve">
     <value>Pipeline failed: {0}</value>
   </data>
-  <data name="AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>Failed to record that task {0} completed {1}: {2}. A resume will redo this step.</value>
-  </data>
   <data name="OspreyArgUsageProvider_AppliesToHeader_Applies_To" xml:space="preserve">
     <value>Applies To</value>
   </data>
@@ -179,7 +176,7 @@
     <value>writes: {0}, and {1} with {2}</value>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_" xml:space="preserve">
-    <value>writes beside each parquet: {0}, {1}</value>
+    <value>writes beside each parquet: {0}; and once for the analysis: {1}</value>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_" xml:space="preserve">
     <value>For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: {0}. The argument tables below are generated from the command-line declarations, so they always match the build; run {1} for the same reference as text.</value>
@@ -256,6 +253,9 @@
   <data name="OspreyCommandArgs_UsageBlocks_HPC_SPLIT__one_node___one__0____see__0__above_" xml:space="preserve">
     <value>HPC SPLIT (one node = one {0}): see {0} above.</value>
   </data>
+  <data name="OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_to_its_option___0___and_a_file_that_exists_may_be_given_without__1__" xml:space="preserve">
+    <value>OTHER FORMS ACCEPTED: a value may also be joined to its option ({0}), and a file that exists may be given without {1}.</value>
+  </data>
   <data name="OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_" xml:space="preserve">
     <value>Osprey - Peptide-centric DIA analysis</value>
   </data>
@@ -294,6 +294,9 @@
   </data>
   <data name="Program_RunModelDiagnosticsTask__0___the_saved_model_diagnostics_data_for_this_analysis_could_not_be_read__so_the_report_" xml:space="preserve">
     <value>{0}: the saved model diagnostics data for this analysis could not be read, so the report was not built.</value>
+  </data>
+  <data name="Program_RunModelDiagnosticsTask__0___this_analysis_was_written_by_Osprey__1__and_this_build_is__2___so_building_the_missing_" xml:space="preserve">
+    <value>{0}: this analysis was written by Osprey {1} and this build is {2}, so building the missing part of the report would re-run the analysis. Set {3}={1} to build it from the analysis as written.</value>
   </data>
   <data name="Program_RunModelDiagnosticsTask__0___there_is_no_completed_first_pass_to_describe__no_first_pass_intermediate_file_for_" xml:space="preserve">
     <value>{0}: there is no completed first pass to describe (no first-pass intermediate file for the whole experiment beside the output). Run the analysis at least as far as {1} first.</value>
@@ -397,9 +400,6 @@
   <data name="Program_TrainingExportError__0____1__and__2__apply_only_with__3__" xml:space="preserve">
     <value>{0}, {1} and {2} apply only with {3}.</value>
   </data>
-  <data name="Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_" xml:space="preserve">
-    <value>{0} cannot run with {1}: that mode computes the run q-values in {2}, after the per-run export is written. Leave out {0}, or run without {1}.</value>
-  </data>
   <data name="Program_TrainingExportError__0__must_be_in__0__1__" xml:space="preserve">
     <value>{0} must be in (0, 1].</value>
   </data>
@@ -414,5 +414,8 @@
   </data>
   <data name="Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_" xml:space="preserve">
     <value>The {0} path is the library the search reads: {1}. Choose another path for the search results.</value>
+  </data>
+  <data name="Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_" xml:space="preserve">
+    <value>Input file not found, and its demultiplexed spectra cache cannot stand in for it: {0} ({1}). It can be rebuilt only from the source file; restore it.</value>
   </data>
 </root>

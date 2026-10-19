@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.IO</RootNamespace>
+    <AssemblyName>CarafeSharp.IO</AssemblyName>
+    <!-- Parquet.Net, as pwiz's patched build: see Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 1.0.119 to match Osprey and pwiz-sharp. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <!-- The one .blib writer every tool of ours writes the format through; the library writer
+         here is a thin adapter over it, adding Carafe's DecoyPairs table. -->
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
+  </ItemGroup>
+
+</Project>

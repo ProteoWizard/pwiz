@@ -1574,7 +1574,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMostRecentReleaseFormatIsSupportedForSharing()
         {
-            if (Install.Build > 1) return; // Skip this test for .9 feature complete releases, e.g. 23.0.9
+            if (Install.Build == 9) return; // Skip this test for .9 feature complete releases, e.g. 23.0.9 (2 is the .NET 10 daily line, e.g. 26.1.2, and is checked)
 
             var releaseVersions = SkylineVersion.SupportedForSharing()
                 .Where(version => version.Build == 0 && version.Revision == 0)

@@ -13,7 +13,7 @@ REM   * .NET 10 SDK
 REM   (dotCover is restored from .config\dotnet-tools.json by the build, so it
 REM   needs no agent provisioning.)
 REM   Inno Setup 6 (for the Setup.exe) is self-provisioned by package.ps1 through
-REM   pwiz-sharp/installer/Ensure-InnoSetup.ps1 if absent, so no manual agent step
+REM   scripts/installer/Ensure-InnoSetup.ps1 if absent, so no manual agent step
 REM   is needed.
 REM
 REM Outputs consumed by TeamCity:
@@ -28,6 +28,13 @@ REM   no server-side artifact-path configuration is required.
 setlocal
 
 pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity -Coverage -Configuration Release
+if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+
+REM CarafeSharp (pwiz_tools/CarafeSharp) trains the spectral libraries Osprey searches and
+REM has no config of its own, so this one builds and tests it too, with its own test results
+REM and coverage snapshot. It needs no test data; the Carafe parity tests are Inconclusive
+REM without it.
+pwsh -NoProfile -File "%~dp0..\CarafeSharp\build.ps1" -TeamCity -Coverage
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 pwsh -NoProfile -File "%~dp0package.ps1" -TeamCity -Rid win-x64 -Setup

@@ -49,6 +49,9 @@ REM #   --skip-tutorial-tests, so the per-commit run leaves the tutorial suite t
 REM #   the Perf/Tutorial configuration (tc-perftests.bat), and perf tests stay
 REM #   out because nothing sets perftests=on. Pass --with-tutorial-perf to run
 REM #   both: the skip is dropped and build.bat adds perftests=on.
+REM #   TestConnected is always left out (--skip-connected-tests): the "Skyline master
+REM #   and PRs TestConnected tests" configuration runs it on this build's staged
+REM #   output, and the smart trigger queues that only for remote-API changes.
 REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0
@@ -63,6 +66,24 @@ dotnet --version
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet not on PATH & goto error)
 
+REM # Directories the tree used to have tracked files in (pwiz-sharp/ before the C++
+REM # retirement, installer/ and pwiz/src|test before the relayout, the removed
+REM # BullseyeSharp submodule). A persistent agent checkout that built those revisions
+REM # still carries their gitignored outputs or the submodule's working tree, which the
+REM # current .gitignore no longer covers, and the hygiene check at the end would report
+REM # them as files the build left behind. Only a directory with no tracked files is
+REM # swept, so this is a no-op on a fresh checkout and harmless on any branch.
+REM # Mirrors the sweep in the root tcbuild.bat.
+set "REPO_ROOT=%SCRIPT_DIR%\..\.."
+for %%d in (pwiz-sharp installer pwiz\src pwiz\test pwiz_tools\Skyline\Executables\BullseyeSharp) do (
+    if exist "%REPO_ROOT%\%%d" (
+        git -C "%REPO_ROOT%" ls-files --error-unmatch "%%d" >nul 2>&1 || (
+            echo ##teamcity[message text='Removing stale untracked directory %%d left by an earlier layout']
+            rmdir /s /q "%REPO_ROOT%\%%d"
+        )
+    )
+)
+
 REM # The three distro zips the Jamfile used to produce. Appended here rather
 REM # than left to the caller so every TC configuration yields the same artifacts.
 set DISTRO_ZIPS=SkylineTester.zip SkylineNightly.zip BiblioSpec.zip
@@ -73,8 +94,11 @@ REM # build.bat turns it into perftests=on.
 set TUTORIAL_ARG=--skip-tutorial-tests
 for %%A in (%*) do if /i "%%~A"=="--with-tutorial-perf" set TUTORIAL_ARG=
 
-echo ##teamcity[progressMessage 'Skyline build.bat %* %TUTORIAL_ARG% %DISTRO_ZIPS%']
-call "%SCRIPT_DIR%\build.bat" %* %TUTORIAL_ARG% %DISTRO_ZIPS%
+REM # TestConnected stays out unconditionally - see the scope note above.
+set CONNECTED_ARG=--skip-connected-tests
+
+echo ##teamcity[progressMessage 'Skyline build.bat %* %TUTORIAL_ARG% %CONNECTED_ARG% %DISTRO_ZIPS%']
+call "%SCRIPT_DIR%\build.bat" %* %TUTORIAL_ARG% %CONNECTED_ARG% %DISTRO_ZIPS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
 

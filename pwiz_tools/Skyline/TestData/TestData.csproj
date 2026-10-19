@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
@@ -114,6 +114,6 @@
       <Parent>$(MSBuildThisFileDirectory)..\..\..\pwiz\data\vendor_readers\Thermo</Parent>
     </VendorTestArchives>
   </ItemGroup>
-  <Import Project="$(MSBuildThisFileDirectory)..\..\..\pwiz-sharp\build\ExtractTestData.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\build\ExtractTestData.targets" />
 
 </Project>

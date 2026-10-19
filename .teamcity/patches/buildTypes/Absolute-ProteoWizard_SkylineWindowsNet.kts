@@ -53,8 +53,9 @@ create(DslContext.projectId, BuildType({
             // from a clean slate too: on an agent that reuses its checkout, stale bin\x64 and
             // obj\x64 left by an earlier commit fail inspectcode's own solution build.
             // tcbuild.bat does not clean again: build.bat builds the same x64 tree the
-            // inspection just built, and picks up from it. Without -cpp, clean.bat leaves the C++
-            // build alone and just runs pwiz_tools\clean-apps.bat.
+            // inspection just built, and picks up from it. clean.bat sweeps the pwiz build outputs
+            // (keeping the extracted vendor SDKs and runtime installer caches) and then runs
+            // pwiz_tools\clean-apps.bat.
         }
         exec {
             name = "Skyline code inspection"

@@ -17,6 +17,10 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
+    <!-- Restore win-x64 too, for the single-file publish SkylineNightly.zip carries (see
+         SkylineTester.csproj, _StageDistroZipPrereqs). Plural, so ordinary builds keep their
+         RID-less output path. -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>

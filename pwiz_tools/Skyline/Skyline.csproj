@@ -35,6 +35,10 @@
          downgrades that net8's runtime supersedes safely. -->
     <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The <gcServer> element in app.config only applies to .NET Framework. Without this the
+         .NET 10 build runs the workstation collector, which stalls every thread whenever one of
+         the parallel workers allocates; a report export measured 80% slower on it. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <!-- Parquet.Net, as pwiz's patched build: see ..\Shared\Lib\Parquet\ParquetNet.targets -->
     <ReferenceParquetNet>true</ReferenceParquetNet>
     <!-- Skyline ships as Skyline-daily.exe in the daily channel; honor the env
@@ -200,7 +204,7 @@
   <ItemGroup>
     <!-- Shared dep tree - all multi-targeted in the same session as this csproj.
          Each follows the same net472/net10.0-windows split internally. -->
-    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj" />
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpecUtil\BiblioSpecUtil.csproj" />
     <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj" />
     <ProjectReference Include="..\Shared\Common\Common.csproj" />
@@ -217,11 +221,11 @@
          ProcessStartInfo expecting them to sit next to Skyline in the bin dir. Reference
          the projects so they build first; the _DeployBundledToolOutputs target below deploys
          their outputs. -->
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
+    <ProjectReference Include="..\BiblioSpec\src\BlibBuild\BlibBuild.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
+    <ProjectReference Include="..\BiblioSpec\src\BlibFilter\BlibFilter.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
@@ -278,11 +282,12 @@
          Skyline shipped msparser.dll - so DllImport("MascotShim") and its msparser dependency
          resolve from the executable's own directory. BiblioSpec.csproj emits msparserD.dll in
          Debug and msparser.dll otherwise (Debug links msparserD.lib), so the name tracks
-         $(Configuration). -->
+         $(Configuration). Without Mascot support (no vendor licenses) BlibBuild has none of
+         these, though the directory may still hold other natives. -->
     <PropertyGroup>
       <_MascotNativeDir>@(_BundledToolTargetPath->WithMetadataValue('Filename', 'BlibBuild')->'%(RootDir)%(Directory)runtimes\win-x64\native\')</_MascotNativeDir>
     </PropertyGroup>
-    <ItemGroup Condition="'$(_MascotNativeDir)' != '' And Exists('$(_MascotNativeDir)')">
+    <ItemGroup Condition="'$(_MascotNativeDir)' != '' And Exists('$(_MascotNativeDir)MascotShim.dll')">
       <Content Include="$(_MascotNativeDir)MascotShim.dll">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <Link>MascotShim.dll</Link>
@@ -315,7 +320,7 @@
        _DeployBundledToolOutputs target above deploys its output. net8-only: the net472 build gets
        the native msconvert from the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\MsConvert.csproj"
+    <ProjectReference Include="..\Commandline\MsConvert\src\MsConvert.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
@@ -329,7 +334,7 @@
        the legacy BullseyeSharp.exe from pwiz_tools\Skyline\BullseyeSharp\BullseyeSharp.csproj via
        the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\BullseyeSharp.csproj"
+    <ProjectReference Include="..\BullseyeSharp\src\BullseyeSharp.csproj"
                       ReferenceOutputAssembly="false"
                       Private="false"
                       DeployOutput="true" />
@@ -499,7 +504,7 @@
        pwiz.CLI.Bruker.PrmScheduling assembly. P/Invokes prmscheduler.dll shipped
        inside pwiz. Only wired for net8; net472 keeps the old C++/CLI reference. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <ProjectReference Include="..\..\pwiz-sharp\pwiz\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj" />
+    <ProjectReference Include="..\..\pwiz\utility\bindings\timstof_prm_scheduler\Bruker.PrmScheduling.csproj" />
   </ItemGroup>
 
   <!-- Build batch hooks (preserved from legacy) - PreBuildEvents.bat is what
@@ -575,28 +580,6 @@
       <Compile Include="$(IntermediateOutputPath)Net8Version.g.cs" />
       <FileWrites Include="$(IntermediateOutputPath)Net8Version.g.cs" />
     </ItemGroup>
-  </Target>
-
-
-  <!-- net8 app.config. App.config is shared with the net472 leg and carries three
-       .NET Framework-only sections; the system.data one is fatal on net8 (undeclared
-       section aborts the whole configuration system at startup, so Skyline-daily.exe
-       would not launch at all). App.net8.xslt removes them. Transforming at build
-       time rather than checking in a second config keeps the 46 KB of user settings
-       in one place. -->
-  <Target Name="_GenerateNet8AppConfig" BeforeTargets="PrepareForBuild"
-          Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <!-- AppConfig is set HERE, not in a plain PropertyGroup: $(IntermediateOutputPath) is
-         defined by the SDK targets, which for an Sdk-attribute project are imported after
-         the project body, so a property group referencing it evaluates to a bare
-         "App.net8.config" and the build fails with MSB3030 file-not-found. -->
-    <MakeDir Directories="$(IntermediateOutputPath)" />
-    <XslTransformation XmlInputPaths="App.config" XslInputPath="App.net8.xslt"
-                       OutputPaths="$(IntermediateOutputPath)App.net8.config" />
-    <PropertyGroup>
-      <AppConfig>$(IntermediateOutputPath)App.net8.config</AppConfig>
-    </PropertyGroup>
-    <Message Importance="normal" Text="Generated $(AppConfig) from App.config" />
   </Target>
 
 

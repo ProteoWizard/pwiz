@@ -109,26 +109,17 @@
   <data name="FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks" xml:space="preserve">
     <value>Fragment types in {0}: of {2:N0} peaks the library types as a b or y ion, Osprey's own typing agrees on {1:N0}, the library chooses another ion within tolerance of the peak on {5:N0}, and names no ion within tolerance on {3:N0}; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable)</value>
   </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
-    <value>Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}</value>
-  </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
-    <value>Invalid peak m/z blob size: {0} bytes (not a multiple of 8)</value>
-  </data>
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>Invalid BiblioSpec library: the {0} table was not found.</value>
+  </data>
+  <data name="BlibLoader_LoadSpectra_Reading__0_N0__library_spectra" xml:space="preserve">
+    <value>Reading {0:N0} library spectra</value>
   </data>
   <data name="CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_" xml:space="preserve">
     <value>Library protein accessions carry the per-peptide '{4}' suffix that Carafe adds (e.g. '{2}' -&gt; '{3}'); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein.</value>
   </data>
   <data name="ColumnIndices_RequireColumn_Missing_required_column___0_" xml:space="preserve">
     <value>Missing required column: {0}</value>
-  </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_" xml:space="preserve">
-    <value>The decoy pairing manifest is empty.</value>
-  </data>
-  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
-    <value>The decoy pairing manifest is missing required columns (it needs {1}, {2} and {3}). Found: {0}</value>
   </data>
   <data name="DiannTsvLoader_LineReader___line__0___column__1___Missing__2_" xml:space="preserve">
     <value>(line {0}, column {1}) Missing {2}</value>
@@ -178,8 +169,11 @@
   <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
     <value>Failed to load the library cache: {0}. Reading the library file instead.</value>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
-    <value>Failed to save library cache: {0}</value>
+  <data name="LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_" xml:space="preserve">
+    <value>Failed to read the derived library '{0}': {1} Reading the library file instead.</value>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_save_the_derived_library___0_" xml:space="preserve">
+    <value>Failed to save the derived library: {0}</value>
   </data>
   <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
     <value>Library cache '{0}' was built from a different version of the source library; ignoring the stale cache and rebuilding from source.</value>
@@ -190,11 +184,17 @@
   <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
     <value>Loaded {0:N0} library precursors from cache '{1}'</value>
   </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__" xml:space="preserve">
+    <value>Loaded {0:N0} library precursors from the derived library '{1}'</value>
+  </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
     <value>Loading spectral library from {0}...</value>
   </data>
-  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
-    <value>Saved library cache ({0:N0} precursors) to '{1}'</value>
+  <data name="LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__" xml:space="preserve">
+    <value>Saved the derived library ({0:N0} precursors) to '{1}'</value>
+  </data>
+  <data name="LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_or_configuration__rebuilding_it_from_the_source_library_" xml:space="preserve">
+    <value>The derived library '{0}' was built from a different version or configuration; rebuilding it from the source library.</value>
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
     <value>Unsupported library format: {0}</value>
@@ -204,6 +204,27 @@
   </data>
   <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
     <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%): {3:N0} from the pairing manifest, {4:N0} by amino acid composition. {5:N0} decoys and {6:N0} targets have no partner.</value>
+  </data>
+  <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_s_DecoyPairs_table___3__" xml:space="preserve">
+    <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%) from the library's DecoyPairs table. {3:N0} decoys and {4:N0} targets have no partner.</value>
+  </data>
+  <data name="LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pairing_each_decoy_with_its_target_" xml:space="preserve">
+    <value>The library {0} supplies decoys but has no DecoyPairs table pairing each decoy with its target. A BiblioSpec library searched with its own decoys must carry the table, as CarafeSharp writes it; otherwise leave out {1} so Osprey generates its own decoys.</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_from_the_library_s_DecoyPairs_table_" xml:space="preserve">
+    <value>Pairing library decoys to targets from the library's DecoyPairs table.</value>
+  </data>
+  <data name="LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_" xml:space="preserve">
+    <value>The library {0} has entrapment peptides (protein accessions marked _p_target) but nothing pairs them with their targets. Give the pairing manifest with {1}, or search a BiblioSpec library that carries a DecoyPairs table.</value>
+  </data>
+  <data name="LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_" xml:space="preserve">
+    <value>The library's DecoyPairs table carries its pairing design; the pairing manifest {0} is not read.</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_s_decoys_are_paired_with_a_target_in_its_DecoyPairs_table__at_least__1___is_needed___" xml:space="preserve">
+    <value>Only {0:F1}% of the library's decoys are paired with a target in its DecoyPairs table (at least {1:F0}% is needed), so FDR estimates would be unreliable. The library must pair each decoy with its target at one charge, or leave out {2} so Osprey generates its own decoys.</value>
+  </data>
+  <data name="BlibDecoyPairs_Read_The_library__0__has_a_DecoyPairs_table_Osprey_cannot_read___1_" xml:space="preserve">
+    <value>The library {0} has a DecoyPairs table Osprey cannot read: {1}</value>
   </data>
   <data name="LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_" xml:space="preserve">
     <value>Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search.</value>
@@ -259,9 +280,6 @@
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_" xml:space="preserve">
     <value>{0} was written by an Osprey build this one does not recognize ({1}; this is {2}), so it cannot be reused. Score the file again with this build ({3}).</value>
   </data>
-  <data name="ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__" xml:space="preserve">
-    <value>The file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}.</value>
-  </data>
   <data name="ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_" xml:space="preserve">
     <value>{0}: the stored peak candidates in row group {1} have an unexpected type ({2}). The file is damaged or was written by a different version of Osprey.</value>
   </data>
@@ -310,14 +328,8 @@
   <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
     <value>Reading the intermediate file '{0}' failed partway, after {1:N0} records were read. The run stops here rather than continue with part of the file's values.</value>
   </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
-    <value>Reconciliation file {0} has {2} {1} but does not carry the first-pass precursor set. Delete this analysis's {3} files and run the first pass again.</value>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
-    <value>Reconciliation file {0} has {2} {1} but does not list the input files it covers ({3}). Delete this analysis's {4} files and run the first pass again.</value>
-  </data>
   <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">
-    <value>Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis's {4} files and run the first pass again.</value>
+    <value>Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis's {4} files and run the analysis again.</value>
   </data>
   <data name="ReconciliationFile_Load_Reconciliation_file_not_found__" xml:space="preserve">
     <value>Reconciliation file not found: {0}</value>
@@ -336,6 +348,9 @@
   </data>
   <data name="SpectraCacheException_Describe_no_file_exists_at_that_path" xml:space="preserve">
     <value>no file exists at that path</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_cache_was_demultiplexed_with_different_settings__or_its_demultiplexing_state_does_not_match" xml:space="preserve">
+    <value>the cache was demultiplexed with different settings, or its demultiplexing state does not match the demultiplexing option, so it must be rebuilt</value>
   </data>
   <data name="SpectraCacheException_Describe_the_cache_was_refused_for_an_unrecorded_reason" xml:space="preserve">
     <value>the cache was refused for an unrecorded reason</value>
@@ -408,5 +423,24 @@
   </data>
   <data name="LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys" xml:space="preserve">
     <value>{0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library's decoys, or remove them from the library.</value>
+  </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library__0__claims_the_Osprey_library_contract_but_violates_it___1_" xml:space="preserve">
+    <value>The library {0} claims the Osprey library contract but violates it:
+{1}</value>
+  </data>
+  <data name="LibraryLoader_CheckLibraryContract_The_library_claims_the_Osprey_library_contract__checking_it_before_any_repair_" xml:space="preserve">
+    <value>The library claims the Osprey library contract; checking it before any repair.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">
+    <value>Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_" xml:space="preserve">
+    <value>Excluded 1 entrapment peptide with no target pair and no known cause ({1}). Check the library and its pairing manifest.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_" xml:space="preserve">
+    <value>Excluded {0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics.</value>
+  </data>
+  <data name="PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_" xml:space="preserve">
+    <value>Excluded {0} entrapment peptides with no target pair and no known cause (e.g. {1}). Check the library and its pairing manifest.</value>
   </data>
 </root>

@@ -317,32 +317,12 @@
     <value>{0}Percolatorの結果：ターゲット{1:N0}個、デコイ{2:N0}個が{3:P1} FDRを通過</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Could_not_save_the_precursor_candidates_from_proteins_with_2_or_more_detections_for___0___" xml:space="preserve">
-    <value>「{0}」について、検出数が2以上のタンパク質由来のプリカーサー候補を保存できませんでした：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for_1_file_" xml:space="preserve">
-    <value>1個のファイルについて、検出数が2以上のタンパク質由来のプリカーサー候補を保存しました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_BuildAndPublishProteinCompactStratum_Saved_the_precursor_candidates_from_proteins_with_2_or_more_detections_for__0__files_" xml:space="preserve">
-    <value>{0:N0}個のファイルについて、検出数が2以上のタンパク質由来のプリカーサー候補を保存しました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_BuildCalibrationData_Calibration_report___0__of__1__files_have_no_calibration_diagnostics_and_are_left_out_of_" xml:space="preserve">
     <value>校正レポート：{1:N0}個のファイルのうち{0:N0}個には校正診断がないため、レポートから除外されます：[{2}]</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_BuildProteinCompactStratum__0__proteins_have_2_or_more_detections___1__detected_peptides___their__2__precursor_" xml:space="preserve">
     <value>{0:N0}個のタンパク質の検出数が2以上です（検出されたペプチド{1:N0}個）。これらの{2:N0}個のプリカーサー候補は第2パスFDRに進みます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates__1_file_" xml:space="preserve">
-    <value>第1パスの結果を、保持されたプリカーサー候補に絞り込み中（1個のファイル）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_CompactFirstPass_Trimming_first_pass_results_to_the_kept_precursor_candidates___0__files_" xml:space="preserve">
-    <value>第1パスの結果を、保持されたプリカーサー候補に絞り込み中（{0:N0}個のファイル）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_ComputeFirstPassBaseIds_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
@@ -397,27 +377,11 @@
     <value>出力{0}がないため、タンパク質Q値を読み取るための実験全体の第1パス中間ファイルがありません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__no__scores_parquet_file_is_known_for__0__" xml:space="preserve">
-    <value>再開できません：{0}に対応する既知の{1}ファイルがありません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__the_first_pass_intermediate_files_could_not_be_read___0_" xml:space="preserve">
-    <value>再開できません：第1パス中間ファイルを読み取れませんでした。{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_LoadOwnReconciliationBundle_This_configuration_resumes_with_the_first_pass_precursor_candidates_of_every_run_in_" xml:space="preserve">
-    <value>この構成では、すべてのランの第1パスプリカーサー候補を一度にメモリに保持して再開します。これはラン数に比例して増加し（ランあたり約0.1 GB）、大規模なコホートではメモリが不足する可能性があります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_LoadResumeStubs_Failed_to_load_the_scores_for__0__from__1____2_" xml:space="preserve">
     <value>{1}から{0}のスコアの読み込みに失敗しました：{2}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR" xml:space="preserve">
-    <value>{0}：{2:P1}のランレベルFDRで{1:N0}個のプリカーサー</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR" xml:space="preserve">
     <value>{0}：{2:P1}のランレベルFDRで{1:N0}個のプリカーサー</value>
     <comment>Needs Review:New resource</comment>
   </data>
@@ -437,20 +401,8 @@
     <value>モデル診断：{0}はこの解析に対して古いため、レポートを構築するために第1パスを再実行します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Could_not_save_the_first_pass_model_for___0_____1_" xml:space="preserve">
-    <value>「{0}」の第1パスモデルを保存できませんでした：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0_" xml:space="preserve">
     <value>トレーニング済みの第1パスモデルを{0}に保存しました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_each_of_the_other__1__inputs" xml:space="preserve">
-    <value>トレーニング済みの第1パスモデルを{0}と、他の{1:N0}個の各入力用に保存しました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_PersistFirstPassModel_Saved_the_trained_first_pass_model_to__0__and_for_the_other_input" xml:space="preserve">
-    <value>トレーニング済みの第1パスモデルを{0}と、もう1つの入力用に保存しました</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_PlanStage6_Cross_run_reconciliation_planning" xml:space="preserve">
@@ -475,26 +427,6 @@
   </data>
   <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Re_scoring_loads_the_file_on_its_own__so_no_combined_cross_run_reconciliation_data_is_" xml:space="preserve">
     <value>再スコアリングではファイルを個別に読み込むため、統合されたラン間整合データは構築されません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from_1_cross_run_reconciliation_file_" xml:space="preserve">
-    <value>1個のラン間整合ファイルから、欠損ピークの対象と精密化された校正を{1:F1}秒で読み取りました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_" xml:space="preserve">
-    <value>{0:N0}個のラン間整合ファイルから、欠損ピークの対象と精密化された校正を{1:F1}秒で読み取りました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
-    <value>中間ファイルに保存された第1パスのQ値を使用します。第1パスPercolatorは再実行されません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>1個のファイルから保持されたプリカーサー候補を再読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから保持されたプリカーサー候補を再読み込み中</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
@@ -553,14 +485,6 @@
     <value>最新：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found" xml:space="preserve">
-    <value>第1パスのペプチドが2個以上のタンパク質由来のプリカーサーのリスト（{0}）が、入力の{1}ファイルの横に見つかりませんでした</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___" xml:space="preserve">
-    <value>読み取り可能な第1パスモデルファイル（{0}）が、入力の{1}ファイルの横に見つかりませんでした</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model" xml:space="preserve">
     <value>第1パスモデルファイル（{0}）にモデルが含まれていません</value>
     <comment>Needs Review:New resource</comment>
@@ -581,18 +505,6 @@
     <value>{0:N0}個のファイルの第1パスタンパク質FDRを計算中</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Failed_to_resolve_first_pass_protein_q_values_for__0____1_" xml:space="preserve">
-    <value>{0}の第1パスタンパク質Q値の決定に失敗しました：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第1パスタンパク質Q値を決定中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFirstPassProteinFdrStreaming_Resolving_first_pass_protein_q_values_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第1パスタンパク質Q値を決定中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>モデル診断：第1パスはすでに完了しているため、レポートは第1パス中間ファイルから構築されます。再実行は行いません。</value>
     <comment>Needs Review:New resource</comment>
@@ -607,26 +519,6 @@
   </data>
   <data name="FirstPassFdrTask_StreamFirstPassFileScores_Failed_to_read_the_first_pass_intermediate_file_for___0_____1_" xml:space="preserve">
     <value>「{0}」の第1パス中間ファイルの読み取りに失敗しました：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_StreamOwnReconciliationBundle_Resuming__reloading_first_pass_intermediate_files_for_1_file_" xml:space="preserve">
-    <value>再開：1個のファイルの第1パス中間ファイルを再読み込み中。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_StreamOwnReconciliationBundle_Resuming__reloading_first_pass_intermediate_files_for__0__files_" xml:space="preserve">
-    <value>再開：{0:N0}個のファイルの第1パス中間ファイルを再読み込み中。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_StreamOwnReconciliationBundle___model_diagnostics__could_not_prepare_the_report_on_this_resume__so_no_report_will_be_" xml:space="preserve">
-    <value>{1}：この再開ではレポートを準備できなかったため、レポートは書き込まれません。検索には影響ありません。{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__no__scores_parquet_file_is_known_for__0___so_its_first_pass_precursor_" xml:space="preserve">
-    <value>再開できません：{0}に対応する既知の{1}ファイルがないため、その第1パスのプリカーサー候補を再スコアリング用に再読み込みできません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__the_first_pass_intermediate_files_for__0__files_are_missing_the_list_of_" xml:space="preserve">
-    <value>再開できません：{0:N0}個のファイルの第1パス中間ファイルに、ラン間整合のために保持されたプリカーサー候補のリストがありません。これらの入力の{1}ファイルを削除して再実行してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_" xml:space="preserve">
@@ -655,18 +547,6 @@
   </data>
   <data name="FirstPassFdrTask_WriteFdrBenchPass1FromSidecarsIfRequested_Writing_first_pass_FDRBench_input_for__0__files" xml:space="preserve">
     <value>{0:N0}個のファイルの第1パスFDRBench入力を書き込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
-    <value>「{0}」の第1パス中間ファイルを書き込めません：入力パスから場所を導出できませんでした。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteFdrScoresSidecars_Failed_to_write_the_first_pass_intermediate_file_for__0____1_" xml:space="preserve">
-    <value>{0}の第1パス中間ファイルの書き込みに失敗しました：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_locate_the_intermediate_files_for__0___so_its_cross_run_reconciliation_file_was_" xml:space="preserve">
-    <value>{0}の中間ファイルが見つからなかったため、そのラン間整合ファイルは書き込まれませんでした。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_WriteReconciliationFile_Could_not_write_the_cross_run_reconciliation_file_for__0____1_" xml:space="preserve">
@@ -749,18 +629,6 @@
     <value>第2パスの結果をモデル診断レポートに追加できませんでした：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>第2パスの結果をモデル診断レポートに追加できませんでした：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_" xml:space="preserve">
-    <value>モデル診断レポートを書き込めませんでした：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_" xml:space="preserve">
-    <value>モデル診断レポートを書き込みました：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="ModelDiagnosticsTask_DescribeOutput__0___report_only__no_other_file_is_written_" xml:space="preserve">
     <value>{0}（レポートのみ。他のファイルは書き込まれません）</value>
     <comment>Needs Review:New resource</comment>
@@ -821,14 +689,6 @@
     <value>1個のファイルで、保持された{1:N0}個のプリカーサー候補ピークの第1パススコアを復元しました。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_missing_or_unreadable_for_" xml:space="preserve">
-    <value>1個のファイルで第1パス中間ファイル（{2}）がないか、読み取れません：{1}。この実行のタンパク質レベルの結果は信頼できないものとして扱ってください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__are_missing_or_unreadable_" xml:space="preserve">
-    <value>{0:N0}個のファイルで第1パス中間ファイル（{2}）がないか、読み取れません：{1}。この実行のタンパク質レベルの結果は信頼できないものとして扱ってください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Computing_second_pass_FDR_scores_for_1_file_" xml:space="preserve">
     <value>1個のファイルの第2パスFDRスコアを計算中。</value>
     <comment>Needs Review:New resource</comment>
@@ -837,68 +697,8 @@
     <value>{0:N0}個のファイルの第2パスFDRスコアを計算中。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_" xml:space="preserve">
-    <value>1個のファイルの第2パスFDRスコアファイルは変更しませんでした（{1}はレポートのみを書き込みます）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_" xml:space="preserve">
-    <value>{0:N0}個のファイルの第2パスFDRスコアファイルは変更しませんでした（{1}はレポートのみを書き込みます）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第2パスFDRスコアを書き込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Writing_second_pass_FDR_scores_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第2パスFDRスコアを書き込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第2パスFDRスコアを書き込みました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist_Wrote_second_pass_FDR_scores_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第2パスFDRスコアを書き込みました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run__so_no_second_pass_" xml:space="preserve">
-    <value>第1パスの{0:N0}個のファイルが今回の実行の入力に含まれていないため、これらの第2パス中間ファイルは書き込まれません：[{1}]。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__1__of_1_file_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_re_" xml:space="preserve">
-    <value>1個のファイルのうち{1:N0}個には保存された第2パスFDRスコアがありませんでした。{2:N0}個には、ファイルごとの再スコアリングで書き込まれたスコアがあります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist__1__of__0__files_had_no_saved_second_pass_FDR_scores___2__have_scores_written_by_per_file_" xml:space="preserve">
-    <value>{0:N0}個のファイルのうち{1:N0}個には保存された第2パスFDRスコアがありませんでした。{2:N0}個には、ファイルごとの再スコアリングで書き込まれたスコアがあります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_" xml:space="preserve">
-    <value>{2}：第1パスの{0:N0}個のファイルが今回の実行の入力に含まれていないため、スキップされます：[{1}]。通常これは、第1パスと第2パスのタスクの間に入力の名前が変更されたか、移動されたことを意味します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__" xml:space="preserve">
     <value>第2パスFDRを実行できません：保存された第1パスモデル、第1パス中間ファイル、または検出数が2以上のタンパク質由来のプリカーサー候補のリストがないか、読み取れません（原因となるファイルがある場合は、上記の警告にファイル名が記載されています）。{0}を指定せずに、解析を最初から最後まで通して実行してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from_1_file" xml:space="preserve">
-    <value>1個のファイルから再スコアリングされたピークフィーチャーを再読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから再スコアリングされたピークフィーチャーを再読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__could_not_read_the_re_scored_intermediate_file__0____1_" xml:space="preserve">
-    <value>第2パスFDR：再スコアリングされた中間ファイル{0}を読み取れませんでした：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so__1__precursor_candidates_" xml:space="preserve">
-    <value>第2パスFDR：「{0}」に対応する既知の{2}ファイルがないため、{1:N0}個のプリカーサー候補はフィーチャーなしでスコアリングされます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_file___3___does_not_match_the_first_pass_" xml:space="preserve">
-    <value>第2パスFDR：再スコアリングされた中間ファイル「{3}」が「{0}」の第1パス中間ファイルと一致しません（{1:N0}行、想定{2:N0}行）。{4:N0}個のプリカーサー候補はフィーチャーなしでスコアリングされます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
@@ -953,24 +753,8 @@
     <value>第2パスFDR：保存された第1パスモデルは使用できません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_no_results_from_re_scoring_for_the_file__so_they_are_recomputed_from_" xml:space="preserve">
-    <value>第2パスFDRにはこのファイルの再スコアリング結果がないため、その第1パス中間ファイルから再計算されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_has_results_from_re_scoring_for__1__of__0__files__the_other__2__are_" xml:space="preserve">
-    <value>第2パスFDRには{0:N0}個のファイルのうち{1:N0}個の再スコアリング結果があります。残りの{2:N0}個はそれぞれの第1パス中間ファイルから再計算されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_" xml:space="preserve">
     <value>{0:N0}個のファイルに対する第2パスFDR：検出数が2以上のタンパク質由来の{1:N0}個のプリカーサー候補のQ値を再計算中。その他の候補は第1パスのQ値を維持します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_all__0__files_" xml:space="preserve">
-    <value>第2パスFDRは、{0:N0}個すべてのファイルについて、再スコアリング中に書き込まれた結果を使用します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_uses_the_results_written_during_re_scoring_for_the_file_" xml:space="preserve">
-    <value>第2パスFDRは、このファイルについて、再スコアリング中に書き込まれた結果を使用します。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_experiment_level_q_values_could_not_be_written_for__0__files____1____Stopping_" xml:space="preserve">
@@ -1013,30 +797,6 @@
     <value>{0}からピークフィーチャーの再読み込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第2パス中間ファイルを確認中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第2パス中間ファイルを確認中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for_1_file" xml:space="preserve">
-    <value>1個のファイルの第2パスFDRスコア（{1}）を再読み込みしました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Reloaded_second_pass_FDR_scores___1___for__2__of__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルのうち{2:N0}個の第2パスFDRスコア（{1}）を再読み込みしました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for_1_file" xml:space="preserve">
-    <value>1個のファイルの第1パススコアを復元中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルの第1パススコアを復元中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_" xml:space="preserve">
     <value>{0}の再スコアリング結果を読み取れませんでした：{1}</value>
     <comment>Needs Review:New resource</comment>
@@ -1071,14 +831,6 @@
   </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_for__1__precursor_candidates_to__0_" xml:space="preserve">
     <value>{1:N0}個のプリカーサー候補の実験レベルFDR結果を{0}に書き込みました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>{0}による{1}の完了を記録できませんでした：{2}。再開時にはこのステップがやり直されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_" xml:space="preserve">
-    <value>「{0}」の第2パス中間ファイルの書き込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PeakCoAssignmentSource_AddFile_could_not_read__0_" xml:space="preserve">
@@ -1161,14 +913,6 @@
     <value>再スコアリングでは、ファイルをその中間ファイルから読み込みます。保持された{1:N0}個のターゲット-デコイペアのリストは1回だけ読み取ります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>1個のファイルから保持されたプリカーサー候補を再構築中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildRescoredPool_Rebuilding_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから保持されたプリカーサー候補を再構築中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileRescoreTask_BuildResumePerRunSource_Second_pass_FDR_reads_the_re_scored_results_of_the_file___1__of_1_current__" xml:space="preserve">
     <value>第2パスFDRは、このファイルの再スコアリング結果を読み取ります（1個中{1:N0}個が最新）。</value>
     <comment>Needs Review:New resource</comment>
@@ -1183,14 +927,6 @@
   </data>
   <data name="PerFileRescoreTask_BuildRunPerRunSource_Second_pass_FDR_will_read_the_file_from_its_own_intermediate_files_" xml:space="preserve">
     <value>第2パスFDRは、ファイルをその中間ファイルから読み取ります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_one_file_at_a_time___0__files__from_its_own_intermediate_files__the_" xml:space="preserve">
-    <value>第2パスFDRは、各ファイルをその中間ファイルから1ファイルずつ（{0:N0}個のファイル）読み取ります。保持された{1:N0}個のターゲット-デコイペアのリストは1回だけ読み取り、{0:N0}個のファイルのうち{2:N0}個にはすでに第2パスの結果があります。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_BuildStage7PerRunSource_Second_pass_FDR_reads_the_file_from_its_own_intermediate_files__the_list_of__1__kept_" xml:space="preserve">
-    <value>第2パスFDRは、ファイルをその中間ファイルから読み取ります。保持された{1:N0}個のターゲット-デコイペアのリストは1回だけ読み取り、1個のファイルのうち{2:N0}個にはすでに第2パスの結果があります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_" xml:space="preserve">
@@ -1227,34 +963,6 @@
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">
     <value>{2}のキャッシュから{1:N0}個のMS1スペクトルと{0:N0}個のMS/MSスペクトルをストリーミング中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>1個のファイルから保持されたプリカーサー候補を読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから保持されたプリカーサー候補を読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_all__0__files_into_memory_at_" xml:space="preserve">
-    <value>第2パスFDRは、{0:N0}個すべてのファイルの保持されたプリカーサー候補を一度にメモリに読み込んでいます。メモリ使用量はファイル数に比例して増加します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllFromSource_Second_pass_FDR_is_loading_the_kept_precursor_candidates_of_the_file_into_memory_" xml:space="preserve">
-    <value>第2パスFDRは、このファイルの保持されたプリカーサー候補をメモリに読み込んでいます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
-    <value>1個のファイルから保持されたプリカーサー候補を再構築中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_MaterializeAllResumedFiles_Rebuilding_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから保持されたプリカーサー候補を再構築中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_OverlayReconciledIntoBuffer_Failed_to_reload_the_re_scored_results_file__0____1_" xml:space="preserve">
-    <value>再スコアリング結果ファイル{0}の再読み込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_" xml:space="preserve">
@@ -1309,14 +1017,6 @@
     <value>新しい境界で再スコアリングするピーク{0:N0}個、欠損ピーク{1:N0}個</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_" xml:space="preserve">
-    <value>読み取り可能な保存済み第1パスモデルがないため、今回の実行では第2パスFDRのファイルごとの処理は{0}で実行されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used__so_the_per_file_part_of_second_pass_FDR_runs_" xml:space="preserve">
-    <value>保存された第1パスモデルを使用できないため、今回の実行では第2パスFDRのファイルごとの処理は{0}で実行されます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileRescoreTask_TryResumeRescoredFile_File__0___1____2__was_already_re_scored__keeping_it_" xml:space="preserve">
     <value>ファイル{0:N0}/{1:N0}：{2}はすでに再スコアリング済みです。そのまま維持します。</value>
     <comment>Needs Review:New resource</comment>
@@ -1339,10 +1039,6 @@
   </data>
   <data name="PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_" xml:space="preserve">
     <value>{0:N0}個のターゲットは新しいピーク境界内にシグナルがなかったため、スコアがリセットされました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>{0}による{1}の完了を記録できませんでした：{2}。再開時にはこのステップがやり直されます。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">
@@ -1397,14 +1093,6 @@
     <value>{0}が完了しました。FDRと{2}は次のタスク（{1}）で行います。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_HydrateRescoreBundleIfPresent_Loaded_cross_run_reconciliation_files_for__0__runs___1__peak_re_picks_and_boundary_" xml:space="preserve">
-    <value>{0:N0}個のランのラン間整合ファイルを読み込みました：ピーク再選択と境界補完{1:N0}個、欠損ピーク{2:N0}個、精密化されたRT校正{3:N0}個。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_HydrateRescoreBundleOrNull_Failed_to_load_the_scores_files___0_" xml:space="preserve">
-    <value>スコアファイルの読み込みに失敗しました：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_LoadCalibrationAndIsolation___Failed_to_load_calibration_for__0____1_" xml:space="preserve">
     <value>{0}の校正の読み込みに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
@@ -1419,18 +1107,6 @@
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyPerRunNames__1__loads_the_file_on_its_own_" xml:space="preserve">
     <value>{1}はファイルを個別に読み込みます。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile__0__is_missing_the_feature_columns_of_an_Osprey__scores_parquet_file__Delete_it_and_re_" xml:space="preserve">
-    <value>{0}にはOsprey {1}ファイルのフィーチャー列がありません。削除して再実行し、再生成してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile_____Loading_file__0___1____2___from__3__" xml:space="preserve">
-    <value>ファイル{0}/{1}を読み込み中：{2}（{3}から）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile_______Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>{0:N0}個の第1パスプリカーサー候補ピークを読み込みました（ここではフィーチャーは不要）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for_1_file" xml:space="preserve">
@@ -1459,18 +1135,6 @@
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores_Second_pass_FDR" xml:space="preserve">
     <value>第2パスFDR</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>{0:N0}個の第1パスプリカーサー候補ピークを読み込みました（ここではフィーチャーは不要）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features" xml:space="preserve">
-    <value>{0:N0}個の第1パスプリカーサー候補ピークをフィーチャーと共に読み込みました</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candidate_peaks_but__2__feature_rows_" xml:space="preserve">
-    <value>{0}には{1:N0}個のプリカーサー候補ピークがありますが、フィーチャー行は{2:N0}行です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_" xml:space="preserve">
@@ -1503,14 +1167,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>{1:N0}個のファイルから{0:N0}個の第1パスプリカーサー候補ピークを読み込みました。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">
-    <value>ラン間整合ファイルなしでの再開</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_Training_the_first_pass_Percolator_model" xml:space="preserve">
-    <value>第1パスPercolatorモデルのトレーニング</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_" xml:space="preserve">
@@ -1565,14 +1221,6 @@
     <value>{0}には{1:N0}行ありますが、このバージョンのOspreyで処理できる行数（{2:N0}）を超えています。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from_1_file" xml:space="preserve">
-    <value>1個のファイルから第1パスのプリカーサー候補ピークを読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイルから第1パスのプリカーサー候補ピークを読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_Run_Scoring__0__files_in_parallel_" xml:space="preserve">
     <value>{0:N0}個のファイルを並列でスコアリング中：</value>
     <comment>Needs Review:New resource</comment>
@@ -1593,24 +1241,8 @@
     <value>再開：{0}には{1:N0}個のプリカーサー候補ピークがありますが、フィーチャー行は{2:N0}行です。再度スコアリングします。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_" xml:space="preserve">
-    <value>再開：{0}には{1:N0}個のプリカーサー候補ピークがありますが、フィーチャー行は{2:N0}行のため、保存されたスコアを読み込めません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_" xml:space="preserve">
     <value>再開：{0}の読み込みに失敗しました：{1}。再度スコアリングします。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_" xml:space="preserve">
-    <value>再開：{0}から保存されたスコアの読み込みに失敗しました：{1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">
-    <value>この構成</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_WarnPreCompactionPool__0__needs_the_first_pass_precursor_candidates_of_every_file_in_memory_at_once__memory_" xml:space="preserve">
-    <value>{0}では、すべてのファイルの第1パスプリカーサー候補を一度にメモリに保持する必要があります。メモリ使用量はファイル数に比例して増加し、大規模なコホートではRAMが不足する可能性があります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1__from__0____2_" xml:space="preserve">
@@ -1621,56 +1253,12 @@
     <value>{0}の{1:N0}個のプリカーサー候補ピークを書き込みました：{4:N0}個の第1パスピークから、{2:N0}個を再スコアリングし、{3:N0}個の欠損ピークを追加</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___" xml:space="preserve">
-    <value>{0}ステップで中間ファイルから結果を再読み込みできませんでした（終了コード{1}）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreCompaction_Apply_Trimming_each_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation___0__" xml:space="preserve">
-    <value>各ファイルを、ラン間整合のために保持されたプリカーサー候補に絞り込み中（{0:N0}個のファイル）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation" xml:space="preserve">
-    <value>ファイルを、ラン間整合のために保持されたプリカーサー候補に絞り込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_re_scoring_and_second_pass_FDR" xml:space="preserve">
-    <value>ファイルを、再スコアリングと第2パスFDRのために保持されたプリカーサー候補に絞り込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_" xml:space="preserve">
     <value>スコアファイル{0}の名前から、どの入力ファイルのものかを判別できません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_" xml:space="preserve">
-    <value>{0}は、この解析の他の整合ファイルとは異なるライブラリまたは検索設定用に書き込まれています（ライブラリ{1}対{2}、検索{3}対{4}）。この解析の{5}ファイルを削除し、第1パスを再実行してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_" xml:space="preserve">
-    <value>{0}は、この解析の他の整合ファイルとは異なる入力ファイルのセット用に書き込まれています。想定：{1}。検出：{2}。この解析の{3}ファイルを削除し、第1パスを再実行してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report" xml:space="preserve">
     <value>モデル診断レポート用に第1パスの結果を読み取り中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateCompactedStreaming_Loading_cross_run_reconciliation_files" xml:space="preserve">
-    <value>ラン間整合ファイルを読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateCompactedStreaming_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
-    <value>{0:N0}個すべてのランのラン間整合ファイルを一度にメモリに読み込んでいます。メモリ使用量はファイル数に比例して増加します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_files" xml:space="preserve">
-    <value>ラン間整合ファイルを読み込み中</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
-    <value>{0:N0}個すべてのランのラン間整合ファイルを一度にメモリに読み込んでいます。メモリ使用量はファイル数に比例して増加します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="RescoreHydration_LoadEnvelope_Failed_to_read__0____1_" xml:space="preserve">
-    <value>{0}の読み取りに失敗しました：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_" xml:space="preserve">
@@ -1687,10 +1275,6 @@
   </data>
   <data name="RescoredEntries_StreamFiles__1____0__files_" xml:space="preserve">
     <value>{1}（{0:N0}個のファイル）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ScoringTaskShared_AllRunsBundleGuardError_Stopped_before_holding_the_first_pass_precursor_candidates_of_every_run_in_memory_at_once_" xml:space="preserve">
-    <value>すべてのランの第1パスプリカーサー候補を一度にメモリに保持する前に停止しました。これはラン数に比例して増加します（ランあたり約0.1 GB）。この解析は1ランずつ処理できるため、ここに到達したのはOspreyの不具合です。報告してください。{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___" xml:space="preserve">
@@ -1849,10 +1433,6 @@
     <value>{0}：{1}の書き込みをスキップします（レポートのみ）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_candidates_of_all__0__runs_in_memory_at_once__" xml:space="preserve">
-    <value>第2パスFDRは、{0:N0}個すべてのランのプリカーサー候補を一度にメモリに保持します（約{1:N0} GB）。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_" xml:space="preserve">
     <value>FDR閾値を通過したプリカーサーがありません。空の{0}を書き込みます。</value>
     <comment>Needs Review:New resource</comment>
@@ -1937,18 +1517,6 @@
     <value>ラン間整合：ファイルが1個しかないため、スキップしました。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Stage6Planner_PlanFiles_Multi_charge_consensus_planning__pass_2_of_2_" xml:space="preserve">
-    <value>複数電荷コンセンサスの計画（パス2/2）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__across__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイル全体の整合計画（パス2/2）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_PlanFiles_Reconciliation_planning__pass_2_of_2__for_1_file" xml:space="preserve">
-    <value>1個のファイルの整合計画（パス2/2）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Stage6Planner_PlanFiles_Refined_the_retention_time_calibration_of__0__of__1__files_using_the_cross_run_consensus_" xml:space="preserve">
     <value>ラン間コンセンサスを使用して、{1:N0}個のファイルのうち{0:N0}個の保持時間校正を精密化しました。</value>
     <comment>Needs Review:New resource</comment>
@@ -1959,18 +1527,6 @@
   </data>
   <data name="Stage6Planner_ScanFiles_Multi_charge_consensus___1__charge_states_will_be_re_scored_at_the_peak_boundaries_of_the_" xml:space="preserve">
     <value>複数電荷コンセンサス：{1:N0}個の電荷状態を、同じペプチドの最良の電荷状態のピーク境界で再スコアリングします。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Multi_charge_consensus_planning__pass_1_of_2_" xml:space="preserve">
-    <value>複数電荷コンセンサスの計画（パス1/2）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__across__0__files" xml:space="preserve">
-    <value>{0:N0}個のファイル全体の整合計画（パス1/2）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file" xml:space="preserve">
-    <value>1個のファイルの整合計画（パス1/2）</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>

@@ -120,6 +120,10 @@ namespace pwiz.Osprey.Core
                 sb.AppendFormat(ic, "rt_cal.calibration_sample_size:{0}\n", _config.RtCalibration.CalibrationSampleSize);
                 sb.AppendFormat(ic, "rt_cal.calibration_retry_factor:{0}\n", _config.RtCalibration.CalibrationRetryFactor);
                 sb.AppendFormat(ic, "reconciliation.top_n_peaks:{0}\n", _config.Reconciliation.TopNPeaks);
+                // Osprey-only, and appended only when enabled: with demux off the recipe, and so
+                // every existing hash, is unchanged, including the cross-impl match with Rust.
+                if (_config.DemuxMode != DemuxMode.off)
+                    sb.AppendFormat(ic, "demux:{0}\n", _config.DemuxMode);
 
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);
@@ -263,8 +267,7 @@ namespace pwiz.Osprey.Core
         /// <see cref="OspreyConfig.InputFiles"/> only carries this worker's single
         /// parquet — the hash that the downstream <c>--task SecondPassFDR</c>
         /// SecondPassFDR node expects is computed over ALL files in the join, so
-        /// the worker must read the full set from the planner's
-        /// <c>reconciliation.json</c> envelope and pass it in here. The
+        /// the worker must pass the join's full set in here. The
         /// stems are sorted + deduped internally so the hash is invariant
         /// to caller ordering. Mirrors Rust
         /// <c>OspreyConfig::reconciliation_parameter_hash_for_stems</c>.

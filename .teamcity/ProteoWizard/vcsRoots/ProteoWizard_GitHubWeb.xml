@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vcs-root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" uuid="4a9893c3-fe5f-4c1a-8997-d708df58a3aa" type="jetbrains.git" modification-check-interval="60" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2025.3/project-config.xsd">
+  <name>GitHub web</name>
+  <param name="agentCleanFilesPolicy" value="ALL_UNTRACKED" />
+  <param name="agentCleanPolicy" value="ON_BRANCH_CHANGE" />
+  <param name="authMethod" value="ANONYMOUS" />
+  <param name="branch" value="refs/heads/master" />
+  <param name="ignoreKnownHosts" value="true" />
+  <param name="submoduleCheckout" value="CHECKOUT" />
+  <param name="teamcity:branchSpec"><![CDATA[+:refs/heads/(master)
++:refs/(pull/*)/head]]></param>
+  <param name="url" value="https://github.com/ProteoWizard/web.git" />
+  <param name="useAlternates" value="USE_MIRRORS" />
+  <param name="usernameStyle" value="USERID" />
+</vcs-root>
+

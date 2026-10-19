@@ -99,7 +99,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `-o`, `--output` | `<output.blib>` | Output `.blib` (see [13-blib-output-schema.md](13-blib-output-schema.md)). |
 | `--work-dir` | `<dir>` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `<dir>` | Directory for derived artifacts (overrides `--work-dir`). |
-| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the `<library-leaf>.libcache` (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
+| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the derived `<library-leaf>.blib` of a `.tsv` library (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
 | `--report` | `<report.tsv>` | Also write a TSV report. |
 
 ### Scoring & Tolerance
@@ -110,6 +110,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--fragment-tolerance` | `<value>` | `10` | Fragment m/z tolerance (ignored at unit resolution). |
 | `--fragment-unit` | `ppm \| mz` | `ppm` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
+| `--demux` | `off \| auto` | `off` | Demultiplex overlapping-window (staggered) or MSX DIA with ProteoWizard's demultiplexer while the source is read, into `<stem>.demux.spectra.bin` (see [23-demultiplexing.md](23-demultiplexing.md)). `auto` reads a run that is not multiplexed as acquired. With `off`, a multiplexed run is searched as acquired, with a warning suggesting `--demux auto`. Give every task of an HPC chain the same value. Osprey-only. |
 
 ### FDR & Protein Inference
 
@@ -131,7 +132,6 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
 | `--decoy-pairing-manifest` | `<manifest.tsv>` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
-| `--write-pin` | — | Write PIN files for external tools (diagnostic only; the engine does not consume them). |
 
 ### Training Export
 
@@ -147,7 +147,15 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
 | `--parallel-files` | `[<N>]` | one at a time | Files scored concurrently (OUTER). No value = auto from free RAM + cores; `<N>` = exactly N. **Single-node** mode — do not use under an HPC scheduler that already fans out. |
-| `--threads` | `<count>` | all cores | Per-file main-search threads (INNER), divided across concurrently-scored files. |
+| `--parallel-files-caching` | `[<N>]` | `--parallel-files` | Files whose spectra are cached concurrently (`--task SpectraCache`), overriding `--parallel-files` for that stage only. Same forms. A vendor decode is single-threaded (~20 MB/s per Thermo file), so this stage gains from far more lanes than scoring; `--threads` is not divided here. mzML parses still run one at a time, and a full run caches inside scoring at the scoring count. |
+| `--parallel-files-scoring` | `[<N>]` | `--parallel-files` | Files scored concurrently (`PerFileScoring`, Stages 1-4), overriding `--parallel-files` for that stage only. Same forms. |
+| `--parallel-files-rescoring` | `[<N>]` | `--parallel-files` | Files re-scored concurrently (`PerFileRescoring`, Stage 6, and Stage 7's per-run fold), overriding `--parallel-files` for that stage only. Same forms. Its per-file working set is a fraction of scoring's. |
+| `--threads` | `<count>` | all cores | Per-file main-search threads (INNER), divided across the files a scoring or re-scoring stage runs concurrently. |
+
+Each per-file stage resolves its own count, once, from its own flag, else `--parallel-files`, else
+`OSPREY_MAX_PARALLEL_FILES` (not for caching), else one at a time, and logs a `File parallelism: N (...)` line naming
+the argument that decided. First-pass FDR's lanes are separate (from `--threads` and free memory).
+None of these counts enters a validity key or changes an output byte; one lane is the plain loop.
 
 ### Distributed / HPC
 
@@ -245,14 +253,14 @@ the user's culture, as Skyline's does:
   which scans every `.resx` under `pwiz_tools`.
 - Text written for a PERSON uses the current culture: in fr-FR a count reads `1 234 567` and a
   fraction `12,5 %`. Text written for a PROGRAM uses the invariant culture: every output file
-  (blib, TSV report, FDRBench input, parquet, JSON, `.osprey.task`) and every tagged log line.
+  (blib, TSV report, FDRBench input, parquet, JSON, the embedded validity stamps) and every tagged log line.
   A run under any culture writes byte-identical files.
 - `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
   argument and environment variable names, internal-invariant exceptions, and diagnostics reached
   only through `-d` or an `OSPREY_*` setting.
 - `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
   instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
-  choice from `OSPREY_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
+  choice from `OSPREYDEV_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
   tr-TR are test cultures for number formatting, not translation targets.
 
 ## Distributed execution (HPC)

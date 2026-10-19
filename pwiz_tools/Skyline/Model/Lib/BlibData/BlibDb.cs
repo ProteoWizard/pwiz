@@ -46,6 +46,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         private static readonly Regex REGEX_LSID =
             new Regex(@"urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)");
 
+        // Optional global (experiment-wide) statistics of a library protein group
+        private const string COLUMN_PROTEIN_Q_VALUE = @"QValue";
+        private const string COLUMN_PROTEIN_PEP = @"Pep";
+
         private IProgressMonitor ProgressMonitor { get; set; }
         private IProgressStatus _progressStatus;
 
@@ -146,13 +150,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             private ISession _session;
             private Dictionary<string, int> _namedProteinIds;
-            private Dictionary<int, int> _peptideIdProteinId;
+            // A library protein group's global statistics, by name
+            private Dictionary<string, LibraryProteinGroup> _proteinGroups;
+            private HashSet<KeyValuePair<int, int>> _peptideIdProteinIds;
 
             public ProteinTablesBuilder(ISession session)
             {
                 _session = session;
                 _namedProteinIds = new Dictionary<string, int>();
-                _peptideIdProteinId = new Dictionary<int, int>();
+                _proteinGroups = new Dictionary<string, LibraryProteinGroup>();
+                _peptideIdProteinIds = new HashSet<KeyValuePair<int, int>>();
             }
 
             public void Add(DbRefSpectra refSpectra, string proteinName)
@@ -164,8 +171,17 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         proteinTableId = _namedProteinIds.Count + 1;
                         _namedProteinIds.Add(proteinName, proteinTableId);
                     }
-                    _peptideIdProteinId.Add((int)(refSpectra.Id ?? 0), proteinTableId);
+                    _peptideIdProteinIds.Add(new KeyValuePair<int, int>((int)(refSpectra.Id ?? 0), proteinTableId));
                 }
+            }
+
+            /// <summary>
+            /// Links the spectrum to a library protein group, keeping the group's global statistics.
+            /// </summary>
+            public void Add(DbRefSpectra refSpectra, LibraryProteinGroup proteinGroup)
+            {
+                _proteinGroups[proteinGroup.Name] = proteinGroup;
+                Add(refSpectra, proteinGroup.Name);
             }
 
             public void Write()
@@ -200,15 +216,34 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         }
                     }
 
+                    bool hasQValue = _proteinGroups.Values.Any(group => group.QValue.HasValue);
+                    bool hasPep = _proteinGroups.Values.Any(group => group.Pep.HasValue);
+                    if (hasQValue)
+                        AddColumn(_session.Connection, @"Proteins", COLUMN_PROTEIN_Q_VALUE);
+                    if (hasPep)
+                        AddColumn(_session.Connection, @"Proteins", COLUMN_PROTEIN_PEP);
+
                     using (var insertCommand = _session.Connection.CreateCommand())
                     {
-                        insertCommand.CommandText = @"INSERT INTO Proteins (id, accession) VALUES(?,?)";
-                        insertCommand.Parameters.Add(new SQLiteParameter());
-                        insertCommand.Parameters.Add(new SQLiteParameter());
+                        insertCommand.CommandText = hasQValue || hasPep
+                            ? @"INSERT INTO Proteins (id, accession" +
+                              (hasQValue ? @", " + COLUMN_PROTEIN_Q_VALUE : string.Empty) +
+                              (hasPep ? @", " + COLUMN_PROTEIN_PEP : string.Empty) + @") VALUES(?,?" +
+                              (hasQValue ? @",?" : string.Empty) + (hasPep ? @",?" : string.Empty) + @")"
+                            : @"INSERT INTO Proteins (id, accession) VALUES(?,?)";
+                        int parameterCount = 2 + (hasQValue ? 1 : 0) + (hasPep ? 1 : 0);
+                        for (int i = 0; i < parameterCount; i++)
+                            insertCommand.Parameters.Add(new SQLiteParameter());
                         foreach (var kvp in _namedProteinIds)
                         {
                             ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Value + existingProteinsCount; // Id
                             ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Key; // Accession
+                            _proteinGroups.TryGetValue(kvp.Key, out var proteinGroup);
+                            int iParameter = 2;
+                            if (hasQValue)
+                                ((SQLiteParameter)insertCommand.Parameters[iParameter++]).Value = (object)proteinGroup?.QValue ?? DBNull.Value;
+                            if (hasPep)
+                                ((SQLiteParameter)insertCommand.Parameters[iParameter]).Value = (object)proteinGroup?.Pep ?? DBNull.Value;
                             insertCommand.ExecuteNonQuery();
                         }
                     }
@@ -218,7 +253,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         insertCommand.CommandText = @"INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES(?,?)";
                         insertCommand.Parameters.Add(new SQLiteParameter());
                         insertCommand.Parameters.Add(new SQLiteParameter());
-                        foreach (var kvp in _peptideIdProteinId)
+                        foreach (var kvp in _peptideIdProteinIds)
                         {
                             ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Key; // RefSpectraId
                             ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Value + existingProteinsCount; // ProteinId
@@ -230,6 +265,67 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 _session.Flush();
                 _session.Clear();
             }
+        }
+
+        /// <summary>
+        /// Writes each minimized spectrum's global (experiment-wide) q-values and PEPs to the
+        /// optional RefSpectra columns, adding only the columns that have a value.
+        /// </summary>
+        private class GlobalScoresWriter
+        {
+            private static readonly Tuple<string, Func<LibraryGlobalScores, double?>>[] COLUMNS =
+            {
+                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PrecursorQValue", scores => scores.PrecursorQValue),
+                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PrecursorPep", scores => scores.PrecursorPep),
+                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PeptideQValue", scores => scores.PeptideQValue),
+                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PeptidePep", scores => scores.PeptidePep),
+            };
+
+            private readonly ISession _session;
+            private readonly List<KeyValuePair<long, LibraryGlobalScores>> _scores =
+                new List<KeyValuePair<long, LibraryGlobalScores>>();
+
+            public GlobalScoresWriter(ISession session)
+            {
+                _session = session;
+            }
+
+            public void Add(DbRefSpectra refSpectra, LibraryGlobalScores globalScores)
+            {
+                if (!ReferenceEquals(globalScores, LibraryGlobalScores.EMPTY))
+                    _scores.Add(new KeyValuePair<long, LibraryGlobalScores>(refSpectra.Id ?? 0, globalScores));
+            }
+
+            public void Write()
+            {
+                var columns = COLUMNS.Where(column => _scores.Any(kvp => column.Item2(kvp.Value).HasValue)).ToList();
+                if (columns.Count == 0)
+                    return;
+                foreach (var column in columns)
+                    AddColumn(_session.Connection, @"RefSpectra", column.Item1);
+                using var updateCommand = _session.Connection.CreateCommand();
+                updateCommand.CommandText = @"UPDATE RefSpectra SET " +
+                                            string.Join(@", ", columns.Select(column => column.Item1 + @" = ?")) +
+                                            @" WHERE id = ?";
+                for (int i = 0; i <= columns.Count; i++)
+                    updateCommand.Parameters.Add(new SQLiteParameter());
+                foreach (var kvp in _scores)
+                {
+                    for (int i = 0; i < columns.Count; i++)
+                        ((SQLiteParameter)updateCommand.Parameters[i]).Value = (object)columns[i].Item2(kvp.Value) ?? DBNull.Value;
+                    ((SQLiteParameter)updateCommand.Parameters[columns.Count]).Value = kvp.Key;
+                    updateCommand.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private static void AddColumn(System.Data.IDbConnection connection, string table, string column)
+        {
+            if (SqliteOperations.ColumnExists(connection, table, column))
+                return;
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"ALTER TABLE " + table + @" ADD COLUMN " + column + @" REAL";
+            cmd.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -829,6 +925,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     int peptideCount = document.MoleculeCount;
                     int savedCount = 0;
                     var proteinTablesBuilder = new ProteinTablesBuilder(session);
+                    var globalScoresWriter = new GlobalScoresWriter(session);
+                    // A library with protein-group q-values keeps its own groups, which carry them
+                    bool keepLibraryProteinGroups = library.GlobalQValueLevels.Contains(GlobalQValueLevel.protein);
 
                     foreach (var moleculeGroup in document.MoleculeGroups)
                     {
@@ -975,7 +1074,17 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     }
 
                                     // Prepare to build peptide-protein tables
-                                    proteinTablesBuilder.Add(refSpectra, proteinName);
+                                    var globalScores = library.GetGlobalScores(libKey);
+                                    globalScoresWriter.Add(refSpectra, globalScores);
+                                    if (keepLibraryProteinGroups)
+                                    {
+                                        foreach (var proteinGroup in globalScores.ProteinGroups)
+                                            proteinTablesBuilder.Add(refSpectra, proteinGroup);
+                                    }
+                                    else
+                                    {
+                                        proteinTablesBuilder.Add(refSpectra, proteinName);
+                                    }
                                 }
                             }
 
@@ -987,6 +1096,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                     // Output the protein - peptide relationships
                     proteinTablesBuilder.Write();
+                    globalScoresWriter.Write();
 
                     // Simulate ctime(d), which is what BlibBuild uses.
                     string createTime = string.Format(@"{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // CONSIDER: localize? different date/time format in different countries
