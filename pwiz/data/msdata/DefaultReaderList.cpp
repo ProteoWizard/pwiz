@@ -31,6 +31,7 @@
 #include "SpectrumList_MGF.hpp"
 #include "SpectrumList_MSn.hpp"
 #include "SpectrumList_BTDX.hpp"
+#include "SpectrumList_IgnoreCalibrationScans.hpp"
 #include "Serializer_mzML.hpp"
 #include "Serializer_mzXML.hpp"
 #include "Serializer_MGF.hpp"
@@ -116,6 +117,28 @@ static bool has_extension(std::string const &test_filename,const char *ext)
     return bal::iends_with(filename, ext);
 }
 
+/// Honors Reader::Config::ignoreCalibrationScans for the formats that carry "calibration spectrum"
+/// as a label rather than a vendor notion of a calibration function, and drops the fileContent
+/// declaration along with the spectra.
+///
+/// Reconciling fileContent is not tidiness. It is what the declaration means: msconvert writes it
+/// back out verbatim, so leaving it would emit a file advertising calibration spectra it does not
+/// contain - and since that declaration is exactly what decides whether a file is worth scanning,
+/// every later read of the output would pay a full pass to find nothing, forever.
+void applyIgnoreCalibrationScans(MSData& msd)
+{
+    SpectrumListPtr filtered = SpectrumList_IgnoreCalibrationScans::create(msd.run.spectrumListPtr, msd);
+    if (filtered == msd.run.spectrumListPtr)
+        return; // nothing was hidden, so the declaration is either absent or still true
+
+    msd.run.spectrumListPtr = filtered;
+
+    vector<CVParam>& cvParams = msd.fileDescription.fileContent.cvParams;
+    cvParams.erase(std::remove_if(cvParams.begin(), cvParams.end(),
+                                  [](const CVParam& cvParam) { return cvParam.cvid == MS_calibration_spectrum; }),
+                   cvParams.end());
+}
+
 } // namespace
 
 
@@ -166,6 +189,11 @@ PWIZ_API_DECL void Reader_mzML::read(const std::string& filename,
     }
 
     fillInCommonMetadata(filename, result);
+
+    // Note this reads the enclosing Config parameter, not the Serializer_mzML::Config the cases
+    // above declare under the same name
+    if (config.ignoreCalibrationScans)
+        applyIgnoreCalibrationScans(result);
 }
 
 PWIZ_API_DECL void Reader_mzML::read(const std::string& filename,
@@ -479,6 +507,11 @@ PWIZ_API_DECL void Reader_mz5::read(const string& filename,
     // the file-level ids can't be empty
     if (result.id.empty() || result.run.id.empty())
         result.id = result.run.id = bfs::basename(filename);
+
+    // mz5 round-trips both the fileContent declaration and the per-spectrum terms, so the same run
+    // must not keep its calibration spectra here and lose them as mzML
+    if (config.ignoreCalibrationScans)
+        applyIgnoreCalibrationScans(result);
 #endif
 }
 
@@ -489,7 +522,7 @@ PWIZ_API_DECL void Reader_mz5::read(const std::string& filename,
 {
     // TODO multiple read mz5
     results.push_back(MSDataPtr(new MSData));
-    read(filename, head, *results.back());
+    read(filename, head, *results.back(), 0, config);
 }
 
 //
@@ -561,6 +594,9 @@ PWIZ_API_DECL void Reader_mzMLb::read(const std::string& filename,
     }
 
     fillInCommonMetadata(filename, result);
+
+    if (config.ignoreCalibrationScans)
+        applyIgnoreCalibrationScans(result);
 #endif
 }
 
