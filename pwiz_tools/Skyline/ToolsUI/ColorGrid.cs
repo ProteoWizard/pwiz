@@ -43,22 +43,20 @@ namespace pwiz.Skyline.ToolsUI
             colorPickerDlg.FullOpen = true;
             colBtn.UseColumnTextForButtonValue = true;
             comboColorType.SelectedIndex = 0;
-            // Fixed-width columns are 96-DPI designs that neither AutoScaleMode.Font nor
-            // column auto-sizing scales. Row height is NOT scaled here - WinForms derives
-            // it from the font, so scaling it again makes these rows half again as tall as
+            // The designer's column widths and minimum widths are scaled by the grid when
+            // its handle is created. Row height is NOT scaled anywhere - WinForms derives it
+            // from the font, so scaling it again makes these rows half again as tall as
             // every other grid's (issue #4599).
-            dataGridViewColors.ScaleDesignerColumnWidths = false;   // scaled right here instead
-            colBtn.Width = colBtn.MinimumWidth = DpiUtil.Scale(this, colBtn.MinimumWidth);
-            colorCol.Width = DpiUtil.Scale(this, colorCol.Width);
-            rgbCol.MinimumWidth = DpiUtil.Scale(this, rgbCol.MinimumWidth);
-            hexCol.MinimumWidth = DpiUtil.Scale(this, hexCol.MinimumWidth);
+            colBtn.Width = colBtn.MinimumWidth;
             if (DpiUtil.IsScaled(this))
             {
-                // The anchored children do not follow this container's size when the
-                // parent dialog resizes it at high DPI (the same autoscale bookkeeping
-                // gap that skips the container's own size), so lay them out explicitly:
-                // the grid fills the width and leaves the designer's 35px (scaled) strip
-                // for the color-type combo pinned at the bottom (issue #4599).
+                // Inherit scales this control's bounds with the parent, but its anchored
+                // children still do not follow when the parent dialog resizes it at high
+                // DPI, so lay them out explicitly: the grid fills the width and leaves the
+                // designer's 35 px strip below it for the color-type combo pinned at the
+                // bottom (21 px up). The literals are the designer's: by the time this runs,
+                // InitializeComponent has already font-scaled the geometry, so reading the
+                // gaps off the controls would scale them twice (issue #4599).
                 SizeChanged += (sender, args) =>
                 {
                     dataGridViewColors.Size = new Size(ClientSize.Width,

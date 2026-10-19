@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -134,6 +135,33 @@ namespace pwiz.Skyline.Util
         private static void FitTabPage(TabPage page, Control control, int left, int top, int right)
         {
             control.Bounds = new Rectangle(left, top, page.ClientSize.Width - left - right, page.ClientSize.Height - top);
+        }
+
+        /// <summary>
+        /// Keeps the designer's bottom anchors on tab-page controls from misplacing them at
+        /// high DPI on .NET, where WinForms sizes a TabPage only after its children are
+        /// scaled. The anchors are held from the top until the form has loaded and the
+        /// pages have their final size, then restored as designed, so the resx keeps the
+        /// anchors the designer shows (issue #4599).
+        /// </summary>
+        public static void DeferBottomAnchors(Form form, params TabPage[] pages)
+        {
+            var deferred = new List<KeyValuePair<Control, AnchorStyles>>();
+            foreach (var page in pages)
+            {
+                foreach (Control control in page.Controls)
+                {
+                    if ((control.Anchor & AnchorStyles.Bottom) == 0)
+                        continue;
+                    deferred.Add(new KeyValuePair<Control, AnchorStyles>(control, control.Anchor));
+                    control.Anchor = (control.Anchor & ~AnchorStyles.Bottom) | AnchorStyles.Top;
+                }
+            }
+            form.Load += (sender, args) =>
+            {
+                foreach (var entry in deferred)
+                    entry.Key.Anchor = entry.Value;
+            };
         }
 
         /// <summary>

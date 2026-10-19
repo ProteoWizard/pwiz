@@ -30,11 +30,13 @@ namespace pwiz.Skyline.Controls
         private bool _columnWidthsScaled;
 
         /// <summary>
-        /// Column widths set in the designer are 96-DPI pixel values that auto-scaling
-        /// never touches: only a column left at the default width gets the DPI-dependent
-        /// default. True (the default) scales every other fixed-width column once, when
-        /// the handle is created. A grid that sizes its columns itself sets this false
-        /// (issue #4599).
+        /// Column widths and minimum widths set in the designer, or in code before the
+        /// handle exists, are 96-DPI pixel values that auto-scaling never touches: only a
+        /// column left at the default width gets the DPI-dependent default. True (the
+        /// default) scales every other fixed-width column once, when the handle is created.
+        /// The one width this cannot tell apart is a designer width equal to the scaled
+        /// default (150 at 150%), which is left as the default. A grid that sizes its
+        /// columns itself in device pixels sets this false (issue #4599).
         /// </summary>
         public bool ScaleDesignerColumnWidths { get; set; } = true;
 
@@ -49,11 +51,17 @@ namespace pwiz.Skyline.Controls
             int defaultWidth = DpiUtil.Scale(this, 100);    // what an untouched column already has
             foreach (DataGridViewColumn column in Columns)
             {
+                // Read the width before the minimum is scaled: raising the minimum raises a
+                // narrower width to meet it, and that bumped width would then be scaled too
+                int width = column.Width;
+                // A minimum width above WinForms' own default is a designer value
+                if (column.MinimumWidth > 5)
+                    column.MinimumWidth = DpiUtil.Scale(this, column.MinimumWidth);
                 var autoSize = column.InheritedAutoSizeMode;
                 if (autoSize != DataGridViewAutoSizeColumnMode.None && autoSize != DataGridViewAutoSizeColumnMode.NotSet)
                     continue;   // width follows the content or the grid, not the designer
-                if (column.Width != defaultWidth)
-                    column.Width = DpiUtil.Scale(this, column.Width);
+                if (width != defaultWidth)
+                    column.Width = DpiUtil.Scale(this, width);
             }
         }
 
