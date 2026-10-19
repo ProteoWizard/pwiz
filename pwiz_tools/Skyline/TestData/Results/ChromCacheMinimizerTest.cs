@@ -222,12 +222,11 @@ namespace pwiz.SkylineTestData.Results
             using (var fs = new FileSaver(skydFilePath))
             using (var fsScans = new FileSaver(skydFilePath + ChromatogramCache.SCANS_EXT, true))
             using (var fsPeaks = new FileSaver(skydFilePath + ChromatogramCache.PEAKS_EXT, true))
-            using (var fsObservedPeakValues = new FileSaver(skydFilePath + ChromatogramCache.OBSERVED_PEAK_VALUES_EXT, true))
             using (var fsScores = new FileSaver(skydFilePath + ChromatogramCache.SCORES_EXT, true))
             {
                 fs.Stream = File.OpenWrite(fs.SafeName);
                 chromCacheMinimizer.Minimize(settings, null, fs.Stream,
-                    fsScans.FileStream, fsPeaks.FileStream, fsObservedPeakValues.FileStream, fsScores.FileStream);
+                    fsScans.FileStream, fsPeaks.FileStream, fsScores.FileStream);
                 fs.Commit();
             }
             using (var writer = new XmlTextWriter(skyFilePath, new UTF8Encoding(false))) // UTF-8 without BOM

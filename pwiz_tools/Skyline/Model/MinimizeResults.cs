@@ -134,7 +134,6 @@ namespace pwiz.Skyline.Model
             _skydSaver = new FileSaver(targetSkydFile);
             using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
             using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
-            using (var observedPeakValuesSaver = new FileSaver(targetSkydFile + ChromatogramCache.OBSERVED_PEAK_VALUES_EXT, true))
             using (var scoreSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCORES_EXT, true))
             {
 
@@ -146,8 +145,7 @@ namespace pwiz.Skyline.Model
                         new BackgroundWorker(this, true))
                     {
                         backgroundWorker.RunBackground(_skydSaver.Stream,
-                            scansSaver.FileStream, peaksSaver.FileStream, observedPeakValuesSaver.FileStream,
-                            scoreSaver.FileStream);
+                            scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
                     }
                 }
                 catch (Exception)
@@ -214,17 +212,17 @@ namespace pwiz.Skyline.Model
             }
 
             public void RunBackground(Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks,
-                FileStream outputStreamObservedPeakValues, FileStream outputStreamScores)
+                FileStream outputStreamScores)
             {
                 _minimizeResults.ChromCacheMinimizer.Minimize(_minimizeResults.Settings, OnProgress, outputStream,
-                    outputStreamScans, outputStreamPeaks, outputStreamObservedPeakValues, outputStreamScores);
+                    outputStreamScans, outputStreamPeaks, outputStreamScores);
             }
 
             public void CollectStatistics()
             {
                 try
                 {
-                    RunBackground(null, null, null, null, null);
+                    RunBackground(null, null, null, null);
                 }
                 catch (ObjectDisposedException)
                 {

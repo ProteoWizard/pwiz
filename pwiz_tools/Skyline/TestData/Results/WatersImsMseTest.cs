@@ -226,10 +226,10 @@ namespace pwiz.SkylineTestData.Results
         }
 
         /// <summary>
-        /// The .skyd keeps the observed IM/CCS of peaks in a block separate from the peaks, located only by
-        /// the order of the peaks, so every path that rewrites a cache must carry it along: joining the
-        /// partial caches of an import, removing a file, and minimizing - into the current format, and into
-        /// one from before the block existed, which drops the values but must keep the peaks.
+        /// The observed IM/CCS of each peak are stored in the peak itself, so every path that rewrites a
+        /// cache must keep them: joining the partial caches of an import, removing a file, and minimizing -
+        /// into the current format, and into one whose peaks are too small for them, which drops the values
+        /// but must keep the peaks.
         /// </summary>
         private void AssertObservedPeakValuesSurviveCacheRewrites(SrmDocument documentNoResults, string mz5Path)
         {
@@ -243,7 +243,7 @@ namespace pwiz.SkylineTestData.Results
             docContainer.AssertComplete();
             var document = docContainer.Document;
 
-            // Joined from one partial cache per file, each with its own block of values
+            // Joined from one partial cache per file
             var cache = document.Settings.MeasuredResults.CacheFinal;
             var expectedLines = GetPeakLines(cache, true);
             foreach (var dataPath in dataPaths)
@@ -309,12 +309,11 @@ namespace pwiz.SkylineTestData.Results
             using (var fs = new FileSaver(skydPath))
             using (var fsScans = new FileSaver(skydPath + ChromatogramCache.SCANS_EXT, true))
             using (var fsPeaks = new FileSaver(skydPath + ChromatogramCache.PEAKS_EXT, true))
-            using (var fsObservedPeakValues = new FileSaver(skydPath + ChromatogramCache.OBSERVED_PEAK_VALUES_EXT, true))
             using (var fsScores = new FileSaver(skydPath + ChromatogramCache.SCORES_EXT, true))
             {
                 fs.Stream = File.OpenWrite(fs.SafeName);
                 minimizer.Minimize(new ChromCacheMinimizer.Settings().ChangeCacheFormat(cacheFormat), null, fs.Stream,
-                    fsScans.FileStream, fsPeaks.FileStream, fsObservedPeakValues.FileStream, fsScores.FileStream);
+                    fsScans.FileStream, fsPeaks.FileStream, fsScores.FileStream);
                 fs.Commit();
             }
             return LoadCache(skydPath, document);

@@ -503,7 +503,6 @@ namespace pwiz.Skyline.Model
             using (var skydSaver = new FileSaver(targetSkydFile, true))
             using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
             using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
-            using (var observedPeakValuesSaver = new FileSaver(targetSkydFile + ChromatogramCache.OBSERVED_PEAK_VALUES_EXT, true))
             using (var scoreSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCORES_EXT, true))
             {
                 var minimizer = Document.Settings.MeasuredResults.GetChromCacheMinimizer(Document);
@@ -521,8 +520,7 @@ namespace pwiz.Skyline.Model
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(stats.PercentComplete));
                     }
                     
-                }, skydSaver.FileStream, scansSaver.FileStream, peaksSaver.FileStream, observedPeakValuesSaver.FileStream,
-                    scoreSaver.FileStream);
+                }, skydSaver.FileStream, scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
                 skydSaver.Commit();
             }
         }

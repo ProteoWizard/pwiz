@@ -45,10 +45,13 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(32, Marshal.OffsetOf<ChromPeak>("_pointsAcross"));
             Assert.AreEqual(32, ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
             Assert.AreEqual(36, ChromPeak.GetStructSize(CacheFormatVersion.Twelve));
+            Assert.AreEqual(36, Marshal.OffsetOf<ChromPeak>("_stdDev"));
+            Assert.AreEqual(48, Marshal.OffsetOf<ChromPeak>("_shapeCorrelation"));
             Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Sixteen));
-            // The observed IM/CCS at the end of the struct are stored outside the peak on disk
             Assert.AreEqual(52, Marshal.OffsetOf<ChromPeak>("_observedIonMobility"));
-            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
+            Assert.AreEqual(56, Marshal.OffsetOf<ChromPeak>("_observedCcs"));
+            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.Twenty));
+            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
         }
 
         [TestMethod]
@@ -57,12 +60,7 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.SizeOf);
             Assert.AreEqual(Marshal.SizeOf<ChromGroupHeaderInfo>(), ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.CURRENT));
             Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.SizeOf);
-            // Unlike the other structs, ChromPeak is larger in memory (60 bytes) than on disk (52 bytes).
-            // The two trailing floats hold the observed IM/CCS, which are stored in a separate block
-            // written only for ion mobility groups, so a peak is read and written as a 52-byte prefix.
-            Assert.AreEqual(60, Marshal.SizeOf<ChromPeak>());
-            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
-            Assert.AreEqual(ChromPeak.GetStructSize(CacheFormatVersion.CURRENT) + 2 * sizeof(float), Marshal.SizeOf<ChromPeak>());
+            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
             Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.SizeOf);
             Assert.AreEqual(Marshal.SizeOf<ChromTransition>(), ChromTransition.GetStructSize(CacheFormatVersion.CURRENT));
         }

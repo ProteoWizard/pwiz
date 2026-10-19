@@ -1404,15 +1404,6 @@ namespace pwiz.Skyline.Model.Results
                 CacheFormat.ChromPeakSerializer().WriteItems(_fsPeaks.FileStream, chromData.Peaks);
             }
 
-            // Written in the same order as the peaks, which is all that locates them
-            if (CacheFormat.HasObservedPeakValues &&
-                chromDataSet.Chromatograms.Any(chromData => chromData.Peaks.Any(peak => peak.HasObservedValues)))
-            {
-                var groupPeaks = chromDataSet.Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
-                PrimitiveArrays.Write(_fsObservedPeakValues.FileStream, ChromPeak.GetObservedValues(groupPeaks));
-                header = header.ChangeHasObservedPeakValues(true);
-            }
-
             AddChromGroup(new ChromGroupHeaderEntry(indexInFile, header));
         }
     }
