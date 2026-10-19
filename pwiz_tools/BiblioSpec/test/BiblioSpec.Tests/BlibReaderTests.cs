@@ -518,6 +518,210 @@ public class BlibReaderTests
         }
     }
 
+    /// <summary>
+    /// The calls Skyline's library reader and writer make beyond BiblioSpec's own tools: a
+    /// library under an LSID of the caller's, with and without a RetentionTimes table; a score
+    /// type registered by name, BiblioSpec's own found and a new one numbered after them; a
+    /// spectrum without a source file, written as NULL and read back as 0; one spectrum's
+    /// observations by id and their count; the score types with their probability types; the
+    /// optional columns probed for a value; and a source file deleted from an appended library
+    /// with everything of its spectra's.
+    /// </summary>
+    [TestMethod]
+    public void Reader_AndWriter_ServeSkylinesLibraryReadsAndWrites()
+    {
+        string path = TempPath();
+        string redundantPath = TempPath();
+        try
+        {
+            const string lsid = "urn:lsid:unknown.org:spectral_library:bibliospec:nr:minimal:lib:guid:1.11";
+            long fileA, fileB, withFile, withoutFile;
+            int generic, custom;
+            using (var writer = BlibWriter.Create(path, lsid))
+            {
+                fileA = writer.AddSourceFile("a.raw", "a.pep.xml", 0.9, BlibWriter.WORKFLOW_TYPE_DDA);
+                fileB = writer.AddSourceFile("b.raw", null, null, BlibWriter.WORKFLOW_TYPE_DDA);
+                generic = writer.AddScoreType("GENERIC Q-VALUE", "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT");
+                custom = writer.AddScoreType("SKYLINE DOT PRODUCT", null);
+                Assert.AreEqual(custom, writer.AddScoreType("SKYLINE DOT PRODUCT", "NOT_A_PROBABILITY_VALUE"));
+                writer.AddOptionalColumn(BlibSchema.PrecursorQValue);
+                writer.AddOptionalColumn(BlibSchema.PeptideQValue);
+                withFile = writer.AddSpectrum(new BlibSpectrumRecord
+                {
+                    PeptideSeq = "PEPTIDEK", PeptideModSeq = "PEPTIDEK", PrecursorMz = 500.25, PrecursorCharge = 2,
+                    FileId = fileA, ScoreType = custom, Score = 0.8, PrecursorQValue = 0.01,
+                    MzBlob = BlibWriter.EncodeMzs(new[] { 100.0 }, false), IntensityBlob = BlibWriter.EncodeIntensities(new[] { 1f }, false),
+                    NumPeaks = 1, Modifications = new[] { new BlibModification(1, 42.0) }, Proteins = new[] { "P1" },
+                    Annotations = new[] { new BlibPeakAnnotation(0, "y1", 1, 100.0, 100.0) },
+                });
+                withoutFile = writer.AddSpectrum(new BlibSpectrumRecord
+                {
+                    PeptideSeq = "SAMPLER", PeptideModSeq = "SAMPLER", PrecursorMz = 400.2, PrecursorCharge = 2, FileId = fileB,
+                });
+                writer.AddRetentionTime(withFile, fileA, 10.5, null, null, 0, true, redundantRefId: -1);
+                writer.AddRetentionTime(withFile, fileB, 10.7, null, null, 0, false, redundantRefId: -1);
+                writer.AddRetentionTime(withoutFile, fileB, 20.0, null, null, 0, true);
+                writer.SetRevision(3);
+                writer.Complete();
+            }
+            using (var redundant = BlibWriter.Create(redundantPath, lsid.Replace(":nr:", ":redundant:"), true))
+            {
+                redundant.AddSpectrum(new BlibSpectrumRecord { Id = 7, PeptideSeq = "SAMPLER", PeptideModSeq = "SAMPLER", PrecursorMz = 400.2, PrecursorCharge = 2 }, true);
+                redundant.Complete();
+            }
+
+            using (var reader = new BlibReader(path))
+            {
+                Assert.AreEqual(lsid, reader.Info.Lsid);
+                Assert.AreEqual(3, reader.Info.Revision);
+                Assert.IsTrue(reader.HasTable(BlibReader.TABLE_RETENTION_TIMES));
+                Assert.AreEqual(BlibWriter.SCORE_TYPE_GENERIC_QVALUE, generic);
+                Assert.AreEqual(BlibSchema.ScoreTypes.Length, custom);
+                var scoreTypes = reader.ReadScoreTypeTable();
+                Assert.AreEqual(BlibSchema.ScoreTypes.Length + 1, scoreTypes.Count);
+                Assert.AreEqual("SKYLINE DOT PRODUCT", scoreTypes[custom].Name);
+                Assert.IsNull(scoreTypes[custom].ProbabilityType);
+                Assert.AreEqual("NOT_A_PROBABILITY_VALUE", scoreTypes[BlibWriter.SCORE_TYPE_UNKNOWN].ProbabilityType);
+                Assert.IsTrue(reader.HasValues(BlibReader.TABLE_REF_SPECTRA, BlibSchema.PrecursorQValue.Name));
+                Assert.IsFalse(reader.HasValues(BlibReader.TABLE_REF_SPECTRA, BlibSchema.PeptideQValue.Name), "A column NULL throughout has no values.");
+                Assert.IsFalse(reader.HasValues(BlibReader.TABLE_REF_SPECTRA, BlibSchema.PeptidePep.Name), "A column the library lacks has no values.");
+                Assert.AreEqual(3, reader.CountRetentionTimes());
+                var times = reader.ReadSpectrumRetentionTimes(withFile);
+                Assert.AreEqual(2, times.Count);
+                Assert.AreEqual(fileA, times[0].SpectrumSourceId);
+                Assert.AreEqual(10.5, times[0].RetentionTime);
+                Assert.IsTrue(times[0].BestSpectrum);
+                Assert.AreEqual(-1L, times[0].RedundantRefSpectraId);
+                Assert.AreEqual(fileB, times[1].SpectrumSourceId);
+                Assert.IsFalse(times[1].BestSpectrum);
+                Assert.AreEqual(0, reader.ReadSpectrumRetentionTimes(99).Count);
+            }
+            using (var reader = new BlibReader(redundantPath))
+            {
+                Assert.IsTrue(reader.Info.IsRedundant);
+                Assert.IsFalse(reader.HasTable(BlibReader.TABLE_RETENTION_TIMES));
+                Assert.AreEqual(0, reader.CountRetentionTimes());
+                Assert.AreEqual(0, reader.ReadSpectrumRetentionTimes(7).Count);
+                Assert.AreEqual(7L, reader.ReadSpectrum(7, false)!.Id);
+            }
+
+            // A spectrum whose record names no source file (0) is written as NULL, not as 0.
+            using (var writer = BlibWriter.Open(path, true))
+            {
+                writer.DropIndexes();
+                writer.AddSpectrum(new BlibSpectrumRecord { PeptideSeq = "NOFILEK", PeptideModSeq = "NOFILEK", PrecursorMz = 300.1, PrecursorCharge = 1 });
+                writer.Complete();
+            }
+            var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3, ReadOnly = true };
+            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            {
+                connection.Open();
+                using var command = new SQLiteCommand("SELECT COUNT(*) FROM RefSpectra WHERE fileID IS NULL", connection);
+                Assert.AreEqual(1L, command.ExecuteScalar());
+            }
+            using (var reader = new BlibReader(path))
+            {
+                var spectra = reader.ReadSpectra(false).ToList();
+                Assert.AreEqual(3, spectra.Count);
+                Assert.AreEqual(0L, spectra[2].FileId);
+            }
+
+            // Deleting a source file takes its spectra and everything of theirs; the other file's
+            // stay, and the header's count follows without Complete, as Skyline edits a library.
+            using (var writer = BlibWriter.Open(path, true))
+            {
+                writer.DeleteSourceFiles(new[] { "a.raw", "missing.raw" });
+                Assert.AreEqual(2, writer.SpectrumCount);
+            }
+            using (var reader = new BlibReader(path))
+            {
+                Assert.AreEqual(2, reader.Info.SpectrumCount);
+                CollectionAssert.AreEqual(new[] { "b.raw" }, reader.ReadSourceFiles().Select(f => f.FileName).ToArray());
+                CollectionAssert.AreEqual(new[] { withoutFile, withoutFile + 1 }, reader.ReadSpectra(false).Select(s => s.Id).ToArray());
+                Assert.AreEqual(0, reader.ReadModifications(withFile).Count);
+                Assert.AreEqual(0, reader.ReadAnnotations(withFile).Count);
+                Assert.IsNull(reader.ReadPeaks(withFile, 1));
+                Assert.AreEqual(0, reader.ReadProteins().Count);
+                Assert.AreEqual(1, reader.CountRetentionTimes());
+                Assert.AreEqual(withoutFile, reader.ReadRetentionTimes().Single().RefSpectraId);
+            }
+        }
+        finally
+        {
+            DeleteTemp(path);
+            DeleteTemp(redundantPath);
+        }
+    }
+
+    /// <summary>
+    /// The RetentionTimes table of the schemas before the ion mobility units: the drift time
+    /// columns of schemas 4 and 5 read as a drift time, and the value column of schemas 2 and 3
+    /// as a drift time or a CCS by that schema's own type code, as Skyline has always read them.
+    /// </summary>
+    [TestMethod]
+    public void Reader_ReadsLegacyRetentionTimeIonMobilityColumns()
+    {
+        string path = TempPath();
+        try
+        {
+            var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3 };
+            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            {
+                connection.Open();
+                Execute(connection, "CREATE TABLE LibInfo (libLSID TEXT, createTime TEXT, numSpecs INTEGER, majorVersion INTEGER, minorVersion INTEGER)");
+                Execute(connection, "INSERT INTO LibInfo VALUES ('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:old.blib', 'Thu Nov  3 17:02:18 2011', 1, 1, 4)");
+                Execute(connection, "CREATE TABLE RefSpectra (id INTEGER PRIMARY KEY AUTOINCREMENT, peptideSeq VARCHAR(150), precursorMZ REAL, " +
+                                    "precursorCharge INTEGER, peptideModSeq VARCHAR(200), prevAA CHAR(1), nextAA CHAR(1), copies INTEGER, numPeaks INTEGER)");
+                Execute(connection, "INSERT INTO RefSpectra VALUES (1, 'PEPTIDEK', 500.25, 2, 'PEPTIDEK', '-', '-', 1, 0)");
+                Execute(connection, "CREATE TABLE RetentionTimes (RefSpectraID INTEGER, RedundantRefSpectraID INTEGER, SpectrumSourceID INTEGER, " +
+                                    "driftTimeMsec REAL, collisionalCrossSectionSqA REAL, driftTimeHighEnergyOffsetMsec REAL, retentionTime REAL, bestSpectrum INTEGER)");
+                Execute(connection, "INSERT INTO RetentionTimes VALUES (1, 0, 1, 3.5, 250.0, -0.2, 12.0, 1)");
+                Execute(connection, "INSERT INTO RetentionTimes VALUES (1, 0, 2, NULL, NULL, NULL, 12.5, 0)");
+            }
+            using (var reader = new BlibReader(path))
+            {
+                var times = reader.ReadSpectrumRetentionTimes(1);
+                Assert.AreEqual(2, times.Count);
+                Assert.AreEqual(3.5, times[0].IonMobility);
+                Assert.AreEqual(BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME, times[0].IonMobilityType);
+                Assert.AreEqual(250.0, times[0].CollisionalCrossSectionSqA);
+                Assert.AreEqual(-0.2, times[0].IonMobilityHighEnergyOffset);
+                Assert.IsNull(times[1].IonMobility);
+                Assert.AreEqual(BlibWriter.ION_MOBILITY_TYPE_NONE, times[1].IonMobilityType);
+            }
+
+            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            {
+                connection.Open();
+                Execute(connection, "DROP TABLE RetentionTimes");
+                Execute(connection, "CREATE TABLE RetentionTimes (RefSpectraID INTEGER, RedundantRefSpectraID INTEGER, SpectrumSourceID INTEGER, " +
+                                    "ionMobilityValue REAL, ionMobilityType INTEGER, ionMobilityHighEnergyDriftTimeOffsetMsec REAL, retentionTime REAL, bestSpectrum INTEGER)");
+                Execute(connection, "INSERT INTO RetentionTimes VALUES (1, 0, 1, 3.5, 1, -0.2, 12.0, 1)");
+                Execute(connection, "INSERT INTO RetentionTimes VALUES (1, 0, 2, 250.0, 2, 0, 12.5, 0)");
+                Execute(connection, "INSERT INTO RetentionTimes VALUES (1, 0, 3, 0, 0, 0, 13.0, 0)");
+            }
+            using (var reader = new BlibReader(path))
+            {
+                var times = reader.ReadSpectrumRetentionTimes(1);
+                Assert.AreEqual(3, times.Count);
+                Assert.AreEqual(3.5, times[0].IonMobility);
+                Assert.AreEqual(BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME, times[0].IonMobilityType);
+                Assert.IsNull(times[0].CollisionalCrossSectionSqA);
+                Assert.AreEqual(-0.2, times[0].IonMobilityHighEnergyOffset);
+                Assert.IsNull(times[1].IonMobility);
+                Assert.AreEqual(BlibWriter.ION_MOBILITY_TYPE_NONE, times[1].IonMobilityType);
+                Assert.AreEqual(250.0, times[1].CollisionalCrossSectionSqA);
+                Assert.IsNull(times[2].IonMobility, "A row of that schema's type none has no ion mobility.");
+                Assert.AreEqual(BlibWriter.ION_MOBILITY_TYPE_NONE, times[2].IonMobilityType);
+                Assert.IsNull(times[2].CollisionalCrossSectionSqA);
+            }
+        }
+        finally
+        {
+            DeleteTemp(path);
+        }
+    }
+
     private static string TempPath()
     {
         return Path.Combine(Path.GetTempPath(), $"pwiz-sharp-blibreader-{Guid.NewGuid():N}.blib");

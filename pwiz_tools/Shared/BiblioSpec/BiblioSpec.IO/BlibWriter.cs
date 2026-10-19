@@ -232,6 +232,34 @@ namespace pwiz.BiblioSpec.IO
         }
 
         /// <summary>
+        /// Starts a new library under an LSID of the caller's own, as Skyline names the library it
+        /// minimizes from another (the source library's authority and name, with a GUID) and its
+        /// redundant companion (<c>:redundant:</c> in place of <c>:nr:</c>): every table, as the
+        /// constructor creates them, except that a <paramref name="redundant"/> library gets no
+        /// <c>RetentionTimes</c> table, every spectrum there being its own observation.
+        /// </summary>
+        public static BlibWriter Create(string path, string lsid, bool redundant = false)
+        {
+            if (string.IsNullOrEmpty(lsid))
+                throw new ArgumentException(@"A library needs an LSID", nameof(lsid));
+            var writer = new BlibWriter(path, false);
+            try
+            {
+                writer.CreateSchema(lsid);
+                if (!redundant)
+                    writer.EnsureRetentionTimes();
+                writer.EnsureMetadata();
+                writer.EnsurePrepared();
+            }
+            catch
+            {
+                writer.Dispose();
+                throw;
+            }
+            return writer;
+        }
+
+        /// <summary>
         /// Opens the library BiblioSpec's BlibBuild or BlibFilter writes to <paramref name="path"/>
         /// without a schema, for the tool to attach its input libraries to
         /// <see cref="Connection"/> and then <see cref="CreateSchema"/>, with
@@ -440,6 +468,88 @@ namespace pwiz.BiblioSpec.IO
         {
             using (var reader = new BlibReader(_connection))
                 return reader.ReadSourceFiles();
+        }
+
+        /// <summary>
+        /// Removes the source files named in <paramref name="fileNames"/> from an appended library
+        /// with everything of theirs: their spectra, those spectra's peaks, modifications,
+        /// annotations, protein mappings and observations, and the file rows. Skyline takes runs
+        /// out of a document's redundant library this way before filtering it again.
+        /// </summary>
+        public void DeleteSourceFiles(IEnumerable<string> fileNames)
+        {
+            if (fileNames == null)
+                throw new ArgumentNullException(nameof(fileNames));
+            var names = fileNames.ToList();
+            if (names.Count == 0)
+                return;
+            string parameters = string.Join(@", ", names.Select((name, i) => @"@file" + i.ToString(CultureInfo.InvariantCulture)));
+            string fileIds = @"(SELECT id FROM SpectrumSourceFiles WHERE fileName IN (" + parameters + @"))";
+            string spectrumIds = @"(SELECT id FROM RefSpectra WHERE fileID IN " + fileIds + @")";
+            var statements = new List<string>();
+            foreach (var (table, column) in new[]
+                     {
+                         (@"Modifications", @"RefSpectraID"), (@"RefSpectraPeaks", @"RefSpectraID"),
+                         (@"RefSpectraPeakAnnotations", @"RefSpectraID"), (@"RefSpectraProteins", @"RefSpectraId"),
+                         (@"RetentionTimes", @"RefSpectraID"),
+                     })
+            {
+                if (TableExists(table))
+                    statements.Add(@"DELETE FROM " + table + @" WHERE " + column + @" IN " + spectrumIds);
+            }
+            if (TableExists(@"DecoyPairs"))
+            {
+                // A decoy whose target goes keeps its row, with no target to name.
+                statements.Add(@"UPDATE DecoyPairs SET TargetRefSpectraID = NULL WHERE TargetRefSpectraID IN " + spectrumIds);
+                statements.Add(@"DELETE FROM DecoyPairs WHERE RefSpectraID IN " + spectrumIds);
+            }
+            statements.Add(@"DELETE FROM RefSpectra WHERE id IN " + spectrumIds);
+            statements.Add(@"DELETE FROM SpectrumSourceFiles WHERE fileName IN (" + parameters + @")");
+            // The header's count follows the rows, as a library closed by Complete carries it.
+            statements.Add(@"UPDATE LibInfo SET numSpecs = (SELECT COUNT(*) FROM RefSpectra)");
+            using (var transaction = _connection.BeginTransaction())
+            {
+                foreach (string sql in statements)
+                {
+                    using (var command = new SQLiteCommand(sql, _connection))
+                    {
+                        for (int i = 0; i < names.Count; i++)
+                            command.Parameters.AddWithValue(@"@file" + i.ToString(CultureInfo.InvariantCulture), names[i]);
+                        command.ExecuteNonQuery();
+                    }
+                }
+                transaction.Commit();
+            }
+            _spectrumCount = (int)Scalar(@"SELECT COUNT(*) FROM RefSpectra");
+        }
+
+        /// <summary>
+        /// The id of the <c>ScoreTypes</c> row named <paramref name="name"/>, added with
+        /// <paramref name="probabilityType"/> when the library has none: BiblioSpec's own types
+        /// (<see cref="BlibSchema.ScoreTypes"/>) are seeded in every library, and a score of
+        /// another tool's gets the next id after them. A spectrum's <see cref="BlibSpectrumRecord.ScoreType"/>
+        /// refers to the id returned.
+        /// </summary>
+        public int AddScoreType(string name, string probabilityType)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(@"A score type needs a name", nameof(name));
+            using (var find = new SQLiteCommand(@"SELECT id FROM ScoreTypes WHERE scoreType = @name ORDER BY id LIMIT 1", _connection))
+            {
+                find.Parameters.AddWithValue(@"@name", name);
+                object existing = find.ExecuteScalar();
+                if (existing != null && existing != DBNull.Value)
+                    return Convert.ToInt32(existing, CultureInfo.InvariantCulture);
+            }
+            int id = (int)Scalar(@"SELECT IFNULL(MAX(id), -1) + 1 FROM ScoreTypes");
+            using (var insert = new SQLiteCommand(@"INSERT INTO ScoreTypes (id, scoreType, probabilityType) VALUES (@id, @name, @probability)", _connection))
+            {
+                insert.Parameters.AddWithValue(@"@id", id);
+                insert.Parameters.AddWithValue(@"@name", name);
+                insert.Parameters.AddWithValue(@"@probability", (object)probabilityType ?? DBNull.Value);
+                insert.ExecuteNonQuery();
+            }
+            return id;
         }
 
         /// <summary>
@@ -1022,7 +1132,10 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>
         /// The <c>RefSpectra</c> values of <paramref name="spectrum"/>, in the order
         /// <see cref="EnsurePrepared"/> lists the columns; with <paramref name="withId"/>, the
-        /// record's id first.
+        /// record's id first. A <see cref="BlibSpectrumRecord.FileId"/> of 0, the id no
+        /// <c>SpectrumSourceFiles</c> row has, is written as NULL: a spectrum whose source the
+        /// library does not record, as <see cref="BlibReader"/> reads a NULL back and as Skyline
+        /// has always written a spectrum minimized from a library without source files.
         /// </summary>
         private object[] SpectrumValues(BlibSpectrumRecord spectrum, bool withId)
         {
@@ -1036,8 +1149,8 @@ namespace pwiz.BiblioSpec.IO
                 Nullable(spectrum.IonMobility), Nullable(spectrum.CollisionalCrossSectionSqA), Nullable(spectrum.IonMobilityHighEnergyOffset),
                 spectrum.IonMobilityType, Nullable(spectrum.RetentionTime), Nullable(spectrum.StartTime), Nullable(spectrum.EndTime),
                 Nullable(spectrum.TotalIonCurrent), spectrum.MoleculeName, spectrum.ChemicalFormula, spectrum.PrecursorAdduct,
-                spectrum.InchiKey, spectrum.OtherKeys, spectrum.FileId, (object)spectrum.SpecIdInFile ?? DBNull.Value,
-                spectrum.Score, spectrum.ScoreType,
+                spectrum.InchiKey, spectrum.OtherKeys, spectrum.FileId > 0 ? spectrum.FileId : DBNull.Value,
+                (object)spectrum.SpecIdInFile ?? DBNull.Value, spectrum.Score, spectrum.ScoreType,
             });
             foreach (var column in _optionalSpectrumColumns)
                 values.Add(Nullable(OptionalValue(spectrum, column)));

@@ -75,6 +75,27 @@ namespace pwiz.BiblioSpec.IO
         public double? Pep { get; }
     }
 
+    /// <summary>
+    /// One <c>ScoreTypes</c> row: a score's name and how to read it, one of BiblioSpec's
+    /// (<see cref="BlibSchema.ScoreTypes"/>, seeded in every library) or one a tool registered
+    /// (<see cref="BlibWriter.AddScoreType"/>).
+    /// </summary>
+    public sealed class BlibScoreType
+    {
+        public BlibScoreType(int id, string name, string probabilityType)
+        {
+            Id = id;
+            Name = name;
+            ProbabilityType = probabilityType;
+        }
+
+        /// <summary>The id <c>RefSpectra.scoreType</c> refers to.</summary>
+        public int Id { get; }
+        public string Name { get; }
+        /// <summary><c>PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT</c>, <c>..._INCORRECT</c>, <c>NOT_A_PROBABILITY_VALUE</c>, or null in a library before the column.</summary>
+        public string ProbabilityType { get; }
+    }
+
     /// <summary>One <c>SpectrumSourceFiles</c> row, as <see cref="BlibWriter.AddSourceFile"/> writes it.</summary>
     public sealed class BlibSourceFile
     {
