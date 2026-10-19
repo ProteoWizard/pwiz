@@ -22,44 +22,24 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
 using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {
-    /// <summary>One row of a blib's <c>DecoyPairs</c> table: what the library says about a spectrum's side and pair.</summary>
-    public readonly struct BlibDecoyPair
-    {
-        public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairId)
-        {
-            IsDecoy = isDecoy;
-            IsEntrapment = isEntrapment;
-            PairId = pairId;
-        }
-
-        public bool IsDecoy { get; }
-        /// <summary>True for an entrapment target or entrapment decoy (FDRBench's p_target / p_decoy).</summary>
-        public bool IsEntrapment { get; }
-        /// <summary>Shared by exactly two rows: a target and its decoy, at one charge.</summary>
-        public int PairId { get; }
-    }
-
     /// <summary>
     /// The <c>DecoyPairs</c> table of a blib that supplies its own decoys (CarafeSharp writes
-    /// it, <c>BlibSchema.CreateDecoyPairs</c> defines it): which spectra are decoys, which are
-    /// entrapment, and which target each decoy was made from. A blib searched with its own
-    /// decoys must carry the table, and Osprey pairs the decoys from it alone - no manifest, no
-    /// composition fallback, both of which stay for TSV libraries. Read by RefSpectra id, which
-    /// is a <see cref="LibraryEntry.Id"/> only until the deduplicator renumbers the library, so
-    /// the rows are carried by entry object (<see cref="ByEntry"/>) into the pairing that runs
-    /// after it.
+    /// it, <c>BlibSchema.CreateDecoyPairs</c> defines it, <see cref="BlibReader.ReadDecoyPairs"/>
+    /// reads it): which spectra are decoys, which are entrapment, and which target each decoy
+    /// was made from. A blib searched with its own decoys must carry the table, and Osprey pairs
+    /// the decoys from it alone - no manifest, no composition fallback, both of which stay for
+    /// TSV libraries. Read by RefSpectra id, which is a <see cref="LibraryEntry.Id"/> only until
+    /// the deduplicator renumbers the library, so the rows are carried by entry object
+    /// (<see cref="ByEntry"/>) into the pairing that runs after it.
     /// </summary>
     public static class BlibDecoyPairs
     {
-        public const string TABLE = @"DecoyPairs";
-
         /// <summary>True when the library claims the Osprey library contract in its metadata, which makes its table part of the contract check.</summary>
         public static bool ClaimsContract(string path)
         {
@@ -71,31 +51,13 @@ namespace pwiz.Osprey.IO
         /// table Osprey cannot read (another writer's columns) is a library fault, reported as
         /// one rather than as a defect.
         /// </summary>
-        public static Dictionary<uint, BlibDecoyPair> Read(string path)
+        public static IReadOnlyDictionary<long, BlibDecoyPair> Read(string path)
         {
-            // A ';' in the path must not end the connection string early: the builder quotes it.
-            var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3, ReadOnly = true };
-            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            using (var reader = new BlibReader(path))
             {
-                connection.Open();
-                using (var exists = new SQLiteCommand(@"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name", connection))
-                {
-                    exists.Parameters.AddWithValue(@"@name", TABLE);
-                    if ((long)(exists.ExecuteScalar() ?? 0L) == 0)
-                        return null;
-                }
-                var rows = new Dictionary<uint, BlibDecoyPair>();
                 try
                 {
-                    using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID FROM DecoyPairs", connection))
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            rows[(uint)reader.GetInt64(0)] = new BlibDecoyPair(reader.GetInt64(1) != 0, reader.GetInt64(2) != 0,
-                                (int)reader.GetInt64(3));
-                        }
-                    }
+                    return reader.ReadDecoyPairs();
                 }
                 catch (Exception ex) when (ex is SQLiteException || ex is InvalidCastException)
                 {
@@ -103,23 +65,25 @@ namespace pwiz.Osprey.IO
                         OspreyIOResources.BlibDecoyPairs_Read_The_library__0__has_a_DecoyPairs_table_Osprey_cannot_read___1_,
                         path, ex.Message), ex);
                 }
-                return rows;
             }
         }
 
         /// <summary>
-        /// The rows of <paramref name="table"/> keyed by the entry they describe, taken while
-        /// <see cref="LibraryEntry.Id"/> is still the RefSpectra id. The entries survive
-        /// deduplication as the same objects, so the map still addresses them afterwards.
+        /// The rows of <paramref name="table"/> keyed by the entry they describe, through
+        /// <paramref name="refSpectraIds"/>, the RefSpectra id of each entry in order (the
+        /// loader's <see cref="BlibLoader.RefSpectraIds"/>). The entries survive deduplication
+        /// as the same objects, so the map still addresses them afterwards.
         /// </summary>
-        public static IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> ByEntry(IEnumerable<LibraryEntry> entries,
-            IReadOnlyDictionary<uint, BlibDecoyPair> table)
+        public static IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> ByEntry(IReadOnlyList<LibraryEntry> entries,
+            IReadOnlyList<long> refSpectraIds, IReadOnlyDictionary<long, BlibDecoyPair> table)
         {
+            if (entries.Count != refSpectraIds.Count)
+                throw new ArgumentException($@"{entries.Count} entries but {refSpectraIds.Count} RefSpectra ids: not the loader's list");
             var byEntry = new Dictionary<LibraryEntry, BlibDecoyPair>(ReferenceEqualityComparer.Instance);
-            foreach (var entry in entries)
+            for (int i = 0; i < entries.Count; i++)
             {
-                if (table.TryGetValue(entry.Id, out var pair))
-                    byEntry.Add(entry, pair);
+                if (table.TryGetValue(refSpectraIds[i], out var pair))
+                    byEntry.Add(entries[i], pair);
             }
             return byEntry;
         }
@@ -128,21 +92,22 @@ namespace pwiz.Osprey.IO
         /// Marks and pairs <paramref name="library"/> from its table: a row's side is
         /// authoritative over the accession prefixes (<paramref name="newlyMarked"/> counts the
         /// entries it changed, each given or stripped of the decoy bit as the marker would), and
-        /// each pair id naming exactly one target and one decoy at one charge gives the decoy
-        /// its target's id with the decoy bit, as the manifest and composition pairings do.
-        /// Returns the pairs made. A pair id with a side missing (the deduplicator dropped it,
-        /// or the writer left it out) or with more than two rows is malformed and pairs nothing,
-        /// the same rule the library contract's rule 6 applies, so its rows count as unpaired in
-        /// the summary.
+        /// each decoy row naming a target at its charge gives the decoy that target's id with the
+        /// decoy bit, as the manifest and composition pairings do. Returns the pairs made. A
+        /// decoy row naming no target, a target the deduplicator dropped, a decoy, or a target at
+        /// another charge pairs nothing, the same rule the library contract's rule 6 applies, so
+        /// it counts as unpaired in the summary. The rows' pairing ids are
+        /// <see cref="PairingIds.Assign"/>'s to give, after this.
         /// </summary>
         public static int Pair(IList<LibraryEntry> library, IReadOnlyDictionary<LibraryEntry, BlibDecoyPair> pairs,
-            PairingState state, out int newlyMarked)
+            IReadOnlyDictionary<long, LibraryEntry> entriesByRefSpectraId, PairingState state, out int newlyMarked)
         {
             newlyMarked = 0;
-            var groups = new Dictionary<int, List<int>>();
+            var indexByEntry = new Dictionary<LibraryEntry, int>(ReferenceEqualityComparer.Instance);
             for (int idx = 0; idx < library.Count; idx++)
             {
                 var entry = library[idx];
+                indexByEntry[entry] = idx;
                 if (!pairs.TryGetValue(entry, out var pair))
                     continue;
                 if (entry.IsDecoy != pair.IsDecoy)
@@ -151,22 +116,19 @@ namespace pwiz.Osprey.IO
                     entry.Id = pair.IsDecoy ? entry.Id | LibraryEntry.DECOY_ID_BIT : entry.Id & ~LibraryEntry.DECOY_ID_BIT;
                     newlyMarked++;
                 }
-                if (!groups.TryGetValue(pair.PairId, out var group))
-                    groups.Add(pair.PairId, group = new List<int>(2));
-                group.Add(idx);
             }
             int paired = 0;
-            // Pair-id order, so the ids a library gets do not depend on dictionary order.
-            foreach (int pairId in groups.Keys.OrderBy(id => id))
+            // Library order, so the ids a library gets do not depend on dictionary order.
+            for (int decoyIdx = 0; decoyIdx < library.Count; decoyIdx++)
             {
-                var group = groups[pairId];
-                if (group.Count != 2)
-                    continue;
-                int targetIdx = library[group[0]].IsDecoy ? group[1] : group[0];
-                int decoyIdx = library[group[0]].IsDecoy ? group[0] : group[1];
-                var target = library[targetIdx];
                 var decoy = library[decoyIdx];
-                if (target.IsDecoy || !decoy.IsDecoy || target.Charge != decoy.Charge ||
+                if (!pairs.TryGetValue(decoy, out var pair) || !pair.IsDecoy || !pair.TargetRefSpectraId.HasValue ||
+                    !entriesByRefSpectraId.TryGetValue(pair.TargetRefSpectraId.Value, out var target) ||
+                    !indexByEntry.TryGetValue(target, out int targetIdx))
+                {
+                    continue;
+                }
+                if (target.IsDecoy || target.Charge != decoy.Charge ||
                     state.ClaimedTargets.Contains(targetIdx) || state.PairedDecoys.Contains(decoyIdx))
                 {
                     continue;
@@ -177,6 +139,22 @@ namespace pwiz.Osprey.IO
                 paired++;
             }
             return paired;
+        }
+
+        /// <summary>
+        /// The entries of <paramref name="entries"/> by RefSpectra id, through
+        /// <paramref name="refSpectraIds"/> (the loader's list, in the entries' order): what a
+        /// row's <see cref="BlibDecoyPair.TargetRefSpectraId"/> names.
+        /// </summary>
+        public static IReadOnlyDictionary<long, LibraryEntry> ByRefSpectraId(IReadOnlyList<LibraryEntry> entries,
+            IReadOnlyList<long> refSpectraIds)
+        {
+            if (entries.Count != refSpectraIds.Count)
+                throw new ArgumentException($@"{entries.Count} entries but {refSpectraIds.Count} RefSpectra ids: not the loader's list");
+            var byId = new Dictionary<long, LibraryEntry>(entries.Count);
+            for (int i = 0; i < entries.Count; i++)
+                byId[refSpectraIds[i]] = entries[i];
+            return byId;
         }
     }
 }

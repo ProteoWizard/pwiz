@@ -196,8 +196,9 @@ The pipeline is a fixed, four-element list, always in this order
 
 Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
-Stage 6 reconciliation plan. Stage 6 is the per-run rescore and gap-fill. Stage 7 is
-second-pass FDR, protein FDR, and the `.blib` write. The stage-to-document map is in
+cross-run half of Stage 6 planning - the consensus every run's plan is made from. Stage 6
+is each run's plan (calibration refit, reconciliation actions, gap-fill targets), then its
+rescore and gap-fill. Stage 7 is second-pass FDR, protein FDR, and the `.blib` write. The stage-to-document map is in
 [README.md](README.md); the task-name-to-class map is in
 [15-hpc-scoring-split](15-hpc-scoring-split.md).
 
@@ -298,8 +299,9 @@ This is the shape every fan-out task has, and the reason batch size is free. Tak
     for each run r in the batch:          PER-RUN WORKING SET
         load   r.scores.parquet               |
         load   r.1st-pass.fdr_scores.bin      |
-        load   r.reconciliation.json          |  O(entries in r)
-        load   r.calibration.json             |
+        load   r.calibration.json             |  O(entries in r)
+              ---- plan r ----                |
+        write  r.reconciliation.json          |
         load   r.spectra.bin (windowed)       |
               ---- rescore r ----             |
         write  r.scores-reconciled.parquet    |
@@ -331,8 +333,8 @@ and silently reintroduces the wall.
 ### Phase boundaries inside a task
 
 A task is not the unit of persistence. `FirstPassFDR` alone passes through model
-training, a scoring pass over every run, the experiment-wide barrier, a second pass,
-protein FDR, and Stage 6 planning - and it writes its products at the end of the phase
+training, a scoring pass over every run, the experiment-wide barrier, protein FDR, and
+the cross-run consensus for Stage 6 planning - and it writes its products at the end of the phase
 that computes them, not at the end of the task.
 
 This matters for two reasons. It bounds crash exposure to a single in-flight file
@@ -356,25 +358,29 @@ tier, and an artifact that fits neither is a design error rather than a special 
 Scope is a statement about *content* - whose data is in the file - and it is what the
 memory model in P5 and P6 is built on.
 
-The converse of the replication below is the shape to watch for: **a per-run artifact
-carrying an analysis-wide payload.** `<stem>.reconciliation.json` does this today - every
-one of its N copies restates the same join-wide `first_pass_base_ids` array, which at 446
-runs is 2.79 GB of pure duplication inside 10.7 GB of envelopes that a fan-out worker then
-has to parse to rebuild a union it could have been handed. Replication is only benign when
-the payload is fixed in size, as the frozen model is; when it scales with the experiment
-it belongs in one experiment-wide artifact, and the fan-out reads that instead. This is the
-P6 startup rule seen from the writer's side. Fixed is not the same as small: the linear
-model is a few hundred KB, but a tree model under `OSPREY_FDR_MODEL=gbdt` is about 3.4 MB per
-copy, 1.5 GB across 446 runs, so the writer serializes it once and writes that text beside
-every run, and `LoadFromAny` parses one copy rather than each in turn.
+**Scope decides the name, with no exceptions: experiment-wide content is written ONCE, as
+`<blib-stem>.<ext>`, and never under a run stem.** A `<stem>.<ext>` file whose bytes are
+the same for every run is a defect, however small the payload. The orchestrator ships one
+analysis-named file to every node that needs it, as it already does for
+`<blib-stem>.1st-pass.fdr_experiment.bin`; a copy per run buys a fan-out node nothing it
+could not get from that one file, and it costs disk, relay volume and a directory that
+reads as N times more output than the analysis produced.
 
-Scope is not the same question as naming, and the two must not be conflated. Most
-per-run content is named for its run stem and most experiment-wide content is named for
-the analysis, but an experiment-wide payload small enough to duplicate may be
-*replicated* under every run stem so a fan-out node can find it by the one derivation it
-already knows. `<stem>.1st-pass.model.json` is exactly that: identical bytes beside
-every run, any one copy authoritative. It is experiment-wide content, and the memory
-model counts it as baseline, whatever its name says.
+This used to be a sanctioned exception, and the cost is why it is not one now. The frozen
+first-pass model and the protein-compact stratum were written beside every run so a node
+could find them "by the one derivation it already knows". On the 82-run SEA-AD cohort that
+was 82 identical copies of each, 790 MB of them stratum (about 4 GB at 446 runs). They are
+`<blib-stem>.1st-pass.model.json` and `<blib-stem>.1st-pass.stratum.json` now.
+`SubsetPipelineTest` enforces the whole-file form of the rule: after a straight-through
+multi-run analysis no `<stem>.*` suffix may be byte-identical across every run.
+
+That test cannot see the subtler shape, so it falls to review: **a per-run artifact
+carrying an analysis-wide payload.** `<stem>.reconciliation.json` did this - every one of
+its N copies restated the same join-wide `first_pass_base_ids` array, which at 446 runs is
+2.79 GB of pure duplication inside 10.7 GB of envelopes that a fan-out worker then had to
+parse to rebuild a union it could have been handed. Whatever the size, the payload belongs
+in one experiment-wide artifact and the fan-out reads that instead. This is the P6 startup
+rule seen from the writer's side.
 
 **P2. A per-run iteration reads only its own run's artifacts plus experiment-wide
 summaries written by an earlier phase, and builds nothing spanning runs.** This is the
@@ -484,8 +490,7 @@ previous run's report or none, never a half-written one. Because nothing downstr
 them and the blib has not been written yet when they run, a report that cannot be written
 - the previous run's copy still open in Excel is the common case, which makes the
 commit's replace throw - is logged as a warning naming the path and skipped, not turned
-into a pipeline failure. `--write-pin`'s `<stem>.cs_features.tsv`
-(`PerFileScoringTask.WriteFeatureDump`) and most `-d` diagnostic dumps
+into a pipeline failure. Most `-d` diagnostic dumps
 (`OspreyFileDiagnostics`'s one-shot dumps, `FdrDiagnostics.WriteCutoffs`,
 `PercolatorDiagnosticsDump`, `PickCandidateDump`, `PeakDataExtractor`'s search-XIC dump)
 commit the same way: nothing in the pipeline reads any of them back, but a bisection
@@ -799,15 +804,18 @@ node running that task needs a copy, whatever batch it was handed.
 
 | File | Scope / kind | Written by | Read by | Relay |
 |---|---|---|---|---|
-| `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
+| `<library-leaf>.blib` (derived library; a `.tsv` source only) | experiment cache | library load, any task | all tasks | ship it, or rebuild locally - it is the finished library in the transfer format, validated by its own `osprey.library_hash` row, and the `.libcache` it replaced is read for one release where one is left |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
 | `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on a multiplexed run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, read demultiplexed from the source | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices while its descriptor matches, and it can be rebuilt only from the source, so keep the source to absorb a demux settings change |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
-| `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
-| `<stem>.reconciliation.json` | per-run product | `FirstPassFDR` (Stage 6 planning) | `PerFileRescoring`, `SecondPassFDR` (gap-fill entry ids) | with the run |
+| `<stem>.1st-pass.fdr_scores.bin` | per-run product, carrying the run's share of the report's Model tab (`FeatureSums`) | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `FirstPassFDR`'s pay-later report; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` | with the run |
+| `<stem>.reconciliation.json` | per-run product | `PerFileRescoring` (the run's Stage 6 plan, written just before it is rescored) | `SecondPassFDR` (gap-fill entry ids) | with the run, from the rescore node to `SecondPassFDR` |
+| `<blib-stem>.1st-pass.consensus.json` | experiment product | `FirstPassFDR` (end of the consensus pass) | `PerFileRescoring` (every run's plan) | **every node** running `PerFileRescoring` |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | experiment product | `FirstPassFDR` | `PerFileRescoring`, `SecondPassFDR`, `PerFileScoring` (rehydrate) | **every node** |
-| `<stem>.1st-pass.model.json` | experiment product, replicated | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR` | **every node** (any one copy) |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | experiment product | `FirstPassFDR` (end of the consensus pass) | `PerFileRescoring`, `SecondPassFDR`, `FirstPassFDR` and `PerFileScoring` (resume) | **every node** |
+| `<blib-stem>.1st-pass.model.json` | experiment product | `FirstPassFDR` (training) | `PerFileRescoring`, `SecondPassFDR`, `FirstPassFDR` (resume) | **every node** |
+| `<blib-stem>.1st-pass.stratum.json` | experiment product, protein-compact only | `FirstPassFDR` (first-pass protein FDR) | as the model, paired with it by stamp | **every node** |
 | `<stem>.scores-reconciled.parquet` | per-run product, written for **every** run | `PerFileRescoring` (Stage 6) | `SecondPassFDR` - the join's only row source, one parquet per run; and `PerFileRescoring` itself on its per-run resume arm and for its training export | with the run |
 | `<stem>.2nd-pass.fdr_decoys.bin` | per-run product, protein-compact only | `PerFileRescoring` (pass-2 worker) | `SecondPassFDR` | with the run |
 | `<stem>.2nd-pass.fdr_scores.bin` | per-run product, written for **every** run | `PerFileRescoring` (pass-2 worker), in every pass-2 mode | `SecondPassFDR`; `PerFileRescoring`'s training export | with the run |
@@ -820,9 +828,10 @@ node running that task needs a copy, whatever batch it was handed.
 
 No row lists a validity record, because none is a separate file. Every product above
 carries its own validity stamp inside itself (see "Validity stamps live inside the artifact"
-below), and the two caches, `.libcache` and `.spectra.bin`, validate themselves from their
-headers as they always have. A node that has the artifact has its stamp; there is nothing
-else to stage.
+below), and the two caches validate themselves: `.spectra.bin` from its header as it always
+has, the derived `<library-leaf>.blib` from its `LibMetadata` row `osprey.library_hash`, the
+library's composition hash plus the blib reader's term. A node that has the artifact has its
+stamp; there is nothing else to stage.
 
 Nothing else is part of this contract. The `--fdrbench` pairing manifests and the
 peptide-trace dumps are side channels: no task reads them, nothing relays them, and
@@ -864,25 +873,13 @@ to stage the raw data, build the caches, and delete the sources - and after that
 file is the only copy of the run, and deleting it loses the run. Prune spectra caches
 only where the source is still on disk.
 
-**`<stem>.1st-pass.model.json` is experiment-wide content under a per-run name.** The
-trained first-pass Percolator model is identical for every run, and a `SecondPassFDR` or
-`PerFileRescoring` node running a frozen pass-2 mode needs it. Writing it once under the
-analysis name would force every fan-out node to learn a second path convention; writing
-it beside each run's other sidecars means a node finds it by the same stem derivation it
-already uses. `LoadFromAny` takes the first copy that exists, because the copies are
-identical.
-
-**The protein-compact stratum rides inside `<stem>.1st-pass.model.json`** as an optional
-field, present only under `OSPREY_PASS2_QVALUE=protein-compact`. The mode needs both the
-frozen model and the stratum, and a node holding one without the other can do nothing, so
-one artifact meant one relay hop and one reload site.
-
-> **In flight** - this is changing, and P12 is why: training does not compute the stratum,
-> first-pass protein FDR does, so the column belongs in a file written by that phase.
-> `.1st-pass.stratum.json` is a separate artifact on
-> `Skyline/work/20260901_osprey_firstpass_resume` and is staged as its own relay hop by
-> `regression.ps1`. When that branch lands, this becomes a fourth experiment-wide artifact
-> that must relay with the other three.
+**The model and the protein-compact stratum are two files, because two phases compute
+them (P12).** Training produces `<blib-stem>.1st-pass.model.json`; first-pass protein FDR
+produces `<blib-stem>.1st-pass.stratum.json`, present only under
+`OSPREY_PASS2_QVALUE=protein-compact`. The mode needs both, and a node holding one without
+the other can do nothing, so they relay together. `FirstPassModelIO.LoadForAnalysis` pairs
+them only when their embedded stamps match, so a stratum left by an earlier run under
+another key is never published with this run's model.
 
 **`<stem>.2nd-pass.fdr_scores.bin` has one writer, in every pass-2 mode.** `PerFileRescoring`'s
 pass-2 per-run worker writes it for every run - the protein-compact competition and the
@@ -917,14 +914,16 @@ gets that coverage. It is read behind a `File.Exists`, so an orchestrator that l
 behind does not get an error: gap-fill filtering silently changes. That is the P13-shaped
 hazard this document warns about, in the contract itself.
 
-**A cohort-wide union cannot ride in a per-run envelope, for an ordering reason.** Each
-`<stem>.reconciliation.json` is written the instant that run's planning finishes, so the
-planned actions of runs planned *later* do not exist yet and cannot be in it. Any fact that
-is a union over all runs is therefore only knowable after the last run is planned, which
-means it belongs in an artifact written at the end of planning - not replicated into
-envelopes that were each sealed too early to hold it. This is why "just add it to the
-per-run file" is not an available answer for that class of fact, and the reason is not
-deducible from the scope taxonomy alone.
+**A per-run plan is a per-run product, and nothing cross-run rides in it.** Each run's
+`<stem>.reconciliation.json` holds that run's actions, gap-fill targets and refined
+calibration, written by `PerFileRescoring` the moment it plans the run and under the stamp
+the run's reconciled parquet will carry, so the plan is part of the run's "done" predicate
+(P14). Everything a plan reads from outside its run - the consensus retention times and the
+two sets of precursors that passed somewhere in the experiment - is computed once by
+`FirstPassFDR` and written once, as `<blib-stem>.1st-pass.consensus.json`. The plans used to
+be made in `FirstPassFDR` too, a second pass over every run in the one node every HPC run
+waits for: 42 minutes of it on the 446-run CHS cohort, for work that reads one run at a
+time.
 
 **Validity stamps live inside the artifact, one per artifact.** Each durable product
 carries one stamp, `osprey-validity/1;task=<Task>;version=<OspreyVersion.Current>;key=<validity key>`,
@@ -940,10 +939,8 @@ those files read as stale and recompute; they were written by another build anyw
 
 ### Where blib-named experiment-wide artifacts live
 
-This rule governs `fdr_experiment.bin` for both passes. It does **not** govern
-`<stem>.1st-pass.model.json`, which is the replicated exception described above: that one
-takes its name from the run stem and its directory from that run's own parquet, precisely
-so a fan-out node can find it without knowing this rule.
+This rule governs every experiment-wide artifact: `fdr_experiment.bin` for both passes,
+`retained_base_ids.bin`, `model.json` and `stratum.json`.
 
 A blib-named artifact takes its **name** from the output blib and its **directory**
 from the same resolution the per-run sidecars use - `ArtifactPaths.ResolveOutputDir` off
@@ -971,14 +968,14 @@ default:
 - `<blib-stem>.1st-pass.fdr_experiment.bin` carries the experiment-scope q-values every
   downstream pass reads. A `PerFileRescoring` or `SecondPassFDR` node without it cannot
   reconstruct them, because they are a function of all runs.
-- `<stem>.1st-pass.model.json` carries the frozen model, and under `protein-compact` the
-  stratum with it. A distributed `SecondPassFDR` node that never trained pass 1 has no
-  other source for either.
+- `<blib-stem>.1st-pass.model.json` carries the frozen model, and under `protein-compact`
+  `<blib-stem>.1st-pass.stratum.json` carries the stratum. A distributed `SecondPassFDR`
+  node that never trained pass 1 has no other source for either.
 
-Ship both to every node running either task. **Their failure behaviour differs, and only
+Ship them to every node running either task. **Their failure behaviour differs, and only
 one of them fails safely:**
 
-- A missing `<stem>.1st-pass.model.json` under an explicitly requested frozen pass-2 mode
+- A missing `<blib-stem>.1st-pass.model.json` under an explicitly requested frozen pass-2 mode
   aborts with a `ConfigError` rather than degrading to the anti-conservative retrain
   (see [12-second-pass-fdr](12-second-pass-fdr.md), "Fail-fast"). That is the behaviour to
   copy.
@@ -1003,7 +1000,7 @@ both defaulting to "beside the input file":
 | Setting | Sets | Holds |
 |---|---|---|
 | `--output-dir` | `ArtifactPaths.OutputDir` | products: scores parquet, calibration JSON, FDR sidecars, reconciliation JSON |
-| `--cache-dir` | `ArtifactPaths.CacheDir` | caches: `.spectra.bin`, `.libcache` |
+| `--cache-dir` | `ArtifactPaths.CacheDir` | caches: `.spectra.bin`, the derived `<library-leaf>.blib` (and a `.libcache` an earlier release left) |
 | `--work-dir` | both | the single-flag form |
 
 This is the product/cache split from the contract table made operational. `ResolveOutputDir`
@@ -1182,7 +1179,9 @@ The join needs every run's Stage 1-4 output, since training and experiment-wide 
 are functions of all runs:
 
 - `<stem>.scores.parquet` for **every** run in the cohort
-- `<stem>.calibration.json` for **every** run
+- `<stem>.calibration.json` for **every** run. It also carries the run's row of the report's
+  calibration view (`model_diagnostics`), written on every run because only Stage 3 holds the
+  calibration matches it is binned from
 - the library, and `-i` naming the runs whose parquets it reads
 
 `.calibration.json` must travel, which is easy to get wrong because the join reads
@@ -1202,26 +1201,31 @@ Each rescore node needs its own runs' artifacts plus the experiment-wide set:
 Per run, for each run in the node's batch:
 - `<stem>.scores.parquet`
 - `<stem>.1st-pass.fdr_scores.bin`
-- `<stem>.reconciliation.json`
 - `<stem>.calibration.json`
 - `<stem>.spectra.bin`, with no data file beside it
 
+No `<stem>.reconciliation.json`: the node plans each of its runs from the consensus below
+and writes the run's plan itself.
+
 Experiment-wide, to **every** node:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
+- `<blib-stem>.1st-pass.consensus.json` - the cross-run consensus every run's plan is made
+  from. Its absence is fatal: planning a run without it would write a plan with no
+  reconciliation in it.
 - `<blib-stem>.1st-pass.retained_base_ids.bin` - the join-wide compaction set, written when
-  Stage 6 planning ends. It is what makes this list one a single-run node can actually run
-  on: without it a node would rebuild the union from every run's `reconciliation.json`,
-  which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
+  the consensus pass ends. It is what makes this list one a single-run node can actually run
+  on: without it a node would have to survey every run to rebuild the set, which is the
+  O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
   rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`. Stage 7's
   library-fragment release reads the same file (#4650); it used to fold every run's final
   pool to rebuild the set instead, which is the identical O(runs) pre-pass in different
   clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
   625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
-- `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
+- `<blib-stem>.1st-pass.model.json` - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
-- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum, split out of
-  the model sidecar because a different phase produces it (P7)
+- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum, a separate file because
+  a different phase produces it (P7)
 
 This is the boundary where a missing experiment-wide file does the most damage, because
 the node can often proceed without it and produce a plausible wrong answer rather than
@@ -1243,13 +1247,15 @@ Per run, for **every** run in the cohort:
 - `<stem>.scores-reconciled.parquet`
 - `<stem>.2nd-pass.fdr_scores.bin`, and under protein-compact `<stem>.2nd-pass.fdr_decoys.bin`
   - the pass-2 worker's answer, which this task folds and never recomputes
-- `<stem>.reconciliation.json` - read here for the gap-fill entry ids on the Stage-7 fold
+- `<stem>.reconciliation.json` - written by the rescore node, read here for the gap-fill
+  entry ids on the Stage-7 fold. Part of the worker's answer: a run whose plan is missing or
+  carries another stamp than its reconciled parquet is refused, like a missing 2nd-pass file
 - `<stem>.calibration.json` - isolation-window coverage, so a node with no mzML still has it
 
 Experiment-wide:
 - `<blib-stem>.1st-pass.fdr_experiment.bin`
-- `<stem>.1st-pass.model.json` (any one copy)
-- `<stem>.1st-pass.stratum.json` (any one copy) - the protein-compact stratum. The default
+- `<blib-stem>.1st-pass.model.json`
+- `<blib-stem>.1st-pass.stratum.json` - the protein-compact stratum. The default
   pass-2 mode reloads both this and the model here when neither was published in-process,
   which is every distributed `SecondPassFDR` node
 - `<blib-stem>.1st-pass.model-diagnostics.json`, when `--model-diagnostics` is on - the
@@ -1313,7 +1319,7 @@ the text says so rather than describing the current shape as though it were the 
 
 2. ~~**Two experiment-wide artifacts arrive with the fan-out fix.**~~ **LANDED** in
    [#4633](https://github.com/ProteoWizard/pwiz/pull/4633) (`c4921f3d6c`, 2026-09-06).
-   `<blib-stem>.1st-pass.retained_base_ids.bin` and `<stem>.1st-pass.stratum.json` are both
+   `<blib-stem>.1st-pass.retained_base_ids.bin` and the stratum file are both
    written by `FirstPassFDR` at the end of the phase that computes them, and both are now
    carried in the Boundary 2 -> 3 and 3 -> 4 lists above. The count of experiment-wide
    artifacts that must relay together is four.

@@ -42,8 +42,8 @@ namespace pwiz.Osprey.Scoring
     public interface IOspreyFeatureCalculator
     {
         /// <summary>
-        /// The feature name -- the column emitted in the <c>.cs_features.tsv</c>
-        /// dump. Parity-critical (matches the Rust PIN column name).
+        /// The feature name -- the feature's column in <c>.scores.parquet</c>, the same name
+        /// as the Rust PIN column.
         /// </summary>
         string Name { get; }
 

@@ -24,12 +24,14 @@ a value both routes copy identically from pass 1. See issue #4559.
 
 Two artifacts since the v5 scope split (issue #4486), and this decodes both.
 
-Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v7: 32-byte header, 36-byte records,
+Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v9: 32-byte header, 36-byte records,
   entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20, apex_rt @28.
   NO pep: it is experiment-scope and moved to the experiment sidecar (issue #4486).
   apex_rt arrived at v7 (issue #4522) so the model-diagnostics co-assignment panel stops
   re-reading a whole column out of every .scores.parquet to recover it.
-  Magic OSPRYFDR. One record per OBSERVATION, one file per input.
+  Magic OSPRYFDR. One record per OBSERVATION, one file per input. Since v9 a first-pass file
+  carries the run's feature sums (its share of the model diagnostics Model tab) between the
+  records and the stamp, their length at header [28..32]; compared byte for byte.
 
 Analysis-wide experiment-scope (Osprey.IO\FdrExperimentSidecar.cs), v1: 32-byte header,
   v2: 44-byte records, entry_id u32 @0, experiment_precursor_q f64 @4,
@@ -92,6 +94,7 @@ if (-not $ospreyComparerType) {
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 public class FdrSidecarField
 {
@@ -165,6 +168,9 @@ public class FdrSidecarDiff
     /// that claim failing, and silently dropping those rows would hide it behind a PASS.
     public long MissingExperiment;
     public string FirstMissingExperiment;
+    /// Run-scope compare only: the two files' feature-sums sections (v9, first pass) differ in
+    /// length or content. The model diagnostics report is built from them.
+    public bool FeatureSumsDiffer;
 }
 
 public class Pass2ProteinQLiveness
@@ -181,7 +187,7 @@ public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
     private const int RecordLen = 36;
-    private const byte ExpectedVersion = 8;
+    private const byte ExpectedVersion = 9;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
@@ -405,7 +411,17 @@ public static class OspreyFdrSidecarComparer
         // can print a negative remainder.
         result.OnlyExpected = seenExpected.Count - matchedIds.Count;
         result.OnlyActual = offsetById.Count - matchedIds.Count;
+        result.FeatureSumsDiffer = !FeatureSums(a, na).SequenceEqual(FeatureSums(b, nb));
         return result;
+    }
+
+    /// The feature-sums section between the records and the stamp; empty when there is none.
+    private static byte[] FeatureSums(byte[] data, long count)
+    {
+        int length = (int)BitConverter.ToUInt32(data, 28);
+        var section = new byte[length];
+        Array.Copy(data, HeaderLen + count * RecordLen, section, 0, length);
+        return section;
     }
 
     /// Byte-equality for two artifacts that must be identical, with the first differing offset
@@ -865,8 +881,10 @@ public static class OspreyFdrSidecarComparer
         long expectedLen;
         try
         {
-            // The writer's validity stamp follows the records; its length is the u32 at [24..28].
-            expectedLen = checked(HeaderLen + (long)n * RecordLen + BitConverter.ToUInt32(data, 24));
+            // The writer's feature sums (v9, first pass) and validity stamp follow the records;
+            // their lengths are the u32s at [28..32] and [24..28].
+            expectedLen = checked(HeaderLen + (long)n * RecordLen + BitConverter.ToUInt32(data, 28) +
+                                  BitConverter.ToUInt32(data, 24));
         }
         catch (OverflowException)
         {
@@ -966,6 +984,9 @@ function Compare-FdrSidecars {
         }
         if ($diff.Compared -eq 0) {
             $issues.Add("$stem$suffix compared 0 records - agreeing on nothing is not agreement")
+        }
+        if ($diff.FeatureSumsDiffer) {
+            $issues.Add("$stem$suffix feature sums differ (the model diagnostics Model tab is built from them)")
         }
         $nCompared += $diff.Compared
 

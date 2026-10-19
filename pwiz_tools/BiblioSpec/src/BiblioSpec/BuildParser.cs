@@ -211,6 +211,19 @@ public abstract class BuildParser : IDisposable
     /// <remarks>cpp parity: BuildParser.cpp:272.</remarks>
     protected internal string GetPsmFilePath() => _filepath;
 
+    /// <summary>
+    /// Adds one of the optional columns of experiment-wide values (<see cref="BlibSchema.PrecursorQValue"/>
+    /// and the others) to the library, so the values this reader sets on its <see cref="PSM"/>s and
+    /// <see cref="Protein"/>s are written. Call it only when the input has values for the column,
+    /// before the spectra are inserted. Does nothing when the library cannot hold experiment-wide
+    /// values (see <see cref="BlibBuilder.AllowsOptionalColumns"/>).
+    /// </summary>
+    protected internal void EnableOptionalColumn(BlibOptionalColumn column)
+    {
+        if (BlibMaker.IsDbOpen && BlibMaker.AllowsOptionalColumns)
+            BlibMaker.AddOptionalColumn(column);
+    }
+
     // --- progress wiring ------------------------------------------------------------
 
     /// <summary>
@@ -1029,6 +1042,11 @@ public abstract class BuildParser : IDisposable
             SpecIdInFile = precursorOnly ? string.Empty : specIdStr,
             Score = psm.Score,
             ScoreType = (int)scoreType,
+            // The experiment-wide values, written where the reader enabled their columns.
+            PrecursorQValue = psm.PrecursorQValue,
+            PrecursorPep = psm.PrecursorPep,
+            PeptideQValue = psm.PeptideQValue,
+            PeptidePep = psm.PeptidePep,
         };
 
         // cpp parity: BuildParser.cpp:608 — startTime / endTime are linked.
@@ -1058,7 +1076,13 @@ public abstract class BuildParser : IDisposable
         record.Modifications = modifications;
 
         // cpp parity: BuildParser.cpp:672 — one row per protein mapping; the writer adds a
-        // protein the first time it sees its accession.
+        // protein the first time it sees its accession, here with the experiment-wide values
+        // the reader gave it, where it enabled their columns.
+        foreach (var protein in psm.Proteins)
+        {
+            if (!string.IsNullOrEmpty(protein.Accession) && (protein.QValue.HasValue || protein.Pep.HasValue))
+                BlibMaker.AddProtein(protein.Accession, protein.QValue, protein.Pep);
+        }
         record.Proteins = psm.Proteins.Select(protein => protein.Accession).ToList();
 
         // cpp parity: BuildParser.cpp:638 - a failed insert is a BlibException, which

@@ -31,7 +31,7 @@ namespace pwiz.Osprey.IO
     /// <summary>
     /// A library precursor in the form a blib stores it: the <c>RefSpectra</c> identity, the
     /// compressed peaks, the <c>Modifications</c> and protein rows. The one place a <see cref="LibraryEntry"/> becomes blib rows, shared by the search
-    /// output and <see cref="LibraryBlibWriter"/>; <see cref="OspreyBlibWriter.AddSpectrum(BlibSpectrum, double, double, double, double, long, int)"/>
+    /// output and <see cref="LibraryBlibWriter"/>; <see cref="OspreyBlibWriter.AddSpectrum(BlibSpectrum, double, double, double, double, long, int, SearchGlobalValues)"/>
     /// writes it. Built from the entry alone, so it can be prepared on any thread while the
     /// SQLite inserts stay on one.
     ///
@@ -87,11 +87,14 @@ namespace pwiz.Osprey.IO
             }
             var modMasses = PeptideFragmentMass.ModMassesByPosition(entry.Modifications);
             var byResidue = SumByResidue(modMasses, entry.Sequence.Length);
-            // A modification the library loader could not resolve is missing from Modifications
-            // but not from the precursor's identity. Building the text from Modifications would
-            // then give two library precursors one (peptideModSeq, charge), so such an entry keeps
-            // its own text, with the UniMod ids the writer knows converted to masses.
-            string modifiedSequence = CountModificationTokens(entry.ModifiedSequence) == (entry.Modifications?.Count ?? 0)
+            // The text is built from the modifications, which the loaders give ModifiedSequence
+            // too. An entry made elsewhere whose text names a modification its Modifications do
+            // not carry keeps its own text (with the UniMod ids the writer knows converted to
+            // masses), so two library precursors never share one (peptideModSeq, charge).
+            // Counted against the modified residues, not the modification records: two records
+            // on one residue (an N-terminal acetyl and an oxidized first methionine) are one
+            // bracket.
+            string modifiedSequence = CountModificationTokens(entry.ModifiedSequence) == byResidue.Count
                 ? FormatModifiedSequence(entry.Sequence, byResidue)
                 : BlibPeptideText.ConvertUnimodToMass(BlibPeptideText.StripFlankingChars(entry.ModifiedSequence));
             return new BlibSpectrum(entry,

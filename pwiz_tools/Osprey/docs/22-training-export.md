@@ -48,7 +48,7 @@ route does not reach - one resumed as already re-scored, one with no re-scoring 
 the same from-disk route at the end of the task. Both routes read the reconciled parquet and
 the q-value sidecar back from disk, so they write the same bytes. The one shortcut is the
 library: when the process already holds it, the export uses it rather than loading the
-`.libcache` again. A load of its own retains fragments only for the base_ids in the retained
+derived `.blib` again. A load of its own retains fragments only for the base_ids in the retained
 summary, as `--task SecondPassFDR` loads it: every row the export reads is a reconciled
 survivor, so none loses its spectrum.
 

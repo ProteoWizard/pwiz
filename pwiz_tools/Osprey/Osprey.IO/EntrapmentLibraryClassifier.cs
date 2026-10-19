@@ -21,8 +21,9 @@
 using System;
 using System.Collections.Generic;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.Osprey.Core;
 
-namespace pwiz.Osprey.Tasks
+namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Classifies a searched library entry as target / entrapment / decoy /
@@ -42,7 +43,7 @@ namespace pwiz.Osprey.Tasks
     /// the library for protein parsimony, so entrapment-to-target PAIRING is not
     /// recoverable here and still comes from the manifest; the CLASS is.)
     /// </summary>
-    internal static class EntrapmentLibraryClassifier
+    public static class EntrapmentLibraryClassifier
     {
         /// <summary>FDRBench default entrapment label embedded in entrapment protein accessions.</summary>
         private const string EntrapmentMarker = @"_p_target";
@@ -76,6 +77,16 @@ namespace pwiz.Osprey.Tasks
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// True if <paramref name="entry"/> is a decoy by its flag or by its accessions: the one
+        /// test of the decoy side for the pairing and its consumers, since a generated decoy is
+        /// flagged but carries Osprey's <c>DECOY_</c> prefix, not the manifest's.
+        /// </summary>
+        public static bool IsDecoySide(LibraryEntry entry)
+        {
+            return entry.IsDecoy || IsDecoySide(entry.ProteinIds);
         }
 
         /// <summary>The four-way peptide kind for a library entry, from its accessions.</summary>

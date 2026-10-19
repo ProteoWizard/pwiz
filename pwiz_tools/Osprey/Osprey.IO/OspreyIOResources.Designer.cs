@@ -70,26 +70,6 @@ namespace pwiz.Osprey.IO {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}.
-        /// </summary>
-        public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_ {
-            get {
-                return ResourceManager.GetString("BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__" +
-                        "bytes__got__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid peak m/z blob size: {0} bytes (not a multiple of 8).
-        /// </summary>
-        public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_ {
-            get {
-                return ResourceManager.GetString("BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_" +
-                        "of_8_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid BiblioSpec library: the {0} table was not found..
         /// </summary>
         public static string BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_ {
@@ -107,7 +87,16 @@ namespace pwiz.Osprey.IO {
                         "_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reading {0:N0} library spectra.
+        /// </summary>
+        public static string BlibLoader_LoadSpectra_Reading__0_N0__library_spectra {
+            get {
+                return ResourceManager.GetString("BlibLoader_LoadSpectra_Reading__0_N0__library_spectra", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to ... and {0:N0} more modifications.
         /// </summary>
@@ -363,11 +352,21 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to save library cache: {0}.
+        ///   Looks up a localized string similar to Failed to read the derived library &apos;{0}&apos;: {1} Reading the library file instead..
         /// </summary>
-        public static string LibraryLoader_Load_Failed_to_save_library_cache___0_ {
+        public static string LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_library_file_instead_ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_save_library_cache___0_", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_read_the_derived_library___0____1__Reading_the_libra" +
+                        "ry_file_instead_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to save the derived library: {0}.
+        /// </summary>
+        public static string LibraryLoader_Load_Failed_to_save_the_derived_library___0_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_Failed_to_save_the_derived_library___0_", resourceCulture);
             }
         }
         
@@ -398,6 +397,15 @@ namespace pwiz.Osprey.IO {
                 return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Loaded {0:N0} library precursors from the derived library &apos;{1}&apos;.
+        /// </summary>
+        public static string LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_Loaded__0__library_precursors_from_the_derived_library___1__", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Loading spectral library from {0}....
@@ -409,14 +417,35 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved library cache ({0:N0} precursors) to &apos;{1}&apos;.
+        ///   Looks up a localized string similar to Saved the derived library ({0:N0} precursors) to &apos;{1}&apos;.
         /// </summary>
-        public static string LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__ {
+        public static string LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__ {
             get {
-                return ResourceManager.GetString("LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__", resourceCulture);
+                return ResourceManager.GetString("LibraryLoader_Load_Saved_the_derived_library___0__precursors__to___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The derived library &apos;{0}&apos; was built from a different version or configuration; rebuilding it from the source library..
+        /// </summary>
+        public static string LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_or_configuration__rebuilding_it_from_the_source_library_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_derived_library___0___was_built_from_a_different_version_" +
+                        "or_configuration__rebuilding_it_from_the_source_library_", resourceCulture);
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The library {0} has entrapment peptides (protein accessions marked _p_target) but nothing pairs them with their targets. Give the pairing manifest with {1}, or search a BiblioSpec library that carries a DecoyPairs table..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_carries_a_DecoyPairs_table_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library__0__has_entrapment_peptides_but_nothing_pairs_them" +
+                        "_with_their_targets__Give_the_pairing_manifest_with__1__or_search_a__blib_that_ca" +
+                        "rries_a_DecoyPairs_table_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The library {0} supplies decoys but has no DecoyPairs table pairing each decoy with its target. A BiblioSpec library searched with its own decoys must carry the table, as CarafeSharp writes it; otherwise leave out {1} so Osprey generates its own decoys..
         /// </summary>
@@ -424,6 +453,16 @@ namespace pwiz.Osprey.IO {
             get {
                 return ResourceManager.GetString("LibraryLoader_Load_The_library__0__supplies_decoys_but_has_no_DecoyPairs_table_pa" +
                         "iring_each_decoy_with_its_target_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The library&apos;s DecoyPairs table carries its pairing design; the pairing manifest {0} is not read..
+        /// </summary>
+        public static string LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the_pairing_manifest__0__is_not_read_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_Load_The_library_s_DecoyPairs_table_carries_its_pairing_design__the" +
+                        "_pairing_manifest__0__is_not_read_", resourceCulture);
             }
         }
 
@@ -566,16 +605,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The library pairs its own decoys from DecoyPairs; the pairing manifest {0} serves entrapment pairing only..
-        /// </summary>
-        public static string LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_DecoyPairs__the_pairing_manifest__0__serves_entrapment_pairing_only_ {
-            get {
-                return ResourceManager.GetString("LibraryLoader_TryFinishSuppliedDecoys_The_library_pairs_its_own_decoys_from_Decoy" +
-                        "Pairs__the_pairing_manifest__0__serves_entrapment_pairing_only_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to The pairing manifest marked {0:N0} more library precursors as decoys (their protein accessions have no decoy prefix).
         /// </summary>
         public static string LibraryLoader_TryFinishSuppliedDecoys_The_pairing_manifest_marked__0__more_library_precursors_as_decoys__their_protein_ {
@@ -592,6 +621,42 @@ namespace pwiz.Osprey.IO {
             get {
                 return ResourceManager.GetString("LibraryValidation_ValidatePeptideLength_Library_peptide___0___has__1__residues__t" +
                         "he_minimum_supported_length_is__2___Peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded 1 entrapment peptide with no target pair and no known cause ({1}). Check the library and its pairing manifest..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Excluded {0} entrapment peptides with no target pair and no known cause (e.g. {1}). Check the library and its pairing manifest..
+        /// </summary>
+        public static string PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_ {
+            get {
+                return ResourceManager.GetString("PairingIds_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_", resourceCulture);
             }
         }
         
@@ -832,27 +897,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not carry the first-pass precursor set. Delete this analysis&apos;s {3} files and run the first pass again..
-        /// </summary>
-        public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_ {
-            get {
-                return ResourceManager.GetString("ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_n" +
-                        "ot_carry_the_first_pass_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not list the input files it covers ({3}). Delete this analysis&apos;s {4} files and run the first pass again..
-        /// </summary>
-        public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_ {
-            get {
-                return ResourceManager.GetString("ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_n" +
-                        "ot_list_the_input_files_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis&apos;s {4} files and run the first pass again..
+        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis&apos;s {4} files and run the analysis again..
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_ {
             get {

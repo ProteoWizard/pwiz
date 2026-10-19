@@ -153,7 +153,8 @@ namespace pwiz.CarafeSharp.Test
                     var result = Build(build.Arguments, targets, foreign, outputFolder);
                     Assert.IsTrue(result.KeptQuartets > 0, build.Name);
                     string fastaSha = Sha256File(Path.Combine(outputFolder, @"peptides.fasta"));
-                    string manifestSha = Sha256File(Path.Combine(outputFolder, @"pairing.tsv"));
+                    // Carafe wrote FDRBench's five columns; the entrapment_method column is cut first.
+                    string manifestSha = Sha256File(TestData.FdrBenchColumnsOf(Path.Combine(outputFolder, @"pairing.tsv")));
                     TestContext.WriteLine(@"{0}: {1} quartets, FASTA {2}, manifest {3}", build.Name, result.KeptQuartets,
                         fastaSha == build.FastaSha256 ? @"match" : @"DIFFERS", manifestSha == build.ManifestSha256 ? @"match" : @"DIFFERS");
                     if (fastaSha != build.FastaSha256 || manifestSha != build.ManifestSha256)
@@ -323,8 +324,8 @@ namespace pwiz.CarafeSharp.Test
                 @">db2|ACC5_pep00001|ACC5", @"MSTNPKPQRKTKRNTNRRPQDVKFPGGGQIVGGVYLLPRRGPRLGVRATRKTSERSQPR",
             }, ReadLfLines(Path.Combine(folder, @"peptides.fasta")));
             var manifest = ReadLfLines(Path.Combine(folder, @"pairing.tsv"));
-            Assert.AreEqual(PairingManifest.HEADER, manifest[0]);
-            Assert.AreEqual("K\tNo\tsp|P10010|SINGLE_HUMAN\ttarget\t1", manifest[2]);
+            Assert.AreEqual(PairingManifest.HEADER_WITH_ENTRAPMENT_METHOD, manifest[0]);
+            Assert.AreEqual("K\tNo\tsp|P10010|SINGLE_HUMAN\ttarget\t1\t", manifest[2]);
             Assert.AreEqual(10, manifest.Length);
         }
 
@@ -333,9 +334,9 @@ namespace pwiz.CarafeSharp.Test
         {
             var manifest = ReadLfLines(manifestPath);
             CollectionAssert.Contains(manifest,
-                "DAHKSEVAHR\tNo\tsp|P10001|ALPHA_HUMAN;tr|P10001|ALPHA_HUMAN;sp|plainident|plainident\ttarget\t6");
+                "DAHKSEVAHR\tNo\tsp|P10001|ALPHA_HUMAN;tr|P10001|ALPHA_HUMAN;sp|plainident|plainident\ttarget\t6\t");
             CollectionAssert.Contains(manifest,
-                "HAVESKHADR\tYes\tdecoy_sp|P10001|ALPHA_HUMAN;decoy_tr|P10001|ALPHA_HUMAN;decoy_sp|plainident|plainident\tdecoy\t6");
+                "HAVESKHADR\tYes\tdecoy_sp|P10001|ALPHA_HUMAN;decoy_tr|P10001|ALPHA_HUMAN;decoy_sp|plainident|plainident\tdecoy\t6\t");
         }
 
         /// <summary>
@@ -350,7 +351,16 @@ namespace pwiz.CarafeSharp.Test
             WriteLibrary(tsv, librarySequences);
             string reconciled = Path.Combine(folder, @"reconciled.tsv");
             var result = PairingManifestReconciler.Run(manifest, tsv, reconciled);
-            Assert.AreEqual(RECONCILED_SHA256, Sha256File(reconciled));
+            Assert.AreEqual(RECONCILED_SHA256, Sha256File(TestData.FdrBenchColumnsOf(reconciled)));
+            // The entrapment_method column survives reconciliation: on the p_target rows alone.
+            var reconciledLines = ReadLfLines(reconciled);
+            Assert.AreEqual(PairingManifest.HEADER_WITH_ENTRAPMENT_METHOD, reconciledLines[0]);
+            foreach (string line in reconciledLines.Skip(1))
+            {
+                string[] fields = line.Split('\t');
+                Assert.AreEqual(6, fields.Length, line);
+                Assert.AreEqual(fields[3] == PairingManifest.KIND_P_TARGET ? PairingManifest.ENTRAPMENT_METHOD_SHUFFLE : string.Empty, fields[5], line);
+            }
             Assert.AreEqual(99, result.GroupsIn);
             Assert.AreEqual(11, result.GroupsKept);
             Assert.AreEqual(88, result.GroupsDropped);
@@ -365,7 +375,7 @@ namespace pwiz.CarafeSharp.Test
             WriteBlib(blib, librarySequences);
             string fromBlib = Path.Combine(folder, @"reconciled-blib.tsv");
             PairingManifestReconciler.Run(manifest, blib, fromBlib);
-            Assert.AreEqual(RECONCILED_SHA256, Sha256File(fromBlib));
+            Assert.AreEqual(RECONCILED_SHA256, Sha256File(TestData.FdrBenchColumnsOf(fromBlib)));
             TestContext.WriteLine(@"reconciled: {0}/{1} groups, {2}/{3} rows", result.GroupsKept, result.GroupsIn, result.RowsKept, result.RowsIn);
         }
 

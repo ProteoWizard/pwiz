@@ -31,12 +31,15 @@ namespace pwiz.BiblioSpec.IO
     /// small-molecule writer fill the same record. The defaults are what BiblioSpec writes
     /// for a column a writer has nothing for: <c>-</c> flanking residues, one copy, empty
     /// small-molecule text (Skyline reads those columns with GetString, so never NULL), and
-    /// NULL for the optional numbers.
+    /// NULL for the optional numbers. <see cref="BlibReader"/> reads the same record back, with
+    /// <see cref="Id"/> set; a column a library of an older schema lacks keeps its default.
     /// </summary>
     public sealed class BlibSpectrumRecord
     {
         public const string NO_FLANKING_RESIDUE = @"-";
 
+        /// <summary>The <c>RefSpectra</c> id a reader found the row under; the writer assigns its own and ignores this.</summary>
+        public long Id { get; set; }
         public string PeptideSeq { get; set; }
         public double PrecursorMz { get; set; }
         public int PrecursorCharge { get; set; }
@@ -67,6 +70,17 @@ namespace pwiz.BiblioSpec.IO
         public double Score { get; set; }
         /// <summary>A <c>ScoreTypes</c> id, <see cref="BlibWriter.SCORE_TYPE_UNKNOWN"/> by default.</summary>
         public int ScoreType { get; set; } = BlibWriter.SCORE_TYPE_UNKNOWN;
+
+        /// <summary>
+        /// The experiment-wide (global) precursor q-value, written to the optional
+        /// <see cref="BlibSchema.PrecursorQValue"/> column when the writer added it
+        /// (<see cref="BlibWriter.AddOptionalColumn"/>) and read from it when the library has it;
+        /// null where unknown. The three below are its PEP and the peptide's q-value and PEP.
+        /// </summary>
+        public double? PrecursorQValue { get; set; }
+        public double? PrecursorPep { get; set; }
+        public double? PeptideQValue { get; set; }
+        public double? PeptidePep { get; set; }
 
         /// <summary>
         /// The peak m/z values as <see cref="BlibWriter.CompressMzs"/> encodes them; null for a

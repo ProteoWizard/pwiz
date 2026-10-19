@@ -472,19 +472,24 @@ namespace pwiz.CarafeSharp.Proteome
             EntrapmentPairingValidator.Enforce(EntrapmentPairingValidator.ValidateQuartets(kept),
                 _settings.FailOnPairingViolation, _log);
             Log(@"Writing manifest: " + _settings.Manifest);
+            // How the entrapment targets were made travels with the manifest to the library
+            // build, which writes it on their DecoyPairs rows; only this stage knows it.
+            string entrapmentMethod = _settings.EntrapmentSourceFasta == null
+                ? PairingManifest.ENTRAPMENT_METHOD_SHUFFLE
+                : PairingManifest.ENTRAPMENT_METHOD_FOREIGN;
             using (var writer = CreateWriter(path))
             {
-                PairingManifest.WriteHeader(writer);
+                PairingManifest.WriteHeader(writer, true);
                 int pairIndex = 0;
                 foreach (var quartet in kept)
                 {
-                    PairingManifest.WriteRow(writer, quartet.Target, false, JoinedLabel(quartet, null, false, false), PeptideKind.Target, pairIndex);
+                    PairingManifest.WriteRow(writer, quartet.Target, false, JoinedLabel(quartet, null, false, false), PeptideKind.Target, pairIndex, string.Empty);
                     if (quartet.PTarget != null)
-                        PairingManifest.WriteRow(writer, quartet.PTarget, false, JoinedLabel(quartet, null, true, false), PeptideKind.PTarget, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.PTarget, false, JoinedLabel(quartet, null, true, false), PeptideKind.PTarget, pairIndex, entrapmentMethod);
                     if (quartet.Decoy != null)
-                        PairingManifest.WriteRow(writer, quartet.Decoy, true, JoinedLabel(quartet, null, false, true), PeptideKind.Decoy, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.Decoy, true, JoinedLabel(quartet, null, false, true), PeptideKind.Decoy, pairIndex, string.Empty);
                     if (quartet.PDecoy != null)
-                        PairingManifest.WriteRow(writer, quartet.PDecoy, true, JoinedLabel(quartet, null, true, true), PeptideKind.PDecoy, pairIndex);
+                        PairingManifest.WriteRow(writer, quartet.PDecoy, true, JoinedLabel(quartet, null, true, true), PeptideKind.PDecoy, pairIndex, string.Empty);
                     pairIndex++;
                 }
             }

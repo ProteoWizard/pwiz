@@ -455,14 +455,5 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_work_dir", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Write PIN files for external tools.
-        /// </summary>
-        public static string _write_pin {
-            get {
-                return ResourceManager.GetString("_write_pin", resourceCulture);
-            }
-        }
     }
 }
