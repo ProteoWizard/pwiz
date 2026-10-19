@@ -763,6 +763,42 @@ public class BlibReaderTests
         }
     }
 
+    /// <summary>
+    /// A library named by a long-path (<c>\\?\</c>) name, as Skyline names the libraries it builds
+    /// in deep test directories, is written, appended to and read under that name. System.Data.SQLite
+    /// parses a connection string with backslash escapes, which folded the prefix to <c>\?\</c> and
+    /// left BlibBuild and BlibFilter unable to open the file.
+    /// </summary>
+    [TestMethod]
+    public void Reader_AndWriter_AcceptLongPathPrefix()
+    {
+        string path = TempPath();
+        string longPath = @"\\?\" + path;
+        try
+        {
+            using (var writer = new BlibWriter(longPath, "long.blib"))
+            {
+                writer.AddSpectrum(new BlibSpectrumRecord { PeptideSeq = "PEPTIDEK", PeptideModSeq = "PEPTIDEK", PrecursorMz = 500.25, PrecursorCharge = 2 });
+                writer.Complete();
+            }
+            Assert.IsTrue(File.Exists(path), "The library should be at the path without the prefix.");
+            using (var reader = new BlibReader(longPath))
+                Assert.AreEqual(1, reader.CountSpectra());
+            using (var writer = BlibWriter.Open(longPath, true))
+            {
+                writer.DropIndexes();
+                writer.AddSpectrum(new BlibSpectrumRecord { PeptideSeq = "SAMPLER", PeptideModSeq = "SAMPLER", PrecursorMz = 400.2, PrecursorCharge = 2 });
+                writer.Complete();
+            }
+            using (var reader = new BlibReader(longPath))
+                Assert.AreEqual(2, reader.CountSpectra());
+        }
+        finally
+        {
+            DeleteTemp(path);
+        }
+    }
+
     private static string TempPath()
     {
         return Path.Combine(Path.GetTempPath(), $"pwiz-sharp-blibreader-{Guid.NewGuid():N}.blib");

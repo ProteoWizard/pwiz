@@ -211,9 +211,7 @@ namespace pwiz.BiblioSpec.IO
             _file = append ? null : new SimpleFileSaver(path);
             try
             {
-                // A ';' in the path must not end the connection string early: the builder quotes it.
-                var connectionString = new SQLiteConnectionStringBuilder { DataSource = TempPath, Version = 3 };
-                _connection = new SQLiteConnection(connectionString.ToString());
+                _connection = new SQLiteConnection(BlibSqlite.ConnectionString(TempPath, false));
                 _connection.Open();
                 // No sync per transaction, as BiblioSpec has always written. A new library is a
                 // temp until Complete moves it into place, so a crash loses nothing durable and

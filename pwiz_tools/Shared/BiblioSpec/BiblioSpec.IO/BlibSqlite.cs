@@ -34,9 +34,7 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>Opens the library at <paramref name="path"/> read-only; the caller disposes it.</summary>
         public static SQLiteConnection OpenReadOnly(string path)
         {
-            // A ';' in the path must not end the connection string early: the builder quotes it.
-            var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3, ReadOnly = true };
-            var connection = new SQLiteConnection(connectionString.ToString());
+            var connection = new SQLiteConnection(ConnectionString(path, true));
             try
             {
                 connection.Open();
@@ -47,6 +45,26 @@ namespace pwiz.BiblioSpec.IO
                 throw;
             }
             return connection;
+        }
+
+        /// <summary>
+        /// The connection string for the library at <paramref name="path"/>, which System.Data.SQLite
+        /// parses with backslash escapes: unescaped, a long path's <c>\\?\</c> folds to <c>\?\</c>,
+        /// which the driver's full-path expansion then roots on the current drive
+        /// (<c>C:\?\C:\...</c>) and SQLite cannot open. The backslashes are doubled and the path
+        /// kept as given, as Skyline opens its databases; a ';' in the path is quoted by the builder.
+        /// </summary>
+        public static string ConnectionString(string path, bool readOnly)
+        {
+            var builder = new SQLiteConnectionStringBuilder
+            {
+                DataSource = path.Replace(@"\", @"\\"),
+                ToFullPath = false,
+                Version = 3,
+            };
+            if (readOnly)
+                builder.ReadOnly = true;
+            return builder.ToString();
         }
 
         public static bool TableExists(SQLiteConnection connection, string table)
