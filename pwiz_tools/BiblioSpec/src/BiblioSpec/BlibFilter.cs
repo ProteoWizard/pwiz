@@ -27,10 +27,11 @@ namespace Pwiz.Tools.BiblioSpec;
 /// <remarks>
 /// <para>
 /// Extends <see cref="BlibMaker"/> directly — BlibFilter does NOT go through the
-/// reader-based ingestion pipeline of <see cref="BlibBuilder"/>. The redundant library is
-/// ATTACH'd as an auxiliary schema; <see cref="BlibMaker.CreateUpdatedRefSpectraView"/> normalises
-/// any older schema columns; then we iterate sorted by peptideModSeq+charge and choose one
-/// representative per group.
+/// reader-based ingestion pipeline of <see cref="BlibBuilder"/>. The redundant library is read
+/// through a <see cref="BlibReader"/> of its own (a library of any older schema reads through the
+/// same calls), its spectra grouped by precursor; one representative per group is chosen and
+/// copied, with everything that hangs off it, through a <see cref="BlibCopier"/> into the new
+/// library, under its redundant id.
 /// </para>
 /// <para>
 /// CLI parity: cpp BlibFilter uses boost::program_options. The C# port hooks into
@@ -54,13 +55,13 @@ public class BlibFilter : BlibMaker
     // cpp BlibFilter.cpp:727-729 — peak processor defaults used inside compAndInsert.
     private const int PeakProcessorNumTopPeaks = 100;
 
-    private readonly string _redundantDbName = DefaultRedundantDbName;
+    private BlibReader? _redundant;
+    private BlibCopier? _copier;
     private string _redundantFileName = string.Empty;
     private int _minPeaks = DefaultMinPeaks;
     private double _minAverageScore = DefaultMinAverageScore;
     private bool _useBestScoring;
 
-    private int _tableVersion;
     private readonly Dictionary<int, bool> _higherIsBetter = new();
 
     /// <summary>
@@ -123,34 +124,39 @@ public class BlibFilter : BlibMaker
 
     // --- BlibMaker overrides --------------------------------------------------------------
 
+    /// <summary>The redundant library, open from <see cref="Init"/> to <see cref="BlibMaker.Commit"/>.</summary>
+    private BlibReader RedundantLibrary => _redundant ?? throw new InvalidOperationException("The redundant library is not open. Call Init first.");
+
     /// <summary>
-    /// cpp <c>BlibFilter::attachAll</c> at BlibFilter.cpp:214-223. ATTACH'es the redundant
-    /// library as <c>redundant</c> and creates the <c>RefSpectraTransfer</c> temp view.
+    /// cpp <c>BlibFilter::attachAll</c> at BlibFilter.cpp:214-223: opens the redundant library
+    /// to read from. cpp attached it to the connection the new library was written on; here a
+    /// reader of its own reads it, a library of any older schema through the same calls.
     /// </summary>
-    protected override void AttachAll()
+    protected override void OpenSources()
     {
         if (string.IsNullOrEmpty(_redundantFileName))
             throw new BlibException(false, "Redundant library name has not been set; call ParseCommandArgs or RedundantFileName first.");
 
         Verbosity.Status($"Filtering redundant library '{_redundantFileName}'.");
-        var sql = string.Format(
-            CultureInfo.InvariantCulture,
-            "ATTACH DATABASE '{0}' as {1}",
-            SqliteRoutine.EscapeApostrophes(_redundantFileName),
-            _redundantDbName);
-        SqlStmt(sql);
-
-        CreateUpdatedRefSpectraView(_redundantDbName);
+        _redundant = new BlibReader(_redundantFileName);
     }
 
     /// <summary>
-    /// cpp <c>BlibFilter::commit</c> at BlibFilter.cpp:225-232, the DETACH of the redundant
-    /// schema: after LibInfo has taken its revision from it, before the writer closes the
-    /// connection.
+    /// cpp <c>BlibFilter::commit</c> at BlibFilter.cpp:225-232: the redundant library is closed
+    /// after LibInfo has taken its revision from it, before the writer completes the new one.
     /// </summary>
-    protected override void DetachAll()
+    protected override void CloseSources()
     {
-        SqlStmt("DETACH DATABASE " + _redundantDbName);
+        _redundant?.Dispose();
+        _redundant = null;
+    }
+
+    /// <summary>Closes the redundant library if the build stopped short of <see cref="BlibMaker.Commit"/>.</summary>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+            CloseSources();
+        base.Dispose(disposing);
     }
 
     /// <summary>
@@ -159,14 +165,10 @@ public class BlibFilter : BlibMaker
     /// </summary>
     protected override string GetLsid()
     {
-        var sql = $"SELECT libLSID FROM {_redundantDbName}.LibInfo";
-        using var cmd = Db.CreateCommand();
-        cmd.CommandText = sql;
-        var result = cmd.ExecuteScalar();
-        if (result is null || result is DBNull)
+        var libLsid = RedundantLibrary.Info.Lsid;
+        if (string.IsNullOrEmpty(libLsid))
             throw new BlibException(false, $"Failed to read libLSID from redundant library '{_redundantFileName}'.");
 
-        var libLsid = Convert.ToString(result, CultureInfo.InvariantCulture) ?? string.Empty;
         const string redundantMarker = ":redundant:";
         var idx = libLsid.IndexOf(redundantMarker, StringComparison.Ordinal);
         if (idx < 0)
@@ -189,18 +191,12 @@ public class BlibFilter : BlibMaker
     /// </summary>
     protected override void GetNextRevision(out int dataRev)
     {
-        var sql = $"SELECT majorVersion, minorVersion FROM {_redundantDbName}.LibInfo";
-        using var cmd = Db.CreateCommand();
-        cmd.CommandText = sql;
-        using var reader = cmd.ExecuteReader();
-        if (!reader.Read())
-            throw new BlibException(false, $"Failed to read version info from redundant library '{_redundantFileName}'.");
-        dataRev = reader.GetInt32(0);
+        dataRev = RedundantLibrary.Info.Revision;
     }
 
     /// <summary>
     /// cpp <c>BlibFilter::init</c> at BlibFilter.cpp:286-312. Calls base init (which opens
-    /// the writer and creates the standard tables after <see cref="AttachAll"/>), then adds
+    /// the writer and creates the standard tables after <see cref="OpenSources"/>), then adds
     /// the RetentionTimes table <see cref="CompAndInsert"/> fills.
     /// </summary>
     public override void Init()
@@ -233,101 +229,16 @@ public class BlibFilter : BlibMaker
 
         Message = "ERROR: Failed building library " + (LibName ?? string.Empty);
 
-        // cpp parity: BlibFilter.cpp:377-379 — copy SpectrumSourceFiles and Proteins first.
-        TransferSpectrumFiles(_redundantDbName);
-        TransferProteins(_redundantDbName);
-
-        // cpp parity: BlibFilter.cpp:382-426 — probe the redundant schema for which optional
-        // columns exist. This drives both `optional_cols` (used to build the SELECT) and the
-        // `tableVersion_` flag (used to switch on behaviour in TransferSpectra).
-        _tableVersion = 0;
-        var optionalCols = string.Empty;
-        var orderBy = string.Empty;
-
-        if (TableColumnExists(_redundantDbName, "RefSpectra", "retentionTime"))
-        {
-            ++_tableVersion;
-            optionalCols = ", SpecIDinFile, retentionTime";
-            if (TableColumnExists(_redundantDbName, "RefSpectra", "collisionalCrossSectionSqA"))
-            {
-                if (TableColumnExists(_redundantDbName, "RefSpectra", "ionMobilityHighEnergyOffset"))
-                {
-                    _tableVersion = BlibSchema.MinVersionImsUnits;
-                    optionalCols += ", ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset";
-                    if (TableColumnExists(_redundantDbName, "RefSpectra", "startTime"))
-                    {
-                        _tableVersion = BlibSchema.MinVersionRtBounds;
-                        optionalCols += ", startTime, endTime";
-                        if (TableExists(_redundantDbName, "Proteins"))
-                        {
-                            _tableVersion = BlibSchema.MinVersionProteins;
-                            if (TableColumnExists(_redundantDbName, "RefSpectra", "totalIonCurrent"))
-                            {
-                                _tableVersion = BlibSchema.MinVersionTic;
-                                optionalCols += ", totalIonCurrent";
-                            }
-                        }
-                    }
-                    else if (TableExists(_redundantDbName, "RefSpectraPeakAnnotations"))
-                    {
-                        _tableVersion = BlibSchema.MinVersionPeakAnnot;
-                    }
-                }
-                else
-                {
-                    _tableVersion = BlibSchema.MinVersionCcs;
-                    optionalCols += ", driftTimeMsec, collisionalCrossSectionSqA, driftTimeHighEnergyOffsetMsec";
-                }
-                if (TableColumnExists(_redundantDbName, "RefSpectra", "inchiKey"))
-                {
-                    // May contain small molecules.
-                    orderBy = "peptideModSeq, moleculeName, chemicalFormula, inchiKey, otherKeys, precursorCharge, precursorAdduct" + optionalCols;
-                    optionalCols += SmallMolMetadata.SqlColumnNamesCsv();
-                    if (_tableVersion >= BlibSchema.MinVersionImsUnits)
-                        optionalCols += ", ionMobilityType";
-                    else
-                        _tableVersion = BlibSchema.MinVersionSmallMol;
-                }
-            }
-            else if (TableColumnExists(_redundantDbName, "RefSpectra", "ionMobilityValue"))
-            {
-                ++_tableVersion;
-                optionalCols += ", ionMobilityValue, ionMobilityType";
-                if (TableColumnExists(_redundantDbName, "RefSpectra", "ionMobilityHighEnergyDriftTimeOffsetMsec"))
-                {
-                    ++_tableVersion;
-                    optionalCols += ", ionMobilityHighEnergyDriftTimeOffsetMsec";
-                }
-            }
-        }
+        // cpp parity: BlibFilter.cpp:377-379 — the source files first, so the observations can
+        // name theirs; the proteins come across with the spectra that map to them.
+        var redundant = RedundantLibrary;
+        _copier = new BlibCopier(redundant, Writer);
+        _copier.CopySourceFiles();
 
         Verbosity.Debug("Counting Spectra.");
-        var progress = new ProgressIndicator(GetSpectrumCount(_redundantDbName));
+        var progress = new ProgressIndicator(redundant.Info.SpectrumCount > 0 ? redundant.Info.SpectrumCount : redundant.CountSpectra());
 
         Verbosity.Debug("Sorting spectra by sequence and charge.");
-        if (string.IsNullOrEmpty(orderBy))
-        {
-            // cpp parity: BlibFilter.cpp:441 — default order_by.
-            orderBy = "peptideModSeq, precursorCharge " + optionalCols;
-        }
-
-        // cpp parity: BlibFilter.cpp:444-453 — SELECT from the RefSpectraTransfer view with
-        // numPeaks filter. Precursor-only entries (empty SpecIDinFile) bypass the filter.
-        var selectSql = string.Format(
-            CultureInfo.InvariantCulture,
-            "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq," +
-            "prevAA, nextAA, numPeaks, score, scoreType, " +
-            "ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, " +
-            "moleculeName, chemicalFormula, inchiKey, otherKeys, precursorAdduct, " +
-            "startTime, endTime, totalIonCurrent, retentionTime, specIDinFile " +
-            "FROM RefSpectraTransfer " +
-            "WHERE numPeaks >= {0} OR SpecIDinFile=\"\"" +
-            "ORDER BY {1}",
-            _minPeaks, orderBy);
-
-        // cpp parity: BlibFilter.cpp:490-503 — open a second connection just for peak blobs.
-        // We don't need a second connection in C# (the main connection can handle parallel
-        // commands), but we keep the comment for parity reference.
         var bestSpectraIdAndCount = new List<(int Id, int Copies)>();
 
         var oneIon = new List<RefSpectrum>();
@@ -335,181 +246,80 @@ public class BlibFilter : BlibMaker
         var lastCharge = 0;
         var lastMoleculeAndAdduct = new SmallMolMetadata();
 
-        using (var cmd = Db.CreateCommand())
+        // cpp parity: BlibFilter.cpp:444-453 — the spectra of one precursor come together, with
+        // the numPeaks filter; precursor-only entries (empty SpecIDinFile) bypass the filter.
+        // The peaks come with the rows unless useBestScoring, which does not need them.
+        foreach (var record in redundant.ReadSpectraByPrecursor(!_useBestScoring, _minPeaks))
         {
-            cmd.CommandText = selectSql;
-            using var reader = cmd.ExecuteReader();
-            Verbosity.Debug("Successfully sorted.");
+            progress.Increment();
 
-            // cpp parity: BlibFilter.cpp:464-487 — column-name → ordinal dictionary for
-            // backward compatibility with older schemas.
-            var columns = new Dictionary<string, int>(StringComparer.Ordinal);
-            for (var i = 0; i < reader.FieldCount; i++)
-                columns[reader.GetName(i)] = i;
+            var tmpRef = ToRefSpectrum(record);
+            var pepModSeq = record.PeptideModSeq ?? string.Empty;
+            var charge = record.PrecursorCharge;
 
-            var molNameIndex = columns.GetValueOrDefault("moleculeName", -1);
-            var formulaIndex = columns.GetValueOrDefault("chemicalFormula", -1);
-            var adductIndex = columns.GetValueOrDefault("precursorAdduct", -1);
-            var inchiKeyIndex = columns.GetValueOrDefault("inchiKey", -1);
-            var otherKeysIndex = columns.GetValueOrDefault("otherKeys", -1);
-            var ccsIndex = columns.GetValueOrDefault("collisionalCrossSectionSqA", -1);
-            var ionMobilityTypeIndex = columns.GetValueOrDefault("ionMobilityType", -1);
-            var ionMobilityValueIndex = columns.GetValueOrDefault("ionMobilityValue", -1); // V3 and earlier
-            var ionMobilityIndex = columns.GetValueOrDefault("ionMobility", -1);
-            var highEnergyOffsetIndex = columns.GetValueOrDefault("ionMobilityHighEnergyOffset", -1);
-            var scoreIndex = columns.GetValueOrDefault("score", -1);
-            var scoreTypeIndex = columns.GetValueOrDefault("scoreType", -1);
-            var scanNumberIndex = columns.GetValueOrDefault("SpecIDinFile", -1);
-            var retentionTimeIndex = columns.GetValueOrDefault("retentionTime", -1);
-            var startTimeIndex = columns.GetValueOrDefault("startTime", -1);
-            var endTimeIndex = columns.GetValueOrDefault("endTime", -1);
-            var ticIndex = columns.GetValueOrDefault("totalIonCurrent", -1);
-            var numPeaksIndex = columns.GetValueOrDefault("numPeaks", -1);
+            // cpp parity: BlibFilter.cpp:567-569 — small molecule IonID is appended to the
+            // group key. One of pepModSeq / smallMoleculeIonID is always empty.
+            pepModSeq += tmpRef.GetSmallMoleculeIonId();
 
-            // for each spectrum entry in table
-            while (reader.Read())
+            // cpp parity: BlibFilter.cpp:573-599 — decode the peaks unless useBestScoring.
+            if (!_useBestScoring)
             {
-                progress.Increment();
-
-                var tmpRef = new RefSpectrum();
-
-                var pepModSeq = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
-                var charge = reader.GetInt32(3);
-
-                tmpRef.LibSpecId = reader.GetInt32(0);
-                tmpRef.Sequence = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                tmpRef.Mz = reader.GetDouble(2);
-                tmpRef.Charge = charge;
-
-                // cpp parity: BlibFilter.cpp:526-547 — ion mobility / CCS hydration depends
-                // on which columns the source library has.
-                if (ionMobilityValueIndex >= 0)
+                var peaks = PeaksOf(record);
+                if (peaks.Count == 0 && record.NumPeaks != 0)
                 {
-                    // Records drift time or ccs but not both.
-                    var ionMobilityValue = ionMobilityValueIndex >= 0 && !reader.IsDBNull(ionMobilityValueIndex) ? reader.GetDouble(ionMobilityValueIndex) : 0;
-                    var imType = ionMobilityTypeIndex >= 0 ? SafeGetIntCoerce(reader, ionMobilityTypeIndex) : 0;
-                    tmpRef.SetIonMobility(
-                        imType == 1 ? ionMobilityValue : 0,
-                        imType == 1 ? IonMobilityType.DriftTimeMsec : IonMobilityType.None);
-                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 && !reader.IsDBNull(ccsIndex) ? reader.GetDouble(ccsIndex) : 0;
+                    Verbosity.Error(string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Unable to read peaks for redundant library spectrum {0}, sequence {1}, charge {2}.",
+                        tmpRef.LibSpecId, tmpRef.DisplayName, tmpRef.Charge));
                 }
-                else if (ionMobilityIndex >= 0)
+                tmpRef.SetRawPeaks(peaks);
+            }
+
+            // cpp parity: BlibFilter.cpp:603-624 — group test: same peptide+charge (or
+            // same molecule+adduct for small molecules) means add to the current group;
+            // otherwise flush the current group and start a new one.
+            bool sameGroup;
+            if (!string.IsNullOrEmpty(pepModSeq))
+                sameGroup = pepModSeq == lastPepModSeq && lastCharge == charge;
+            else
+                sameGroup = tmpRef.SmallMolMetadata.Equals(lastMoleculeAndAdduct);
+
+            if (sameGroup)
+            {
+                oneIon.Add(tmpRef);
+            }
+            else
+            {
+                if (oneIon.Count > 0)
                 {
-                    var ionMobilityValue = reader.IsDBNull(ionMobilityIndex) ? 0 : reader.GetDouble(ionMobilityIndex);
-                    var imType = ionMobilityTypeIndex >= 0
-                        ? (IonMobilityType)SafeGetIntCoerce(reader, ionMobilityTypeIndex)
-                        : IonMobilityType.DriftTimeMsec;
-                    tmpRef.SetIonMobility(ionMobilityValue, imType);
-                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 && !reader.IsDBNull(ccsIndex) ? reader.GetDouble(ccsIndex) : 0;
-                    if (molNameIndex >= 0)
-                    {
-                        // moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys
-                        tmpRef.MoleculeName = SafeGetString(reader, molNameIndex);
-                        tmpRef.ChemicalFormula = SafeGetString(reader, formulaIndex);
-                        tmpRef.Adduct = SafeGetString(reader, adductIndex);
-                        tmpRef.InchiKey = SafeGetString(reader, inchiKeyIndex);
-                        tmpRef.OtherKeys = SafeGetString(reader, otherKeysIndex);
-                    }
-                }
-                else
-                {
-                    tmpRef.SetIonMobility(0, IonMobilityType.None);
-                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 && !reader.IsDBNull(ccsIndex) ? reader.GetDouble(ccsIndex) : 0;
-                }
-
-                if (startTimeIndex >= 0 && endTimeIndex >= 0)
-                {
-                    tmpRef.StartTime = reader.IsDBNull(startTimeIndex) ? 0 : reader.GetDouble(startTimeIndex);
-                    tmpRef.EndTime = reader.IsDBNull(endTimeIndex) ? 0 : reader.GetDouble(endTimeIndex);
-                }
-
-                if (ticIndex >= 0)
-                    tmpRef.TotalIonCurrentRaw = reader.IsDBNull(ticIndex) ? 0 : reader.GetDouble(ticIndex);
-
-                // Older blibs (and some source data paths) leave these as NULL — cpp's
-                // sqlite3_column_double returns 0 on NULL; .NET's GetDouble throws.
-                tmpRef.IonMobilityHighEnergyOffset = highEnergyOffsetIndex >= 0 && !reader.IsDBNull(highEnergyOffsetIndex)
-                    ? reader.GetDouble(highEnergyOffsetIndex) : 0;
-                tmpRef.RetentionTime = retentionTimeIndex >= 0 && !reader.IsDBNull(retentionTimeIndex)
-                    ? reader.GetDouble(retentionTimeIndex) : 0;
-                tmpRef.ModifiedSequence = pepModSeq;
-                tmpRef.PrevAa = "-";
-                tmpRef.NextAa = "-";
-                tmpRef.Score = scoreIndex >= 0 && !reader.IsDBNull(scoreIndex) ? reader.GetDouble(scoreIndex) : 0;
-                tmpRef.ScoreType = scoreTypeIndex >= 0 ? SafeGetIntCoerce(reader, scoreTypeIndex) : 0;
-                // cpp parity: BlibFilter.cpp:564 — SpecIDinFile may be a non-integer string in
-                // the source DB; cpp does sqlite3_column_int which coerces or returns 0.
-                tmpRef.ScanNumber = scanNumberIndex >= 0 ? SafeGetIntCoerce(reader, scanNumberIndex) : 0;
-
-                // cpp parity: BlibFilter.cpp:567-569 — small molecule IonID is appended to the
-                // group key. One of pepModSeq / smallMoleculeIonID is always empty.
-                var smallMoleculeIonId = tmpRef.GetSmallMoleculeIonId();
-                pepModSeq += smallMoleculeIonId;
-
-                var numPeaks = numPeaksIndex >= 0 ? reader.GetInt32(numPeaksIndex) : 0;
-
-                // cpp parity: BlibFilter.cpp:573-599 — fetch peak blobs unless useBestScoring
-                // (in which case peaks are not needed for selecting the winner).
-                if (!_useBestScoring)
-                {
-                    var refSpectraId = reader.GetInt32(0);
-                    var peaks = ReadPeaks(_redundantFileName, refSpectraId, numPeaks);
-                    if (peaks.Count == 0 && numPeaks != 0)
-                    {
-                        Verbosity.Error(string.Format(
-                            CultureInfo.InvariantCulture,
-                            "Unable to read peaks for redundant library spectrum {0}, sequence {1}, charge {2}.",
-                            tmpRef.LibSpecId, tmpRef.DisplayName, tmpRef.Charge));
-                    }
-                    tmpRef.SetRawPeaks(peaks);
-                }
-
-                // cpp parity: BlibFilter.cpp:603-624 — group test: same peptide+charge (or
-                // same molecule+adduct for small molecules) means add to the current group;
-                // otherwise flush the current group and start a new one.
-                bool sameGroup;
-                if (!string.IsNullOrEmpty(pepModSeq))
-                    sameGroup = pepModSeq == lastPepModSeq && lastCharge == charge;
-                else
-                    sameGroup = tmpRef.SmallMolMetadata.Equals(lastMoleculeAndAdduct);
-
-                if (sameGroup)
-                {
-                    oneIon.Add(tmpRef);
-                }
-                else
-                {
-                    if (oneIon.Count > 0)
-                    {
-                        Verbosity.Comment(VerbosityLevel.Detail, string.Format(
-                            CultureInfo.InvariantCulture,
-                            "Selecting spec for {0}, charge {1} from {2} spectra.",
-                            string.IsNullOrEmpty(lastPepModSeq) ? lastMoleculeAndAdduct.MoleculeName : lastPepModSeq,
-                            lastCharge, oneIon.Count));
-                        CompAndInsert(oneIon, bestSpectraIdAndCount);
-                        oneIon.Clear();
-                    }
-
-                    oneIon.Add(tmpRef);
-                    lastPepModSeq = pepModSeq;
-                    lastCharge = charge;
-                    // cpp parity: BlibFilter.cpp:620 — copy SmallMolMetadata for the new group.
-                    var src = tmpRef.SmallMolMetadata;
-                    lastMoleculeAndAdduct = new SmallMolMetadata
-                    {
-                        MoleculeName = src.MoleculeName,
-                        ChemicalFormula = src.ChemicalFormula,
-                        PrecursorAdduct = src.PrecursorAdduct,
-                        InchiKey = src.InchiKey,
-                        OtherKeys = src.OtherKeys,
-                        PrecursorMzDeclared = src.PrecursorMzDeclared,
-                    };
-
                     Verbosity.Comment(VerbosityLevel.Detail, string.Format(
                         CultureInfo.InvariantCulture,
-                        "Collecting spec for {0}, charge {1},",
-                        tmpRef.DisplayName, charge));
+                        "Selecting spec for {0}, charge {1} from {2} spectra.",
+                        string.IsNullOrEmpty(lastPepModSeq) ? lastMoleculeAndAdduct.MoleculeName : lastPepModSeq,
+                        lastCharge, oneIon.Count));
+                    CompAndInsert(oneIon, bestSpectraIdAndCount);
+                    oneIon.Clear();
                 }
+
+                oneIon.Add(tmpRef);
+                lastPepModSeq = pepModSeq;
+                lastCharge = charge;
+                // cpp parity: BlibFilter.cpp:620 — copy SmallMolMetadata for the new group.
+                var src = tmpRef.SmallMolMetadata;
+                lastMoleculeAndAdduct = new SmallMolMetadata
+                {
+                    MoleculeName = src.MoleculeName,
+                    ChemicalFormula = src.ChemicalFormula,
+                    PrecursorAdduct = src.PrecursorAdduct,
+                    InchiKey = src.InchiKey,
+                    OtherKeys = src.OtherKeys,
+                    PrecursorMzDeclared = src.PrecursorMzDeclared,
+                };
+
+                Verbosity.Comment(VerbosityLevel.Detail, string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Collecting spec for {0}, charge {1},",
+                    tmpRef.DisplayName, charge));
             }
         }
 
@@ -525,11 +335,104 @@ public class BlibFilter : BlibMaker
             oneIon.Clear();
         }
 
-        TransferSpectra(_redundantDbName, bestSpectraIdAndCount, _tableVersion);
+        // cpp parity: BlibFilter.cpp:639 (transferSpectra) — the chosen spectra, in id order and
+        // under their redundant ids, which the retention times written above refer to, each with
+        // its peaks, modifications, annotations and proteins.
+        bestSpectraIdAndCount.Sort((a, b) => a.Id.CompareTo(b.Id));
+        foreach (var (id, copies) in bestSpectraIdAndCount)
+        {
+            if (_copier.CopySpectrum(id, copies, keepId: true) == null)
+                throw new BlibException(false, $"Spectrum {id.ToString(CultureInfo.InvariantCulture)} could not be read back from the redundant library.");
+        }
 
         // cpp parity: BlibFilter.cpp:642 — clean up the progress bar.
         progress.Finish();
         progress.Complete();
+    }
+
+    /// <summary>
+    /// The <see cref="RefSpectrum"/> of a redundant library row, as cpp hydrated it
+    /// (BlibFilter.cpp:510-565): a value the library lacks is 0, the flanking residues are
+    /// unknown, and a non-integer <c>SpecIDinFile</c> is scan 0.
+    /// </summary>
+    private static RefSpectrum ToRefSpectrum(BlibSpectrumRecord record)
+    {
+        var tmpRef = new RefSpectrum
+        {
+            LibSpecId = checked((int)record.Id),
+            FileId = record.FileId,
+            Sequence = record.PeptideSeq ?? string.Empty,
+            Mz = record.PrecursorMz,
+            Charge = record.PrecursorCharge,
+            ModifiedSequence = record.PeptideModSeq ?? string.Empty,
+            PrevAa = "-",
+            NextAa = "-",
+            Score = record.Score,
+            ScoreType = record.ScoreType,
+            ScanNumber = ScanNumberOf(record.SpecIdInFile),
+            MoleculeName = record.MoleculeName ?? string.Empty,
+            ChemicalFormula = record.ChemicalFormula ?? string.Empty,
+            Adduct = record.PrecursorAdduct ?? string.Empty,
+            InchiKey = record.InchiKey ?? string.Empty,
+            OtherKeys = record.OtherKeys ?? string.Empty,
+            CollisionalCrossSection = record.CollisionalCrossSectionSqA ?? 0,
+            IonMobilityHighEnergyOffset = record.IonMobilityHighEnergyOffset ?? 0,
+            RetentionTime = record.RetentionTime ?? 0,
+            TotalIonCurrentRaw = record.TotalIonCurrent ?? 0,
+        };
+        tmpRef.SetIonMobility(record.IonMobility ?? 0, (IonMobilityType)record.IonMobilityType);
+        // cpp parity: BuildParser.cpp:608 — the start and end times are a pair.
+        if (record.StartTime.HasValue && record.EndTime.HasValue)
+        {
+            tmpRef.StartTime = record.StartTime.Value;
+            tmpRef.EndTime = record.EndTime.Value;
+        }
+        return tmpRef;
+    }
+
+    /// <summary>
+    /// cpp <c>BlibFilter::getUncompressedPeaks</c> at BlibFilter.cpp:645-691: the spectrum's
+    /// peaks decoded from its blobs, or none when the blobs are missing, short, or hold a
+    /// corrupted peak (cpp parity: BlibFilter.cpp:675-680, which the caller reports).
+    /// </summary>
+    private static List<PeakT> PeaksOf(BlibSpectrumRecord record)
+    {
+        if (record.NumPeaks <= 0 || record.MzBlob == null || record.IntensityBlob == null)
+            return new List<PeakT>();
+
+        BlibPeaks decoded;
+        try
+        {
+            decoded = BlibReader.DecodePeaks(record);
+        }
+        catch (Exception ex) when (ex is InvalidDataException or ArgumentException or OverflowException)
+        {
+            Verbosity.Warn($"Could not decode the peaks of spectrum {record.Id.ToString(CultureInfo.InvariantCulture)}: {ex.Message}");
+            return new List<PeakT>();
+        }
+
+        var peaks = new List<PeakT>(decoded.Mzs.Length);
+        for (var i = 0; i < decoded.Mzs.Length; i++)
+        {
+            var mz = decoded.Mzs[i];
+            var intensity = decoded.Intensities[i];
+            if (double.IsNaN(mz) || mz < 0 || mz > 100000 ||
+                float.IsNaN(intensity) || intensity < 0)
+            {
+                return new List<PeakT>();
+            }
+            peaks.Add(new PeakT(mz, intensity));
+        }
+        return peaks;
+    }
+
+    /// <summary>
+    /// cpp parity: BlibFilter.cpp:564 — <c>sqlite3_column_int</c> read a non-integer
+    /// <c>SpecIDinFile</c> as 0.
+    /// </summary>
+    private static int ScanNumberOf(string? specIdInFile)
+    {
+        return int.TryParse(specIdInFile, NumberStyles.Integer, CultureInfo.InvariantCulture, out var scan) ? scan : 0;
     }
 
     /// <summary>
@@ -540,18 +443,12 @@ public class BlibFilter : BlibMaker
     /// </summary>
     private void ClassifyScoreTypes()
     {
-        using var scoreCmd = Db.CreateCommand();
-        scoreCmd.CommandText = "SELECT id, scoreType FROM ScoreTypes";
-        using var scoreReader = scoreCmd.ExecuteReader();
-
-        using var checkCmd = Db.CreateCommand();
-        checkCmd.CommandText = $"SELECT EXISTS(SELECT 1 FROM {_redundantDbName}.RefSpectra WHERE scoreType = @scoreType)";
-        var checkParam = checkCmd.Parameters.Add("@scoreType", System.Data.DbType.Int32);
-
-        while (scoreReader.Read())
+        // The score types the new library seeds (BlibSchema.ScoreTypes, the id its index), and
+        // the ones the redundant library's spectra actually carry.
+        var inUse = new HashSet<int>(RedundantLibrary.ReadScoreTypesInUse());
+        for (var scoreTypeId = 0; scoreTypeId < BlibSchema.ScoreTypes.Length; scoreTypeId++)
         {
-            var scoreTypeId = scoreReader.GetInt32(0);
-            var scoreTypeName = scoreReader.GetString(1);
+            var scoreTypeName = BlibSchema.ScoreTypes[scoreTypeId].ScoreType;
             // cpp parity: BlibFilter.cpp:330-352 — explicit higher/lower-is-better lists.
             // cpp comment at line 336: SEQUEST XCORR is actually the associated q-value here.
             switch (scoreTypeName)
@@ -582,9 +479,7 @@ public class BlibFilter : BlibMaker
                     break;
                 default:
                     Verbosity.Warn($"Don't know if higher or lower is better: {scoreTypeName}");
-                    checkParam.Value = scoreTypeId;
-                    var present = Convert.ToInt32(checkCmd.ExecuteScalar(), CultureInfo.InvariantCulture);
-                    if (present == 1)
+                    if (inUse.Contains(scoreTypeId))
                     {
                         // cpp parity: BlibFilter.cpp:360-364 — bail out of best-scoring mode if
                         // a spectrum with an unknown score type would actually be selected.
@@ -772,7 +667,7 @@ public class BlibFilter : BlibMaker
             var hasBounds = startTime != 0 && endTime != 0;
             try
             {
-                Writer.AddRetentionTime(specId, GetNewFileId(_redundantDbName, specIdRedundant),
+                Writer.AddRetentionTime(specId, _copier!.TargetFileId(spectrum.FileId),
                     retentionTime != 0 ? retentionTime : null,
                     hasBounds ? startTime : null,
                     hasBounds ? endTime : null,
@@ -863,138 +758,6 @@ public class BlibFilter : BlibMaker
             }
         }
         return bestIdx;
-    }
-
-    /// <summary>
-    /// cpp <c>BlibFilter::getUncompressedPeaks</c> at BlibFilter.cpp:645-691. Opens the
-    /// redundant SQLite directly to read the peak blobs for a given spectrum, then decodes
-    /// them into a peak list (decompressing zlib-wrapped blobs when necessary).
-    /// </summary>
-    private static List<PeakT> ReadPeaks(string redundantFile, int refSpectraId, int numPeaks)
-    {
-        if (numPeaks == 0)
-            return new List<PeakT>();
-
-        using var conn = SqliteRoutine.Open(redundantFile, readOnly: true);
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT peakMZ, peakIntensity FROM RefSpectraPeaks WHERE RefSpectraId = @id";
-        cmd.Parameters.AddWithValue("@id", refSpectraId);
-        using var reader = cmd.ExecuteReader();
-        if (!reader.Read())
-        {
-            Verbosity.Error($"Did not find peaks for spectrum {refSpectraId.ToString(CultureInfo.InvariantCulture)}.");
-            return new List<PeakT>();
-        }
-
-        // NULL blobs (corrupt source library or partial write) fall through to an empty
-        // peak list, not InvalidCastException. cpp parity: sqlite3_column_blob returns NULL
-        // → 0-byte buffer that fails the length check.
-        var mzBlob = reader.IsDBNull(0) ? Array.Empty<byte>() : (byte[])reader[0];
-        var intBlob = reader.IsDBNull(1) ? Array.Empty<byte>() : (byte[])reader[1];
-
-        // cpp parity: BlibFilter.cpp:654-668 — if the blob length already matches the
-        // uncompressed size, the data is stored raw; otherwise zlib-decompress it.
-        // `checked` arithmetic makes integer overflow at ~268M peaks fail loudly (a synthetic
-        // .blib could try this) rather than silently producing a negative expected-size that
-        // routes every blob through Decompress and corrupts the output.
-        int mzExpected, intExpected;
-        try
-        {
-            mzExpected = checked(numPeaks * sizeof(double));
-            intExpected = checked(numPeaks * sizeof(float));
-        }
-        catch (OverflowException)
-        {
-            Verbosity.Warn(
-                $"Spectrum {refSpectraId} declares {numPeaks} peaks — exceeds int.MaxValue "
-                + "in byte-buffer size; treating as no peaks.");
-            return new List<PeakT>();
-        }
-
-        var mzBytes = mzBlob.Length == mzExpected ? mzBlob : Decompress(mzBlob, mzExpected);
-        var intBytes = intBlob.Length == intExpected ? intBlob : Decompress(intBlob, intExpected);
-
-        var peaks = new List<PeakT>(numPeaks);
-        for (var i = 0; i < numPeaks; i++)
-        {
-            var mz = BitConverter.IsLittleEndian
-                ? BitConverter.ToDouble(mzBytes, i * sizeof(double))
-                : BitConverter.Int64BitsToDouble(System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(mzBytes.AsSpan(i * sizeof(double))));
-            var intensity = BitConverter.IsLittleEndian
-                ? BitConverter.ToSingle(intBytes, i * sizeof(float))
-                : BitConverter.Int32BitsToSingle(System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(intBytes.AsSpan(i * sizeof(float))));
-
-            // cpp parity: BlibFilter.cpp:675-680 — corrupted peak detection. Return empty
-            // list (which surfaces as an error upstream).
-            if (double.IsNaN(mz) || mz < 0 || mz > 100000 ||
-                float.IsNaN(intensity) || intensity < 0)
-            {
-                return new List<PeakT>();
-            }
-
-            peaks.Add(new PeakT(mz, intensity));
-        }
-
-        return peaks;
-    }
-
-    /// <summary>
-    /// Decompress a zlib-wrapped byte array into a buffer of <paramref name="expectedSize"/>
-    /// bytes. Matches cpp <c>uncompress()</c> which expects zlib (RFC 1950) format. The
-    /// cpp side writes via <c>compress()</c> which emits zlib format; .NET 8's
-    /// <see cref="System.IO.Compression.ZLibStream"/> reads that format directly.
-    /// </summary>
-    private static byte[] Decompress(byte[] compressed, int expectedSize)
-    {
-        using var ms = new MemoryStream(compressed);
-        using var z = new System.IO.Compression.ZLibStream(ms, System.IO.Compression.CompressionMode.Decompress);
-        var output = new byte[expectedSize];
-        var read = 0;
-        while (read < expectedSize)
-        {
-            var n = z.Read(output, read, expectedSize - read);
-            if (n == 0) break;
-            read += n;
-        }
-        return output;
-    }
-
-    private static string SafeGetString(SQLiteDataReader reader, int ordinal)
-    {
-        if (ordinal < 0 || reader.IsDBNull(ordinal)) return string.Empty;
-        return reader.GetString(ordinal);
-    }
-
-    /// <summary>
-    /// cpp parity: BlibFilter.cpp:564 — sqlite3_column_int silently coerces text → 0.
-    /// The C# reader throws on text → int; mirror cpp by reading the value as text first
-    /// and parsing leniently.
-    /// </summary>
-    private static int SafeGetIntCoerce(SQLiteDataReader reader, int ordinal)
-    {
-        if (reader.IsDBNull(ordinal)) return 0;
-        var raw = reader.GetValue(ordinal);
-        switch (raw)
-        {
-            case long l: return checked((int)l);
-            case int i: return i;
-            case short s2: return s2;
-            // System.Data.SQLite maps TINYINT to unsigned byte; recover signedness so
-            // workflowType / scoreType of -1 doesn't read back as 255.
-            case byte b: return (sbyte)b;
-            case sbyte sb: return sb;
-            case double d: return (int)d;
-            case float f: return (int)f;
-        }
-        var s = raw?.ToString() ?? string.Empty;
-        if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))
-            return v;
-        // cpp's sqlite3_column_int silently returns 0 for non-numeric text; behavior preserved
-        // for cpp parity, but a debug log surfaces the silent coercion when troubleshooting an
-        // unexpected zero in the filtered library (e.g. a non-integer SpecIDinFile token).
-        Verbosity.Debug(
-            $"SafeGetIntCoerce: non-numeric value '{s}' at ordinal {ordinal}; coercing to 0 (cpp parity).");
-        return 0;
     }
 
     // --- CLI parsing -----------------------------------------------------------------------

@@ -84,11 +84,41 @@ namespace pwiz.BiblioSpec.IO
 
         /// <summary>
         /// The most annotation rows one INSERT takes; a spectrum with more peaks takes several.
-        /// Each row binds 5 variables and the spectrum id 1 more, so 100 rows bind 501: under
+        /// Each row binds 10 variables and the spectrum id 1 more, so 99 rows bind 991: under
         /// 999, SQLite's SQLITE_MAX_VARIABLE_NUMBER before 3.32, let alone the 32766 of the
         /// SQLite 3.46.1 in System.Data.SQLite 1.0.119.
         /// </summary>
-        public const int MAX_ANNOTATIONS_PER_INSERT = 100;
+        public const int MAX_ANNOTATIONS_PER_INSERT = 99;
+
+        /// <summary>The <c>SpectrumSourceFiles</c> row for spectra whose source the library does not record.</summary>
+        public const string UNKNOWN_SOURCE_FILE = @"UNKNOWN";
+
+        // The RefSpectra columns the spectrum INSERT names, after the id, with their types.
+        private static readonly string[] SPECTRUM_COLUMNS =
+        {
+            @"peptideSeq", @"precursorMZ", @"precursorCharge", @"peptideModSeq", @"prevAA", @"nextAA", @"copies", @"numPeaks",
+            @"ionMobility", @"collisionalCrossSectionSqA", @"ionMobilityHighEnergyOffset", @"ionMobilityType", @"retentionTime",
+            @"startTime", @"endTime", @"totalIonCurrent", @"moleculeName", @"chemicalFormula", @"precursorAdduct", @"inchiKey",
+            @"otherKeys", @"fileID", @"SpecIDinFile", @"score", @"scoreType",
+        };
+
+        private static readonly DbType[] SPECTRUM_COLUMN_TYPES =
+        {
+            DbType.String, DbType.Double, DbType.Int32, DbType.String, DbType.String, DbType.String, DbType.Int32, DbType.Int32,
+            DbType.Double, DbType.Double, DbType.Double, DbType.Int32, DbType.Double, DbType.Double, DbType.Double, DbType.Double,
+            DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.Int64, DbType.String, DbType.Double,
+            DbType.Int32,
+        };
+
+        // The RefSpectra columns added since the first schema, with the types UpgradeSchema adds
+        // them as; the small-molecule columns come from BlibSchema.SmallMoleculeColumns.
+        private static readonly (string Name, string Type)[] UPGRADE_REF_SPECTRA_COLUMNS =
+        {
+            (@"retentionTime", @"REAL"), (@"startTime", @"REAL"), (@"endTime", @"REAL"), (@"fileID", @"INTEGER"),
+            (@"SpecIDinFile", @"VARCHAR(256)"), (@"score", @"REAL"), (@"scoreType", @"TINYINT"),
+            (@"collisionalCrossSectionSqA", @"REAL"), (@"ionMobility", @"REAL"), (@"ionMobilityHighEnergyOffset", @"REAL"),
+            (@"ionMobilityType", @"TINYINT"), (@"totalIonCurrent", @"REAL"),
+        };
 
         /// <summary>
         /// Indexes on the per-spectrum tables beyond BiblioSpec's own, so a reader that walks a
@@ -115,6 +145,8 @@ namespace pwiz.BiblioSpec.IO
         private SQLiteTransaction _batch;
         // Prepared on the first row written, once the schema exists.
         private PreparedInsert _insertSpectrum;
+        // The same INSERT naming the id, for a copy that keeps the source library's ids.
+        private PreparedInsert _insertSpectrumWithId;
         private PreparedInsert _insertPeaks;
         private PreparedInsert _insertModification;
         private PreparedInsert _insertProtein;
@@ -135,6 +167,10 @@ namespace pwiz.BiblioSpec.IO
         private PreparedInsert _insertDecoyPair;
         private int _spectrumCount;
         private int _revision = MAJOR_VERSION;
+        // An appended library's LibInfo.majorVersion, read at open; null for a new library.
+        private int? _existingRevision;
+        // The SpectrumSourceFiles row named UNKNOWN, once a spectrum without a source needed it.
+        private long? _unknownSourceFileId;
 
         /// <summary>
         /// Starts the non-redundant library that <see cref="Complete"/> writes to
@@ -176,11 +212,14 @@ namespace pwiz.BiblioSpec.IO
                 // there is no journal to replay either; an appended library keeps its rollback
                 // journal, which is what makes writing it in place safe.
                 Execute(@"PRAGMA synchronous=OFF");
+                // The sort of an index creation and the temp tables of a bulk copy stay in memory.
+                Execute(@"PRAGMA temp_store=MEMORY");
                 if (!append)
                     Execute(@"PRAGMA journal_mode=MEMORY");
                 if (append)
                 {
                     _spectrumCount = (int)Scalar(@"SELECT COUNT(*) FROM RefSpectra");
+                    _existingRevision = (int)Scalar(@"SELECT IFNULL(MAX(majorVersion), 0) FROM LibInfo");
                     LoadProteinIds();
                     LoadOptionalColumns();
                 }
@@ -223,10 +262,181 @@ namespace pwiz.BiblioSpec.IO
             get { return _file != null ? _file.SafeName : _path; }
         }
 
-        /// <summary><c>RefSpectra</c> rows so far, those of an appended library included; the next spectrum gets this plus one as its id.</summary>
+        /// <summary>
+        /// <c>RefSpectra</c> rows so far, those of an appended library included; the next spectrum
+        /// written without an id of its own gets this plus one as its id.
+        /// </summary>
         public int SpectrumCount
         {
             get { return _spectrumCount; }
+        }
+
+        /// <summary>
+        /// An appended library's revision (<c>LibInfo.majorVersion</c>) as it was opened, for the
+        /// tool to count up from (<see cref="SetRevision"/>); null for a new library.
+        /// </summary>
+        public int? ExistingRevision
+        {
+            get { return _existingRevision; }
+        }
+
+        /// <summary>
+        /// Sets SQLite's page cache for this connection to <paramref name="megabytes"/>, for a
+        /// bulk write; the default is a few megabytes.
+        /// </summary>
+        public void SetCacheSize(int megabytes)
+        {
+            if (megabytes <= 0)
+                throw new ArgumentOutOfRangeException(nameof(megabytes));
+            // A negative cache_size is a size in KiB rather than in pages.
+            Execute(@"PRAGMA cache_size=" + (-megabytes * 1024L).ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Brings an appended library of an older schema up to the current one, as BiblioSpec has
+        /// always done before adding to a library: the tables it lacks are created with their
+        /// seed rows, the <c>RefSpectra</c> and <c>SpectrumSourceFiles</c> columns it lacks are
+        /// added, a spectrum without a source file is given the UNKNOWN one, and a spectrum
+        /// without a score type the unknown type.
+        /// </summary>
+        public void UpgradeSchema()
+        {
+            if (!TableExists(@"RefSpectra"))
+                throw new InvalidOperationException(@"The library has no RefSpectra table");
+            if (!TableExists(@"SpectrumSourceFiles"))
+                Execute(BlibSchema.CreateSpectrumSourceFiles);
+            if (!TableExists(@"ScoreTypes"))
+            {
+                Execute(BlibSchema.CreateScoreTypes);
+                SeedScoreTypes();
+            }
+            if (!TableExists(@"IonMobilityTypes"))
+            {
+                Execute(BlibSchema.CreateIonMobilityTypes);
+                SeedIonMobilityTypes();
+            }
+            if (!TableExists(@"RefSpectraPeakAnnotations"))
+                Execute(BlibSchema.CreateRefSpectraPeakAnnotations);
+            if (!TableExists(@"Proteins"))
+                Execute(BlibSchema.CreateProteins);
+            if (!TableExists(@"RefSpectraProteins"))
+                Execute(BlibSchema.CreateRefSpectraProteins);
+
+            var spectrumColumns = BlibSqlite.ColumnNames(_connection, @"RefSpectra");
+            foreach (var (name, type) in UPGRADE_REF_SPECTRA_COLUMNS)
+            {
+                if (!spectrumColumns.Contains(name))
+                    Execute(@"ALTER TABLE RefSpectra ADD " + name + @" " + type);
+            }
+            foreach (var column in BlibSchema.SmallMoleculeColumns)
+            {
+                if (!spectrumColumns.Contains(column.Name))
+                    Execute(@"ALTER TABLE RefSpectra ADD " + column.Name + @" VARCHAR(128)");
+            }
+            var fileColumns = BlibSqlite.ColumnNames(_connection, @"SpectrumSourceFiles");
+            if (!fileColumns.Contains(@"idFileName"))
+                Execute(@"ALTER TABLE SpectrumSourceFiles ADD COLUMN idFileName TEXT");
+            if (!fileColumns.Contains(@"cutoffScore"))
+                Execute(@"ALTER TABLE SpectrumSourceFiles ADD COLUMN cutoffScore REAL");
+            if (!fileColumns.Contains(@"workflowType"))
+            {
+                Execute(@"ALTER TABLE SpectrumSourceFiles ADD COLUMN workflowType TINYINT");
+                Execute(@"UPDATE SpectrumSourceFiles SET workflowType = " + WORKFLOW_TYPE_DDA.ToString(CultureInfo.InvariantCulture));
+            }
+            if (Scalar(@"SELECT COUNT(*) FROM RefSpectra WHERE fileID IS NULL") > 0)
+            {
+                Execute(@"UPDATE RefSpectra SET fileID = " + EnsureUnknownSourceFile().ToString(CultureInfo.InvariantCulture) +
+                        @" WHERE fileID IS NULL");
+            }
+            Execute(@"UPDATE RefSpectra SET scoreType = " + SCORE_TYPE_UNKNOWN.ToString(CultureInfo.InvariantCulture) +
+                    @" WHERE scoreType IS NULL");
+            LoadOptionalColumns();
+            ResetPrepared();
+        }
+
+        /// <summary>
+        /// The id of the <c>SpectrumSourceFiles</c> row named <c>UNKNOWN</c>, for a spectrum
+        /// whose source the library does not record, added on first use with no cutoff.
+        /// </summary>
+        public long EnsureUnknownSourceFile()
+        {
+            if (_unknownSourceFileId.HasValue)
+                return _unknownSourceFileId.Value;
+            if (TryFindSourceFile(UNKNOWN_SOURCE_FILE, out long id, out _))
+                _unknownSourceFileId = id;
+            else
+                _unknownSourceFileId = AddSourceFile(UNKNOWN_SOURCE_FILE, null, -1, WORKFLOW_TYPE_DDA);
+            return _unknownSourceFileId.Value;
+        }
+
+        /// <summary>
+        /// Finds the <c>SpectrumSourceFiles</c> row named <paramref name="fileName"/>, with its
+        /// cutoff score; false when the library has none.
+        /// </summary>
+        public bool TryFindSourceFile(string fileName, out long id, out double? cutoffScore)
+        {
+            id = 0;
+            cutoffScore = null;
+            if (!TableExists(@"SpectrumSourceFiles"))
+                return false;
+            bool hasCutoff = BlibSqlite.ColumnNames(_connection, @"SpectrumSourceFiles").Contains(@"cutoffScore");
+            using (var command = new SQLiteCommand(@"SELECT id, " + (hasCutoff ? @"cutoffScore" : @"NULL") +
+                                                   @" FROM SpectrumSourceFiles WHERE fileName = @file ORDER BY id LIMIT 1", _connection))
+            {
+                command.Parameters.AddWithValue(@"@file", fileName);
+                using (var reader = command.ExecuteReader())
+                {
+                    if (!reader.Read())
+                        return false;
+                    id = reader.GetInt64(0);
+                    cutoffScore = reader.IsDBNull(1) ? null : reader.GetDouble(1);
+                    return true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the cutoff score of source file <paramref name="id"/>: -1 when the spectra of
+        /// one file were filtered at more than one threshold, which BiblioSpec records as unknown.
+        /// </summary>
+        public void SetCutoffScore(long id, double? cutoffScore)
+        {
+            using (var command = new SQLiteCommand(@"UPDATE SpectrumSourceFiles SET cutoffScore = @cutoff WHERE id = @id", _connection))
+            {
+                command.Parameters.AddWithValue(@"@cutoff", cutoffScore.HasValue ? cutoffScore.Value : DBNull.Value);
+                command.Parameters.AddWithValue(@"@id", id);
+                command.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>The <c>SpectrumSourceFiles</c> rows written so far, in id order.</summary>
+        public IReadOnlyList<BlibSourceFile> ReadSourceFiles()
+        {
+            using (var reader = new BlibReader(_connection))
+                return reader.ReadSourceFiles();
+        }
+
+        /// <summary>
+        /// Folds the source files <paramref name="mergedIds"/> into <paramref name="keepId"/>,
+        /// renamed <paramref name="fileName"/>: their spectra move to it and their rows go, as
+        /// BlibBuild collapses the Q1, Q2 and Q3 files of one Waters MSe run into one source.
+        /// </summary>
+        public void MergeSourceFiles(long keepId, IReadOnlyCollection<long> mergedIds, string fileName)
+        {
+            if (mergedIds == null)
+                throw new ArgumentNullException(nameof(mergedIds));
+            if (mergedIds.Count > 0)
+            {
+                string ids = string.Join(@", ", mergedIds.Select(id => id.ToString(CultureInfo.InvariantCulture)));
+                Execute(@"UPDATE RefSpectra SET fileID = " + keepId.ToString(CultureInfo.InvariantCulture) + @" WHERE fileID IN (" + ids + @")");
+                Execute(@"DELETE FROM SpectrumSourceFiles WHERE id IN (" + ids + @")");
+            }
+            using (var command = new SQLiteCommand(@"UPDATE SpectrumSourceFiles SET fileName = @name WHERE id = @id", _connection))
+            {
+                command.Parameters.AddWithValue(@"@name", fileName);
+                command.Parameters.AddWithValue(@"@id", keepId);
+                command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -253,26 +463,38 @@ namespace pwiz.BiblioSpec.IO
                     info.Parameters.AddWithValue(@"@minor", BlibSchema.CurrentMinorVersion);
                     info.ExecuteNonQuery();
                 }
-                for (int i = 0; i < BlibSchema.ScoreTypes.Length; i++)
-                {
-                    using (var score = new SQLiteCommand(@"INSERT INTO ScoreTypes VALUES (@id, @name, @probability)", _connection))
-                    {
-                        score.Parameters.AddWithValue(@"@id", i);
-                        score.Parameters.AddWithValue(@"@name", BlibSchema.ScoreTypes[i].ScoreType);
-                        score.Parameters.AddWithValue(@"@probability", BlibSchema.ScoreTypes[i].ProbabilityType);
-                        score.ExecuteNonQuery();
-                    }
-                }
-                for (int i = 0; i < BlibSchema.IonMobilityTypes.Length; i++)
-                {
-                    using (var mobility = new SQLiteCommand(@"INSERT INTO IonMobilityTypes VALUES (@id, @name)", _connection))
-                    {
-                        mobility.Parameters.AddWithValue(@"@id", i);
-                        mobility.Parameters.AddWithValue(@"@name", BlibSchema.IonMobilityTypes[i]);
-                        mobility.ExecuteNonQuery();
-                    }
-                }
+                SeedScoreTypes();
+                SeedIonMobilityTypes();
                 transaction.Commit();
+            }
+        }
+
+        /// <summary>One <c>ScoreTypes</c> row per <see cref="BlibSchema.ScoreTypes"/> entry, the id its index.</summary>
+        private void SeedScoreTypes()
+        {
+            for (int i = 0; i < BlibSchema.ScoreTypes.Length; i++)
+            {
+                using (var score = new SQLiteCommand(@"INSERT INTO ScoreTypes VALUES (@id, @name, @probability)", _connection))
+                {
+                    score.Parameters.AddWithValue(@"@id", i);
+                    score.Parameters.AddWithValue(@"@name", BlibSchema.ScoreTypes[i].ScoreType);
+                    score.Parameters.AddWithValue(@"@probability", BlibSchema.ScoreTypes[i].ProbabilityType);
+                    score.ExecuteNonQuery();
+                }
+            }
+        }
+
+        /// <summary>One <c>IonMobilityTypes</c> row per <see cref="BlibSchema.IonMobilityTypes"/> entry, the id its index.</summary>
+        private void SeedIonMobilityTypes()
+        {
+            for (int i = 0; i < BlibSchema.IonMobilityTypes.Length; i++)
+            {
+                using (var mobility = new SQLiteCommand(@"INSERT INTO IonMobilityTypes VALUES (@id, @name)", _connection))
+                {
+                    mobility.Parameters.AddWithValue(@"@id", i);
+                    mobility.Parameters.AddWithValue(@"@name", BlibSchema.IonMobilityTypes[i]);
+                    mobility.ExecuteNonQuery();
+                }
             }
         }
 
@@ -379,10 +601,25 @@ namespace pwiz.BiblioSpec.IO
         /// </summary>
         public long AddSpectrum(BlibSpectrumRecord spectrum)
         {
+            return AddSpectrum(spectrum, false);
+        }
+
+        /// <summary>
+        /// <see cref="AddSpectrum(BlibSpectrumRecord)"/>, writing the row under the record's own
+        /// <see cref="BlibSpectrumRecord.Id"/> when <paramref name="keepId"/> is set, as a copy of
+        /// a library that keeps its ids does (BlibFilter's output refers to the redundant
+        /// library's spectra by their ids). The ids of the spectra written without one continue
+        /// from the highest id so far.
+        /// </summary>
+        public long AddSpectrum(BlibSpectrumRecord spectrum, bool keepId)
+        {
             if (spectrum == null)
                 throw new ArgumentNullException(nameof(spectrum));
             EnsurePrepared();
-            _insertSpectrum.Execute(SpectrumValues(spectrum));
+            if (keepId)
+                _insertSpectrumWithId.Execute(SpectrumValues(spectrum, true));
+            else
+                _insertSpectrum.Execute(SpectrumValues(spectrum, false));
             long refId = _connection.LastInsertRowId;
             _spectrumCount++;
             if (spectrum.MzBlob != null)
@@ -405,7 +642,7 @@ namespace pwiz.BiblioSpec.IO
         /// (<see cref="BlibSchema.ProteinQValue"/>, <see cref="BlibSchema.ProteinPep"/>, written
         /// where <see cref="AddOptionalColumn"/> added them), and returns its id. The row an
         /// accession already has is returned, so a protein is written once however many spectra
-        /// map to it: <see cref="AddSpectrum"/> adds the record's accessions this way, without
+        /// map to it: <see cref="AddSpectrum(BlibSpectrumRecord)"/> adds the record's accessions this way, without
         /// values, and <see cref="AddSpectrumProtein"/> maps a spectrum to a row added here. A row
         /// written without values takes the first values a later call supplies for it (a value it
         /// already has is kept), so the order a reader meets a protein's spectra in does not decide
@@ -432,7 +669,7 @@ namespace pwiz.BiblioSpec.IO
             return proteinId;
         }
 
-        /// <summary>Maps spectrum <paramref name="refId"/> to the <c>Proteins</c> row <paramref name="proteinId"/>, as <see cref="AddSpectrum"/> maps the record's accessions.</summary>
+        /// <summary>Maps spectrum <paramref name="refId"/> to the <c>Proteins</c> row <paramref name="proteinId"/>, as <see cref="AddSpectrum(BlibSpectrumRecord)"/> maps the record's accessions.</summary>
         public void AddSpectrumProtein(long refId, long proteinId)
         {
             EnsurePrepared();
@@ -696,21 +933,10 @@ namespace pwiz.BiblioSpec.IO
         {
             if (_insertSpectrum != null)
                 return;
-            _insertSpectrum = PrepareInsert(@"RefSpectra",
-                new List<string>
-                {
-                    @"peptideSeq", @"precursorMZ", @"precursorCharge", @"peptideModSeq", @"prevAA", @"nextAA", @"copies", @"numPeaks",
-                    @"ionMobility", @"collisionalCrossSectionSqA", @"ionMobilityHighEnergyOffset", @"ionMobilityType", @"retentionTime",
-                    @"startTime", @"endTime", @"totalIonCurrent", @"moleculeName", @"chemicalFormula", @"precursorAdduct", @"inchiKey",
-                    @"otherKeys", @"fileID", @"SpecIDinFile", @"score", @"scoreType",
-                },
-                new List<DbType>
-                {
-                    DbType.String, DbType.Double, DbType.Int32, DbType.String, DbType.String, DbType.String, DbType.Int32, DbType.Int32,
-                    DbType.Double, DbType.Double, DbType.Double, DbType.Int32, DbType.Double, DbType.Double, DbType.Double, DbType.Double,
-                    DbType.String, DbType.String, DbType.String, DbType.String, DbType.String, DbType.Int64, DbType.String, DbType.Double,
-                    DbType.Int32,
-                },
+            _insertSpectrumWithId = PrepareInsert(@"RefSpectra",
+                new List<string>(SPECTRUM_COLUMNS.Prepend(@"id")), new List<DbType>(SPECTRUM_COLUMN_TYPES.Prepend(DbType.Int64)),
+                _optionalSpectrumColumns);
+            _insertSpectrum = PrepareInsert(@"RefSpectra", new List<string>(SPECTRUM_COLUMNS), new List<DbType>(SPECTRUM_COLUMN_TYPES),
                 _optionalSpectrumColumns);
             _insertPeaks = Prepare(@"INSERT INTO RefSpectraPeaks (RefSpectraID, peakMZ, peakIntensity) VALUES (@id, @mz, @intensity)",
                 new[] { @"@id", @"@mz", @"@intensity" }, new[] { DbType.Int64, DbType.Binary, DbType.Binary });
@@ -753,6 +979,8 @@ namespace pwiz.BiblioSpec.IO
         {
             _insertSpectrum?.Dispose();
             _insertSpectrum = null;
+            _insertSpectrumWithId?.Dispose();
+            _insertSpectrumWithId = null;
             _insertPeaks?.Dispose();
             _insertPeaks = null;
             _insertModification?.Dispose();
@@ -765,10 +993,17 @@ namespace pwiz.BiblioSpec.IO
             _insertSpectrumProtein = null;
         }
 
-        /// <summary>The <c>RefSpectra</c> values of <paramref name="spectrum"/>, in the order <see cref="EnsurePrepared"/> lists the columns.</summary>
-        private object[] SpectrumValues(BlibSpectrumRecord spectrum)
+        /// <summary>
+        /// The <c>RefSpectra</c> values of <paramref name="spectrum"/>, in the order
+        /// <see cref="EnsurePrepared"/> lists the columns; with <paramref name="withId"/>, the
+        /// record's id first.
+        /// </summary>
+        private object[] SpectrumValues(BlibSpectrumRecord spectrum, bool withId)
         {
-            var values = new List<object>(25 + _optionalSpectrumColumns.Count)
+            var values = new List<object>(26 + _optionalSpectrumColumns.Count);
+            if (withId)
+                values.Add(spectrum.Id);
+            values.AddRange(new[]
             {
                 spectrum.PeptideSeq, spectrum.PrecursorMz, spectrum.PrecursorCharge, spectrum.PeptideModSeq,
                 spectrum.PrevAA, spectrum.NextAA, spectrum.Copies, spectrum.NumPeaks,
@@ -777,7 +1012,7 @@ namespace pwiz.BiblioSpec.IO
                 Nullable(spectrum.TotalIonCurrent), spectrum.MoleculeName, spectrum.ChemicalFormula, spectrum.PrecursorAdduct,
                 spectrum.InchiKey, spectrum.OtherKeys, spectrum.FileId, (object)spectrum.SpecIdInFile ?? DBNull.Value,
                 spectrum.Score, spectrum.ScoreType,
-            };
+            });
             foreach (var column in _optionalSpectrumColumns)
                 values.Add(Nullable(OptionalValue(spectrum, column)));
             return values.ToArray();
@@ -837,6 +1072,8 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>The optional columns an appended library already has.</summary>
         private void LoadOptionalColumns()
         {
+            _optionalSpectrumColumns.Clear();
+            _optionalProteinColumns.Clear();
             var spectrumColumns = BlibSqlite.ColumnNames(_connection, @"RefSpectra");
             foreach (var column in BlibSchema.OptionalRefSpectraColumns)
             {
@@ -922,6 +1159,7 @@ namespace pwiz.BiblioSpec.IO
                 _batch = null;
             }
             _insertSpectrum?.Dispose();
+            _insertSpectrumWithId?.Dispose();
             _insertPeaks?.Dispose();
             _insertModification?.Dispose();
             _insertProtein?.Dispose();
@@ -930,7 +1168,7 @@ namespace pwiz.BiblioSpec.IO
             _insertRetentionTime?.Dispose();
             _insertMetadata?.Dispose();
             _insertDecoyPair?.Dispose();
-            _insertSpectrum = _insertPeaks = _insertModification = null;
+            _insertSpectrum = _insertSpectrumWithId = _insertPeaks = _insertModification = null;
             _insertProtein = _updateProtein = _insertSpectrumProtein = _insertRetentionTime = _insertMetadata = _insertDecoyPair = null;
             for (int i = 0; i < _insertAnnotations.Length; i++)
             {
@@ -1012,7 +1250,12 @@ namespace pwiz.BiblioSpec.IO
             private readonly SQLiteParameter _id;
             private readonly SQLiteParameter[] _peakIndex;
             private readonly SQLiteParameter[] _name;
+            private readonly SQLiteParameter[] _formula;
+            private readonly SQLiteParameter[] _inchiKey;
+            private readonly SQLiteParameter[] _otherKeys;
             private readonly SQLiteParameter[] _charge;
+            private readonly SQLiteParameter[] _adduct;
+            private readonly SQLiteParameter[] _comment;
             private readonly SQLiteParameter[] _theoretical;
             private readonly SQLiteParameter[] _observed;
 
@@ -1025,20 +1268,30 @@ namespace pwiz.BiblioSpec.IO
                     if (row > 0)
                         sql.Append(@", ");
                     sql.AppendFormat(CultureInfo.InvariantCulture,
-                        @"(@id, @index{0}, @name{0}, '', '', '', @charge{0}, '', '', @theoretical{0}, @observed{0})", row);
+                        @"(@id, @index{0}, @name{0}, @formula{0}, @inchiKey{0}, @otherKeys{0}, @charge{0}, @adduct{0}, @comment{0}, @theoretical{0}, @observed{0})", row);
                 }
                 _command = new SQLiteCommand(sql.ToString(), connection);
                 _id = _command.Parameters.Add(@"@id", DbType.Int64);
                 _peakIndex = new SQLiteParameter[rows];
                 _name = new SQLiteParameter[rows];
+                _formula = new SQLiteParameter[rows];
+                _inchiKey = new SQLiteParameter[rows];
+                _otherKeys = new SQLiteParameter[rows];
                 _charge = new SQLiteParameter[rows];
+                _adduct = new SQLiteParameter[rows];
+                _comment = new SQLiteParameter[rows];
                 _theoretical = new SQLiteParameter[rows];
                 _observed = new SQLiteParameter[rows];
                 for (int row = 0; row < rows; row++)
                 {
                     _peakIndex[row] = AddParameter(@"@index", row, DbType.Int32);
                     _name[row] = AddParameter(@"@name", row, DbType.String);
+                    _formula[row] = AddParameter(@"@formula", row, DbType.String);
+                    _inchiKey[row] = AddParameter(@"@inchiKey", row, DbType.String);
+                    _otherKeys[row] = AddParameter(@"@otherKeys", row, DbType.String);
                     _charge[row] = AddParameter(@"@charge", row, DbType.Int32);
+                    _adduct[row] = AddParameter(@"@adduct", row, DbType.String);
+                    _comment[row] = AddParameter(@"@comment", row, DbType.String);
                     _theoretical[row] = AddParameter(@"@theoretical", row, DbType.Double);
                     _observed[row] = AddParameter(@"@observed", row, DbType.Double);
                 }
@@ -1054,7 +1307,12 @@ namespace pwiz.BiblioSpec.IO
                     var annotation = annotations[start + row];
                     _peakIndex[row].Value = annotation.PeakIndex;
                     _name[row].Value = annotation.Name;
+                    _formula[row].Value = annotation.Formula;
+                    _inchiKey[row].Value = annotation.InchiKey;
+                    _otherKeys[row].Value = annotation.OtherKeys;
                     _charge[row].Value = annotation.Charge;
+                    _adduct[row].Value = annotation.Adduct;
+                    _comment[row].Value = annotation.Comment;
                     _theoretical[row].Value = annotation.MzTheoretical;
                     _observed[row].Value = annotation.MzObserved;
                 }
