@@ -179,6 +179,7 @@ namespace pwiz.Skyline.Util
             if (!IsScaled(control))
                 return;
             var factor = GetFactor(control);
+            byte[] transformed;
             try
             {
                 var doc = XDocument.Load(path);
@@ -186,19 +187,24 @@ namespace pwiz.Skyline.Util
                     return;
                 // Serialize completely in memory first: a failure part-way through must not
                 // leave a truncated file where the caller is about to commit it.
-                var transformed = new MemoryStream();
-                using (var writer = XmlWriter.Create(transformed,
+                var stream = new MemoryStream();
+                using (var writer = XmlWriter.Create(stream,
                            new XmlWriterSettings { Encoding = new UTF8Encoding(false), Indent = true, CloseOutput = false }))
                 {
                     doc.Save(writer);
                 }
-                File.WriteAllBytes(path, transformed.ToArray());
+                transformed = stream.ToArray();
             }
             catch (Exception)
             {
                 // A layout that cannot be transformed is saved in device pixels - degraded
                 // but functional, and preferable to failing the document save.
+                return;
             }
+            // Outside the fallback on purpose: a failed write can leave the file truncated,
+            // and the error must reach the caller so its FileSaver discards the file instead
+            // of committing it over the user's layout.
+            File.WriteAllBytes(path, transformed);
         }
 
         /// <summary>

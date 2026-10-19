@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Linq;
+using System.Resources;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Skyline.Util;
@@ -34,9 +36,10 @@ namespace pwiz.Skyline.Controls
         /// handle exists, are 96-DPI pixel values that auto-scaling never touches: only a
         /// column left at the default width gets the DPI-dependent default. True (the
         /// default) scales every other fixed-width column once, when the handle is created.
-        /// The one width this cannot tell apart is a designer width equal to the scaled
-        /// default (150 at 150%), which is left as the default. A grid that sizes its
-        /// columns itself in device pixels sets this false (issue #4599).
+        /// A width the designer wrote to the resx is read back from there, so it is scaled
+        /// even when it equals the scaled default (150 at 150%); a width set in code is
+        /// told from the default by value. A grid that sizes its columns itself in device
+        /// pixels sets this false (issue #4599).
         /// </summary>
         public bool ScaleDesignerColumnWidths { get; set; } = true;
 
@@ -49,20 +52,54 @@ namespace pwiz.Skyline.Controls
             if (!DpiUtil.IsScaled(this))
                 return;
             int defaultWidth = DpiUtil.Scale(this, 100);    // what an untouched column already has
+            var resources = GetDesignerResources();
             foreach (DataGridViewColumn column in Columns)
             {
                 // Read the width before the minimum is scaled: raising the minimum raises a
                 // narrower width to meet it, and that bumped width would then be scaled too
                 int width = column.Width;
                 // A minimum width above WinForms' own default is a designer value
-                if (column.MinimumWidth > 5)
-                    column.MinimumWidth = DpiUtil.Scale(this, column.MinimumWidth);
+                int minimumWidth = GetDesignerValue(resources, column.Name + @".MinimumWidth") ?? column.MinimumWidth;
+                if (minimumWidth > 5)
+                    column.MinimumWidth = DpiUtil.Scale(this, minimumWidth);
                 var autoSize = column.InheritedAutoSizeMode;
                 if (autoSize != DataGridViewAutoSizeColumnMode.None && autoSize != DataGridViewAutoSizeColumnMode.NotSet)
                     continue;   // width follows the content or the grid, not the designer
-                if (width != defaultWidth)
+                int? designerWidth = GetDesignerValue(resources, column.Name + @".Width");
+                if (designerWidth.HasValue)
+                    column.Width = DpiUtil.Scale(this, designerWidth.Value);
+                else if (width != defaultWidth)
                     column.Width = DpiUtil.Scale(this, width);
             }
+        }
+
+        /// <summary>
+        /// The component resources of the designer-built container this grid sits in, which
+        /// hold the exact values the designer wrote for its columns. Null for a grid built
+        /// in code, or one whose containers have no resx.
+        /// </summary>
+        private ComponentResourceManager GetDesignerResources()
+        {
+            for (var container = Parent; container != null; container = container.Parent)
+            {
+                var resources = new ComponentResourceManager(container.GetType());
+                try
+                {
+                    // Any column of this grid proves the resx belongs to the right container
+                    if (Columns.Cast<DataGridViewColumn>().Any(col => resources.GetObject(col.Name + @".HeaderText") != null))
+                        return resources;
+                }
+                catch (MissingManifestResourceException)
+                {
+                    // This container has no resx; keep looking outward
+                }
+            }
+            return null;
+        }
+
+        private static int? GetDesignerValue(ComponentResourceManager resources, string resourceName)
+        {
+            return resources?.GetObject(resourceName) as int?;
         }
 
         public string GetCopyText()
