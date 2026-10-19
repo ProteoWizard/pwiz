@@ -1087,7 +1087,16 @@ public abstract class BuildParser : IDisposable
 
         // cpp parity: BuildParser.cpp:638 - a failed insert is a BlibException, which
         // BuildTables annotates with the PSM.
-        BlibMaker.InsertSpectrum(record);
+        OnSpectrumInserted(psm, BlibMaker.InsertSpectrum(record));
+    }
+
+    /// <summary>
+    /// Called with each PSM's new <c>RefSpectra</c> id as <see cref="BuildTables"/> writes it,
+    /// for a reader that writes rows referring to its spectra after the duplicate filtering
+    /// has decided which are written (the DIA-NN reader's retention times).
+    /// </summary>
+    protected virtual void OnSpectrumInserted(PSM psm, int refSpectraId)
+    {
     }
 
     /// <summary>

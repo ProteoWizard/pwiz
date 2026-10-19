@@ -53,6 +53,28 @@ namespace pwiz.BiblioSpec.IO
         }
     }
 
+    /// <summary>
+    /// One <c>Proteins</c> row: a protein, or a protein group as its accessions joined by
+    /// semicolons, with the global q-value and PEP of the optional columns
+    /// (<see cref="BlibSchema.ProteinQValue"/>, <see cref="BlibSchema.ProteinPep"/>) where the
+    /// library has them.
+    /// </summary>
+    public sealed class BlibProtein
+    {
+        public BlibProtein(long id, string accession, double? qValue, double? pep)
+        {
+            Id = id;
+            Accession = accession;
+            QValue = qValue;
+            Pep = pep;
+        }
+
+        public long Id { get; }
+        public string Accession { get; }
+        public double? QValue { get; }
+        public double? Pep { get; }
+    }
+
     /// <summary>One <c>SpectrumSourceFiles</c> row, as <see cref="BlibWriter.AddSourceFile"/> writes it.</summary>
     public sealed class BlibSourceFile
     {
@@ -106,7 +128,7 @@ namespace pwiz.BiblioSpec.IO
     /// </summary>
     public readonly struct BlibDecoyPair
     {
-        public const string TABLE = @"DecoyPairs";
+        public const string TABLE = BlibSchema.TABLE_DECOY_PAIRS;
 
         public BlibDecoyPair(bool isDecoy, bool isEntrapment, int pairingId, long? targetRefSpectraId = null, string method = null)
         {

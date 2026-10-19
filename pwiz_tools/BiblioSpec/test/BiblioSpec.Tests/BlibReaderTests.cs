@@ -413,6 +413,207 @@ public class BlibReaderTests
         }
     }
 
+    /// <summary>
+    /// A spectrum copied through the copier keeps everything that hangs off it - the peak blobs,
+    /// its modifications, its annotations' small-molecule columns, its proteins with their
+    /// values and its source file with its cutoff - its copy count is the caller's, and it
+    /// keeps its id when asked. The optional columns come across with the source files. The
+    /// grouped scan and the score types in use read the copy back.
+    /// </summary>
+    [TestMethod]
+    public void Copier_CopiesSpectraWithTheirRowsAndIds()
+    {
+        string source = TempPath();
+        string target = TempPath();
+        try
+        {
+            long fileA, id1, id2;
+            using (var writer = new BlibWriter(source, "source.blib"))
+            {
+                fileA = writer.AddSourceFile("a.mzML", "a.pep.xml", 0.95, BlibWriter.WORKFLOW_TYPE_DDA);
+                writer.AddOptionalColumn(BlibSchema.PrecursorQValue);
+                writer.AddOptionalColumn(BlibSchema.ProteinQValue);
+                writer.AddProtein("P1", 0.02);
+                id1 = writer.AddSpectrum(new BlibSpectrumRecord
+                {
+                    PeptideSeq = "PEPTIDEK",
+                    PeptideModSeq = "PEPT[+80.0]IDEK",
+                    PrecursorMz = 500.25,
+                    PrecursorCharge = 2,
+                    FileId = fileA,
+                    SpecIdInFile = "scan=17",
+                    NumPeaks = 2,
+                    MzBlob = BlibWriter.EncodeMzs(new[] { 100.0, 200.0 }, false),
+                    IntensityBlob = BlibWriter.EncodeIntensities(new[] { 1f, 2f }, false),
+                    PrecursorQValue = 0.001,
+                    Modifications = new[] { new BlibModification(4, 79.966331) },
+                    Proteins = new[] { "P1", "P2" },
+                    Annotations = new[] { new BlibPeakAnnotation(0, "frag", 1, 100.0, 100.0, "C6H12O6", "KEY", "cas:1", "[M+H]", "note") },
+                });
+                id2 = writer.AddSpectrum(new BlibSpectrumRecord
+                {
+                    PeptideSeq = "SAMPLER",
+                    PeptideModSeq = "SAMPLER",
+                    PrecursorMz = 400.2,
+                    PrecursorCharge = 2,
+                    FileId = fileA,
+                    SpecIdInFile = "scan=20",
+                });
+                writer.Complete();
+            }
+
+            using (var reader = new BlibReader(source))
+            using (var writer = new BlibWriter(target, "target.blib"))
+            {
+                var copier = new BlibCopier(reader, writer);
+                copier.CopySourceFiles();
+                Assert.IsTrue(writer.HasOptionalColumn(BlibSchema.PrecursorQValue));
+                Assert.IsTrue(writer.HasOptionalColumn(BlibSchema.ProteinQValue));
+                // Out of id order, under their own ids, with the caller's copy counts.
+                Assert.AreEqual(id2, copier.CopySpectrum(id2, 3, keepId: true));
+                Assert.AreEqual(id1, copier.CopySpectrum(id1, 1, keepId: true));
+                Assert.IsNull(copier.CopySpectrum(99, 1, keepId: true));
+                writer.Complete();
+            }
+
+            using var copy = new BlibReader(target);
+            var spectra = copy.ReadSpectra(true).ToList();
+            CollectionAssert.AreEqual(new[] { id1, id2 }, spectra.Select(s => s.Id).ToArray());
+            var first = spectra[0];
+            Assert.AreEqual(1, first.Copies);
+            Assert.AreEqual(3, spectra[1].Copies);
+            Assert.AreEqual(0.001, first.PrecursorQValue);
+            CollectionAssert.AreEqual(new[] { 100.0, 200.0 }, BlibReader.DecodePeaks(first).Mzs);
+            var modifications = copy.ReadModifications(id1);
+            Assert.AreEqual(1, modifications.Count);
+            Assert.AreEqual(4, modifications[0].Position);
+            Assert.AreEqual(79.966331, modifications[0].Mass);
+            var annotations = copy.ReadAnnotations(id1);
+            Assert.AreEqual(1, annotations.Count);
+            Assert.AreEqual("C6H12O6", annotations[0].Formula);
+            Assert.AreEqual("KEY", annotations[0].InchiKey);
+            Assert.AreEqual("cas:1", annotations[0].OtherKeys);
+            Assert.AreEqual("[M+H]", annotations[0].Adduct);
+            Assert.AreEqual("note", annotations[0].Comment);
+            var proteins = copy.ReadProteinTable();
+            Assert.AreEqual(2, proteins.Count);
+            Assert.AreEqual(0.02, proteins.Single(p => p.Accession == "P1").QValue);
+            Assert.IsNull(proteins.Single(p => p.Accession == "P2").QValue);
+            CollectionAssert.AreEqual(new[] { "P1", "P2" }, copy.ReadProteins()[id1].ToArray());
+            Assert.AreEqual(2, copy.ReadProteinIds()[id1].Count());
+            var files = copy.ReadSourceFiles();
+            Assert.AreEqual(1, files.Count);
+            Assert.AreEqual("a.mzML", files[0].FileName);
+            Assert.AreEqual("a.pep.xml", files[0].IdFileName);
+            Assert.AreEqual(0.95, files[0].CutoffScore);
+            Assert.AreEqual(files[0].Id, first.FileId);
+            // The scan grouped by precursor (PEPT[+80.0]IDEK sorts before SAMPLER) and the score types in use.
+            CollectionAssert.AreEqual(new[] { id1, id2 }, copy.ReadSpectraByPrecursor(false, 0).Select(s => s.Id).ToArray());
+            CollectionAssert.AreEqual(new[] { BlibWriter.SCORE_TYPE_UNKNOWN }, copy.ReadScoreTypesInUse().ToArray());
+        }
+        finally
+        {
+            DeleteTemp(source);
+            DeleteTemp(target);
+        }
+    }
+
+    /// <summary>
+    /// A library named by a long-path (<c>\\?\</c>) name, as Skyline names the libraries it builds
+    /// in deep test directories, is written, appended to and read under that name. System.Data.SQLite
+    /// parses a connection string with backslash escapes, which folded the prefix to <c>\?\</c> and
+    /// left BlibBuild and BlibFilter unable to open the file.
+    /// </summary>
+    [TestMethod]
+    public void Reader_AndWriter_AcceptLongPathPrefix()
+    {
+        string path = TempPath();
+        string longPath = @"\\?\" + path;
+        try
+        {
+            using (var writer = new BlibWriter(longPath, "long.blib"))
+            {
+                writer.AddSpectrum(new BlibSpectrumRecord { PeptideSeq = "PEPTIDEK", PeptideModSeq = "PEPTIDEK", PrecursorMz = 500.25, PrecursorCharge = 2 });
+                writer.Complete();
+            }
+            Assert.IsTrue(File.Exists(path), "The library should be at the path without the prefix.");
+            using (var reader = new BlibReader(longPath))
+                Assert.AreEqual(1, reader.CountSpectra());
+            using (var writer = BlibWriter.Open(longPath, true))
+            {
+                writer.DropIndexes();
+                writer.AddSpectrum(new BlibSpectrumRecord { PeptideSeq = "SAMPLER", PeptideModSeq = "SAMPLER", PrecursorMz = 400.2, PrecursorCharge = 2 });
+                writer.Complete();
+            }
+            using (var reader = new BlibReader(longPath))
+                Assert.AreEqual(2, reader.CountSpectra());
+        }
+        finally
+        {
+            DeleteTemp(path);
+        }
+    }
+
+    /// <summary>
+    /// The schema script (<c>blibbuild -d</c>) and the writer agree: a library made by running
+    /// the script has the writer's tables and seed rows, and the writer's library has the
+    /// script's, apart from the tables the writer adds to a new library (RetentionTimes,
+    /// LibMetadata) and the indexes it builds on completion.
+    /// </summary>
+    [TestMethod]
+    public void Schema_CreateScriptMatchesTheWriter()
+    {
+        string scriptPath = TempPath();
+        string writerPath = TempPath();
+        try
+        {
+            const string lsid = "urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:it's.blib";
+            var connectionString = new SQLiteConnectionStringBuilder { DataSource = scriptPath, Version = 3 };
+            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            {
+                connection.Open();
+                foreach (string statement in BlibSchema.CreateScript(lsid, "Thu Nov  3 17:02:18 2011"))
+                    Execute(connection, statement);
+            }
+            using (var writer = new BlibWriter(writerPath, "writer.blib"))
+                writer.Complete();
+
+            using var fromScript = new BlibReader(scriptPath);
+            using var fromWriter = new BlibReader(writerPath);
+            Assert.AreEqual(lsid, fromScript.Info.Lsid, "The script escapes the LSID's apostrophe.");
+            Assert.AreEqual(-1, fromScript.Info.SpectrumCount);
+            Assert.AreEqual(BlibSchema.CurrentMinorVersion, fromScript.Info.SchemaVersion);
+            var scriptTables = TableNames(fromScript.Connection);
+            var writerTables = TableNames(fromWriter.Connection);
+            writerTables.Remove(BlibReader.TABLE_RETENTION_TIMES);
+            writerTables.Remove(BlibMetadata.TABLE);
+            CollectionAssert.AreEquivalent(scriptTables, writerTables);
+            CollectionAssert.AreEqual(fromWriter.ReadScoreTypes().OrderBy(t => t.Key).Select(t => t.Key + "=" + t.Value).ToList(),
+                fromScript.ReadScoreTypes().OrderBy(t => t.Key).Select(t => t.Key + "=" + t.Value).ToList());
+            using var mobilityTypes = new SQLiteCommand("SELECT id || '=' || ionMobilityType FROM IonMobilityTypes ORDER BY id", fromScript.Connection);
+            using var reader = mobilityTypes.ExecuteReader();
+            var scripted = new List<string>();
+            while (reader.Read())
+                scripted.Add(reader.GetString(0));
+            CollectionAssert.AreEqual(BlibSchema.IonMobilityTypes.Select((name, i) => i + "=" + name).ToList(), scripted);
+        }
+        finally
+        {
+            DeleteTemp(scriptPath);
+            DeleteTemp(writerPath);
+        }
+    }
+
+    private static List<string> TableNames(SQLiteConnection connection)
+    {
+        var names = new List<string>();
+        using var command = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'", connection);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+            names.Add(reader.GetString(0));
+        return names;
+    }
+
     private static string TempPath()
     {
         return Path.Combine(Path.GetTempPath(), $"pwiz-sharp-blibreader-{Guid.NewGuid():N}.blib");
