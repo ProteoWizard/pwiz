@@ -46,6 +46,7 @@ namespace pwiz.BiblioSpec.IO
         private readonly Dictionary<long, long> _fileIds = new Dictionary<long, long>();
         private readonly Dictionary<long, BlibProtein> _proteins = new Dictionary<long, BlibProtein>();
         private ILookup<long, long> _proteinIds;
+        private bool _proteinsLoaded;
         private bool _sourceFilesCopied;
 
         public BlibCopier(BlibReader source, BlibWriter target)
@@ -120,7 +121,10 @@ namespace pwiz.BiblioSpec.IO
         /// its modifications, annotations and proteins read from the source and written with it;
         /// a protein keeps its global q-value and PEP where the target has those columns. With
         /// <paramref name="keepId"/> the spectrum keeps its id (<see cref="BlibWriter.AddSpectrum(BlibSpectrumRecord,bool)"/>).
-        /// Returns the target's id.
+        /// Returns the target's id. The record is left as it was written: its copies and
+        /// source file are the target's, its modifications and annotations filled in, and its
+        /// protein names cleared (the proteins go through <see cref="BlibWriter.AddProtein"/>
+        /// with their values), so a caller that needs the source's values reads them first.
         /// </summary>
         public long CopySpectrum(BlibSpectrumRecord spectrum, int copies, bool keepId)
         {
@@ -160,10 +164,11 @@ namespace pwiz.BiblioSpec.IO
 
         private Dictionary<long, BlibProtein> Proteins()
         {
-            if (_proteins.Count == 0)
+            if (!_proteinsLoaded)
             {
                 foreach (var protein in _source.ReadProteinTable())
                     _proteins[protein.Id] = protein;
+                _proteinsLoaded = true;
             }
             return _proteins;
         }

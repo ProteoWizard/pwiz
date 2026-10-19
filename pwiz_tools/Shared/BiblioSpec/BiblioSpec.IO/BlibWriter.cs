@@ -333,6 +333,32 @@ namespace pwiz.BiblioSpec.IO
                 if (!spectrumColumns.Contains(column.Name))
                     Execute(@"ALTER TABLE RefSpectra ADD " + column.Name + @" VARCHAR(128)");
             }
+            // The ion mobility values a library of an earlier schema holds under the earlier column
+            // names move to the current columns, which a reader prefers once they exist.
+            if (!spectrumColumns.Contains(@"ionMobility"))
+            {
+                if (spectrumColumns.Contains(@"driftTimeMsec"))
+                {
+                    Execute(@"UPDATE RefSpectra SET ionMobility = driftTimeMsec, ionMobilityType = " +
+                            ION_MOBILITY_TYPE_DRIFT_TIME.ToString(CultureInfo.InvariantCulture) + @" WHERE driftTimeMsec IS NOT NULL AND driftTimeMsec != 0");
+                }
+                else if (spectrumColumns.Contains(@"ionMobilityValue") && spectrumColumns.Contains(@"ionMobilityType"))
+                {
+                    // Schema 3 told a drift time from a CCS by the type; only the drift time is an ion mobility.
+                    Execute(@"UPDATE RefSpectra SET ionMobility = ionMobilityValue WHERE ionMobilityType = " +
+                            ION_MOBILITY_TYPE_DRIFT_TIME.ToString(CultureInfo.InvariantCulture));
+                }
+                Execute(@"UPDATE RefSpectra SET ionMobilityType = " + ION_MOBILITY_TYPE_NONE.ToString(CultureInfo.InvariantCulture) +
+                        @" WHERE ionMobilityType IS NULL");
+            }
+            if (!spectrumColumns.Contains(@"ionMobilityHighEnergyOffset"))
+            {
+                foreach (string legacy in new[] { @"driftTimeHighEnergyOffsetMsec", @"ionMobilityHighEnergyDriftTimeOffsetMsec" })
+                {
+                    if (spectrumColumns.Contains(legacy))
+                        Execute(@"UPDATE RefSpectra SET ionMobilityHighEnergyOffset = " + legacy + @" WHERE " + legacy + @" IS NOT NULL");
+                }
+            }
             var fileColumns = BlibSqlite.ColumnNames(_connection, @"SpectrumSourceFiles");
             if (!fileColumns.Contains(@"idFileName"))
                 Execute(@"ALTER TABLE SpectrumSourceFiles ADD COLUMN idFileName TEXT");

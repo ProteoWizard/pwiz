@@ -183,7 +183,7 @@ namespace pwiz.BiblioSpec.IO
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
-                    scoreTypes.Add(Convert.ToInt32(reader.GetValue(0), CultureInfo.InvariantCulture));
+                    scoreTypes.Add(GetInt32(reader, 0) ?? BlibWriter.SCORE_TYPE_UNKNOWN);
             }
             return scoreTypes;
         }
@@ -630,7 +630,14 @@ namespace pwiz.BiblioSpec.IO
 
         private static int? GetInt32(SQLiteDataReader reader, int ordinal)
         {
-            return reader.IsDBNull(ordinal) ? null : Convert.ToInt32(reader.GetValue(ordinal), CultureInfo.InvariantCulture);
+            if (reader.IsDBNull(ordinal))
+                return null;
+            object value = reader.GetValue(ordinal);
+            // System.Data.SQLite surfaces a TINYINT as an unsigned byte, so the -1 BiblioSpec's
+            // tools have written for an unknown workflow or score type would read as 255.
+            if (value is byte b)
+                return (sbyte)b;
+            return Convert.ToInt32(value, CultureInfo.InvariantCulture);
         }
 
         private static long? GetInt64(SQLiteDataReader reader, int ordinal)
@@ -924,6 +931,14 @@ namespace pwiz.BiblioSpec.IO
                     spectrum.IonMobilityType = Integer(reader, ION_MOBILITY_TYPE) ?? BlibWriter.ION_MOBILITY_TYPE_NONE;
                 else if (FromLegacyName(ION_MOBILITY) && spectrum.IonMobility.HasValue)
                     spectrum.IonMobilityType = BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME;
+                // A library of schema 3 held a drift time or a CCS in ionMobilityValue, told apart by
+                // its ionMobilityType; only the drift time (1) is an ion mobility, as BlibFilter has
+                // always read it, and the type codes of that schema are not the current ones.
+                if (Source(ION_MOBILITY) == @"ionMobilityValue" && spectrum.IonMobilityType != BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME)
+                {
+                    spectrum.IonMobility = null;
+                    spectrum.IonMobilityType = BlibWriter.ION_MOBILITY_TYPE_NONE;
+                }
                 if (Has(RETENTION_TIME))
                     spectrum.RetentionTime = Real(reader, RETENTION_TIME);
                 if (Has(START_TIME))

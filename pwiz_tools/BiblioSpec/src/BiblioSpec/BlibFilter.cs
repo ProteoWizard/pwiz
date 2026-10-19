@@ -138,7 +138,17 @@ public class BlibFilter : BlibMaker
             throw new BlibException(false, "Redundant library name has not been set; call ParseCommandArgs or RedundantFileName first.");
 
         Verbosity.Status($"Filtering redundant library '{_redundantFileName}'.");
-        _redundant = new BlibReader(_redundantFileName);
+        VerifyFileExists(_redundantFileName);
+        try
+        {
+            _redundant = new BlibReader(_redundantFileName);
+            _ = _redundant.Info;
+        }
+        catch (Exception ex) when (ex is SQLiteException or InvalidDataException)
+        {
+            // cpp parity: a redundant library that cannot be read is an error naming the file.
+            throw new BlibException(true, $"Redundant library '{_redundantFileName}' cannot be read: {ex.Message}");
+        }
     }
 
     /// <summary>

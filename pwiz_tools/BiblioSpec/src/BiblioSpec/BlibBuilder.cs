@@ -508,13 +508,16 @@ public class BlibBuilder : BlibMaker
 
         copier.CopySourceFiles();
 
+        // With target sequences, most spectra are skipped: the scan reads no peaks, and the
+        // copier reads a kept spectrum's by id.
+        var selecting = _targetSequences != null || _targetSequencesModified != null;
         var processed = 0;
-        foreach (var spectrum in source.ReadSpectra(withPeaks: true))
+        foreach (var spectrum in source.ReadSpectra(withPeaks: !selecting))
         {
             processed++;
 
             var skip = false;
-            if (_targetSequences != null || _targetSequencesModified != null)
+            if (selecting)
             {
                 var seqUnmodified = spectrum.PeptideSeq ?? string.Empty;
                 var rawModSeq = spectrum.PeptideModSeq ?? string.Empty;
@@ -530,7 +533,11 @@ public class BlibBuilder : BlibMaker
 
             // cpp parity: BlibBuilder.cpp:402 — always passes copies=1, regardless of
             // whether the source library was redundant.
-            if (!skip)
+            if (skip)
+                continue;
+            if (selecting)
+                copier.CopySpectrum(spectrum.Id, 1, keepId: false);
+            else
                 copier.CopySpectrum(spectrum, 1, keepId: false);
         }
 
@@ -676,10 +683,10 @@ public class BlibBuilder : BlibMaker
                     scoreTypes.Add(scoreType);
             }
         }
-        catch (SQLiteException)
+        catch (Exception ex) when (ex is SQLiteException or InvalidDataException)
         {
-            // A damaged library is no known score type rather than an error (which would
-            // re-hang Skyline's Build Spectral Library page).
+            // A damaged library (no RefSpectra or LibInfo, or not a database) is no known score
+            // type rather than an error (which would re-hang Skyline's Build Spectral Library page).
             scoreTypes.Clear();
         }
 
