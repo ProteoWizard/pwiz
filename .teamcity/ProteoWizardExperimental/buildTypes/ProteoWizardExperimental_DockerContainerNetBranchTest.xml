@@ -21,7 +21,7 @@
       <param name="env.architecture_property" value="" />
       <param name="env.link_property" value="" />
       <param name="env.variant_property" value="release" />
-      <param name="system.build.vcs.number" value="%system.build.vcs.number.ProteoWizard_GithubContainer%" />
+      <param name="system.build.vcs.number" value="%system.build.vcs.number.ProteoWizardExperimental_GithubContainerBranchTest%" />
     </parameters>
     <build-runners>
       <runner id="RUNNER_2155" name="Build container" type="simpleRunner">
