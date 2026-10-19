@@ -654,6 +654,47 @@ public class BlibReaderTests
     }
 
     /// <summary>
+    /// A library written in place into a file another tool keeps a table in: that table stays,
+    /// the library's tables are made anew each time, and the result reads as any library does.
+    /// </summary>
+    [TestMethod]
+    public void Writer_CreatesLibraryInPlaceBesideAnotherToolsTable()
+    {
+        string path = TempPath();
+        try
+        {
+            var connectionString = new SQLiteConnectionStringBuilder { DataSource = path, Version = 3 };
+            using (var connection = new SQLiteConnection(connectionString.ToString()))
+            {
+                connection.Open();
+                Execute(connection, "CREATE TABLE IrtLibrary (id INTEGER PRIMARY KEY, PeptideModSeq TEXT, Irt REAL)");
+                Execute(connection, "INSERT INTO IrtLibrary VALUES (1, 'PEPTIDEK', 42.0)");
+            }
+            const string lsid = "urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:inplace.blib";
+            for (int round = 1; round <= 2; round++)
+            {
+                using (var writer = BlibWriter.Create(path, lsid, false, true))
+                {
+                    for (int i = 0; i < round; i++)
+                        writer.AddSpectrum(new BlibSpectrumRecord { PeptideSeq = "PEPTIDEK", PeptideModSeq = "PEPTIDEK", PrecursorMz = 500.25, PrecursorCharge = 1 + i });
+                    writer.Complete();
+                }
+                using var reader = new BlibReader(path);
+                Assert.AreEqual(lsid, reader.Info.Lsid);
+                Assert.AreEqual(round, reader.Info.SpectrumCount, "Each in-place write starts the library's tables anew.");
+                Assert.IsTrue(reader.HasTable(BlibReader.TABLE_RETENTION_TIMES));
+                Assert.IsTrue(reader.HasTable("IrtLibrary"), "The other tool's table stays.");
+                using var count = new SQLiteCommand("SELECT COUNT(*) FROM IrtLibrary", reader.Connection);
+                Assert.AreEqual(1L, count.ExecuteScalar());
+            }
+        }
+        finally
+        {
+            DeleteTemp(path);
+        }
+    }
+
+    /// <summary>
     /// The RetentionTimes table of the schemas before the ion mobility units: the drift time
     /// columns of schemas 4 and 5 read as a drift time, and the value column of schemas 2 and 3
     /// as a drift time or a CCS by that schema's own type code, as Skyline has always read them.

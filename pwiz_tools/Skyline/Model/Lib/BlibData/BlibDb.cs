@@ -33,7 +33,6 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.BlibData
 {
@@ -116,7 +115,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             var listIonMobilitiesByFileId = new List<IList<KeyValuePair<long, IonMobilityAndCCS>>>();
             var sourceFiles = new Dictionary<string, long>();
 
-            using (var writer = BlibWriter.Create(FilePath, libLsid))
+            // A library file that already exists keeps the tables another part of Skyline put
+            // there (the iRT table of a document library), and gets its library tables anew.
+            using (var writer = BlibWriter.Create(FilePath, libLsid, false, File.Exists(FilePath)))
             {
                 writer.BeginBatch();
                 int progressPercent = -1;

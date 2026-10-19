@@ -93,6 +93,14 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>The <c>SpectrumSourceFiles</c> row for spectra whose source the library does not record.</summary>
         public const string UNKNOWN_SOURCE_FILE = @"UNKNOWN";
 
+        // Every table of the format, the optional ones included, for a library made anew in place.
+        private static readonly string[] FORMAT_TABLES =
+        {
+            @"LibInfo", @"RefSpectra", @"Modifications", @"RefSpectraPeaks", @"Proteins", @"RefSpectraProteins",
+            @"RefSpectraPeakAnnotations", @"SpectrumSourceFiles", @"ScoreTypes", @"IonMobilityTypes", @"RetentionTimes",
+            BlibMetadata.TABLE, @"DecoyPairs",
+        };
+
         // The RefSpectra columns the spectrum INSERT names, after the id, with their types.
         private static readonly string[] SPECTRUM_COLUMNS =
         {
@@ -216,7 +224,10 @@ namespace pwiz.BiblioSpec.IO
                 Execute(@"PRAGMA temp_store=MEMORY");
                 if (!append)
                     Execute(@"PRAGMA journal_mode=MEMORY");
-                if (append)
+                // A library opened in place may be a file of another tool's tables with no
+                // library in it yet (Skyline adds its iRT table before the library); the schema
+                // comes with CreateSchema then.
+                if (append && TableExists(@"RefSpectra"))
                 {
                     _spectrumCount = (int)Scalar(@"SELECT COUNT(*) FROM RefSpectra");
                     _existingRevision = (int)Scalar(@"SELECT IFNULL(MAX(majorVersion), 0) FROM LibInfo");
@@ -236,15 +247,22 @@ namespace pwiz.BiblioSpec.IO
         /// minimizes from another (the source library's authority and name, with a GUID) and its
         /// redundant companion (<c>:redundant:</c> in place of <c>:nr:</c>): every table, as the
         /// constructor creates them, except that a <paramref name="redundant"/> library gets no
-        /// <c>RetentionTimes</c> table, every spectrum there being its own observation.
+        /// <c>RetentionTimes</c> table, every spectrum there being its own observation. With
+        /// <paramref name="inPlace"/> the library is written into the file at <paramref name="path"/>
+        /// as it stands, the format's own tables dropped and made anew and any other tool's
+        /// tables left as they are, where Skyline's NHibernate writer did the same: a document
+        /// library gets its iRT table before its spectra. Without it, as a new file moved over
+        /// the path by <see cref="Complete"/>.
         /// </summary>
-        public static BlibWriter Create(string path, string lsid, bool redundant = false)
+        public static BlibWriter Create(string path, string lsid, bool redundant = false, bool inPlace = false)
         {
             if (string.IsNullOrEmpty(lsid))
                 throw new ArgumentException(@"A library needs an LSID", nameof(lsid));
-            var writer = new BlibWriter(path, false);
+            var writer = new BlibWriter(path, inPlace);
             try
             {
+                if (inPlace)
+                    writer.DropFormatTables();
                 writer.CreateSchema(lsid);
                 if (!redundant)
                     writer.EnsureRetentionTimes();
@@ -603,6 +621,23 @@ namespace pwiz.BiblioSpec.IO
                 SeedIonMobilityTypes();
                 transaction.Commit();
             }
+        }
+
+        /// <summary>
+        /// Drops every table of the format the file holds, with their indexes, for a library
+        /// written anew into a file another tool keeps tables in; that tool's tables stay.
+        /// </summary>
+        private void DropFormatTables()
+        {
+            foreach (string table in FORMAT_TABLES)
+                Execute(@"DROP TABLE IF EXISTS " + table);
+            _spectrumCount = 0;
+            _existingRevision = null;
+            _proteinIds.Clear();
+            _proteinIdsWithValues.Clear();
+            _optionalSpectrumColumns.Clear();
+            _optionalProteinColumns.Clear();
+            _unknownSourceFileId = null;
         }
 
         /// <summary>One <c>ScoreTypes</c> row per <see cref="BlibSchema.ScoreTypes"/> entry, the id its index.</summary>

@@ -1235,6 +1235,9 @@ namespace pwiz.Skyline.Model.Lib
             var listSpectra = _sqliteConnection.ExecuteWithReader(reader =>
             {
                 var spectra = new List<SpectrumInfoLibrary>();
+                // The files from the library itself, which a library just written by BlibDb has
+                // before it is loaded and has its list of source files.
+                var filesById = reader.ReadSourceFiles().ToDictionary(file => file.Id);
                 // Only bother with the RetentionTimes table if it can lead to a redundant spectrum.
                 // For libraries which never went through BlibFilter it holds nothing the spectrum's
                 // own row does not.
@@ -1247,22 +1250,22 @@ namespace pwiz.Skyline.Model.Lib
                             continue;
                         // An observation whose source file the library does not list is left out,
                         // as the join to the files table always left it.
-                        if (!time.SpectrumSourceId.HasValue || !TryGetSourceFile(time.SpectrumSourceId.Value, out var file))
+                        if (!time.SpectrumSourceId.HasValue || !filesById.TryGetValue(time.SpectrumSourceId.Value, out var file))
                             continue;
                         var ionMobility = GetIonMobility(time.IonMobility, time.CollisionalCrossSectionSqA,
                             time.IonMobilityHighEnergyOffset, time.IonMobilityType);
-                        spectra.Add(CreateSpectrumInfo(i, labelType, file.FilePath, time.RetentionTime, ionMobility,
+                        spectra.Add(CreateSpectrumInfo(i, labelType, file.FileName, time.RetentionTime, ionMobility,
                             info.Protein, isBest, (int)time.RedundantRefSpectraId, redundancy));
                     }
                 }
                 else
                 {
                     var spectrum = reader.ReadSpectrum(info.Id, false);
-                    if (spectrum != null && TryGetSourceFile(spectrum.FileId, out var file))
+                    if (spectrum != null && filesById.TryGetValue(spectrum.FileId, out var file))
                     {
                         var ionMobility = GetIonMobility(spectrum.IonMobility, spectrum.CollisionalCrossSectionSqA,
                             spectrum.IonMobilityHighEnergyOffset, spectrum.IonMobilityType);
-                        spectra.Add(CreateSpectrumInfo(i, labelType, file.FilePath, spectrum.RetentionTime, ionMobility,
+                        spectra.Add(CreateSpectrumInfo(i, labelType, file.FileName, spectrum.RetentionTime, ionMobility,
                             info.Protein, true, -1, redundancy));
                     }
                 }
@@ -1291,20 +1294,6 @@ namespace pwiz.Skyline.Model.Lib
             {
                 SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[entryIndex])
             };
-        }
-
-        private bool TryGetSourceFile(long id, out BiblioLiteSourceInfo file)
-        {
-            foreach (var sourceFile in _librarySourceFiles)
-            {
-                if (sourceFile.Id == id)
-                {
-                    file = sourceFile;
-                    return true;
-                }
-            }
-            file = default;
-            return false;
         }
 
         /// <summary>
