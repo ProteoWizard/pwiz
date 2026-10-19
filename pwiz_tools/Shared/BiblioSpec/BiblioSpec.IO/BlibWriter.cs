@@ -93,14 +93,6 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>The <c>SpectrumSourceFiles</c> row for spectra whose source the library does not record.</summary>
         public const string UNKNOWN_SOURCE_FILE = @"UNKNOWN";
 
-        // Every table of the format, the optional ones included, for a library made anew in place.
-        private static readonly string[] FORMAT_TABLES =
-        {
-            @"LibInfo", @"RefSpectra", @"Modifications", @"RefSpectraPeaks", @"Proteins", @"RefSpectraProteins",
-            @"RefSpectraPeakAnnotations", @"SpectrumSourceFiles", @"ScoreTypes", @"IonMobilityTypes", @"RetentionTimes",
-            BlibMetadata.TABLE, @"DecoyPairs",
-        };
-
         // The RefSpectra columns the spectrum INSERT names, after the id, with their types.
         private static readonly string[] SPECTRUM_COLUMNS =
         {
@@ -225,7 +217,7 @@ namespace pwiz.BiblioSpec.IO
                 // A library opened in place may be a file of another tool's tables with no
                 // library in it yet (Skyline adds its iRT table before the library); the schema
                 // comes with CreateSchema then.
-                if (append && TableExists(@"RefSpectra"))
+                if (append && TableExists(BlibSchema.TABLE_REF_SPECTRA))
                 {
                     _spectrumCount = (int)Scalar(@"SELECT COUNT(*) FROM RefSpectra");
                     _existingRevision = (int)Scalar(@"SELECT IFNULL(MAX(majorVersion), 0) FROM LibInfo");
@@ -505,15 +497,15 @@ namespace pwiz.BiblioSpec.IO
             var statements = new List<string>();
             foreach (var (table, column) in new[]
                      {
-                         (@"Modifications", @"RefSpectraID"), (@"RefSpectraPeaks", @"RefSpectraID"),
-                         (@"RefSpectraPeakAnnotations", @"RefSpectraID"), (@"RefSpectraProteins", @"RefSpectraId"),
-                         (@"RetentionTimes", @"RefSpectraID"),
+                         (BlibSchema.TABLE_MODIFICATIONS, @"RefSpectraID"), (BlibSchema.TABLE_REF_SPECTRA_PEAKS, @"RefSpectraID"),
+                         (BlibSchema.TABLE_REF_SPECTRA_PEAK_ANNOTATIONS, @"RefSpectraID"), (BlibSchema.TABLE_REF_SPECTRA_PROTEINS, @"RefSpectraId"),
+                         (BlibSchema.TABLE_RETENTION_TIMES, @"RefSpectraID"),
                      })
             {
                 if (TableExists(table))
                     statements.Add(@"DELETE FROM " + table + @" WHERE " + column + @" IN " + spectrumIds);
             }
-            if (TableExists(@"DecoyPairs"))
+            if (TableExists(BlibSchema.TABLE_DECOY_PAIRS))
             {
                 // A decoy whose target goes keeps its row, with no target to name.
                 statements.Add(@"UPDATE DecoyPairs SET TargetRefSpectraID = NULL WHERE TargetRefSpectraID IN " + spectrumIds);
@@ -627,7 +619,7 @@ namespace pwiz.BiblioSpec.IO
         /// </summary>
         private void DropFormatTables()
         {
-            foreach (string table in FORMAT_TABLES)
+            foreach (string table in BlibSchema.AllTableNames)
                 Execute(@"DROP TABLE IF EXISTS " + table);
             _spectrumCount = 0;
             _existingRevision = null;
