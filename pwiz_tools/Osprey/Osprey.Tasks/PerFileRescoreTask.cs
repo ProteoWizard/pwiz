@@ -2111,7 +2111,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             Func<Stage6Consensus> loadConsensus = config.Reconciliation.Enabled
-                ? () => Stage6ConsensusFile.Load(Stage6ConsensusFile.PathFor(config))
+                ? () => Stage6ConsensusFile.Load(config)
                 : () => null;
             return new RunReconciliationPlanner(loadConsensus, perFileCalibrations,
                 ctx.Get<PerFileIsolationMz>().Value, fullLibrary, perFileParquetPaths, config, ctx);

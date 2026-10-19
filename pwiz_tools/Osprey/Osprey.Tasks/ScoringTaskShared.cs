@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -1005,7 +1005,71 @@ namespace pwiz.Osprey.Tasks
                     path, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
                 return null;
             }
+            string stampProblem = FirstPassProductStampProblem(config, path);
+            if (stampProblem != null)
+            {
+                error = string.Format(
+                    OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_cannot_be_used,
+                    path, stampProblem, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN);
+                return null;
+            }
             return retained;
+        }
+
+        /// <summary>
+        /// Why the analysis-wide FirstPassFDR product at <paramref name="path"/> - the
+        /// retained base_id summary or the Stage 6 consensus - cannot be trusted, or null when it
+        /// can as far as a reader is able to tell.
+        ///
+        /// <para>This is a CONSISTENCY check, not the validity check a resume makes. A full
+        /// check rebuilds the writer's key and compares, and a reader on another HPC node
+        /// cannot: FirstPassFDR's key includes <c>LibraryFragmentRelease.ValidityKeySuffix</c>,
+        /// which records what the WRITING leg did, so a PerFileRescoring or SecondPassFDR node
+        /// would compute its own leg's term and refuse a valid file. What a reader can check
+        /// is that the file was written by FirstPassFDR of this build - which catches an HPC
+        /// node shipped a file from an older Osprey - and that the two products FirstPassFDR
+        /// writes back to back under one stamp still carry the same one, which catches one of
+        /// them left over from an earlier run by a failed overwrite. A matching stale pair
+        /// from the same build under other settings passes; only the writer can detect that,
+        /// and a straight-through run does, because both are declared FirstPassFDR outputs.</para>
+        ///
+        /// <para>The pair is compared only where both are present: a SecondPassFDR node is
+        /// shipped the retained summary and not the consensus. The first-pass model file is
+        /// not part of the pair, because its write is best-effort and an earlier run's model
+        /// may legitimately sit beside this run's products.</para>
+        /// </summary>
+        internal static string FirstPassProductStampProblem(OspreyConfig config, string path)
+        {
+            var stamp = ArtifactValidity.ReadStamp(path);
+            if (stamp == null)
+                return OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp;
+            if (!string.Equals(stamp.Task, FirstPassFdrTask.TASK_NAME, StringComparison.Ordinal) ||
+                !string.Equals(stamp.Version, OspreyVersion.Current, StringComparison.Ordinal))
+            {
+                return string.Format(
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_was_written_by__0__of_Osprey__1___not_by__2__of_this_build___3__,
+                    stamp.Task, stamp.Version, FirstPassFdrTask.TASK_NAME, OspreyVersion.Current);
+            }
+            var pair = new[]
+            {
+                Stage6ConsensusFile.PathFor(config),
+                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config))
+            };
+            foreach (string other in pair)
+            {
+                if (string.IsNullOrEmpty(other) || !File.Exists(other) ||
+                    string.Equals(Path.GetFullPath(other), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                if (!string.Equals(stamp.ToString(), ArtifactValidity.ReadStamp(other)?.ToString(), StringComparison.Ordinal))
+                {
+                    return string.Format(
+                        OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,
+                        other, FirstPassFdrTask.TASK_NAME);
+                }
+            }
+            return null;
         }
 
         /// <summary>
