@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Globalization;
@@ -27,12 +26,11 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Dapper;
 using JetBrains.Annotations;
 using pwiz.BiblioSpec;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Crosslinking;
@@ -278,12 +276,6 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private class ScoreTypeRow
-        {
-            public string ScoreType { get; set; }
-            public string ProbabilityType { get; set; }
-        }
-
         public IEnumerable<SpectrumSourceFileDetails> GetDataFileDetails()
         {
             var detailsByFileIndex = new SpectrumSourceFileDetails[_librarySourceFiles.Length];
@@ -291,14 +283,10 @@ namespace pwiz.Skyline.Model.Lib
             Dictionary<string, ScoreType> scoreTypesByName = new Dictionary<string, ScoreType>();
             try
             {
-                lock (_sqliteConnection)
+                foreach (var scoreTypeRow in _sqliteConnection.ExecuteWithReader(reader => reader.ReadScoreTypeTable()))
                 {
-                    foreach (var scoreTypeRow in _sqliteConnection.Connection.Query<ScoreTypeRow>(
-                                 @"SELECT * FROM ScoreTypes"))
-                    {
-                        var scoreType = new ScoreType(scoreTypeRow.ScoreType, scoreTypeRow.ProbabilityType);
-                        scoreTypesByName[scoreType.NameInvariant] = scoreType;
-                    }
+                    var scoreType = new ScoreType(scoreTypeRow.Name, scoreTypeRow.ProbabilityType);
+                    scoreTypesByName[scoreType.NameInvariant] = scoreType;
                 }
             }
             catch
@@ -350,9 +338,8 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static bool IsRedundantLibrary(string filepath)
         {
-            using var conn = SqliteOperations.OpenConnection(filepath);
-            using var cmd = new SQLiteCommand(@"SELECT name FROM sqlite_master WHERE name = 'RetentionTimes'", conn);
-            return cmd.ExecuteScalar() == null;
+            using var reader = new BlibReader(filepath);
+            return !reader.HasTable(BlibReader.TABLE_RETENTION_TIMES);
         }
 
         /// <summary>
@@ -415,310 +402,76 @@ namespace pwiz.Skyline.Model.Lib
             return (diff == 0 ? 0 : (diff < 0 ? -1 : 1));
         }
 
-        // ReSharper disable UnusedMember.Local
-        // ReSharper disable InconsistentNaming
-        // Column indices for BiblioSpec SQLite indices
-        private enum LibInfo
-        {
-            libLSID,
-            createTime,
-            numSpecs,
-            majorVersion,
-            minorVersion,
-        }
-
-        public enum IonMobilityType
-        {
-             none,
-             driftTime,
-             collisionalCrossSection
-        }
-
-        private class RefSpectraRow
-        {
-            public int id { get; set; }
-            public string peptideSeq { get; set; }
-            public double precursorMZ { get; set; }
-            public int precursorCharge { get; set; } 
-            public string moleculeName { get; set; }
-            public string chemicalFormula { get; set; }
-            public string precursorAdduct { get; set; }
-            public string inchiKey { get; set; }
-            public string otherKeys { get; set; }
-            public double ionMobilityValue { get; set; }
-            public IonMobilityType ionMobilityType { get; set; }
-            public string peptideModSeq { get; set; }
-            public int copies { get; set; }
-            public int numPeaks { get; set; }
-            public double? score { get; set; }
-            public int? scoreType { get; set; }
-            public string SpecIDinFile { get; set; }
-            public int? fileId { get; set; }
-            // Optional global statistics, absent from most libraries
-            public double? PrecursorQValue { get; set; }
-            public double? PrecursorPep { get; set; }
-            public double? PeptideQValue { get; set; }
-            public double? PeptidePep { get; set; }
-        }
-
-        private enum RefSpectra
-        {
-            id,
-            libSpecNumber,
-            peptideSeq,
-            precursorMZ,
-            precursorCharge,
-            moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys, // Small molecule columns
-            ionMobilityValue,     // See ionMobilityType value for interpretation - obsolete as of v4
-            ionMobilityHighEnergyDriftTimeOffsetMsec, // in Waters Mse IMS, product ions travel slightly faster after the drift tube due to added kinetic energy in the fragmentation cell
-            ionMobilityType, // See enum IonMobilityType - obsolete as of v4
-            peptideModSeq,
-            copies,
-            numPeaks,
-            score,
-            scoreType,
-            SpecIDinFile,
-            retentionTime,
-            fileId
-        }
-
-        private enum RefSpectraPeaks
-        {
-            RefSpectraID,
-            peakMZ,
-            peakIntensity
-        }
-
-
-        // From BlibMaker.cpp:
-        // CREATE TABLE RefSpectraPeakAnnotations(RefSpectraID INTEGER, "
-        // "peakIndex INTEGER, "
-        // "name VARCHAR(256), "
-        // "formula VARCHAR(256), "
-        // "inchiKey VARCHAR(256), " // molecular identifier for structure retrieval
-        // "otherKeys VARCHAR(256), " // alternative molecular identifiers for structure retrieval (CAS or hmdb etc)
-        // "charge INTEGER, "
-        // "adduct VARCHAR(256), "
-        // "comment VARCHAR(256), "
-        // "mzTheoretical REAL, "
-        // "mzObserved REAL )",
-        private enum RefSpectraPeakAnnotations
-        {
-            RefSpectraID,
-            peakIndex,
-            name,
-            formula,
-            inchiKey,  // molecular identifier for structure retrieval (inChiKey or hmdb etc)
-            otherKeys, // alternative molecular identifiers for structure retrieval (inChiKey or hmdb etc)
-            charge,
-            adduct,
-            comment,
-            mzTheoretical,
-            mzObserved
-        }
-
-        // Note on ion mobility fields:
-        // Our thoughts on this have changed over time.
-        // Before v4, the fields of interest were 
-        //   ionMobilityValue,    which was a drift time or a CCS
-        //   ionMobilityHighEnergyDriftTimeOffsetMsec, which was an incremental drift time
-        //   ionMobilityType, which was one of none, drift time, or CCS
-        //
-        // Before v6, the  fields of interest were a bit more rational, but still drift time oriented
-        //   driftTimeMsec,
-        //   collisionalCrossSectionSqA,
-        //   driftTimeHighEnergyOffsetMsec
-        //
-        // Now we have
-        //   ionMobility
-        //   collisionalCrossSectionSqA,
-        //   ionMobilityHighEnergyOffset
-        //   ionMobilityType, which is one of none, drift time, or inverse reduced IM (for Bruker)
-
-        private enum RetentionTimes
-        {
-            RefSpectraID,
-            RedundantRefSpectraID,
-            SpectrumSourceID,
-            ionMobilityValue,     // See ionMobilityType value for interpretation - obsolete as of v4
-            ionMobilityHighEnergyDriftTimeOffsetMsec, // in Waters Mse IMS, product ions travel slightly faster after the drift tube due to added kinetic energy in the fragmentation cell   - obsolete as of v4
-            ionMobilityType,
-            retentionTime,
-            bestSpectrum,
-            driftTimeMsec, // Obsolete
-            collisionalCrossSectionSqA,
-            driftTimeHighEnergyOffsetMsec,  // Obsolete
-            ionMobility,
-            ionMobilityHighEnergyOffset // in Waters Mse IMS, product ions travel slightly faster after the drift tube due to added kinetic energy in the fragmentation cell
-        }
-
-        private enum SpectrumSourceFiles
-        {
-            id,
-            fileName,
-            idFileName,
-            cutoffScore,
-            workflowType
-        }
-
-        private enum ScoreTypes
-        {
-            scoreType,
-            probabilityType
-        }
-
-        // Cache struct layouts
-        private enum LibHeaders
-        {
-            lsid_byte_count,
-            data_rev,
-            schema_ver,
-            format_version,
-            num_spectra,
-            location_sources_lo,
-            location_sources_hi,
-            location_score_types_lo,
-            location_score_types_hi,
-
-            count
-        }
-
-        private enum SourceHeader
-        {
-            id,
-            filename_length,
-            id_filename_length,
-
-            count
-        }
-
-        private enum ScoreTypeHeader
-        {
-            id,
-            name_length,
-
-            count
-        }
-        // ReSharper restore InconsistentNaming
-        // ReSharper restore UnusedMember.Local
-
         private bool ReadFromDatabase(ILoadMonitor loader, IProgressStatus status)
         {
             var sm = loader.StreamManager;
             EnsureConnections(sm);
-            int rows;
-            string lsid;
-            int dataRev, schemaVer;
-            var scoreTypesById = new Dictionary<int, string>();
-            var proteinGroupsBySpectraID = ProteinGroupsBySpectraID();
-            _globalQValueLevels = ImmutableList.ValueOf(ReadGlobalQValueLevels());
+            int rows = 0;
+            bool hasRetentionTimesTable = false;
+            IReadOnlyDictionary<int, string> scoreTypesById = null;
+            Dictionary<long, ImmutableList<LibraryProteinGroup>> proteinGroupsBySpectraId = null;
             var librarySourceFiles = new List<BiblioLiteSourceInfo>();
-            bool hasRetentionTimesTable = SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes");
-            int segmentCount = hasRetentionTimesTable ? 2 : 1;
-            var blibFilePath = Path.GetFileName(FilePath);
-            status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library, blibFilePath));
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            // The header and the small tables, on the pooled connection
+            _sqliteConnection.ExecuteWithReader(reader =>
             {
-                // First get header information
-                select.CommandText = @"SELECT * FROM [LibInfo]";
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                BlibLibraryInfo info;
+                try
                 {
-                    if (!reader.Read())
-                        throw new IOException(string.Format(
-                            LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
-                            FilePath));
+                    info = reader.Info;
+                }
+                catch (InvalidDataException x)
+                {
+                    throw new IOException(string.Format(
+                        LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath), x);
+                }
 
-                    rows = reader.GetInt32(LibInfo.numSpecs);
+                // Set these now, in case we encounter an error further in
+                Lsid = info.Lsid;
+                SetRevision(info.Revision, info.SchemaVersion);
 
-                    lsid = reader.GetString(LibInfo.libLSID);
-
-                    dataRev = reader.GetInt32(LibInfo.majorVersion);
-                    schemaVer = reader.GetInt32(LibInfo.minorVersion);
-
-                    // Set these now, in case we encounter an error further in
-                    Lsid = lsid;
-                    SetRevision(dataRev, schemaVer);
+                // A library of schema 1 or later lists its source files, and one without the
+                // table is damaged. The reader reads none for a schema-0 library, which never
+                // had the table, so the requirement is checked here, as this loader always has.
+                if (info.SchemaVersion > 0 && !reader.HasTable(BlibReader.TABLE_SPECTRUM_SOURCE_FILES))
+                {
+                    throw new InvalidDataException(string.Format(
+                        LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_The_library__0__has_no__1__table,
+                        FilePath, BlibReader.TABLE_SPECTRUM_SOURCE_FILES));
                 }
 
                 // Corrupted library without a valid row count, but try to compensate
                 // by using count(*)
-                if (rows == 0)
+                rows = info.SpectrumCount > 0 ? info.SpectrumCount : reader.CountSpectra();
+                hasRetentionTimesTable = reader.HasTable(BlibReader.TABLE_RETENTION_TIMES);
+                proteinGroupsBySpectraId = ProteinGroupsBySpectraId(reader);
+                _globalQValueLevels = ImmutableList.ValueOf(ReadGlobalQValueLevels(reader));
+                scoreTypesById = reader.ReadScoreTypes();
+                foreach (var file in reader.ReadSourceFiles())
                 {
-                    select.CommandText = @"SELECT count(*) FROM [RefSpectra]";
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        if (!reader.Read())
-                            throw new InvalidDataException(string.Format(
-                                LibResources
-                                    .BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__,
-                                FilePath));
-                        rows = reader.GetInt32(0);
-                    }
+                    // Save the search result file, too (may be distinct from the spectra source file)
+                    librarySourceFiles.Add(new BiblioLiteSourceInfo((int)file.Id, file.FileName ?? string.Empty,
+                        file.IdFileName ?? string.Empty, file.CutoffScore, (WorkflowType)file.WorkflowType));
                 }
+                return true;
+            });
 
-
-                if (schemaVer >= 1)
-                {
-                    if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"ScoreTypes"))
-                    {
-                        select.CommandText = @"SELECT id, scoreType FROM ScoreTypes";
-                        using (var reader = select.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                var id = reader.GetInt32(0);
-                                var name = reader.GetString(1);
-                                scoreTypesById[id] = name;
-                            }
-                        }
-                    }
-                }
-
-                if (schemaVer > 0)
-                {
-                    select.CommandText = @"SELECT * FROM [SpectrumSourceFiles]";
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
-                        int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
-                        int iIdFilename =
-                            reader.GetOrdinal(SpectrumSourceFiles
-                                .idFileName); // Save the search result file, too (may be distinct from the spectra source file)
-                        int iIdCutoffScore = reader.GetOrdinal(SpectrumSourceFiles.cutoffScore);
-                        int iWorkflowType = reader.GetOrdinal(SpectrumSourceFiles.workflowType);
-                        while (reader.Read())
-                        {
-                            string filename = reader.GetString(iFilename);
-                            string idFilename = iIdFilename < 0 || reader.IsDBNull(iIdFilename)
-                                ? null
-                                : reader.GetString(iIdFilename);
-                            int id = reader.GetInt32(iId);
-                            double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? null : reader.GetDouble(iIdCutoffScore);
-                            WorkflowType workflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
-                                ? WorkflowType.DDA
-                                : (WorkflowType) reader.GetInt32(iWorkflowType);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty, cutoffScore, workflowType));
-                        }
-                    }
-
-                }
-
-
-            }
+            int segmentCount = hasRetentionTimesTable ? 2 : 1;
+            var blibFilePath = Path.GetFileName(FilePath);
+            status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_entries_from__0__library, blibFilePath));
 
             var setLibKeys = new HashSet<LibKey>(rows);
             var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
             var fileIdToIndex = Enumerable.Range(0, librarySourceFiles.Count)
-                .ToDictionary(i => librarySourceFiles[i].Id);
+                .ToDictionary(i => (long)librarySourceFiles[i].Id);
 
             int threadCount = ParallelEx.GetThreadCount(4);
             int rowsRead = 0;
             object lockObject = new object();
             ParallelEx.For(0, threadCount, threadIndex =>
             {
-                using var connection = SqliteOperations.OpenConnection(FilePath);
-                string sql = @"SELECT * FROM RefSpectra WHERE id % " + threadCount + @" = " + threadIndex;
-                foreach (var row in connection.Query<RefSpectraRow>(sql, buffered:false))
+                // Each thread scans its own range of ids on a reader of its own
+                using var reader = new BlibReader(FilePath);
+                foreach (var row in reader.ReadSpectra(false, threadCount, threadIndex))
                 {
                     lock (lockObject)
                     {
@@ -735,21 +488,17 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
 
-                    proteinGroupsBySpectraID.TryGetValue(row.id, out var proteinGroups);
+                    proteinGroupsBySpectraId.TryGetValue(row.Id, out var proteinGroups);
                     int? fileIndex = null;
-                    if (row.fileId.HasValue && fileIdToIndex.TryGetValue(row.fileId.Value, out int iFile))
+                    if (fileIdToIndex.TryGetValue(row.FileId, out int iFile))
                     {
                         fileIndex = iFile;
                     }
 
-                    string sequence = row.peptideModSeq;
-                    int charge = row.precursorCharge;
-                    string adduct = row.precursorAdduct;
-                    int copies = row.copies;
-                    int numPeaks = row.numPeaks;
-                    double? score = row.score;
-                    int? scoreType = row.scoreType;
-                    var chemicalFormula = row.chemicalFormula;
+                    string sequence = row.PeptideModSeq;
+                    int charge = row.PrecursorCharge;
+                    string adduct = row.PrecursorAdduct;
+                    var chemicalFormula = row.ChemicalFormula;
                     bool isProteomic =
                         (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) &&
                         !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
@@ -760,12 +509,12 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     else
                     {
-                        var moleculeName = row.moleculeName;
-                        var inChiKey = row.inchiKey;
-                        var otherKeys = row.otherKeys;
+                        var moleculeName = row.MoleculeName;
+                        var inChiKey = row.InchiKey;
+                        var otherKeys = row.OtherKeys;
                         if (string.IsNullOrEmpty(chemicalFormula))
                         {
-                            var precursorMz = row.precursorMZ;
+                            var precursorMz = row.PrecursorMz;
                             Adduct precursorAdduct;
                             if (string.IsNullOrEmpty(adduct))
                             {
@@ -822,14 +571,9 @@ namespace pwiz.Skyline.Model.Lib
                         // CONSIDER: Emit error about redundancy?
                         if (setLibKeys.Add(key))
                         {
-                            string scoreName = null;
-                            if (scoreType.HasValue)
-                            {
-                                scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
-                            }
-
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, row.id, fileIndex,
-                                GetGlobalScores(row, proteinGroups), scoreName == null ? null : score, scoreName));
+                            scoreTypesById.TryGetValue(row.ScoreType, out string scoreName);
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, row.Copies, row.NumPeaks, (int)row.Id, fileIndex,
+                                GetGlobalScores(row, proteinGroups), scoreName == null ? null : row.Score, scoreName));
                         }
                     }
                 }
@@ -845,7 +589,7 @@ namespace pwiz.Skyline.Model.Lib
             if (hasRetentionTimesTable) // Only a filtered library will have this table
             {
                 status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_ReadFromDatabase_Reading_retention_times_from__0_, blibFilePath));
-                var retentionTimeReader = new RetentionTimeReader(FilePath, schemaVer, fileIdToIndex);
+                var retentionTimeReader = new RetentionTimeReader(FilePath, fileIdToIndex);
                 retentionTimeReader.ReadAllRows(loader, ref status, rows);
                 if (loader.IsCanceled)
                 {
@@ -884,11 +628,11 @@ namespace pwiz.Skyline.Model.Lib
 
             _librarySourceFiles = librarySourceFiles.ToArray();
             _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
-            
+
             // Remove and report nonsense entries (e.g. adduct removes more H2O than present in molecule)
             libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries.OrderBy(spec => spec.Id), blibFilePath);
             SetLibraryEntries(libraryEntries);
-            
+
             EnsureConnections(sm);
             loader.UpdateProgress(status.ChangeSegments(segmentCount - 1, segmentCount).Complete());
             return true;
@@ -896,47 +640,32 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// Reads every protein group each spectrum is mapped to (RefSpectraProteins is many-to-many),
-        /// with the group's global statistics when the Proteins table has those columns.
+        /// with the group's global statistics when the Proteins table has those columns. A group
+        /// is one object shared by the entries mapped to it.
         /// </summary>
-        private Dictionary<int, ImmutableList<LibraryProteinGroup>> ProteinGroupsBySpectraID()
+        private static Dictionary<long, ImmutableList<LibraryProteinGroup>> ProteinGroupsBySpectraId(BlibReader reader)
         {
-            var proteinGroupsBySpectraID = new Dictionary<int, List<LibraryProteinGroup>>();
-            var connection = _sqliteConnection.Connection;
-            if (SqliteOperations.TableExists(connection, @"RefSpectraProteins"))
+            var proteinGroupsById = new Dictionary<long, LibraryProteinGroup>();
+            foreach (var protein in reader.ReadProteinTable())
             {
-                bool hasQValue = SqliteOperations.ColumnExists(connection, @"Proteins", @"QValue");
-                bool hasPep = SqliteOperations.ColumnExists(connection, @"Proteins", @"Pep");
-                var proteinGroupsById = new Dictionary<int, LibraryProteinGroup>();
-                using var cmd = connection.CreateCommand();
-                cmd.CommandText =
-                    @"SELECT RefSpectraId, ProteinId, accession" +
-                    (hasQValue ? @", QValue" : @", NULL") +
-                    (hasPep ? @", Pep" : @", NULL") +
-                    @" FROM [Proteins] as t INNER JOIN [RefSpectraProteins] as s ON t.[id] = s.[ProteinId]";
-                using var dataReader = cmd.ExecuteReader();
-                while (dataReader.Read())
-                {
-                    var accession = dataReader.GetString(2);
-                    if (string.IsNullOrEmpty(accession))
-                        continue;
-                    var refSpectraId = dataReader.GetInt32(0);
-                    var proteinId = dataReader.GetInt32(1);
-                    if (!proteinGroupsById.TryGetValue(proteinId, out var proteinGroup))
-                    {
-                        proteinGroup = new LibraryProteinGroup(accession, GetNullableDouble(dataReader, 3),
-                            GetNullableDouble(dataReader, 4));
-                        proteinGroupsById.Add(proteinId, proteinGroup);
-                    }
-                    if (!proteinGroupsBySpectraID.TryGetValue(refSpectraId, out var proteinGroups))
-                    {
-                        proteinGroups = new List<LibraryProteinGroup>();
-                        proteinGroupsBySpectraID.Add(refSpectraId, proteinGroups);
-                    }
-                    proteinGroups.Add(proteinGroup);
-                }
+                if (!string.IsNullOrEmpty(protein.Accession))
+                    proteinGroupsById.Add(protein.Id, new LibraryProteinGroup(protein.Accession, protein.QValue, protein.Pep));
             }
-
-            return proteinGroupsBySpectraID.ToDictionary(kvp => kvp.Key, kvp => ImmutableList.ValueOf(kvp.Value));
+            var proteinGroupsBySpectraId = new Dictionary<long, ImmutableList<LibraryProteinGroup>>();
+            if (proteinGroupsById.Count == 0)
+                return proteinGroupsBySpectraId;
+            foreach (var mapping in reader.ReadProteinIds())
+            {
+                var proteinGroups = new List<LibraryProteinGroup>();
+                foreach (long proteinId in mapping)
+                {
+                    if (proteinGroupsById.TryGetValue(proteinId, out var proteinGroup))
+                        proteinGroups.Add(proteinGroup);
+                }
+                if (proteinGroups.Count > 0)
+                    proteinGroupsBySpectraId.Add(mapping.Key, ImmutableList.ValueOf(proteinGroups));
+            }
+            return proteinGroupsBySpectraId;
         }
 
         /// <summary>
@@ -944,32 +673,19 @@ namespace pwiz.Skyline.Model.Lib
         /// value in at least one row. A column that is NULL throughout would offer a cutoff every
         /// entry fails.
         /// </summary>
-        private IEnumerable<GlobalQValueLevel> ReadGlobalQValueLevels()
+        private static IList<GlobalQValueLevel> ReadGlobalQValueLevels(BlibReader reader)
         {
-            var connection = _sqliteConnection.Connection;
-            if (SqliteOperations.TableExists(connection, @"RefSpectraProteins") && HasValues(connection, @"Proteins", @"QValue"))
-                yield return GlobalQValueLevel.protein;
-            if (HasValues(connection, @"RefSpectra", @"PeptideQValue"))
-                yield return GlobalQValueLevel.peptide;
-            if (HasValues(connection, @"RefSpectra", @"PrecursorQValue"))
-                yield return GlobalQValueLevel.precursor;
+            var levels = new List<GlobalQValueLevel>();
+            if (reader.HasTable(BlibReader.TABLE_REF_SPECTRA_PROTEINS) && reader.HasValues(BlibReader.TABLE_PROTEINS, BlibSchema.ProteinQValue.Name))
+                levels.Add(GlobalQValueLevel.protein);
+            if (reader.HasValues(BlibReader.TABLE_REF_SPECTRA, BlibSchema.PeptideQValue.Name))
+                levels.Add(GlobalQValueLevel.peptide);
+            if (reader.HasValues(BlibReader.TABLE_REF_SPECTRA, BlibSchema.PrecursorQValue.Name))
+                levels.Add(GlobalQValueLevel.precursor);
+            return levels;
         }
 
-        /// <summary>
-        /// Whether <paramref name="table"/> has <paramref name="column"/> with a value in some row.
-        /// The scan stops at the first value, so a library with values answers at once.
-        /// </summary>
-        private static bool HasValues(IDbConnection connection, string table, string column)
-        {
-            if (!SqliteOperations.ColumnExists(connection, table, column))
-                return false;
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"SELECT 1 FROM " + table + @" WHERE " + column + @" IS NOT NULL LIMIT 1";
-            using var reader = cmd.ExecuteReader();
-            return reader.Read();
-        }
-
-        private static LibraryGlobalScores GetGlobalScores(RefSpectraRow row, ImmutableList<LibraryProteinGroup> proteinGroups)
+        private static LibraryGlobalScores GetGlobalScores(BlibSpectrumRecord row, ImmutableList<LibraryProteinGroup> proteinGroups)
         {
             if (proteinGroups == null && !row.PrecursorQValue.HasValue && !row.PrecursorPep.HasValue &&
                 !row.PeptideQValue.HasValue && !row.PeptidePep.HasValue)
@@ -978,11 +694,6 @@ namespace pwiz.Skyline.Model.Lib
             }
             return new LibraryGlobalScores(row.PrecursorQValue, row.PrecursorPep, row.PeptideQValue,
                 row.PeptidePep, proteinGroups ?? ImmutableList<LibraryProteinGroup>.EMPTY);
-        }
-
-        private static double? GetNullableDouble(IDataRecord record, int ordinal)
-        {
-            return record.IsDBNull(ordinal) ? null : record.GetDouble(ordinal);
         }
 
         private bool Load(ILoadMonitor loader)
@@ -1100,87 +811,11 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return Array.Empty<SpectrumPeaksInfo.MI>();
             }
-            return _sqliteConnection.ExecuteWithConnection(connection =>
+            return _sqliteConnection.ExecuteWithReader(reader =>
             {
-                using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-                {
-                    select.CommandText = @"SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?";
-                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            int numPeaks = info.NumPeaks;
-                            return ReadPeaks(reader, numPeaks, info.Id, _sqliteConnection);
-                        }
-                    }
-                    return null;
-                }
+                var peaks = reader.ReadPeaks(info.Id, info.NumPeaks);
+                return peaks == null ? null : ToPeaks(peaks, reader.ReadAnnotations(info.Id));
             });
-        }
-
-        // Libraries may contain multiple annotations for a single observed mz
-        private class AnnotationsForObservedMz
-        {
-            public List<SpectrumPeakAnnotation> Annotations { get; private set; }
-            public double ObservedMz { get; private set; } // For sanity checking
-
-            public AnnotationsForObservedMz(double mz, List<SpectrumPeakAnnotation> annotations)
-            {
-                ObservedMz = mz;
-                Annotations = annotations;
-            }
-        }
-
-        // Create a dictionary of <peak index, <observedMz, annotations>> for a RefSpectraId
-        private Dictionary<int, AnnotationsForObservedMz> ReadPeakAnnotations(int refSpectraId, PooledSqliteConnection connection)
-        {
-            var resultDict = new Dictionary<int, AnnotationsForObservedMz>();
-            if (connection == null)
-            {
-                return resultDict;
-            }
-            if (!SqliteOperations.TableExists(connection.Connection, @"RefSpectraPeakAnnotations"))
-            {
-                return resultDict;
-            }
-            // Read fragment annotations if any
-            // For small molecules, see if there are any peak annotations (for peptides, we can generate our own fragment info)
-            using (var select = connection.Connection.CreateCommand())
-            {
-                select.CommandText = @"SELECT * FROM [RefSpectraPeakAnnotations] WHERE [RefSpectraID] = ?";
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)refSpectraId));
-                using (SQLiteDataReader reader = @select.ExecuteReader())
-                {
-                    // N.B. this code needs to track any changes to RefSpectraPeakAnnotations, which is to say changes in BlibMaker.cpp 
-                    while (reader.Read())
-                    {
-                        // var refSpectraID = reader.GetInt32(RefSpectraPeakAnnotations.RefSpectraID);
-                        var peakIndex = reader.GetInt32(RefSpectraPeakAnnotations.peakIndex);
-                        var fragname = reader.GetString(RefSpectraPeakAnnotations.name);
-                        var formula = reader.GetString(RefSpectraPeakAnnotations.formula);
-                        var inchkey = reader.GetString(RefSpectraPeakAnnotations.inchiKey);
-                        var otherKeys = reader.GetString(RefSpectraPeakAnnotations.otherKeys);
-                        var charge = reader.GetInt32(RefSpectraPeakAnnotations.charge);
-                        var adductString = reader.GetString(RefSpectraPeakAnnotations.adduct);
-                        var comment = reader.GetString(RefSpectraPeakAnnotations.comment);
-                        var mzTheoretical = reader.GetDouble(RefSpectraPeakAnnotations.mzTheoretical);
-                        var mzObserved = reader.GetDouble(RefSpectraPeakAnnotations.mzObserved);
-                        var molecule = SmallMoleculeLibraryAttributes.Create(fragname, formula, inchkey, otherKeys);
-                        var adduct = string.IsNullOrEmpty(adductString)
-                            ? Adduct.FromChargeNoMass(charge)
-                            : Adduct.FromStringAssumeChargeOnly(adductString);
-                        AnnotationsForObservedMz annotations;
-                        if (!resultDict.TryGetValue(peakIndex, out annotations))
-                        {
-                            resultDict.Add(peakIndex, annotations = new AnnotationsForObservedMz(mzObserved, new List<SpectrumPeakAnnotation>()));
-                        }
-                        var annotation = SpectrumPeakAnnotation.Create(molecule, adduct, comment, mzTheoretical);
-                        annotations.Annotations.Add(annotation);
-                    }
-                }
-            }
-            return resultDict;
         }
 
         private SpectrumPeaksInfo.MI[] ReadRedundantSpectrum(int spectrumId)
@@ -1188,72 +823,47 @@ namespace pwiz.Skyline.Model.Lib
             if (_sqliteConnectionRedundant == null)
                 throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist, FilePathRedundant));
 
-            try
+            return _sqliteConnectionRedundant.ExecuteWithReader(reader =>
             {
-                using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
-                {
-                    select.CommandText =
-                        @"SELECT * FROM " +
-                        @"[RefSpectra] as s INNER JOIN [RefSpectraPeaks] as p ON s.[id] = p.[RefSpectraID] " +
-                        @"WHERE s.[id] = ?";
-                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)spectrumId));
-
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            int numPeaks = reader.GetInt32(RefSpectra.numPeaks);
-                            return ReadPeaks(reader, numPeaks, spectrumId, _sqliteConnectionRedundant);
-                        }
-                    }
-                }
-            }
-            catch (SQLiteException x)
-            {
-                throw new IOException(
-                    string.Format(Resources.BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__,
-                                  FilePathRedundant), x);
-            }
-
-            return null;
+                var spectrum = reader.ReadSpectrum(spectrumId, true);
+                if (spectrum == null)
+                    return null;
+                if (spectrum.NumPeaks == 0)
+                    return Array.Empty<SpectrumPeaksInfo.MI>();
+                var peaks = BlibReader.DecodePeaks(spectrum);
+                return peaks == null ? null : ToPeaks(peaks, reader.ReadAnnotations(spectrumId));
+            });
         }
 
-        private SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, int numPeaks, int refSpectraId, PooledSqliteConnection connection)
+        /// <summary>
+        /// The peaks of a spectrum with the annotations the library keeps for them. A peak may
+        /// carry more than one annotation and not every peak has one; small molecules need them,
+        /// where for peptides Skyline generates its own fragment information. Each names the
+        /// peak's index and the m/z stored for it, which must agree with the peak list.
+        /// </summary>
+        private static SpectrumPeaksInfo.MI[] ToPeaks(BlibPeaks peaks, IReadOnlyList<BlibPeakAnnotation> annotations)
         {
-            if (numPeaks == 0)
+            var arrayMI = new SpectrumPeaksInfo.MI[peaks.Count];
+            for (int i = 0; i < arrayMI.Length; i++)
             {
-                return Array.Empty<SpectrumPeaksInfo.MI>();
-            }
-            const int sizeMz = sizeof(double);
-            const int sizeInten = sizeof(float);
-
-            byte[] peakMzCompressed = reader.GetBytes(RefSpectraPeaks.peakMZ);
-            byte[] peakMz = peakMzCompressed.Uncompress(numPeaks * sizeMz);
-
-            byte[] peakIntensCompressed = reader.GetBytes(RefSpectraPeaks.peakIntensity);
-            byte[] peakIntens = peakIntensCompressed.Uncompress(numPeaks * sizeInten);
-
-            // Build the list
-            var arrayMI = new SpectrumPeaksInfo.MI[numPeaks];
-
-            for (int i = 0; i < numPeaks; i++)
-            {
-                arrayMI[i].Intensity = BitConverter.ToSingle(peakIntens, i * sizeInten);
-                arrayMI[i].Mz = BitConverter.ToDouble(peakMz, i * sizeMz);
+                arrayMI[i].Mz = peaks.Mzs[i];
+                arrayMI[i].Intensity = peaks.Intensities[i];
             }
 
-            // Add peak annotations, if any
-            var dict = ReadPeakAnnotations(refSpectraId, connection);
-            foreach (var kvp in dict)
+            foreach (var annotation in annotations)
             {
-                var peakIndex = kvp.Key;
-                var annotationWithObservedMz = kvp.Value;
-                if (Math.Abs(annotationWithObservedMz.ObservedMz-arrayMI[peakIndex].Mz) > 0.0000001)
+                int peakIndex = annotation.PeakIndex;
+                if (Math.Abs(annotation.MzObserved - arrayMI[peakIndex].Mz) > 0.0000001)
                 {
                     Assume.Fail(string.Format(@"trouble reading peak annotation: mzObserved {0} disagrees with indexed peak mz {1}",
-                            annotationWithObservedMz.ObservedMz, arrayMI[peakIndex].Mz));
+                        annotation.MzObserved, arrayMI[peakIndex].Mz));
                 }
-                arrayMI[peakIndex].Annotations = annotationWithObservedMz.Annotations;
+                var molecule = SmallMoleculeLibraryAttributes.Create(annotation.Name, annotation.Formula, annotation.InchiKey, annotation.OtherKeys);
+                var adduct = string.IsNullOrEmpty(annotation.Adduct)
+                    ? Adduct.FromChargeNoMass(annotation.Charge)
+                    : Adduct.FromStringAssumeChargeOnly(annotation.Adduct);
+                arrayMI[peakIndex].Annotations ??= new List<SpectrumPeakAnnotation>();
+                arrayMI[peakIndex].Annotations.Add(SpectrumPeakAnnotation.Create(molecule, adduct, annotation.Comment, annotation.MzTheoretical));
             }
 
             return arrayMI;
@@ -1605,9 +1215,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return GetRedundantSpectra(key, labelType, redundancy);
             }
-            // In case there is no RetentionTimes table
-            // CONSIDER: Could also be a failure to read the SQLite file
-            catch (SQLiteException)
+            // In case of a failure to read the SQLite file
+            catch (IOException)
             {
                 return base.GetSpectra(key, labelType, redundancy);
             }
@@ -1622,141 +1231,83 @@ namespace pwiz.Skyline.Model.Lib
             if (i == -1)
                 return Array.Empty<SpectrumInfoLibrary>();
 
-            // Only bother with the RetentionTimes table if it can lead to a redundant spectrum.
-            // It has no index on RefSpectraID, so querying it means a full table scan, and for
-            // libraries which never went through BlibFilter that table can be enormous.
-            var useRetentionTimesTable = _anyRedundantSpectra;
             var info = _libraryEntries[i];
-            var protein = info.Protein;
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            var listSpectra = _sqliteConnection.ExecuteWithReader(reader =>
             {
-                if (useRetentionTimesTable)
+                var spectra = new List<SpectrumInfoLibrary>();
+                // The files from the library itself, which a library just written by BlibDb has
+                // before it is loaded and has its list of source files.
+                var filesById = reader.ReadSourceFiles().ToDictionary(file => file.Id);
+                // Only bother with the RetentionTimes table if it can lead to a redundant spectrum.
+                // For libraries which never went through BlibFilter it holds nothing the spectrum's
+                // own row does not.
+                if (_anyRedundantSpectra)
                 {
-                    select.CommandText = @"SELECT * " +
-                                         @"FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
-                                         @"WHERE t.[RefSpectraID] = ?";
-                    if (redundancy == LibraryRedundancy.best)
-                        select.CommandText += @" AND t.[bestSpectrum] = 1";
-
+                    foreach (var time in reader.ReadSpectrumRetentionTimes(info.Id))
+                    {
+                        bool isBest = time.BestSpectrum;
+                        if (redundancy == LibraryRedundancy.best && !isBest)
+                            continue;
+                        // An observation whose source file the library does not list is left out,
+                        // as the join to the files table always left it.
+                        if (!time.SpectrumSourceId.HasValue || !filesById.TryGetValue(time.SpectrumSourceId.Value, out var file))
+                            continue;
+                        var ionMobility = GetIonMobility(time.IonMobility, time.CollisionalCrossSectionSqA,
+                            time.IonMobilityHighEnergyOffset, time.IonMobilityType);
+                        spectra.Add(CreateSpectrumInfo(i, labelType, file.FileName, time.RetentionTime, ionMobility,
+                            info.Protein, isBest, (int)time.RedundantRefSpectraId, redundancy));
+                    }
                 }
                 else
                 {
-                    select.CommandText = @"SELECT * " +
-                                         @"FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " +
-                                         @"WHERE t.[id] = ?";
+                    var spectrum = reader.ReadSpectrum(info.Id, false);
+                    if (spectrum != null && filesById.TryGetValue(spectrum.FileId, out var file))
+                    {
+                        var ionMobility = GetIonMobility(spectrum.IonMobility, spectrum.CollisionalCrossSectionSqA,
+                            spectrum.IonMobilityHighEnergyOffset, spectrum.IonMobilityType);
+                        spectra.Add(CreateSpectrumInfo(i, labelType, file.FileName, spectrum.RetentionTime, ionMobility,
+                            info.Protein, true, -1, redundancy));
+                    }
                 }
+                return spectra;
+            });
+            // A spectrum the library records no source file for (one minimized from a library
+            // without files) is still the best spectrum of its entry.
+            if (listSpectra.Count == 0 && !_anyRedundantSpectra)
+                return base.GetSpectra(key, labelType, redundancy);
+            return listSpectra;
+        }
 
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+        private SpectrumInfoLibrary CreateSpectrumInfo(int entryIndex, IsotopeLabelType labelType, string filePath, double? retentionTime,
+            IonMobilityAndCCS ionMobility, string protein, bool isBest, int redundantId, LibraryRedundancy redundancy)
+        {
+            // If this is not a reference(best) spectrum, the spectrumKey should be of the
+            // type SpectrumLiteKey so that peaks for this spectrum are loaded from the
+            // redundant library. Otherwise, for best spectra, the key should simply be
+            // the id of this spectrum in the cache.
+            // Look at the LoadSpectrum method to see how spectrumKey is used.
+            object spectrumKey = entryIndex;
+            if (!isBest || redundancy == LibraryRedundancy.all_redundant)
+                spectrumKey = new SpectrumLiteKey(entryIndex, redundantId, isBest);
+            return new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, ionMobility ?? IonMobilityAndCCS.EMPTY,
+                protein, isBest, spectrumKey)
+            {
+                SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[entryIndex])
+            };
+        }
 
-                using (SQLiteDataReader reader = select.ExecuteReader())
-                {
-                    int iFilePath = reader.GetOrdinal(SpectrumSourceFiles.fileName);
-                    int iRedundantId = reader.GetOrdinal(RetentionTimes.RedundantRefSpectraID);
-                    int iRetentionTime = reader.GetOrdinal(RetentionTimes.retentionTime);
-                    int iBestSpectrum = reader.GetOrdinal(RetentionTimes.bestSpectrum);
-                    bool hasDTvsCCS = (SchemaVersion > 1) && (SchemaVersion < 4); // Initially we saw DT and CCS as mutually exclusive values
-                    bool hasDriftTime = reader.GetOrdinal(RetentionTimes.driftTimeMsec) >= 0;  // Then we went to saving both DT and CCS
-                    bool hasGeneralIonMobility = (SchemaVersion >= 6); // And now we have CCS and generalized ion mobility with a type declaration (DT, inverse reduced IM, others to come?)
-                    int iDriftTimeVsCCS = hasDTvsCCS
-                        ? reader.GetOrdinal(RetentionTimes.ionMobilityType)
-                        : int.MinValue;
-                    hasDTvsCCS &= iDriftTimeVsCCS >= 0;
-                    int iDTorCCS= hasDTvsCCS
-                        ? reader.GetOrdinal(RetentionTimes.ionMobilityValue)
-                        : int.MinValue;
-                    int iIonMobility = 0;
-                    int iIonMobilityType = 0;
-                    int iCCS = 0;
-                    int iIonMobilityHighEnergyOffset = 0;
-                    if (hasGeneralIonMobility)
-                    {
-                        iIonMobility = reader.GetOrdinal(RetentionTimes.ionMobility);
-                        iIonMobilityHighEnergyOffset = reader.GetOrdinal(RetentionTimes.ionMobilityHighEnergyOffset);
-                        iCCS = reader.GetOrdinal(RetentionTimes.collisionalCrossSectionSqA);
-                        iIonMobilityType = reader.GetOrdinal(RetentionTimes.ionMobilityType);
-                    }
-                    else if (hasDriftTime)
-                    {
-                        iIonMobility = reader.GetOrdinal(RetentionTimes.driftTimeMsec);
-                        iIonMobilityHighEnergyOffset = reader.GetOrdinal(RetentionTimes.driftTimeHighEnergyOffsetMsec);
-                        iCCS = reader.GetOrdinal(RetentionTimes.collisionalCrossSectionSqA);
-                    }
-                    else if (hasDTvsCCS)
-                    {
-                        iDTorCCS = reader.GetOrdinal(RetentionTimes.ionMobilityValue);
-                        iDriftTimeVsCCS = reader.GetOrdinal(RetentionTimes.ionMobilityType);
-                    }
-                    var listSpectra = new List<SpectrumInfoLibrary>();
-                    while (reader.Read())
-                    {
-                        string filePath = reader.GetString(iFilePath);
-                        int redundantId = iRedundantId < 0 ? -1 : reader.GetInt32(iRedundantId);
-                        var retentionTime = UtilDB.GetNullableDouble(reader, iRetentionTime);
-                        bool isBest = !useRetentionTimesTable || reader.GetInt16(iBestSpectrum) != 0;
-
-                        IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;
-                        if (hasGeneralIonMobility)
-                        {
-                            var ionMobilityType = eIonMobilityUnits.none;
-                            if (iIonMobilityType != -1)
-                                ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
-                            if (!ionMobilityType.Equals(eIonMobilityUnits.none))
-                            {
-                                var ionMobility = UtilDB.GetNullableDouble(reader, iIonMobility);
-                                var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
-                                var ionMobilityHighEnergyOffset = UtilDB.GetNullableDouble(reader, iIonMobilityHighEnergyOffset);
-                                if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
-                                    ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
-                            }
-                            else
-                            {
-                                var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
-                                if (collisionalCrossSectionSqA != 0) 
-                                {
-                                    ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(0, ionMobilityType), collisionalCrossSectionSqA, 0);
-                                }
-                            }
-                        }
-                        else if (hasDriftTime) 
-                        {
-                            var driftTimeMsec = reader.GetDouble(iIonMobility);
-                            var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
-                            var highEnergyDriftTimeOffsetMsec = reader.GetDouble(iIonMobilityHighEnergyOffset);
-                            if (!(driftTimeMsec == 0 && collisionalCrossSectionSqA == 0 && highEnergyDriftTimeOffsetMsec == 0))
-                               ionMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(driftTimeMsec, eIonMobilityUnits.drift_time_msec) , collisionalCrossSectionSqA, highEnergyDriftTimeOffsetMsec);
-                        }
-                        else if (hasDTvsCCS)
-                        {
-                            // Ancient formats had CCS and DT as either/or
-                            var type = NullSafeToInteger(reader.GetValue(iDriftTimeVsCCS));
-                            if (type > 0)
-                            {
-                                double? val = reader.GetDouble(iDTorCCS);
-                                var ionMobility = type == 1 
-                                    ? IonMobilityValue.GetIonMobilityValue(val, eIonMobilityUnits.drift_time_msec)
-                                    : IonMobilityValue.EMPTY;
-                                ionMobilityInfo =  IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, type != 1 ? val : null,
-                                    (iIonMobilityHighEnergyOffset > 0) ? reader.GetDouble(iIonMobilityHighEnergyOffset) : 0);
-                            }
-                        }
-
-                        // If this is not a reference(best) spectrum, the spectrumKey should be of the 
-                        // type SpectrumLiteKey so that peaks for this spectrum are loaded from the
-                        // redundant library. Otherwise, for best spectra, the key should simply be 
-                        // the id of this spectrum in the cache.
-                        // Look at the LoadSpectrum method to see how spectrumKey is used.
-                        object spectrumKey = i;
-                        if (!isBest || redundancy == LibraryRedundancy.all_redundant)
-                            spectrumKey = new SpectrumLiteKey(i, redundantId, isBest);
-                        listSpectra.Add(new SpectrumInfoLibrary(this, labelType, filePath, retentionTime, ionMobilityInfo, protein, isBest,
-                                                         spectrumKey)
-                                            {
-                                                SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
-                                            });
-                    }
-                    return listSpectra;
-                }
-            }
+        /// <summary>
+        /// The ion mobility of a library row, or null when the row has none: every value zero or
+        /// missing, as libraries have always written a spectrum without one. A null value is
+        /// passed through as unknown; a caller that wants the zero the row holds passes it.
+        /// </summary>
+        private static IonMobilityAndCCS GetIonMobility(double? mobility, double? collisionalCrossSection, double? highEnergyOffset, int ionMobilityType)
+        {
+            if ((mobility ?? 0) == 0 && (collisionalCrossSection ?? 0) == 0 && (highEnergyOffset ?? 0) == 0)
+                return null;
+            var units = (eIonMobilityUnits)ionMobilityType;
+            return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(mobility, units),
+                collisionalCrossSection, highEnergyOffset);
         }
 
         /// <summary>
@@ -1766,70 +1317,14 @@ namespace pwiz.Skyline.Model.Lib
         /// 0 if schema version is 0
         /// 0 if schema version > 0 and RetentionTimes table does not exist (e.g. redundant libraries)
         /// number of entries in the RetentionTimes table, otherwise.
-        /// </returns> 
+        /// </returns>
         private int RetentionTimesPsmCount()
         {
             // No redundant spectra before schema version 1
             if (SchemaVersion == 0)
                 return 0;
 
-            if (!SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes"))
-            {
-                // SchemaVersion 1 does not have RetentionTimes table for redundant libraries. 
-                return 0;
-            }
-
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-            {
-                select.CommandText = @"SELECT count(*) FROM [RetentionTimes]";
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
-                {
-                        if (!reader.Read())
-                        throw new InvalidDataException(string.Format(LibResources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__, FilePath));
-                    int rows = reader.GetInt32(0);
-                    return rows;
-                }
-            }
-        }
-
-        private bool HasRedundantModificationsTable()
-        {
-            return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, @"Modifications");
-        }
-
-        private bool HasScoreTypesTable(SQLiteConnection connection)
-        {
-            if (!SqliteOperations.TableExists(connection, @"ScoreTypes"))
-            {
-                return false;
-            }
-
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-            {
-                select.CommandText = @"SELECT count(*) FROM [ScoreTypes]";
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        int rows = reader.GetInt32(0);
-                        return rows > 0;
-                    }
-
-                    return false;
-                }
-            }
-        }
-
-        private bool HasSourceFilesTable(SQLiteConnection connection)
-        {
-            return SqliteOperations.TableExists(connection, @"SpectrumSourceFiles");
-        }
-
-        private bool HasFileIdColumn(SQLiteConnection connection)
-        {
-            return SqliteOperations.ColumnExists(connection, @"RefSpectra", @"fileID");
+            return _sqliteConnection.ExecuteWithReader(reader => reader.CountRetentionTimes());
         }
 
         public class BiblioSpecSheetInfo
@@ -1860,7 +1355,7 @@ namespace pwiz.Skyline.Model.Lib
             var info = _libraryEntries[i];
             return GetSheetInfo(info.Id, true);
         }
-        
+
         /// <summary>
         /// Gets data on a spectrum to populate the Property Sheet in ViewLibraryDlg
         /// </summary>
@@ -1869,126 +1364,51 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns></returns>
         public BiblioSpecSheetInfo GetSheetInfo(long id, bool isBest)
         {
-            var connection = isBest ? _sqliteConnection.Connection : _sqliteConnectionRedundant.Connection;
-            var hasScores = HasScoreTypesTable(connection);
-            var hasFiles = HasSourceFilesTable(connection) && HasFileIdColumn(connection);
-            using (SQLiteCommand select = new SQLiteCommand(connection))
+            var connection = isBest ? _sqliteConnection : _sqliteConnectionRedundant;
+            return connection.ExecuteWithReader(reader =>
             {
-                if (hasScores)
-                {
-                    // Resolves issue with RefSpectra and ScoreTypes table both having a column named scoreType
-                    select.CommandText = @"SELECT u.SpecIDinFile, u.retentionTime, u.score, u.copies, q.*";
-                    select.CommandText += hasFiles ? @", s.* " : @" ";
-                }
-                else
-                {
-                    select.CommandText = @"SELECT * ";
-                }
-
-                select.CommandText += @"FROM [RefSpectra] as u ";
-
-                if (hasFiles)
-                    select.CommandText += @"INNER JOIN [SpectrumSourceFiles] as s ON u.[FileID] = s.[id] ";
-
-                if (hasScores)
-                    select.CommandText += @"INNER JOIN [ScoreTypes] as q ON u.[scoreType] = q.[id] ";
-
-                select.CommandText += @"WHERE u.[id] = ?";
-
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, id));
-                using (SQLiteDataReader reader = select.ExecuteReader())
-                {
-                    var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
-                    var iIdFileName = reader.GetOrdinal(SpectrumSourceFiles.idFileName);
-                    var iFileName = reader.GetOrdinal(SpectrumSourceFiles.fileName);
-                    var iWorkflowType = reader.GetOrdinal(SpectrumSourceFiles.workflowType);
-                    var iCopies = reader.GetOrdinal(RefSpectra.copies);
-                    var iScore = reader.GetOrdinal(RefSpectra.score);
-                    var iScoreType = reader.GetOrdinal(ScoreTypes.scoreType);
-                    var iProbabilityType = reader.GetOrdinal(ScoreTypes.probabilityType);
-                    var sheetInfo = new BiblioSpecSheetInfo();
-                    if (reader.Read())
-                    {
-                        sheetInfo.SpecIdInFile = reader.IsDBNull(iSpecIdInFile) ? null : reader.GetString(iSpecIdInFile);
-                        sheetInfo.Count = reader.GetInt32(iCopies);
-                        if (hasFiles)
-                        {
-                            sheetInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
-                            sheetInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
-                        }
-
-                        sheetInfo.WorkflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
-                            ? WorkflowType.DDA
-                            : (WorkflowType) reader.GetInt32(iWorkflowType);
-
-                        if (hasScores)
-                        {
-                            sheetInfo.Score = reader.IsDBNull(iScore) ? null : reader.GetDouble(iScore);
-                            var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
-                            var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
-                            if (ScoreType.INVARIANT_NAMES.Contains(scoreType))
-                            {
-                                sheetInfo.ScoreType = new ScoreType(scoreType, probabilityType).ToString();
-                            }
-                            else
-                            {
-                                sheetInfo.ScoreType = scoreType;
-                            }
-                        }
-                        return sheetInfo;
-                    }
-                    // Should never reach here, as there should always be an sql entry matching the query
+                var spectrum = reader.ReadSpectrum(id, false);
+                // Should never reach here, as there should always be a row matching the id
+                if (spectrum == null)
                     return null;
+                var sheetInfo = new BiblioSpecSheetInfo
+                {
+                    SpecIdInFile = spectrum.SpecIdInFile,
+                    Count = spectrum.Copies,
+                };
+                var sourceFile = reader.ReadSourceFiles().FirstOrDefault(file => file.Id == spectrum.FileId);
+                if (sourceFile != null)
+                {
+                    sheetInfo.IDFileName = sourceFile.IdFileName;
+                    sheetInfo.FileName = sourceFile.FileName;
+                    sheetInfo.WorkflowType = (WorkflowType)sourceFile.WorkflowType;
                 }
-            }
+                var scoreType = reader.ReadScoreTypeTable().FirstOrDefault(type => type.Id == spectrum.ScoreType);
+                if (scoreType != null)
+                {
+                    sheetInfo.Score = spectrum.Score;
+                    sheetInfo.ScoreType = ScoreType.INVARIANT_NAMES.Contains(scoreType.Name)
+                        ? new ScoreType(scoreType.Name, scoreType.ProbabilityType).ToString()
+                        : scoreType.Name;
+                }
+                return sheetInfo;
+            });
         }
 
         public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)
         {
-            string inList = GetInList(filenames);
-            bool hasModsTable = HasRedundantModificationsTable();
- 
-            // Make the changes to the redundant library and then use BlibFilter
-            using (var myTrans = _sqliteConnectionRedundant.Connection.BeginTransaction(IsolationLevel.ReadCommitted))
-            // ReSharper disable LocalizableElement
-            using (var sqCommand = _sqliteConnectionRedundant.Connection.CreateCommand())
-            {
-                if (hasModsTable)
-                {
-                    sqCommand.CommandText = "DELETE FROM [Modifications] WHERE id IN " + "" +
-                                                "(SELECT m.id FROM [Modifications] as m " + 
-                                                    "INNER JOIN [RefSpectra] as s ON m.RefSpectraId = s.id " +
-                                                    "INNER JOIN [SpectrumSourceFiles] as f ON s.fileId = f.id " +
-                                                    "WHERE f.fileName IN " + inList + ")";
-                    sqCommand.ExecuteNonQuery();
-                }
-
-                sqCommand.CommandText = "DELETE FROM [RefSpectraPeaks] WHERE RefSpectraId IN " + 
-                                            "(SELECT p.RefSpectraId FROM [RefSpectraPeaks] as p " +
-                                                "INNER JOIN [RefSpectra] as s ON p.RefSpectraId = s.id " +
-                                                "INNER JOIN [SpectrumSourceFiles] as f ON s.fileId = f.id " +
-                                                "WHERE f.fileName IN " + inList + ")";
-                sqCommand.ExecuteNonQuery();
-
-                sqCommand.CommandText = "DELETE FROM [RefSpectra] WHERE id IN " + 
-                                            "(SELECT s.id FROM [RefSpectra] as s " + 
-                                                "INNER JOIN [SpectrumSourceFiles] as f ON s.fileId = f.id " +
-                                                "WHERE f.fileName IN " + inList + ")";
-                sqCommand.ExecuteNonQuery();
-
-                sqCommand.CommandText = "DELETE FROM SpectrumSourceFiles WHERE fileName IN " + inList;
-                sqCommand.ExecuteNonQuery();
-
-                myTrans.Commit();
-            }
-            // ReSharper restore LocalizableElement
-
-            // Release our handle to the redundant library before shelling out to BlibFilter.exe,
-            // which opens it with File.OpenRead (FileShare.Read). On net8 the still-open SQLite
-            // connection keeps a write handle, making that read a sharing violation
-            // ("... cannot be opened"); net472 released it in time. BlibFilter reads the file from
-            // disk, so the in-process connection is not needed for the filter step.
+            // Release our handle to the redundant library before writing to it and before shelling
+            // out to BlibFilter.exe, which opens it with File.OpenRead (FileShare.Read). On net8 the
+            // still-open SQLite connection keeps a write handle, making that read a sharing
+            // violation ("... cannot be opened"); net472 released it in time. BlibFilter reads the
+            // file from disk, so the in-process connection is not needed for the filter step.
             _sqliteConnectionRedundant.CloseStream();
+
+            // Make the changes to the redundant library and then use BlibFilter
+            using (var writer = BlibWriter.Open(FilePathRedundant, true))
+            {
+                writer.DeleteSourceFiles(filenames);
+            }
 
             // Write the non-redundant library to a temporary file first
             using (var saver = new FileSaver(FilePath))
@@ -2001,27 +1421,6 @@ namespace pwiz.Skyline.Model.Lib
                 _sqliteConnection.CloseStream();
                 saver.Commit();
             }
-        }
-
-        private string GetInList(string[] filenames)
-        {
-            var sb = new StringBuilder();
-            foreach (string filename in filenames)
-            {
-                if (sb.Length > 0)
-                    sb.Append(',');
-                sb.Append('\'').Append(filename).Append('\'');
-            }
-            return @"(" + sb + @")";
-        }
-
-        private static int NullSafeToInteger(object value)
-        {
-            if (value is DBNull)
-            {
-                return 0;
-            }
-            return Convert.ToInt32(value);
         }
 
         #region Implementation of IXmlSerializable
@@ -2131,27 +1530,8 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        class RetentionTimeRow
-        {
-            public int? RefSpectraID { get; set; }
-            public int? RedundantRefSpectraID { get; set; }
-            public int? SpectrumSourceID { get; set; }
-            public double? retentionTime { get; set; }
-            public double? driftTimeMsec { get; set; }
-            public double? collisionalCrossSectionSqA { get; set; }
-            public double? driftTimeHighEnergyOffsetMsec { get; set; }
-            public byte? ionMobilityType { get; set; }
-            public double? ionMobilityValue { get; set; }
-            public double? ionMobilityHighEnergyDriftTimeOffsetMsec { get; set; }
-            public double? startTime { get; set; }
-            public double? endTime { get; set; }
-            public double? ionMobility { get; set; }
-            public double? ionMobilityHighEnergyOffset { get; set; }
-            public double? score { get; set; }
-        }
         class RetentionTimeReader
         {
-            private readonly int _schemaVer;
             private readonly string _dbPath;
 
             private Dictionary<int, IndexedMultiArray<float>> _retentionTimes =
@@ -2169,10 +1549,9 @@ namespace pwiz.Skyline.Model.Lib
             private int _completedSpectraCount;
             private int _refSpectraCount;
 
-            public RetentionTimeReader(string dbPath, int schemaVer, Dictionary<int, int> fileIdToIndex)
+            public RetentionTimeReader(string dbPath, Dictionary<long, int> fileIdToIndex)
             {
                 _dbPath = dbPath;
-                _schemaVer = schemaVer;
                 FileIdToIndex = fileIdToIndex;
             }
 
@@ -2180,7 +1559,7 @@ namespace pwiz.Skyline.Model.Lib
             /// The index in <see cref="LibraryFiles"/> of each spectrum source file, keyed by the
             /// file's id in the library database. Rows for files which are not in here are skipped.
             /// </summary>
-            public IDictionary<int, int> FileIdToIndex { get; private set; }
+            public IDictionary<long, int> FileIdToIndex { get; private set; }
 
             /// <summary>
             /// True if any row pointed at a spectrum in the redundant library. Libraries which were
@@ -2215,26 +1594,25 @@ namespace pwiz.Skyline.Model.Lib
                 int threadCount = ParallelEx.GetThreadCount();
                 ParallelEx.For(0, threadCount, threadIndex =>
                 {
-                    using var conn = SqliteOperations.OpenConnection(_dbPath);
-                    ReadSubset(conn, threadCount, threadIndex);
+                    // Each thread scans its own range of spectrum ids on a reader of its own
+                    using var reader = new BlibReader(_dbPath);
+                    ReadSubset(reader, threadCount, threadIndex);
                 }, maxThreads: threadCount);
                 status = _progressStatus;
             }
 
-            private void ReadSubset(IDbConnection connection, int threadCount, int threadIndex)
+            private void ReadSubset(BlibReader reader, int threadCount, int threadIndex)
             {
-                var sql = @"SELECT * From RetentionTimes WHERE RefSpectraId % "
-                          + threadCount + @" = " + threadIndex;
-                List<RetentionTimeRow> rows = new List<RetentionTimeRow>();
-                int? lastRefSpectraId = null;
-                foreach (var row in connection.Query<RetentionTimeRow>(sql, buffered: false))
+                var rows = new List<BlibRetentionTimeRecord>();
+                long? lastRefSpectraId = null;
+                foreach (var row in reader.ReadRetentionTimes(threadCount, threadIndex))
                 {
-                    int? refSpectraId = row.RefSpectraID;
-                    if (refSpectraId == null)
+                    // A row without a spectrum id reads as 0, which no spectrum has
+                    if (row.RefSpectraId == 0)
                     {
                         continue;
                     }
-                    if (refSpectraId != lastRefSpectraId)
+                    if (row.RefSpectraId != lastRefSpectraId)
                     {
                         if (rows.Count != 0)
                         {
@@ -2242,10 +1620,10 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 return;
                             }
-                            rows = new List<RetentionTimeRow>();
+                            rows = new List<BlibRetentionTimeRecord>();
                         }
 
-                        lastRefSpectraId = refSpectraId;
+                        lastRefSpectraId = row.RefSpectraId;
                     }
                     rows.Add(row);
                 }
@@ -2256,21 +1634,21 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            private bool ConsumeRows(List<RetentionTimeRow> rows)
+            private bool ConsumeRows(List<BlibRetentionTimeRecord> rows)
             {
-                var refSpectraId = rows[0].RefSpectraID;
+                int refSpectraId = (int)rows[0].RefSpectraId;
                 var retentionTimes = new List<KeyValuePair<int, float>>();
                 var ionMobilities = new List<KeyValuePair<int, IonMobilityAndCCS>>();
                 // One entry per file index, holding null for the files which have no boundaries
                 ExplicitPeakBounds[] explicitPeakBounds = null;
                 foreach (var row in rows)
                 {
-                    if (row.RedundantRefSpectraID.GetValueOrDefault() != 0)
+                    if (row.RedundantRefSpectraId != 0)
                     {
                         AnyRedundantSpectra = true;
                     }
 
-                    int? fileId = row.SpectrumSourceID;
+                    long? fileId = row.SpectrumSourceId;
                     if (!fileId.HasValue)
                     {
                         continue;
@@ -2283,9 +1661,9 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     }
 
-                    if (row.retentionTime.HasValue)
+                    if (row.RetentionTime.HasValue)
                     {
-                        retentionTimes.Add(new KeyValuePair<int, float>(fileIndex, (float) row.retentionTime.Value));
+                        retentionTimes.Add(new KeyValuePair<int, float>(fileIndex, (float) row.RetentionTime.Value));
                     }
 
                     var ionMobility = ReadIonMobilityInfo(row);
@@ -2307,13 +1685,13 @@ namespace pwiz.Skyline.Model.Lib
                     var indexedRetentionTimes = retentionTimes.ToIndexedMultiArray();
                     lock (_retentionTimes)
                     {
-                        if (_retentionTimes.TryGetValue(refSpectraId.Value, out var existing))
+                        if (_retentionTimes.TryGetValue(refSpectraId, out var existing))
                         {
-                            _retentionTimes[refSpectraId.Value] = existing.Merge(indexedRetentionTimes);
+                            _retentionTimes[refSpectraId] = existing.Merge(indexedRetentionTimes);
                         }
                         else
                         {
-                            _retentionTimes.Add(refSpectraId.Value, indexedRetentionTimes);
+                            _retentionTimes.Add(refSpectraId, indexedRetentionTimes);
                         }
                     }
                 }
@@ -2323,13 +1701,13 @@ namespace pwiz.Skyline.Model.Lib
                     var indexedIonMobilities = ionMobilities.ToIndexedMultiArray();
                     lock (_ionMobilities)
                     {
-                        if (_ionMobilities.TryGetValue(refSpectraId.Value, out var existing))
+                        if (_ionMobilities.TryGetValue(refSpectraId, out var existing))
                         {
-                            _ionMobilities[refSpectraId.Value] = existing.Merge(indexedIonMobilities);
+                            _ionMobilities[refSpectraId] = existing.Merge(indexedIonMobilities);
                         }
                         else
                         {
-                            _ionMobilities.Add(refSpectraId.Value, indexedIonMobilities);
+                            _ionMobilities.Add(refSpectraId, indexedIonMobilities);
                         }
                     }
                 }
@@ -2338,13 +1716,13 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     lock (_explicitPeakBounds)
                     {
-                        if (_explicitPeakBounds.TryGetValue(refSpectraId.Value, out var existing))
+                        if (_explicitPeakBounds.TryGetValue(refSpectraId, out var existing))
                         {
-                            _explicitPeakBounds[refSpectraId.Value] = existing.Merge(explicitPeakBounds);
+                            _explicitPeakBounds[refSpectraId] = existing.Merge(explicitPeakBounds);
                         }
                         else
                         {
-                            _explicitPeakBounds.Add(refSpectraId.Value, new ExplicitPeakBoundsList(explicitPeakBounds));
+                            _explicitPeakBounds.Add(refSpectraId, new ExplicitPeakBoundsList(explicitPeakBounds));
                         }
                     }
                 }
@@ -2373,64 +1751,23 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            public IonMobilityAndCCS ReadIonMobilityInfo(RetentionTimeRow row)
+            /// <summary>
+            /// The ion mobility of an observation, with the zero the row holds for a value it lacks
+            /// (a library has always written every ion mobility column of a spectrum without one),
+            /// or null when there is none at all; the reader has already read the columns of the
+            /// older schemas as the current ones.
+            /// </summary>
+            public static IonMobilityAndCCS ReadIonMobilityInfo(BlibRetentionTimeRecord row)
             {
-                if (_schemaVer < 2)
-                {
-                    return null;
-                }
-                switch (_schemaVer)
-                {
-                    default:
-                    {
-                        double mobility = row.ionMobility ?? 0;
-                        double collisionalCrossSection = row.collisionalCrossSectionSqA ?? 0;
-                        double highEnergyOffset = row.ionMobilityHighEnergyOffset ?? 0;
-                        var units = (eIonMobilityUnits)row.ionMobilityType.GetValueOrDefault();
-                        if (mobility == 0 && collisionalCrossSection == 0 &&
-                            highEnergyOffset == 0)
-                        {
-                            return null;
-                        }
-                        return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(mobility, units),
-                            collisionalCrossSection, highEnergyOffset);
-                    }
-                    case 5:
-                    case 4:
-                    {
-                        double driftTimeMsec = row.driftTimeMsec ?? 0;
-                        double collisionalCrossSection =
-                            row.collisionalCrossSectionSqA ?? 0;
-                        double highEnergyOffset = row.driftTimeHighEnergyOffsetMsec ?? 0;
-                        if (driftTimeMsec == 0 && collisionalCrossSection == 0 &&
-                            highEnergyOffset == 0)
-                        {
-                            return null;
-                        }
-                        return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(driftTimeMsec, eIonMobilityUnits.drift_time_msec),
-                            collisionalCrossSection, highEnergyOffset);
-                    }
-                    case 3:
-                    case 2:
-                    {
-                        int ionMobilityType = row.ionMobilityType ?? 0;
-                        double ionMobilityValue = row.ionMobilityValue ?? 0;
-                        double highEnergyOffset = row.ionMobilityHighEnergyDriftTimeOffsetMsec ?? 0;
-                        if (ionMobilityValue == 0 && highEnergyOffset == 0)
-                        {
-                            return null;
-                        }
-                        bool isCcs = ionMobilityType == (int) IonMobilityType.collisionalCrossSection;
-                        return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : null, highEnergyOffset);
-                    }
-                }
+                return GetIonMobility(row.IonMobility ?? 0, row.CollisionalCrossSectionSqA ?? 0,
+                    row.IonMobilityHighEnergyOffset ?? 0, row.IonMobilityType);
             }
 
-            public ExplicitPeakBounds ReadPeakBounds(RetentionTimeRow row)
+            public static ExplicitPeakBounds ReadPeakBounds(BlibRetentionTimeRecord row)
             {
-                if (row.startTime.HasValue && row.endTime.HasValue)
+                if (row.StartTime.HasValue && row.EndTime.HasValue)
                 {
-                    return new ExplicitPeakBounds(row.startTime.Value, row.endTime.Value, row.score ?? ExplicitPeakBounds.UNKNOWN_SCORE);
+                    return new ExplicitPeakBounds(row.StartTime.Value, row.EndTime.Value, row.Score ?? ExplicitPeakBounds.UNKNOWN_SCORE);
                 }
                 return null;
             }

@@ -65,6 +65,20 @@ namespace pwiz.BiblioSpec.IO
         public const string TABLE_SCORE_TYPES = BlibSchema.TABLE_SCORE_TYPES;
         public const string TABLE_RETENTION_TIMES = BlibSchema.TABLE_RETENTION_TIMES;
 
+        /// <summary>
+        /// The ion mobility columns of the schemas before <see cref="BlibSchema.MinVersionImsUnits"/>,
+        /// which <c>RefSpectra</c> and <c>RetentionTimes</c> both carried under the same names:
+        /// <c>driftTimeMsec</c> (schemas 4 and 5) and <c>ionMobilityValue</c> (2 and 3) for the
+        /// value, <c>driftTimeHighEnergyOffsetMsec</c> and
+        /// <c>ionMobilityHighEnergyDriftTimeOffsetMsec</c> for the high-energy offset. Each reads
+        /// as the current column; <see cref="KnownColumns.ReadLegacyIonMobility"/> settles the units.
+        /// </summary>
+        private static readonly IReadOnlyDictionary<string, string[]> LEGACY_ION_MOBILITY_NAMES = new Dictionary<string, string[]>
+        {
+            { @"ionMobility", new[] { @"driftTimeMsec", @"ionMobilityValue" } },
+            { @"ionMobilityHighEnergyOffset", new[] { @"driftTimeHighEnergyOffsetMsec", @"ionMobilityHighEnergyDriftTimeOffsetMsec" } },
+        };
+
         private readonly SQLiteConnection _connection;
         private readonly bool _ownsConnection;
         // Which tables the library has, asked once each: a read-only library's tables do not
@@ -193,15 +207,44 @@ namespace pwiz.BiblioSpec.IO
         public IReadOnlyDictionary<int, string> ReadScoreTypes()
         {
             var scoreTypes = new Dictionary<int, string>();
+            foreach (var scoreType in ReadScoreTypeTable())
+                scoreTypes[scoreType.Id] = scoreType.Name;
+            return scoreTypes;
+        }
+
+        /// <summary>
+        /// The <c>ScoreTypes</c> rows in id order, each with how its score reads
+        /// (<see cref="BlibScoreType.ProbabilityType"/>); empty in a library without the table.
+        /// </summary>
+        public IReadOnlyList<BlibScoreType> ReadScoreTypeTable()
+        {
+            var scoreTypes = new List<BlibScoreType>();
             if (!HasTable(TABLE_SCORE_TYPES))
                 return scoreTypes;
-            using (var command = new SQLiteCommand(@"SELECT id, scoreType FROM ScoreTypes", _connection))
+            // The probability type arrived with a later schema than the table.
+            string probability = HasColumn(TABLE_SCORE_TYPES, @"probabilityType") ? @"probabilityType" : @"NULL";
+            using (var command = new SQLiteCommand(@"SELECT id, scoreType, " + probability + @" FROM ScoreTypes ORDER BY id", _connection))
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
-                    scoreTypes[reader.GetInt32(0)] = GetString(reader, 1);
+                    scoreTypes.Add(new BlibScoreType(reader.GetInt32(0), GetString(reader, 1), GetString(reader, 2)));
             }
             return scoreTypes;
+        }
+
+        /// <summary>
+        /// Whether the library has <paramref name="column"/> of <paramref name="table"/> with a
+        /// value in some row: an optional column (<see cref="BlibSchema.OptionalRefSpectraColumns"/>)
+        /// that is NULL throughout offers nothing, as a cutoff on it would fail every row. The
+        /// scan stops at the first value, so a library with values answers at once.
+        /// </summary>
+        public bool HasValues(string table, string column)
+        {
+            if (!HasColumn(table, column))
+                return false;
+            using (var command = new SQLiteCommand(@"SELECT 1 FROM " + table + @" WHERE " + column + @" IS NOT NULL LIMIT 1", _connection))
+            using (var reader = command.ExecuteReader())
+                return reader.Read();
         }
 
         /// <summary>
@@ -470,29 +513,62 @@ namespace pwiz.BiblioSpec.IO
         public IEnumerable<BlibRetentionTimeRecord> ReadRetentionTimes(int partitionCount = 1, int partitionIndex = 0)
         {
             ValidatePartition(partitionCount, partitionIndex);
-            var columns = _retentionTimeColumns ??
-                          (_retentionTimeColumns = new RetentionTimeColumns(BlibSqlite.ColumnNames(_connection, TABLE_RETENTION_TIMES)));
+            var columns = RetentionTimeColumnsOfLibrary();
             if (columns.Count == 0)
                 return Array.Empty<BlibRetentionTimeRecord>();
-            return EnumerateRetentionTimes(columns, partitionCount, partitionIndex);
+            var where = new WhereClause();
+            if (partitionCount > 1)
+                where.AddPartition(@"RefSpectraID", IdSpan(), partitionCount, partitionIndex);
+            return EnumerateRetentionTimes(columns, where);
         }
 
-        /// <summary>The scan of <see cref="ReadRetentionTimes"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
-        private IEnumerable<BlibRetentionTimeRecord> EnumerateRetentionTimes(RetentionTimeColumns columns, int partitionCount, int partitionIndex)
+        /// <summary>
+        /// The <c>RetentionTimes</c> rows of spectrum <paramref name="refId"/>, in the order
+        /// written: the observations of one spectrum, for a caller showing them; empty without
+        /// the table. Served by the index <see cref="BlibWriter.Complete"/> adds, or a scan of
+        /// the table in a library written without it.
+        /// </summary>
+        public IReadOnlyList<BlibRetentionTimeRecord> ReadSpectrumRetentionTimes(long refId)
+        {
+            var columns = RetentionTimeColumnsOfLibrary();
+            if (columns.Count == 0)
+                return Array.Empty<BlibRetentionTimeRecord>();
+            var where = new WhereClause();
+            where.Add(@"RefSpectraID = @id", @"@id", refId);
+            return EnumerateRetentionTimes(columns, where).ToList();
+        }
+
+        /// <summary>The <c>RetentionTimes</c> rows counted: every observation of every spectrum; 0 without the table.</summary>
+        public int CountRetentionTimes()
+        {
+            if (!HasTable(TABLE_RETENTION_TIMES))
+                return 0;
+            using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM RetentionTimes", _connection))
+                return Convert.ToInt32(command.ExecuteScalar());
+        }
+
+        private RetentionTimeColumns RetentionTimeColumnsOfLibrary()
+        {
+            return _retentionTimeColumns ??
+                   (_retentionTimeColumns = new RetentionTimeColumns(BlibSqlite.ColumnNames(_connection, TABLE_RETENTION_TIMES)));
+        }
+
+        /// <summary>The scan of <see cref="ReadRetentionTimes(int,int)"/>, deferred until enumerated; the arguments were checked by the caller.</summary>
+        private IEnumerable<BlibRetentionTimeRecord> EnumerateRetentionTimes(RetentionTimeColumns columns, WhereClause where)
         {
             var sql = new StringBuilder(@"SELECT ");
             sql.Append(columns.SelectList(string.Empty));
             sql.Append(@" FROM RetentionTimes");
-            var where = new WhereClause();
-            if (partitionCount > 1)
-                where.AddPartition(@"RefSpectraID", IdSpan(), partitionCount, partitionIndex);
             where.AppendTo(sql);
             sql.Append(@" ORDER BY RefSpectraID");
             using (var command = new SQLiteCommand(sql.ToString(), _connection))
-            using (var reader = command.ExecuteReader())
             {
-                while (reader.Read())
-                    yield return columns.Read(reader);
+                where.Bind(command);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                        yield return columns.Read(reader);
+                }
             }
         }
 
@@ -809,25 +885,46 @@ namespace pwiz.BiblioSpec.IO
             {
                 return GetInt64(reader, _ordinals[column]);
             }
+
+            /// <summary>
+            /// The ion mobility of a row read from the legacy columns
+            /// (<see cref="LEGACY_ION_MOBILITY_NAMES"/>): a drift time where the library has no
+            /// <c>ionMobilityType</c> to say (schemas 4 and 5); in schemas 2 and 3
+            /// <c>ionMobilityValue</c> held a drift time or a CCS, told apart by a type of that
+            /// schema's own (1 drift time, 2 CCS), so only the drift time is an ion mobility and
+            /// the CCS is returned as one when <paramref name="ccsFromValue"/> says so, which
+            /// BlibFilter never did and Skyline always has.
+            /// </summary>
+            protected static void ReadLegacyIonMobility(string source, bool hasType, bool ccsFromValue,
+                ref double? ionMobility, ref int ionMobilityType, ref double? collisionalCrossSection)
+            {
+                if (source == null)
+                    return;
+                if (!hasType)
+                {
+                    if (ionMobility.HasValue)
+                        ionMobilityType = BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME;
+                    return;
+                }
+                if (source != @"ionMobilityValue" || ionMobilityType == BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME)
+                    return;
+                // The schema-3 type codes are not the current ones: 2 was a CCS.
+                if (ccsFromValue && ionMobilityType == 2 && ionMobility.HasValue)
+                    collisionalCrossSection = ionMobility;
+                ionMobility = null;
+                ionMobilityType = BlibWriter.ION_MOBILITY_TYPE_NONE;
+            }
         }
 
         /// <summary>
         /// The <c>RefSpectra</c> columns, in the order <see cref="BlibSchema.CreateRefSpectra"/>
         /// declares them. A NULL in a column the library has reads as null, or as 0 in a column
         /// the record holds as a plain number. The ion mobility columns of the schemas before
-        /// <see cref="BlibSchema.MinVersionImsUnits"/> (<c>driftTimeMsec</c> and
-        /// <c>ionMobilityValue</c>, <c>driftTimeHighEnergyOffsetMsec</c> and
-        /// <c>ionMobilityHighEnergyDriftTimeOffsetMsec</c>) read as the current ones, in drift
-        /// time units where the library has no <c>ionMobilityType</c> to say.
+        /// <see cref="BlibSchema.MinVersionImsUnits"/> read as the current ones
+        /// (<see cref="LEGACY_ION_MOBILITY_NAMES"/>).
         /// </summary>
         private sealed class SpectrumColumns : KnownColumns
         {
-            private static readonly IReadOnlyDictionary<string, string[]> LEGACY_NAMES = new Dictionary<string, string[]>
-            {
-                { @"ionMobility", new[] { @"driftTimeMsec", @"ionMobilityValue" } },
-                { @"ionMobilityHighEnergyOffset", new[] { @"driftTimeHighEnergyOffsetMsec", @"ionMobilityHighEnergyDriftTimeOffsetMsec" } },
-            };
-
             private const int ID = 0, PEPTIDE_SEQ = 1, PRECURSOR_MZ = 2, PRECURSOR_CHARGE = 3, PEPTIDE_MOD_SEQ = 4, PREV_AA = 5, NEXT_AA = 6,
                 COPIES = 7, NUM_PEAKS = 8, ION_MOBILITY = 9, CCS = 10, ION_MOBILITY_HIGH_ENERGY_OFFSET = 11, ION_MOBILITY_TYPE = 12,
                 RETENTION_TIME = 13, START_TIME = 14, END_TIME = 15, TOTAL_ION_CURRENT = 16, MOLECULE_NAME = 17, CHEMICAL_FORMULA = 18,
@@ -845,7 +942,7 @@ namespace pwiz.BiblioSpec.IO
             };
 
             public SpectrumColumns(HashSet<string> present)
-                : base(NAMES, present, LEGACY_NAMES)
+                : base(NAMES, present, LEGACY_ION_MOBILITY_NAMES)
             {
                 if (!Has(ID))
                     throw new InvalidDataException(@"The library has no RefSpectra table");
@@ -930,15 +1027,15 @@ namespace pwiz.BiblioSpec.IO
                     spectrum.IonMobilityHighEnergyOffset = Real(reader, ION_MOBILITY_HIGH_ENERGY_OFFSET);
                 if (Has(ION_MOBILITY_TYPE))
                     spectrum.IonMobilityType = Integer(reader, ION_MOBILITY_TYPE) ?? BlibWriter.ION_MOBILITY_TYPE_NONE;
-                else if (FromLegacyName(ION_MOBILITY) && spectrum.IonMobility.HasValue)
-                    spectrum.IonMobilityType = BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME;
-                // A library of schema 3 held a drift time or a CCS in ionMobilityValue, told apart by
-                // its ionMobilityType; only the drift time (1) is an ion mobility, as BlibFilter has
-                // always read it, and the type codes of that schema are not the current ones.
-                if (Source(ION_MOBILITY) == @"ionMobilityValue" && spectrum.IonMobilityType != BlibWriter.ION_MOBILITY_TYPE_DRIFT_TIME)
+                if (FromLegacyName(ION_MOBILITY))
                 {
-                    spectrum.IonMobility = null;
-                    spectrum.IonMobilityType = BlibWriter.ION_MOBILITY_TYPE_NONE;
+                    // Only the drift time of a schema-3 row is an ion mobility, as BlibFilter has always read it.
+                    double? ionMobility = spectrum.IonMobility, ccs = spectrum.CollisionalCrossSectionSqA;
+                    int ionMobilityType = spectrum.IonMobilityType;
+                    ReadLegacyIonMobility(Source(ION_MOBILITY), Has(ION_MOBILITY_TYPE), false, ref ionMobility, ref ionMobilityType, ref ccs);
+                    spectrum.IonMobility = ionMobility;
+                    spectrum.IonMobilityType = ionMobilityType;
+                    spectrum.CollisionalCrossSectionSqA = ccs;
                 }
                 if (Has(RETENTION_TIME))
                     spectrum.RetentionTime = Real(reader, RETENTION_TIME);
@@ -978,7 +1075,12 @@ namespace pwiz.BiblioSpec.IO
             }
         }
 
-        /// <summary>The <c>RetentionTimes</c> columns of <see cref="BlibSchema.CreateRetentionTimes"/>.</summary>
+        /// <summary>
+        /// The <c>RetentionTimes</c> columns of <see cref="BlibSchema.CreateRetentionTimes"/>. The
+        /// ion mobility columns of the schemas before <see cref="BlibSchema.MinVersionImsUnits"/>
+        /// read as the current ones (<see cref="LEGACY_ION_MOBILITY_NAMES"/>), a schema-3 CCS
+        /// included, as Skyline has always read its libraries' observations.
+        /// </summary>
         private sealed class RetentionTimeColumns : KnownColumns
         {
             private const int REF_SPECTRA_ID = 0, REDUNDANT_REF_SPECTRA_ID = 1, SPECTRUM_SOURCE_ID = 2, ION_MOBILITY = 3, CCS = 4,
@@ -992,7 +1094,7 @@ namespace pwiz.BiblioSpec.IO
             };
 
             public RetentionTimeColumns(HashSet<string> present)
-                : base(NAMES, present)
+                : base(NAMES, present, LEGACY_ION_MOBILITY_NAMES)
             {
             }
 
@@ -1011,6 +1113,15 @@ namespace pwiz.BiblioSpec.IO
                     row.IonMobilityHighEnergyOffset = Real(reader, ION_MOBILITY_HIGH_ENERGY_OFFSET);
                 if (Has(ION_MOBILITY_TYPE))
                     row.IonMobilityType = Integer(reader, ION_MOBILITY_TYPE) ?? BlibWriter.ION_MOBILITY_TYPE_NONE;
+                if (FromLegacyName(ION_MOBILITY))
+                {
+                    double? ionMobility = row.IonMobility, ccs = row.CollisionalCrossSectionSqA;
+                    int ionMobilityType = row.IonMobilityType;
+                    ReadLegacyIonMobility(Source(ION_MOBILITY), Has(ION_MOBILITY_TYPE), true, ref ionMobility, ref ionMobilityType, ref ccs);
+                    row.IonMobility = ionMobility;
+                    row.IonMobilityType = ionMobilityType;
+                    row.CollisionalCrossSectionSqA = ccs;
+                }
                 if (Has(RETENTION_TIME))
                     row.RetentionTime = Real(reader, RETENTION_TIME);
                 if (Has(START_TIME))
