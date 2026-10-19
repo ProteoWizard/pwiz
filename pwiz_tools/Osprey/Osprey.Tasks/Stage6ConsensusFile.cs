@@ -185,7 +185,8 @@ namespace pwiz.Osprey.Tasks
             if (stampProblem != null)
             {
                 throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.Stage6ConsensusFile_Load_Failed_to_read_the_cross_run_consensus__0____1_, path, stampProblem));
+                    OspreyTasksResources.Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it,
+                    path, stampProblem, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             var result = new Stage6Consensus
             {

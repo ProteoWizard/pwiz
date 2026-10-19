@@ -3785,6 +3785,15 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The cross-run consensus {0} cannot be used: {1}. To rebuild it, delete this analysis&apos;s {2} files and run the first pass again..
+        /// </summary>
+        public static string Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it {
+            get {
+                return ResourceManager.GetString("Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to the file is incomplete or was written by another Osprey build.
         /// </summary>
         public static string Stage6ConsensusFile_Load_the_file_is_incomplete_or_from_another_build {

@@ -1063,6 +1063,9 @@
   <data name="ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_cannot_be_used" xml:space="preserve">
     <value>The list of precursor candidates kept for cross-run reconciliation cannot be used: {0}: {1}. To rebuild it, delete this analysis's {2} files and run the first pass again.</value>
   </data>
+  <data name="Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it" xml:space="preserve">
+    <value>The cross-run consensus {0} cannot be used: {1}. To rebuild it, delete this analysis's {2} files and run the first pass again.</value>
+  </data>
   <data name="ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp" xml:space="preserve">
     <value>the file has no validity stamp</value>
   </data>

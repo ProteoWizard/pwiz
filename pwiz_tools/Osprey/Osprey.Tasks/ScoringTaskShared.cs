@@ -1033,10 +1033,15 @@ namespace pwiz.Osprey.Tasks
         /// from the same build under other settings passes; only the writer can detect that,
         /// and a straight-through run does, because both are declared FirstPassFDR outputs.</para>
         ///
-        /// <para>The pair is compared only where both are present: a SecondPassFDR node is
-        /// shipped the retained summary and not the consensus. The first-pass model file is
-        /// not part of the pair, because its write is best-effort and an earlier run's model
-        /// may legitimately sit beside this run's products.</para>
+        /// <para>The first-pass experiment sidecar is compared too: the same run writes it under
+        /// the same stamp, and its write failure is counted rather than fatal, so a failed
+        /// overwrite can leave an earlier run's beside this run's pair. Each is compared only
+        /// where present - a SecondPassFDR node is shipped the retained summary and not the
+        /// consensus - and only where its stamp is readable: a sibling with no readable stamp
+        /// is refused by its own reader, for its own reason, and blaming it here would name
+        /// the wrong cause. The first-pass model file is not compared, because its write is
+        /// best-effort and an earlier run's model may legitimately sit beside this run's
+        /// products.</para>
         /// </summary>
         internal static string FirstPassProductStampProblem(OspreyConfig config, string path)
         {
@@ -1050,19 +1055,22 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_was_written_by__0__of_Osprey__1___not_by__2__of_this_build___3__,
                     stamp.Task, stamp.Version, FirstPassFdrTask.TASK_NAME, OspreyVersion.Current);
             }
-            var pair = new[]
+            string siblingPath = ArtifactSiblingPath(config);
+            var siblings = new[]
             {
                 Stage6ConsensusFile.PathFor(config),
-                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config))
+                RetainedBaseIdSidecar.PathFor(config.OutputBlib, siblingPath),
+                FdrExperimentSidecar.PathFor(config.OutputBlib, siblingPath, FdrScoresSidecar.Pass.FirstPass)
             };
-            foreach (string other in pair)
+            foreach (string other in siblings)
             {
-                if (string.IsNullOrEmpty(other) || !File.Exists(other) ||
+                if (string.IsNullOrEmpty(other) ||
                     string.Equals(Path.GetFullPath(other), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
-                if (!string.Equals(stamp.ToString(), ArtifactValidity.ReadStamp(other)?.ToString(), StringComparison.Ordinal))
+                var otherStamp = ArtifactValidity.ReadStamp(other);
+                if (otherStamp != null && !string.Equals(stamp.ToString(), otherStamp.ToString(), StringComparison.Ordinal))
                 {
                     return string.Format(
                         OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,

@@ -402,10 +402,10 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The two analysis-wide products FirstPassFDR writes under one stamp - the Stage 6
-        /// consensus and the retained base_id summary - load only when each was written by
-        /// FirstPassFDR of this build and, where both are present, they still carry the same
-        /// stamp. A node cannot rebuild FirstPassFDR's key, so this consistency check is what
+        /// The analysis-wide products FirstPassFDR writes under one stamp - the Stage 6
+        /// consensus, the retained base_id summary and the first-pass experiment sidecar - load
+        /// only when each was written by FirstPassFDR of this build and the others present
+        /// beside it still carry the same stamp. A node cannot rebuild FirstPassFDR's key, so this consistency check is what
         /// stands between a stale file shipped to it and a plan that looks current.
         /// </summary>
         [TestMethod]
@@ -435,6 +435,32 @@ namespace pwiz.Osprey.Test
                 StringAssert.Contains(error, string.Format(
                     OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,
                     consensusPath, FirstPassFdrTask.TASK_NAME));
+
+                // The first-pass experiment sidecar is written by the same run under the same
+                // stamp, so one left by another run beside this run's pair is refused too.
+                SaveFirstPassProducts(config, thisRun, thisRun);
+                string experimentPath = FdrExperimentSidecar.PathFor(config.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass);
+                FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
+                    FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"another-run"));
+                string experimentMismatch = string.Format(
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,
+                    experimentPath, FirstPassFdrTask.TASK_NAME);
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => Stage6ConsensusFile.Load(config)).Message, experimentMismatch);
+                Assert.IsNull(ScoringTaskShared.ReadRetainedBaseIds(config, out error));
+                StringAssert.Contains(error, experimentMismatch);
+                FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
+                    FdrScoresSidecar.Pass.FirstPass, thisRun);
+                Assert.IsNotNull(Stage6ConsensusFile.Load(config));
+
+                // A consensus with no stamp is refused for that, by its own reader. The summary
+                // beside it does not blame it: with no stamp to compare there is no mismatch.
+                File.WriteAllText(consensusPath,
+                    @"{""SchemaVersion"":1,""Consensus"":[],""PassingBaseIds"":[],""PassingBaseIdCharges"":[],""PassingSequences"":[],""PassingSequenceCharges"":[]}");
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => Stage6ConsensusFile.Load(config)).Message,
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp);
+                Assert.IsNotNull(ScoringTaskShared.ReadRetainedBaseIds(config, out error), error);
+                File.Delete(experimentPath);
 
                 // A matching pair from another build, or written by another task, is refused by
                 // its own stamp.
