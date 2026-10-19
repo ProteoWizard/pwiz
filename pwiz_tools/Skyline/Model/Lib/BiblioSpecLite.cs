@@ -982,7 +982,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static double? GetNullableDouble(IDataRecord record, int ordinal)
         {
-            return record.IsDBNull(ordinal) ? (double?)null : record.GetDouble(ordinal);
+            return record.IsDBNull(ordinal) ? null : record.GetDouble(ordinal);
         }
 
         private bool Load(ILoadMonitor loader)

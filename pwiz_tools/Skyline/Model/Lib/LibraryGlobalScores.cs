@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Lib
@@ -187,7 +186,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     else
                     {
-                        newPeptides.Add(((DocNodeParent) nodePep.ChangeChildren(keptGroups)).ChangeAutoManageChildren(false));
+                        newPeptides.Add(nodePep.ChangeChildren(keptGroups).ChangeAutoManageChildren(false));
                         peptideChanged = true;
                     }
                 }
@@ -196,7 +195,7 @@ namespace pwiz.Skyline.Model.Lib
                     newPeptideGroups.Add(nodePepGroup);
                     continue;
                 }
-                var newPeptideGroup = (DocNodeParent) nodePepGroup.ChangeChildren(newPeptides);
+                var newPeptideGroup = nodePepGroup.ChangeChildren(newPeptides);
                 if (peptideRemoved)
                     newPeptideGroup = newPeptideGroup.ChangeAutoManageChildren(false);
                 newPeptideGroups.Add(newPeptideGroup);
@@ -237,7 +236,7 @@ namespace pwiz.Skyline.Model.Lib
                     return true;
                 inLibrary = true;
             }
-            return inLibrary ? false : (bool?) null;
+            return inLibrary ? false : null;
         }
     }
 }

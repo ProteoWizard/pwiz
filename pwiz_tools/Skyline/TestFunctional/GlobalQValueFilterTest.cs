@@ -533,7 +533,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static double? GetNullableDouble(SQLiteDataReader reader, int ordinal)
         {
-            return reader.IsDBNull(ordinal) ? (double?) null : reader.GetDouble(ordinal);
+            return reader.IsDBNull(ordinal) ? null : reader.GetDouble(ordinal);
         }
 
         /// <summary>
@@ -609,7 +609,7 @@ namespace pwiz.SkylineTestFunctional
                         qValue = PeptideQValue;
                         break;
                     default:
-                        qValue = ProteinGroups.Count == 0 ? (double?) null : ProteinGroups.Values.Min();
+                        qValue = ProteinGroups.Count == 0 ? null : ProteinGroups.Values.Min();
                         break;
                 }
                 return qValue.HasValue && qValue.Value <= cutoff;

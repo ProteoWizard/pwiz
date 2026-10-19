@@ -817,7 +817,7 @@ namespace pwiz.Skyline.SettingsUI
                 bool copyIds = false;
                 foreach (var protein in proteins)
                 {
-                    var nodePep = (PeptideDocNode) pepMatch.NodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                    var nodePep = pepMatch.NodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
                     // The same peptide in a second group needs its own identities
                     if (copyIds)
                         nodePep = CopyIds(nodePep);
