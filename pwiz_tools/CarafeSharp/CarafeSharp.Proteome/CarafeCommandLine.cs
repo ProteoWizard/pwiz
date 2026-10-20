@@ -297,12 +297,16 @@ namespace pwiz.CarafeSharp.Proteome
                 return new IUsageBlock[]
                 {
                     new ParaUsageBlock(@"CarafeSharp - spectral library prediction and fine-tuning for Osprey (C# port of Carafe)"),
-                    new ParaUsageBlock(@"USAGE: CarafeSharp " + ARG_BUILD_ENTRAPMENT_FASTA.ArgumentText + @" <out.fasta> --db <proteins.fasta> [options]"),
-                    new ParaUsageBlock(@"       CarafeSharp " + ARG_RECONCILE_MANIFEST.ArgumentText + @" <out.tsv> --manifest <in.tsv> " +
-                                       ARG_PREDICTED_LIBRARY.ArgumentText + @" <library.tsv|.blib>"),
-                    new ParaUsageBlock(@"       CarafeSharp --db <peptides.fasta|proteins.fasta> -o <folder> [options]   (library prediction)"),
-                    new ParaUsageBlock(@"       CarafeSharp -i <osprey.blib> --ms <runs> -o <folder> [--db <fasta>] [options]   (training)"),
-                    new ParaUsageBlock(@"       CarafeSharp -i <run" + TrainingExportParquet.EXT + @"|folder> [--ms <runs>] -o <folder> [--db <fasta>] [options]"),
+                    new ParaUsageBlock(@"USAGE: CarafeSharp " + ARG_BUILD_ENTRAPMENT_FASTA.ArgumentText + @" <out.fasta> " + ARG_DB.ArgumentText +
+                                       @" <proteins.fasta> [options]"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_RECONCILE_MANIFEST.ArgumentText + @" <out.tsv> " + ARG_MANIFEST.ArgumentText +
+                                       @" <in.tsv> " + ARG_PREDICTED_LIBRARY.ArgumentText + @" <library.tsv|.blib>"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_DB.ArgumentText + @" <peptides.fasta|proteins.fasta> " + ARG_O.ArgumentText +
+                                       @" <folder> [options]   (library prediction)"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_I.ArgumentText + @" <osprey.blib> " + ARG_MS.ArgumentText + @" <runs> " +
+                                       ARG_O.ArgumentText + @" <folder> [" + ARG_DB.ArgumentText + @" <fasta>] [options]   (training)"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_I.ArgumentText + @" <run" + TrainingExportParquet.EXT + @"|folder> [" +
+                                       ARG_MS.ArgumentText + @" <runs>] " + ARG_O.ArgumentText + @" <folder> [" + ARG_DB.ArgumentText + @" <fasta>] [options]"),
                     new ParaUsageBlock(@"       CarafeSharp " + ARG_MODEL_INFO.ArgumentText + @" <file" + CarafeModelFile.EXTENSION + @">"),
                     GROUP_MODES,
                     GROUP_DIGEST,

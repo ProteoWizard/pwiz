@@ -59,8 +59,8 @@ namespace pwiz.Common.CommandLine
 
         /// <summary>
         /// The prefix an argument's long name is spelled with in help and messages
-        /// (<see cref="ArgumentBase.ArgumentText"/>): <c>--</c> for Skyline and Osprey, <c>-</c>
-        /// for CarafeSharp, which keeps Carafe's spelling.
+        /// (<see cref="ArgumentBase.ArgumentText"/>): <c>--</c> for Skyline, Osprey and
+        /// CarafeSharp, whose grammar also accepts Carafe's single dash when parsing.
         /// </summary>
         public string Prefix { get; init; } = ArgumentBase.ARG_PREFIX;
 

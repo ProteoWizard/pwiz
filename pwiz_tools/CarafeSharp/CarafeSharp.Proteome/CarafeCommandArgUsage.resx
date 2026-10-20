@@ -224,7 +224,7 @@
     <value>The models to train, or to predict with from --model-dir: all (default), ms2 or rt.</value>
   </data>
   <data name="_rt_model" xml:space="preserve">
-    <value>The retention-time model (default: a fine-tuned model's, else chronologer). A different one from a fine-tuned model's predicts with its pretrained model, Chronologer's in iRT. Not in Java Carafe.</value>
+    <value>The retention-time model (default: the one of a saved model or model folder, else chronologer). A different one from a fine-tuned model's predicts with its pretrained model, Chronologer's in iRT. Not in Java Carafe.</value>
   </data>
   <data name="_device" xml:space="preserve">
     <value>Where the models run: cpu, or gpu / cuda (default; the CPU when there is no CUDA device).</value>
