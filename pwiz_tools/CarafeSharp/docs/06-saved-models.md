@@ -77,7 +77,7 @@ saved model to fine-tune further on the new runs:
 - The RT model is fine-tuned as the kind `-rt_model` names, else as the saved model's kind. A saved
   fine-tuned RT model of the other kind is not the start: the named kind starts from its pretrained
   model, the held-out `pretrained` RT metrics are that model's, and the log warns
-  (`WARNING: -rt_model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not
+  (`WARNING: --rt-model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not
   fine-tuned further`).
 - The new fine-tuned MS2 model is kept when it beats the saved one on all four held-out metrics, as
   against the pretrained model. Otherwise the new file holds the saved model's MS2 model

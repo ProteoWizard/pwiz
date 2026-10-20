@@ -13,12 +13,12 @@ tests feed it the exact command lines of recorded Carafe runs (`CarafeReferenceR
 whether or not these modes read it.
 
 ```
-CarafeSharp --build_entrapment_fasta <out.fasta> --db <proteins.fasta> [options]
-CarafeSharp --reconcile_manifest <out.tsv> --manifest <in.tsv> --predicted_library <library.tsv|.blib>
-CarafeSharp --db <peptides.fasta|proteins.fasta> -o <folder> [options]            (library prediction)
-CarafeSharp -i <osprey.blib> --ms <runs> -o <folder> [--db <fasta>] [options]     (training)
-CarafeSharp -i <run.training.parquet|folder> [--ms <runs>] -o <folder> [--db <fasta>] [options]
-CarafeSharp --model_info <file.carafemodel>
+CarafeSharp --build-entrapment-fasta <out.fasta> --db <proteins.fasta> [options]
+CarafeSharp --reconcile-manifest <out.tsv> --manifest <in.tsv> --predicted-library <library.tsv|.blib>
+CarafeSharp --db <peptides.fasta|proteins.fasta> --o <folder> [options]            (library prediction)
+CarafeSharp --i <osprey.blib> --ms <runs> --o <folder> [--db <fasta>] [options]     (training)
+CarafeSharp --i <run.training.parquet|folder> [--ms <runs>] --o <folder> [--db <fasta>] [options]
+CarafeSharp --model-info <file.carafemodel>
 CarafeSharp -h [ascii|unicode|sections|html|<Section>]
 ```
 
@@ -61,8 +61,10 @@ names), `html` (the page archived under `Documentation/Help`), or a section name
 section alone.
 
 A usage error prints the message and `Run CarafeSharp --help for the options.`, with exit code 1.
-The messages name options as the help spells them (`--db`, `--rt-reference`), through each
-declaration's `ArgumentText`, whatever spelling the user typed.
+The messages the settings raise name options as the help spells them (`--db`, `--rt-reference`),
+through each declaration's `ArgumentText`, whatever spelling the user typed. The parser's own
+errors - an unknown option, a missing value - quote the token as it was typed (`-db requires a
+value`), since they are about that token.
 
 ## Modes
 
@@ -71,37 +73,37 @@ The mode is decided from the options given, in Carafe's order of precedence:
 | Given | Mode | Runs |
 |---|---|---|
 | nothing, or `-h` | help | prints the usage |
-| `-build_entrapment_fasta` | entrapment FASTA build | `EntrapmentFastaBuilder`: digest `-db`, add decoys and entrapment, write the pairing manifest of `-manifest` |
-| `-model_info` | model info | describes a saved `.carafemodel` |
-| `-reconcile_manifest` | manifest reconciliation | `PairingManifestReconciler` against `-predicted_library` |
-| `-ms`, or `-i` naming training exports, without `-model_dir` | training | `ModelTrainer` on Osprey's `.training.parquet` exports, then the library of `-db` with the fine-tuned models when `-db` is given |
-| `-db` | library prediction | `LibraryGenerator` with the pretrained models, a `-model_dir` folder or a saved `-model` |
+| `--build-entrapment-fasta` | entrapment FASTA build | `EntrapmentFastaBuilder`: digest `--db`, add decoys and entrapment, write the pairing manifest of `--manifest` |
+| `--model-info` | model info | describes a saved `.carafemodel` |
+| `--reconcile-manifest` | manifest reconciliation | `PairingManifestReconciler` against `--predicted-library` |
+| `--ms`, or `--i` naming training exports, without `--model-dir` | training | `ModelTrainer` on Osprey's `.training.parquet` exports, then the library of `--db` with the fine-tuned models when `--db` is given |
+| `--db` | library prediction | `LibraryGenerator` with the pretrained models, a `--model-dir` folder or a saved `--model` |
 
-Carafe trains only with `-ms`. CarafeSharp also trains on Osprey's training exports named by
-`-i` directly (one file, a comma-separated list, or a folder), which Carafe could never have
-read; `-i` with a `.blib` and no `-ms` is library prediction, as in Carafe.
+Carafe trains only with `--ms`. CarafeSharp also trains on Osprey's training exports named by
+`--i` directly (one file, a comma-separated list, or a folder), which Carafe could never have
+read; `--i` with a `.blib` and no `--ms` is library prediction, as in Carafe.
 
 ## Carafe options CarafeSharp does not read
 
 The help's last section lists them. Each is accepted so a Carafe command line runs unchanged:
 
-- XIC extraction (`-itol`, `-itolu`, `-sg`, `-min_mz`, `-rf`, `-rf_rt_win`, `-rt_win_offset`):
+- XIC extraction (`--itol`, `--itolu`, `--sg`, `--min-mz`, `--rf`, `--rf-rt-win`, `--rt-win-offset`):
   reported and ignored; the fragment matches, XICs and peak boundaries come from Osprey's
   training export (`pwiz_tools/Osprey/docs/22-training-export.md`).
-- Diagnostic files (`-ez`, `-xic`, `-export_mgf`, `-skyline`): reported and ignored.
-- Checked for the one value supported: `-se Osprey`, `-mode general`, `-ai_version v2`,
-  `-na 0`; `-lf_format parquet` and `-lf_type mzSpecLib` are refused.
-- Not ported, refused: `-printPTM`, `-build_koina_library`, `-mod2mass`, `-user_var_mods`,
-  and for training `-cs`, `-use_all_peaks`, `-y1`.
-- Silently ignored, as Carafe ignores them in these modes: `-ptm_site_prob`,
-  `-ptm_site_qvalue`, `-data_type`, `-koina_url`, `-koina_ms2_model`, `-koina_rt_model`,
-  `-nce_ms`, `-python`, `-verbose`, `-nm`, `-torch_compile`.
+- Diagnostic files (`--ez`, `--xic`, `--export-mgf`, `--skyline`): reported and ignored.
+- Checked for the one value supported: `--se Osprey`, `--mode general`, `--ai-version v2`,
+  `--na 0`; `--lf-format parquet` and `--lf-type mzSpecLib` are refused.
+- Not ported, refused: `--printPTM`, `--build-koina-library`, `--mod2mass`, `--user-var-mods`,
+  and for training `--cs`, `--use-all-peaks`, `--y1`.
+- Silently ignored, as Carafe ignores them in these modes: `--ptm-site-prob`,
+  `--ptm-site-qvalue`, `--data-type`, `--koina-url`, `--koina-ms2-model`, `--koina-rt-model`,
+  `--nce-ms`, `--python`, `--verbose`, `--nm`, `--torch-compile`.
 
 ## CarafeSharp's own options
 
-Beyond Carafe's: `-pretrained`, `-model`, `-model_info`, `-activation`, `-analyzer`,
-`-rt_model`, `-rt_align`, `-rt_select` and `-rt_reference`, and the output options every mode
-reads, `-log_file`, `-timestamp` and `-memstamp` (Osprey's `--log-file`, `--timestamp` and
+Beyond Carafe's: `--pretrained`, `--model`, `--model-info`, `--activation`, `--analyzer`,
+`--rt-model`, `--rt-align`, `--rt-select` and `--rt-reference`, and the output options every mode
+reads, `--log-file`, `--timestamp` and `--memstamp` (Osprey's `--log-file`, `--timestamp` and
 `--memstamp`). Their semantics are in
 `01-model-spec.md`, `06-saved-models.md` and `07-chronologer.md`; the help has the one-line
 version of each.

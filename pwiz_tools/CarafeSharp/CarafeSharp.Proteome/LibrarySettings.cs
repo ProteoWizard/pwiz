@@ -208,7 +208,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// writes (<c>LibMetadata</c>, key <c>carafe.command</c>) so the library carries how it
         /// was made. Null (settings built in code) records nothing. Provenance, not a setting:
         /// left out of the validity key, so the same options spelled another way (Carafe's
-        /// underscores, a different order) find the library current.
+        /// underscores, a different order) find the library current. Leaving it out changed every
+        /// key once: a library or model written before that is predicted or trained again on its
+        /// next run, as after a version change.
         /// </summary>
         [JsonIgnore]
         public string CommandLine { get; set; }

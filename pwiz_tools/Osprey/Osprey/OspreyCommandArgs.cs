@@ -70,6 +70,9 @@ namespace pwiz.Osprey
             ShortPrefix = @"-",
             ValueMayFollow = true,
             ValidatesListedValues = false,
+            // The library-build options are CarafeSharp's declarations, spelled with hyphens as
+            // Osprey's are; Carafe's underscore spelling (--miss_c) names the same declaration.
+            NameSeparatorsEquivalent = true,
         };
 
         // Install the host text the help renderer and the parser's errors need (descriptions,

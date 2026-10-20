@@ -103,8 +103,7 @@ namespace pwiz.Common.CommandLine
 
         /// <summary>
         /// The argument as typed and as help shows it: the installed grammar's
-        /// <see cref="CommandLineGrammar.Prefix"/> and the name (<c>--input</c>; <c>-db</c> for
-        /// CarafeSharp).
+        /// <see cref="CommandLineGrammar.Prefix"/> and the name (<c>--input</c>, <c>--db</c>).
         /// </summary>
         public string ArgumentText
         {
