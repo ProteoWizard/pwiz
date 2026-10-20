@@ -43,8 +43,12 @@
            mirrors pwiz_tools/Skyline AssemblyInformationalVersion; OspreyVersion
            parses it back for the version display). Set on every path.
          * Version = numeric  only while it is still the props placeholder, so an
-           explicit /p:Version from build.ps1 / package.ps1 / the Boost build (a
-           global property) still wins and this only fills the script-less gap.
+           explicit /p:Version (a global property) still wins. build.ps1 and
+           package.ps1 no longer pass one: a global property flows into every
+           referenced project, so it also stamped the libraries Osprey shares with
+           Skyline (BiblioSpec.IO) and made the two builds recompile each other's
+           output on every switch. This target is now how the scripts' builds get
+           their version too, and they check the result.
 
        pwsh is a hard project prerequisite (pwiz_tools/Osprey/tcbuild.bat), so the
        Exec is reliable on every build agent and dev shell. If git or pwsh is

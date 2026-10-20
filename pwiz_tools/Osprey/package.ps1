@@ -193,7 +193,9 @@ function New-OspreyStage {
         '--self-contained', 'true',
         '-p:PublishSingleFile=false',
         '-p:Platform=x64',
-        "-p:Version=$version",
+        # No -p:Version: as in build.ps1, a global property would also stamp the shared
+        # libraries (BiblioSpec.IO) with Osprey's version. Directory.Build.targets stamps
+        # the Osprey projects with $version from the same version.ps1; checked below.
         '-o', $stageDir,
         '-v', 'minimal', '--nologo'
     )
@@ -203,6 +205,13 @@ function New-OspreyStage {
     if ($LASTEXITCODE -ne 0) {
         Write-Error "dotnet publish failed for $Rid (exit $LASTEXITCODE)"
         exit $LASTEXITCODE
+    }
+    # The stamp target is ContinueOnError, so an unstamped publish still succeeds with the
+    # 26.1.1.0 placeholder; refuse to package it under a dated name.
+    $publishedVersion = [System.Reflection.AssemblyName]::GetAssemblyName((Join-Path $stageDir 'Osprey.dll')).Version.ToString()
+    if ($publishedVersion -ne $version) {
+        Write-Error "Published Osprey.dll is version $publishedVersion, expected $version; the version stamp in Directory.Build.targets did not run"
+        exit 3
     }
 
     if (-not $IncludePdb) {
