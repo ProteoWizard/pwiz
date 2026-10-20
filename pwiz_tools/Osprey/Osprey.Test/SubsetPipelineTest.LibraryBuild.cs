@@ -78,8 +78,8 @@ namespace pwiz.Osprey.Test
             // prediction, then the four stages.
             string log = RunOsprey(buildArgs, Verifier(false));
             AssertTasks(log, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS));
-            string library = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB);
-            string libraryWorkDir = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX);
+            string library = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
+            string libraryWorkDir = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_SUFFIX);
             Assert.IsTrue(File.Exists(library), library);
             Assert.IsTrue(Directory.Exists(libraryWorkDir), libraryWorkDir);
             Assert.IsFalse(File.Exists(Path.Combine(libraryWorkDir, LibraryBuildWorkflow.PAIRING_FILE_NAME)),
@@ -114,10 +114,10 @@ namespace pwiz.Osprey.Test
             string entrapmentLog = RunOsprey(LibraryBuildArgs(fasta, entrapmentDir)
                 .Concat(new[] { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText }).ToArray(), Verifier(false));
             AssertTasks(entrapmentLog, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS));
-            string entrapmentLibrary = Path.Combine(entrapmentDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB);
+            string entrapmentLibrary = Path.Combine(entrapmentDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
             int withEntrapment = AssertPredictedLibrary(entrapmentLibrary, true, PredictLibraryTask.TASK_NAME);
             Assert.IsTrue(withEntrapment > 1.5 * predicted, string.Format(@"{0} precursors with entrapment, {1} without", withEntrapment, predicted));
-            string pairing = Path.Combine(entrapmentDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX,
+            string pairing = Path.Combine(entrapmentDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_SUFFIX,
                 LibraryBuildWorkflow.PAIRING_FILE_NAME);
             Assert.IsTrue(File.Exists(pairing), pairing);
             Assert.IsTrue(File.ReadLines(pairing).Skip(1).Any(l => l.Contains("\t" + PairingManifest.KIND_P_TARGET + "\t")), @"no p_target rows in " + pairing);
@@ -162,7 +162,7 @@ namespace pwiz.Osprey.Test
             var buildArgs = LibraryBuildArgs(fasta, workDir).Concat(new[] { OspreyCommandArgs.ARG_MODEL.ArgumentText, model }).ToArray();
             string log = RunOsprey(buildArgs, Verifier(false));
             AssertTasks(log, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS));
-            string library = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB);
+            string library = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
             AssertPredictedLibrary(library, false, PredictLibraryTask.TASK_NAME);
             AssertLibraryBuildOutput(Path.Combine(workDir, BLIB_FILE), library, log);
             // The model file is an input of the prediction: the same command line is current.

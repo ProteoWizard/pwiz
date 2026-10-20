@@ -156,14 +156,19 @@ manifest and the model folder.
 **What a run writes**, with `-o out.blib`:
 
 ```
-out.blib              the result, with its sidecars, as for any search
-out.library.blib      the library the result was searched with (-l takes it next time)
-out.carafemodel       with --training-input: the tuned model (--model takes it next time)
-out.library/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
-  initial.blib        with --training-input: the library the tuning runs were searched with
-  training/           the tuning runs' search: its artifacts, <stem>.training.parquet, training.blib
-  model/              Carafe's model folder the tuning wrote, the library's input
+out.blib                the result: what the search detected, with its sidecars, as for any search
+out.predicted.blib      the predicted library the result was searched with (-l takes it next time)
+out.carafemodel         with --training-input: the tuned model (--model takes it next time)
+out.predicted/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
+  initial.blib          with --training-input: the library the tuning runs were searched with
+  training/             the tuning runs' search: its artifacts, <stem>.training.parquet, training.blib
+  model/                Carafe's model folder the tuning wrote, the library's input
 ```
+
+The two `.blib` files differ in what their spectra are: `out.blib` holds the precursors the
+search detected, with their observed retention times, for Skyline; `out.predicted.blib` holds a
+predicted spectrum for every precursor the search looked for, which is what makes it a library to
+search again.
 
 They land beside `out.blib`, or under `--output-dir` when it is given, as the run's other
 artifacts do. The library carries the prediction's validity stamp and the command line that
@@ -171,7 +176,7 @@ made it (`LibMetadata`), and the search keys on the library file as it keys on a
 library. So a re-run of the same command line predicts nothing and searches nothing; a changed
 digest or prediction option predicts the library again and the search follows; a changed `-i`
 alone searches again against the current library. With tuning, each phase checkpoints the same
-way - the training library, the tuning runs' search (its own artifacts, in `out.library/training/`;
+way - the training library, the tuning runs' search (its own artifacts, in `out.predicted/training/`;
 a tuning run that is also an input is parsed once, from the shared spectra cache), the model and
 the library - so a changed tuning option tunes again and predicts again without searching the
 tuning runs again, `--entrapment` changes only the final library, and a run that died resumes

@@ -49,9 +49,9 @@ namespace pwiz.Osprey
     /// Each library is predicted over a digest made in memory from the FASTA (its decoys and,
     /// with <c>--entrapment</c>, its entrapment peptides included), so no peptide FASTA, no
     /// pairing manifest and no TSV sit between the phases. The library lands beside the output, as
-    /// <c>&lt;out&gt;.library.blib</c>, where <c>-l</c> takes it next time, and the tuned model as
+    /// <c>&lt;out&gt;.predicted.blib</c>, where <c>-l</c> takes it next time, and the tuned model as
     /// <c>&lt;out&gt;.carafemodel</c>, where <c>--model</c> takes it; the working files go under
-    /// <c>&lt;out&gt;.library/</c>. All follow <c>--output-dir</c> as the run's other artifacts do.
+    /// <c>&lt;out&gt;.predicted/</c>. All follow <c>--output-dir</c> as the run's other artifacts do.
     /// Every phase checkpoints in the file it writes, stamped, so a re-run skips each phase whose
     /// inputs and settings are unchanged and resumes a run that died at the first one that is not.
     /// </para>
@@ -63,7 +63,7 @@ namespace pwiz.Osprey
     internal sealed class LibraryBuildWorkflow
     {
         /// <summary>The suffix of the library and of its working folder, after the output's stem.</summary>
-        public const string LIBRARY_SUFFIX = @".library";
+        public const string PREDICTED_SUFFIX = @".predicted";
 
         /// <summary>The FDRBench pairing manifest written into the working folder with <c>--entrapment</c>.</summary>
         public const string PAIRING_FILE_NAME = @"pairing.tsv";
@@ -87,13 +87,13 @@ namespace pwiz.Osprey
         public const string TRAIN_MODEL_TASK = @"TrainModel";
 
         /// <summary>The library as the help spells it, after the output's stem.</summary>
-        public const string LIBRARY_EXAMPLE = @"<output>" + LIBRARY_SUFFIX + LibrarySource.EXT_BLIB;
+        public const string LIBRARY_EXAMPLE = @"<output>" + PREDICTED_SUFFIX + LibrarySource.EXT_BLIB;
 
         /// <summary>The working folder as the help spells it, after the output's stem.</summary>
-        public const string LIBRARY_SUFFIX_EXAMPLE = @"<output>" + LIBRARY_SUFFIX + @"/";
+        public const string PREDICTED_SUFFIX_EXAMPLE = @"<output>" + PREDICTED_SUFFIX + @"/";
 
         /// <summary>The pairing manifest as the help spells it.</summary>
-        public const string PAIRING_FILE_EXAMPLE = LIBRARY_SUFFIX_EXAMPLE + PAIRING_FILE_NAME;
+        public const string PAIRING_FILE_EXAMPLE = PREDICTED_SUFFIX_EXAMPLE + PAIRING_FILE_NAME;
 
         private readonly OspreyConfig _config;
         private readonly LibraryBuildSettings _settings;
@@ -112,10 +112,10 @@ namespace pwiz.Osprey
         /// </summary>
         internal static Action<FineTuneOptions> ConfigureFineTuneForTests { get; set; }
 
-        /// <summary>The library the run predicts and then searches: <c>&lt;out&gt;.library.blib</c>.</summary>
+        /// <summary>The library the run predicts and then searches: <c>&lt;out&gt;.predicted.blib</c>.</summary>
         public static string LibraryPath(OspreyConfig config)
         {
-            return Path.Combine(BaseDirectory(config), OutputStem(config) + LIBRARY_SUFFIX + LibrarySource.EXT_BLIB);
+            return Path.Combine(BaseDirectory(config), OutputStem(config) + PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
         }
 
         /// <summary>The model the tuning writes: <c>&lt;out&gt;.carafemodel</c>.</summary>
@@ -124,10 +124,10 @@ namespace pwiz.Osprey
             return Path.Combine(BaseDirectory(config), OutputStem(config) + CarafeModelFile.EXTENSION);
         }
 
-        /// <summary>The library build's working folder: <c>&lt;out&gt;.library/</c>.</summary>
+        /// <summary>The library build's working folder: <c>&lt;out&gt;.predicted/</c>.</summary>
         public static string WorkDirectory(OspreyConfig config)
         {
-            return Path.Combine(BaseDirectory(config), OutputStem(config) + LIBRARY_SUFFIX);
+            return Path.Combine(BaseDirectory(config), OutputStem(config) + PREDICTED_SUFFIX);
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace pwiz.Osprey
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is TaskBudgetSpentException))
             {
                 Program.LogError(DescribeFailure(ex));
                 return Program.EXIT_CODE_FAILURE_TO_START;
@@ -427,6 +427,7 @@ namespace pwiz.Osprey
             protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
             {
                 Program.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)", task.Name, elapsed.TotalSeconds);
+                TaskBudget.TaskDone(task.Name);
             }
         }
     }

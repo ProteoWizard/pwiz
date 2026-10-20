@@ -167,7 +167,7 @@ namespace pwiz.Osprey
         // option touches no type that loads the torch runtime.
         public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
             () => @"<proteome.fasta>", (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
-            { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.LIBRARY_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
+            { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.PREDICTED_SUFFIX_EXAMPLE, ARG_TRAINING_INPUT.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_INPUT = new OspreyArgument(OspreyArgNames.TRAINING_INPUT,
             () => @"<file1.mzML ...>", (c, p) => c.SetLibraryBuildOption(p, b => b.TrainingInputs.Add(p.Value)))
             { Variadic = true, DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, ARG_INPUT.ShortArgumentText, ModelExample, ARG_MODEL.ArgumentText } };
@@ -215,7 +215,7 @@ namespace pwiz.Osprey
         /// <summary>The library the one command writes beside its output, in the help's spelling.</summary>
         private static string LibraryExample
         {
-            get { return @"<output>" + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB; }
+            get { return @"<output>" + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB; }
         }
 
         /// <summary>The tuned model the one command writes beside its output, in the help's spelling.</summary>

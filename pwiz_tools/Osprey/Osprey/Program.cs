@@ -678,15 +678,26 @@ namespace pwiz.Osprey
                 // pipeline searches it. Dispatched through a class of its own, so a run that
                 // searches a given library compiles no method that reaches the predictor and
                 // never loads its native runtime.
-                if (config.LibraryBuild.Enabled)
-                    return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
+                TaskBudget.Reset();
+                try
+                {
+                    if (config.LibraryBuild.Enabled)
+                        return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
 
-                // Single entry point. The rescore worker (--task
-                // PerFileRescoring) includes only PerFileRescoreTask
-                // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
-                // ctx.Demand) populates the upstream state from the boundary files
-                // on disk.
-                return new AnalysisPipeline().Run(config, pipeline);
+                    // Single entry point. The rescore worker (--task
+                    // PerFileRescoring) includes only PerFileRescoreTask
+                    // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
+                    // ctx.Demand) populates the upstream state from the boundary files
+                    // on disk.
+                    return new AnalysisPipeline().Run(config, pipeline);
+                }
+                catch (TaskBudgetSpentException stop)
+                {
+                    // OSPREY_STOP_AFTER_TASKS: every task run so far committed its outputs, and
+                    // the next run of the same command line resumes after the last.
+                    LogInfo(LogTag.TASK, @"stop:after {0} ({1}; {2})", stop.TasksRun, stop.TaskName, @"OSPREY_STOP_AFTER_TASKS");
+                    return EXIT_CODE_SUCCESS;
+                }
             }
             catch (Exception ex)
             {

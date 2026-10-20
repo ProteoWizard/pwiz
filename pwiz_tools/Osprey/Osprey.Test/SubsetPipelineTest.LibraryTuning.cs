@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
@@ -201,6 +202,61 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// The tuned one command stopped after every task it runs (<c>OSPREY_STOP_AFTER_TASKS=1</c>)
+        /// and run again until it completes: each run skips every task finished before it,
+        /// recomputes none of their work, and runs exactly the next task, in the order a run
+        /// straight through takes them; the result is the straight-through run's.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetLibraryBuildTunedStepwise()
+        {
+            string fasta = WriteSubsetProteinFasta();
+            var inputs = DataInputs().ToArray();
+            using (ShortFineTune())
+            {
+                string straightDir = CreateDir(@"library-build-straight");
+                RunOsprey(TunedArgs(fasta, straightDir, inputs, inputs).ToArray(), Verifier(false));
+
+                string stepwiseDir = CreateDir(@"library-build-stepwise");
+                var args = TunedArgs(fasta, stepwiseDir, inputs, inputs).ToArray();
+                var stopEach = new Dictionary<string, string>(Verifier(false)) { [@"OSPREY_STOP_AFTER_TASKS"] = @"1" };
+                var expected = new[] { LibraryBuildWorkflow.PREDICT_TRAINING_LIBRARY_TASK }.Concat(ALL_TASKS)
+                    .Concat(new[] { LibraryBuildWorkflow.TRAIN_MODEL_TASK, PredictLibraryTask.TASK_NAME }).Concat(ALL_TASKS).ToList();
+                var ran = new List<string>();
+                for (int step = 0; step <= expected.Count; step++)
+                {
+                    string log = RunOsprey(args, stopEach);
+                    var started = TaskNames(log, @"starting");
+                    Assert.AreEqual(step, TaskNames(log, @"skipping").Count, @"tasks skipped at step " + step + Environment.NewLine + log);
+                    if (step == expected.Count)
+                    {
+                        // Everything was done: nothing runs and nothing stops.
+                        Assert.AreEqual(0, started.Count, log);
+                        Assert.IsFalse(HasStopLine(log), log);
+                        break;
+                    }
+                    Assert.AreEqual(1, started.Count, @"tasks run at step " + step + Environment.NewLine + log);
+                    Assert.IsTrue(HasStopLine(log), log);
+                    ran.Add(started[0]);
+                }
+                CollectionAssert.AreEqual(expected, ran);
+                AssertBlibsEqual(new TunedProducts(straightDir).Output, new TunedProducts(stepwiseDir).Output);
+            }
+        }
+
+        /// <summary>The tasks a log's <c>[TASK]</c> lines name in <paramref name="state"/>, in order.</summary>
+        private static List<string> TaskNames(string log, string state)
+        {
+            var line = new Regex(Regex.Escape(@"[" + LogTag.TASK + @"] ") + @"(\w+):" + Regex.Escape(state) + @"\b");
+            return line.Matches(log).Select(m => m.Groups[1].Value).ToList();
+        }
+
+        private static bool HasStopLine(string log)
+        {
+            return HasLine(log, TaskLine(@"stop", string.Empty));
+        }
+
         /// <summary>The files a tuned one-command run writes, under its output's stem in <c>workDir</c>.</summary>
         private sealed class TunedProducts
         {
@@ -208,9 +264,9 @@ namespace pwiz.Osprey.Test
             {
                 string stem = Path.GetFileNameWithoutExtension(BLIB_FILE);
                 Output = Path.Combine(workDir, BLIB_FILE);
-                Library = Path.Combine(workDir, stem + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB);
+                Library = Path.Combine(workDir, stem + LibraryBuildWorkflow.PREDICTED_SUFFIX + LibrarySource.EXT_BLIB);
                 Model = Path.Combine(workDir, stem + CarafeModelFile.EXTENSION);
-                WorkDirectory = Path.Combine(workDir, stem + LibraryBuildWorkflow.LIBRARY_SUFFIX);
+                WorkDirectory = Path.Combine(workDir, stem + LibraryBuildWorkflow.PREDICTED_SUFFIX);
                 TrainingLibrary = Path.Combine(WorkDirectory, LibraryBuildWorkflow.TRAINING_LIBRARY_FILE_NAME);
                 TrainingDirectory = Path.Combine(WorkDirectory, LibraryBuildWorkflow.TRAINING_FOLDER);
                 TrainingOutput = Path.Combine(TrainingDirectory, LibraryBuildWorkflow.TRAINING_OUTPUT_FILE_NAME);

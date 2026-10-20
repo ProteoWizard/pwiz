@@ -275,12 +275,12 @@ each a CarafeSharp task run in-process through the shared `PipelineDriver`, or a
 over a derived config. With the pretrained models or a saved one the phases are two -
 `PredictLibrary` (CarafeSharp's task, over a digest of the FASTA made in memory, decoys and
 entrapment included) and the search - and the second takes the first's product,
-`<out>.library.blib`, as its `-l`. With `--training-input` three come first:
-`PredictTrainingLibrary` (the same task, entrapment-free, into `<out>.library/initial.blib`), the
+`<out>.predicted.blib`, as its `-l`. With `--training-input` three come first:
+`PredictTrainingLibrary` (the same task, entrapment-free, into `<out>.predicted/initial.blib`), the
 tuning runs' search (an Osprey analysis over a derived config: the tuning runs, the initial
-library, `--training-export`, and `<out>.library/training/` as its `--output-dir`), and
+library, `--training-export`, and `<out>.predicted/training/` as its `--output-dir`), and
 `TrainModel` (CarafeSharp's `TrainTask` on the exports, writing the model folder
-`<out>.library/model/` and `<out>.carafemodel`); the final `PredictLibrary` then predicts from
+`<out>.predicted/model/` and `<out>.carafemodel`); the final `PredictLibrary` then predicts from
 that folder, as CarafeSharp's own training does right after the fine-tune.
 
 The two analyses run in one process, so each gets its own task set (`OspreyTasks.Create()`): a

@@ -119,6 +119,11 @@ namespace pwiz.Osprey
                 LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));
                 return 0;
             }
+            catch (TaskBudgetSpentException)
+            {
+                // The developer stop (OSPREY_STOP_AFTER_TASKS), not a failure: Program ends the run.
+                throw;
+            }
             catch (RehydrateFailedException ex)
             {
                 // The task that could not rehydrate has already logged why, naming the file, and
@@ -200,6 +205,8 @@ namespace pwiz.Osprey
                     ospreyCtx.LogInfo(LogTag.STAGE_WALL, @"{0}: {1:F1}s",
                         stageName, elapsed.TotalSeconds);
                 }
+                // Last: the developer stop ends the run between this task and the next.
+                TaskBudget.TaskDone(task.Name);
             }
         }
 
