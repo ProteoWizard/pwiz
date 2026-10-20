@@ -43,7 +43,9 @@ namespace IconBuilder
         private const string MANIFEST_NAME = "icons.manifest";
         private const string VECTOR_DIR = @"Icons\Vector";
         private const string RASTER_DIR = @"Icons\Raster";
-        private const string DEFAULT_OUT_DIR = "Output";
+        // Relative to the folder holding icons.manifest: Skyline embeds Resources\Icons\*.png
+        // and DpiUtil.GetIcon loads them by name and size.
+        private const string DEFAULT_OUT_DIR = @"..\..\..\Resources\Icons";
         private const double SCREEN_DPI = 96;
 
         [STAThread] // WPF rendering requires an STA thread
@@ -63,7 +65,7 @@ namespace IconBuilder
             }
 
             var projectDir = Path.GetDirectoryName(manifestPath)!;
-            outDir ??= Path.Combine(projectDir, DEFAULT_OUT_DIR);
+            outDir ??= Path.GetFullPath(Path.Combine(projectDir, DEFAULT_OUT_DIR));
             Directory.CreateDirectory(outDir);
 
             var entries = ReadManifest(manifestPath);
@@ -131,7 +133,7 @@ namespace IconBuilder
             Console.WriteLine("Usage: IconBuilder [--manifest <path>] [--out <dir>] [IconName ...]");
             Console.WriteLine();
             Console.WriteLine("  --manifest  Path to icons.manifest (default: found by walking up from the exe or cwd)");
-            Console.WriteLine("  --out       Output folder for <Name>.<Size>.png files (default: Output next to the manifest)");
+            Console.WriteLine("  --out       Output folder for <Name>.<Size>.png files (default: pwiz_tools/Skyline/Resources/Icons)");
             Console.WriteLine("  IconName    Build only these icons (default: every icon in the manifest)");
             Console.WriteLine();
             Console.WriteLine("Example: dotnet run -c Release -- Save Copy Paste");

@@ -42,10 +42,13 @@ Change an icon's source kind by editing its line; nothing else references the ki
 
 ```bash
 cd pwiz_tools/Skyline/Executables/DevTools/IconBuilder
-dotnet run -c Release                      # every icon in the manifest, into Output/
+dotnet run -c Release                      # every icon in the manifest, into pwiz_tools/Skyline/Resources/Icons
 dotnet run -c Release -- Save Copy Paste   # just these icons
-dotnet run -c Release -- --out <dir>       # somewhere else
+dotnet run -c Release -- --out <dir>       # somewhere else, e.g. for a gallery
 ```
+
+Icon names in the manifest are the `Resources.resx` property names (`add_pro32`, `HomeIcon1`,
+`Properties_Button`), not the bitmap file names, because that is how callers ask for them.
 
 Requires the .NET 10 SDK. The tool finds `icons.manifest` by walking up from the current
 directory or the exe; `--manifest <path>` overrides that.
@@ -68,9 +71,13 @@ hqxenv\Scripts\python.exe Tools\hq2x_icons.py <folder of Name.16.16.png> Icons\R
 The input PNGs must already have the magenta key applied (transparent background); the
 script upscales color and alpha separately so edges stay clean. Then re-run the tool.
 
-## Output
+## Output and how Skyline uses it
 
-`Output/<Name>.<Size>.png`, 32-bit ARGB with real alpha. Consumers must put them in
-32-bit image lists with `TransparentColor = Color.Transparent`; a 24-bit list with a
-magenta key would flatten the alpha. Wiring the outputs into Skyline's resources is a
-separate step on the DPI awareness branch.
+`pwiz_tools/Skyline/Resources/Icons/<Name>.<Size>.png`, 32-bit ARGB with real alpha, checked
+in. `Skyline.csproj` embeds the folder with one wildcard, and `DpiUtil.GetIcon(control,
+nameof(Resources.X), Resources.X, key)` returns the size the control's DPI calls for, or the
+native bitmap at 100%. `IconResourcesTest` fails when any small icon in `Resources.resx` is
+missing one of its sizes, so re-run this tool after adding an icon.
+
+Consumers must put the results in 32-bit image lists with `TransparentColor =
+Color.Transparent`; a 24-bit list with a magenta key would flatten the alpha.
