@@ -418,4 +418,67 @@
   <data name="Program_Run_Input_file_not_found__and_its_demultiplexed_spectra_cache_cannot_stand_in_for_it___0____1____It_can_be_rebuilt_only_from_the_source_file__restore_it_" xml:space="preserve">
     <value>Input file not found, and its demultiplexed spectra cache cannot stand in for it: {0} ({1}). It can be rebuilt only from the source file; restore it.</value>
   </data>
+  <data name="OspreyCommandArgs_Group_Library_Build" xml:space="preserve">
+    <value>Library Build</value>
+  </data>
+  <data name="OspreyCommandArgs_Group_Library_Digest" xml:space="preserve">
+    <value>Library Digest</value>
+  </data>
+  <data name="OspreyCommandArgs_Group_Library_Prediction" xml:space="preserve">
+    <value>Library Prediction</value>
+  </data>
+  <data name="OspreyCommandArgs_GROUP_LIBRARY_DIGEST_With__0___what_the_library_holds" xml:space="preserve">
+    <value>With {0}: what the library holds. These are CarafeSharp's options under their standard names; see its help for the full set.</value>
+  </data>
+  <data name="OspreyCommandArgs_GROUP_LIBRARY_PREDICTION_With__0___how_the_library_is_predicted" xml:space="preserve">
+    <value>With {0}: how the library is predicted.</value>
+  </data>
+  <data name="OspreyCommandArgs_UsageBlocks_The_library_build_options_are_listed_in_the_standard_form___0___and__for_compatibility_with_Java_Carafe_s_command_lines__also_accepted_with_its_underscores___1___" xml:space="preserve">
+    <value>The library build options are listed in the standard form ({0}) and, for compatibility with Java Carafe's command lines, also accepted with its underscores ({1}).</value>
+  </data>
+  <data name="Program_Run_Library__predicted_from__0__with__1_" xml:space="preserve">
+    <value>Library: predicted from {0} with {1}</value>
+  </data>
+  <data name="Program_Run_the_pretrained_models" xml:space="preserve">
+    <value>the pretrained models</value>
+  </data>
+  <data name="Program_Run_the_saved_model__0_" xml:space="preserve">
+    <value>the saved model {0}</value>
+  </data>
+  <data name="Program_Run_Library_build___0___working_files_in__1_" xml:space="preserve">
+    <value>Library build: {0} (working files in {1})</value>
+  </data>
+  <data name="Program_ValidateArgs__0__or__1_" xml:space="preserve">
+    <value>{0}, or {1}</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__can_be_used_only_with__1__" xml:space="preserve">
+    <value>{0} can be used only with {1}.</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_" xml:space="preserve">
+    <value>{0} builds the library and {1} names one; give one or the other.</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_" xml:space="preserve">
+    <value>{0} is not read with {1}: the library it builds carries its pairing.</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__" xml:space="preserve">
+    <value>{0} cannot be combined with {1} yet. Run the command without {1}, then search the library it writes ({2}) with {3} and {1}.</value>
+  </data>
+  <data name="Program_LibraryBuildError_FASTA_file_not_found___0_" xml:space="preserve">
+    <value>FASTA file not found: {0}</value>
+  </data>
+  <data name="Program_LibraryBuildError_Model_file_not_found___0_" xml:space="preserve">
+    <value>Model file not found: {0}</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__needs__1__" xml:space="preserve">
+    <value>{0} needs {1}.</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__must_be_in___1____2__" xml:space="preserve">
+    <value>{0} must be in [{1}, {2}].</value>
+  </data>
+  <data name="LibraryBuildWorkflow_Run_Searching_the_predicted_library__0_" xml:space="preserve">
+    <value>Searching the predicted library {0}</value>
+  </data>
+  <data name="LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_" xml:space="preserve">
+    <value>Wrote the pairing manifest {0}</value>
+  </data>
 </root>

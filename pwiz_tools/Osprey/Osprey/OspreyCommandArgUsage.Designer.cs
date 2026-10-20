@@ -97,11 +97,38 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to With {0}: where the library is predicted, {1} (falling back to the CPU with a warning when no CUD [rest of string was truncated]";.
+        /// </summary>
+        public static string _device {
+            get {
+                return ResourceManager.GetString("_device", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Write developer diagnostic dump files, for comparison with the Rust implementation.
         /// </summary>
         public static string _diagnostics {
             get {
                 return ResourceManager.GetString("_diagnostics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: add an entrapment peptide to every target (or to this fraction of the targets, {1} to 1 [rest of string was truncated]";.
+        /// </summary>
+        public static string _entrapment {
+            get {
+                return ResourceManager.GetString("_entrapment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: draw the entrapment peptides, matched in mass, from this foreign-species protein FASTA  [rest of string was truncated]";.
+        /// </summary>
+        public static string _entrapment_fasta {
+            get {
+                return ResourceManager.GetString("_entrapment_fasta", resourceCulture);
             }
         }
         
@@ -120,6 +147,15 @@ namespace pwiz.Osprey {
         public static string _export_library {
             get {
                 return ResourceManager.GetString("_export_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Predict the spectral library from this protein FASTA with CarafeSharp's models and search it, in  [rest of string was truncated]";.
+        /// </summary>
+        public static string _fasta {
+            get {
+                return ResourceManager.GetString("_fasta", resourceCulture);
             }
         }
         
@@ -228,6 +264,15 @@ namespace pwiz.Osprey {
         public static string _memstamp {
             get {
                 return ResourceManager.GetString("_memstamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) [rest of string was truncated]";.
+        /// </summary>
+        public static string _model {
+            get {
+                return ResourceManager.GetString("_model", resourceCulture);
             }
         }
         

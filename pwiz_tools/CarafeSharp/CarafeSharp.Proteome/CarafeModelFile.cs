@@ -171,7 +171,7 @@ namespace pwiz.CarafeSharp.Proteome
         public static CarafeModelFile Open(string path)
         {
             if (!File.Exists(path))
-                throw new FileNotFoundException(@"Model file (-model) not found: " + path, path);
+                throw new FileNotFoundException(@"Model file (" + CarafeCommandLine.ARG_MODEL.ArgumentText + @") not found: " + path, path);
             try
             {
                 using (var zip = ZipFile.OpenRead(path))
@@ -408,8 +408,9 @@ namespace pwiz.CarafeSharp.Proteome
                     Line(@"    its MS2: {0}; its RT: {1}", baseModel.Ms2Origin, baseModel.RtOrigin);
             }
             Line(@"  A library takes: NCE {0}, instrument {1}, activation {2}, analyzer {3}, rt_max {4}" +
-                 @" (unless -nce, -ms_instrument, -activation, -analyzer, -rt_max are given)",
-                Nce, Instrument ?? @"(the command line's)", Activation ?? @"(none)", Analyzer ?? @"(none)", RtMax);
+                 @" (unless {5}, {6}, {7}, {8}, {9} are given)",
+                Nce, Instrument ?? @"(the command line's)", Activation ?? @"(none)", Analyzer ?? @"(none)", RtMax,
+                CarafeCommandLine.ARG_NCE.ArgumentText, CarafeCommandLine.ARG_MS_INSTRUMENT.ArgumentText, CarafeCommandLine.ARG_ACTIVATION.ArgumentText, CarafeCommandLine.ARG_ANALYZER.ArgumentText, CarafeCommandLine.ARG_RT_MAX.ArgumentText);
             if (Acquisition != null)
                 Line(@"  MS2 acquisition columns: {0}", Acquisition);
             if (Training == null)

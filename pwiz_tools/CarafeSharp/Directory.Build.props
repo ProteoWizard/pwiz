@@ -27,19 +27,9 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
-  <!-- libtorch backend selection. The CPU and CUDA libtorch packages ship identically named
-       native files, so one project cannot reference both. CPU is the default; build with
-       /p:CarafeSharpTorch=cuda for the CUDA 12.8 runtime (about 4 GB installed). The
-       native package is chosen for the build host unless a RuntimeIdentifier says otherwise. -->
-  <PropertyGroup>
-    <CarafeSharpTorch Condition="'$(CarafeSharpTorch)' == ''">cpu</CarafeSharpTorch>
-    <TorchSharpVersion>0.106.0</TorchSharpVersion>
-    <LibTorchVersion>2.10.0</LibTorchVersion>
-    <CarafeSharpTargetIsWindows Condition="'$(RuntimeIdentifier)' != '' AND $(RuntimeIdentifier.StartsWith('win'))">true</CarafeSharpTargetIsWindows>
-    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == '' AND '$(RuntimeIdentifier)' != ''">false</CarafeSharpTargetIsWindows>
-    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == '' AND '$(OS)' == 'Windows_NT'">true</CarafeSharpTargetIsWindows>
-    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == ''">false</CarafeSharpTargetIsWindows>
-  </PropertyGroup>
+  <!-- libtorch backend selection (CarafeSharpTorch, the package versions, the host), shared with
+       the Osprey tree, whose executable runs CarafeSharp's library prediction in-process. -->
+  <Import Project="$(MSBuildThisFileDirectory)LibTorch.props" />
 
   <!-- Each backend builds into its own folders. Their native files have the same names and
        they restore different packages, so sharing bin/ and obj/ forced a clean rebuild and a

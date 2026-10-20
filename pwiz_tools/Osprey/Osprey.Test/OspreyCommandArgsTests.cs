@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -532,8 +533,23 @@ namespace pwiz.Osprey.Test
                 .Where(f => typeof(OspreyArgument).IsAssignableFrom(f.FieldType))
                 .Select(f => (OspreyArgument) f.GetValue(null))
                 .ToList();
-            Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(), declared.Count,
+            // The hosted CarafeSharp declarations are listed, not declared one by one: they are
+            // counted against CarafeSharp's lists, and described by CarafeSharp's text.
+            var hosted = OspreyCommandArgs.HostedArguments.ToList();
+            Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(a => !a.IsHosted), declared.Count,
                 @"Every declared argument must be in a help group");
+            Assert.AreEqual(CarafeCommandLine.HostedDigestArguments.Count + CarafeCommandLine.HostedPredictionArguments.Count, hosted.Count);
+            Assert.AreEqual(hosted.Count, OspreyCommandArgs.AllArguments.Count(a => a.IsHosted));
+            foreach (var arg in hosted)
+            {
+                seen.TryGetValue(arg.Name, out int groupCount);
+                Assert.AreEqual(1, groupCount, string.Format(@"Hosted argument {0} must be in exactly one group", arg.Name));
+                Assert.IsNull(OspreyCommandArgUsage.ResourceManager.GetString(OspreyCommandArgs.UsageKey(arg.Name)),
+                    string.Format(@"Hosted argument {0} is described by CarafeSharp, not OspreyCommandArgUsage.resx", arg.Name));
+                Assert.AreEqual(CarafeCommandLine.GetUsageText(arg.Name), ArgUsage.Provider.GetDescription(arg.Name), arg.Name);
+                Assert.IsFalse(string.IsNullOrEmpty(ArgUsage.Provider.GetDescription(arg.Name)), arg.Name);
+                Assert.IsFalse(declared.Any(d => d.Name == arg.Name), string.Format(@"{0} is both Osprey's and CarafeSharp's", arg.Name));
+            }
 
             var usageKeys = new HashSet<string>();
             foreach (var arg in declared)

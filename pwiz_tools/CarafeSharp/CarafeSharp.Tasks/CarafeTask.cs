@@ -23,7 +23,7 @@ using System.Globalization;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// A CarafeSharp stage on the shared <see cref="PipelineTask"/> contract: Carafe's modes,
@@ -32,7 +32,7 @@ namespace pwiz.CarafeSharp
     /// CarafeSharp's stages in memory - each reads the files the one before wrote - so
     /// <see cref="Rehydrate"/> has nothing to load.
     /// </summary>
-    internal abstract class CarafeTask : PipelineTask
+    public abstract class CarafeTask : PipelineTask
     {
         /// <summary>The task for <paramref name="commandLine"/>'s mode, or null for a mode that is not a task (help, model info).</summary>
         public static CarafeTask Create(CarafeCommandLine commandLine)

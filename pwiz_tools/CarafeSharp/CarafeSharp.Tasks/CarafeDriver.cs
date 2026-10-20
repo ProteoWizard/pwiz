@@ -21,13 +21,13 @@
 using System;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// The shared driver with Carafe's lines: a finished mode prints the line Carafe prints
     /// (<see cref="CarafeTask.Completion"/>), where the shared default would say "done".
     /// </summary>
-    internal sealed class CarafeDriver : PipelineDriver
+    public sealed class CarafeDriver : PipelineDriver
     {
         protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
         {
