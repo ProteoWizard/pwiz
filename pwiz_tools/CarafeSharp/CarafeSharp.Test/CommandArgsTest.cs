@@ -49,8 +49,9 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>
         /// Carafe 2.2.0 (origin/main) AIGear's options, plus CarafeSharp's own (-pretrained,
         /// -model, -model_info, -activation, -analyzer, -rt_model, -rt_align, -rt_select,
-        /// -rt_reference, -log_file, -timestamp, -memstamp). The declarations must cover exactly these, so a Carafe command line
-        /// is accepted whole and nothing is declared that neither tool knows.
+        /// -rt_reference, -log_file, -timestamp, -memstamp), in Carafe's spelling. The declarations
+        /// must cover exactly these - spelled the standard way, an underscore a hyphen - so a Carafe
+        /// command line is accepted whole and nothing is declared that neither tool knows.
         /// </summary>
         private const string CARAFE_OPTIONS =
             @"i ms fixMod varMod maxVar db o pairing_manifest itol itolu sg nf na fdr cor " +
@@ -96,8 +97,8 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(1, groupCount, string.Format(@"Argument {0} must be in exactly one group", arg.Name));
             }
 
-            // Exactly Carafe's options, by name.
-            var expected = CARAFE_OPTIONS.Split(' ').OrderBy(n => n, StringComparer.Ordinal).ToArray();
+            // Exactly Carafe's options, by name, each declared in the standard spelling.
+            var expected = CARAFE_OPTIONS.Split(' ').Select(n => n.Replace('_', '-')).OrderBy(n => n, StringComparer.Ordinal).ToArray();
             var declaredNames = declared.Select(a => a.Name).OrderBy(n => n, StringComparer.Ordinal).ToArray();
             CollectionAssert.AreEqual(expected, declaredNames);
             Assert.AreEqual(@"-h", CarafeCommandLine.ARG_HELP.ShortArgumentText);
@@ -151,12 +152,23 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(@"--tf ms2", CarafeCommandLine.ARG_TF + @"ms2");
             Assert.AreEqual(@"--help", CarafeCommandLine.ARG_HELP.ArgumentText);
             Assert.ThrowsException<ValueInvalidException>(() => CarafeCommandLine.ARG_TF + @"bogus");
+            // A name with words is hyphenated in the help and the tokens, and Carafe's underscore
+            // spelling names the same declaration in either dash form, so a recorded Carafe command
+            // line runs unchanged. A hyphen in Carafe's spelling, or an underscore where the name has
+            // none, matches nothing.
+            Assert.AreEqual(@"--miss-c", CarafeCommandLine.ARG_MISS_C.ArgumentText);
+            Assert.AreEqual(@"--lf-type blib", CarafeCommandLine.ARG_LF_TYPE + @"blib");
+            foreach (var spelling in new[] { @"--miss-c", @"-miss-c", @"-miss_c", @"--miss_c" })
+                Assert.AreEqual(3, CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", spelling, @"3" }).LibrarySettings.Digest.MaxMissedCleavages, spelling);
+            Assert.AreEqual(@"blib", CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-lf_type=blib" }).LibrarySettings.LibraryFormat);
+            Assert.AreEqual(@"-miss-c-", Assert.ThrowsException<UnknownArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-miss-c-", @"3" })).ArgumentText);
+            Assert.AreEqual(@"-max_Var", Assert.ThrowsException<UnknownArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-max_Var", @"3" })).ArgumentText);
 
             // A value may start with a dash when it names no option: -mode - is Carafe's default
             // mode, and a negative seed is a number (refused later, by training, as Carafe does).
             Assert.AreEqual(CarafeCommandMode.predict_library, CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-mode", @"-" }).Mode);
             var negative = Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-seed", @"-1" }));
-            StringAssert.Contains(negative.Message, @"-seed must not be negative");
+            StringAssert.Contains(negative.Message, @"--seed must not be negative");
             // But a declared option ends the value: the value is missing, not "-o", and the
             // message names the option as typed.
             var missing = Assert.ThrowsException<ValueMissingException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"-o", @"out" }));

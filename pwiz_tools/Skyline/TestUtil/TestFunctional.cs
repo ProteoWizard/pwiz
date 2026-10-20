@@ -36,6 +36,7 @@ using ExcelDataReader;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
@@ -57,7 +58,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
-using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -3919,17 +3919,17 @@ namespace pwiz.SkylineTestUtil
 
         #region Spectral library test helpers
 
-        public static IList<DbRefSpectra> GetRefSpectra(string filename)
+        public static IList<BlibSpectrumRecord> GetRefSpectra(string filename)
         {
             return SpectralLibraryTestUtil.GetRefSpectraFromPath(filename);
         }
 
-        public static IList<DbRefSpectra> GetRefSpectra(SQLiteConnection connection)
+        public static IList<BlibSpectrumRecord> GetRefSpectra(SQLiteConnection connection)
         {
             return SpectralLibraryTestUtil.GetRefSpectra(connection);
         }
 
-        public static void CheckRefSpectra(IList<DbRefSpectra> spectra, string peptideSeq, string peptideModSeq, int precursorCharge, double precursorMz, ushort numPeaks, double rT, IonMobilityAndCCS im = null)
+        public static void CheckRefSpectra(IList<BlibSpectrumRecord> spectra, string peptideSeq, string peptideModSeq, int precursorCharge, double precursorMz, int numPeaks, double rT, IonMobilityAndCCS im = null)
         {
             SpectralLibraryTestUtil.CheckRefSpectra(spectra, peptideSeq, peptideModSeq, precursorCharge, precursorMz, numPeaks, rT, im);
         }

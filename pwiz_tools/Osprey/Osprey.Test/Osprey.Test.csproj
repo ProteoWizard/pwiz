@@ -7,6 +7,9 @@
     <GenerateProgramFile>true</GenerateProgramFile>
     <!-- Parquet.Net, as pwiz's patched build: see Shared\Lib\Parquet\ParquetNet.targets -->
     <ReferenceParquetNet>true</ReferenceParquetNet>
+    <!-- The libtorch native runtime and the pretrained models, so the one-command library build
+         runs in-process in SubsetPipelineTest. -->
+    <UseLibTorch>true</UseLibTorch>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
     <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />

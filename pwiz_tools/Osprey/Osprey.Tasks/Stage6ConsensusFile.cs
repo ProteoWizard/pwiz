@@ -149,13 +149,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Read the consensus at <paramref name="path"/>. Throws <see cref="InvalidDataException"/>
-        /// naming the file when it is missing or unreadable: a rescore node cannot plan without
-        /// it, and planning a run as though no peptide had a consensus would write a
-        /// plausible-looking plan with no reconciliation in it.
+        /// Read the analysis's consensus (<see cref="PathFor"/>). Throws
+        /// <see cref="InvalidDataException"/> naming the file when it is missing or unreadable: a
+        /// rescore node cannot plan without it, and planning a run as though no peptide had a
+        /// consensus would write a plausible-looking plan with no reconciliation in it. Throws
+        /// the same when its stamp fails
+        /// <see cref="ScoringTaskShared.FirstPassProductStampProblem"/>, because a consensus
+        /// from another build or another FirstPassFDR run plans every run from the wrong
+        /// analysis and the outputs still look current.
         /// </summary>
-        public static Stage6Consensus Load(string path)
+        public static Stage6Consensus Load(OspreyConfig config)
         {
+            string path = PathFor(config);
             ConsensusDto dto;
             try
             {
@@ -175,6 +180,13 @@ namespace pwiz.Osprey.Tasks
                 throw new InvalidDataException(string.Format(
                     OspreyTasksResources.Stage6ConsensusFile_Load_Failed_to_read_the_cross_run_consensus__0____1_, path,
                     OspreyTasksResources.Stage6ConsensusFile_Load_the_file_is_incomplete_or_from_another_build));
+            }
+            string stampProblem = ScoringTaskShared.FirstPassProductStampProblem(config, path);
+            if (stampProblem != null)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it,
+                    path, stampProblem, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
             }
             var result = new Stage6Consensus
             {

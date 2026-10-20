@@ -24,7 +24,7 @@ using System.Linq;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// An RT model whose predictions an aligned training's maps take to minutes on one of its gradients: a Chronologer's

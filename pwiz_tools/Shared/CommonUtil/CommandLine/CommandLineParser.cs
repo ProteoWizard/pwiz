@@ -159,7 +159,7 @@ namespace pwiz.Common.CommandLine
                     continue;
                 string name = SplitInline(token.Substring(prefix.Length), out inlineValue);
                 argText = prefix + name;
-                var arg = _arguments.FirstOrDefault(a => string.Equals(a.Name, name, StringComparison.Ordinal));
+                var arg = _arguments.FirstOrDefault(a => Grammar.NamesMatch(a.Name, name));
                 if (arg != null)
                     return arg;
             }

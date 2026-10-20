@@ -351,8 +351,10 @@ namespace SkylineTester
                 {
                     FileName = fileName,
                     UseShellExecute = false,
+                    // CreateNoWindow hides the console. Do not also set WindowStyle Hidden: Windows applies
+                    // it to the first window a GUI child shows normally, which hid the Skyline main window
+                    // in TestRunner's screenshot modes.
                     CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 },
