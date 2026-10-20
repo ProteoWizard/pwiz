@@ -362,6 +362,25 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>
+        /// The tuning options a host presents: Carafe's rules for which matched ions train the MS2
+        /// model, which models train, the seed, and how the training runs' retention times are
+        /// aligned - with the training-run RT reference, which only a model trained on aligned runs
+        /// can honor. Not among them: what the host derives (the exports, the runs, the output, the
+        /// q-value a training precursor needs, the saved model to start from and the device).
+        /// </summary>
+        public static IReadOnlyList<CarafeArgument> HostedTrainingArguments
+        {
+            get
+            {
+                return new[]
+                {
+                    ARG_TF, ARG_COR, ARG_N_ION_MIN, ARG_C_ION_MIN, ARG_NF, ARG_MIN_N, ARG_VALID, ARG_NO_MASKING, ARG_SEED,
+                    ARG_RT_ALIGN, ARG_RT_SELECT, ARG_RT_REFERENCE,
+                };
+            }
+        }
+
+        /// <summary>
         /// The usage text of the argument named <paramref name="argName"/>: its own, or the one
         /// line every compatibility option shares; null for a name that is not declared here. The
         /// provider installed by CarafeSharp.exe reads it, and so does a host's provider for the
@@ -511,12 +530,8 @@ namespace pwiz.CarafeSharp.Proteome
                 if (Has(ARG_MS2_MODEL))
                     throw new ArgumentException(ARG_MODEL.ArgumentText + @" and " + ARG_MS2_MODEL.ArgumentText + @" both name the MS2 model to start from; give one");
                 bool training = Has(ARG_MS) || NamesTrainingExports();
-                // With training, -model is the model to fine-tune further, and the new file holds both of its models.
-                if (training && TryGet(ARG_TF, out string trainingType) && !string.Equals(trainingType, @"all", StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new ArgumentException(ARG_MODEL.ArgumentText + @" with training fine-tunes both of the saved model's models further; " + ARG_TF.ArgumentText + @" " +
-                                                trainingType + @" would leave the other one pretrained in the new model");
-                }
+                if (training)
+                    CheckModelTrainingType();
                 if (!training && !Has(ARG_DB))
                     throw new ArgumentException(ARG_MODEL.ArgumentText + @" predicts a library, which needs the FASTA to predict via " + ARG_DB.ArgumentText);
             }
@@ -570,6 +585,38 @@ namespace pwiz.CarafeSharp.Proteome
             return LibrarySettings;
         }
 
+        /// <summary>
+        /// The fine-tuning a host runs on Osprey's training exports, with the options it recorded
+        /// from <see cref="HostedTrainingArguments"/> and the library sections. The rest is derived as
+        /// <see cref="InterpretHostedLibrary"/> derives it: <paramref name="database"/>, the saved model
+        /// to start from (<paramref name="modelFile"/>, or null for the pretrained models), the device,
+        /// and <paramref name="fdr"/>, the run q-value a training precursor needs. The files are the
+        /// host's to fill in before the run - the exports and their runs
+        /// (<see cref="TrainingSettings.Identifications"/>, <see cref="TrainingSettings.MsFiles"/>), the
+        /// model folder and file - since it places them by paths it settles after the parse. The
+        /// settings' <see cref="TrainingSettings.Library"/> is the library predicted with the
+        /// fine-tuned models from the folder they are written to, as CarafeSharp's training predicts it
+        /// after the fine-tune; a host may predict it as a task of its own.
+        /// </summary>
+        public TrainingSettings InterpretHostedTraining(string database, string modelFile, string device, double fdr, string commandLine)
+        {
+            Set(ARG_DB, database);
+            Set(ARG_LF_TYPE, LibraryOutputs.BLIB_FORMAT);
+            Set(ARG_FDR, fdr.ToString(@"R", CultureInfo.InvariantCulture));
+            if (modelFile != null)
+            {
+                Set(ARG_MODEL, modelFile);
+                CheckModelTrainingType();
+            }
+            if (device != null)
+                Set(ARG_DEVICE, device);
+            var digest = InterpretDigest(out var modifications, out double minMz, out double maxMz);
+            Mode = CarafeCommandMode.train;
+            TrainingSettings = InterpretTraining(digest, modifications, minMz, maxMz, true);
+            TrainingSettings.Library.CommandLine = commandLine;
+            return TrainingSettings;
+        }
+
         /// <summary>The digest, the modifications and the precursor m/z window every mode reads first.</summary>
         private DigestSettings InterpretDigest(out ModificationSettings modifications, out double minMz, out double maxMz)
         {
@@ -606,9 +653,11 @@ namespace pwiz.CarafeSharp.Proteome
         /// reads no spectra, so <c>-ms</c> only names the runs, and the options that shape
         /// Carafe's own XIC extraction are Osprey's to decide.
         /// </summary>
-        private TrainingSettings InterpretTraining(DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz)
+        private TrainingSettings InterpretTraining(DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz,
+            bool hosted = false)
         {
-            if (!TryGet(ARG_I, out string identifications) || identifications.Length == 0)
+            // A host names the exports itself, after the parse.
+            if ((!TryGet(ARG_I, out string identifications) || identifications.Length == 0) && !hosted)
                 throw new ArgumentException(@"Training requires Osprey's results via " + ARG_I.ArgumentText + @" (its blib, or its .training.parquet exports)");
             if (TryGet(ARG_SE, out string searchEngine) && !string.Equals(searchEngine, @"Osprey", StringComparison.OrdinalIgnoreCase))
                 throw new NotSupportedException(ARG_SE.ArgumentText + @" " + searchEngine + @" is not supported by CarafeSharp, which trains on Osprey's training export (" + ARG_SE.ArgumentText + @" Osprey)");
@@ -885,6 +934,16 @@ namespace pwiz.CarafeSharp.Proteome
         /// True when <c>-i</c> names an Osprey training export or a folder of them, input Carafe
         /// could not read, so CarafeSharp trains on it without <c>-ms</c>.
         /// </summary>
+        /// <summary>With training, <c>-model</c> is the model to fine-tune further, and the new file holds both of its models.</summary>
+        private void CheckModelTrainingType()
+        {
+            if (TryGet(ARG_TF, out string trainingType) && !string.Equals(trainingType, @"all", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(ARG_MODEL.ArgumentText + @" with training fine-tunes both of the saved model's models further; " + ARG_TF.ArgumentText + @" " +
+                                            trainingType + @" would leave the other one pretrained in the new model");
+            }
+        }
+
         private bool NamesTrainingExports()
         {
             return TryGet(ARG_I, out string identifications) &&

@@ -84,7 +84,7 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(Directory.Exists(libraryWorkDir), libraryWorkDir);
             Assert.IsFalse(File.Exists(Path.Combine(libraryWorkDir, LibraryBuildWorkflow.PAIRING_FILE_NAME)),
                 @"no pairing manifest without " + OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
-            int predicted = AssertPredictedLibrary(library, false);
+            int predicted = AssertPredictedLibrary(library, false, PredictLibraryTask.TASK_NAME);
             int reported = AssertLibraryBuildOutput(Path.Combine(workDir, BLIB_FILE), library, log);
             Assert.IsTrue(reported < predicted, string.Format(@"{0} reported of {1} predicted", reported, predicted));
 
@@ -115,7 +115,7 @@ namespace pwiz.Osprey.Test
                 .Concat(new[] { OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText }).ToArray(), Verifier(false));
             AssertTasks(entrapmentLog, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS));
             string entrapmentLibrary = Path.Combine(entrapmentDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB);
-            int withEntrapment = AssertPredictedLibrary(entrapmentLibrary, true);
+            int withEntrapment = AssertPredictedLibrary(entrapmentLibrary, true, PredictLibraryTask.TASK_NAME);
             Assert.IsTrue(withEntrapment > 1.5 * predicted, string.Format(@"{0} precursors with entrapment, {1} without", withEntrapment, predicted));
             string pairing = Path.Combine(entrapmentDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX,
                 LibraryBuildWorkflow.PAIRING_FILE_NAME);
@@ -163,7 +163,7 @@ namespace pwiz.Osprey.Test
             string log = RunOsprey(buildArgs, Verifier(false));
             AssertTasks(log, Array.Empty<string>(), new[] { PredictLibraryTask.TASK_NAME }.Concat(ALL_TASKS));
             string library = Path.Combine(workDir, Path.GetFileNameWithoutExtension(BLIB_FILE) + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB);
-            AssertPredictedLibrary(library, false);
+            AssertPredictedLibrary(library, false, PredictLibraryTask.TASK_NAME);
             AssertLibraryBuildOutput(Path.Combine(workDir, BLIB_FILE), library, log);
             // The model file is an input of the prediction: the same command line is current.
             string warm = RunOsprey(buildArgs, Verifier(false));
@@ -172,8 +172,8 @@ namespace pwiz.Osprey.Test
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_MODEL.ArgumentText, Path.Combine(_testDir, @"missing.carafemodel"));
         }
 
-        /// <summary>The predicted library: stamped by the prediction task, with its DecoyPairs, and with Osprey's command line recorded.</summary>
-        private static int AssertPredictedLibrary(string library, bool entrapment)
+        /// <summary>The predicted library: stamped by the prediction task <paramref name="task"/>, with its DecoyPairs, and with Osprey's command line recorded.</summary>
+        private static int AssertPredictedLibrary(string library, bool entrapment, string task)
         {
             // Plain counts: the comparer's projections are the search output's tables.
             int precursors = BlibComparer.CountWhere(library, @"RefSpectra", @"1");
@@ -186,7 +186,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(entrapment ? 1 : 0, Math.Sign(BlibComparer.CountWhere(library, @"DecoyPairs", @"IsEntrapment = 1")));
             var stamp = ArtifactStamp.Parse(BlibMetadata.Read(library, ArtifactStamp.PARQUET_KEY));
             Assert.IsNotNull(stamp);
-            Assert.AreEqual(PredictLibraryTask.TASK_NAME, stamp.Task);
+            Assert.AreEqual(task, stamp.Task);
             StringAssert.StartsWith(BlibMetadata.Read(library, BlibLibraryWriter.KEY_COMMAND), @"Osprey ");
             return precursors;
         }
@@ -219,7 +219,13 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private IEnumerable<string> LibraryBuildArgs(string fasta, string workDir)
         {
-            return InputArgs(DataInputs()).Concat(new[]
+            return LibraryBuildArgs(fasta, workDir, DataInputs());
+        }
+
+        /// <summary><see cref="LibraryBuildArgs(string, string)"/> over <paramref name="inputs"/>.</summary>
+        private IEnumerable<string> LibraryBuildArgs(string fasta, string workDir, IEnumerable<string> inputs)
+        {
+            return InputArgs(inputs).Concat(new[]
             {
                 OspreyCommandArgs.ARG_FASTA.ArgumentText, fasta,
                 OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),

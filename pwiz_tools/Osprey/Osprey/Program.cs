@@ -291,7 +291,7 @@ namespace pwiz.Osprey
                 }
 
                 OspreyConfig config;
-                LibrarySettings librarySettings;
+                LibraryBuildSettings librarySettings;
                 try
                 {
                     config = OspreyCommandArgs.ParseArgs(args, out librarySettings);
@@ -523,6 +523,11 @@ namespace pwiz.Osprey
                             : OspreyResources.Program_Run_the_pretrained_models));
                     LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
                         LibraryBuildWorkflow.LibraryPath(config), LibraryBuildWorkflow.WorkDirectory(config)));
+                    if (config.LibraryBuild.Tuning)
+                    {
+                        LogInfo(string.Format(OspreyResources.Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_,
+                            string.Join(@", ", config.LibraryBuild.TrainingInputs.Select(Path.GetFileName)), LibraryBuildWorkflow.ModelPath(config)));
+                    }
                 }
                 else
                 {
@@ -936,7 +941,7 @@ namespace pwiz.Osprey
                     return dupErr;
             }
 
-            string exportErr = TrainingExportError(config.TrainingExport);
+            string exportErr = TrainingExportError(config.TrainingExport, config.LibraryBuild.Tuning);
             if (exportErr != null)
                 return exportErr;
 
@@ -1023,6 +1028,24 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
                     OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
             }
+            if (build.OptionsWithoutTrainingInput.Count > 0)
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                    string.Join(@", ", build.OptionsWithoutTrainingInput), OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText);
+            }
+            if (build.Tuning)
+            {
+                // A tuning run that is also an input is checked with the inputs, where a spectra
+                // cache may stand in for it; one searched for the tuning only is read here.
+                foreach (string run in build.TrainingInputs)
+                {
+                    if (!config.InputFiles.Any(input => IsSamePath(input, run)) && !File.Exists(run))
+                        return string.Format(OspreyResources.Program_LibraryBuildError_Training_input_file_not_found___0_, run);
+                }
+                string dupErr = DuplicateInputStemError(build.TrainingInputs);
+                if (dupErr != null)
+                    return dupErr;
+            }
             return null;
         }
 
@@ -1062,9 +1085,10 @@ namespace pwiz.Osprey
         /// given without <c>--training-export</c> (or <c>--task TrainingExport</c>) they would
         /// change nothing, and a q threshold outside (0, 1] selects nothing or everything.
         /// </summary>
-        private static string TrainingExportError(TrainingExportConfig export)
+        private static string TrainingExportError(TrainingExportConfig export, bool tuning)
         {
-            if (export.HasSettingsWithoutExport)
+            // The one command's tuning search writes the export, so its settings apply there.
+            if (export.HasSettingsWithoutExport && !tuning)
             {
                 return string.Format(OspreyResources.Program_TrainingExportError__0____1__and__2__apply_only_with__3__,
                     OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText,

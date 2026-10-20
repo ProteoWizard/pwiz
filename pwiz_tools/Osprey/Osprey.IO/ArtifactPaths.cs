@@ -59,6 +59,14 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string CacheDir { get; set; }
 
+        /// <summary>
+        /// Where the cache goes when <see cref="CacheDir"/> is unset and the data's directory is
+        /// read-only, or null for <see cref="OutputDir"/>. A second analysis in one process (the
+        /// one command's search of its tuning runs) writes its other artifacts to a folder of its
+        /// own and keeps the first analysis's fallback here, so a run both analyses read is parsed once.
+        /// </summary>
+        public static string CacheFallbackDir { get; set; }
+
         // Writability is probed (an ACL check is unreliable cross-platform) and
         // memoized per directory so resolution stays cheap when called for every
         // input file.
@@ -84,7 +92,8 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Directory for the spectra cache of <paramref name="inputPath"/>.
         /// Resolution order: explicit <see cref="CacheDir"/> -> beside the data
-        /// file if that directory is writable -> <see cref="OutputDir"/>. The
+        /// file if that directory is writable -> <see cref="CacheFallbackDir"/>,
+        /// else <see cref="OutputDir"/>. The
         /// cache is settings-independent, so a shared CacheDir lets many analyses
         /// (and the straight-through vs. resume passes) reuse one parse.
         /// </summary>
@@ -101,7 +110,7 @@ namespace pwiz.Osprey.IO
             // OutputDir is set but no explicit CacheDir: prefer beside-data for
             // cross-analysis reuse, falling back to OutputDir when the data
             // directory is read-only.
-            return IsDirectoryWritable(inputDir) ? inputDir : OutputDir;
+            return IsDirectoryWritable(inputDir) ? inputDir : CacheFallbackDir ?? OutputDir;
         }
 
         /// <summary>
