@@ -1039,6 +1039,14 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
                     OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
             }
+            // The tuning writes <out>.carafemodel, so tuning from it would overwrite its own input,
+            // and a re-run would tune again from the last result instead of finding it current.
+            if (build.Tuning && build.ModelPath != null && !string.IsNullOrEmpty(config.OutputBlib) &&
+                IsSamePath(build.ModelPath, LibraryBuildWorkflow.ModelPath(config)))
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__,
+                    OspreyCommandArgs.ARG_MODEL.ArgumentText, build.ModelPath, OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText);
+            }
             if (build.OptionsWithoutTrainingInput.Count > 0)
             {
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,

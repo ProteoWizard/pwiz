@@ -118,6 +118,12 @@ namespace pwiz.Osprey.Test
                 AssertTunedPhases(refolder, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
                 Assert.IsTrue(Directory.Exists(products.ModelDirectory), products.ModelDirectory);
 
+                // Nor is the tuning current when the folder holds other weights than the model file
+                // packed (a later tuning that died before saving its model): it runs again.
+                File.WriteAllBytes(Path.Combine(products.ModelDirectory, ModelFiles.RT_SAFETENSORS), new byte[] { 1, 2, 3 });
+                string reweighted = RunOsprey(buildArgs, Verifier(false));
+                AssertTunedPhases(reweighted, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
+
                 // A tuning option changes the tuning and what follows it, not the training library
                 // or its search.
                 var seedArgs = buildArgs.Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7" }).ToArray();
@@ -158,9 +164,16 @@ namespace pwiz.Osprey.Test
                 Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
             StringAssert.Contains(badReference, @"no_such_run");
             Assert.IsFalse(badReference.Contains(TaskLine(LibraryBuildWorkflow.PREDICT_TRAINING_LIBRARY_TASK, @"starting")), badReference);
+            // The model this run writes cannot be the one it tunes from.
+            string ownModel = RunOspreyExpecting(buildArgs.Concat(new[] { OspreyCommandArgs.ARG_MODEL.ArgumentText, products.Model }).ToArray(),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(ownModel, string.Format(OspreyResources.Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__,
+                OspreyCommandArgs.ARG_MODEL.ArgumentText, products.Model, OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText));
             // A saved model tunes further with both of its models, never one.
+            string copied = Path.Combine(_testDir, @"tuned-copy" + CarafeModelFile.EXTENSION);
+            File.Copy(products.Model, copied, true);
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText, inputs[1],
-                OspreyCommandArgs.ARG_MODEL.ArgumentText, products.Model, CarafeCommandLine.ARG_TF.ArgumentText, @"ms2");
+                OspreyCommandArgs.ARG_MODEL.ArgumentText, copied, CarafeCommandLine.ARG_TF.ArgumentText, @"ms2");
         }
 
         /// <summary>

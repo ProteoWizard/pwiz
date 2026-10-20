@@ -42,12 +42,14 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// Counts <paramref name="taskName"/>, which has run, and throws <see cref="TaskBudgetSpentException"/>
-        /// when it is the last one the budget allows.
+        /// when it is the last one the budget allows. A task that failed (<paramref name="exitCode"/>
+        /// not zero) is not counted: its failure ends the run as it would without the budget, rather
+        /// than being reported as a clean stop.
         /// </summary>
-        public static void TaskDone(string taskName)
+        public static void TaskDone(string taskName, int exitCode)
         {
             int limit = OspreyEnvironment.StopAfterTasks;
-            if (limit <= 0)
+            if (limit <= 0 || exitCode != 0)
                 return;
             if (++_ran >= limit)
                 throw new TaskBudgetSpentException(taskName, _ran);

@@ -206,7 +206,7 @@ namespace pwiz.Osprey
                         stageName, elapsed.TotalSeconds);
                 }
                 // Last: the developer stop ends the run between this task and the next.
-                TaskBudget.TaskDone(task.Name);
+                TaskBudget.TaskDone(task.Name, ctx.ExitCode);
             }
         }
 

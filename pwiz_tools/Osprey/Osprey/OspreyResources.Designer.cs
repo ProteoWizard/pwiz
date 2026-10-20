@@ -780,6 +780,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} names the model this run writes: {1}. Copy it, or choose another {2}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} needs {1}..
         /// </summary>
         public static string Program_LibraryBuildError__0__needs__1__ {

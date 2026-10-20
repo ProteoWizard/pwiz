@@ -21,8 +21,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Tasks;
@@ -271,22 +271,35 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// The library is predicted from the model folder, so a current <c>&lt;out&gt;.carafemodel</c>
-        /// whose folder lost any of the files it packed (the working files deleted, the model kept)
+        /// whose folder no longer holds the files it packed, byte for byte (the working files deleted
+        /// with the model kept, or rewritten by a later tuning that died before it saved its model),
         /// is discarded, and the tuning runs again from the exports, rather than skipping the tuning
-        /// and predicting from what is left.
+        /// and predicting from other weights than the saved model holds.
         /// </summary>
         private static void DiscardModelWithoutFolder(string modelFile, string modelFolder)
         {
             if (!File.Exists(modelFile))
                 return;
             bool complete;
-            using (var archive = ZipFile.OpenRead(modelFile))
+            try
             {
-                complete = archive.Entries.Where(e => e.Name.Length > 0 && e.FullName != CarafeModelFile.MANIFEST_ENTRY)
-                    .All(e => File.Exists(Path.Combine(modelFolder, e.FullName)));
+                complete = CarafeModelFile.Open(modelFile).Entries.All(entry => IsSameFile(Path.Combine(modelFolder, entry.Key), entry.Value));
+            }
+            catch (InvalidDataException)
+            {
+                // A model file that does not open is no checkpoint either.
+                complete = false;
             }
             if (!complete)
                 File.Delete(modelFile);
+        }
+
+        private static bool IsSameFile(string path, string sha256)
+        {
+            if (!File.Exists(path))
+                return false;
+            using (var stream = File.OpenRead(path))
+                return string.Equals(Convert.ToHexString(SHA256.HashData(stream)), sha256, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -427,7 +440,7 @@ namespace pwiz.Osprey
             protected override void OnDone(PipelineTask task, TaskContext ctx, TimeSpan elapsed)
             {
                 Program.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)", task.Name, elapsed.TotalSeconds);
-                TaskBudget.TaskDone(task.Name);
+                TaskBudget.TaskDone(task.Name, ctx.ExitCode);
             }
         }
     }

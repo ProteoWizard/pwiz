@@ -496,4 +496,7 @@
   <data name="LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_" xml:space="preserve">
     <value>Searching the tuning runs with {0}</value>
   </data>
+  <data name="Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__" xml:space="preserve">
+    <value>{0} names the model this run writes: {1}. Copy it, or choose another {2}.</value>
+  </data>
 </root>
