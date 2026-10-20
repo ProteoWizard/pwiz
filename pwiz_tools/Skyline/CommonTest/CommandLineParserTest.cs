@@ -49,6 +49,7 @@ namespace CommonTest
             public bool CountSeen;
             public bool Flag;
             public bool Stop;
+            public string TwoWords;
         }
 
         private static readonly Argument<Context> ARG_INPUT = new Argument<Context>(@"input", () => @"<file>",
@@ -77,10 +78,13 @@ namespace CommonTest
             c.Stop = true;
             return false;
         });
+        // A hyphenated name, for the grammar that reads an underscore as a hyphen.
+        private static readonly Argument<Context> ARG_TWO_WORDS = new Argument<Context>(@"two-words", () => @"<v>",
+            (c, p) => c.TwoWords = p.Value);
 
         private static readonly Argument<Context>[] ARGUMENTS =
         {
-            ARG_INPUT, ARG_OUTPUT, ARG_MODE, ARG_HELP, ARG_COUNT, ARG_FLAG, ARG_STOP, ARG_RAGGED
+            ARG_INPUT, ARG_OUTPUT, ARG_MODE, ARG_HELP, ARG_COUNT, ARG_FLAG, ARG_STOP, ARG_RAGGED, ARG_TWO_WORDS
         };
 
         /// <summary>
@@ -99,6 +103,7 @@ namespace CommonTest
                 TestStrictGrammar();
                 TestNextTokenGrammar();
                 TestSingleDashGrammar();
+                TestEquivalentSeparators();
             }
             finally
             {
@@ -260,6 +265,37 @@ namespace CommonTest
             AssertEx.AreEqual(@"unknown --bogus", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--bogus")).Message);
             AssertEx.AreEqual(@"unexpected -flag", Assert.ThrowsException<ValueUnexpectedException>(() => Parse(@"-flag=1")).Message);
             AssertEx.AreEqual(@"unknown -", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"-")).Message);
+        }
+
+        /// <summary>
+        /// With <see cref="CommandLineGrammar.NameSeparatorsEquivalent"/> an underscore in a typed
+        /// name matches a hyphen in the declared one (Osprey and CarafeSharp, whose declarations
+        /// are hyphenated and whose users have Carafe's underscore spellings in scripts); the
+        /// declaration still spells itself with the hyphen, and without the rule the underscore
+        /// spelling is an unknown argument, as Skyline's grammar has always treated it.
+        /// </summary>
+        private static void TestEquivalentSeparators()
+        {
+            ArgUsage.Grammar = CommandLineGrammar.STRICT;
+            ArgUsage.ArgumentValueSeparator = @"=";
+            AssertEx.AreEqual(@"x", Parse(@"--two-words=x").TwoWords);
+            AssertEx.AreEqual(@"unknown --two_words=x", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_words=x")).Message);
+
+            ArgUsage.Grammar = new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, NameSeparatorsEquivalent = true };
+            ArgUsage.ArgumentValueSeparator = @" ";
+            AssertEx.AreEqual(@"--two-words", ARG_TWO_WORDS.ArgumentText);
+            AssertEx.AreEqual(@"--two-words x", ARG_TWO_WORDS + @"x");
+            foreach (var spelling in new[] { @"--two-words", @"--two_words" })
+            {
+                AssertEx.AreEqual(@"x", Parse(spelling, @"x").TwoWords, spelling);
+                AssertEx.AreEqual(@"y", Parse(spelling + @"=y").TwoWords, spelling);
+            }
+            // A separator matches only a separator, in the same place; an unknown name is reported as typed.
+            AssertEx.AreEqual(@"unknown --two_word", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_word", @"x")).Message);
+            AssertEx.AreEqual(@"unknown --twowords", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--twowords", @"x")).Message);
+            AssertEx.AreEqual(@"unknown --two_words_", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_words_", @"x")).Message);
+            // FindValue follows the same rule.
+            AssertEx.AreEqual(@"x", new CommandLineParser<Context>(ARGUMENTS).FindValue(new[] { @"--two_words", @"x" }, ARG_TWO_WORDS));
         }
 
         private static Context Parse(params string[] args)

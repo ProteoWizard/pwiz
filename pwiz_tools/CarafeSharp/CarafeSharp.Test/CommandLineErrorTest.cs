@@ -100,7 +100,7 @@ namespace pwiz.CarafeSharp.Test
                 .LibrarySettings.TrainingType);
             // -model_dir keeps Carafe's reading, where another value predicts with neither fine-tuned model, and says so.
             Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model_dir", _folder, @"-tf", @"MS2" }).Warnings
-                .Any(w => w.StartsWith(@"-tf MS2 is not all, ms2 or rt", StringComparison.Ordinal)));
+                .Any(w => w.StartsWith(@"--tf MS2 is not all, ms2 or rt", StringComparison.Ordinal)));
             AssertUsageError(@"-db", @"x.fasta", @"-fixMod", @"abc");
             AssertUsageError(@"-db", @"x.fasta", @"-max_pep_charge", @"1");
             AssertUsageError(@"-db", @"x.fasta", @"-nce", @"30x");
@@ -122,9 +122,9 @@ namespace pwiz.CarafeSharp.Test
             // -ccs with training, as Carafe on Osprey's results: no CCS fine-tune, the library's 1/K0 from the CCS model.
             var withMobility = CarafeCommandLine.Parse(new[] { @"-i", @"x.training.parquet", @"-db", @"x.fasta", @"-ccs" });
             Assert.IsTrue(withMobility.TrainingSettings.Library.PredictIonMobility);
-            Assert.IsTrue(withMobility.Warnings.Any(w => w.StartsWith(@"-ccs: the CCS model is not fine-tuned", StringComparison.Ordinal)));
+            Assert.IsTrue(withMobility.Warnings.Any(w => w.StartsWith(@"--ccs: the CCS model is not fine-tuned", StringComparison.Ordinal)));
             Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-i", @"x.training.parquet", @"-ccs" }).Warnings
-                .Any(w => w.StartsWith(@"Ignored -ccs", StringComparison.Ordinal)));
+                .Any(w => w.StartsWith(@"Ignored --ccs", StringComparison.Ordinal)));
             Assert.AreEqual(7L, CarafeCommandLine.Parse(new[] { @"-build_entrapment_fasta", @"o.fasta", @"-db", @"i.fasta", @"-decoy_seed", @"7" })
                 .BuildSettings.DecoySeed);
         }

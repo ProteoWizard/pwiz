@@ -76,11 +76,11 @@ namespace pwiz.CarafeSharp
             // saved model (-model, its entries checked), the device, the pretrained models, and
             // Chronologer's pinned files when it is the RT model.
             if (_settings.Library != null && !File.Exists(_settings.Library.Database))
-                throw new FileNotFoundException(@"Library FASTA (-db) not found: " + _settings.Library.Database, _settings.Library.Database);
+                throw new FileNotFoundException(@"Library FASTA (" + CarafeCommandLine.ARG_DB.ArgumentText + @") not found: " + _settings.Library.Database, _settings.Library.Database);
             if (_settings.Library != null)
                 LibraryGenerator.CheckOutputsReplaceable(_settings.Library, _settings.OutputDirectory);
             if (_settings.Ms2Model != null && !File.Exists(_settings.Ms2Model))
-                throw new FileNotFoundException(@"MS2 model (-ms2_model) not found: " + _settings.Ms2Model, _settings.Ms2Model);
+                throw new FileNotFoundException(@"MS2 model (" + CarafeCommandLine.ARG_MS2_MODEL.ArgumentText + @") not found: " + _settings.Ms2Model, _settings.Ms2Model);
             var baseModel = _settings.BaseModel != null ? CarafeModelFile.Open(_settings.BaseModel) : null;
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
             if (fallback != null)
@@ -114,8 +114,8 @@ namespace pwiz.CarafeSharp
             {
                 if (_settings.RtAlignment != RtAlignmentType.kde)
                 {
-                    throw new InvalidOperationException(string.Format(@"-rt_reference {0} needs the training runs aligned (-rt_align kde), not -rt_align {1}.",
-                        rtReference, _settings.RtAlignment));
+                    throw new InvalidOperationException(string.Format(@"{0} {1} needs the training runs aligned ({2} kde), not {2} {3}.",
+                        CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, rtReference, CarafeCommandLine.ARG_RT_ALIGN.ArgumentText, _settings.RtAlignment));
                 }
                 RtAlignment.FindRun(OspreyTrainingSet.GetRunNames(exports).Values.OrderBy(n => n, StringComparer.Ordinal).ToArray(), rtReference);
             }
@@ -349,7 +349,7 @@ namespace pwiz.CarafeSharp
                 Log(@"Ions masked by rule: " + string.Join(@", ", trainingSet.Stats.MaskedBy
                     .OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + @" " + p.Value)));
                 if (_settings.NoMasking)
-                    Log(@"-no_masking: training on every ion of the kept spectra");
+                    Log(CarafeCommandLine.ARG_NO_MASKING.ArgumentText + @": training on every ion of the kept spectra");
                 foreach (var export in exports)
                 {
                     var energy = trainingSet.GetCollisionEnergy(export);
@@ -357,8 +357,8 @@ namespace pwiz.CarafeSharp
                     if (energy.Calibration != null && energy.Calibration.AtLimit)
                     {
                         Log(string.Format(CultureInfo.InvariantCulture,
-                            @"WARNING: {0} calibrated at NCE {1}, an end of the range scored ({2}-{3}); give its NCE with -nce if another fits better.",
-                            export.Path, energy.Nce, NceCalibration.MIN_NCE, NceCalibration.MAX_NCE));
+                            @"WARNING: {0} calibrated at NCE {1}, an end of the range scored ({2}-{3}); give its NCE with {4} if another fits better.",
+                            export.Path, energy.Nce, NceCalibration.MIN_NCE, NceCalibration.MAX_NCE, CarafeCommandLine.ARG_NCE.ArgumentText));
                     }
                 }
                 return trainingSet;
@@ -383,13 +383,13 @@ namespace pwiz.CarafeSharp
             string path = Path.Combine(_settings.OutputDirectory, ModelFiles.RT_MAPS);
             var alignment = trainingSet.Alignment;
             if (trainingSet.Unaligned != null)
-                Log(@"WARNING: RT rows not aligned onto the hydrophobic index (as -rt_align none): " + trainingSet.Unaligned);
+                Log(@"WARNING: RT rows not aligned onto the hydrophobic index (as " + CarafeCommandLine.ARG_RT_ALIGN.ArgumentText + @" none): " + trainingSet.Unaligned);
             foreach (string run in trainingSet.UnalignedRuns)
                 Log(@"WARNING: RT rows left out, as the run cannot be aligned onto the hydrophobic index (its spectra still train MS2): " + run);
             if (alignment == null)
             {
                 if (_settings.RtSelection == RtSelectionType.median)
-                    Log(@"WARNING: Ignored -rt_select median: the runs are not aligned, so each form's RT row is its best observation's");
+                    Log(@"WARNING: Ignored " + CarafeCommandLine.ARG_RT_SELECT.ArgumentText + @" median: the runs are not aligned, so each form's RT row is its best observation's");
                 File.Delete(path);
                 return;
             }
@@ -410,7 +410,7 @@ namespace pwiz.CarafeSharp
             if (fineTune.RtModelType != RtModelType.chronologer)
             {
                 Log(string.Format(@"WARNING: the runs are on different gradients, and {0} predicts one gradient's minutes: it trains on their " +
-                    @"median, which is none of them. -rt_model chronologer trains on the hydrophobic index instead.", fineTune.RtModelType));
+                    @"median, which is none of them. {1} chronologer trains on the hydrophobic index instead.", fineTune.RtModelType, CarafeCommandLine.ARG_RT_MODEL.ArgumentText));
                 return;
             }
             if (fineTune.RtModel != null && ChronologerModel.IsNormalizedRtFile(fineTune.RtModel))
@@ -420,7 +420,7 @@ namespace pwiz.CarafeSharp
                 fineTune.RtModel = null;
             }
             Log(@"RT: the runs are on different gradients; Chronologer trains on the hydrophobic index, and a library from it is iRT, " +
-                @"or one run's minutes with -rt_reference");
+                @"or one run's minutes with " + CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText);
             double rtMax = trainingSet.Stats.RtMax;
             fineTune.HiToRtNorm = hi => alignment.ToMinutes(hi) / rtMax;
         }
@@ -439,8 +439,8 @@ namespace pwiz.CarafeSharp
                 fineTune.RtModel = baseRt;
                 return;
             }
-            Log(string.Format(@"WARNING: -rt_model {0}: the saved model's fine-tuned {1} RT model is not fine-tuned further; " +
-                              @"the {0} RT model starts from its pretrained model.", fineTune.RtModelType, baseType));
+            Log(string.Format(@"WARNING: {2} {0}: the saved model's fine-tuned {1} RT model is not fine-tuned further; " +
+                              @"the {0} RT model starts from its pretrained model.", fineTune.RtModelType, baseType, CarafeCommandLine.ARG_RT_MODEL.ArgumentText));
         }
 
         /// <summary>

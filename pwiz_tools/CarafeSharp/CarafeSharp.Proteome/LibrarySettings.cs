@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System.Text.Json.Serialization;
 using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
@@ -205,8 +206,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>
         /// The command line this run was given, as one line of text, recorded in the .blib it
         /// writes (<c>LibMetadata</c>, key <c>carafe.command</c>) so the library carries how it
-        /// was made. Null (settings built in code) records nothing.
+        /// was made. Null (settings built in code) records nothing. Provenance, not a setting:
+        /// left out of the validity key, so the same options spelled another way (Carafe's
+        /// underscores, a different order) find the library current. Leaving it out changed every
+        /// key once: a library or model written before that is predicted or trained again on its
+        /// next run, as after a version change.
         /// </summary>
+        [JsonIgnore]
         public string CommandLine { get; set; }
 
         /// <summary>
