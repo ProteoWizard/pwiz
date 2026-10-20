@@ -1371,8 +1371,11 @@ namespace pwiz.Skyline
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
             // If the files for the library do not exist on disk, or the library is already
             // at the new name, there is nothing to copy.
-            if (!File.Exists(oldDocLibFile) || string.Equals(oldDocLibFile, newDocLibFile, StringComparison.OrdinalIgnoreCase))
+            if (!File.Exists(oldDocLibFile) ||
+                string.Equals(Path.GetFullPath(oldDocLibFile), Path.GetFullPath(newDocLibFile), StringComparison.OrdinalIgnoreCase))
+            {
                 return null;
+            }
 
             var fileSavers = new List<FileSaver>();
             try

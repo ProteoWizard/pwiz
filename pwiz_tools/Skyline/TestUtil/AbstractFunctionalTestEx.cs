@@ -140,16 +140,11 @@ namespace pwiz.SkylineTestUtil
             bool ignoreDecoys = false)
         {
             var doc = WaitForDocumentLoaded();
-            // Write the converted libraries to their own folder, so that converting a document
-            // that was already converted never overwrites a library it is reading from. Save As
-            // then copies the document library beside the new .sky file.
-            var pathForLibraryFiles = Path.Combine(Path.GetDirectoryName(SkylineWindow.DocumentFilePath) ?? string.Empty,
-                @"ConvertedToSmallMolecules" + Guid.NewGuid().ToString(@"N"));
-            Directory.CreateDirectory(pathForLibraryFiles);
             RunUI(() => SkylineWindow.ModifyDocument("Convert to small molecules", document =>
             {
                 var refine = new RefinementSettings();
-                var smallMolDoc = refine.ConvertToSmallMolecules(document, pathForLibraryFiles, mode, invertCharges, ignoreDecoys);
+                var path = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
+                var smallMolDoc = refine.ConvertToSmallMolecules(document, path, mode, invertCharges, ignoreDecoys);
                 CheckConsistentLibraryInfo(smallMolDoc);
                 return smallMolDoc;
             }));
