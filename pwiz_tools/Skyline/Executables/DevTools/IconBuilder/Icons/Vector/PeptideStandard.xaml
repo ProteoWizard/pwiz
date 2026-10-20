@@ -1,0 +1,9 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Peptide with standard overlay: base glyph plus a black diagonal with a square at each end, upper right. -->
+  <Path Data="M 6,0 L 16,0 L 20,4 L 20,10 L 16,14 L 6,14 L 2,10 L 2,4 Z" Fill="#000080"/>
+  <Path Data="M 8,2 L 14,2 L 16,4 L 16,6 L 14,8 L 10,8 L 10,12 L 8,12 Z M 10,4 L 14,4 L 14,6 L 10,6 Z" Fill="#FFFFFF"/>
+  <Path Data="M 6,16 L 8,16 L 11,20 L 14,16 L 16,16 L 16,18 L 12,23 L 12,30 L 10,30 L 10,23 L 6,18 Z" Fill="#FF0000"/>
+  <Rectangle Canvas.Left="22" Canvas.Top="0" Width="4" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="8" Width="4" Height="4" Fill="#000000"/>
+  <Line X1="30" Y1="2" X2="22" Y2="10" Stroke="#000000" StrokeThickness="2"/>
+</Canvas>

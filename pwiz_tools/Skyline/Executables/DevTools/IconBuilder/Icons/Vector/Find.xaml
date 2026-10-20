@@ -1,0 +1,49 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Binoculars: two blue barrels that widen toward the bottom, each with a small white eyepiece
+       highlight, a lighter mid band and a large pale lens, joined by a dark navy bridge. -->
+  <Path Data="M 5,3.5 Q 5,2 6.5,2 L 9.5,2 Q 11,2 11,3.5 L 12,8 L 13,14 L 13,26 Q 13,28 11,28 L 4,28 Q 2,28 2,26 L 2,14 L 4,8 Z" Stroke="#1E3A6E" StrokeThickness="1" StrokeLineJoin="Round">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#5D86BE" Offset="0"/>
+        <GradientStop Color="#3C64A4" Offset="0.5"/>
+        <GradientStop Color="#1F4280" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 21,3.5 Q 21,2 22.5,2 L 25.5,2 Q 27,2 27,3.5 L 28,8 L 30,14 L 30,26 Q 30,28 28,28 L 21,28 Q 19,28 19,26 L 19,14 L 20,8 Z" Stroke="#1E3A6E" StrokeThickness="1" StrokeLineJoin="Round">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#5D86BE" Offset="0"/>
+        <GradientStop Color="#3C64A4" Offset="0.5"/>
+        <GradientStop Color="#1F4280" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Rectangle Canvas.Left="12" Canvas.Top="8" Width="8" Height="6" Fill="#1E3F75"/>
+  <Rectangle Canvas.Left="14" Canvas.Top="9" Width="4" Height="4" Fill="#2C5390"/>
+  <!-- Eyepiece highlights -->
+  <Rectangle Canvas.Left="7" Canvas.Top="3" Width="2" Height="2" Fill="#F4F7FB"/>
+  <Rectangle Canvas.Left="23" Canvas.Top="3" Width="2" Height="2" Fill="#F4F7FB"/>
+  <!-- Mid bands -->
+  <Rectangle Canvas.Left="5" Canvas.Top="8" Width="6" Height="3" RadiusX="0.5" RadiusY="0.5" Fill="#C9DAF0" Opacity="0.9"/>
+  <Rectangle Canvas.Left="21" Canvas.Top="8" Width="6" Height="3" RadiusX="0.5" RadiusY="0.5" Fill="#C9DAF0" Opacity="0.9"/>
+  <!-- Lenses -->
+  <Rectangle Canvas.Left="4" Canvas.Top="15" Width="7" Height="10" RadiusX="1" RadiusY="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#DCE7F5" Offset="0.5"/>
+        <GradientStop Color="#9FBBE0" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="21" Canvas.Top="15" Width="7" Height="10" RadiusX="1" RadiusY="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#DCE7F5" Offset="0.5"/>
+        <GradientStop Color="#9FBBE0" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+</Canvas>

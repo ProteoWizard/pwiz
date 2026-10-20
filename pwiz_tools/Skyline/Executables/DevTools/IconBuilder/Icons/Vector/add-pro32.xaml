@@ -1,0 +1,18 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Add: a blue plus sign filling the canvas, lit from the top left with a darker
+       blue outline and darker right and bottom bar edges. -->
+  <Path Data="M 10.5,0.5 L 21.5,0.5 L 21.5,10.5 L 31.5,10.5 L 31.5,21.5 L 21.5,21.5 L 21.5,31.5 L 10.5,31.5 L 10.5,21.5 L 0.5,21.5 L 0.5,10.5 L 10.5,10.5 Z" Stroke="#2F5F9F" StrokeThickness="1" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#9CC4EE" Offset="0"/>
+        <GradientStop Color="#5A9BE0" Offset="0.45"/>
+        <GradientStop Color="#3A7CC8" Offset="0.8"/>
+        <GradientStop Color="#2D62AA" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <!-- Highlight along the top and left inner edges -->
+  <Path Data="M 12,2 L 20,2 M 2,12 L 10,12 M 12,12 L 12,2" Stroke="#C6DDF5" StrokeThickness="1.5" Opacity="0.9"/>
+  <!-- Shadow along the right and bottom inner edges -->
+  <Path Data="M 30,13 L 30,20 M 20,30 L 20,22 M 22,20 L 30,20" Stroke="#24549A" StrokeThickness="1.5" Opacity="0.7"/>
+</Canvas>

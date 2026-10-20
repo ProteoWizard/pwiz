@@ -1,0 +1,20 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Closed folder: gold-outlined back panel with a tab at the top left, a front panel shading
+       from pale yellow to orange with a white highlight under its top edge, and a gray shadow
+       along the right and bottom. -->
+  <Rectangle Canvas.Left="27" Canvas.Top="10" Width="2" Height="19" Fill="#A8A090" Opacity="0.7"/>
+  <Rectangle Canvas.Left="4" Canvas.Top="28" Width="25" Height="2" Fill="#A8A090" Opacity="0.7"/>
+  <!-- Back panel -->
+  <Path Data="M 1,6 L 11,6 L 15,9 L 26,9 L 26,27 L 1,27 Z" Fill="#FFF2A8" Stroke="#B8860B" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <!-- Front panel -->
+  <Rectangle Canvas.Left="5" Canvas.Top="13" Width="21" Height="14" Stroke="#C08A10" StrokeThickness="2">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFF9CC" Offset="0"/>
+        <GradientStop Color="#FFE878" Offset="0.5"/>
+        <GradientStop Color="#F2B830" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Path Data="M 6,14.5 L 25,14.5" Stroke="#FFFCE6" StrokeThickness="1"/>
+</Canvas>

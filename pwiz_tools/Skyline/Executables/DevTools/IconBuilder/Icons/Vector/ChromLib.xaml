@@ -1,0 +1,8 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="28" Height="28">
+  <!-- ChromLib (14x14): identical drawing to AllIonsStatusButton (the native bitmaps differ only in
+       background): the TransitionGroup three-peak drawing shifted two units left for the 28-unit
+       canvas, with the red baseline running to the right edge. -->
+  <Path Data="M -2,24 L 7,24 C 11,24 11.5,15 13,4 L 14,2.5 L 17.5,25 M 17,24 L 28,24" Stroke="#0A8A0A" StrokeThickness="2" StrokeLineJoin="Round"/>
+  <Path Data="M 4,24.5 C 8,24.5 9.5,16 11.5,11 L 13.5,10 L 16,24" Stroke="#2024E0" StrokeThickness="2.5" StrokeLineJoin="Round"/>
+  <Path Data="M -2,26 L 7,26 C 9,26 10.5,21 13,19.5 L 14.5,19.5 L 17.5,26 L 28,26" Stroke="#E52814" StrokeThickness="2" StrokeLineJoin="Round"/>
+</Canvas>

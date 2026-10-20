@@ -1,0 +1,33 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Empty list window: blue title bar across the top, white body with five item rows, each a
+       small colored square (brown, then pink) at the left, a dark bar, and a small gray square
+       at the right. The white body is part of the window and is kept. -->
+  <Rectangle Canvas.Left="0" Canvas.Top="8" Width="32" Height="24" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="0" Width="32" Height="8">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#A5CEDE" Offset="0"/>
+        <GradientStop Color="#94BDCE" Offset="0.25"/>
+        <GradientStop Color="#4A9CC6" Offset="0.26"/>
+        <GradientStop Color="#3184AD" Offset="0.55"/>
+        <GradientStop Color="#217BAD" Offset="0.8"/>
+        <GradientStop Color="#2984B5" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Rectangle Canvas.Left="2" Canvas.Top="12" Width="2" Height="2" Fill="#73524A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="12" Width="14" Height="2" Fill="#5A3931"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="12" Width="2" Height="2" Fill="#8C7B73"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="16" Width="2" Height="2" Fill="#A5315A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="16" Width="14" Height="2" Fill="#4A4A4A"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="16" Width="2" Height="2" Fill="#948C84"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="20" Width="2" Height="2" Fill="#CE1852"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="20" Width="14" Height="2" Fill="#4A5252"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="20" Width="2" Height="2" Fill="#ADA59C"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="24" Width="2" Height="2" Fill="#CE104A"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="24" Width="14" Height="2" Fill="#4A524A"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="24" Width="2" Height="2" Fill="#CEC6C6"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="28" Width="2" Height="2" Fill="#AD2152"/>
+  <Rectangle Canvas.Left="6" Canvas.Top="28" Width="14" Height="2" Fill="#525252"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="28" Width="2" Height="2" Fill="#E0DCD8"/>
+</Canvas>

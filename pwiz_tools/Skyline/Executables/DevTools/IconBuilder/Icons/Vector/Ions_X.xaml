@@ -1,0 +1,5 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Bold black capital X, 20 units tall: two 5-unit diagonal arms with horizontal end cuts. -->
+  <Path Fill="#000000" Data="M 8,6 L 13,6 L 22,26 L 17,26 Z"/>
+  <Path Fill="#000000" Data="M 17,6 L 22,6 L 13,26 L 8,26 Z"/>
+</Canvas>

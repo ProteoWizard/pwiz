@@ -1,0 +1,16 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="28" Height="28">
+  <!-- Glossy red X: dark red outline, red gradient body, white glints on the upper arms. -->
+  <Path Data="M 5,5 L 23,23 M 23,5 L 5,23" Stroke="#8A0000" StrokeThickness="8" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Path Data="M 5,5 L 23,23 M 23,5 L 5,23" StrokeThickness="6" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+    <Path.Stroke>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#F04040" Offset="0"/>
+        <GradientStop Color="#E01010" Offset="0.5"/>
+        <GradientStop Color="#B00000" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Stroke>
+  </Path>
+  <Ellipse Canvas.Left="5.5" Canvas.Top="5" Width="4" Height="2.5" Fill="#FFFFFF" Opacity="0.8"/>
+  <Ellipse Canvas.Left="18.5" Canvas.Top="5" Width="4" Height="2.5" Fill="#FFFFFF" Opacity="0.8"/>
+  <Ellipse Canvas.Left="12" Canvas.Top="11" Width="4" Height="3" Fill="#FFFFFF" Opacity="0.5"/>
+</Canvas>

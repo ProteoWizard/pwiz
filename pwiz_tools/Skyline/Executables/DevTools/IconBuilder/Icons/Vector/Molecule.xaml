@@ -1,0 +1,43 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Small-molecule lattice: fifteen red atoms (shaded balls) joined by short gray bonds.
+       Atom positions and bond pairs are shared by every Molecule* variant. -->
+  <Canvas.Resources>
+    <RadialGradientBrush x:Key="Atom" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" GradientOrigin="0.3,0.3" Center="0.5,0.5" RadiusX="0.65" RadiusY="0.65">
+      <GradientStop Color="#EB9090" Offset="0"/>
+      <GradientStop Color="#E35F5F" Offset="0.45"/>
+      <GradientStop Color="#DB3434" Offset="1"/>
+    </RadialGradientBrush>
+  </Canvas.Resources>
+  <!-- Bonds -->
+  <Line X1="14" Y1="4" X2="18" Y2="8" Stroke="#6C6C6C" StrokeThickness="2"/>
+  <Line X1="6" Y1="8" X2="8" Y2="14" Stroke="#6C6C6C" StrokeThickness="2"/>
+  <Line X1="18" Y1="8" X2="14" Y2="14" Stroke="#6C6C6C" StrokeThickness="2"/>
+  <Line X1="18" Y1="8" X2="24" Y2="8" Stroke="#9E9E9E" StrokeThickness="2"/>
+  <Line X1="24" Y1="8" X2="28" Y2="14" Stroke="#8B8B8B" StrokeThickness="2"/>
+  <Line X1="8" Y1="14" X2="14" Y2="14" Stroke="#8B8B8B" StrokeThickness="2"/>
+  <Line X1="8" Y1="14" X2="6" Y2="20" Stroke="#7B7B7B" StrokeThickness="2"/>
+  <Line X1="14" Y1="14" X2="18" Y2="20" Stroke="#575757" StrokeThickness="2"/>
+  <Line X1="28" Y1="14" X2="24" Y2="20" Stroke="#909090" StrokeThickness="2"/>
+  <Line X1="18" Y1="20" X2="24" Y2="20" Stroke="#7B7B7B" StrokeThickness="2"/>
+  <Line X1="6" Y1="20" X2="8" Y2="24" Stroke="#8B8B8B" StrokeThickness="2"/>
+  <Line X1="8" Y1="24" X2="14" Y2="24" Stroke="#848484" StrokeThickness="2"/>
+  <Line X1="18" Y1="20" X2="14" Y2="24" Stroke="#6C6C6C" StrokeThickness="2"/>
+  <Line X1="24" Y1="20" X2="26" Y2="24" Stroke="#8B8B8B" StrokeThickness="2"/>
+  <Line X1="8" Y1="24" X2="6" Y2="28" Stroke="#767676" StrokeThickness="2"/>
+  <!-- Atoms -->
+  <Ellipse Canvas.Left="11.5" Canvas.Top="1.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="3.5" Canvas.Top="5.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="15.5" Canvas.Top="5.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="21.5" Canvas.Top="5.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="5.5" Canvas.Top="11.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="11.5" Canvas.Top="11.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="25.5" Canvas.Top="11.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="3.5" Canvas.Top="17.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="15.5" Canvas.Top="17.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="21.5" Canvas.Top="17.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="5.5" Canvas.Top="21.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="11.5" Canvas.Top="21.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="23.5" Canvas.Top="21.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="3.5" Canvas.Top="25.5" Width="5" Height="5" Fill="{StaticResource Atom}"/>
+  <Ellipse Canvas.Left="21.5" Canvas.Top="25.5" Width="3" Height="3" Fill="{StaticResource Atom}"/>
+</Canvas>

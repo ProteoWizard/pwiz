@@ -1,0 +1,16 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Down: the Up arrow flipped vertically, straight shaft above a wide triangular head
+       pointing down, lighter at the top with a pale highlight and a faint gray edge. -->
+  <Path Data="M 9,2 L 23,2 L 23,18.5 L 29,18.5 L 16,31 L 3,18.5 L 9,18.5 Z" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#7FC0DE" Offset="0"/>
+        <GradientStop Color="#4A9AC4" Offset="0.5"/>
+        <GradientStop Color="#2E7CA6" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 9.5,2.5 L 22.5,2.5 M 9.5,3 L 9.5,18" Stroke="#BFE0EE" StrokeThickness="1.2" Opacity="0.9"/>
+  <Path Data="M 23,3 L 23,18.5 L 29,18.5 L 16,31" Stroke="#8FA3AD" StrokeThickness="1" Opacity="0.8"/>
+  <Path Data="M 3.5,19 L 16,30.5" Stroke="#9DD0E6" StrokeThickness="1" Opacity="0.7"/>
+</Canvas>

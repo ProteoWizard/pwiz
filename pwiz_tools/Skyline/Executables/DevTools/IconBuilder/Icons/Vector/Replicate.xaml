@@ -1,0 +1,18 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Replicate: a pale blue-gray microcentrifuge tube tapering to a point at the bottom, its lid
+       flipped open to the upper left, with three dark graduation marks down the right side. -->
+  <Path Data="M 6,2 L 15,0.5 L 17,6 L 8,8 Z" Fill="#C4CED6" Stroke="#9AAAB4" StrokeThickness="1" StrokeLineJoin="Miter"/>
+  <Path Data="M 15.5,8 L 24.5,8 L 24.5,20 L 19,30.5 L 15.5,20 Z" Stroke="#9AAAB4" StrokeThickness="1" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#EAF0F4" Offset="0"/>
+        <GradientStop Color="#D4DEE6" Offset="0.5"/>
+        <GradientStop Color="#B4C2CC" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Rectangle Canvas.Left="14" Canvas.Top="6" Width="12" Height="2" Fill="#A8B4BC"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="8" Width="5" Height="2" Fill="#6A7A84"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="15" Width="5" Height="2" Fill="#6A7A84"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="22" Width="5" Height="2" Fill="#6A7A84"/>
+</Canvas>

@@ -1,0 +1,42 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Printer: a white sheet with gray text lines standing in the top, a slate-outlined body with a
+       lighter top face, a white output slot across the front, a green button and a darker base. -->
+  <!-- Paper -->
+  <Rectangle Canvas.Left="9.5" Canvas.Top="2.5" Width="13" Height="11" Fill="#FFFFFF" Stroke="#8A97A8" StrokeThickness="1"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="5" Width="8" Height="1" Fill="#B8C2CF"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="7" Width="8" Height="1" Fill="#B8C2CF"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="9" Width="6" Height="1" Fill="#B8C2CF"/>
+  <!-- Top face -->
+  <Path Data="M 3.5,14.5 L 7.5,9.5 L 25.5,9.5 L 28.5,14.5 Z" Stroke="#4A5668" StrokeThickness="1" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#DCE3EC" Offset="0"/>
+        <GradientStop Color="#B5C0D0" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <!-- Front face -->
+  <Rectangle Canvas.Left="3.5" Canvas.Top="14.5" Width="25" Height="14" RadiusX="1" RadiusY="1" Stroke="#4A5668" StrokeThickness="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#EDF1F6" Offset="0"/>
+        <GradientStop Color="#CBD4E0" Offset="0.6"/>
+        <GradientStop Color="#A3AFC0" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <!-- Output slot -->
+  <Rectangle Canvas.Left="5.5" Canvas.Top="16.5" Width="21" Height="3" Fill="#FFFFFF" Stroke="#6B7A8F" StrokeThickness="1"/>
+  <!-- Base -->
+  <Rectangle Canvas.Left="4" Canvas.Top="26" Width="24" Height="2" Fill="#8E9AAB"/>
+  <!-- Green button -->
+  <Rectangle Canvas.Left="20.5" Canvas.Top="20.5" Width="4" Height="5" Stroke="#138613" StrokeThickness="1">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#6CE86C" Offset="0"/>
+        <GradientStop Color="#22C022" Offset="0.5"/>
+        <GradientStop Color="#15A015" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+</Canvas>

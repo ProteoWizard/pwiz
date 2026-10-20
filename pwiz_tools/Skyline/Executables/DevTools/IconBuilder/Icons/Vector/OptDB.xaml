@@ -1,0 +1,11 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Optimization library: a black-framed chart with a green zigzag trace, and a dark gear
+       overlapping the lower-left corner of the frame. -->
+  <Rectangle Canvas.Left="7" Canvas.Top="5" Width="22" Height="20" Fill="#FFFFFF" Stroke="#1A1A1A" StrokeThickness="2"/>
+  <Polyline Points="10,15 13,13.5 16,18 23,10 27,14 30,12.5" Stroke="#3C9A3C" StrokeThickness="2.5" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <Rectangle Canvas.Left="4.5" Canvas.Top="17.5" Width="3" Height="15" Fill="#333333"/>
+  <Rectangle Canvas.Left="0" Canvas.Top="23.5" Width="13" Height="3" Fill="#333333"/>
+  <Path Data="M 1.5,20.5 L 10.5,29.5 M 10.5,20.5 L 1.5,29.5" Stroke="#333333" StrokeThickness="3"/>
+  <Ellipse Canvas.Left="1" Canvas.Top="20" Width="10" Height="10" Fill="#2A2A2A"/>
+  <Ellipse Canvas.Left="4" Canvas.Top="23" Width="4" Height="4" Fill="#FFFFFF"/>
+</Canvas>

@@ -1,0 +1,6 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- View file: thick near-black rounded frame with a pale fill and four short diagonal
+       strokes pointing in from the corners. -->
+  <Rectangle Canvas.Left="3.5" Canvas.Top="3.5" Width="25" Height="25" RadiusX="2" RadiusY="2" Fill="#F4F4F4" Stroke="#303030" StrokeThickness="3"/>
+  <Path Data="M 7,7 L 11,11 M 25,7 L 21,11 M 7,25 L 11,21 M 25,25 L 21,21" Stroke="#505050" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+</Canvas>
