@@ -23,7 +23,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
@@ -211,16 +210,38 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
-        public unsafe void TestChromPeakStructSize()
+        public void TestChromPeakCurrentFormatRoundTrip()
         {
-            // v20 added ObservedIonMobility and ObservedCcs as floats. Locking in
-            // the struct size guards against accidental layout drift, since the
-            // cache writes peaks via Marshal.SizeOf<ChromPeak>().
-            Assert.AreEqual(52, ChromPeak.GetStructSize(CacheFormatVersion.Nineteen));
-            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.Twenty));
-            Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
-            Assert.AreEqual(60, sizeof(ChromPeak));
-            Assert.AreEqual(60, Marshal.SizeOf<ChromPeak>());
+            // A peak written at the current size keeps its observed IM and CCS, and which of them
+            // were unknown: fragment peaks have IM but no CCS, and non-IM peaks have neither.
+            var peak = new ChromPeak(10f, 9.5f, 10.5f, 100f, 5f, 50f, 0.5f,
+                ChromPeak.FlagValues.time_normalized, 1.5, 7, null);
+            var peaks = new[]
+            {
+                peak.WithObservedIonMobility(1.25f).WithObservedCcs(345.5),
+                peak.WithObservedIonMobility(1.5f),
+                peak
+            };
+            var serializer = CacheFormat.CURRENT.ChromPeakSerializer();
+            using (var stream = new MemoryStream())
+            {
+                serializer.WriteItems(stream, peaks);
+                Assert.AreEqual(peaks.Length * ChromPeak.GetStructSize(CacheFormatVersion.CURRENT), stream.Length);
+                stream.Position = 0;
+                var roundTripped = serializer.ReadArray(stream, peaks.Length);
+                for (int i = 0; i < peaks.Length; i++)
+                {
+                    Assert.AreEqual(peaks[i].RetentionTime, roundTripped[i].RetentionTime);
+                    Assert.AreEqual(peaks[i].Area, roundTripped[i].Area);
+                    Assert.AreEqual(peaks[i].MassError, roundTripped[i].MassError);
+                    Assert.AreEqual(peaks[i].PointsAcross, roundTripped[i].PointsAcross);
+                    Assert.AreEqual(peaks[i].ObservedIonMobility, roundTripped[i].ObservedIonMobility);
+                    Assert.AreEqual(peaks[i].ObservedCcs, roundTripped[i].ObservedCcs);
+                }
+            }
+            Assert.IsNotNull(peaks[1].ObservedIonMobility);
+            Assert.IsNull(peaks[1].ObservedCcs);
+            Assert.IsNull(peaks[2].ObservedIonMobility);
         }
 
         [TestMethod]

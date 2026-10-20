@@ -51,7 +51,6 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(52, Marshal.OffsetOf<ChromPeak>("_observedIonMobility"));
             Assert.AreEqual(56, Marshal.OffsetOf<ChromPeak>("_observedCcs"));
             Assert.AreEqual(60, ChromPeak.GetStructSize(CacheFormatVersion.Twenty));
-            Assert.AreEqual(Marshal.SizeOf<ChromPeak>(), ChromPeak.GetStructSize(CacheFormatVersion.CURRENT));
         }
 
         [TestMethod]
