@@ -47,7 +47,7 @@ kernels for compute capabilities 7.0, 7.5, 8.0, 8.6, 9.0, 10.0 and 12.0, and no 
 - **Preflight:** `build.ps1 -Torch cuda` reads `nvidia-smi` before the 4 GB download. It stops if the
   first GPU (the one libtorch uses; `CUDA_VISIBLE_DEVICES` picks another) is older than compute 7.0 or the
   driver is older than 570, and says which.
-- **Fallback:** at run time `-device gpu` falls back to the CPU, as Carafe does, and logs why.
+- **Fallback:** at run time `--device gpu` falls back to the CPU, as Carafe does, and logs why.
 - **Tested hardware:** a GeForce GTX 1650 (Turing, 7.5, 4 GB) under Windows. `build.sh` and the test passes
   have not yet been verified on Linux or WSL2.
 
@@ -199,7 +199,7 @@ every commit, with the arguments its golden records, against `regression.data/st
 
 ```
 pwsh -File regression.ps1                                   # CPU run, compared with the golden
-pwsh -File regression.ps1 -NoBuild -ExtraArgs "-cor 0.7"    # a sensitivity check, which must fail
+pwsh -File regression.ps1 -NoBuild -ExtraArgs "--cor 0.7"    # a sensitivity check, which must fail
 pwsh -File regression.ps1 -CompareRun <run folder>          # compare an existing run again
 pwsh -File regression.ps1 -Export <x.training.parquet>      # fine-tune on another export instead
 pwsh -File regression.ps1 -CreateGolden                     # from a clean tree; -Force to replace
@@ -215,9 +215,9 @@ subset FASTA those peptides' records: 4,378 groups and 17,512 records of the 875
 has a DecoyPairs table as a full one does. `-Dataset Astral` takes the export from
 `carafesharp-export-astral-v2` and the FASTA and manifest from `carafesharp-testfiles-astral-v1`
 (`astral/Carafe-Osprey-entrapment`): 27,820 groups and 111,322 records. Carafe's digest repeats 39
-sequences across records, which is why there are 45 more records than distinct sequences. CarafeSharp runs once, `-tf all` with the library arguments
+sequences across records, which is why there are 45 more records than distinct sequences. CarafeSharp runs once, `--tf all` with the library arguments
 of the workflow's stage 4-5, so fine-tuning and prediction happen in one call. The library is not
-rebuilt with `-model_dir`, because `meta.json` carries Carafe's default `lf_frag_mz_max` of 1800 while
+rebuilt with `--model-dir`, because `meta.json` carries Carafe's default `lf_frag_mz_max` of 1800 while
 the workflow predicts with 1960. A CPU run takes 20 to 35 minutes; each gets its own folder under
 `CARAFESHARP_REGRESSION_WORKDIR` (default `TestResults/regression`), holding `out/`, the log, the subset,
 `regression-run.json` and the comparator's `regression-report.txt`.
@@ -314,19 +314,19 @@ extracts `pwiz_tools/Osprey/Osprey.Test/TestData/StellarSubset.zip` (one isolati
 Stellar runs, 6.5-13.5 min, and a 358-precursor DIA-NN library; its README has the details), and writes
 a peptide FASTA of the library's 358 peptides. Osprey searches the three runs with `--training-export`,
 the full pipeline including the second pass: the subset is sized so a 1% run FDR keeps 118-159
-precursors per run. CarafeSharp then runs `-tf all` on the exports, with the isolated leg's library
+precursors per run. CarafeSharp then runs `--tf all` on the exports, with the isolated leg's library
 arguments, predicting a library from the FASTA. The comparator checks, with no golden:
 - an export per run, each with at least 50 precursors (how many is Osprey's regression's to gate) and
   run q-values from the per-run second pass;
 - the four training tables are not empty, and hold no more PSMs than were exported;
 - both models are written and every metric is finite;
 - `meta.json` records each run, with a precursor window that holds the subset's (594.52 m/z);
-- the library has precursors, each with at least `-lf_min_n_frag` peaks.
+- the library has precursors, each with at least `--lf-min-n-frag` peaks.
 - the saved model (`carafe_fine_tuned_model.carafemodel`, [06](06-saved-models.md)) opens, and a second
-  library predicted from it with `-model` over a wider precursor window holds every precursor of the
+  library predicted from it with `--model` over a wider precursor window holds every precursor of the
   first with the same m/z, retention time and fragments, and intensities within 1e-5 (float32
   rounding moves with a batch's other peptides; over the same window the spectra are identical).
-- the saved model fine-tuned further on the same exports (`-model` with training) starts from the
+- the saved model fine-tuned further on the same exports (`--model` with training) starts from the
   models the first training chose: on the same held-out rows they score exactly as they did there (RT's
   fine-tuned metrics, and MS2's fine-tuned or pretrained ones as it chose). The new file names the
   saved one as its base, by SHA-256, and holds the saved MS2 model when its own did not beat it.
@@ -364,10 +364,10 @@ COS -2.8e-5, sampled spectral cosine median 0.99981, fine-tune and library in 3.
 
 | Setting | Gated checks that fail | Exact comparisons (information) |
 |---|---|---|
-| `-cor 0.7` | the 8 MS2 held-out metrics (fine-tuned COS -6.1e-3 against a tolerance of 1.5e-3); library peaks +2.28% | 3 training tables, `ms2.safetensors` and the library content differ; the RT model and metrics are SAME |
-| `-lf_top_n_frag 19` | library peaks -2.76% (tolerance 1%), the only gated check that fails | the library content differs; the models, metrics and training tables are SAME |
+| `--cor 0.7` | the 8 MS2 held-out metrics (fine-tuned COS -6.1e-3 against a tolerance of 1.5e-3); library peaks +2.28% | 3 training tables, `ms2.safetensors` and the library content differ; the RT model and metrics are SAME |
+| `--lf-top-n-frag 19` | library peaks -2.76% (tolerance 1%), the only gated check that fails | the library content differs; the models, metrics and training tables are SAME |
 
-`-lf_top_n_frag 19` is caught by the peak count alone: every fragment it drops is a precursor's
+`--lf-top-n-frag 19` is caught by the peak count alone: every fragment it drops is a precursor's
 weakest, so the sampled cosine stays inside its bounds (median 1.000000, p1 0.99598), and so do the
 DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 times over.
 

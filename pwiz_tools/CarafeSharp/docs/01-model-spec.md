@@ -8,7 +8,7 @@ transformers 4.47.0, peptdeep fork `wenbostar/alphapeptdeep_dia@f549bb70` (1.1.0
 Apache-2.0.
 
 CarafeSharp runs the same networks on libtorch 2.10.0 through TorchSharp 0.106.0. For RT it uses
-Chronologer by default instead (07-chronologer.md); AlphaPeptDeep's RT model below is `-rt_model
+Chronologer by default instead (07-chronologer.md); AlphaPeptDeep's RT model below is `--rt-model
 alphapeptdeep`.
 
 ## Pretrained weights
@@ -81,7 +81,7 @@ modloss columns.
 Positional encoding: `pe[p, 2i] = sin(p * 200^(-2i/d))`, `pe[p, 2i+1] = cos(...)` with base
 **max_len = 200**, stored in the checkpoint. Peptides are limited to 198 residues.
 
-## RT model: `Model_RT_LSTM_CNN` (`-rt_model alphapeptdeep`)
+## RT model: `Model_RT_LSTM_CNN` (`--rt-model alphapeptdeep`)
 
 State dict (708,224 parameters): `rt_encoder.mod_nn.nn.weight` [2,103];
 `rt_encoder.input_cnn.cnn_{short,medium,long}.*` Conv1d(35, 35, k=3/5/7, same padding);
@@ -98,10 +98,10 @@ iRT: predict the 11 Biognosys peptides (LGGNEQVTR -24.92 ... LFLQFGAQGSPFLK 100.
 `irt = slope * rt_pred + intercept` by least squares. Carafe's library RT is `rt_pred * rt_max`
 when the training `rt_max` is known, else `irt_pred`.
 
-## RT model: Chronologer (the default; `-rt_model chronologer`)
+## RT model: Chronologer (the default; `--rt-model chronologer`)
 
 CarafeSharp's default RT model is Chronologer (Searle lab, Apache-2.0), not Carafe's `Model_RT_LSTM_CNN`
-(`-rt_model alphapeptdeep`): AlphaPeptDeep's generic RT model plateaus at the end of the gradient, Chronologer
+(`--rt-model alphapeptdeep`): AlphaPeptDeep's generic RT model plateaus at the end of the gradient, Chronologer
 does not (#4759). 07-chronologer.md documents it: its source and pins, what it predicts (a hydrophobic index, the
 % acetonitrile at which a peptide elutes) and on what scale, the network and its encoding, library prediction,
 how CarafeSharp fine-tunes it, how Chronologer's own training handles data from many sources, and the results.
@@ -122,7 +122,7 @@ In short:
   trains every weight with the RT fine-tune's schedule and L1 loss, the BatchNorm running statistics frozen and
   batches mixing peptide lengths.
 
-## CCS model: `Model_CCS_LSTM` (ion mobility, `-ccs`)
+## CCS model: `Model_CCS_LSTM` (ion mobility, `--ccs`)
 
 State dict (713,452 parameters): the RT model's layout under `ccs_encoder.*` with one more input
 channel, Conv1d(36, 36, k=3/5/7) and LSTM(144, 128, 2 layers, bidirectional); then
@@ -139,11 +139,11 @@ prediction at `min_pred_value` 0, as for RT).
 precursor m/z is alphabase's (residues, plus water, plus the mods, over z, plus a proton), not
 the compomics m/z the library writes.
 
-In the library (`-ccs`):
-- The model, as Carafe's `ai_pred.py` picks it: with `-tf all` (the default) the model folder's
+In the library (`--ccs`):
+- The model, as Carafe's `ai_pred.py` picks it: with `--tf all` (the default) the model folder's
   Carafe `ccs_model.pt` (from a timsTOF training run) when there is one, else `generic/ccs.pth`;
-  any other `-tf` takes `generic/ccs.pth`. Carafe predicts no CCS for `-tf rt` or `ms2` and then
-  fails, so CarafeSharp refuses `-ccs` with them. Carafe takes `generic/ccs.pth` in the phospho and
+  any other `--tf` takes `generic/ccs.pth`. Carafe predicts no CCS for `--tf rt` or `ms2` and then
+  fails, so CarafeSharp refuses `--ccs` with them. Carafe takes `generic/ccs.pth` in the phospho and
   ubiquitin modes too.
 - With training, as Carafe does on Osprey's results, which carry no ion mobility: the CCS model
   is not fine-tuned, and the library after training predicts 1/K0 as above (with a warning).
@@ -201,15 +201,15 @@ Parity:
   - ToF for a time-of-flight analyzer (an Astral's MS2, a timsTOF, a Sciex TOF), LIT for an ion trap
     (a Stellar, a Tribrid's), Orbitrap for an Orbitrap; without the analyzers (an export from before
     #4757 added them, or no data file), a Stellar is LIT and an Astral ToF.
-  A run whose MS2 spectra mix activations or analyzers is refused unless `-activation` or `-analyzer`
-  names one for all of it. A library predicts for `-activation` and `-analyzer`, else the training
+  A run whose MS2 spectra mix activations or analyzers is refused unless `--activation` or `--analyzer`
+  names one for all of it. A library predicts for `--activation` and `--analyzer`, else the training
   run's.
 - **NCE of a run** (CarafeSharp's; Carafe trains every run at its file's energy). The NCE input is
   Thermo's normalized collision energy. pwiz reports every vendor's energy as PSI-MS's collision
   energy in eV, but a Thermo file's value is its scan filter's NCE, so:
-  - a Thermo run trains at its own NCE (the most common over its sampled MS2 spectra), else `-nce`,
+  - a Thermo run trains at its own NCE (the most common over its sampled MS2 spectra), else `--nce`,
     else 27, as Carafe's does;
-  - a run from any other vendor, whose energy is in eV, trains at `-nce`, else at the NCE where the
+  - a run from any other vendor, whose energy is in eV, trains at `--nce`, else at the NCE where the
     start MS2 model predicts its training spectra best: the highest median PCC over NCE 20 to 40 in
     steps of 1, on at most 1,000 of its spectra, as AlphaPeptDeep calibrated the NCE of its SCIEX
     TripleTOF fine-tune. A rolling collision energy needs nothing more, since the run's spectra
