@@ -21,6 +21,7 @@
 using System;
 using System.IO;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 

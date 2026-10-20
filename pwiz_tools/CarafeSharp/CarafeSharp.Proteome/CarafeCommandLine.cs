@@ -62,6 +62,14 @@ namespace pwiz.CarafeSharp.Proteome
     /// these modes do not read are accepted and ignored, as Carafe ignores them. The help is
     /// generated from the declarations (<see cref="BuildUsage"/>), so it cannot drift from the parser.
     /// <para>
+    /// A host may present the library-build options as sections of its own command line: Osprey
+    /// declares <see cref="HostedDigestArguments"/> and <see cref="HostedPredictionArguments"/>
+    /// again for its own parser, records what it is given through <see cref="Record"/>, describes
+    /// them with <see cref="GetUsageText"/>, and after its parse calls
+    /// <see cref="InterpretHostedLibrary"/> with the values it derives itself. One declaration
+    /// set, two front ends.
+    /// </para>
+    /// <para>
     /// Defaults are Carafe's effective ones, which are not all its help text's: without the
     /// options, missed cleavages are 2 (help: 1), the precursor m/z window is 300-2000 (help:
     /// 400-1000), charges are 2-3 (help: 2-4), and methionine clipping is off. The
@@ -317,6 +325,64 @@ namespace pwiz.CarafeSharp.Proteome
             }
         }
 
+        /// <summary>
+        /// The digest and modification options a host presents in a library-build section of its
+        /// own command line: what decides which peptides a library holds.
+        /// </summary>
+        public static IReadOnlyList<CarafeArgument> HostedDigestArguments
+        {
+            get
+            {
+                return new[]
+                {
+                    ARG_ENZYME, ARG_MISS_C, ARG_MIN_LENGTH, ARG_MAX_LENGTH, ARG_CLIP_N_M, ARG_FIX_MOD, ARG_VAR_MOD, ARG_MAX_VAR,
+                    ARG_MIN_PEP_MZ, ARG_MAX_PEP_MZ, ARG_MIN_PEP_CHARGE, ARG_MAX_PEP_CHARGE, ARG_I2L,
+                };
+            }
+        }
+
+        /// <summary>
+        /// The prediction options a host presents: the fragments kept, the acquisition the models
+        /// predict for, the RT model and the pretrained archive. Not among them: what the host
+        /// derives (the FASTA, the output, the format, the pairing manifest), the saved model and
+        /// the device, which the host declares under its own names, training, and the training-run
+        /// RT reference, which only a model trained with aligned runs can honor and so belongs
+        /// with the tuning options.
+        /// </summary>
+        public static IReadOnlyList<CarafeArgument> HostedPredictionArguments
+        {
+            get
+            {
+                return new[]
+                {
+                    ARG_LF_FRAG_MZ_MIN, ARG_LF_FRAG_MZ_MAX, ARG_LF_TOP_N_FRAG, ARG_LF_MIN_N_FRAG, ARG_LF_FRAG_N_MIN, ARG_NCE,
+                    ARG_MS_INSTRUMENT, ARG_ACTIVATION, ARG_ANALYZER, ARG_RT_MAX, ARG_CCS, ARG_RT_MODEL, ARG_PRETRAINED,
+                };
+            }
+        }
+
+        /// <summary>
+        /// The usage text of the argument named <paramref name="argName"/>: its own, or the one
+        /// line every compatibility option shares; null for a name that is not declared here. The
+        /// provider installed by CarafeSharp.exe reads it, and so does a host's provider for the
+        /// hosted arguments.
+        /// </summary>
+        public static string GetUsageText(string argName)
+        {
+            string description = CarafeCommandArgUsage.ResourceManager.GetString(UsageKey(argName));
+            if (description != null)
+                return description;
+            return CompatibilityArguments.Any(a => a.Name == argName)
+                ? @"Accepted for Carafe compatibility; not used by CarafeSharp."
+                : null;
+        }
+
+        /// <summary>An empty command line for a host to <see cref="Record"/> into and then interpret.</summary>
+        public static CarafeCommandLine CreateHosted()
+        {
+            return new CarafeCommandLine();
+        }
+
         /// <summary>Every declared argument, in help order.</summary>
         public static IEnumerable<CarafeArgument> AllArguments
         {
@@ -410,31 +476,7 @@ namespace pwiz.CarafeSharp.Proteome
             TimeStamp = Has(ARG_TIMESTAMP);
             MemStamp = Has(ARG_MEMSTAMP);
 
-            var digest = new DigestSettings { ClipNTermMethionine = Has(ARG_CLIP_N_M) };
-            var modifications = new ModificationSettings();
-            if (TryGet(ARG_FIX_MOD, out string fixMod))
-                modifications.FixedModifications = fixMod;
-            if (TryGet(ARG_VAR_MOD, out string varMod))
-                modifications.VariableModifications = varMod;
-            if (TryGet(ARG_MISS_C, out string missedCleavages))
-                digest.MaxMissedCleavages = ParseInt(ARG_MISS_C, missedCleavages);
-            if (TryGet(ARG_ENZYME, out string enzyme))
-            {
-                digest.EnzymeIndex = string.Equals(enzyme, EnzymeTable.NO_CUT_ENZYME_NAME, StringComparison.OrdinalIgnoreCase)
-                    ? EnzymeTable.GetIndexByName(enzyme)
-                    : ParseInt(ARG_ENZYME, enzyme);
-            }
-            // Carafe validates the index here, through its non-specific check.
-            if (EnzymeTable.IsNonSpecific(EnzymeTable.GetByIndex(digest.EnzymeIndex)))
-                digest.MaxMissedCleavages = EnzymeTable.NON_SPECIFIC_MISSED_CLEAVAGES;
-            if (TryGet(ARG_MAX_VAR, out string maxVar))
-                modifications.MaxVariableModifications = ParseInt(ARG_MAX_VAR, maxVar);
-            if (TryGet(ARG_MIN_LENGTH, out string minLength))
-                digest.MinLength = ParseInt(ARG_MIN_LENGTH, minLength);
-            if (TryGet(ARG_MAX_LENGTH, out string maxLength))
-                digest.MaxLength = ParseInt(ARG_MAX_LENGTH, maxLength);
-            double minMz = TryGet(ARG_MIN_PEP_MZ, out string minMzText) ? ParseDouble(ARG_MIN_PEP_MZ, minMzText) : DEFAULT_MIN_PEPTIDE_MZ;
-            double maxMz = TryGet(ARG_MAX_PEP_MZ, out string maxMzText) ? ParseDouble(ARG_MAX_PEP_MZ, maxMzText) : DEFAULT_MAX_PEPTIDE_MZ;
+            var digest = InterpretDigest(out var modifications, out double minMz, out double maxMz);
 
             if (Has(ARG_BUILD_ENTRAPMENT_FASTA))
             {
@@ -502,6 +544,61 @@ namespace pwiz.CarafeSharp.Proteome
             throw new ArgumentException(string.Format(@"CarafeSharp supports {0}, {1}, library prediction from {2} " +
                                         @"and training from {3} with {4} (or {3} naming Osprey's training exports)",
                                         ARG_BUILD_ENTRAPMENT_FASTA.ArgumentText, ARG_RECONCILE_MANIFEST.ArgumentText, ARG_DB.ArgumentText, ARG_I.ArgumentText, ARG_MS.ArgumentText));
+        }
+
+        /// <summary>
+        /// The library a host builds from <paramref name="database"/> with the options it recorded
+        /// (<see cref="Record"/>) from <see cref="HostedDigestArguments"/> and
+        /// <see cref="HostedPredictionArguments"/>. The values the host derives are filled in here -
+        /// the FASTA, a .blib output, and the saved model and device when it gives them - and the
+        /// rest is read as a CarafeSharp command line's is, with the same refusals.
+        /// <paramref name="commandLine"/> is the host's own command line, recorded in the library's
+        /// metadata as how it was made.
+        /// </summary>
+        public LibrarySettings InterpretHostedLibrary(string database, string modelFile, string device, string commandLine)
+        {
+            Set(ARG_DB, database);
+            Set(ARG_LF_TYPE, LibraryOutputs.BLIB_FORMAT);
+            if (modelFile != null)
+                Set(ARG_MODEL, modelFile);
+            if (device != null)
+                Set(ARG_DEVICE, device);
+            var digest = InterpretDigest(out var modifications, out double minMz, out double maxMz);
+            Mode = CarafeCommandMode.predict_library;
+            LibrarySettings = InterpretLibrary(digest, modifications, minMz, maxMz);
+            LibrarySettings.CommandLine = commandLine;
+            return LibrarySettings;
+        }
+
+        /// <summary>The digest, the modifications and the precursor m/z window every mode reads first.</summary>
+        private DigestSettings InterpretDigest(out ModificationSettings modifications, out double minMz, out double maxMz)
+        {
+            var digest = new DigestSettings { ClipNTermMethionine = Has(ARG_CLIP_N_M) };
+            modifications = new ModificationSettings();
+            if (TryGet(ARG_FIX_MOD, out string fixMod))
+                modifications.FixedModifications = fixMod;
+            if (TryGet(ARG_VAR_MOD, out string varMod))
+                modifications.VariableModifications = varMod;
+            if (TryGet(ARG_MISS_C, out string missedCleavages))
+                digest.MaxMissedCleavages = ParseInt(ARG_MISS_C, missedCleavages);
+            if (TryGet(ARG_ENZYME, out string enzyme))
+            {
+                digest.EnzymeIndex = string.Equals(enzyme, EnzymeTable.NO_CUT_ENZYME_NAME, StringComparison.OrdinalIgnoreCase)
+                    ? EnzymeTable.GetIndexByName(enzyme)
+                    : ParseInt(ARG_ENZYME, enzyme);
+            }
+            // Carafe validates the index here, through its non-specific check.
+            if (EnzymeTable.IsNonSpecific(EnzymeTable.GetByIndex(digest.EnzymeIndex)))
+                digest.MaxMissedCleavages = EnzymeTable.NON_SPECIFIC_MISSED_CLEAVAGES;
+            if (TryGet(ARG_MAX_VAR, out string maxVar))
+                modifications.MaxVariableModifications = ParseInt(ARG_MAX_VAR, maxVar);
+            if (TryGet(ARG_MIN_LENGTH, out string minLength))
+                digest.MinLength = ParseInt(ARG_MIN_LENGTH, minLength);
+            if (TryGet(ARG_MAX_LENGTH, out string maxLength))
+                digest.MaxLength = ParseInt(ARG_MAX_LENGTH, maxLength);
+            minMz = TryGet(ARG_MIN_PEP_MZ, out string minMzText) ? ParseDouble(ARG_MIN_PEP_MZ, minMzText) : DEFAULT_MIN_PEPTIDE_MZ;
+            maxMz = TryGet(ARG_MAX_PEP_MZ, out string maxMzText) ? ParseDouble(ARG_MAX_PEP_MZ, maxMzText) : DEFAULT_MAX_PEPTIDE_MZ;
+            return digest;
         }
 
         /// <summary>
@@ -877,12 +974,23 @@ namespace pwiz.CarafeSharp.Proteome
             return _values.TryGetValue(arg.Name, out value);
         }
 
-        /// <summary>The parser's sink: what was given, by the declaration's name, for Interpret to read.</summary>
-        private void Record(NameValuePair p)
+        /// <summary>
+        /// The parser's sink: what was given, by the declaration's name, for Interpret to read. A
+        /// host's parser records its hosted arguments here too.
+        /// </summary>
+        public void Record(NameValuePair p)
         {
             _flags.Add(p.Name);
             if (p.Value != null)
                 _values[p.Name] = p.Value;
+        }
+
+        /// <summary>A value a host derives, recorded as if the option had been typed.</summary>
+        private void Set(CarafeArgument arg, string value)
+        {
+            _flags.Add(arg.Name);
+            if (value != null)
+                _values[arg.Name] = value;
         }
 
         /// <summary>
@@ -1105,12 +1213,7 @@ namespace pwiz.CarafeSharp.Proteome
         {
             public string GetDescription(string argName)
             {
-                string description = CarafeCommandArgUsage.ResourceManager.GetString(UsageKey(argName));
-                if (description != null)
-                    return description;
-                return CompatibilityArguments.Any(a => a.Name == argName)
-                    ? @"Accepted for Carafe compatibility; not used by CarafeSharp."
-                    : null;
+                return GetUsageText(argName);
             }
 
             public string AppliesToHeader { get { return @"Applies To"; } }

@@ -303,6 +303,14 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
 
+        /// <summary>
+        /// The one-command library build (<c>--fasta</c>): the library is predicted before the
+        /// search and <see cref="LibrarySource"/> is set to it when it has been. Off by default,
+        /// and in no identity hash of the search: the search keys on the library file it reads,
+        /// whichever way the file came to exist.
+        /// </summary>
+        public LibraryBuildConfig LibraryBuild { get; set; } = new LibraryBuildConfig();
+
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
 

@@ -28,6 +28,7 @@ using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.CarafeSharp.Training;
 
 namespace pwiz.CarafeSharp.Test

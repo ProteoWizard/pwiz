@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// Carafe's <c>-build_entrapment_fasta</c>: the protein FASTA digested into target, decoy

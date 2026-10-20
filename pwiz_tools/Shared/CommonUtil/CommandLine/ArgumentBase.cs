@@ -43,6 +43,28 @@ namespace pwiz.Common.CommandLine
             _dynamicValues = dynamicValues;
         }
 
+        /// <summary>
+        /// A declaration with everything <paramref name="template"/> declares about its name and
+        /// value - the name, the value example, the listed and accepted values, whether the value
+        /// is optional or variadic - for a host that includes another tool's declarations in its
+        /// own parse (Osprey presents CarafeSharp's library options). The short name and the
+        /// applies-to text are the host's to set: both are spelled in the host's grammar and the
+        /// short names of two tools collide.
+        /// </summary>
+        protected ArgumentBase(ArgumentBase template)
+            : this(template.Name, template.ValueExample, template._fixedValues, template._dynamicValues)
+        {
+            WrapValue = template.WrapValue;
+            OptionalValue = template.OptionalValue;
+            OptionalValueFilter = template.OptionalValueFilter;
+            Variadic = template.Variadic;
+            MissingValueMessage = template.MissingValueMessage;
+            InternalUse = template.InternalUse;
+            HasValueChecking = template.HasValueChecking;
+            AcceptedValues = template.AcceptedValues;
+            AcceptsValue = template.AcceptsValue;
+        }
+
         private readonly string[] _fixedValues;
         private readonly Func<string[]> _dynamicValues;
 

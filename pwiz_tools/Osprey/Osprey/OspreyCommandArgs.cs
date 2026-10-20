@@ -27,8 +27,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -81,6 +83,12 @@ namespace pwiz.Osprey
         // hands a flag a value or a fixed-list argument a value it does not list.
         static OspreyCommandArgs()
         {
+            // The grammar and the provider are process-wide, and CarafeSharp's declarations
+            // install theirs when their type initializes. Osprey hosts those declarations, so its
+            // field initializers already touch that type before this body runs; run its type
+            // initializer here explicitly, so Osprey's grammar and provider are installed LAST
+            // whatever order the fields are initialized in.
+            RuntimeHelpers.RunClassConstructor(typeof(CarafeCommandLine).TypeHandle);
             ArgUsage.Grammar = GRAMMAR;
             ArgUsage.Provider = new OspreyArgUsageProvider();
             // Osprey's grammar is space-separated (--name value); --name=value is accepted too, but
@@ -105,6 +113,11 @@ namespace pwiz.Osprey
         private double? _fragmentTolerance;
         private string _fragmentUnit;
         private readonly OspreyConfig _config = new OspreyConfig();
+        // The library-build options CarafeSharp declares, recorded as a CarafeSharp command line
+        // records them and interpreted after the parse (InterpretLibraryBuild), and every
+        // library-build option seen, as typed, for the refusal of one given without --fasta.
+        private readonly CarafeCommandLine _carafe = CarafeCommandLine.CreateHosted();
+        private readonly List<string> _libraryBuildOptionsSeen = new List<string>();
 
         // --- General I/O ------------------------------------------------------------------
         public static readonly OspreyArgument ARG_INPUT = new OspreyArgument(OspreyArgNames.INPUT,
@@ -141,6 +154,83 @@ namespace pwiz.Osprey
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_General_IO, true,
                 ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT,
                 ARG_EXPORT_LIBRARY);
+
+        // --- Library Build ----------------------------------------------------------------
+        // The one command from a protein FASTA to a .blib: --fasta predicts the library with
+        // CarafeSharp's models before the search (LibraryBuildWorkflow), in place of -l. Osprey's
+        // own options here are what Osprey decides; the library-build parameters - the digest,
+        // the modifications, the fragments, the acquisition, the RT model - are CarafeSharp's
+        // declarations, presented in the two sections after this one under Osprey's grammar and
+        // recorded into a CarafeSharp command line the parser owns. One declaration set, two front
+        // ends. The device names are literals rather than TorchDevice's constants, so declaring the
+        // option touches no type that loads the torch runtime.
+        public static readonly OspreyArgument ARG_FASTA = new OspreyArgument(OspreyArgNames.FASTA,
+            () => @"<proteome.fasta>", (c, p) => c._config.LibraryBuild.FastaPath = p.Value)
+            { DescriptionArgs = () => new object[] { ARG_LIBRARY.ShortArgumentText, LibraryExample, LibraryBuildWorkflow.LIBRARY_SUFFIX_EXAMPLE } };
+        public static readonly OspreyArgument ARG_MODEL = new OspreyArgument(OspreyArgNames.MODEL,
+            () => @"<file" + CarafeModelFile.EXTENSION + @">", (c, p) => c.SetLibraryBuildOption(p, b => b.ModelPath = p.Value))
+            { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, CarafeModelFile.EXTENSION } };
+        public static readonly OspreyArgument ARG_DEVICE = new OspreyArgument(OspreyArgNames.DEVICE,
+            new[] { @"gpu", @"cpu" }, (c, p) => c.SetLibraryBuildOption(p, b => b.Device = p.Value.ToLowerInvariant()))
+            { DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText, @"gpu", @"cpu" } };
+        public static readonly OspreyArgument ARG_ENTRAPMENT = new OspreyArgument(OspreyArgNames.ENTRAPMENT,
+            () => @"<ratio>", (c, p) => c.SetLibraryBuildOption(p, b =>
+            {
+                b.Entrapment = true;
+                if (p.Value != null)
+                    b.EntrapmentRatio = ParseDouble(p);
+            }))
+            { OptionalValue = true, OptionalValueFilter = IsNumber, DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText,
+                EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, ARG_ENTRAPMENT_FASTA.ArgumentText, LibraryBuildWorkflow.PAIRING_FILE_EXAMPLE } };
+        public static readonly OspreyArgument ARG_ENTRAPMENT_FASTA = new OspreyArgument(OspreyArgNames.ENTRAPMENT_FASTA,
+            () => @"<foreign.fasta>", (c, p) => c.SetLibraryBuildOption(p, b => b.EntrapmentFastaPath = p.Value))
+            { DescriptionArgs = () => new object[] { ARG_ENTRAPMENT.ArgumentText } };
+
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_BUILD =
+            new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Build, true,
+                ARG_FASTA, ARG_MODEL, ARG_DEVICE, ARG_ENTRAPMENT, ARG_ENTRAPMENT_FASTA);
+
+        // CarafeSharp's declarations, declared again for Osprey's parser: the name, the value and
+        // its listed values come from CarafeSharp, and the handler records the value into the
+        // CarafeSharp command line this parser owns. The sections are two, so the help reads as
+        // Osprey's does, and their text comes from CarafeSharp's usage resources.
+        private static readonly OspreyArgument[] HOSTED_DIGEST_ARGUMENTS = Host(CarafeCommandLine.HostedDigestArguments);
+        private static readonly OspreyArgument[] HOSTED_PREDICTION_ARGUMENTS = Host(CarafeCommandLine.HostedPredictionArguments);
+
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_DIGEST =
+            new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Digest, true, HOSTED_DIGEST_ARGUMENTS)
+            { Preamble = () => string.Format(OspreyResources.OspreyCommandArgs_GROUP_LIBRARY_DIGEST_With__0___what_the_library_holds, ARG_FASTA.ArgumentText) };
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LIBRARY_PREDICTION =
+            new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Library_Prediction, true, HOSTED_PREDICTION_ARGUMENTS)
+            { Preamble = () => string.Format(OspreyResources.OspreyCommandArgs_GROUP_LIBRARY_PREDICTION_With__0___how_the_library_is_predicted, ARG_FASTA.ArgumentText) };
+
+        /// <summary>The library the one command writes beside its output, in the help's spelling.</summary>
+        private static string LibraryExample
+        {
+            get { return @"<output>" + LibraryBuildWorkflow.LIBRARY_SUFFIX + LibrarySource.EXT_BLIB; }
+        }
+
+        /// <summary>Every CarafeSharp declaration Osprey hosts, in help order.</summary>
+        public static IEnumerable<OspreyArgument> HostedArguments
+        {
+            get { return HOSTED_DIGEST_ARGUMENTS.Concat(HOSTED_PREDICTION_ARGUMENTS); }
+        }
+
+        private static OspreyArgument[] Host(IEnumerable<ArgumentBase> declarations)
+        {
+            return declarations.Select(d => new OspreyArgument(d, (c, p) =>
+            {
+                c._carafe.Record(p);
+                c._libraryBuildOptionsSeen.Add(p.Match.ArgumentText);
+            })).ToArray();
+        }
+
+        /// <summary>Records one of Osprey's own library-build options, and that it was given.</summary>
+        private void SetLibraryBuildOption(NameValuePair p, Action<LibraryBuildConfig> set)
+        {
+            set(_config.LibraryBuild);
+            _libraryBuildOptionsSeen.Add(p.Match.ArgumentText);
+        }
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(OspreyArgNames.RESOLUTION,
@@ -380,7 +470,11 @@ namespace pwiz.Osprey
                     new ParaUsageBlock(OspreyResources.OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_),
                     new ParaUsageBlock(string.Format(OspreyResources.OspreyCommandArgs_UsageBlocks_USAGE___0_,
                         @"osprey -i <file1.mzML> [file2.mzML ...] -l <library.tsv> -o <output.blib>")),
+                    new ParaUsageBlock(@"       osprey -i <file1.mzML> [file2.mzML ...] " + ARG_FASTA.ArgumentText + @" <proteome.fasta> -o <output.blib>"),
                     GROUP_GENERAL_IO,
+                    GROUP_LIBRARY_BUILD,
+                    GROUP_LIBRARY_DIGEST,
+                    GROUP_LIBRARY_PREDICTION,
                     GROUP_SCORING,
                     GROUP_FDR,
                     GROUP_DECOYS,
@@ -392,11 +486,14 @@ namespace pwiz.Osprey
                     new ParaUsageBlock(OspreyResources.OspreyCommandArgs_UsageBlocks_EXAMPLES_),
                     new ParaUsageBlock(@"  osprey -i sample.mzML -l library.tsv -o results.blib"),
                     new ParaUsageBlock(@"  osprey -i *.mzML -l library.tsv -o results.blib " + (ARG_RESOLUTION + @"hram")),
+                    new ParaUsageBlock(@"  osprey -i *.mzML " + ARG_FASTA + @"human.fasta -o results.blib " + (ARG_RESOLUTION + @"hram")),
                     new ParaUsageBlock(string.Format(OspreyResources.OspreyCommandArgs_UsageBlocks_HPC_SPLIT__one_node___one__0____see__0__above_,
                         ARG_TASK.ArgumentText)),
                     // The other forms the parser accepts, after the reference, as CarafeSharp's help ends.
                     new ParaUsageBlock(string.Format(OspreyResources.OspreyCommandArgs_UsageBlocks_OTHER_FORMS_ACCEPTED__a_value_may_also_be_joined_to_its_option___0___and_a_file_that_exists_may_be_given_without__1__,
-                        ARG_OUTPUT.ArgumentText + @"=results.blib", ARG_INPUT.ShortArgumentText)),
+                        ARG_OUTPUT.ArgumentText + @"=results.blib", ARG_INPUT.ShortArgumentText) + @" " + string.Format(
+                        OspreyResources.OspreyCommandArgs_UsageBlocks_The_library_build_options_are_listed_in_the_standard_form___0___and__for_compatibility_with_Java_Carafe_s_command_lines__also_accepted_with_its_underscores___1___,
+                        CarafeCommandLine.ARG_MISS_C + @"1", @"--miss_c 1")),
                 };
             }
         }
@@ -416,7 +513,18 @@ namespace pwiz.Osprey
         /// </summary>
         internal static OspreyConfig ParseArgs(string[] args)
         {
-            return ParseArgs(args, OspreyEnvironment.FdrModel);
+            return ParseArgs(args, OspreyEnvironment.FdrModel, out _);
+        }
+
+        /// <summary>
+        /// <see cref="ParseArgs(string[])"/> with the library the run builds (<c>--fasta</c>) as
+        /// CarafeSharp's settings, or null when the run searches a given library. The settings
+        /// are CarafeSharp's type, which the config in Osprey.Core cannot hold; the executable's
+        /// workflow takes them beside the config.
+        /// </summary>
+        internal static OspreyConfig ParseArgs(string[] args, out LibrarySettings librarySettings)
+        {
+            return ParseArgs(args, OspreyEnvironment.FdrModel, out librarySettings);
         }
 
         /// <summary>
@@ -427,11 +535,36 @@ namespace pwiz.Osprey
         /// </summary>
         internal static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel)
         {
+            return ParseArgs(args, fdrModel, out _);
+        }
+
+        private static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel, out LibrarySettings librarySettings)
+        {
             var parser = new OspreyCommandArgs();
             CreateParser().Parse(parser, args);
             var config = parser.ToConfig(fdrModel);
             config.CommandLine = CommandLineText.Format(@"Osprey", args);
+            librarySettings = parser.InterpretLibraryBuild(config);
             return config;
+        }
+
+        /// <summary>
+        /// The library a <c>--fasta</c> run predicts, read from the CarafeSharp declarations the
+        /// parse recorded with the values Osprey derives: the FASTA, the saved model and the device,
+        /// and the run's own command line for the library's metadata. CarafeSharp's refusals of a
+        /// bad combination are its own <see cref="ArgumentException"/> and
+        /// <see cref="NotSupportedException"/>, which Program reports as usage errors. Null without
+        /// <c>--fasta</c>; the options then given are reported by <c>ValidateArgs</c>.
+        /// </summary>
+        private LibrarySettings InterpretLibraryBuild(OspreyConfig config)
+        {
+            var build = config.LibraryBuild;
+            if (!build.Enabled)
+            {
+                build.OptionsWithoutFasta.AddRange(_libraryBuildOptionsSeen.Distinct());
+                return null;
+            }
+            return _carafe.InterpretHostedLibrary(build.FastaPath, build.ModelPath, build.Device, config.CommandLine);
         }
 
         /// <summary>
@@ -645,6 +778,17 @@ namespace pwiz.Osprey
                     return false;
             }
             return int.TryParse(token, out int n) && n >= 0;
+        }
+
+        /// <summary>
+        /// True when <paramref name="token"/> is a plain non-negative number in the invariant
+        /// culture: the <c>--entrapment [ratio]</c> optional-value filter, which tells a ratio from
+        /// a trailing positional file.
+        /// </summary>
+        private static bool IsNumber(string token)
+        {
+            return !string.IsNullOrEmpty(token) && token[0] != '-' &&
+                   double.TryParse(token, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
         }
 
         /// <summary>
@@ -927,7 +1071,10 @@ namespace pwiz.Osprey
             {
                 string description = OspreyCommandArgUsage.ResourceManager.GetString(UsageKey(argName));
                 if (description == null)
-                    return null;
+                {
+                    // A hosted CarafeSharp declaration is described by CarafeSharp's text.
+                    return HostedArguments.Any(a => a.Name == argName) ? CarafeCommandLine.GetUsageText(argName) : null;
+                }
                 var formatArgs = AllArguments.FirstOrDefault(a => a.Name == argName)?.DescriptionArgs?.Invoke();
                 return formatArgs == null ? description : string.Format(description, formatArgs);
             }
@@ -996,6 +1143,20 @@ namespace pwiz.Osprey
             : base(name, values, processValue)
         {
         }
+
+        /// <summary>
+        /// Another tool's declaration, hosted on Osprey's command line (CarafeSharp's library-build
+        /// options): what it says about its name and value is copied, the handler is Osprey's, and
+        /// its usage text is the other tool's.
+        /// </summary>
+        public OspreyArgument(ArgumentBase template, Action<OspreyCommandArgs, NameValuePair> processValue)
+            : base(template, processValue)
+        {
+            IsHosted = true;
+        }
+
+        /// <summary>True for a declaration hosted from CarafeSharp, whose usage text is CarafeSharp's.</summary>
+        public bool IsHosted { get; }
 
         /// <summary>
         /// Values for the <c>{N}</c> placeholders in this argument's usage text in

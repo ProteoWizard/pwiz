@@ -52,6 +52,12 @@ namespace CommonTest
             public string TwoWords;
         }
 
+        /// <summary>A second tool's context, which hosts some of the first tool's declarations.</summary>
+        private class HostContext
+        {
+            public readonly Dictionary<string, string> Recorded = new Dictionary<string, string>();
+        }
+
         private static readonly Argument<Context> ARG_INPUT = new Argument<Context>(@"input", () => @"<file>",
             (c, p) => c.Inputs.Add(p.Value)) { ShortName = @"i", Variadic = true };
         private static readonly Argument<Context> ARG_OUTPUT = new Argument<Context>(@"out", () => @"<path>",
@@ -104,6 +110,7 @@ namespace CommonTest
                 TestNextTokenGrammar();
                 TestSingleDashGrammar();
                 TestEquivalentSeparators();
+                TestHostedDeclarations();
             }
             finally
             {
@@ -296,6 +303,50 @@ namespace CommonTest
             AssertEx.AreEqual(@"unknown --two_words_", Assert.ThrowsException<UnknownArgumentException>(() => Parse(@"--two_words_", @"x")).Message);
             // FindValue follows the same rule.
             AssertEx.AreEqual(@"x", new CommandLineParser<Context>(ARGUMENTS).FindValue(new[] { @"--two_words", @"x" }, ARG_TWO_WORDS));
+        }
+
+        /// <summary>
+        /// A host declares another tool's argument again for its own context: the name, the value
+        /// example, the listed values and the value flags come from the template, the handler is
+        /// the host's, and the short name is not copied (the two tools' short names collide).
+        /// </summary>
+        private static void TestHostedDeclarations()
+        {
+            ArgUsage.Grammar = new CommandLineGrammar { ShortPrefix = @"-", ValueMayFollow = true, ValidatesListedValues = false };
+            ArgUsage.ArgumentValueSeparator = @" ";
+            var hosted = new[]
+            {
+                new Argument<HostContext>(ARG_INPUT, (c, p) => c.Recorded[p.Name] = (c.Recorded.TryGetValue(p.Name, out string v) ? v + @"," : string.Empty) + p.Value),
+                new Argument<HostContext>(ARG_MODE, (c, p) => c.Recorded[p.Name] = p.Value),
+                new Argument<HostContext>(ARG_COUNT, (c, p) => c.Recorded[p.Name] = p.Value ?? @"(none)"),
+                new Argument<HostContext>(ARG_FLAG, (c, p) => c.Recorded[p.Name] = @"on"),
+            };
+            AssertEx.AreEqual(ARG_MODE.Name, hosted[1].Name);
+            AssertEx.AreEqual(ARG_MODE.ValueExample(), hosted[1].ValueExample());
+            CollectionAssert.AreEqual(ARG_MODE.Values, hosted[1].Values);
+            AssertEx.AreEqual(ARG_MODE.ArgumentDescription, hosted[1].ArgumentDescription);
+            AssertEx.IsTrue(hosted[0].Variadic);
+            AssertEx.IsNull(hosted[0].ShortName, @"a short name is the host's to give");
+            AssertEx.IsTrue(hosted[2].OptionalValue);
+            AssertEx.IsFalse(hosted[3].TakesValue);
+
+            var host = new HostContext();
+            var parser = new CommandLineParser<HostContext>(hosted);
+            AssertEx.IsTrue(parser.Parse(host, new[] { @"--input", @"a", @"b", @"--mode", @"slow", @"--count", @"--flag" }));
+            AssertEx.AreEqual(@"a,b", host.Recorded[@"input"]);
+            AssertEx.AreEqual(@"slow", host.Recorded[@"mode"]);
+            AssertEx.AreEqual(@"(none)", host.Recorded[@"count"]);
+            AssertEx.AreEqual(@"on", host.Recorded[@"flag"]);
+            AssertEx.AreEqual(@"3", ParseHost(hosted, @"--count", @"3").Recorded[@"count"]);
+            AssertEx.AreEqual(@"unknown -i", Assert.ThrowsException<UnknownArgumentException>(() => ParseHost(hosted, @"-i", @"a")).Message);
+            Assert.ThrowsException<ValueInvalidException>(() => hosted[1] + @"bogus");
+        }
+
+        private static HostContext ParseHost(Argument<HostContext>[] hosted, params string[] args)
+        {
+            var host = new HostContext();
+            AssertEx.IsTrue(new CommandLineParser<HostContext>(hosted).Parse(host, args));
+            return host;
         }
 
         private static Context Parse(params string[] args)

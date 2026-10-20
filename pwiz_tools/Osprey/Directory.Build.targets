@@ -5,6 +5,10 @@
        Directory.Build.targets, is the only one MSBuild imports for the Osprey tree. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
 
+  <!-- The libtorch native runtime and CarafeSharp's pretrained models, for the projects that set
+       UseLibTorch=true (see Directory.Build.props). -->
+  <Import Project="$(MSBuildThisFileDirectory)..\CarafeSharp\LibTorch.targets" />
+
   <!-- ProteowizardWrapper, CommonUtil and pwiz-sharp are not in Osprey.sln, so a solution build
        strips Configuration and Platform from references to them and every level below falls back
        to Debug|AnyCPU. Give them this build's Configuration and AnyCPU, as

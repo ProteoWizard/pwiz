@@ -67,6 +67,14 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary><c>-o</c>; also where Carafe looks for models when no <c>-model_dir</c> is given.</summary>
         public string OutputDirectory { get; set; } = DEFAULT_OUTPUT_DIRECTORY;
 
+        /// <summary>
+        /// The <c>.blib</c> to write, in place of <see cref="OutputDirectory"/>'s fixed
+        /// <c>carafe_spectral_library.blib</c>: a host (Osprey) names the library beside its own
+        /// output. Null (CarafeSharp's command line) writes the fixed name. A TSV, when one is
+        /// written, stays in <see cref="OutputDirectory"/>.
+        /// </summary>
+        public string OutputFile { get; set; }
+
         public DigestSettings Digest { get; set; } = new DigestSettings();
 
         public ModificationSettings Modifications { get; set; } = new ModificationSettings();

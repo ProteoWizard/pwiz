@@ -42,4 +42,10 @@
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>
 
+  <!-- CarafeSharp's libtorch backend selection: Osprey.exe predicts spectral libraries through
+       CarafeSharp.Tasks, so the executable and the test project carry the native runtime
+       (UseLibTorch=true in their csproj; the item groups are in LibTorch.targets). The CPU
+       build by default, as CarafeSharp's; Osprey keeps one output folder either way. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\CarafeSharp\LibTorch.props" />
+
 </Project>

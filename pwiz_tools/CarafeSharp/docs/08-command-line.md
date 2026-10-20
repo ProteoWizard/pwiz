@@ -108,13 +108,27 @@ reads, `--log-file`, `--timestamp` and `--memstamp` (Osprey's `--log-file`, `--t
 `01-model-spec.md`, `06-saved-models.md` and `07-chronologer.md`; the help has the one-line
 version of each.
 
+## The same declarations on Osprey's command line
+
+Osprey's one command (`osprey --fasta proteome.fasta ...`, `pwiz_tools/Osprey/docs/20-command-line.md`,
+"Library build") presents the library-build options as two sections of its own help, **Library
+Digest** and **Library Prediction**, under Osprey's grammar. They are these declarations, not
+copies: `CarafeCommandLine.HostedDigestArguments` and `HostedPredictionArguments` name the ones a
+host surfaces, Osprey declares each again for its own parser from the declaration (the shared
+`Argument<TContext>` copy constructor), records what it is given through `Record`, and after its
+parse calls `InterpretHostedLibrary` with the values it derives itself (the FASTA, a `.blib`
+output, the saved model, the device), which reads them as `Interpret` does and returns the
+`LibrarySettings`. Their help text is this tool's (`GetDescription`). What Osprey derives, and
+training, are not surfaced; Osprey's own `--model` and `--device` stand for CarafeSharp's.
+
 ## Adding or changing an option
 
 1. Declare it in `CarafeCommandLine.cs` with `Value`, `Choice` or `Flag`, hyphenated, and put it
-   in a group.
+   in a group; if a host should present it, add it to the hosted list of its section.
 2. Add its usage text to `CarafeCommandArgUsage.resx` under `_<name>` (an underscore for each
    hyphen), naming other options in the standard form.
 3. Read it in `Interpret` (or the settings method of its mode) through `Has` / `TryGet`, by its
    declaration, and name it in any message through its `ArgumentText`.
 4. Run `CarafeSharp.Test`: `CommandArgsTest` fails on an option that is undeclared, ungrouped
    or undescribed, and regenerates `Documentation/Help/en/CommandLine.html` for you to commit.
+   Osprey's `OspreyCommandArgsTests` regenerates its pages, which hold the hosted sections.

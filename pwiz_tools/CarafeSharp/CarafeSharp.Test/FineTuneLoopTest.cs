@@ -33,6 +33,7 @@ using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.CarafeSharp.Training;
 using TorchSharp;
 using static TorchSharp.torch;

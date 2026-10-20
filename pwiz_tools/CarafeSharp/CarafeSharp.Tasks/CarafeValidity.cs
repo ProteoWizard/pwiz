@@ -28,7 +28,7 @@ using System.Text.Json;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// The validity key of a CarafeSharp task: a hash of its settings and the identity (name,
