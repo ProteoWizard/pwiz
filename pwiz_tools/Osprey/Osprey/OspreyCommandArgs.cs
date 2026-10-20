@@ -181,7 +181,7 @@ namespace pwiz.Osprey
                     b.EntrapmentRatio = ParseDouble(p);
             }))
             { OptionalValue = true, OptionalValueFilter = IsNumber, DescriptionArgs = () => new object[] { ARG_FASTA.ArgumentText,
-                LibraryBuildConfig.MIN_ENTRAPMENT_RATIO, ARG_ENTRAPMENT_FASTA.ArgumentText, LibraryBuildWorkflow.PAIRING_FILE_EXAMPLE } };
+                EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, ARG_ENTRAPMENT_FASTA.ArgumentText, LibraryBuildWorkflow.PAIRING_FILE_EXAMPLE } };
         public static readonly OspreyArgument ARG_ENTRAPMENT_FASTA = new OspreyArgument(OspreyArgNames.ENTRAPMENT_FASTA,
             () => @"<foreign.fasta>", (c, p) => c.SetLibraryBuildOption(p, b => b.EntrapmentFastaPath = p.Value))
             { DescriptionArgs = () => new object[] { ARG_ENTRAPMENT.ArgumentText } };

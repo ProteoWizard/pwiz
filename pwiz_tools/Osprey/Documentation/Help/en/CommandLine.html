@@ -68,13 +68,12 @@ a { color: #1565c0; }
 <tr><td><nobr>--lf-frag-n-min</nobr>&nbsp;&lt;n&gt;</td><td>Lowest fragment ordinal kept, b and y alike (default 2).</td></tr>
 <tr><td><nobr>--nce</nobr>&nbsp;&lt;nce&gt;</td><td>The normalized collision energy the MS2 model predicts at (default 27, or a model folder&#39;s).</td></tr>
 <tr><td><nobr>--ms-instrument</nobr>&nbsp;&lt;name&gt;</td><td>The instrument the MS2 model predicts for, by AlphaPeptDeep&#39;s name (default Eclipse, or a model folder&#39;s).</td></tr>
-<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. CarafeSharp only.</td></tr>
-<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. CarafeSharp only.</td></tr>
+<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
 <tr><td><nobr>--rt-max</nobr>&nbsp;&lt;minutes&gt;</td><td>The gradient length the library&#39;s retention times are scaled to, in minutes; absent, iRT.</td></tr>
 <tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
-<tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: the one of <nobr>--model</nobr> or <nobr>--model-dir</nobr>, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. CarafeSharp only.</td></tr>
-<tr><td><nobr>--rt-reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt-align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. CarafeSharp only.</td></tr>
-<tr><td><nobr>--pretrained</nobr>&nbsp;&lt;pretrained_models.zip&gt;</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). CarafeSharp only.</td></tr>
+<tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: a <nobr>fine-tuned</nobr> model&#39;s, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--pretrained</nobr>&nbsp;&lt;pretrained_models.zip&gt;</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</td></tr>
 </table>
 <div class="RowType">Scoring &amp; Tolerance</div>
 <table>

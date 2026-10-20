@@ -341,7 +341,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// The prediction options a host presents: the fragments kept, the acquisition the models
         /// predict for, the RT model and the pretrained archive. Not among them: what the host
         /// derives (the FASTA, the output, the format, the pairing manifest), the saved model and
-        /// the device, which the host declares under its own names, and training.
+        /// the device, which the host declares under its own names, training, and the training-run
+        /// RT reference, which only a model trained with aligned runs can honor and so belongs
+        /// with the tuning options.
         /// </summary>
         public static IReadOnlyList<CarafeArgument> HostedPredictionArguments
         {
@@ -350,7 +352,7 @@ namespace pwiz.CarafeSharp.Proteome
                 return new[]
                 {
                     ARG_LF_FRAG_MZ_MIN, ARG_LF_FRAG_MZ_MAX, ARG_LF_TOP_N_FRAG, ARG_LF_MIN_N_FRAG, ARG_LF_FRAG_N_MIN, ARG_NCE,
-                    ARG_MS_INSTRUMENT, ARG_ACTIVATION, ARG_ANALYZER, ARG_RT_MAX, ARG_CCS, ARG_RT_MODEL, ARG_RT_REFERENCE, ARG_PRETRAINED,
+                    ARG_MS_INSTRUMENT, ARG_ACTIVATION, ARG_ANALYZER, ARG_RT_MAX, ARG_CCS, ARG_RT_MODEL, ARG_PRETRAINED,
                 };
             }
         }

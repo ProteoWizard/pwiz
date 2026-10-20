@@ -994,8 +994,13 @@ namespace pwiz.Osprey
             }
             if (config.SelectedTask != null)
             {
+                // The output path is checked below this, so the library it would name is spelled
+                // as the help spells it when -o is missing.
+                string libraryPath = string.IsNullOrEmpty(config.OutputBlib)
+                    ? LibraryBuildWorkflow.LIBRARY_EXAMPLE
+                    : LibraryBuildWorkflow.LibraryPath(config);
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__,
-                    fastaArg, OspreyCommandArgs.ARG_TASK.ArgumentText, LibraryBuildWorkflow.LibraryPath(config),
+                    fastaArg, OspreyCommandArgs.ARG_TASK.ArgumentText, libraryPath,
                     OspreyCommandArgs.ARG_LIBRARY.ShortArgumentText);
             }
             if (!File.Exists(build.FastaPath))
@@ -1013,10 +1018,10 @@ namespace pwiz.Osprey
                     return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.EntrapmentFastaPath);
             }
             if (build.EntrapmentRatio.HasValue &&
-                !(build.EntrapmentRatio.Value >= LibraryBuildConfig.MIN_ENTRAPMENT_RATIO && build.EntrapmentRatio.Value <= 1))
+                !(build.EntrapmentRatio.Value >= EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO && build.EntrapmentRatio.Value <= 1))
             {
                 return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
-                    OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, LibraryBuildConfig.MIN_ENTRAPMENT_RATIO, 1);
+                    OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO, 1);
             }
             return null;
         }

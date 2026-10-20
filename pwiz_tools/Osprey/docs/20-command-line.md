@@ -133,8 +133,8 @@ executable. Three modes, chosen by the options given, on top of the search of a 
 `--max-pep-charge`, `--min-pep-mz`, `--max-pep-mz`), the fragments kept
 (`--lf-frag-mz-min`, `--lf-frag-mz-max`, `--lf-top-n-frag`, `--lf-min-n-frag`,
 `--lf-frag-n-min`), the acquisition the models predict for (`--nce`, `--ms-instrument`,
-`--activation`, `--analyzer`, `--rt-max`, `--ccs`), the RT model (`--rt-model`,
-`--rt-reference`) and the pretrained archive (`--pretrained`) are CarafeSharp's declarations,
+`--activation`, `--analyzer`, `--rt-max`, `--ccs`), the RT model (`--rt-model`) and the
+pretrained archive (`--pretrained`) are CarafeSharp's declarations,
 presented in Osprey's help as the sections **Library Digest** and **Library Prediction** under
 Osprey's grammar, with CarafeSharp's text and defaults. They are listed in the standard form
 (`--miss-c 1`); for compatibility with Java Carafe's command lines, each is also accepted with

@@ -32,9 +32,6 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public sealed class LibraryBuildConfig
     {
-        /// <summary>The smallest entrapment ratio CarafeSharp's generator has been characterized at.</summary>
-        public const double MIN_ENTRAPMENT_RATIO = 0.1;
-
         /// <summary>The protein FASTA to predict the library from (<c>--fasta</c>), or null for a run that searches a given library.</summary>
         public string FastaPath { get; set; }
 

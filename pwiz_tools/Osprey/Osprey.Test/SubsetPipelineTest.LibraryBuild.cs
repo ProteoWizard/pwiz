@@ -126,6 +126,12 @@ namespace pwiz.Osprey.Test
             // The refusals: each a designed usage error, one Error: line and no stack.
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, LIBRARY_FILE));
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_TASK.ArgumentText, PerFileScoringTask.TASK_NAME);
+            // The same refusal with no -o spells the library as the help does, instead of failing on the missing path.
+            StringAssert.Contains(RunOspreyExpecting(InputArgs(DataInputs()).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_FASTA.ArgumentText, fasta,
+                OspreyCommandArgs.ARG_TASK.ArgumentText, PerFileScoringTask.TASK_NAME
+            }).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START), LibraryBuildWorkflow.LIBRARY_EXAMPLE);
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText, fasta);
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, @"0.05");
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, pairing);

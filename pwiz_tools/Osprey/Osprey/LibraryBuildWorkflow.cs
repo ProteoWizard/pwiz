@@ -60,6 +60,9 @@ namespace pwiz.Osprey
         /// <summary>The FDRBench pairing manifest written into the working folder with <c>--entrapment</c>.</summary>
         public const string PAIRING_FILE_NAME = @"pairing.tsv";
 
+        /// <summary>The library as the help spells it, after the output's stem.</summary>
+        public const string LIBRARY_EXAMPLE = @"<output>" + LIBRARY_SUFFIX + LibrarySource.EXT_BLIB;
+
         /// <summary>The working folder as the help spells it, after the output's stem.</summary>
         public const string LIBRARY_SUFFIX_EXAMPLE = @"<output>" + LIBRARY_SUFFIX + @"/";
 
@@ -126,12 +129,19 @@ namespace pwiz.Osprey
                     return exitCode;
                 // The pairing manifest for FDRBench, which reads the entrapment pairing from the
                 // file; Osprey itself reads it from the library's DecoyPairs table. Written when the
-                // prediction ran; a skipped prediction left the earlier one in place.
-                if (predict.Peptides != null && predict.Peptides.HasEntrapment)
+                // prediction ran, and when a skipped prediction (the library is current) finds no
+                // manifest beside it - a write that failed after the library was committed is made
+                // good here from the same seeded digest, in seconds, rather than by deleting the
+                // library.
+                if (_config.LibraryBuild.Entrapment)
                 {
                     string pairingPath = Path.Combine(workDirectory, PAIRING_FILE_NAME);
-                    predict.Peptides.WriteManifest(pairingPath);
-                    Program.LogInfo(string.Format(OspreyResources.LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_, pairingPath));
+                    if (predict.Peptides != null || !File.Exists(pairingPath))
+                    {
+                        var peptides = predict.Peptides ?? LibraryPeptides.Build(DigestSettings(), TextWriter.Null);
+                        peptides.WriteManifest(pairingPath);
+                        Program.LogInfo(string.Format(OspreyResources.LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_, pairingPath));
+                    }
                 }
             }
             catch (Exception ex)

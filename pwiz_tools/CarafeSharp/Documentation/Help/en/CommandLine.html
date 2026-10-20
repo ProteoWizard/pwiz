@@ -70,22 +70,22 @@ code { font-family: Consolas,'Courier New',monospace; }
 <tr><td><nobr>--lf-frag-n-min</nobr>&nbsp;&lt;n&gt;</td><td>Lowest fragment ordinal kept, b and y alike (default 2).</td></tr>
 <tr><td><nobr>--nce</nobr>&nbsp;&lt;nce&gt;</td><td>The normalized collision energy the MS2 model predicts at (default 27, or a model folder&#39;s).</td></tr>
 <tr><td><nobr>--ms-instrument</nobr>&nbsp;&lt;name&gt;</td><td>The instrument the MS2 model predicts for, by AlphaPeptDeep&#39;s name (default Eclipse, or a model folder&#39;s).</td></tr>
-<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. CarafeSharp only.</td></tr>
-<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. CarafeSharp only.</td></tr>
+<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
 <tr><td><nobr>--rt-max</nobr>&nbsp;&lt;minutes&gt;</td><td>The gradient length the library&#39;s retention times are scaled to, in minutes; absent, iRT.</td></tr>
 <tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
 <tr><td><nobr>--pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>The pairing manifest of <nobr>--build-entrapment-fasta</nobr>: the library then carries Carafe&#39;s DecoyPairs table, every pair written whole or not at all.</td></tr>
 <tr><td><nobr>--library-contract</nobr></td><td>Check the library against the Osprey library contract (one row per precursor, clean accessions, decoys and entrapment marked, the manifest authoritative, pairs whole) before predicting and after writing, refuse or discard it on a violation, and mark the .blib as meeting the contract so Osprey checks it at load instead of repairing it. Needs <nobr>--lf-type</nobr> blib and <nobr>--pairing-manifest</nobr>, and a FASTA built without Carafe&#39;s <nobr>per-peptide</nobr> accession suffix.</td></tr>
-<tr><td><nobr>--rt-reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt-align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. CarafeSharp only.</td></tr>
+<tr><td><nobr>--rt-reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt-align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. Not in Java Carafe.</td></tr>
 </table>
 <div class="RowType">Models</div>
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>--model-dir</nobr>&nbsp;&lt;folder&gt;</td><td>A Carafe <nobr>fine-tuned</nobr> model folder to predict with: its MS2 and RT models, metrics and <nobr>training-run</nobr> summary.</td></tr>
-<tr><td><nobr>--model</nobr>&nbsp;&lt;file.carafemodel&gt;</td><td>A saved model (.carafemodel), which every training run writes into <nobr>--o</nobr>: predict a library with it, or with <nobr>--i</nobr> <nobr>fine-tune</nobr> it further. CarafeSharp only.</td></tr>
-<tr><td><nobr>--pretrained</nobr>&nbsp;&lt;pretrained_models.zip&gt;</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). CarafeSharp only.</td></tr>
+<tr><td><nobr>--model</nobr>&nbsp;&lt;file.carafemodel&gt;</td><td>A saved model (.carafemodel), which every training run writes into <nobr>--o</nobr>: predict a library with it, or with <nobr>--i</nobr> <nobr>fine-tune</nobr> it further. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--pretrained</nobr>&nbsp;&lt;pretrained_models.zip&gt;</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</td></tr>
 <tr><td><nobr>--tf</nobr> &lt;all | ms2 | rt&gt;</td><td>The models to train, or to predict with from <nobr>--model-dir</nobr>: all (default), ms2 or rt.</td></tr>
-<tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: the one of <nobr>--model</nobr> or <nobr>--model-dir</nobr>, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. CarafeSharp only.</td></tr>
+<tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: a <nobr>fine-tuned</nobr> model&#39;s, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. Not in Java Carafe.</td></tr>
 <tr><td><nobr>--device</nobr> &lt;cpu | gpu | cuda&gt;</td><td>Where the models run: cpu, or gpu / cuda (default; the CPU when there is no CUDA device).</td></tr>
 <tr><td><nobr>--ms2-model</nobr>&nbsp;&lt;model&gt;</td><td>The MS2 model (a PyTorch checkpoint) <nobr>fine-tuning</nobr> starts from, in place of the pretrained one.</td></tr>
 </table>
@@ -102,15 +102,15 @@ code { font-family: Consolas,'Courier New',monospace; }
 <tr><td><nobr>--valid</nobr></td><td>Require a precursor&#39;s most intense fragment to be valid.</td></tr>
 <tr><td><nobr>--no-masking</nobr></td><td>Train on every ion of the kept spectra, masking none.</td></tr>
 <tr><td><nobr>--seed</nobr>&nbsp;&lt;n&gt;</td><td>The random seed of training (default 2024; not negative).</td></tr>
-<tr><td><nobr>--rt-align</nobr> &lt;none | kde&gt;</td><td>How the training runs&#39; retention times are aligned before the RT model is <nobr>fine-tuned</nobr>: kde (default; each run&#39;s minutes mapped onto Chronologer&#39;s hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe&#39;s one rt_max). CarafeSharp only.</td></tr>
-<tr><td><nobr>--rt-select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median. CarafeSharp only.</td></tr>
+<tr><td><nobr>--rt-align</nobr> &lt;none | kde&gt;</td><td>How the training runs&#39; retention times are aligned before the RT model is <nobr>fine-tuned</nobr>: kde (default; each run&#39;s minutes mapped onto Chronologer&#39;s hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe&#39;s one rt_max). Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median. Not in Java Carafe.</td></tr>
 </table>
 <div class="RowType">Output</div>
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
-<tr><td><nobr>--log-file</nobr>&nbsp;&lt;path&gt;</td><td>Write every line of output and error to this file instead of the console. CarafeSharp only, any mode.</td></tr>
-<tr><td><nobr>--timestamp</nobr></td><td>Prefix each line with the time. CarafeSharp only.</td></tr>
-<tr><td><nobr>--memstamp</nobr></td><td>Prefix each line with the managed and private memory in use. CarafeSharp only.</td></tr>
+<tr><td><nobr>--log-file</nobr>&nbsp;&lt;path&gt;</td><td>Write every line of output and error to this file instead of the console. Not in Java Carafe; any mode.</td></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>Prefix each line with the time. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>Prefix each line with the managed and private memory in use. Not in Java Carafe.</td></tr>
 </table>
 <div class="RowType">Carafe options accepted for compatibility</div>
 <p>Carafe 2.2.0 options these modes do not read. Each is accepted so a Carafe command line runs unchanged; one that CarafeSharp cannot honor is refused, and the rest are ignored, as Carafe ignores them.</p>
