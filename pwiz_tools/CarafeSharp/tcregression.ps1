@@ -10,9 +10,11 @@
       1. build.ps1 -TestData Fetch -RequireData: fetches the test data it reads, then builds and
          runs every test, the Carafe parity tests included.
       2. regression.ps1 -Dataset Stellar: the full fine-tune on Stellar's export, against its golden.
-      3. regression.ps1 -Leg Chained: Osprey's export of its committed Stellar subset, trained on.
-      4. regression.ps1 -Dataset StellarSubset twice, each in a process of its own: the two runs'
+      3. regression.ps1 -Dataset StellarSubset twice, each in a process of its own: the two runs'
          models and training tables must be the same bytes, so a rerun on this agent repeats.
+
+    Osprey's export feeding CarafeSharp's training is checked by Osprey's own tests, which run the
+    one command with --training-input on Osprey's committed subset (SubsetPipelineTest).
 
     The test data goes in <Downloads>\Perftests\carafesharp, not <Downloads>\Perftests, unless
     CARAFESHARP_TESTDATA names a folder: a per-commit build on the same agent finds data in the
@@ -39,8 +41,7 @@ $teamCityArgs = if ($TeamCity) { @('-TeamCity') } else { @() }
 $steps = @(
     @{ Name = 'CarafeSharp tests with the test data'; Args = @('-File', (Join-Path $root 'build.ps1')) + $teamCityArgs +
         @('-TestData', 'Fetch', '-TestDataPackage', 'testfiles,export,regression-export', '-RequireData') },
-    @{ Name = 'CarafeSharp regression (Stellar)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Dataset', 'Stellar', '-NoBuild') },
-    @{ Name = 'CarafeSharp regression (chained with Osprey)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Leg', 'Chained', '-NoBuild') }
+    @{ Name = 'CarafeSharp regression (Stellar)'; Args = @('-File', (Join-Path $root 'regression.ps1'), '-Dataset', 'Stellar', '-NoBuild') }
 )
 $repeatFolder = Join-Path $root ('TestResults/regression-repeat-' + (Get-Date).ToString('yyyyMMdd-HHmmss'))
 foreach ($name in 'first', 'second') {

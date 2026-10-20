@@ -83,6 +83,13 @@ namespace pwiz.Osprey.Test
                 AssertTunedProducts(products, tuningRuns, inputs.Length, MIN_LIBRARY_BUILD_PRECURSORS);
                 AssertTrainingChain(products, tuningRuns);
 
+                // Every tuned run is a saved-model run later: the model it saved, given to --model,
+                // predicts the spectra the tuned run's own library holds.
+                string savedDir = CreateDir(@"library-build-tuned-saved");
+                RunOsprey(LibraryBuildArgs(fasta, savedDir, inputs)
+                    .Concat(new[] { OspreyCommandArgs.ARG_MODEL.ArgumentText, products.Model }).ToArray(), Verifier(false));
+                AssertSameSpectra(products.Library, new TunedProducts(savedDir).Library);
+
                 // Warm: every phase is current, both searches included.
                 var before = products.Hashes();
                 string warm = RunOsprey(buildArgs, Verifier(false));
@@ -274,6 +281,33 @@ namespace pwiz.Osprey.Test
             {
                 Assert.IsTrue(run.PrecursorMzMin <= SUBSET_WINDOW_TARGET && SUBSET_WINDOW_TARGET <= run.PrecursorMzMax,
                     string.Format(@"{0}: precursor m/z {1}-{2}", run.MsFile, run.PrecursorMzMin, run.PrecursorMzMax));
+            }
+        }
+
+        /// <summary>
+        /// The two libraries predict the same spectrum for every precursor they share - m/z,
+        /// retention time and fragment m/z exactly, intensities to float32 rounding, which moves
+        /// with the other peptides of a prediction batch - and share nearly all of them: the saved
+        /// model's library takes its precursor window from the command line, the tuned run's from
+        /// the training run's isolation window.
+        /// </summary>
+        private static void AssertSameSpectra(string expectedLibrary, string actualLibrary)
+        {
+            var tolerance = FragmentToleranceConfig.UnitResolution(0.5);
+            var expected = new BlibLoader(tolerance).Load(expectedLibrary).ToDictionary(e => e.ModifiedSequence + @"/" + e.Charge);
+            var actual = new BlibLoader(tolerance).Load(actualLibrary).ToDictionary(e => e.ModifiedSequence + @"/" + e.Charge);
+            var shared = expected.Keys.Where(actual.ContainsKey).ToList();
+            Assert.IsTrue(shared.Count >= 0.9 * Math.Min(expected.Count, actual.Count),
+                string.Format(@"{0} precursors shared of {1} and {2}", shared.Count, expected.Count, actual.Count));
+            foreach (string key in shared)
+            {
+                var a = expected[key];
+                var b = actual[key];
+                Assert.AreEqual(a.PrecursorMz, b.PrecursorMz, key);
+                Assert.AreEqual(a.RetentionTime, b.RetentionTime, key);
+                CollectionAssert.AreEqual(a.Fragments.Select(f => f.Mz).ToArray(), b.Fragments.Select(f => f.Mz).ToArray(), key);
+                for (int i = 0; i < a.Fragments.Count; i++)
+                    Assert.AreEqual(a.Fragments[i].RelativeIntensity, b.Fragments[i].RelativeIntensity, 1e-5, key);
             }
         }
 

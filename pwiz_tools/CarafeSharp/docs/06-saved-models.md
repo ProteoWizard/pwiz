@@ -123,7 +123,7 @@ files and shows what each was trained on. A `.carafemodel` file is a zip holding
 
 A reader that only lists models, as a model picker does, needs `manifest.json` alone.
 
-`manifest.json` from the chained regression leg's run on the Stellar subset (three runs; only the first
+`manifest.json` from a run of the (since retired) chained regression leg on the Stellar subset (three runs; only the first
 is shown, and hashes and the path are shortened). The runs are Stellar HCD read out in the ion trap,
 so they trained as beam-CID and LIT. The fine-tuned MS2 model lost to the pretrained one there, so the
 file holds only the fine-tuned RT model:
@@ -341,7 +341,7 @@ does not match its SHA-256.
   with training names the model to fine-tune further, with `--tf all` only, and the library after
   training predicts with the new models; `--model` is refused with `--model-dir`, with `--ms2-model`, and
   without `--db` or training.
-- The chained regression leg (`regression.ps1 -Leg Chained`, [04](04-testing.md)): the model a real
-  training run saved predicts a second library with `--model` over a wider precursor window; every
-  precursor of the library training predicted is in it, with the same m/z, retention time and
-  fragments, and intensities within 1e-5.
+- Osprey's `SubsetPipelineTest.TestSubsetLibraryBuildTuned` ([04](04-testing.md), "Osprey's export
+  feeding CarafeSharp"): the model a tuned one-command run saved predicts the library again with
+  `--model`, with the same m/z, retention time and fragments for every shared precursor and
+  intensities within 1e-5; a further tuning from it names it as its base.
