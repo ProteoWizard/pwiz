@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -29,6 +29,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.Common.Pipeline;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.ML;
 using pwiz.Osprey.Tasks;
@@ -398,6 +399,112 @@ namespace pwiz.Osprey.Test
             {
                 Directory.Delete(dir, true);
             }
+        }
+
+        /// <summary>
+        /// The analysis-wide products FirstPassFDR writes under one stamp - the Stage 6
+        /// consensus, the retained base_id summary and the first-pass experiment sidecar - load
+        /// only when each was written by FirstPassFDR of this build and the others present
+        /// beside it still carry the same stamp. A node cannot rebuild FirstPassFDR's key, so this consistency check is what
+        /// stands between a stale file shipped to it and a plan that looks current.
+        /// </summary>
+        [TestMethod]
+        public void TestFirstPassProductsLoadOnlyFromThisBuildAndOneRun()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_firstpass_stamps_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var config = AnalysisConfig(dir);
+                string consensusPath = Stage6ConsensusFile.PathFor(config);
+                string retainedPath = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config));
+                var thisRun = OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"validity-key");
+
+                // One FirstPassFDR run of this build: both load.
+                SaveFirstPassProducts(config, thisRun, thisRun);
+                Assert.IsNotNull(Stage6ConsensusFile.Load(config));
+                Assert.IsNotNull(ScoringTaskShared.ReadRetainedBaseIds(config, out string error), error);
+
+                // The summary left by another run beside this run's consensus: each refuses.
+                SaveFirstPassProducts(config, thisRun, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"another-run"));
+                string mismatch = string.Format(
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,
+                    retainedPath, FirstPassFdrTask.TASK_NAME);
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => Stage6ConsensusFile.Load(config)).Message, mismatch);
+                Assert.IsNull(ScoringTaskShared.ReadRetainedBaseIds(config, out error));
+                StringAssert.Contains(error, string.Format(
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,
+                    consensusPath, FirstPassFdrTask.TASK_NAME));
+
+                // The first-pass experiment sidecar is written by the same run under the same
+                // stamp, so one left by another run beside this run's pair is refused too.
+                SaveFirstPassProducts(config, thisRun, thisRun);
+                string experimentPath = FdrExperimentSidecar.PathFor(config.OutputBlib,
+                    ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass);
+                FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
+                    FdrScoresSidecar.Pass.FirstPass, OspreyVersion.Stamp(FirstPassFdrTask.TASK_NAME, @"another-run"));
+                string experimentMismatch = string.Format(
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run,
+                    experimentPath, FirstPassFdrTask.TASK_NAME);
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => Stage6ConsensusFile.Load(config)).Message, experimentMismatch);
+                Assert.IsNull(ScoringTaskShared.ReadRetainedBaseIds(config, out error));
+                StringAssert.Contains(error, experimentMismatch);
+                FdrExperimentSidecar.Write(experimentPath, new Dictionary<uint, FdrExperimentRecord>(),
+                    FdrScoresSidecar.Pass.FirstPass, thisRun);
+                Assert.IsNotNull(Stage6ConsensusFile.Load(config));
+
+                // A consensus with no stamp is refused for that, by its own reader. The summary
+                // beside it does not blame it: with no stamp to compare there is no mismatch.
+                File.WriteAllText(consensusPath,
+                    @"{""SchemaVersion"":1,""Consensus"":[],""PassingBaseIds"":[],""PassingBaseIdCharges"":[],""PassingSequences"":[],""PassingSequenceCharges"":[]}");
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => Stage6ConsensusFile.Load(config)).Message,
+                    OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp);
+                Assert.IsNotNull(ScoringTaskShared.ReadRetainedBaseIds(config, out error), error);
+                File.Delete(experimentPath);
+
+                // A matching pair from another build, or written by another task, is refused by
+                // its own stamp.
+                AssertPairRefused(config, new ArtifactStamp(FirstPassFdrTask.TASK_NAME, OspreyVersion.Current + @".1", @"validity-key"));
+                AssertPairRefused(config, OspreyVersion.Stamp(PerFileRescoreTask.TASK_NAME, @"validity-key"));
+
+                // A SecondPassFDR node is shipped the summary and not the consensus, so there is no
+                // pair to compare and this build's summary loads alone.
+                SaveFirstPassProducts(config, thisRun, thisRun);
+                File.Delete(consensusPath);
+                Assert.IsNotNull(ScoringTaskShared.ReadRetainedBaseIds(config, out error), error);
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        private static void SaveFirstPassProducts(OspreyConfig config, ArtifactStamp consensusStamp, ArtifactStamp retainedStamp)
+        {
+            var consensus = new Stage6Consensus
+            {
+                Consensus = new List<PeptideConsensusRT>(),
+                PassingBaseIds = new HashSet<(uint, byte)> { (5, 2) },
+                PassingPrecursors = new HashSet<(string ModifiedSequence, byte Charge)> { (@"PEPTIDEK", 2) },
+            };
+            Stage6ConsensusFile.Save(Stage6ConsensusFile.PathFor(config), consensus, consensusStamp);
+            RetainedBaseIdSidecar.Write(RetainedBaseIdSidecar.PathFor(config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config)),
+                new[] { 5u }, retainedStamp);
+        }
+
+        /// <summary>
+        /// Both products written with <paramref name="stamp"/>, which is not FirstPassFDR of this
+        /// build: the pair agrees, and each is still refused by the stamp itself.
+        /// </summary>
+        private static void AssertPairRefused(OspreyConfig config, ArtifactStamp stamp)
+        {
+            SaveFirstPassProducts(config, stamp, stamp);
+            string notThisBuild = string.Format(
+                OspreyTasksResources.ScoringTaskShared_FirstPassProductStampProblem_the_file_was_written_by__0__of_Osprey__1___not_by__2__of_this_build___3__,
+                stamp.Task, stamp.Version, FirstPassFdrTask.TASK_NAME, OspreyVersion.Current);
+            StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => Stage6ConsensusFile.Load(config)).Message, notThisBuild);
+            Assert.IsNull(ScoringTaskShared.ReadRetainedBaseIds(config, out string error));
+            StringAssert.Contains(error, notThisBuild);
         }
 
         /// <summary>A two-run analysis in <paramref name="dir"/> writing <c>output.blib</c>.</summary>
