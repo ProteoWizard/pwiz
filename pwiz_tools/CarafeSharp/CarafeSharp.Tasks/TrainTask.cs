@@ -25,7 +25,7 @@ using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// Carafe's training on Osprey's results (<see cref="ModelTrainer"/>): the fine-tuned

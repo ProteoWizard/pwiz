@@ -50,6 +50,11 @@ namespace pwiz.Osprey.Core
         public const string VERBOSE = @"verbose";
         public const string TRAINING_EXPORT = @"training-export";
         public const string DEMUX = @"demux";
+        public const string FASTA = @"fasta";
+        public const string MODEL = @"model";
+        public const string DEVICE = @"device";
+        public const string ENTRAPMENT = @"entrapment";
+        public const string ENTRAPMENT_FASTA = @"entrapment-fasta";
 
         /// <summary>The argument as it is typed: <c>--name</c>.</summary>
         public static string Text(string name)

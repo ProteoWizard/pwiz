@@ -24,7 +24,7 @@ using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// Reads the <see cref="ArtifactStamp"/> inside the artifacts CarafeSharp writes, whatever

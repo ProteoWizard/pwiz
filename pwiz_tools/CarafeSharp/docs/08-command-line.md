@@ -22,11 +22,15 @@ CarafeSharp --model_info <file.carafemodel>
 CarafeSharp -h [ascii|unicode|sections|html|<Section>]
 ```
 
-The help and this doc spell options the standard pwiz_tools way, `--name`, as Osprey's help does
-(cross-tool consistency within pwiz); Carafe's `-name` is accepted for every option (cross-impl
-compatibility with Noble-Lab/Carafe), and the help ends with a paragraph saying so. The option
-names themselves stay Carafe's (`--lf_type`, `--miss_c`), because they are the names a Carafe
-user and a recorded Carafe run know.
+The help and this doc spell options the standard pwiz_tools way, `--name` with hyphens between
+words (`--lf-type`, `--miss-c`), as Osprey's help does (cross-tool consistency within pwiz).
+Carafe's own spelling is accepted for every option - its single dash and its underscores
+(`-lf_type`, `--miss_c`) - so a recorded Carafe run's command line is accepted whole (cross-impl
+compatibility with Noble-Lab/Carafe), and the help ends with a paragraph saying so. The words of a
+name stay Carafe's (`miss-c`, not `missed-cleavages`), because they are the names a Carafe user
+knows; the camel-case names (`--minLength`, `--fixMod`, `--I2L`) are unchanged, having no
+separator to standardise. The rule is one grammar setting (`NameSeparatorsEquivalent` on the
+shared `CommandLineGrammar`), not an alias per option.
 
 ---
 
@@ -39,6 +43,7 @@ is the grammar it installs (`CommandLineGrammar`), never the parser. CarafeSharp
 | Rule | CarafeSharp (Carafe's grammar) | For comparison: Osprey | Skyline |
 |---|---|---|---|
 | Option spelling | `--name` as shown; Carafe's `-name` accepted for every option | `--name`, short aliases `-x` | `--name` only |
+| An underscore in a name | reads as a hyphen (`-miss_c` is `--miss-c`) | the same | a different name |
 | Value | `--name value` or `--name=value` | `--name value` or `--name=value` | `--name=value` only |
 | A dash-prefixed next token | a value unless it names a declared option (`-seed -5`, `-mode -`) | always the next option (`-o -l x` fails fast) | never a value |
 | Repeated option | the first value wins | the last value wins | the last value wins |
@@ -101,10 +106,28 @@ reads, `-log_file`, `-timestamp` and `-memstamp` (Osprey's `--log-file`, `--time
 `01-model-spec.md`, `06-saved-models.md` and `07-chronologer.md`; the help has the one-line
 version of each.
 
+## The same declarations on Osprey's command line
+
+Osprey's one command (`osprey --fasta proteome.fasta ...`, `pwiz_tools/Osprey/docs/20-command-line.md`,
+"Library build") presents the library-build options as two sections of its own help, **Library
+Digest** and **Library Prediction**, under Osprey's grammar. They are these declarations, not
+copies: `CarafeCommandLine.HostedDigestArguments` and `HostedPredictionArguments` name the ones a
+host surfaces, Osprey declares each again for its own parser from the declaration (the shared
+`Argument<TContext>` copy constructor), records what it is given through `Record`, and after its
+parse calls `InterpretHostedLibrary` with the values it derives itself (the FASTA, a `.blib`
+output, the saved model, the device), which reads them as `Interpret` does and returns the
+`LibrarySettings`. Their help text is this tool's (`GetDescription`). What Osprey derives, and
+training, are not surfaced; Osprey's own `--model` and `--device` stand for `-model` and
+`-device`.
+
 ## Adding or changing an option
 
-1. Declare it in `CarafeCommandLine.cs` with `Value`, `Choice` or `Flag`, and put it in a group.
-2. Add its usage text to `CarafeCommandArgUsage.resx` under `_<name>`.
-3. Read it in `Interpret` (or the settings method of its mode) through `Has` / `TryGet`.
+1. Declare it in `CarafeCommandLine.cs` with `Value`, `Choice` or `Flag`, hyphenated, and put it
+   in a group; if a host should present it, add it to the hosted list of its section.
+2. Add its usage text to `CarafeCommandArgUsage.resx` under `_<name>` (an underscore for each
+   hyphen), naming other options in the standard form.
+3. Read it in `Interpret` (or the settings method of its mode) through `Has` / `TryGet`, by its
+   declaration.
 4. Run `CarafeSharp.Test`: `CommandArgsTest` fails on an option that is undeclared, ungrouped
    or undescribed, and regenerates `Documentation/Help/en/CommandLine.html` for you to commit.
+   Osprey's `OspreyCommandArgsTests` regenerates its pages, which hold the hosted sections.

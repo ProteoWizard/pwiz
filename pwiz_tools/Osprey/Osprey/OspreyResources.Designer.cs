@@ -151,6 +151,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Searching the predicted library {0}.
+        /// </summary>
+        public static string LibraryBuildWorkflow_Run_Searching_the_predicted_library__0_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildWorkflow_Run_Searching_the_predicted_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrote the pairing manifest {0}.
+        /// </summary>
+        public static string LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_ {
+            get {
+                return ResourceManager.GetString("LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Applies To.
         /// </summary>
         public static string OspreyArgUsageProvider_AppliesToHeader_Applies_To {
@@ -413,6 +431,51 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library Build.
+        /// </summary>
+        public static string OspreyCommandArgs_Group_Library_Build {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_Group_Library_Build", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Digest.
+        /// </summary>
+        public static string OspreyCommandArgs_Group_Library_Digest {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_Group_Library_Digest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: what the library holds. These are CarafeSharp's options under their standard names; see [rest of string was truncated]";.
+        /// </summary>
+        public static string OspreyCommandArgs_GROUP_LIBRARY_DIGEST_With__0___what_the_library_holds {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_LIBRARY_DIGEST_With__0___what_the_library_holds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library Prediction.
+        /// </summary>
+        public static string OspreyCommandArgs_Group_Library_Prediction {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_Group_Library_Prediction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: how the library is predicted..
+        /// </summary>
+        public static string OspreyCommandArgs_GROUP_LIBRARY_PREDICTION_With__0___how_the_library_is_predicted {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_LIBRARY_PREDICTION_With__0___how_the_library_is_predicted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Logging.
         /// </summary>
         public static string OspreyCommandArgs_Group_Logging {
@@ -561,6 +624,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The library build options are listed in the standard form ({0}) and, for compatibility with Java  [rest of string was truncated]";.
+        /// </summary>
+        public static string OspreyCommandArgs_UsageBlocks_The_library_build_options_are_listed_in_the_standard_form___0___and__for_compatibility_with_Java_Carafe_s_command_lines__also_accepted_with_its_underscores___1___ {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_UsageBlocks_The_library_build_options_are_listed_in_the_standard_form___0___and__for_compatibility_with_Java_Carafe_s_command_lines__also_accepted_with_its_underscores___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to USAGE: {0}.
         /// </summary>
         public static string OspreyCommandArgs_UsageBlocks_USAGE___0_ {
@@ -632,6 +704,78 @@ namespace pwiz.Osprey {
             get {
                 return ResourceManager.GetString("Program_DuplicateInputStemError_Every_file_Osprey_writes_for_an_input_is_named_af" +
                         "ter_the_input_without_its_extension__so_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} builds the library and {1} names one; give one or the other..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} can be used only with {1}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__can_be_used_only_with__1__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__can_be_used_only_with__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot be combined with {1} yet. Run the command without {1}, then search the library it writ [rest of string was truncated]";.
+        /// </summary>
+        public static string Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not read with {1}: the library it builds carries its pairing..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be in [{1}, {2}]..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__must_be_in___1____2__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__must_be_in___1____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} needs {1}..
+        /// </summary>
+        public static string Program_LibraryBuildError__0__needs__1__ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError__0__needs__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FASTA file not found: {0}.
+        /// </summary>
+        public static string Program_LibraryBuildError_FASTA_file_not_found___0_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError_FASTA_file_not_found___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Model file not found: {0}.
+        /// </summary>
+        public static string Program_LibraryBuildError_Model_file_not_found___0_ {
+            get {
+                return ResourceManager.GetString("Program_LibraryBuildError_Model_file_not_found___0_", resourceCulture);
             }
         }
         
@@ -812,6 +956,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library: predicted from {0} with {1}.
+        /// </summary>
+        public static string Program_Run_Library__predicted_from__0__with__1_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Library__predicted_from__0__with__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library build: {0} (working files in {1}).
+        /// </summary>
+        public static string Program_Run_Library_build___0___working_files_in__1_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Library_build___0___working_files_in__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library file not found: {0}.
         /// </summary>
         public static string Program_Run_Library_file_not_found___0_ {
@@ -913,6 +1075,24 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to the pretrained models.
+        /// </summary>
+        public static string Program_Run_the_pretrained_models {
+            get {
+                return ResourceManager.GetString("Program_Run_the_pretrained_models", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the saved model {0}.
+        /// </summary>
+        public static string Program_Run_the_saved_model__0_ {
+            get {
+                return ResourceManager.GetString("Program_Run_the_saved_model__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Threads: {0:N0}.
         /// </summary>
         public static string Program_Run_Threads___0_ {
@@ -994,6 +1174,15 @@ namespace pwiz.Osprey {
         public static string Program_TrainingExportError__0__must_be_in__0__1__ {
             get {
                 return ResourceManager.GetString("Program_TrainingExportError__0__must_be_in__0__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, or {1}.
+        /// </summary>
+        public static string Program_ValidateArgs__0__or__1_ {
+            get {
+                return ResourceManager.GetString("Program_ValidateArgs__0__or__1_", resourceCulture);
             }
         }
         

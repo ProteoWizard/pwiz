@@ -266,6 +266,26 @@ All three follow the four pipeline members in `All`. None is a fan-out node, and
 belongs in an HPC relay plan: the training export's relay is `PerFileRescoring`'s, because
 that is the node that writes it.
 
+### A workflow above the pipeline: the one-command library build
+
+`--fasta` (the one command from a protein FASTA to a `.blib`, [20-command-line](20-command-line.md),
+"Library build") does not add a stage. The pipeline stays the fixed four-element list above; what
+runs before it is a **workflow** (`LibraryBuildWorkflow`, in the executable): a sequence of phases,
+each a CarafeSharp task run in-process through the shared `PipelineDriver`, or an Osprey analysis
+over a derived config. Today the phases are two - `PredictLibrary` (CarafeSharp's task, over a
+digest of the FASTA made in memory, decoys and entrapment included) and the search - and the
+second takes the first's product, `<out>.library.blib`, as its `-l`.
+
+The phase boundary is a file, like every task boundary here (P10): the library carries the
+prediction task's validity stamp inside itself, so a re-run skips the prediction when its FASTA,
+settings and models are unchanged, and the search keys on the library file by name, size and
+mtime as it keys on any library, so a re-predicted library re-runs the search and a changed `-i`
+alone does not re-predict. Nothing passes between the phases in memory, and no peptide FASTA,
+pairing manifest or TSV sits between them. The prediction's log lines are the pipeline's
+(`[TASK] PredictLibrary:starting` and the rest), so a log reader sees one run. The library phase
+is a single-node task; its HPC addressing (`--task PredictLibrary`) is not in place yet, and
+`--fasta` with `--task` is refused until it is.
+
 ### Scatter and barrier: what a join may hold
 
 A join is the expensive part of the pipeline and the only place a whole-experiment

@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.CarafeSharp.Contracts;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -68,6 +69,12 @@ namespace pwiz.Osprey
         internal const string USAGE_INPUT = @"-i <file1.mzML> [file2.mzML ...]";
         internal const string USAGE_LIBRARY = @"-l <library.tsv>";
         internal const string USAGE_OUTPUT = @"-o <output.blib>";
+
+        /// <summary>The library's other form in the "not specified" error: the one command's FASTA.</summary>
+        internal static string UsageFasta
+        {
+            get { return OspreyCommandArgs.ARG_FASTA.ArgumentText + @" <proteome.fasta>"; }
+        }
 
         // The caller's writer (stderr from Main), kept after a --log-file swap replaces _out,
         // so an error reported before the swap still counts when the exit code is reconciled.
@@ -284,12 +291,14 @@ namespace pwiz.Osprey
                 }
 
                 OspreyConfig config;
+                LibrarySettings librarySettings;
                 try
                 {
-                    config = ParseArgs(args);
+                    config = OspreyCommandArgs.ParseArgs(args, out librarySettings);
                     CanonicalizeOutputPaths(config);
                 }
-                catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)
+                catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException ||
+                                           ex is NotSupportedException)
                 {
                     // A usage error, not a failure: the parser threw it to name the argument,
                     // so the message IS the diagnosis, and a type name plus a stack through
@@ -297,8 +306,9 @@ namespace pwiz.Osprey
                     // below are. Anything else the parser throws is a defect and falls through
                     // to the sink at the bottom of Main with its frames intact.
                     //
-                    // These three are what the parser raises ON PURPOSE, and the list is
-                    // deliberately narrower than it reads: FileNotFoundException, not
+                    // These are what the parser raises ON PURPOSE (NotSupportedException is
+                    // CarafeSharp's refusal of an unported option among the library-build ones),
+                    // and the list is deliberately narrower than it reads: FileNotFoundException, not
                     // IOException, because --input-list throws the former for the missing-file
                     // case a user can fix, while File.ReadAllLines can throw a sharing or
                     // device IOException that is NOT a usage error and needs its type, inner
@@ -503,9 +513,23 @@ namespace pwiz.Osprey
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
                 LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
                 LogInfo(string.Format(OspreyResources.Program_Run_Input_files___0_, config.InputFiles.Count));
-                LogInfo(string.Format(OspreyResources.Program_Run_Library___0____1__,
-                    config.LibrarySource?.Path ?? OspreyResources.Program_Run__none_,
-                    config.LibrarySource?.Format.GetLocalizedString() ?? @"?"));
+                if (config.LibraryBuild.Enabled)
+                {
+                    // The one command: the library is predicted before the search, so the banner
+                    // names what it is predicted from and where it will be.
+                    LogInfo(string.Format(OspreyResources.Program_Run_Library__predicted_from__0__with__1_, config.LibraryBuild.FastaPath,
+                        config.LibraryBuild.ModelPath != null
+                            ? string.Format(OspreyResources.Program_Run_the_saved_model__0_, config.LibraryBuild.ModelPath)
+                            : OspreyResources.Program_Run_the_pretrained_models));
+                    LogInfo(string.Format(OspreyResources.Program_Run_Library_build___0___working_files_in__1_,
+                        LibraryBuildWorkflow.LibraryPath(config), LibraryBuildWorkflow.WorkDirectory(config)));
+                }
+                else
+                {
+                    LogInfo(string.Format(OspreyResources.Program_Run_Library___0____1__,
+                        config.LibrarySource?.Path ?? OspreyResources.Program_Run__none_,
+                        config.LibrarySource?.Format.GetLocalizedString() ?? @"?"));
+                }
                 // A --task run executes one HPC stage rather than the full pipeline;
                 // name it so the log says which single task ran (no --task = full
                 // pipeline, no line). A selector that is not a stage of the pipeline it
@@ -644,6 +668,13 @@ namespace pwiz.Osprey
                     if (diagnosticsExit >= 0)
                         return diagnosticsExit;
                 }
+
+                // The one command (--fasta): the library is predicted first, then the same
+                // pipeline searches it. Dispatched through a class of its own, so a run that
+                // searches a given library compiles no method that reaches the predictor and
+                // never loads its native runtime.
+                if (config.LibraryBuild.Enabled)
+                    return new LibraryBuildWorkflow(config, librarySettings).Run(pipeline);
 
                 // Single entry point. The rescore worker (--task
                 // PerFileRescoring) includes only PerFileRescoreTask
@@ -835,6 +866,14 @@ namespace pwiz.Osprey
         /// </summary>
         internal static string ValidateArgs(OspreyConfig config)
         {
+            // The one command's own rules first: with --fasta the library is built, so a given
+            // library, an export of one, a pairing manifest and (in this release) a --task leg
+            // are all refused, and a library-build option without --fasta changes nothing and
+            // is refused too, rather than silently ignored.
+            string buildErr = LibraryBuildError(config);
+            if (buildErr != null)
+                return buildErr;
+
             // --export-library converts the library and exits: it needs the library and nothing
             // else, whatever else the command line holds, so nothing below may refuse it.
             if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
@@ -910,10 +949,75 @@ namespace pwiz.Osprey
             // outstanding, which the artifacts' embedded validity stamps decide - not the input kind.
             if (!hasInputFiles)
                 return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, USAGE_INPUT);
-            if (config.LibrarySource == null)
-                return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY);
+            if (config.LibrarySource == null && !config.LibraryBuild.Enabled)
+            {
+                return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_,
+                    string.Format(OspreyResources.Program_ValidateArgs__0__or__1_, USAGE_LIBRARY, UsageFasta));
+            }
             if (string.IsNullOrEmpty(config.OutputBlib))
                 return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, USAGE_OUTPUT);
+            return null;
+        }
+
+        /// <summary>
+        /// The one command's rules (<see cref="LibraryBuildConfig"/>): null when they hold, else the
+        /// error. The files the build reads are checked here, before any work, as the inputs and the
+        /// library are below.
+        /// </summary>
+        private static string LibraryBuildError(OspreyConfig config)
+        {
+            var build = config.LibraryBuild;
+            if (!build.Enabled)
+            {
+                if (build.OptionsWithoutFasta.Count > 0)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__can_be_used_only_with__1__,
+                        string.Join(@", ", build.OptionsWithoutFasta), OspreyCommandArgs.ARG_FASTA.ArgumentText);
+                }
+                return null;
+            }
+            string fastaArg = OspreyCommandArgs.ARG_FASTA.ArgumentText;
+            if (config.LibrarySource != null)
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_,
+                    fastaArg, OspreyCommandArgs.ARG_LIBRARY.ShortArgumentText);
+            }
+            if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__builds_the_library_and__1__names_one__give_one_or_the_other_,
+                    fastaArg, OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText);
+            }
+            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__is_not_read_with__1___the_library_it_builds_carries_its_pairing_,
+                    OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, fastaArg);
+            }
+            if (config.SelectedTask != null)
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__cannot_be_combined_with__1__yet__Run_the_command_without__1___then_search_the_library_it_writes___2___with__3__and__1__,
+                    fastaArg, OspreyCommandArgs.ARG_TASK.ArgumentText, LibraryBuildWorkflow.LibraryPath(config),
+                    OspreyCommandArgs.ARG_LIBRARY.ShortArgumentText);
+            }
+            if (!File.Exists(build.FastaPath))
+                return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.FastaPath);
+            if (build.ModelPath != null && !File.Exists(build.ModelPath))
+                return string.Format(OspreyResources.Program_LibraryBuildError_Model_file_not_found___0_, build.ModelPath);
+            if (build.EntrapmentFastaPath != null)
+            {
+                if (!build.Entrapment)
+                {
+                    return string.Format(OspreyResources.Program_LibraryBuildError__0__needs__1__,
+                        OspreyCommandArgs.ARG_ENTRAPMENT_FASTA.ArgumentText, OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText);
+                }
+                if (!File.Exists(build.EntrapmentFastaPath))
+                    return string.Format(OspreyResources.Program_LibraryBuildError_FASTA_file_not_found___0_, build.EntrapmentFastaPath);
+            }
+            if (build.EntrapmentRatio.HasValue &&
+                !(build.EntrapmentRatio.Value >= LibraryBuildConfig.MIN_ENTRAPMENT_RATIO && build.EntrapmentRatio.Value <= 1))
+            {
+                return string.Format(OspreyResources.Program_LibraryBuildError__0__must_be_in___1____2__,
+                    OspreyCommandArgs.ARG_ENTRAPMENT.ArgumentText, LibraryBuildConfig.MIN_ENTRAPMENT_RATIO, 1);
+            }
             return null;
         }
 

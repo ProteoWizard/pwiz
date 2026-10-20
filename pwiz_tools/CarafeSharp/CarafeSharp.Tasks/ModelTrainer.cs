@@ -33,7 +33,7 @@ using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// A Carafe training run on Osprey's results: reads each run's training export, builds the
