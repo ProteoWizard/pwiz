@@ -285,7 +285,7 @@ public static class CvLookup
         var oboByAccession = new Dictionary<string, (string Prefix, OboTerm Term)>(StringComparer.Ordinal);
         foreach (var obo in new[] { OboFiles.PsiMs, OboFiles.Unimod, OboFiles.Unit })
         {
-            foreach (var term in obo.Terms.Values)
+            foreach (var term in obo.Terms)
             {
                 string key = term.Prefix == "UNIMOD"
                     ? FormatAccessionVariable(term.Prefix, (int)term.Id)
