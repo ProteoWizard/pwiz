@@ -193,5 +193,7 @@ matchPaths = [
     ("pwiz_tools/CarafeSharp/.*", targets['Osprey']),
     ("pwiz_tools/.*", targets['All']),
     (".*\\.bat", targets['Windows']),
+    # Root .ps1 scripts (tcinspect.ps1) run from the Windows tcbuild.bat files.
+    (".*\\.ps1", targets['Windows']),
     (".*\\.sh", targets['Linux'])
 ]

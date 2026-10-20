@@ -73,6 +73,11 @@ param(
     # this pre-build: a project it compiles first here has its warnings logged, while one left to
     # inspectcode's own solution build would be compiled with no warnings log, and build.bat would
     # then find it up to date and emit none. Keep this list in step with build.bat's.
+    #
+    # The last three are SkylineTester's DistroZipPrereq items, which nothing above references:
+    # SkylineTester builds them only for build.bat's DistroZips step, so without them here the
+    # nightly pair is compiled by inspectcode (they are in Skyline.sln) and BlibToMs2 by the zip
+    # step, both with no warnings log. Keep them in step with SkylineTester.csproj's list.
     [string[]] $PreBuild = (@(
         'Skyline.csproj'
         'CommonTest\CommonTest.csproj'
@@ -84,6 +89,9 @@ param(
         'TestPerf\TestPerf.csproj'
         'TestRunner\TestRunner.csproj'
         'SkylineTester\SkylineTester.csproj'
+        'SkylineNightly\SkylineNightly.csproj'
+        'SkylineNightlyShim\SkylineNightlyShim.csproj'
+        '..\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj'
     ) | ForEach-Object { Join-Path $PSScriptRoot $_ }),
     # Every warning the pre-build logs, restore (NuGet audit) included. With -UseExistingReport
     # the log a previous run left here is read instead.
@@ -147,6 +155,7 @@ try {
         }
     }
 
+    $failedPreBuilds = @()
     if (-not $UseExistingReport) {
         if (Test-Path $ReportPath) { Remove-Item $ReportPath -Force }
         if (Test-Path $BuildWarningsPath) { Remove-Item $BuildWarningsPath -Force }
@@ -185,9 +194,13 @@ try {
                 Write-Host "##teamcity[blockClosed name='pre-build $projectName']"
                 # Not fatal, and not silent: the inspection still runs, it just reports every
                 # out-of-solution type as unresolved. Saying so here is what tells that apart
-                # from a real finding when the error count comes back high.
+                # from a real finding when the error count comes back high. It does decide the
+                # verdict, though: a failed compile stops the projects that depend on the failed
+                # one, inspectcode then compiles those without the warnings logger, and build.bat
+                # finds them up to date - so their warnings were never checked.
                 if ($preBuildExit -ne 0) {
                     Write-Host "##teamcity[message text='Pre-build of $(Format-TcValue $project) failed with code $preBuildExit; out-of-solution references will not resolve' status='WARNING']"
+                    $failedPreBuilds += $projectName
                 }
             }
 
@@ -283,6 +296,11 @@ try {
         $verdict += "$total inspections ($counts)"
     }
 
+    # Ahead of the rest of the verdict: GitHub cuts the description at 140 characters.
+    if ($failedPreBuilds.Count -gt 0) {
+        $verdict = @("pre-build of $($failedPreBuilds -join ', ') failed; build warnings not fully checked") + $verdict
+        Complete-Inspection 'error' ($verdict -join '; ')
+    }
     if ($verdict.Count -eq 0) {
         Complete-Inspection 'success' "No build warnings and no inspections at $Severity or above"
     }
