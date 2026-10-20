@@ -465,7 +465,7 @@ namespace pwiz.CarafeSharp.Proteome
                 return;
             }
             if (Has(ARG_PRINT_PTM))
-                throw new ArgumentException(@"-printPTM is not supported by CarafeSharp");
+                throw new ArgumentException(ARG_PRINT_PTM.ArgumentText + @" is not supported by CarafeSharp");
             // Output options, read in every mode (CarafeSharp's, as Osprey's --log-file / --timestamp / --memstamp).
             if (TryGet(ARG_LOG_FILE, out string logFile))
                 LogFile = logFile;
@@ -491,30 +491,30 @@ namespace pwiz.CarafeSharp.Proteome
                 Mode = CarafeCommandMode.reconcile_manifest;
                 ReconcileManifestOut = _values[ARG_RECONCILE_MANIFEST.Name];
                 if (!TryGet(ARG_MANIFEST, out string manifestIn) || manifestIn.Length == 0)
-                    throw new ArgumentException(@"-reconcile_manifest requires the input manifest via -manifest");
+                    throw new ArgumentException(ARG_RECONCILE_MANIFEST.ArgumentText + @" requires the input manifest via " + ARG_MANIFEST.ArgumentText);
                 if (!TryGet(ARG_PREDICTED_LIBRARY, out string library) || library.Length == 0)
-                    throw new ArgumentException(@"-reconcile_manifest requires the predicted library TSV via -predicted_library");
+                    throw new ArgumentException(ARG_RECONCILE_MANIFEST.ArgumentText + @" requires the predicted library TSV via " + ARG_PREDICTED_LIBRARY.ArgumentText);
                 ReconcileManifestIn = manifestIn;
                 ReconcileLibrary = library;
                 return;
             }
             if (Has(ARG_BUILD_KOINA_LIBRARY))
-                throw new NotSupportedException(@"-build_koina_library is not supported by CarafeSharp");
+                throw new NotSupportedException(ARG_BUILD_KOINA_LIBRARY.ArgumentText + @" is not supported by CarafeSharp");
             if (Has(ARG_MODEL))
             {
                 if (Has(ARG_MODEL_DIR))
-                    throw new ArgumentException(@"-model and -model_dir both name the models to predict with; give one");
+                    throw new ArgumentException(ARG_MODEL.ArgumentText + @" and " + ARG_MODEL_DIR.ArgumentText + @" both name the models to predict with; give one");
                 if (Has(ARG_MS2_MODEL))
-                    throw new ArgumentException(@"-model and -ms2_model both name the MS2 model to start from; give one");
+                    throw new ArgumentException(ARG_MODEL.ArgumentText + @" and " + ARG_MS2_MODEL.ArgumentText + @" both name the MS2 model to start from; give one");
                 bool training = Has(ARG_MS) || NamesTrainingExports();
                 // With training, -model is the model to fine-tune further, and the new file holds both of its models.
                 if (training && TryGet(ARG_TF, out string trainingType) && !string.Equals(trainingType, @"all", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new ArgumentException(@"-model with training fine-tunes both of the saved model's models further; -tf " +
+                    throw new ArgumentException(ARG_MODEL.ArgumentText + @" with training fine-tunes both of the saved model's models further; " + ARG_TF.ArgumentText + @" " +
                                                 trainingType + @" would leave the other one pretrained in the new model");
                 }
                 if (!training && !Has(ARG_DB))
-                    throw new ArgumentException(@"-model predicts a library, which needs the FASTA to predict via -db");
+                    throw new ArgumentException(ARG_MODEL.ArgumentText + @" predicts a library, which needs the FASTA to predict via " + ARG_DB.ArgumentText);
             }
             // Carafe trains when -ms is given. CarafeSharp also trains on Osprey's training exports
             // named by -i directly, which Carafe could never have read; -i alone is otherwise
@@ -537,8 +537,9 @@ namespace pwiz.CarafeSharp.Proteome
                 }
                 return;
             }
-            throw new ArgumentException(@"CarafeSharp supports -build_entrapment_fasta, -reconcile_manifest, library prediction from -db " +
-                                        @"and training from -i with -ms (or -i naming Osprey's training exports)");
+            throw new ArgumentException(string.Format(@"CarafeSharp supports {0}, {1}, library prediction from {2} " +
+                                        @"and training from {3} with {4} (or {3} naming Osprey's training exports)",
+                                        ARG_BUILD_ENTRAPMENT_FASTA.ArgumentText, ARG_RECONCILE_MANIFEST.ArgumentText, ARG_DB.ArgumentText, ARG_I.ArgumentText, ARG_MS.ArgumentText));
         }
 
         /// <summary>
@@ -575,24 +576,24 @@ namespace pwiz.CarafeSharp.Proteome
             if (TryGet(ARG_VAR_MOD, out string varMod))
                 modifications.VariableModifications = varMod;
             if (TryGet(ARG_MISS_C, out string missedCleavages))
-                digest.MaxMissedCleavages = ParseInt(@"miss_c", missedCleavages);
+                digest.MaxMissedCleavages = ParseInt(ARG_MISS_C, missedCleavages);
             if (TryGet(ARG_ENZYME, out string enzyme))
             {
                 digest.EnzymeIndex = string.Equals(enzyme, EnzymeTable.NO_CUT_ENZYME_NAME, StringComparison.OrdinalIgnoreCase)
                     ? EnzymeTable.GetIndexByName(enzyme)
-                    : ParseInt(@"enzyme", enzyme);
+                    : ParseInt(ARG_ENZYME, enzyme);
             }
             // Carafe validates the index here, through its non-specific check.
             if (EnzymeTable.IsNonSpecific(EnzymeTable.GetByIndex(digest.EnzymeIndex)))
                 digest.MaxMissedCleavages = EnzymeTable.NON_SPECIFIC_MISSED_CLEAVAGES;
             if (TryGet(ARG_MAX_VAR, out string maxVar))
-                modifications.MaxVariableModifications = ParseInt(@"maxVar", maxVar);
+                modifications.MaxVariableModifications = ParseInt(ARG_MAX_VAR, maxVar);
             if (TryGet(ARG_MIN_LENGTH, out string minLength))
-                digest.MinLength = ParseInt(@"minLength", minLength);
+                digest.MinLength = ParseInt(ARG_MIN_LENGTH, minLength);
             if (TryGet(ARG_MAX_LENGTH, out string maxLength))
-                digest.MaxLength = ParseInt(@"maxLength", maxLength);
-            minMz = TryGet(ARG_MIN_PEP_MZ, out string minMzText) ? ParseDouble(@"min_pep_mz", minMzText) : DEFAULT_MIN_PEPTIDE_MZ;
-            maxMz = TryGet(ARG_MAX_PEP_MZ, out string maxMzText) ? ParseDouble(@"max_pep_mz", maxMzText) : DEFAULT_MAX_PEPTIDE_MZ;
+                digest.MaxLength = ParseInt(ARG_MAX_LENGTH, maxLength);
+            minMz = TryGet(ARG_MIN_PEP_MZ, out string minMzText) ? ParseDouble(ARG_MIN_PEP_MZ, minMzText) : DEFAULT_MIN_PEPTIDE_MZ;
+            maxMz = TryGet(ARG_MAX_PEP_MZ, out string maxMzText) ? ParseDouble(ARG_MAX_PEP_MZ, maxMzText) : DEFAULT_MAX_PEPTIDE_MZ;
             return digest;
         }
 
@@ -604,14 +605,14 @@ namespace pwiz.CarafeSharp.Proteome
         private TrainingSettings InterpretTraining(DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz)
         {
             if (!TryGet(ARG_I, out string identifications) || identifications.Length == 0)
-                throw new ArgumentException(@"Training requires Osprey's results via -i (its blib, or its .training.parquet exports)");
+                throw new ArgumentException(@"Training requires Osprey's results via " + ARG_I.ArgumentText + @" (its blib, or its .training.parquet exports)");
             if (TryGet(ARG_SE, out string searchEngine) && !string.Equals(searchEngine, @"Osprey", StringComparison.OrdinalIgnoreCase))
-                throw new NotSupportedException(@"-se " + searchEngine + @" is not supported by CarafeSharp, which trains on Osprey's training export (-se Osprey)");
+                throw new NotSupportedException(ARG_SE.ArgumentText + @" " + searchEngine + @" is not supported by CarafeSharp, which trains on Osprey's training export (" + ARG_SE.ArgumentText + @" Osprey)");
             if (TryGet(ARG_MODE, out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))
-                throw new NotSupportedException(@"-mode " + mode + @" is not supported by CarafeSharp; only general");
+                throw new NotSupportedException(ARG_MODE.ArgumentText + @" " + mode + @" is not supported by CarafeSharp; only general");
             CheckAiVersion();
             if (Has(ARG_USER_VAR_MODS) || Has(ARG_MOD2MASS))
-                throw new NotSupportedException(@"-user_var_mods and -mod2mass are not supported by CarafeSharp");
+                throw new NotSupportedException(ARG_USER_VAR_MODS.ArgumentText + @" and " + ARG_MOD2MASS.ArgumentText + @" are not supported by CarafeSharp");
             foreach (var option in new[] { ARG_CS, ARG_Y1, ARG_USE_ALL_PEAKS })
             {
                 if (Has(option))
@@ -621,14 +622,14 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 // Carafe does the same with Osprey's results, which carry no ion mobility to train on.
                 Warnings.Add(Has(ARG_DB)
-                    ? @"-ccs: the CCS model is not fine-tuned (Osprey's results carry no ion mobility); the library's 1/K0 is predicted " +
-                      @"with the pretrained CCS model, or a Carafe ccs_model.pt already in -o."
-                    : @"Ignored -ccs: the CCS model is not fine-tuned, and without -db no library is predicted.");
+                    ? ARG_CCS.ArgumentText + @": the CCS model is not fine-tuned (Osprey's results carry no ion mobility); the library's 1/K0 is predicted " +
+                      @"with the pretrained CCS model, or a Carafe ccs_model.pt already in " + ARG_O.ArgumentText + @"."
+                    : @"Ignored " + ARG_CCS.ArgumentText + @": the CCS model is not fine-tuned, and without " + ARG_DB.ArgumentText + @" no library is predicted.");
             }
             if (Has(ARG_RT_REFERENCE) && !Has(ARG_DB))
-                Warnings.Add(@"Ignored -rt_reference: it names the training run whose minutes a library takes, and without -db no library is predicted.");
-            if (TryGet(ARG_NA, out string flanking) && ParseInt(@"na", flanking) != 0)
-                throw new NotSupportedException(@"-na (flanking spectra) is not supported by CarafeSharp training");
+                Warnings.Add(@"Ignored " + ARG_RT_REFERENCE.ArgumentText + @": it names the training run whose minutes a library takes, and without " + ARG_DB.ArgumentText + @" no library is predicted.");
+            if (TryGet(ARG_NA, out string flanking) && ParseInt(ARG_NA, flanking) != 0)
+                throw new NotSupportedException(ARG_NA.ArgumentText + @" (flanking spectra) is not supported by CarafeSharp training");
             var fromOsprey = new[] { ARG_ITOL, ARG_ITOLU, ARG_RF, ARG_RF_RT_WIN, ARG_RT_WIN_OFFSET, ARG_SG, ARG_MIN_MZ }.Where(Has).ToArray();
             if (fromOsprey.Length > 0)
             {
@@ -651,37 +652,37 @@ namespace pwiz.CarafeSharp.Proteome
             if (TryGet(ARG_O, out string output))
                 settings.OutputDirectory = output;
             if (TryGet(ARG_FDR, out string fdr))
-                settings.Fdr = ParseDouble(@"fdr", fdr);
+                settings.Fdr = ParseDouble(ARG_FDR, fdr);
             if (TryGet(ARG_COR, out string correlation))
-                settings.MinCorrelation = ParseDouble(@"cor", correlation);
+                settings.MinCorrelation = ParseDouble(ARG_COR, correlation);
             if (TryGet(ARG_N_ION_MIN, out string nIonMin))
-                settings.LowOrdinalB = ParseInt(@"n_ion_min", nIonMin);
+                settings.LowOrdinalB = ParseInt(ARG_N_ION_MIN, nIonMin);
             if (TryGet(ARG_C_ION_MIN, out string cIonMin))
-                settings.LowOrdinalY = ParseInt(@"c_ion_min", cIonMin);
+                settings.LowOrdinalY = ParseInt(ARG_C_ION_MIN, cIonMin);
             if (TryGet(ARG_LF_FRAG_N_MIN, out string minOrdinal))
-                settings.MinFragmentOrdinal = ParseInt(@"lf_frag_n_min", minOrdinal);
+                settings.MinFragmentOrdinal = ParseInt(ARG_LF_FRAG_N_MIN, minOrdinal);
             if (TryGet(ARG_NF, out string minMatched))
-                settings.MinMatchedIons = ParseInt(@"nf", minMatched);
+                settings.MinMatchedIons = ParseInt(ARG_NF, minMatched);
             if (TryGet(ARG_MIN_N, out string minValid))
-                settings.MinValidIons = ParseInt(@"min_n", minValid);
+                settings.MinValidIons = ParseInt(ARG_MIN_N, minValid);
             if (TryGet(ARG_TF, out string trainingType))
             {
                 if (!new[] { @"all", @"ms2", @"rt" }.Contains(trainingType, StringComparer.OrdinalIgnoreCase))
-                    throw new NotSupportedException(@"-tf " + trainingType + @" is not supported by CarafeSharp; all, ms2 or rt");
+                    throw new NotSupportedException(ARG_TF.ArgumentText + @" " + trainingType + @" is not supported by CarafeSharp; all, ms2 or rt");
                 settings.TrainingType = trainingType.ToLowerInvariant();
             }
             if (TryGet(ARG_SEED, out string seed))
             {
                 // Carafe's Integer.parseInt, and numpy's seed must not be negative.
-                int value = ParseInt(@"seed", seed);
+                int value = ParseInt(ARG_SEED, seed);
                 if (value < 0)
-                    throw new ArgumentException(@"-seed must not be negative: " + seed);
+                    throw new ArgumentException(ARG_SEED.ArgumentText + @" must not be negative: " + seed);
                 settings.Seed = (uint)value;
             }
             if (TryGet(ARG_DEVICE, out string device))
                 settings.Device = ParseDevice(device);
             if (TryGet(ARG_NCE, out string nce))
-                settings.Nce = ParseDouble(@"nce", nce);
+                settings.Nce = ParseDouble(ARG_NCE, nce);
             if (TryGet(ARG_MS_INSTRUMENT, out string instrument))
                 settings.Instrument = instrument;
             if (TryGet(ARG_ACTIVATION, out string activation))
@@ -689,7 +690,7 @@ namespace pwiz.CarafeSharp.Proteome
             if (TryGet(ARG_ANALYZER, out string analyzer))
                 settings.Analyzer = ParseAnalyzer(analyzer);
             if (TryGet(ARG_RT_MAX, out string rtMax))
-                settings.RtMax = ParseDouble(@"rt_max", rtMax);
+                settings.RtMax = ParseDouble(ARG_RT_MAX, rtMax);
             if (TryGet(ARG_MS2_MODEL, out string ms2Model))
                 settings.Ms2Model = ms2Model;
             if (TryGet(ARG_MODEL, out string baseModel))
@@ -699,9 +700,9 @@ namespace pwiz.CarafeSharp.Proteome
             if (TryGet(ARG_RT_MODEL, out string rtModel))
                 settings.RtModelType = ParseRtModel(rtModel);
             if (TryGet(ARG_RT_ALIGN, out string rtAlign))
-                settings.RtAlignment = ParseName<RtAlignmentType>(@"rt_align", rtAlign);
+                settings.RtAlignment = ParseName<RtAlignmentType>(ARG_RT_ALIGN, rtAlign);
             if (TryGet(ARG_RT_SELECT, out string rtSelect))
-                settings.RtSelection = ParseName<RtSelectionType>(@"rt_select", rtSelect);
+                settings.RtSelection = ParseName<RtSelectionType>(ARG_RT_SELECT, rtSelect);
             if (Has(ARG_DB))
             {
                 // The library predicted right after training, with the fine-tuned models in -o,
@@ -720,21 +721,21 @@ namespace pwiz.CarafeSharp.Proteome
         {
             string database = _values[ARG_DB.Name];
             if (database.Length == 0)
-                throw new ArgumentException(@"Library prediction requires a FASTA via -db");
+                throw new ArgumentException(@"Library prediction requires a FASTA via " + ARG_DB.ArgumentText);
             string extension = Path.GetExtension(database).ToLowerInvariant();
             if (extension != @".fa" && extension != @".fasta")
                 throw new NotSupportedException(@"CarafeSharp predicts libraries from a FASTA (.fa or .fasta) only: " + database);
             if (Has(ARG_USER_VAR_MODS) || Has(ARG_MOD2MASS))
-                throw new NotSupportedException(@"-user_var_mods and -mod2mass are not supported by CarafeSharp");
+                throw new NotSupportedException(ARG_USER_VAR_MODS.ArgumentText + @" and " + ARG_MOD2MASS.ArgumentText + @" are not supported by CarafeSharp");
             if (TryGet(ARG_MODE, out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))
-                throw new NotSupportedException(@"-mode " + mode + @" is not supported by CarafeSharp; only general");
+                throw new NotSupportedException(ARG_MODE.ArgumentText + @" " + mode + @" is not supported by CarafeSharp; only general");
             if (TryGet(ARG_LF_FORMAT, out string fileFormat) && string.Equals(fileFormat, @"parquet", StringComparison.OrdinalIgnoreCase))
-                throw new NotSupportedException(@"-lf_format parquet is not supported by CarafeSharp");
+                throw new NotSupportedException(ARG_LF_FORMAT.ArgumentText + @" parquet is not supported by CarafeSharp");
             CheckAiVersion();
             // Parsed here, not only after the digest, so a bad id stops the run before any work.
             // Stage 1 does not come here: its m/z filter reads ids 11 to 26 too.
-            var fixedModifications = GetModifications(@"fixMod", modifications.FixedModifications, modifications.GetFixedModifications);
-            var variableModifications = GetModifications(@"varMod", modifications.VariableModifications, modifications.GetVariableModifications);
+            var fixedModifications = GetModifications(ARG_FIX_MOD, modifications.FixedModifications, modifications.GetFixedModifications);
+            var variableModifications = GetModifications(ARG_VAR_MOD, modifications.VariableModifications, modifications.GetVariableModifications);
 
             digest.ConvertIToL = Has(ARG_I2L);
             var settings = new LibrarySettings
@@ -749,28 +750,28 @@ namespace pwiz.CarafeSharp.Proteome
             };
             if (TryGet(ARG_O, out string output))
                 settings.OutputDirectory = output;
-            int minCharge = TryGet(ARG_MIN_PEP_CHARGE, out string minZ) ? ParseInt(@"min_pep_charge", minZ) : LibrarySettings.DEFAULT_MIN_CHARGE;
-            int maxCharge = TryGet(ARG_MAX_PEP_CHARGE, out string maxZ) ? ParseInt(@"max_pep_charge", maxZ) : LibrarySettings.DEFAULT_MAX_CHARGE;
+            int minCharge = TryGet(ARG_MIN_PEP_CHARGE, out string minZ) ? ParseInt(ARG_MIN_PEP_CHARGE, minZ) : LibrarySettings.DEFAULT_MIN_CHARGE;
+            int maxCharge = TryGet(ARG_MAX_PEP_CHARGE, out string maxZ) ? ParseInt(ARG_MAX_PEP_CHARGE, maxZ) : LibrarySettings.DEFAULT_MAX_CHARGE;
             if (maxCharge < minCharge)
-                throw new ArgumentException(string.Format(@"-max_pep_charge {0} is below -min_pep_charge {1}", maxCharge, minCharge));
+                throw new ArgumentException(string.Format(@"{0} {1} is below {2} {3}", ARG_MAX_PEP_CHARGE.ArgumentText, maxCharge, ARG_MIN_PEP_CHARGE.ArgumentText, minCharge));
             settings.Charges = Enumerable.Range(minCharge, maxCharge - minCharge + 1).ToArray();
             if (TryGet(ARG_LF_FRAG_MZ_MIN, out string fragMin))
-                settings.MinFragmentMz = ParseDouble(@"lf_frag_mz_min", fragMin);
+                settings.MinFragmentMz = ParseDouble(ARG_LF_FRAG_MZ_MIN, fragMin);
             if (TryGet(ARG_LF_FRAG_MZ_MAX, out string fragMax))
-                settings.MaxFragmentMz = ParseDouble(@"lf_frag_mz_max", fragMax);
+                settings.MaxFragmentMz = ParseDouble(ARG_LF_FRAG_MZ_MAX, fragMax);
             if (TryGet(ARG_LF_TOP_N_FRAG, out string topN))
-                settings.TopFragments = ParseInt(@"lf_top_n_frag", topN);
+                settings.TopFragments = ParseInt(ARG_LF_TOP_N_FRAG, topN);
             if (TryGet(ARG_LF_MIN_N_FRAG, out string minFragments))
-                settings.MinFragments = ParseInt(@"lf_min_n_frag", minFragments);
+                settings.MinFragments = ParseInt(ARG_LF_MIN_N_FRAG, minFragments);
             if (TryGet(ARG_LF_FRAG_N_MIN, out string minNumber))
-                settings.MinFragmentNumber = ParseInt(@"lf_frag_n_min", minNumber);
+                settings.MinFragmentNumber = ParseInt(ARG_LF_FRAG_N_MIN, minNumber);
             if (TryGet(ARG_LF_TYPE, out string libraryFormat))
                 settings.LibraryFormat = libraryFormat;
             if (TryGet(ARG_DECOY_PREFIX, out string decoyPrefix))
                 settings.DecoyPrefix = decoyPrefix;
             if (TryGet(ARG_NCE, out string nce))
             {
-                settings.Nce = ParseDouble(@"nce", nce);
+                settings.Nce = ParseDouble(ARG_NCE, nce);
                 settings.UserNce = true;
             }
             if (TryGet(ARG_MS_INSTRUMENT, out string instrument))
@@ -790,7 +791,7 @@ namespace pwiz.CarafeSharp.Proteome
             }
             if (TryGet(ARG_RT_MAX, out string rtMax))
             {
-                settings.RtMax = ParseDouble(@"rt_max", rtMax);
+                settings.RtMax = ParseDouble(ARG_RT_MAX, rtMax);
                 settings.UserRtMax = true;
             }
             bool hasModelDir = TryGet(ARG_MODEL_DIR, out string modelDir);
@@ -808,7 +809,7 @@ namespace pwiz.CarafeSharp.Proteome
                 if (TryGet(ARG_TF, out string trainingType))
                     settings.TrainingType = trainingType;
                 if (string.Equals(settings.TrainingType, @"test", StringComparison.OrdinalIgnoreCase))
-                    throw new NotSupportedException(@"-tf test is not supported by CarafeSharp");
+                    throw new NotSupportedException(ARG_TF.ArgumentText + @" test is not supported by CarafeSharp");
                 if (!new[] { @"all", @"ms2", @"rt" }.Contains(settings.TrainingType, StringComparer.Ordinal))
                 {
                     // -model is CarafeSharp's, so it takes only the values training does; -model_dir keeps
@@ -816,12 +817,12 @@ namespace pwiz.CarafeSharp.Proteome
                     if (hasModelFile)
                     {
                         if (!new[] { @"all", @"ms2", @"rt" }.Contains(settings.TrainingType, StringComparer.OrdinalIgnoreCase))
-                            throw new NotSupportedException(@"-tf " + settings.TrainingType + @" is not supported by CarafeSharp; all, ms2 or rt");
+                            throw new NotSupportedException(ARG_TF.ArgumentText + @" " + settings.TrainingType + @" is not supported by CarafeSharp; all, ms2 or rt");
                         settings.TrainingType = settings.TrainingType.ToLowerInvariant();
                     }
                     else
                     {
-                        Warnings.Add(@"-tf " + settings.TrainingType + @" is not all, ms2 or rt: as in Carafe, the library predicts with neither fine-tuned model.");
+                        Warnings.Add(ARG_TF.ArgumentText + @" " + settings.TrainingType + @" is not all, ms2 or rt: as in Carafe, the library predicts with neither fine-tuned model.");
                     }
                 }
                 CheckIonMobilityTrainingType(settings);
@@ -836,9 +837,9 @@ namespace pwiz.CarafeSharp.Proteome
                 // The contract is written into the .blib and checked against the manifest, so a
                 // run without either has nothing to mark or nothing to check against.
                 if (!LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast).WritesBlib)
-                    throw new ArgumentException(@"-library_contract marks a .blib as meeting the Osprey library contract, so it needs -lf_type blib");
+                    throw new ArgumentException(ARG_LIBRARY_CONTRACT.ArgumentText + @" marks a .blib as meeting the Osprey library contract, so it needs " + ARG_LF_TYPE.ArgumentText + @" blib");
                 if (string.IsNullOrEmpty(settings.PairingManifest))
-                    throw new ArgumentException(@"-library_contract checks the library against its pairing manifest, so it needs -pairing_manifest");
+                    throw new ArgumentException(ARG_LIBRARY_CONTRACT.ArgumentText + @" checks the library against its pairing manifest, so it needs " + ARG_PAIRING_MANIFEST.ArgumentText);
             }
             if (TryGet(ARG_PRETRAINED, out string pretrained))
                 settings.PretrainedModels = pretrained;
@@ -853,8 +854,8 @@ namespace pwiz.CarafeSharp.Proteome
                 fixedModifications.Concat(variableModifications).Any(m => m.Type == CarafeModificationType.protein_n_term))
             {
                 throw new NotSupportedException(string.Format(
-                    @"-lf_type {0} writes a TSV in the {1} notation, which cannot write a protein N-term modification; " +
-                    @"use -lf_type DIA-NN, or a .blib (-lf_type Skyline -fast)", settings.LibraryFormat, outputs.TsvStyle));
+                    @"{0} {1} writes a TSV in the {2} notation, which cannot write a protein N-term modification; " +
+                    @"use {0} DIA-NN, or a .blib ({0} Skyline {3})", ARG_LF_TYPE.ArgumentText, settings.LibraryFormat, outputs.TsvStyle, ARG_FAST.ArgumentText));
             }
             // Carafe's TSV notations have no place for an N-terminal modification of one residue
             // (pyro-Glu); Carafe 2.2.0 fails on it at site -1.
@@ -863,8 +864,8 @@ namespace pwiz.CarafeSharp.Proteome
             if (outputs.WritesTsv && nTermResidue != null)
             {
                 throw new NotSupportedException(string.Format(
-                    @"-lf_type {0} writes a TSV, and Carafe's TSV notations cannot write {1}; use a .blib (-lf_type blib, " +
-                    @"or -lf_type Skyline -fast)", settings.LibraryFormat, nTermResidue.Name));
+                    @"{0} {1} writes a TSV, and Carafe's TSV notations cannot write {2}; use a .blib ({0} blib, " +
+                    @"or {0} Skyline {3})", ARG_LF_TYPE.ArgumentText, settings.LibraryFormat, nTermResidue.Name, ARG_FAST.ArgumentText));
             }
             return settings;
         }
@@ -873,7 +874,7 @@ namespace pwiz.CarafeSharp.Proteome
         private void CheckAiVersion()
         {
             if (TryGet(ARG_AI_VERSION, out string aiVersion) && !string.Equals(aiVersion, @"v2", StringComparison.OrdinalIgnoreCase))
-                throw new NotSupportedException(@"-ai_version " + aiVersion + @" is not supported by CarafeSharp; only v2");
+                throw new NotSupportedException(ARG_AI_VERSION.ArgumentText + @" " + aiVersion + @" is not supported by CarafeSharp; only v2");
         }
 
         /// <summary>
@@ -891,7 +892,7 @@ namespace pwiz.CarafeSharp.Proteome
             double minMz, double maxMz)
         {
             if (!TryGet(ARG_DB, out string inputFasta) || inputFasta.Length == 0)
-                throw new ArgumentException(@"-build_entrapment_fasta requires an input protein FASTA via -db");
+                throw new ArgumentException(ARG_BUILD_ENTRAPMENT_FASTA.ArgumentText + @" requires an input protein FASTA via " + ARG_DB.ArgumentText);
             var settings = new EntrapmentFastaSettings
             {
                 InputFasta = inputFasta,
@@ -908,51 +909,51 @@ namespace pwiz.CarafeSharp.Proteome
             if (TryGet(ARG_DECOY_PREFIX, out string decoyPrefix))
                 settings.DecoyPrefix = decoyPrefix;
             if (settings.ApplyMzFilter && (Has(ARG_USER_VAR_MODS) || Has(ARG_MOD2MASS)))
-                throw new ArgumentException(@"-user_var_mods and -mod2mass are not supported with -mz_filter");
+                throw new ArgumentException(ARG_USER_VAR_MODS.ArgumentText + @" and " + ARG_MOD2MASS.ArgumentText + @" are not supported with " + ARG_MZ_FILTER.ArgumentText);
 
-            int minCharge = TryGet(ARG_MIN_PEP_CHARGE, out string minZ) ? ParseInt(@"min_pep_charge", minZ) : DEFAULT_MIN_CHARGE;
-            int maxCharge = TryGet(ARG_MAX_PEP_CHARGE, out string maxZ) ? ParseInt(@"max_pep_charge", maxZ) : DEFAULT_MAX_CHARGE;
+            int minCharge = TryGet(ARG_MIN_PEP_CHARGE, out string minZ) ? ParseInt(ARG_MIN_PEP_CHARGE, minZ) : DEFAULT_MIN_CHARGE;
+            int maxCharge = TryGet(ARG_MAX_PEP_CHARGE, out string maxZ) ? ParseInt(ARG_MAX_PEP_CHARGE, maxZ) : DEFAULT_MAX_CHARGE;
             if (maxCharge < minCharge)
                 maxCharge = minCharge;
             settings.Charges = Enumerable.Range(minCharge, maxCharge - minCharge + 1).ToArray();
 
             if (TryGet(ARG_ENTRAPMENT_SEED, out string entrapmentSeed))
-                settings.EntrapmentSeed = ParseLong(@"entrapment_seed", entrapmentSeed);
+                settings.EntrapmentSeed = ParseLong(ARG_ENTRAPMENT_SEED, entrapmentSeed);
             if (TryGet(ARG_DECOY_SEED, out string decoySeed))
-                settings.DecoySeed = ParseLong(@"decoy_seed", decoySeed);
+                settings.DecoySeed = ParseLong(ARG_DECOY_SEED, decoySeed);
             if (TryGet(ARG_ENTRAPMENT_DB, out string entrapmentDb))
             {
                 settings.EntrapmentSourceFasta = entrapmentDb;
                 if (!settings.AddEntrapment)
-                    throw new ArgumentException(@"-entrapment_db has no effect without -entrapment");
+                    throw new ArgumentException(ARG_ENTRAPMENT_DB.ArgumentText + @" has no effect without " + ARG_ENTRAPMENT.ArgumentText);
             }
             if (Has(ARG_NO_SIMILARITY_GATE))
             {
                 settings.SimilarityGate = false;
-                Warnings.Add(@"WARNING: -no_similarity_gate reproduces the pre-gate behavior for audit comparison. " +
+                Warnings.Add(@"WARNING: " + ARG_NO_SIMILARITY_GATE.ArgumentText + @" reproduces the pre-gate behavior for audit comparison. " +
                              @"The resulting library contains entrapment near-copies of their own targets and should not be searched.");
             }
             if (Has(ARG_IGNORE_PAIRING_ERRORS))
             {
                 settings.FailOnPairingViolation = false;
-                Warnings.Add(@"WARNING: -ignore_pairing_errors will write the pairing manifest even if it fails its integrity checks. " +
+                Warnings.Add(@"WARNING: " + ARG_IGNORE_PAIRING_ERRORS.ArgumentText + @" will write the pairing manifest even if it fails its integrity checks. " +
                              @"A paired FDP estimator may crash or report a mis-scaled FDP on the result.");
             }
             if (TryGet(ARG_ENTRAPMENT_RATIO, out string ratioText))
             {
                 // The ratio only means anything when entrapment is generated.
                 if (!settings.AddEntrapment)
-                    throw new ArgumentException(@"-entrapment_ratio has no effect without -entrapment");
-                settings.EntrapmentRatio = ParseDouble(@"entrapment_ratio", ratioText);
+                    throw new ArgumentException(ARG_ENTRAPMENT_RATIO.ArgumentText + @" has no effect without " + ARG_ENTRAPMENT.ArgumentText);
+                settings.EntrapmentRatio = ParseDouble(ARG_ENTRAPMENT_RATIO, ratioText);
                 if (settings.EntrapmentRatio > 1.0)
                 {
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
-                        @"-entrapment_ratio cannot exceed 1.0 (one entrapment peptide per target): {0}", settings.EntrapmentRatio));
+                        @"{0} cannot exceed 1.0 (one entrapment peptide per target): {1}", ARG_ENTRAPMENT_RATIO.ArgumentText, settings.EntrapmentRatio));
                 }
                 if (settings.EntrapmentRatio < EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO)
                 {
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
-                        @"-entrapment_ratio {0:F4} is below the tested minimum of {1:F2}", settings.EntrapmentRatio,
+                        @"{0} {1:F4} is below the tested minimum of {2:F2}", ARG_ENTRAPMENT_RATIO.ArgumentText, settings.EntrapmentRatio,
                         EntrapmentFastaSettings.MIN_ENTRAPMENT_RATIO));
                 }
             }
@@ -993,7 +994,7 @@ namespace pwiz.CarafeSharp.Proteome
         /// an <see cref="ArgumentException"/> naming the option, and one Carafe's library
         /// prediction has no alphabase name for is not supported.
         /// </summary>
-        private static IReadOnlyList<CarafeModification> GetModifications(string option, string ids,
+        private static IReadOnlyList<CarafeModification> GetModifications(CarafeArgument option, string ids,
             Func<IReadOnlyList<CarafeModification>> parse)
         {
             IReadOnlyList<CarafeModification> modifications;
@@ -1003,13 +1004,13 @@ namespace pwiz.CarafeSharp.Proteome
             }
             catch (Exception e) when (e is FormatException || e is OverflowException)
             {
-                throw new ArgumentException(string.Format(@"Invalid -{0} {1}: {2}", option, ids, e.Message), e);
+                throw new ArgumentException(string.Format(@"Invalid {0} {1}: {2}", option.ArgumentText, ids, e.Message), e);
             }
             var unsupported = modifications.FirstOrDefault(m => m.AlphabaseName == null);
             if (unsupported != null)
             {
-                throw new NotSupportedException(string.Format(@"-{0}: Carafe's library generation does not support the modification {1} ({2})",
-                    option, unsupported.Id, unsupported.Name));
+                throw new NotSupportedException(string.Format(@"{0}: Carafe's library generation does not support the modification {1} ({2})",
+                    option.ArgumentText, unsupported.Id, unsupported.Name));
             }
             return modifications;
         }
@@ -1018,23 +1019,23 @@ namespace pwiz.CarafeSharp.Proteome
         private static string ParseDevice(string value)
         {
             if (!DEVICES.Contains(value, StringComparer.OrdinalIgnoreCase))
-                throw new ArgumentException(string.Format(@"Unknown -device {0} (expected {1})", value, string.Join(@", ", DEVICES)));
+                throw new ArgumentException(string.Format(@"Unknown {0} {1} (expected {2})", ARG_DEVICE.ArgumentText, value, string.Join(@", ", DEVICES)));
             return value;
         }
 
         /// <summary><c>-rt_model</c>'s value: alphapeptdeep or chronologer (case-insensitive).</summary>
         private static RtModelType ParseRtModel(string value)
         {
-            return ParseName<RtModelType>(@"rt_model", value);
+            return ParseName<RtModelType>(ARG_RT_MODEL, value);
         }
 
         /// <summary>An option's value naming one of <typeparamref name="T"/>'s members (case-insensitive; not a number).</summary>
-        private static T ParseName<T>(string option, string value) where T : struct, Enum
+        private static T ParseName<T>(CarafeArgument option, string value) where T : struct, Enum
         {
             string name = Enum.GetNames(typeof(T)).FirstOrDefault(n => string.Equals(n, value, StringComparison.OrdinalIgnoreCase));
             if (name == null)
             {
-                throw new ArgumentException(string.Format(@"Unknown -{0} {1} (expected {2})", option, value,
+                throw new ArgumentException(string.Format(@"Unknown {0} {1} (expected {2})", option.ArgumentText, value,
                     string.Join(@", ", Enum.GetNames(typeof(T)))));
             }
             return Enum.Parse<T>(name);
@@ -1045,27 +1046,27 @@ namespace pwiz.CarafeSharp.Proteome
         private static string ParseActivation(string value)
         {
             return AcquisitionVocabulary.ParseActivation(value) ?? throw new ArgumentException(string.Format(
-                @"-activation {0} is not an activation CarafeSharp knows; use {1}", value, string.Join(@" or ", AcquisitionVocabulary.KNOWN_ACTIVATIONS)));
+                @"{0} {1} is not an activation CarafeSharp knows; use {2}", ARG_ACTIVATION.ArgumentText, value, string.Join(@" or ", AcquisitionVocabulary.KNOWN_ACTIVATIONS)));
         }
 
         /// <summary><c>-analyzer</c>'s value, a known analyzer (case-insensitive).</summary>
         private static string ParseAnalyzer(string value)
         {
             return AcquisitionVocabulary.ParseAnalyzer(value) ?? throw new ArgumentException(string.Format(
-                @"-analyzer {0} is not an analyzer CarafeSharp knows; use {1}", value, string.Join(@", ", AcquisitionVocabulary.KNOWN_ANALYZERS)));
+                @"{0} {1} is not an analyzer CarafeSharp knows; use {2}", ARG_ANALYZER.ArgumentText, value, string.Join(@", ", AcquisitionVocabulary.KNOWN_ANALYZERS)));
         }
 
-        private static int ParseInt(string option, string value)
+        private static int ParseInt(CarafeArgument option, string value)
         {
             if (!int.TryParse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int result))
-                throw new ArgumentException(string.Format(@"Invalid integer for -{0}: {1}", option, value));
+                throw new ArgumentException(string.Format(@"Invalid integer for {0}: {1}", option.ArgumentText, value));
             return result;
         }
 
-        private static long ParseLong(string option, string value)
+        private static long ParseLong(CarafeArgument option, string value)
         {
             if (!long.TryParse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out long result))
-                throw new ArgumentException(string.Format(@"Invalid integer for -{0}: {1}", option, value));
+                throw new ArgumentException(string.Format(@"Invalid integer for {0}: {1}", option.ArgumentText, value));
             return result;
         }
 
@@ -1073,13 +1074,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// Java's <c>Double.parseDouble</c> for decimal text: surrounding control characters and
         /// spaces trimmed, an optional d or f suffix.
         /// </summary>
-        private static double ParseDouble(string option, string value)
+        private static double ParseDouble(CarafeArgument option, string value)
         {
             string text = JavaText.Trim(value);
             if (text.Length > 1 && @"dDfF".IndexOf(text[text.Length - 1]) >= 0 && char.IsDigit(text[text.Length - 2]))
                 text = text.Substring(0, text.Length - 1);
             if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
-                throw new ArgumentException(string.Format(@"Invalid number for -{0}: {1}", option, value));
+                throw new ArgumentException(string.Format(@"Invalid number for {0}: {1}", option.ArgumentText, value));
             return result;
         }
 
@@ -1093,8 +1094,8 @@ namespace pwiz.CarafeSharp.Proteome
                 (string.Equals(settings.TrainingType, @"rt", StringComparison.Ordinal) ||
                  string.Equals(settings.TrainingType, @"ms2", StringComparison.Ordinal)))
             {
-                throw new NotSupportedException(@"-ccs with -tf " + settings.TrainingType +
-                                                @": Carafe predicts no ion mobility for that training type; use -tf all");
+                throw new NotSupportedException(ARG_CCS.ArgumentText + @" with " + ARG_TF.ArgumentText + @" " + settings.TrainingType +
+                                                @": Carafe predicts no ion mobility for that training type; use " + ARG_TF.ArgumentText + @" all");
             }
         }
 

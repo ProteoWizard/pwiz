@@ -168,7 +168,7 @@ namespace pwiz.CarafeSharp.Test
             // mode, and a negative seed is a number (refused later, by training, as Carafe does).
             Assert.AreEqual(CarafeCommandMode.predict_library, CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-mode", @"-" }).Mode);
             var negative = Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-seed", @"-1" }));
-            StringAssert.Contains(negative.Message, @"-seed must not be negative");
+            StringAssert.Contains(negative.Message, @"--seed must not be negative");
             // But a declared option ends the value: the value is missing, not "-o", and the
             // message names the option as typed.
             var missing = Assert.ThrowsException<ValueMissingException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"-o", @"out" }));

@@ -347,7 +347,7 @@ namespace pwiz.CarafeSharp.Tasks
                 catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
                 {
                     throw new IOException(string.Format(CultureInfo.InvariantCulture,
-                        @"{0} cannot be replaced ({1}). Close it in the program that has it open, or choose another -o folder.", path, e.Message), e);
+                        @"{0} cannot be replaced ({1}). Close it in the program that has it open, or choose another {2} folder.", path, e.Message, CarafeCommandLine.ARG_O.ArgumentText), e);
                 }
             }
         }
@@ -694,7 +694,7 @@ namespace pwiz.CarafeSharp.Tasks
             if (type == RtModelType.chronologer)
                 return WithAlignment(LoadChronologer(path, device), modelDirectory);
             if (_settings.RtReference != null)
-                throw new InvalidOperationException(string.Format(@"-rt_reference {0} needs the Chronologer RT model, not {1}.", _settings.RtReference, type));
+                throw new InvalidOperationException(string.Format(@"{0} {1} needs the Chronologer RT model, not {2}.", CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, type));
             if (path != null)
             {
                 Log(@"Using fine-tuned RT model " + path);
@@ -726,8 +726,8 @@ namespace pwiz.CarafeSharp.Tasks
                     if (_settings.RtReference != null)
                     {
                         throw new InvalidOperationException(string.Format(
-                            @"-rt_reference {0} needs a Chronologer trained with -rt_align kde, whose runs' maps ({1}) its model folder holds.",
-                            _settings.RtReference, ModelFiles.RT_MAPS));
+                            @"{0} {1} needs a Chronologer trained with {2} kde, whose runs' maps ({3}) its model folder holds.",
+                            CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, CarafeCommandLine.ARG_RT_ALIGN.ArgumentText, ModelFiles.RT_MAPS));
                     }
                     return rt;
                 }
@@ -736,7 +736,7 @@ namespace pwiz.CarafeSharp.Tasks
                     if (_settings.RtReference != null)
                     {
                         throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
-                            @"-rt_reference {0} needs a library in minutes, which an rt_max of {1} is not.", _settings.RtReference, _settings.RtMax));
+                            @"{0} {1} needs a library in minutes, which {2} {3} is not.", CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, CarafeCommandLine.ARG_RT_MAX.ArgumentText, _settings.RtMax));
                     }
                     return rt;
                 }
@@ -754,7 +754,7 @@ namespace pwiz.CarafeSharp.Tasks
                     var medianToRun = rt.PredictsNormalizedRt ? alignment.MedianToRunMinutes(run) : null;
                     Func<double, double> toMinutes = medianToRun != null ? rtNorm => medianToRun(rtNorm * trainingRtMax) : alignment.ToRunMinutes(run);
                     LogMapsTakeMinutes();
-                    Log(string.Format(@"Library RT: minutes of training run {0} (-rt_reference, {1}): {2}", run, path, alignment));
+                    Log(string.Format(@"Library RT: minutes of training run {0} ({1}, {2}): {3}", run, CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, path, alignment));
                     return new AlignedRtPredictor(rt, toMinutes, _settings.RtMax);
                 }
                 if (rt.PredictsNormalizedRt)
@@ -763,8 +763,8 @@ namespace pwiz.CarafeSharp.Tasks
                 {
                     Log(string.Format(CultureInfo.InvariantCulture,
                         @"WARNING: the training runs are on different gradients ({0}), so their median minutes are none of theirs; " +
-                        @"the library RT is iRT. Name a run with -rt_reference for its minutes: {1}.",
-                        alignment, string.Join(@", ", alignment.Runs.Select(r => r.Run))));
+                        @"the library RT is iRT. Name a run with {1} for its minutes: {2}.",
+                        alignment, CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, string.Join(@", ", alignment.Runs.Select(r => r.Run))));
                     return rt;
                 }
                 LogMapsTakeMinutes();
@@ -783,8 +783,8 @@ namespace pwiz.CarafeSharp.Tasks
         {
             if (_settings.UserRtMax)
             {
-                Log(string.Format(CultureInfo.InvariantCulture, @"Ignored -rt_max {0}: the library's minutes come from the training runs' maps",
-                    _settings.RtMax));
+                Log(string.Format(CultureInfo.InvariantCulture, @"Ignored {0} {1}: the library's minutes come from the training runs' maps",
+                    CarafeCommandLine.ARG_RT_MAX.ArgumentText, _settings.RtMax));
             }
         }
 

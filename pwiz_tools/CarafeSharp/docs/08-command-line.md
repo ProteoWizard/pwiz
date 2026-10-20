@@ -61,8 +61,8 @@ names), `html` (the page archived under `Documentation/Help`), or a section name
 section alone.
 
 A usage error prints the message and `Run CarafeSharp --help for the options.`, with exit code 1.
-The messages the settings raise still spell options Carafe's way (`-db`, `-rt_reference`); they
-are literal text, and move to the standard spelling with the deferred resx extraction.
+The messages name options as the help spells them (`--db`, `--rt-reference`), through each
+declaration's `ArgumentText`, whatever spelling the user typed.
 
 ## Modes
 
@@ -127,7 +127,7 @@ training, are not surfaced; Osprey's own `--model` and `--device` stand for `-mo
 2. Add its usage text to `CarafeCommandArgUsage.resx` under `_<name>` (an underscore for each
    hyphen), naming other options in the standard form.
 3. Read it in `Interpret` (or the settings method of its mode) through `Has` / `TryGet`, by its
-   declaration.
+   declaration, and name it in any message through its `ArgumentText`.
 4. Run `CarafeSharp.Test`: `CommandArgsTest` fails on an option that is undeclared, ungrouped
    or undescribed, and regenerates `Documentation/Help/en/CommandLine.html` for you to commit.
    Osprey's `OspreyCommandArgsTests` regenerates its pages, which hold the hosted sections.
