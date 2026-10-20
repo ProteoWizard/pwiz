@@ -1,9 +1,10 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,38 +18,39 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
-using NHibernate;
 using pwiz.BiblioSpec;
+using pwiz.BiblioSpec.IO;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.Database;
-using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.BlibData
 {
+    /// <summary>
+    /// Writes the BiblioSpec libraries Skyline makes of its own: a library from a list of spectra
+    /// (an imported transition list, Koina, MIDAS, a library export) and a library minimized
+    /// from another to the spectra a document uses, with its redundant companion when the source
+    /// has one. Everything goes through <see cref="BlibWriter"/>, the one writer of the format,
+    /// so a library written here is the same database BlibBuild writes; this class holds the
+    /// conversion from Skyline's spectra, keys and header information to the writer's records.
+    /// </summary>
     public class BlibDb : IDisposable
     {
         private static readonly Regex REGEX_LSID =
             new Regex(@"urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)");
 
-        // Optional global (experiment-wide) statistics of a library protein group
-        private const string COLUMN_PROTEIN_Q_VALUE = @"QValue";
-        private const string COLUMN_PROTEIN_PEP = @"Pep";
+        // Spectra converted to records in parallel between writes, which are sequential
+        private const int SPECTRA_PER_BATCH = 1024;
 
         private IProgressMonitor ProgressMonitor { get; set; }
         private IProgressStatus _progressStatus;
@@ -56,276 +58,23 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         private BlibDb(String path)
         {
             FilePath = path;
-            SessionFactory = BlibSessionFactoryFactory.CreateSessionFactory(path, false);
-            DatabaseLock = new ReaderWriterLock();
             _progressStatus = new ProgressStatus(string.Empty);
         }
 
-        public ISession OpenSession()
-        {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
-        }
-
-        public ISession OpenWriteSession()
-        {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
-        }
-
-        private void CreateSessionFactory_Redundant(string path)
-        {
-            SessionFactory_Redundant = BlibSessionFactoryFactory.CreateSessionFactory_Redundant(path, true);
-            DatabaseLock_Redundant = new ReaderWriterLock();
-        }
-
-        private ISession OpenWriteSession_Redundant()
-        {
-            return new SessionWithLock(SessionFactory_Redundant.OpenSession(), DatabaseLock_Redundant, true);
-        }
-
-
-        public ReaderWriterLock DatabaseLock { get; private set; }
-        private ReaderWriterLock DatabaseLock_Redundant { get; set;  }
-
         public String FilePath { get; private set; }
 
-        private ISessionFactory SessionFactory { get; set; }
-        private ISessionFactory SessionFactory_Redundant { get; set; }
-
-        public static BlibDb OpenBlibDb(String path)
+        /// <summary>
+        /// The library to be written at <paramref name="path"/>: nothing is on disk until
+        /// <see cref="CreateLibraryFromSpectra(BiblioSpecLiteSpec,IList{SpectrumMzInfo},string,IProgressMonitor)"/>
+        /// or a minimize completes it, and a library already there is replaced then.
+        /// </summary>
+        public static BlibDb CreateBlibDb(String path)
         {
             return new BlibDb(path);
         }
 
-        public static BlibDb CreateBlibDb(String path)
-        {
-            using (BlibSessionFactoryFactory.CreateSessionFactory(path, true))
-            {
-            }
-            return OpenBlibDb(path);
-        }
-
         public void Dispose()
         {
-            if (SessionFactory != null)
-            {
-                SessionFactory.Dispose();
-                SessionFactory = null;
-            }
-            if (SessionFactory_Redundant != null)
-            {
-                SessionFactory_Redundant.Dispose();
-                SessionFactory_Redundant = null;
-            }
-        }
-
-        public string[] GetSourceFilePaths()
-        {
-            using (var session = OpenSession())
-            {
-                var query = session.CreateQuery(@"SELECT FileName From " + typeof(DbSpectrumSourceFiles));
-                return query.List<string>().ToArray();
-            }
-        }
-
-        public string[] GetIdFilePaths()
-        {
-            using (var session = OpenSession())
-            {
-                var query = session.CreateQuery(@"SELECT IdFileName From " + typeof(DbSpectrumSourceFiles));
-                return query.List<string>().ToArray();
-            }
-        }
-
-        public int GetSpectraCount()
-        {
-            using (var session = OpenSession())
-            {
-                return
-                    Convert.ToInt32(
-                        session.CreateQuery(@"SELECT Count(P.Id) From " + typeof(DbRefSpectra) + @" P").UniqueResult());
-            }
-        }
-
-        private class ProteinTablesBuilder
-        {
-            private ISession _session;
-            private Dictionary<string, int> _namedProteinIds;
-            // A library protein group's global statistics, by name
-            private Dictionary<string, LibraryProteinGroup> _proteinGroups;
-            private HashSet<KeyValuePair<int, int>> _peptideIdProteinIds;
-
-            public ProteinTablesBuilder(ISession session)
-            {
-                _session = session;
-                _namedProteinIds = new Dictionary<string, int>();
-                _proteinGroups = new Dictionary<string, LibraryProteinGroup>();
-                _peptideIdProteinIds = new HashSet<KeyValuePair<int, int>>();
-            }
-
-            public void Add(DbRefSpectra refSpectra, string proteinName)
-            {
-                if (!string.IsNullOrEmpty(proteinName))
-                {
-                    if (!_namedProteinIds.TryGetValue(proteinName, out var proteinTableId))
-                    {
-                        proteinTableId = _namedProteinIds.Count + 1;
-                        _namedProteinIds.Add(proteinName, proteinTableId);
-                    }
-                    _peptideIdProteinIds.Add(new KeyValuePair<int, int>((int)(refSpectra.Id ?? 0), proteinTableId));
-                }
-            }
-
-            /// <summary>
-            /// Links the spectrum to a library protein group, keeping the group's global statistics.
-            /// </summary>
-            public void Add(DbRefSpectra refSpectra, LibraryProteinGroup proteinGroup)
-            {
-                _proteinGroups[proteinGroup.Name] = proteinGroup;
-                Add(refSpectra, proteinGroup.Name);
-            }
-
-            public void Write()
-            {
-                // Output the protein - peptide relationships
-                if (_namedProteinIds.Any())
-                {
-                    if (!SqliteOperations.TableExists(_session.Connection, @"RefSpectraProteins"))
-                    {
-                        using (var cmd = _session.Connection.CreateCommand())
-                        {
-                            cmd.CommandText = @"CREATE TABLE RefSpectraProteins (RefSpectraId INTEGER not null, ProteinId INTEGER not null)";
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    var existingProteinsCount = 0;
-                    if (SqliteOperations.TableExists(_session.Connection, @"Proteins"))
-                    {
-                        using (var cmd = _session.Connection.CreateCommand())
-                        {
-                            cmd.CommandText = @"SELECT COALESCE(MAX(id), 0) FROM Proteins";
-                            existingProteinsCount = Convert.ToInt32(cmd.ExecuteScalar());
-                        }
-                    }
-                    else
-                    {
-                        using (var cmd = _session.Connection.CreateCommand())
-                        {
-                            cmd.CommandText = @"CREATE TABLE Proteins (id INTEGER primary key autoincrement, accession TEXT)";
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    bool hasQValue = _proteinGroups.Values.Any(group => group.QValue.HasValue);
-                    bool hasPep = _proteinGroups.Values.Any(group => group.Pep.HasValue);
-                    if (hasQValue)
-                        AddColumn(_session.Connection, @"Proteins", COLUMN_PROTEIN_Q_VALUE);
-                    if (hasPep)
-                        AddColumn(_session.Connection, @"Proteins", COLUMN_PROTEIN_PEP);
-
-                    using (var insertCommand = _session.Connection.CreateCommand())
-                    {
-                        insertCommand.CommandText = hasQValue || hasPep
-                            ? @"INSERT INTO Proteins (id, accession" +
-                              (hasQValue ? @", " + COLUMN_PROTEIN_Q_VALUE : string.Empty) +
-                              (hasPep ? @", " + COLUMN_PROTEIN_PEP : string.Empty) + @") VALUES(?,?" +
-                              (hasQValue ? @",?" : string.Empty) + (hasPep ? @",?" : string.Empty) + @")"
-                            : @"INSERT INTO Proteins (id, accession) VALUES(?,?)";
-                        int parameterCount = 2 + (hasQValue ? 1 : 0) + (hasPep ? 1 : 0);
-                        for (int i = 0; i < parameterCount; i++)
-                            insertCommand.Parameters.Add(new SQLiteParameter());
-                        foreach (var kvp in _namedProteinIds)
-                        {
-                            ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Value + existingProteinsCount; // Id
-                            ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Key; // Accession
-                            _proteinGroups.TryGetValue(kvp.Key, out var proteinGroup);
-                            int iParameter = 2;
-                            if (hasQValue)
-                                ((SQLiteParameter)insertCommand.Parameters[iParameter++]).Value = (object)proteinGroup?.QValue ?? DBNull.Value;
-                            if (hasPep)
-                                ((SQLiteParameter)insertCommand.Parameters[iParameter]).Value = (object)proteinGroup?.Pep ?? DBNull.Value;
-                            insertCommand.ExecuteNonQuery();
-                        }
-                    }
-
-                    using (var insertCommand = _session.Connection.CreateCommand())
-                    {
-                        insertCommand.CommandText = @"INSERT INTO RefSpectraProteins (RefSpectraId, ProteinId) VALUES(?,?)";
-                        insertCommand.Parameters.Add(new SQLiteParameter());
-                        insertCommand.Parameters.Add(new SQLiteParameter());
-                        foreach (var kvp in _peptideIdProteinIds)
-                        {
-                            ((SQLiteParameter)insertCommand.Parameters[0]).Value = kvp.Key; // RefSpectraId
-                            ((SQLiteParameter)insertCommand.Parameters[1]).Value = kvp.Value + existingProteinsCount; // ProteinId
-                            insertCommand.ExecuteNonQuery();
-                        }
-                    }
-                }
-
-                _session.Flush();
-                _session.Clear();
-            }
-        }
-
-        /// <summary>
-        /// Writes each minimized spectrum's global (experiment-wide) q-values and PEPs to the
-        /// optional RefSpectra columns, adding only the columns that have a value.
-        /// </summary>
-        private class GlobalScoresWriter
-        {
-            private static readonly Tuple<string, Func<LibraryGlobalScores, double?>>[] COLUMNS =
-            {
-                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PrecursorQValue", scores => scores.PrecursorQValue),
-                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PrecursorPep", scores => scores.PrecursorPep),
-                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PeptideQValue", scores => scores.PeptideQValue),
-                Tuple.Create<string, Func<LibraryGlobalScores, double?>>(@"PeptidePep", scores => scores.PeptidePep),
-            };
-
-            private readonly ISession _session;
-            private readonly List<KeyValuePair<long, LibraryGlobalScores>> _scores =
-                new List<KeyValuePair<long, LibraryGlobalScores>>();
-
-            public GlobalScoresWriter(ISession session)
-            {
-                _session = session;
-            }
-
-            public void Add(DbRefSpectra refSpectra, LibraryGlobalScores globalScores)
-            {
-                if (!ReferenceEquals(globalScores, LibraryGlobalScores.EMPTY))
-                    _scores.Add(new KeyValuePair<long, LibraryGlobalScores>(refSpectra.Id ?? 0, globalScores));
-            }
-
-            public void Write()
-            {
-                var columns = COLUMNS.Where(column => _scores.Any(kvp => column.Item2(kvp.Value).HasValue)).ToList();
-                if (columns.Count == 0)
-                    return;
-                foreach (var column in columns)
-                    AddColumn(_session.Connection, @"RefSpectra", column.Item1);
-                using var updateCommand = _session.Connection.CreateCommand();
-                updateCommand.CommandText = @"UPDATE RefSpectra SET " +
-                                            string.Join(@", ", columns.Select(column => column.Item1 + @" = ?")) +
-                                            @" WHERE id = ?";
-                for (int i = 0; i <= columns.Count; i++)
-                    updateCommand.Parameters.Add(new SQLiteParameter());
-                foreach (var kvp in _scores)
-                {
-                    for (int i = 0; i < columns.Count; i++)
-                        ((SQLiteParameter)updateCommand.Parameters[i]).Value = (object)columns[i].Item2(kvp.Value) ?? DBNull.Value;
-                    ((SQLiteParameter)updateCommand.Parameters[columns.Count]).Value = kvp.Key;
-                    updateCommand.ExecuteNonQuery();
-                }
-            }
-        }
-
-        private static void AddColumn(System.Data.IDbConnection connection, string table, string column)
-        {
-            if (SqliteOperations.ColumnExists(connection, table, column))
-                return;
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = @"ALTER TABLE " + table + @" ADD COLUMN " + column + @" REAL";
-            cmd.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -345,269 +94,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progressMonitor, ref status);
         }
 
-        private static object ExecuteScalar(string commandText, SQLiteConnection connection)
-        {
-            using var cmd = new SQLiteCommand(commandText, connection);
-            return cmd.ExecuteScalar();
-        }
-
-        private static void ExecuteNonQuery(string commandText, SQLiteConnection connection)
-        {
-            using var cmd = new SQLiteCommand(commandText, connection);
-            cmd.ExecuteNonQuery();
-        }
-
-        private class SpectrumInserter : IDisposable
-        {
-            private const int _spectraBufferSize = 12;
-            private class InsertCommands
-            {
-                public SQLiteCommand[] _insertSpectraCmd;
-                public SQLiteCommand[] _insertAnnotationsCmd;
-                public SQLiteCommand[] _insertPeaksCmd;
-                public SQLiteCommand[] _insertRetentionTimesCmd;
-                public SQLiteCommand[] _insertModificationsCmd;
-                public List<DbRefSpectra> _buffer;
-            }
-            private ConcurrentDictionary<int, InsertCommands> _insertCommandsByThread;
-            private long _lastSpectraId, _lastAnnotationId, _lastRetentionTimesId, _lastModificationId;
-
-            private List<PropertyInfo> _dbRefSpectraProperties;
-            private List<PropertyInfo> _dbRefSpectraPeaksProperties;
-            private List<PropertyInfo> _dbRefSpectraPeakAnnotationsProperties;
-            private List<PropertyInfo> _dbModificationProperties;
-            private List<PropertyInfo> _dbRetentionTimeProperties;
-
-            private static SQLiteCommand[] GenerateInsertCommand(SQLiteConnection connection, string table, IList<PropertyInfo> properties)
-            {
-                string PropertySqlName(PropertyInfo p)
-                {
-                    return p.PropertyType.BaseType == typeof(DbEntity) ? p.Name + @"Id" : p.Name;
-                }
-
-                var result = new SQLiteCommand[2]; // individual and batch
-                // ReSharper disable LocalizableElement
-                string valuesBlock = "(" + string.Join(",", Enumerable.Repeat("?", properties.Count)) + ")";
-                string sql = "INSERT INTO " + table + " (" +
-                             string.Join(",", properties.Select(PropertySqlName)) + ") VALUES " + valuesBlock;
-
-                var cmd = result[0] = new SQLiteCommand(sql, connection);
-                for (int i = 0; i < properties.Count; ++i)
-                    cmd.Parameters.Add(new SQLiteParameter());
-
-                string batchSql = sql + "," + string.Join(",", Enumerable.Repeat(valuesBlock, _spectraBufferSize - 1));
-                cmd = result[1] = new SQLiteCommand(batchSql, connection);
-                for(int j = 0; j < _spectraBufferSize; ++j)
-                {
-                    for (int i = 0; i < properties.Count; ++i)
-                        cmd.Parameters.Add(new SQLiteParameter());
-                }
-                // ReSharper restore LocalizableElement
-                return result;
-            }
-
-            private static SQLiteCommand[] CloneCommands(SQLiteCommand[] commands)
-            {
-                var result = new SQLiteCommand[commands.Length];
-                for (var i = 0; i < commands.Length; i++)
-                {
-                    var cmd = commands[i];
-                    result[i] = cmd.Clone() as SQLiteCommand;
-                }
-                return result;
-            }
-
-            private static IEnumerable<PropertyInfo> GetProperties(Type dbType)
-            {
-                foreach (var property in dbType.GetProperties())
-                {
-                    if (property.Name == "EntityClass")
-                        continue;
-                    yield return property;
-                }
-            }
-
-            private static object GetPropertyValue(object obj, PropertyInfo property)
-            {
-                if (property.PropertyType.BaseType == typeof(DbEntity))
-                    return ((DbEntity)property.GetValue(obj)).Id;
-                return property.GetValue(obj);
-            }
-
-            public SpectrumInserter(ISession session)
-            {
-                var connection = session.Connection as SQLiteConnection;
-
-                _lastSpectraId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectra", connection);
-                _lastAnnotationId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectraPeakAnnotations", connection);
-                _lastRetentionTimesId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM RetentionTimes", connection);
-                _lastModificationId = (long)ExecuteScalar(@"SELECT IFNULL(MAX(id), 0) FROM Modifications", connection);
-
-                _dbRefSpectraProperties = new List<PropertyInfo>();
-                foreach (var property in typeof(DbRefSpectra).GetProperties())
-                {
-                    if (property.Name == "EntityClass")
-                        continue;
-                    if (property.PropertyType.IsValueType || property.PropertyType == typeof(string))
-                        _dbRefSpectraProperties.Add(property);
-                }
-
-                _dbRefSpectraPeaksProperties = new List<PropertyInfo>();
-                foreach (var property in typeof(DbRefSpectraPeaks).GetProperties())
-                {
-                    if (property.Name == "EntityClass" || property.Name == "Id")
-                        continue;
-                    _dbRefSpectraPeaksProperties.Add(property);
-                }
-
-                _dbRefSpectraPeakAnnotationsProperties = GetProperties(typeof(DbRefSpectraPeakAnnotations)).ToList();
-                _dbModificationProperties = GetProperties(typeof(DbModification)).ToList();
-                _dbRetentionTimeProperties = GetProperties(typeof(DbRetentionTimes)).ToList();
-
-                _insertCommandsByThread = new ConcurrentDictionary<int, InsertCommands>();
-                var masterCmds = _insertCommandsByThread[0] = new InsertCommands();
-
-                masterCmds._insertSpectraCmd = GenerateInsertCommand(connection, @"RefSpectra", _dbRefSpectraProperties);
-                masterCmds._insertPeaksCmd = GenerateInsertCommand(connection, @"RefSpectraPeaks", _dbRefSpectraPeaksProperties);
-                masterCmds._insertAnnotationsCmd = GenerateInsertCommand(connection, @"RefSpectraPeakAnnotations", _dbRefSpectraPeakAnnotationsProperties);
-                masterCmds._insertModificationsCmd = GenerateInsertCommand(connection, @"Modifications", _dbModificationProperties);
-                masterCmds._insertRetentionTimesCmd = GenerateInsertCommand(connection, @"RetentionTimes", _dbRetentionTimeProperties);
-            }
-
-            public void InsertSpectrum(DbRefSpectra dbRefSpectrum)
-            {
-                int threadId = Thread.CurrentThread.ManagedThreadId;
-
-                if (!_insertCommandsByThread.TryGetValue(threadId, out InsertCommands insertCommands))
-                {
-                    var masterCmds = _insertCommandsByThread[0];
-                    insertCommands = _insertCommandsByThread[threadId] = new InsertCommands();
-                    insertCommands._insertSpectraCmd = CloneCommands(masterCmds._insertSpectraCmd);
-                    insertCommands._insertPeaksCmd = CloneCommands(masterCmds._insertPeaksCmd);
-                    insertCommands._insertAnnotationsCmd = CloneCommands(masterCmds._insertAnnotationsCmd);
-                    insertCommands._insertModificationsCmd = CloneCommands(masterCmds._insertModificationsCmd);
-                    insertCommands._insertRetentionTimesCmd = CloneCommands(masterCmds._insertRetentionTimesCmd);
-                    insertCommands._buffer = new List<DbRefSpectra>(_spectraBufferSize);
-                }
-
-                var buffer = insertCommands._buffer;
-                buffer.Add(dbRefSpectrum);
-                dbRefSpectrum.Id = Interlocked.Increment(ref _lastSpectraId);
-                if (_spectraBufferSize > 1 && buffer.Count < _spectraBufferSize)
-                    return;
-
-                FlushBuffer(insertCommands);
-                buffer.Clear();
-            }
-
-            private void FlushBuffer(InsertCommands insertCommands = null)
-            {
-                int threadId = Thread.CurrentThread.ManagedThreadId;
-
-                if (insertCommands == null)
-                    if (!_insertCommandsByThread.TryGetValue(threadId, out insertCommands))
-                        return;
-
-                var buffer = insertCommands._buffer;
-                if (!buffer.Any())
-                    return;
-
-                int whichCmd = _spectraBufferSize > 1 && buffer.Count == _spectraBufferSize ? 1 : 0;
-                var _insertSpectraCmd = insertCommands._insertSpectraCmd[whichCmd];
-                var _insertPeaksCmd = insertCommands._insertPeaksCmd[whichCmd];
-                var _insertAnnotationsCmd = insertCommands._insertAnnotationsCmd[0];
-                var _insertRetentionTimesCmd = insertCommands._insertRetentionTimesCmd[0];
-                var _insertModificationsCmd = insertCommands._insertModificationsCmd[0];
-
-                int spectraCmdParameter = 0, peaksCmdParameter = 0;
-                foreach (var dbRefSpectrum in buffer)
-                {
-                    {
-                        foreach (var property in _dbRefSpectraProperties)
-                            _insertSpectraCmd.Parameters[spectraCmdParameter++].Value = GetPropertyValue(dbRefSpectrum, property);
-
-                        dbRefSpectrum.Peaks.RefSpectra ??= dbRefSpectrum;
-                        foreach (var property in _dbRefSpectraPeaksProperties)
-                            _insertPeaksCmd.Parameters[peaksCmdParameter++].Value = GetPropertyValue(dbRefSpectrum.Peaks, property);
-                    }
-
-                    if (whichCmd == 0)
-                    {
-                        spectraCmdParameter = 0;
-                        peaksCmdParameter = 0;
-                        _insertSpectraCmd.ExecuteNonQuery();
-                        _insertPeaksCmd.ExecuteNonQuery();
-                    }
-                }
-
-                if (whichCmd == 1)
-                {
-                    _insertSpectraCmd.ExecuteNonQuery();
-                    _insertPeaksCmd.ExecuteNonQuery();
-                }
-
-                foreach (var dbRefSpectrum in buffer)
-                {
-                    if (dbRefSpectrum.PeakAnnotations != null)
-                    {
-                        foreach (var annotation in dbRefSpectrum.PeakAnnotations)
-                        {
-                            int i = 0;
-                            annotation.Id = Interlocked.Increment(ref _lastAnnotationId);
-                            annotation.RefSpectra = dbRefSpectrum;
-                            foreach (var property in _dbRefSpectraPeakAnnotationsProperties)
-                                _insertAnnotationsCmd.Parameters[i++].Value = GetPropertyValue(annotation, property);
-                            _insertAnnotationsCmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    {
-                        foreach (var retentionTime in dbRefSpectrum.RetentionTimes)
-                        {
-                            int i = 0;
-                            retentionTime.Id = Interlocked.Increment(ref _lastRetentionTimesId);
-                            retentionTime.RefSpectra = dbRefSpectrum;
-                            foreach (var property in _dbRetentionTimeProperties)
-                                _insertRetentionTimesCmd.Parameters[i++].Value = GetPropertyValue(retentionTime, property);
-                            _insertRetentionTimesCmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    if (dbRefSpectrum.Modifications != null)
-                    {
-                        foreach (var modification in dbRefSpectrum.Modifications)
-                        {
-                            int i = 0;
-                            modification.Id = Interlocked.Increment(ref _lastModificationId);
-                            modification.RefSpectra = dbRefSpectrum;
-                            foreach (var property in _dbModificationProperties)
-                                _insertModificationsCmd.Parameters[i++].Value = GetPropertyValue(modification, property);
-                            _insertModificationsCmd.ExecuteNonQuery();
-                        }
-                    }
-                }
-
-            }
-
-            public void Dispose()
-            {
-                foreach (var cmd in _insertCommandsByThread)
-                {
-                    if (cmd.Key > 0)
-                    {
-                        FlushBuffer(cmd.Value);
-                        cmd.Value._buffer.Clear();
-                    }
-                    cmd.Value._insertSpectraCmd.ForEach(c => c.Dispose());
-                    cmd.Value._insertAnnotationsCmd.ForEach(c => c.Dispose());
-                    cmd.Value._insertPeaksCmd.ForEach(c => c.Dispose());
-                    cmd.Value._insertRetentionTimesCmd.ForEach(c => c.Dispose());
-                    cmd.Value._insertModificationsCmd.ForEach(c => c.Dispose());
-                }
-                _insertCommandsByThread.Clear();
-            }
-        }
-
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
             IList<SpectrumMzInfo> listSpectra,
             string libraryName,
@@ -615,8 +101,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             ref IProgressStatus status)
         {
             const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
-            const int majorVer = 1;
-            const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;
+            const int majorVer = BlibWriter.MAJOR_VERSION;
+            const int minorVer = BlibSchema.CurrentMinorVersion;
             string libId = libraryName;
             // Use a very specific LSID, since it really only matches this document.
             string libLsid = string.Format(@"urn:lsid:{0}:spectral_library:bibliospec:nr:minimal:{1}:{2}:{3}.{4}",
@@ -626,89 +112,53 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             // Ion mobilities are stored by the index of the file in LibraryFiles, but the file
             // indexes are not known until all of the spectra have been inserted, so collect the
             // values by source file id here and index them below.
-            var listIonMobilitiesByFileId = new List<IList<KeyValuePair<int, IonMobilityAndCCS>>>();
+            var listIonMobilitiesByFileId = new List<IList<KeyValuePair<long, IonMobilityAndCCS>>>();
             var sourceFiles = new Dictionary<string, long>();
 
-            var localStatus = status;
-            using (ISession session = OpenWriteSession())
+            // A library file that already exists keeps the tables another part of Skyline put
+            // there (the iRT table of a document library), and gets its library tables anew.
+            using (var writer = BlibWriter.Create(FilePath, libLsid, false, File.Exists(FilePath)))
             {
-                // speed up writing by turning off filesystem synchronization and journaling
-                var connection = session.Connection as SQLiteConnection;
-                ExecuteNonQuery(@"PRAGMA journal_mode=OFF;
-                PRAGMA synchronous=OFF;
-                PRAGMA defer_foreign_keys = ON;", connection);
-
-                using ITransaction transaction = session.BeginTransaction();
+                writer.BeginBatch();
                 int progressPercent = -1;
-                int i = 0;
-                var proteinTablesBuilder = new ProteinTablesBuilder(session);
-                using (var spectrumInserter = new SpectrumInserter(session))
+                for (int start = 0; start < listSpectra.Count; start += SPECTRA_PER_BATCH)
                 {
-                    ParallelEx.ForEach(listSpectra, spectrum =>
+                    // The records are made in parallel (the peak blobs compressed, the
+                    // modifications parsed), then written in the order of the list.
+                    int count = Math.Min(SPECTRA_PER_BATCH, listSpectra.Count - start);
+                    var rows = new SpectrumRows[count];
+                    ParallelEx.For(0, count, i => rows[i] = SpectrumRows.FromPeaks(listSpectra[start + i]), maxThreads: 4);
+                    for (int i = 0; i < count; i++)
                     {
-                        var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
-                        spectrumInserter.InsertSpectrum(dbRefSpectrum);
-                        var ionMobilitiesByFileId =
-                            dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
-                                Select(rt =>
-                                {
-                                    var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(rt.IonMobility, (eIonMobilityUnits)rt.IonMobilityType);
-                                    var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, rt.CollisionalCrossSectionSqA, rt.IonMobilityHighEnergyOffset);
-                                    return new KeyValuePair<int, IonMobilityAndCCS>((int)rt.SpectrumSourceId, ionMobilityAndCCS);
-                                }).ToArray();
-                        lock(listLibrary)
+                        if (progressMonitor != null)
                         {
-                            // The file's index in LibraryFiles is not known until the library is
-                            // loaded back from the file which is being written here.
-                            listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key,
-                                dbRefSpectrum.Copies,
-                                dbRefSpectrum.NumPeaks,
-                                (int)(dbRefSpectrum.Id ?? 0),
-                                null,
-                                spectrum.Protein));
-                            listIonMobilitiesByFileId.Add(ionMobilitiesByFileId);
-                            proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
-                            if (progressMonitor != null)
+                            if (progressMonitor.IsCanceled)
+                                return null;
+                            int progressNew = (start + i) * 100 / listSpectra.Count;
+                            if (progressPercent != progressNew)
                             {
-                                if (progressMonitor.IsCanceled)
-                                    return;
-                                int progressNew = (i*100/listSpectra.Count);
-                                if (progressPercent != progressNew)
-                                {
-                                    progressMonitor.UpdateProgress(localStatus = localStatus.ChangePercentComplete(progressNew));
-                                    progressPercent = progressNew;
-                                }
+                                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
+                                progressPercent = progressNew;
                             }
-
-                            ++i;
                         }
-                    }, maxThreads:4);
+
+                        var row = rows[i];
+                        long refId = row.Write(writer, sourceFiles);
+                        var spectrum = listSpectra[start + i];
+                        // The file's index in LibraryFiles is not known until the library is
+                        // loaded back from the file which is being written here.
+                        listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key,
+                            row.Record.Copies,
+                            row.Record.NumPeaks,
+                            (int)refId,
+                            null,
+                            spectrum.Protein));
+                        listIonMobilitiesByFileId.Add(row.IonMobilitiesByFileId);
+                    }
                 }
 
-                if (progressMonitor?.IsCanceled ?? false)
-                    return null;
-
-                status = localStatus;
-
-                session.Flush();
-                session.Clear();
-
-                proteinTablesBuilder.Write();
-                // Simulate ctime(d), which is what BlibBuild uses.
-                string createTime = string.Format(@"{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // CONSIDER: localize? different date/time format in different countries
-                DbLibInfo libInfo = new DbLibInfo
-                {
-                    LibLSID = libLsid,
-                    CreateTime = createTime,
-                    NumSpecs = listLibrary.Count,
-                    MajorVersion = majorVer,
-                    MinorVersion = minorVer
-                };
-
-                session.Save(libInfo);
-                session.Flush();
-                session.Clear();
-                transaction.Commit();
+                writer.CommitBatch();
+                writer.Complete();
 
                 if (progressMonitor != null)
                 {
@@ -741,93 +191,141 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer, libraryEntries, FileStreamManager.Default);
         }
 
-        private DbRefSpectra RefSpectrumFromPeaks(ISession session, SpectrumMzInfo spectrum, IDictionary<string, long> sourceFiles)
+        /// <summary>
+        /// The rows of one spectrum from a list: its record, with the peaks encoded and the
+        /// modifications parsed, and its observations, each naming its source file by name until
+        /// the writer assigns the file its id.
+        /// </summary>
+        private class SpectrumRows
         {
-            //if (string.IsNullOrEmpty(spectrum.SourceFile))
-            //    throw new InvalidDataException(@"Spectrum must have a source file");
+            private readonly string _sourceFile;
+            private readonly List<Observation> _observations = new List<Observation>();
 
-            var peaksInfo = spectrum.SpectrumPeaks;
-            var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
-            var isProteomic = smallMoleculeAttributes.IsEmpty;
-            var ionMobility = spectrum.IonMobility ?? IonMobilityAndCCS.EMPTY;
-
-            long fileId;
-            lock (session)
-                fileId = GetSpectrumSourceId(session, spectrum.SourceFile, sourceFiles);
-
-            var refSpectra = new DbRefSpectra
+            private SpectrumRows(BlibSpectrumRecord record, string sourceFile)
             {
-                PeptideSeq = isProteomic ? FastaSequence.StripModifications(spectrum.Key.Target).Sequence : string.Empty,
-                PrecursorMZ = spectrum.PrecursorMz,
-                PrecursorCharge = spectrum.Key.Charge,
-                PrecursorAdduct = spectrum.Key.Adduct.AsFormula(), // [M+...] format, even for proteomic charges
-                MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
-                ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
-                InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
-                OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
-                PeptideModSeq = isProteomic ? spectrum.Key.Target.Sequence : string.Empty,
-                Copies = 1,
-                NumPeaks = (ushort)peaksInfo.Peaks.Length,
-                RetentionTime = spectrum.RetentionTime.GetValueOrDefault(),
-                IonMobility = ionMobility.IonMobility.Mobility,
-                IonMobilityType = (int)ionMobility.IonMobility.Units,
-                IonMobilityHighEnergyOffset = ionMobility.HighEnergyIonMobilityValueOffset,
-                CollisionalCrossSectionSqA = ionMobility.CollisionalCrossSectionSqA,
-                FileId = fileId,
-                SpecIdInFile = null,
-                Score = 0.0,
-                ScoreType = 0
-            };
+                Record = record;
+                _sourceFile = sourceFile;
+            }
 
-            refSpectra.Peaks = new DbRefSpectraPeaks
+            public BlibSpectrumRecord Record { get; }
+
+            /// <summary>The observations with an ion mobility, by the id of their source file in the library.</summary>
+            public IList<KeyValuePair<long, IonMobilityAndCCS>> IonMobilitiesByFileId { get; } = new List<KeyValuePair<long, IonMobilityAndCCS>>();
+
+            public static SpectrumRows FromPeaks(SpectrumMzInfo spectrum)
             {
-                RefSpectra = refSpectra,
-                PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
-                PeakMZ = MZsToBytes(peaksInfo.Peaks)
-            };
+                var peaksInfo = spectrum.SpectrumPeaks;
+                var smallMoleculeAttributes = spectrum.SmallMoleculeLibraryAttributes ?? SmallMoleculeLibraryAttributes.EMPTY;
+                var isProteomic = smallMoleculeAttributes.IsEmpty;
+                var ionMobility = spectrum.IonMobility ?? IonMobilityAndCCS.EMPTY;
 
-            refSpectra.PeakAnnotations = DbRefSpectraPeakAnnotations.Create(refSpectra, peaksInfo);
-
-            refSpectra.RetentionTimes = new List<DbRetentionTimes>();
-            if (spectrum.RetentionTimes != null && spectrum.RetentionTimes.Any())
-            {
-                foreach (var rt in spectrum.RetentionTimes) 
+                var record = new BlibSpectrumRecord
                 {
-                    if (string.IsNullOrEmpty(rt.SourceFile))
-                        throw new InvalidDataException(@"Spectrum must have a source file");
-                    long rtFileId;
-                    lock (session)
-                        rtFileId = GetSpectrumSourceId(session, rt.SourceFile, sourceFiles);
-                    refSpectra.RetentionTimes.Add(new DbRetentionTimes
+                    PeptideSeq = isProteomic ? FastaSequence.StripModifications(spectrum.Key.Target).Sequence : string.Empty,
+                    PrecursorMz = spectrum.PrecursorMz,
+                    PrecursorCharge = spectrum.Key.Charge,
+                    PrecursorAdduct = spectrum.Key.Adduct.AsFormula(), // [M+...] format, even for proteomic charges
+                    MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
+                    ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
+                    InchiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
+                    OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
+                    PeptideModSeq = isProteomic ? spectrum.Key.Target.Sequence : string.Empty,
+                    Copies = 1,
+                    RetentionTime = spectrum.RetentionTime.GetValueOrDefault(),
+                    IonMobility = ionMobility.IonMobility.Mobility,
+                    IonMobilityType = (int)ionMobility.IonMobility.Units,
+                    IonMobilityHighEnergyOffset = ionMobility.HighEnergyIonMobilityValueOffset,
+                    CollisionalCrossSectionSqA = ionMobility.CollisionalCrossSectionSqA,
+                    SpecIdInFile = null,
+                    Score = 0.0,
+                    ScoreType = BlibWriter.SCORE_TYPE_UNKNOWN,
+                    Proteins = ProteinsOf(spectrum.Protein),
+                };
+                SetPeaks(record, peaksInfo);
+                record.Modifications = ModsFromModifiedSequence(record.PeptideModSeq);
+
+                var rows = new SpectrumRows(record, spectrum.SourceFile);
+                if (spectrum.RetentionTimes != null && spectrum.RetentionTimes.Any())
+                {
+                    foreach (var rt in spectrum.RetentionTimes)
                     {
-                        BestSpectrum = rt.IsBest ? 1 : 0,
-                        RetentionTime = rt.RetentionTime,
-                        SpectrumSourceId = rtFileId,
-                        IonMobility = rt.IonMobility.IonMobility.Mobility,
-                        IonMobilityType = (int)rt.IonMobility.IonMobility.Units,
-                        IonMobilityHighEnergyOffset = rt.IonMobility.HighEnergyIonMobilityValueOffset,
-                        CollisionalCrossSectionSqA = rt.IonMobility.CollisionalCrossSectionSqA,
-                        RedundantRefSpectraId = -1
+                        if (string.IsNullOrEmpty(rt.SourceFile))
+                            throw new InvalidDataException(@"Spectrum must have a source file");
+                        rows._observations.Add(new Observation
+                        {
+                            SourceFile = rt.SourceFile,
+                            IsBest = rt.IsBest,
+                            RetentionTime = rt.RetentionTime,
+                            IonMobility = rt.IonMobility.IonMobility.Mobility,
+                            IonMobilityType = (int)rt.IonMobility.IonMobility.Units,
+                            IonMobilityHighEnergyOffset = rt.IonMobility.HighEnergyIonMobilityValueOffset,
+                            CollisionalCrossSectionSqA = rt.IonMobility.CollisionalCrossSectionSqA,
+                            RedundantId = -1
+                        });
+                    }
+                }
+                else if (spectrum.RetentionTime.HasValue)
+                {
+                    rows._observations.Add(new Observation
+                    {
+                        SourceFile = spectrum.SourceFile,
+                        IsBest = true,
+                        RetentionTime = record.RetentionTime,
+                        IonMobility = record.IonMobility,
+                        IonMobilityType = record.IonMobilityType,
+                        IonMobilityHighEnergyOffset = record.IonMobilityHighEnergyOffset,
+                        CollisionalCrossSectionSqA = record.CollisionalCrossSectionSqA,
+                        RedundantId = -1
                     });
                 }
-            }
-            else if (spectrum.RetentionTime.HasValue)
-            {
-                refSpectra.RetentionTimes.Add(new DbRetentionTimes
-                {
-                    BestSpectrum = 1,
-                    RetentionTime = refSpectra.RetentionTime,
-                    SpectrumSourceId = refSpectra.FileId.GetValueOrDefault(),
-                    IonMobility = refSpectra.IonMobility,
-                    IonMobilityHighEnergyOffset = refSpectra.IonMobilityHighEnergyOffset,
-                    IonMobilityType = refSpectra.IonMobilityType,
-                    CollisionalCrossSectionSqA = refSpectra.CollisionalCrossSectionSqA,
-                    RedundantRefSpectraId = -1
-                });
+                return rows;
             }
 
-            ModsFromModifiedSequence(refSpectra);
-            return refSpectra;
+            /// <summary>Writes the spectrum and its observations, and returns the spectrum's id.</summary>
+            public long Write(BlibWriter writer, IDictionary<string, long> sourceFiles)
+            {
+                Record.FileId = GetSpectrumSourceId(writer, _sourceFile, sourceFiles);
+                long refId = writer.AddSpectrum(Record);
+                foreach (var observation in _observations)
+                {
+                    long fileId = GetSpectrumSourceId(writer, observation.SourceFile, sourceFiles);
+                    observation.Write(writer, refId, fileId);
+                    if (observation.IonMobilityType != BlibWriter.ION_MOBILITY_TYPE_NONE)
+                    {
+                        var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(observation.IonMobility, (eIonMobilityUnits)observation.IonMobilityType);
+                        var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, observation.CollisionalCrossSectionSqA, observation.IonMobilityHighEnergyOffset);
+                        IonMobilitiesByFileId.Add(new KeyValuePair<long, IonMobilityAndCCS>(fileId, ionMobilityAndCCS));
+                    }
+                }
+                return refId;
+            }
+        }
+
+        /// <summary>
+        /// One <c>RetentionTimes</c> row to be written: an observation of a spectrum in a source
+        /// file, with the ion mobility seen there, and for a minimized library the observation's
+        /// own spectrum in the source library (<see cref="Key"/>) and in the redundant library
+        /// being written (<see cref="RedundantId"/>).
+        /// </summary>
+        private class Observation
+        {
+            public string SourceFile { get; set; }
+            public bool IsBest { get; set; }
+            public double? RetentionTime { get; set; }
+            public double? IonMobility { get; set; }
+            public int IonMobilityType { get; set; } = BlibWriter.ION_MOBILITY_TYPE_NONE;
+            public double? IonMobilityHighEnergyOffset { get; set; }
+            public double? CollisionalCrossSectionSqA { get; set; }
+            public long RedundantId { get; set; }
+            /// <summary>The source file's id in the library being written, once it has one.</summary>
+            public long SourceFileId { get; set; }
+            public SpectrumLiteKey Key { get; set; }
+
+            public void Write(BlibWriter writer, long refId, long sourceFileId)
+            {
+                writer.AddRetentionTime(refId, sourceFileId, RetentionTime, null, null, 0, IsBest, IonMobility,
+                    CollisionalCrossSectionSqA, IonMobilityHighEnergyOffset, IonMobilityType, RedundantId);
+            }
         }
 
         /// <summary>
@@ -848,8 +346,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             string libAuthority = @"unknown.org";
             string libId = library.Name;
             // CONSIDER: Use version numbers of the original library?
-            int libraryRevision = DbLibInfo.INITIAL_LIBRARY_REVISION;
-            int schemaVersion = 0;
+            int libraryRevision = BlibWriter.MAJOR_VERSION;
+            // The writer writes the current schema whatever the source library's was
+            const int schemaVersion = BlibSchema.CurrentMinorVersion;
 
             bool saveRetentionTimes = false;
             bool saveRedundantLib = false;
@@ -872,19 +371,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 // We may have a RetentionTimes table if schemaVersion if 1 or greater.
                 saveRetentionTimes = blibLib.SchemaVersion >= 1;
                 libraryRevision = blibLib.Revision;
-                schemaVersion = saveRetentionTimes ? DbLibInfo.SCHEMA_VERSION_CURRENT : blibLib.SchemaVersion;
 
                 // If the document has MS1 filtering enabled we will save a minimized version
                 // of the redundant library, if available.
-                if(document.Settings.TransitionSettings.FullScan.IsEnabledMs)
+                if (document.Settings.TransitionSettings.FullScan.IsEnabledMs)
                 {
-                    String redundantLibPath = blibLib.FilePathRedundant;
-                    if(File.Exists(redundantLibPath))
-                    {
-                        string path = BiblioSpecLiteSpec.GetRedundantName(FilePath); 
-                        CreateSessionFactory_Redundant(path);
-                        saveRedundantLib = true;
-                    }
+                    saveRedundantLib = File.Exists(blibLib.FilePathRedundant);
                 }
             }
             else if (library is BiblioSpecLibrary)
@@ -909,244 +401,296 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             var dictFilesRedundant = new Dictionary<string, long>();
 
             // Hash table to store the score types in the library
-            var dictScoreTypes = new Dictionary<string, ushort>();
+            var dictScoreTypes = new Dictionary<string, int>();
 
-            ISession redundantSession = null;
-            ITransaction redundantTransaction = null;
-            int redundantSpectraCount = 0;
+            BlibWriter redundantWriter = null;
 
             var dataFiles = library.LibraryDetails.DataFiles.ToArray();
+            // The precursors to minimize, found once: the optional columns a library gets must be
+            // in place before the rows that carry values, so the values are surveyed first.
+            var precursors = GetLibraryPrecursors(document, library, smallMoleculeConversionMap).ToList();
+            // A library with protein-group q-values keeps its own groups, which carry them
+            bool keepLibraryProteinGroups = library.GlobalQValueLevels.Contains(GlobalQValueLevel.protein);
 
             try
             {
-                using (ISession session = OpenWriteSession())
-                using (ITransaction transaction = session.BeginTransaction())
+                using (var writer = BlibWriter.Create(FilePath, libLsid))
                 {
-                    int peptideCount = document.MoleculeCount;
+                    writer.SetRevision(libraryRevision);
+                    if (saveRetentionTimes)
+                        AddOptionalColumns(writer, precursors, keepLibraryProteinGroups);
+                    writer.BeginBatch();
                     int savedCount = 0;
-                    var proteinTablesBuilder = new ProteinTablesBuilder(session);
-                    var globalScoresWriter = new GlobalScoresWriter(session);
-                    // A library with protein-group q-values keeps its own groups, which carry them
-                    bool keepLibraryProteinGroups = library.GlobalQValueLevels.Contains(GlobalQValueLevel.protein);
-
-                    foreach (var moleculeGroup in document.MoleculeGroups)
+                    foreach (var precursor in precursors)
                     {
-                        var proteinName = moleculeGroup.Name;
-                        foreach (var nodePep in moleculeGroup.Molecules)
+                        if (dictLibrary.ContainsKey(precursor.NewLibKey))
+                            continue;
+
+                        var nodeGroup = precursor.NodeGroup;
+                        var libKey = precursor.LibKey;
+                        var labelType = nodeGroup.TransitionGroup.LabelType;
+                        // saveRetentionTimes will be false unless this is a BiblioSpec(schemaVersion >=1) library.
+                        if (!saveRetentionTimes)
                         {
-                            foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                            // get the best spectra
+                            foreach (var spectrumInfo in library.GetSpectra(libKey, labelType,
+                                         LibraryRedundancy.best))
                             {
-                                // Only get library info from precursors that use the desired library
-                                if (!nodeGroup.HasLibInfo || !Equals(nodeGroup.LibInfo.LibraryName, library.Name))
-                                    continue;
+                                var record = CreateRecord(precursor);
+                                FillRecord(writer, convertingToSmallMolecules, spectrumInfo, record, dictFiles, dictScoreTypes,
+                                    GetSpectrumSourceFile(spectrumInfo.FilePath, dataFiles));
+                                long refId = writer.AddSpectrum(record);
 
-                                TransitionGroup group = nodeGroup.TransitionGroup;
-                                var peptideSeq = nodePep.SourceUnmodifiedTarget;
-                                var precursorAdduct = group.PrecursorAdduct;
-                                IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
+                                dictLibrary.Add(precursor.NewLibKey,
+                                    new BiblioLiteSpectrumInfo(precursor.NewLibKey, record.Copies,
+                                        record.NumPeaks,
+                                        (int) refId,
+                                        null,
+                                        precursor.ProteinName));
+                            }
+                        }
+                        // This is a BiblioSpec(schemaVersion >=1) library.
+                        else
+                        {
+                            // get all the spectra, including the redundant ones if this library has any
+                            var spectra = library.GetSpectra(libKey, labelType, LibraryRedundancy.all_redundant)
+                                .ToArray();
+                            // Avoid saving to the RefSpectra table for isotope label types that have no spectra
+                            if (spectra.Length == 0)
+                                continue;
 
-                                var smallMoleculeAttributes = nodePep.Peptide.GetSmallMoleculeLibraryAttributes();
-                                Target peptideModSeq;
-                                if (nodePep.IsProteomic)
-                                {
-                                    var calcPre =
-                                        document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
-                                    peptideModSeq = calcPre.GetModifiedSequence(peptideSeq,
-                                        SequenceModFormatType.lib_precision, false);
-                                }
-                                else
-                                {
-                                    peptideModSeq = nodePep.SourceModifiedTarget;
-                                }
+                            var record = CreateRecord(precursor);
 
-                                LibKey libKey = peptideModSeq.GetLibKey(nodeGroup.PrecursorAdduct);
-                                var newLibKey = libKey;
+                            // Get all the information for this reference spectrum.
+                            // For BiblioSpec (schema ver >= 1), this can include retention time information
+                            // for this spectrum as well as any redundant spectra for the peptide.
+                            // Ids of spectra in the redundant library, where available, are also returned.
+                            var observations = new List<Observation>();
+                            BuildRefSpectra(writer, convertingToSmallMolecules, record, spectra,
+                                dictFiles, dictScoreTypes, observations, dataFiles);
 
-                                if (convertingToSmallMolecules)
-                                {
-                                    if (smallMoleculeConversionMap.TryGetValue(
-                                        peptideModSeq.GetLibKey(group.PrecursorAdduct), out newLibKey))
-                                    {
-                                        precursorAdduct = newLibKey.Adduct;
-                                        smallMoleculeAttributes = newLibKey.SmallMoleculeLibraryAttributes;
-                                    }
-                                    else
-                                    {
-                                        // Not being converted
-                                        Assume.IsTrue(group.Peptide.IsDecoy);
-                                        continue; // Not wanted in library
-                                    }
-                                }
+                            var globalScores = precursor.GlobalScores;
+                            SetGlobalScores(record, globalScores);
+                            long refId = writer.AddSpectrum(record);
+                            foreach (var observation in observations)
+                                observation.Write(writer, refId, observation.SourceFileId);
 
-                                if (dictLibrary.ContainsKey(newLibKey))
-                                    continue;
-
-                                // saveRetentionTimes will be false unless this is a BiblioSpec(schemaVersion >=1) library.
-                                if (!saveRetentionTimes)
-                                {
-                                    // get the best spectra
-                                    foreach (var spectrumInfo in library.GetSpectra(libKey, labelType,
-                                        LibraryRedundancy.best))
-                                    {
-                                        DbRefSpectra refSpectra = MakeRefSpectrum(session,
-                                            convertingToSmallMolecules,
-                                            spectrumInfo,
-                                            peptideSeq,
-                                            peptideModSeq,
-                                            nodeGroup.PrecursorMz,
-                                            precursorAdduct,
-                                            smallMoleculeAttributes,
-                                            dictFiles,
-                                            dictScoreTypes,
-                                            GetSpectrumSourceFile(spectrumInfo.FilePath, dataFiles));
-
-                                        session.Save(refSpectra);
-
-                                        dictLibrary.Add(newLibKey,
-                                            new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
-                                                refSpectra.NumPeaks,
-                                                (int) (refSpectra.Id ?? 0),
-                                                null,
-                                                proteinName));
-                                    }
-
-                                    session.Flush();
-                                    session.Clear();
-                                }
-                                // This is a BiblioSpec(schemaVersion >=1) library.
-                                else
-                                {
-                                    // get all the spectra, including the redundant ones if this library has any
-                                    var spectra = library.GetSpectra(libKey, labelType, LibraryRedundancy.all_redundant)
-                                        .ToArray();
-                                    // Avoid saving to the RefSpectra table for isotope label types that have no spectra
-                                    if (spectra.Length == 0)
-                                        continue;
-
-                                    DbRefSpectra refSpectra = new DbRefSpectra
-                                    {
-                                        PeptideSeq = peptideSeq.IsProteomic ? peptideSeq.Sequence : string.Empty,
-                                        PrecursorMZ = nodeGroup.PrecursorMz,
-                                        PrecursorCharge = precursorAdduct.AdductCharge,
-                                        PrecursorAdduct =
-                                            precursorAdduct.AsFormula(), // [M+...] format, even for proteomic charges
-                                        MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
-                                        ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
-                                        InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
-                                        OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
-                                        PeptideModSeq = peptideModSeq.IsProteomic
-                                            ? peptideModSeq.Sequence
-                                            : string.Empty
-                                    };
-
-                                    // Get all the information for this reference spectrum.
-                                    // For BiblioSpec (schema ver >= 1), this can include retention time information 
-                                    // for this spectrum as well as any redundant spectra for the peptide.
-                                    // Ids of spectra in the redundant library, where available, are also returned.
-                                    var redundantSpectraKeys = new List<SpectrumKeyTime>();
-                                    BuildRefSpectra(document, session, convertingToSmallMolecules, refSpectra, spectra,
-                                        dictFiles, dictScoreTypes, redundantSpectraKeys, dataFiles);
-
-                                    session.Save(refSpectra);
-                                    session.Flush();
-                                    session.Clear();
-
-                                    dictLibrary.Add(newLibKey,
-                                        new BiblioLiteSpectrumInfo(newLibKey,
-                                            refSpectra.Copies,
-                                            refSpectra.NumPeaks,
-                                            (int)(refSpectra.Id ?? 0),
-                                            null,
-                                            proteinName));
-
-                                    // Save entries in the redundant library.
-                                    if (saveRedundantLib && redundantSpectraKeys.Count > 0)
-                                    {
-                                        if (redundantSession == null)
-                                        {
-                                            redundantSession = OpenWriteSession_Redundant();
-                                            redundantTransaction = redundantSession.BeginTransaction();
-                                        }
-
-                                        SaveRedundantSpectra(redundantSession, redundantSpectraKeys, dictFilesRedundant,
-                                            refSpectra, library, setRedundantSpectraIds);
-                                        redundantSpectraCount += redundantSpectraKeys.Count;
-                                    }
-
-                                    // Prepare to build peptide-protein tables
-                                    var globalScores = library.GetGlobalScores(libKey);
-                                    globalScoresWriter.Add(refSpectra, globalScores);
-                                    if (keepLibraryProteinGroups)
-                                    {
-                                        foreach (var proteinGroup in globalScores.ProteinGroups)
-                                            proteinTablesBuilder.Add(refSpectra, proteinGroup);
-                                    }
-                                    else
-                                    {
-                                        proteinTablesBuilder.Add(refSpectra, proteinName);
-                                    }
-                                }
+                            // The peptide-protein tables
+                            if (keepLibraryProteinGroups)
+                            {
+                                foreach (var proteinGroup in globalScores.ProteinGroups)
+                                    writer.AddSpectrumProtein(refId, writer.AddProtein(proteinGroup.Name, proteinGroup.QValue, proteinGroup.Pep));
+                            }
+                            else if (!string.IsNullOrEmpty(precursor.ProteinName))
+                            {
+                                writer.AddSpectrumProtein(refId, writer.AddProtein(precursor.ProteinName));
                             }
 
-                            savedCount++;
-                            if (!UpdateProgress(peptideCount, savedCount))
-                                return null;
+                            dictLibrary.Add(precursor.NewLibKey,
+                                new BiblioLiteSpectrumInfo(precursor.NewLibKey,
+                                    record.Copies,
+                                    record.NumPeaks,
+                                    (int)refId,
+                                    null,
+                                    precursor.ProteinName));
+
+                            // Save entries in the redundant library.
+                            var redundantObservations = observations.Where(observation => observation.Key != null).ToList();
+                            if (saveRedundantLib && redundantObservations.Count > 0)
+                            {
+                                if (redundantWriter == null)
+                                {
+                                    redundantWriter = BlibWriter.Create(BiblioSpecLiteSpec.GetRedundantName(FilePath),
+                                        libLsid.Replace(@":nr:", @":redundant:"), true);
+                                    redundantWriter.SetRevision(libraryRevision);
+                                    redundantWriter.BeginBatch();
+                                }
+
+                                SaveRedundantSpectra(redundantWriter, redundantObservations, dictFilesRedundant,
+                                    record, library, setRedundantSpectraIds);
+                            }
                         }
+
+                        savedCount++;
+                        if (!UpdateProgress(precursors.Count, savedCount))
+                            return null;
                     }
 
-                    // Output the protein - peptide relationships
-                    proteinTablesBuilder.Write();
-                    globalScoresWriter.Write();
+                    writer.CommitBatch();
+                    writer.Complete();
 
-                    // Simulate ctime(d), which is what BlibBuild uses.
-                    string createTime = string.Format(@"{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now); // CONSIDER: localize? different date/time format in different countries
-                    DbLibInfo libInfo = new DbLibInfo
-                                            {
-                                                LibLSID = libLsid,
-                                                CreateTime = createTime,
-                                                NumSpecs = dictLibrary.Count,
-                                                MajorVersion = libraryRevision,
-                                                MinorVersion = schemaVersion
-                                            };
-
-                    session.Save(libInfo);
-                    session.Flush();
-                    session.Clear();
-
-                    transaction.Commit();
-
-                    if (redundantTransaction != null)
+                    if (redundantWriter != null)
                     {
-                        var scoreType = new DbScoreTypes {Id = 0, ScoreType = @"UNKNOWN"};
-                        redundantSession.Save(scoreType);
-
-                        libInfo = new DbLibInfo
-                                      {
-                                          LibLSID = libLsid.Replace(@":nr:", @":redundant:"),
-                                          CreateTime = createTime,
-                                          NumSpecs = redundantSpectraCount,
-                                          MajorVersion = libraryRevision,
-                                          MinorVersion = schemaVersion
-                                      };
-                        redundantSession.Save(libInfo);
-                        redundantSession.Flush();
-                        redundantSession.Clear();
-
-                        redundantTransaction.Commit();
+                        redundantWriter.CommitBatch();
+                        redundantWriter.Complete();
                     }
                 }
-
             }
             finally
             {
-                redundantTransaction?.Dispose();
-                redundantSession?.Dispose();
+                redundantWriter?.Dispose();
             }
 
             var libraryEntries = dictLibrary.Values.ToArray();
 
             return new BiblioSpecLiteLibrary(librarySpec, libLsid, libraryRevision, schemaVersion,
                 libraryEntries, FileStreamManager.Default);
+        }
+
+        /// <summary>
+        /// A precursor of the document whose library information comes from the library being
+        /// minimized, with the keys and names the minimized spectrum is written under.
+        /// </summary>
+        private class LibraryPrecursor
+        {
+            public TransitionGroupDocNode NodeGroup { get; set; }
+            public string ProteinName { get; set; }
+            public Target PeptideSeq { get; set; }
+            public Target PeptideModSeq { get; set; }
+            public Adduct PrecursorAdduct { get; set; }
+            public SmallMoleculeLibraryAttributes SmallMoleculeAttributes { get; set; }
+            /// <summary>The key the spectrum has in the source library.</summary>
+            public LibKey LibKey { get; set; }
+            /// <summary>The key the spectrum gets in the minimized library: the same, unless converting to small molecules.</summary>
+            public LibKey NewLibKey { get; set; }
+            /// <summary>The source library's global scores for the key, looked up once.</summary>
+            public LibraryGlobalScores GlobalScores { get; set; }
+        }
+
+        /// <summary>
+        /// The precursors of <paramref name="document"/> that take their library information from
+        /// <paramref name="library"/>, in document order. One being converted to a small molecule
+        /// that the map does not name is a decoy, and is left out.
+        /// </summary>
+        private static IEnumerable<LibraryPrecursor> GetLibraryPrecursors(SrmDocument document, Library library,
+            IDictionary<LibKey, LibKey> smallMoleculeConversionMap)
+        {
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                var proteinName = moleculeGroup.Name;
+                foreach (var nodePep in moleculeGroup.Molecules)
+                {
+                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                    {
+                        // Only get library info from precursors that use the desired library
+                        if (!nodeGroup.HasLibInfo || !Equals(nodeGroup.LibInfo.LibraryName, library.Name))
+                            continue;
+
+                        TransitionGroup group = nodeGroup.TransitionGroup;
+                        var peptideSeq = nodePep.SourceUnmodifiedTarget;
+                        var precursorAdduct = group.PrecursorAdduct;
+                        IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
+
+                        var smallMoleculeAttributes = nodePep.Peptide.GetSmallMoleculeLibraryAttributes();
+                        Target peptideModSeq;
+                        if (nodePep.IsProteomic)
+                        {
+                            var calcPre =
+                                document.Settings.GetPrecursorCalc(labelType, nodePep.SourceExplicitMods);
+                            peptideModSeq = calcPre.GetModifiedSequence(peptideSeq,
+                                SequenceModFormatType.lib_precision, false);
+                        }
+                        else
+                        {
+                            peptideModSeq = nodePep.SourceModifiedTarget;
+                        }
+
+                        LibKey libKey = peptideModSeq.GetLibKey(nodeGroup.PrecursorAdduct);
+                        var newLibKey = libKey;
+
+                        if (smallMoleculeConversionMap != null)
+                        {
+                            if (smallMoleculeConversionMap.TryGetValue(
+                                    peptideModSeq.GetLibKey(group.PrecursorAdduct), out newLibKey))
+                            {
+                                precursorAdduct = newLibKey.Adduct;
+                                smallMoleculeAttributes = newLibKey.SmallMoleculeLibraryAttributes;
+                            }
+                            else
+                            {
+                                // Not being converted
+                                Assume.IsTrue(group.Peptide.IsDecoy);
+                                continue; // Not wanted in library
+                            }
+                        }
+
+                        yield return new LibraryPrecursor
+                        {
+                            NodeGroup = nodeGroup,
+                            ProteinName = proteinName,
+                            PeptideSeq = peptideSeq,
+                            PeptideModSeq = peptideModSeq,
+                            PrecursorAdduct = precursorAdduct,
+                            SmallMoleculeAttributes = smallMoleculeAttributes,
+                            LibKey = libKey,
+                            NewLibKey = newLibKey,
+                            GlobalScores = library.GetGlobalScores(libKey)
+                        };
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds the optional columns (global q-values and PEPs) that some precursor of the
+        /// document has a value for in the library, before any row is written: a column that
+        /// would be NULL throughout is not added.
+        /// </summary>
+        private static void AddOptionalColumns(BlibWriter writer, IEnumerable<LibraryPrecursor> precursors,
+            bool keepLibraryProteinGroups)
+        {
+            bool precursorQValue = false, precursorPep = false, peptideQValue = false, peptidePep = false;
+            bool proteinQValue = false, proteinPep = false;
+            foreach (var precursor in precursors)
+            {
+                var globalScores = precursor.GlobalScores;
+                precursorQValue |= globalScores.PrecursorQValue.HasValue;
+                precursorPep |= globalScores.PrecursorPep.HasValue;
+                peptideQValue |= globalScores.PeptideQValue.HasValue;
+                peptidePep |= globalScores.PeptidePep.HasValue;
+                if (keepLibraryProteinGroups)
+                {
+                    proteinQValue |= globalScores.ProteinGroups.Any(group => group.QValue.HasValue);
+                    proteinPep |= globalScores.ProteinGroups.Any(group => group.Pep.HasValue);
+                }
+            }
+            if (precursorQValue)
+                writer.AddOptionalColumn(BlibSchema.PrecursorQValue);
+            if (precursorPep)
+                writer.AddOptionalColumn(BlibSchema.PrecursorPep);
+            if (peptideQValue)
+                writer.AddOptionalColumn(BlibSchema.PeptideQValue);
+            if (peptidePep)
+                writer.AddOptionalColumn(BlibSchema.PeptidePep);
+            if (proteinQValue)
+                writer.AddOptionalColumn(BlibSchema.ProteinQValue);
+            if (proteinPep)
+                writer.AddOptionalColumn(BlibSchema.ProteinPep);
+        }
+
+        private static void SetGlobalScores(BlibSpectrumRecord record, LibraryGlobalScores globalScores)
+        {
+            record.PrecursorQValue = globalScores.PrecursorQValue;
+            record.PrecursorPep = globalScores.PrecursorPep;
+            record.PeptideQValue = globalScores.PeptideQValue;
+            record.PeptidePep = globalScores.PeptidePep;
+        }
+
+        private static BlibSpectrumRecord CreateRecord(LibraryPrecursor precursor)
+        {
+            var smallMoleculeAttributes = precursor.SmallMoleculeAttributes;
+            return new BlibSpectrumRecord
+            {
+                PeptideSeq = precursor.PeptideSeq.IsProteomic ? precursor.PeptideSeq.Sequence : string.Empty,
+                PrecursorMz = precursor.NodeGroup.PrecursorMz,
+                PrecursorCharge = precursor.PrecursorAdduct.AdductCharge,
+                PrecursorAdduct = precursor.PrecursorAdduct.AsFormula(), // [M+...] format, even for proteomic charges
+                MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
+                ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
+                InchiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
+                OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty,
+                PeptideModSeq = precursor.PeptideModSeq.IsProteomic ? precursor.PeptideModSeq.Sequence : string.Empty
+            };
         }
 
         private bool UpdateProgressMessage(string message)
@@ -1161,94 +705,79 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return true;
         }
 
-        private bool UpdateProgress(int totalPeptideCount, int doneCount)
+        private bool UpdateProgress(int totalPrecursorCount, int doneCount)
         {
             if (ProgressMonitor != null)
             {
                 if (ProgressMonitor.IsCanceled)
                     return false;
 
-                int progressValue = (doneCount) * 100 / totalPeptideCount;
+                int progressValue = totalPrecursorCount == 0 ? 100 : doneCount * 100 / totalPrecursorCount;
 
                 ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progressValue));
             }
             return true;
         }
 
-        private static void SaveRedundantSpectra(ISession sessionRedundant,
-                                                 IEnumerable<SpectrumKeyTime> redundantSpectraIds,
+        private static void SaveRedundantSpectra(BlibWriter writerRedundant,
+                                                 IEnumerable<Observation> redundantObservations,
                                                  IDictionary<string, long> dictFiles,
-                                                 DbRefSpectra refSpectra,
+                                                 BlibSpectrumRecord record,
                                                  Library library,
                                                  ISet<int> savedSpectraIds)
         {
-            foreach (var specLiteKey in redundantSpectraIds)
+            foreach (var observation in redundantObservations)
             {
-                if (specLiteKey.Key.RedundantId == 0)
+                var specLiteKey = observation.Key;
+                if (specLiteKey.RedundantId == 0)
                 {
                     continue;
                 }
-                if (!savedSpectraIds.Add(specLiteKey.Key.RedundantId))
+                if (!savedSpectraIds.Add(specLiteKey.RedundantId))
                 {
                     continue;
                 }
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
-                long spectrumSourceId = GetSpectrumSourceId(sessionRedundant, specLiteKey.FilePath, dictFiles);
+                long spectrumSourceId = GetSpectrumSourceId(writerRedundant, observation.SourceFile, dictFiles);
 
                 // Get peaks for the redundant spectrum
-                var peaksInfo = library.LoadSpectrum(specLiteKey.Key);
+                var peaksInfo = library.LoadSpectrum(specLiteKey);
 
-                var ionMobility = specLiteKey.Time.IonMobility;
-                var ionMobilityHighEnergyOffset = specLiteKey.Time.IonMobilityHighEnergyOffset;
-                var collisionalCrossSectionSqA = specLiteKey.Time.CollisionalCrossSectionSqA;
-                int? ionMobilityType = specLiteKey.Time.IonMobilityType;
-
-                var redundantSpectra = new DbRefSpectraRedundant
-                                           {
-                                               Id = specLiteKey.Key.RedundantId,
-                                               PeptideSeq = refSpectra.PeptideSeq,
-                                               PrecursorMZ = refSpectra.PrecursorMZ,
-                                               PrecursorCharge = refSpectra.PrecursorCharge,
-                                               PrecursorAdduct = refSpectra.PrecursorAdduct,
-                                               MoleculeName = refSpectra.MoleculeName,
-                                               ChemicalFormula = refSpectra.ChemicalFormula,
-                                               InChiKey = refSpectra.InChiKey,
-                                               OtherKeys = refSpectra.OtherKeys,
-                                               PeptideModSeq = refSpectra.PeptideModSeq,
-                                               NumPeaks = (ushort) peaksInfo.Peaks.Length,
-                                               Copies = refSpectra.Copies,
-                                               RetentionTime = specLiteKey.Time.RetentionTime,
-                                               IonMobility = ionMobility,
-                                               IonMobilityHighEnergyOffset =  ionMobilityHighEnergyOffset,
-                                               CollisionalCrossSectionSqA = collisionalCrossSectionSqA,
-                                               IonMobilityType = ionMobilityType,
-                                               FileId = spectrumSourceId
-                                           };
-
-                var peaks = new DbRefSpectraRedundantPeaks
-                                {
-                                    RefSpectra = redundantSpectra,
-                                    PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
-                                    PeakMZ = MZsToBytes(peaksInfo.Peaks)
-                                };
-                redundantSpectra.Peaks = peaks;
-                redundantSpectra.PeakAnnotations = DbRefSpectraPeakAnnotations.Create(refSpectra, peaksInfo);
-                sessionRedundant.Save(redundantSpectra);
+                var redundantSpectrum = new BlibSpectrumRecord
+                {
+                    Id = specLiteKey.RedundantId,
+                    PeptideSeq = record.PeptideSeq,
+                    PrecursorMz = record.PrecursorMz,
+                    PrecursorCharge = record.PrecursorCharge,
+                    PrecursorAdduct = record.PrecursorAdduct,
+                    MoleculeName = record.MoleculeName,
+                    ChemicalFormula = record.ChemicalFormula,
+                    InchiKey = record.InchiKey,
+                    OtherKeys = record.OtherKeys,
+                    PeptideModSeq = record.PeptideModSeq,
+                    Copies = record.Copies,
+                    RetentionTime = observation.RetentionTime,
+                    IonMobility = observation.IonMobility,
+                    IonMobilityHighEnergyOffset = observation.IonMobilityHighEnergyOffset,
+                    CollisionalCrossSectionSqA = observation.CollisionalCrossSectionSqA,
+                    IonMobilityType = observation.IonMobilityType,
+                    FileId = spectrumSourceId
+                };
+                SetPeaks(redundantSpectrum, peaksInfo);
+                // The redundant library keeps the ids of the source library's spectra, which the
+                // minimized library's observations refer to.
+                writerRedundant.AddSpectrum(redundantSpectrum, true);
             }
-
-            sessionRedundant.Flush();
-            sessionRedundant.Clear();
         }
 
-        private void BuildRefSpectra(SrmDocument document,
-            ISession session,
+        private void BuildRefSpectra(BlibWriter writer,
             bool convertingToSmallMolecules,
-            DbRefSpectra refSpectra,
+            BlibSpectrumRecord record,
             SpectrumInfo[] spectra, // Yes, this could be IEnumerable, but then Resharper throws bogus warnings about possible multiple enumeration
             IDictionary<string, long> dictFiles,
-            IDictionary<string, ushort> dictScoreTypes,
-            ICollection<SpectrumKeyTime> redundantSpectraKeys,
+            IDictionary<string, int> dictScoreTypes,
+            ICollection<Observation> observations,
             SpectrumSourceFileDetails[] dataFiles)
         {
             bool foundBestSpectrum = false;
@@ -1262,28 +791,23 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     {
                         throw new InvalidDataException(
                             string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Multiple_reference_spectra_found_for_peptide__0__in_the_library__1__,
-                                          refSpectra.PeptideModSeq, FilePath));
+                                          record.PeptideModSeq, FilePath));
                     }
-                    
+
                     foundBestSpectrum = true;
 
-                    MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes, spectrumSourceFile);
+                    FillRecord(writer, convertingToSmallMolecules, spectrum, record, dictFiles, dictScoreTypes, spectrumSourceFile);
                 }
 
                 // Determine if this spectrum is from a file that is in the document.
                 // If it is not, do not save the retention time for this spectrum, and do not
                 // add it to the redundant library. However, if this is the reference (best) spectrum
-                // we must save its retention time. 
+                // we must save its retention time.
                 // NOTE: Spectra not used in the results get used for too much now for this to be useful
-//                var matchingFile = document.Settings.HasResults
-//                    ? document.Settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrum.FilePath))
-//                    : null;
-//                if (!spectrum.IsBest && matchingFile == null)
-//                    continue;
 
                 // If this source file has already been saved, get its database Id.
                 // Otherwise, save it.
-                long spectrumSourceId = GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
+                long spectrumSourceId = GetSpectrumSourceId(writer, spectrum.FilePath, dictFiles,
                     spectrum.SpectrumHeaderInfo?.ScoreType, spectrumSourceFile);
 
                 // spectrumKey in the SpectrumInfo is an integer for reference(best) spectra,
@@ -1291,34 +815,24 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 object key = spectrum.SpectrumKey;
                 var specLiteKey = key as SpectrumLiteKey;
 
-                var dbRetentionTimes = new DbRetentionTimes
+                var observation = new Observation
                 {
-                    RedundantRefSpectraId = specLiteKey != null ? specLiteKey.RedundantId : 0,
+                    SourceFile = spectrum.FilePath,
+                    SourceFileId = spectrumSourceId,
+                    RedundantId = specLiteKey?.RedundantId ?? 0,
                     RetentionTime = spectrum.RetentionTime,
-                    SpectrumSourceId = spectrumSourceId,
-                    BestSpectrum = spectrum.IsBest ? 1 : 0,
-                    IonMobility = null,
-                    IonMobilityHighEnergyOffset = null,
-                    CollisionalCrossSectionSqA = null,
-                    IonMobilityType = (int)eIonMobilityUnits.none
+                    IsBest = spectrum.IsBest,
+                    Key = specLiteKey
                 };
                 if (null != spectrum.IonMobilityInfo && spectrum.IonMobilityInfo.HasIonMobilityValue)
                 {
-                    dbRetentionTimes.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
-                    dbRetentionTimes.IonMobilityType = (int) spectrum.IonMobilityInfo.IonMobility.Units;
-                    dbRetentionTimes.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility.GetValueOrDefault(); // Get the low energy value
-                    dbRetentionTimes.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
+                    observation.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA.GetValueOrDefault();
+                    observation.IonMobilityType = (int) spectrum.IonMobilityInfo.IonMobility.Units;
+                    observation.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility.GetValueOrDefault(); // Get the low energy value
+                    observation.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
                 }
 
-                if (refSpectra.RetentionTimes == null)
-                    refSpectra.RetentionTimes = new List<DbRetentionTimes>();
-
-                refSpectra.RetentionTimes.Add(dbRetentionTimes);
-               
-                if (specLiteKey != null)
-                {
-                    redundantSpectraKeys.Add(new SpectrumKeyTime(specLiteKey, dbRetentionTimes, spectrum.FilePath));
-                }
+                observations.Add(observation);
             }
         }
 
@@ -1329,138 +843,82 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 : dataFiles.FirstOrDefault(df => string.Equals(filePath, df.FilePath));
         }
 
-        private class SpectrumKeyTime
+        /// <summary>
+        /// Fills the record from the spectrum: its peaks, annotations, ion mobility, retention
+        /// time, source file and score, and the modifications of its sequence.
+        /// </summary>
+        private static void FillRecord(BlibWriter writer, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, BlibSpectrumRecord record,
+            IDictionary<string, long> dictFiles, IDictionary<string, int> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
-            public SpectrumKeyTime(SpectrumLiteKey key, DbRetentionTimes time, string filePath)
-            {
-                Key = key;
-                Time = time;
-                FilePath = filePath;
-            }
-
-            public SpectrumLiteKey Key { get; private set; }
-            public DbRetentionTimes Time { get; private set; }
-            public string FilePath { get; private set; }
-        }
-
-        private static DbRefSpectra MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum,
-            Target peptideSeq, Target modifiedPeptideSeq, double precMz, Adduct precChg, SmallMoleculeLibraryAttributes smallMoleculeAttributes,
-            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
-        {
-            var refSpectra = new DbRefSpectra
-            {
-                PeptideSeq = peptideSeq.IsProteomic ? peptideSeq.Sequence : string.Empty,
-                PrecursorMZ = precMz,
-                PrecursorCharge = precChg.AdductCharge,
-                PrecursorAdduct = precChg.AsFormula(), // [M+...] format, even for proteomic charges
-                PeptideModSeq = modifiedPeptideSeq.IsProteomic ? modifiedPeptideSeq.Sequence : string.Empty,
-                ChemicalFormula = smallMoleculeAttributes.ChemicalFormula ?? string.Empty,
-                MoleculeName = smallMoleculeAttributes.MoleculeName ?? string.Empty,
-                InChiKey = smallMoleculeAttributes.InChiKey ?? string.Empty,
-                OtherKeys = smallMoleculeAttributes.OtherKeys ?? string.Empty
-            };
-            MakeRefSpectrum(session, convertingToSmallMolecules, spectrum, refSpectra, dictFiles, dictScoreTypes, spectrumSourceFile);
-            return refSpectra;
-        }
-
-        private static void MakeRefSpectrum(ISession session, bool convertingToSmallMolecules, SpectrumInfoLibrary spectrum, DbRefSpectra refSpectra,
-            IDictionary<string, long> dictFiles, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
-        {
-            short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
+            int copies = (int)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
             var peaksInfo = spectrum.SpectrumPeaksInfo;
 
-            refSpectra.Copies = copies;
-            refSpectra.NumPeaks = (ushort) peaksInfo.Peaks.Length;
-
-            refSpectra.Peaks = new DbRefSpectraPeaks
-                                   {
-                                       RefSpectra = refSpectra,
-                                       PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
-                                       PeakMZ = MZsToBytes(peaksInfo.Peaks)
-                                   };
-
-            refSpectra.PeakAnnotations = DbRefSpectraPeakAnnotations.Create(refSpectra, peaksInfo);
+            record.Copies = copies;
+            SetPeaks(record, peaksInfo);
 
             if (null != spectrum.IonMobilityInfo)
             {
-                refSpectra.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA;
-                refSpectra.IonMobilityType = (int)spectrum.IonMobilityInfo.IonMobility.Units;
-                refSpectra.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility;
-                refSpectra.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
+                record.CollisionalCrossSectionSqA = spectrum.IonMobilityInfo.CollisionalCrossSectionSqA;
+                record.IonMobilityType = (int)spectrum.IonMobilityInfo.IonMobility.Units;
+                record.IonMobility = spectrum.IonMobilityInfo.IonMobility.Mobility;
+                record.IonMobilityHighEnergyOffset = spectrum.IonMobilityInfo.HighEnergyIonMobilityValueOffset;
             }
 
-            refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
+            record.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
 
-            refSpectra.FileId = spectrum.FilePath != null
-                ? GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
+            record.FileId = spectrum.FilePath != null
+                ? GetSpectrumSourceId(writer, spectrum.FilePath, dictFiles,
                     spectrum.SpectrumHeaderInfo?.ScoreType, spectrumSourceFile)
-                : null;
-            refSpectra.SpecIdInFile = null;
-            refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
-            refSpectra.ScoreType = GetScoreTypeId(session, spectrum.SpectrumHeaderInfo?.ScoreType, dictScoreTypes, spectrumSourceFile);
-            if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
+                : 0;
+            record.SpecIdInFile = null;
+            record.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
+            record.ScoreType = GetScoreTypeId(writer, spectrum.SpectrumHeaderInfo?.ScoreType, dictScoreTypes, spectrumSourceFile);
+            if (convertingToSmallMolecules || !string.IsNullOrEmpty(record.MoleculeName))
             {
-                refSpectra.PeptideSeq = string.Empty;
-                refSpectra.PeptideModSeq = string.Empty;
-                Assume.IsTrue(!string.IsNullOrEmpty(refSpectra.MoleculeName));
+                record.PeptideSeq = string.Empty;
+                record.PeptideModSeq = string.Empty;
+                Assume.IsTrue(!string.IsNullOrEmpty(record.MoleculeName));
             }
 
-            ModsFromModifiedSequence(refSpectra);
+            record.Modifications = ModsFromModifiedSequence(record.PeptideModSeq);
         }
 
-        private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles)
+        private static long GetSpectrumSourceId(BlibWriter writer, string filePath, IDictionary<string, long> dictFiles)
         {
-            return GetSpectrumSourceId(session, filePath, dictFiles, null, null);
+            return GetSpectrumSourceId(writer, filePath, dictFiles, null, null);
         }
 
-        private static long GetSpectrumSourceId(ISession session, string filePath, IDictionary<string, long> dictFiles, 
+        /// <summary>
+        /// The id of the source file row for <paramref name="filePath"/>, added on first use with
+        /// the threshold and workflow the source library reports for it; 0 for no file.
+        /// </summary>
+        private static long GetSpectrumSourceId(BlibWriter writer, string filePath, IDictionary<string, long> dictFiles,
            string scoreName, SpectrumSourceFileDetails spectrumSourceFile)
         {
+            if (string.IsNullOrEmpty(filePath))
+                return 0;
             if (!dictFiles.TryGetValue(filePath, out var spectrumSourceId))
             {
-                spectrumSourceId = SaveSourceFile(session, filePath, spectrumSourceFile?.IdFilePath,
-                    spectrumSourceFile?.GetScoreTypeCutoff(scoreName), spectrumSourceFile?.WorkflowType);
-                if (spectrumSourceId == 0)
-                {
-                    throw new SQLiteException(string.Format(BlibDataResources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__, filePath));
-                }
+                spectrumSourceId = writer.AddSourceFile(filePath, spectrumSourceFile?.IdFilePath,
+                    spectrumSourceFile?.GetScoreTypeCutoff(scoreName),
+                    (int)(spectrumSourceFile?.WorkflowType ?? WorkflowType.DDA));
                 dictFiles.Add(filePath, spectrumSourceId);
             }
             return spectrumSourceId;
         }
 
-        private static ushort GetScoreTypeId(ISession session, string scoreName, IDictionary<string, ushort> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
+        private static int GetScoreTypeId(BlibWriter writer, string scoreName, IDictionary<string, int> dictScoreTypes, SpectrumSourceFileDetails spectrumSourceFile)
         {
-            if (string.IsNullOrEmpty(scoreName)) return 0;
-            if (dictScoreTypes.TryGetValue(scoreName, out var savedScoreTypeId)) return savedScoreTypeId;
+            if (string.IsNullOrEmpty(scoreName))
+                return BlibWriter.SCORE_TYPE_UNKNOWN;
+            if (dictScoreTypes.TryGetValue(scoreName, out var savedScoreTypeId))
+                return savedScoreTypeId;
 
-            var scoreType = spectrumSourceFile.GetScoreType(scoreName) ?? new ScoreType(scoreName, null);
-            var scoreTypeId = SaveScoreType(session, scoreType);
-            if (scoreTypeId == 0)
-            {
-                throw new SQLiteException(string.Format(BlibDataResources.BlibDb_GetScoreTypeId_Error_getting_database_Id_for_score__0_, scoreType.NameInvariant));
-            }
+            var scoreType = spectrumSourceFile?.GetScoreType(scoreName) ?? new ScoreType(scoreName, null);
+            var scoreTypeId = writer.AddScoreType(scoreType.NameInvariant, scoreType.ProbabilityTypeDescription);
             dictScoreTypes.Add(scoreType.NameInvariant, scoreTypeId);
 
             return scoreTypeId;
-        }
-
-        private static long SaveSourceFile(ISession session, string filePath, string idFileName, double? cutoffScore, WorkflowType? workflowType)
-        {
-            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath, IdFileName = idFileName, CutoffScore = cutoffScore, WorkflowType = (int?) workflowType};
-            session.Save(sourceFile);
-            return sourceFile.Id.GetValueOrDefault();
-        }
-
-        private static ushort SaveScoreType(ISession session, ScoreType scoreType)
-        {
-            var scoreTypeDb = new DbScoreTypes
-            {
-                ScoreType = scoreType.NameInvariant, 
-                ProbabilityType = scoreType.ProbabilityTypeDescription
-            };
-            session.Save(scoreTypeDb);
-            return (ushort) scoreTypeDb.Id.GetValueOrDefault();
         }
 
         /// <summary>
@@ -1470,59 +928,77 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// are only accurate to one decimal place.  But this is all that is necessary
         /// for further use as spectral libraries for SRM method building.
         /// </summary>
-        /// <param name="refSpectra"></param>
-        private static void ModsFromModifiedSequence(DbRefSpectra refSpectra)
+        private static IReadOnlyList<BlibModification> ModsFromModifiedSequence(string modSeq)
         {
-            string modSeq = refSpectra.PeptideModSeq;
-            for (int i = 0, iAa = 0; i < modSeq.Length; i++)
+            var modifications = new List<BlibModification>();
+            int iAa = 0;
+            for (int i = 0; i < modSeq.Length; i++)
             {
                 char c = modSeq[i];
                 if (c != '[')
-                    iAa++;
-                else
                 {
-                    int iEnd = modSeq.IndexOf(']', ++i);
-                    double modMass;
-                    if (double.TryParse(modSeq.Substring(i, iEnd - i), out modMass))
-                    {
-                        if (refSpectra.Modifications == null)
-                            refSpectra.Modifications = new List<DbModification>();
+                    iAa++;
+                    continue;
+                }
+                int iEnd = modSeq.IndexOf(']', ++i);
+                if (iEnd < 0)
+                    break;
+                if (double.TryParse(modSeq.Substring(i, iEnd - i), NumberStyles.Float, CultureInfo.InvariantCulture, out double modMass))
+                {
+                    // The position of the residue the bracket follows (1-based)
+                    modifications.Add(new BlibModification(iAa, modMass));
+                }
+                i = iEnd;
+            }
+            return modifications;
+        }
 
-                        refSpectra.Modifications.Add(new DbModification
-                                                         {
-                                                             RefSpectra = refSpectra,
-                                                             Mass = modMass,
-                                                             Position = iAa
-                                                         });
-                        i = iEnd;
-                        iAa++;
+        private static IReadOnlyList<string> ProteinsOf(string protein)
+        {
+            return string.IsNullOrEmpty(protein) ? Array.Empty<string>() : new[] { protein };
+        }
+
+        /// <summary>The peaks of the spectrum as the record's blobs and annotations, with their count.</summary>
+        private static void SetPeaks(BlibSpectrumRecord record, SpectrumPeaksInfo peaksInfo)
+        {
+            var peaks = peaksInfo.Peaks;
+            var mzs = new double[peaks.Length];
+            var intensities = new float[peaks.Length];
+            for (int i = 0; i < peaks.Length; i++)
+            {
+                mzs[i] = peaks[i].Mz;
+                intensities[i] = peaks[i].Intensity;
+            }
+            record.NumPeaks = peaks.Length;
+            record.MzBlob = BlibWriter.CompressMzs(mzs);
+            record.IntensityBlob = BlibWriter.CompressIntensities(intensities);
+            record.Annotations = AnnotationsOf(peaksInfo);
+        }
+
+        /// <summary>
+        /// The annotations of the spectrum's peaks as the library's rows. Each peak may have more
+        /// than one, and a peptide spectrum usually has none, Skyline generating its own.
+        /// </summary>
+        private static IReadOnlyList<BlibPeakAnnotation> AnnotationsOf(SpectrumPeaksInfo peaks)
+        {
+            List<BlibPeakAnnotation> annotations = null;
+            int i = 0;
+            foreach (var peak in peaks.Peaks)
+            {
+                if (peak.Annotations != null)
+                {
+                    foreach (var annotation in peak.Annotations.Where(a => !SpectrumPeakAnnotation.IsNullOrEmpty(a)))
+                    {
+                        annotations ??= new List<BlibPeakAnnotation>();
+                        var ion = annotation.Ion;
+                        annotations.Add(new BlibPeakAnnotation(i, ion.Name, ion.Adduct.AdductCharge, ion.MonoisotopicMassMz, peak.Mz,
+                            ion.NeutralFormula, ion.AccessionNumbers.GetInChiKey(), ion.AccessionNumbers.GetNonInChiKeys(),
+                            ion.Adduct.ToString(), annotation.Comment));
                     }
                 }
+                i++;
             }
-        }
-
-        private static byte[] IntensitiesToBytes(SpectrumPeaksInfo.MI[] peaks)
-        {
-            const int sizeInten = sizeof(float);
-            byte[] peakIntens = new byte[peaks.Length * sizeInten];
-            for (int i = 0; i < peaks.Length; i++)
-            {
-                int offset = i*sizeInten;
-                Array.Copy(BitConverter.GetBytes(peaks[i].Intensity), 0, peakIntens, offset, sizeInten);
-            }
-            return peakIntens.Compress();
-        }
-
-        private static byte[] MZsToBytes(SpectrumPeaksInfo.MI[] peaks)
-        {
-            const int sizeMz = sizeof(double);
-            byte[] peakMZs = new byte[peaks.Length * sizeMz];
-            for (int i = 0; i < peaks.Length; i++)
-            {
-                int offset = i * sizeMz;
-                Array.Copy(BitConverter.GetBytes(peaks[i].Mz), 0, peakMZs, offset, sizeMz);
-            }
-            return peakMZs.Compress();
+            return annotations ?? (IReadOnlyList<BlibPeakAnnotation>)Array.Empty<BlibPeakAnnotation>();
         }
 
         /// <summary>
@@ -1570,7 +1046,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         }
 
         private static SrmDocument MinimizeLibrariesHelper(SrmDocument document,
-            string pathDirectory, string nameModifier, 
+            string pathDirectory, string nameModifier,
             IDictionary<LibKey, LibKey> smallMoleculeConversionInfo,
             Dictionary<string, string> dictOldNameToNew,
             IProgressMonitor progressMonitor)
@@ -1590,7 +1066,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 if (document.MoleculeTransitionGroups.Contains(nodeGroup =>
                         nodeGroup.HasLibInfo && Equals(nodeGroup.LibInfo.LibraryName, libraryName)))
                 {
-                    setUsedLibrarySpecs.Add(librarySpec);   
+                    setUsedLibrarySpecs.Add(librarySpec);
                 }
             }
 
@@ -1618,7 +1094,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     if (smallMoleculeConversionInfo != null &&
                         !fileName.Contains(BiblioSpecLiteSpec.DotConvertedToSmallMolecules))
                     {
-                        fileName += BiblioSpecLiteSpec.DotConvertedToSmallMolecules; 
+                        fileName += BiblioSpecLiteSpec.DotConvertedToSmallMolecules;
                     }
 
                     if (librarySpec is MidasLibSpec)
@@ -1656,7 +1132,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                         listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
                             pepLibraries.Libraries[i], document, smallMoleculeConversionInfo));
-                        
+
                         // Terminate if user canceled
                         if (progressMonitor != null && progressMonitor.IsCanceled)
                             return document;

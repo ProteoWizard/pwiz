@@ -97,7 +97,7 @@ namespace pwiz.CarafeSharp.Proteome
         public override string ToString()
         {
             string start = Start == null ? @"not fine-tuned" : Start == START_BASE ? @"fine-tuned from the base model" :
-                Start == START_MS2_MODEL ? @"fine-tuned from -ms2_model" : @"fine-tuned from the pretrained model";
+                Start == START_MS2_MODEL ? @"fine-tuned from " + CarafeCommandLine.ARG_MS2_MODEL.ArgumentText : @"fine-tuned from the pretrained model";
             return string.Format(@"{0} {1}, {2}", Model, Version ?? @"(version unknown)", start);
         }
 

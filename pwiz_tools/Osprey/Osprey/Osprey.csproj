@@ -6,6 +6,11 @@
     <AssemblyName>Osprey</AssemblyName>
     <!-- Declares longPathAware for native code in the process; see the file's comment. -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The libtorch native runtime and CarafeSharp's pretrained models, for the one-command
+         library build (the fasta option), which predicts the library in-process through
+         CarafeSharp.Tasks. They load only when a library is predicted; a search of a given
+         library never touches them. -->
+    <UseLibTorch>true</UseLibTorch>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +20,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Contracts\CarafeSharp.Contracts.csproj" />
+    <!-- CarafeSharp's command-line declarations (the library-build options Osprey presents as
+         sections of its own help) and its library-prediction task. CarafeSharp.exe references
+         nothing in Osprey: the dependency runs one way. -->
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
+    <ProjectReference Include="..\..\CarafeSharp\CarafeSharp.Tasks\CarafeSharp.Tasks.csproj" />
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <ProjectReference Include="..\Osprey.Diagnostics\Osprey.Diagnostics.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />

@@ -17,7 +17,7 @@ a { color: #1565c0; }
 <h1>Ospreyコマンドラインの使用法</h1>
 <p>Ospreyは、MacCossラボによるペプチド中心型のDIA検索ツールです。DIA mzMLファイルとスペクトルライブラリを読み込み、FDR制御された結果をBiblioSpecLite（<code>.blib</code>）ライブラリとして書き込みます。このライブラリはSkylineに直接インポートできます。WindowsとLinuxでスタンドアロンの実行ファイルとして動作します。</p>
 <p>パイプラインの概要、各段階の詳細、および4つの分散HPCタスクの分割と結合については、ワークフロー図<a href="https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html">Osprey-workflow.html</a>を参照してください。以下の引数表はコマンドラインの宣言から生成されるため、常にビルドと一致します。同じ内容をテキストで表示するには、<code>Osprey --help</code>を実行してください。</p>
-<p>Osprey - ペプチド中心のDIA解析</p><p>使用法：osprey -i &lt;file1.mzML&gt; [file2.mzML ...] -l &lt;library.tsv&gt; -o &lt;output.blib&gt;</p><div class="RowType">一般I/O</div>
+<p>Osprey - ペプチド中心のDIA解析</p><p>使用法：osprey -i &lt;file1.mzML&gt; [file2.mzML ...] -l &lt;library.tsv&gt; -o &lt;output.blib&gt;</p><p>       osprey -i &lt;file1.mzML&gt; [file2.mzML ...] --fasta &lt;proteome.fasta&gt; -o &lt;output.blib&gt;</p><div class="RowType">一般I/O</div>
 <table>
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>-i</nobr>,&nbsp;<nobr>--input</nobr>&nbsp;&lt;file1.mzML&nbsp;...&gt;</td><td>入力mzMLファイル</td></tr>
@@ -29,6 +29,51 @@ a { color: #1565c0; }
 <tr><td><nobr>--cache-dir</nobr>&nbsp;&lt;dir&gt;</td><td>.spectra.binキャッシュのディレクトリ（<nobr>--work-dirより優先</nobr>）</td></tr>
 <tr><td><nobr>--report</nobr>&nbsp;&lt;report.tsv&gt;</td><td>TSVレポートをファイルに書き込みます</td></tr>
 <tr><td><nobr>--export-library</nobr>&nbsp;&lt;library.blib&gt;</td><td>Write the spectral library given by <nobr>--library</nobr> to this path as a .blib file that Skyline and Osprey can read, and exit without searching</td></tr>
+</table>
+<div class="RowType">Library Build</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--fasta</nobr>&nbsp;&lt;proteome.fasta&gt;</td><td>Predict the spectral library from this protein FASTA with CarafeSharp&#39;s models and search it, in place of <nobr>-l</nobr>. The library is written beside the output as &lt;output&gt;.library.blib and can be given to <nobr>-l</nobr> next time; its working files go in &lt;output&gt;.library/. The options of the Library Digest and Library Prediction sections apply.</td></tr>
+<tr><td><nobr>--model</nobr>&nbsp;&lt;file.carafemodel&gt;</td><td>With <nobr>--fasta</nobr>: predict the library with this saved <nobr>fine-tuned</nobr> model (.carafemodel, from CarafeSharp&#39;s training) instead of the pretrained models.</td></tr>
+<tr><td><nobr>--device</nobr> &lt;gpu | cpu&gt;</td><td>With <nobr>--fasta</nobr>: where the library is predicted, gpu (falling back to the CPU with a warning when no CUDA runtime is present) or cpu (default: gpu).</td></tr>
+<tr><td><nobr>--entrapment</nobr>&nbsp;[&lt;ratio&gt;]</td><td>With <nobr>--fasta</nobr>: add an entrapment peptide to every target (or to this fraction of the targets, 0.1 to 1), shuffled from the target or, with <nobr>--entrapment-fasta</nobr>, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as &lt;output&gt;.library/pairing.tsv.</td></tr>
+<tr><td><nobr>--entrapment-fasta</nobr>&nbsp;&lt;foreign.fasta&gt;</td><td>With <nobr>--entrapment</nobr>: draw the entrapment peptides, matched in mass, from this <nobr>foreign-species</nobr> protein FASTA instead of shuffling the targets.</td></tr>
+</table>
+<div class="RowType">Library Digest</div>
+<p>With --fasta: what the library holds. These are CarafeSharp's options under their standard names; see its help for the full set.</p>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--enzyme</nobr> &lt;index|NoCut&gt;</td><td>The enzyme, by Carafe&#39;s index (default 1, trypsin), or NoCut for the <nobr>non-specific</nobr> digest, which forces 100 missed cleavages.</td></tr>
+<tr><td><nobr>--miss-c</nobr>&nbsp;&lt;n&gt;</td><td>Maximum missed cleavages (default 2).</td></tr>
+<tr><td><nobr>--minLength</nobr>&nbsp;&lt;n&gt;</td><td>Minimum peptide length (default 7).</td></tr>
+<tr><td><nobr>--maxLength</nobr>&nbsp;&lt;n&gt;</td><td>Maximum peptide length (default 35).</td></tr>
+<tr><td><nobr>--clip-n-m</nobr></td><td>Also digest each protein with its <nobr>N-terminal</nobr> methionine removed.</td></tr>
+<tr><td><nobr>--fixMod</nobr>&nbsp;&lt;ids&gt;</td><td>Fixed modifications, Carafe&#39;s ids <nobr>comma-separated</nobr> (default 1, carbamidomethyl C).</td></tr>
+<tr><td><nobr>--varMod</nobr>&nbsp;&lt;ids&gt;</td><td>Variable modifications, Carafe&#39;s ids <nobr>comma-separated</nobr> (default 2, oxidation M).</td></tr>
+<tr><td><nobr>--maxVar</nobr>&nbsp;&lt;n&gt;</td><td>Maximum variable modifications per peptide (default 1).</td></tr>
+<tr><td><nobr>--min-pep-mz</nobr>&nbsp;&lt;mz&gt;</td><td>Minimum precursor m/z (default 300).</td></tr>
+<tr><td><nobr>--max-pep-mz</nobr>&nbsp;&lt;mz&gt;</td><td>Maximum precursor m/z (default 2000).</td></tr>
+<tr><td><nobr>--min-pep-charge</nobr>&nbsp;&lt;z&gt;</td><td>Minimum precursor charge (default 2).</td></tr>
+<tr><td><nobr>--max-pep-charge</nobr>&nbsp;&lt;z&gt;</td><td>Maximum precursor charge (default 3 for the FASTA build, 4 for library prediction).</td></tr>
+<tr><td><nobr>--I2L</nobr></td><td>Convert isoleucine to leucine in every sequence.</td></tr>
+</table>
+<div class="RowType">Library Prediction</div>
+<p>With --fasta: how the library is predicted.</p>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--lf-frag-mz-min</nobr>&nbsp;&lt;mz&gt;</td><td>Minimum fragment m/z (default 200).</td></tr>
+<tr><td><nobr>--lf-frag-mz-max</nobr>&nbsp;&lt;mz&gt;</td><td>Maximum fragment m/z (default 1800).</td></tr>
+<tr><td><nobr>--lf-top-n-frag</nobr>&nbsp;&lt;n&gt;</td><td>Fragments kept per precursor, the most intense first (default 20).</td></tr>
+<tr><td><nobr>--lf-min-n-frag</nobr>&nbsp;&lt;n&gt;</td><td>Minimum fragments for a precursor to be written (default 2).</td></tr>
+<tr><td><nobr>--lf-frag-n-min</nobr>&nbsp;&lt;n&gt;</td><td>Lowest fragment ordinal kept, b and y alike (default 2).</td></tr>
+<tr><td><nobr>--nce</nobr>&nbsp;&lt;nce&gt;</td><td>The normalized collision energy the MS2 model predicts at (default 27, or a model folder&#39;s).</td></tr>
+<tr><td><nobr>--ms-instrument</nobr>&nbsp;&lt;name&gt;</td><td>The instrument the MS2 model predicts for, by AlphaPeptDeep&#39;s name (default Eclipse, or a model folder&#39;s).</td></tr>
+<tr><td><nobr>--activation</nobr> &lt;<nobr>beam-CID</nobr> | reCID&gt;</td><td>The activation predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--analyzer</nobr> &lt;Orbitrap | LIT | ToF&gt;</td><td>The MS2 analyzer predicted for, else a training run&#39;s. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-max</nobr>&nbsp;&lt;minutes&gt;</td><td>The gradient length the library&#39;s retention times are scaled to, in minutes; absent, iRT.</td></tr>
+<tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
+<tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: the one of a saved model or model folder, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--pretrained</nobr>&nbsp;&lt;pretrained_models.zip&gt;</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</td></tr>
 </table>
 <div class="RowType">スコアリングと許容誤差</div>
 <table>
@@ -97,7 +142,7 @@ a { color: #1565c0; }
 <tr><td><nobr>-h</nobr>, <nobr>--help</nobr> [&lt;format|Section&gt;]</td><td>このヘルプメッセージを表示します（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>バージョンを表示します</td></tr>
 </table>
-<p>例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC分割（1ノード = 1つの--task）：上記の--taskを参照してください。</p><p>受け付けるその他の形式：値はオプションに「=」でつなげて指定することもでき（--output=results.blib）、存在するファイルは-iなしで指定できます。</p><div class="RowType">分散実行（HPC）</div>
+<p>例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>  osprey -i *.mzML --fastahuman.fasta -o results.blib --resolution hram</p><p>HPC分割（1ノード = 1つの--task）：上記の--taskを参照してください。</p><p>受け付けるその他の形式：値はオプションに「=」でつなげて指定することもでき（--output=results.blib）、存在するファイルは-iなしで指定できます。 The library build options are listed in the standard form (--miss-c 1) and, for compatibility with Java Carafe's command lines, also accepted with its underscores (--miss_c 1).</p><div class="RowType">分散実行（HPC）</div>
 <p><code>--task</code>を指定しない場合、パイプライン全体が1つのプロセスで実行されます。分散（HPC／ワークフローエンジン）実行では、パイプラインは結合／ファンアウトの境界で4つの単一タスクワーカーに分割されます（1ノード = 1つの<code>--task</code>）：<code>PerFileScoring</code>（分割、ファイルごと）&rarr;<code>FirstPassFDR</code>（結合、全ファイル）&rarr;<code>PerFileRescoring</code>（分割、ファイルごと）&rarr;<code>SecondPassFDR</code>（結合、全ファイル）。すべてのタスクに同じ<code>--library</code>と検索オプションを渡してください。parquetの整合性チェックにより、検索／ライブラリのハッシュが一致しない入力は拒否されます。</p>
 <pre>
 # 分割1 - mzMLごとに1プロセス（各入力の横に&lt;stem&gt;.scores.parquet、&lt;stem&gt;.calibration.jsonを書き込み）

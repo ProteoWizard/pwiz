@@ -34,6 +34,7 @@ using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
@@ -803,10 +804,10 @@ namespace pwiz.CarafeSharp.Test
         {
             var refused = Assert.ThrowsException<ArgumentException>(() =>
                 CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-lf_type", @"blib", @"-library_contract" }));
-            StringAssert.Contains(refused.Message, @"-pairing_manifest");
+            StringAssert.Contains(refused.Message, @"--pairing-manifest");
             refused = Assert.ThrowsException<ArgumentException>(() =>
                 CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-pairing_manifest", @"m.tsv", @"-library_contract" }));
-            StringAssert.Contains(refused.Message, @"-lf_type blib");
+            StringAssert.Contains(refused.Message, @"--lf-type blib");
 
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Contract_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(folder);

@@ -29,7 +29,7 @@ using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Proteome;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// Writes a library's chunks of spectra on one dedicated thread, in the order they are
