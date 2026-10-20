@@ -82,7 +82,7 @@ namespace pwiz.Common.Controls
             // A color-keyed list applies its key only to exact matches, so the key goes on
             // before interpolation: afterwards the blended edge pixels would no longer match
             var key = imageList.TransparentColor;
-            return DpiScale.Resample(image, imageList.ImageSize, key.A > 0 ? key : (Color?) null);
+            return DpiScale.Resample(image, imageList.ImageSize, key.A > 0 ? key : null);
         }
     }
 }

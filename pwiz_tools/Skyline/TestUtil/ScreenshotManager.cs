@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestUtil
             if (form == null)
                 return false;
             Func<IntPtr> getHandle = () => form.TopLevel && form.IsHandleCreated ? form.Handle : IntPtr.Zero;
-            var hwnd = form.InvokeRequired ? (IntPtr) form.Invoke(getHandle) : getHandle();
+            var hwnd = form.InvokeRequired ? form.Invoke(getHandle) : getHandle();
             return hwnd != IntPtr.Zero && DwmapiTest.TryGetExtendedFrameBounds(hwnd, out bounds);
         }
 
