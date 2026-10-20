@@ -110,6 +110,32 @@ namespace pwiz.CarafeSharp.Test
             AssertViolation(LibraryContractViolationClass.DecoyUnmarked, @"KEDITPEP: sp|P2|B", null,
                 Replace(clean, 2, Row(@"KEDITPEP", @"KEDITPEP", 2, @"decoy_sp|P1|A;sp|P2|B")));
 
+            // Rule 6 from the library's own pairing (a blib's DecoyPairs) when there is no manifest:
+            // each decoy row names a target row at its charge and each target is named once, and
+            // the report says the pairs were checked that way. A decoy naming no target is unpaired.
+            var tablePaired = new List<LibraryContractRow>
+            {
+                Row(@"PEPTIDEK", @"PEPTIDEK", 2, @"sp|P1|A;sp|P2|B", false, 1, 1),
+                Row(@"KEDITPEP", @"KEDITPEP", 2, @"decoy_sp|P1|A;decoy_sp|P2|B", true, 1, 2, 1),
+            };
+            report = LibraryContract.Validate(tablePaired, null, PREFIXES);
+            Assert.IsTrue(report.IsValid, report.Describe());
+            Assert.IsTrue(report.PairsCheckedFromLibrary);
+            Assert.AreEqual(ContractsResources.LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds_and_accessions_were_not_checked_against_one__the_pairs_were_checked_from_the_library_s_own_DecoyPairs_table_,
+                report.Describe());
+            AssertViolation(LibraryContractViolationClass.UnpairedDecoy,
+                string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__, @"KEDITPEP", 3, 2), null,
+                tablePaired.Concat(new[] { Row(@"KEDITPEP", @"KEDITPEP", 3, @"decoy_sp|P1|A;decoy_sp|P2|B", true, 2, 3) }).ToList());
+            // A target pairs with the first decoy naming it (Osprey claims a target once); a second
+            // decoy naming the same target is unpaired.
+            AssertViolation(LibraryContractViolationClass.UnpairedDecoy,
+                string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___pair__2__has__3__decoy_row_s__and__4__target_row_s__, @"KEDITPEQ", 2, 1, 2, 1), null,
+                tablePaired.Concat(new[] { Row(@"KEDITPEQ", @"KEDITPEQ", 2, @"decoy_sp|P2|B", true, 1, 3, 1) }).ToList());
+            // A target no decoy names is unpaired.
+            AssertViolation(LibraryContractViolationClass.UnpairedTarget,
+                string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_decoy_in_pair__2__, @"PEPTIDEQ", 2, 1), null,
+                tablePaired.Concat(new[] { Row(@"PEPTIDEQ", @"PEPTIDEQ", 2, @"sp|P2|B", false, 1, 3) }).ToList());
+
             // Pairs-only and rows-only checks apply the rules they name.
             var unpaired = clean.Where((_, i) => i != 1).Select(r => Row(r.Sequence, r.ModifiedSequence, r.Charge, string.Empty)).ToList();
             report = LibraryContract.Validate(unpaired, manifest, PREFIXES, LibraryContractChecks.Pairs);
@@ -139,10 +165,11 @@ namespace pwiz.CarafeSharp.Test
             return copy;
         }
 
-        private static LibraryContractRow Row(string sequence, string modifiedSequence, int charge, string accessions, bool? markedDecoy = null)
+        private static LibraryContractRow Row(string sequence, string modifiedSequence, int charge, string accessions, bool? markedDecoy = null,
+            int? pairingId = null, long? refSpectraId = null, long? targetRefSpectraId = null)
         {
             return new LibraryContractRow(sequence, modifiedSequence, charge,
-                accessions.Length > 0 ? accessions.Split(';') : new string[0], markedDecoy);
+                accessions.Length > 0 ? accessions.Split(';') : new string[0], markedDecoy, pairingId, refSpectraId, targetRefSpectraId);
         }
 
         private static PairingManifestRow ManifestRow(string sequence, string kind, string proteins, int pairIndex)

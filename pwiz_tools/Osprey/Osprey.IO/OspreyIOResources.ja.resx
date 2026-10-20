@@ -97,14 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
-    <value>ピーク強度blobのサイズが無効です：{0}または{1}バイトが必要ですが、{2}です</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
-    <value>ピークm/z blobのサイズが無効です：{0}バイト（8の倍数ではありません）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
     <value>無効なBiblioSpecライブラリ：{0}テーブルが見つかりませんでした。</value>
     <comment>Needs Review:New resource</comment>
@@ -161,10 +153,6 @@
     <value>ライブラリキャッシュの読み込みに失敗しました：{0}。代わりにライブラリファイルを読み取ります。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
-    <value>ライブラリキャッシュの保存に失敗しました：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
     <value>ライブラリキャッシュ「{0}」は別のバージョンのソースライブラリから構築されています。古いキャッシュを無視し、ソースから再構築します。</value>
     <comment>Needs Review:New resource</comment>
@@ -179,10 +167,6 @@
   </data>
   <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
     <value>{0}からスペクトルライブラリを読み込み中...</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
-    <value>ライブラリキャッシュ（{0:N0}個のプリカーサー）を「{1}」に保存しました</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
@@ -331,14 +315,6 @@
   </data>
   <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
     <value>中間ファイル「{0}」の読み取りが、{1:N0}個のレコードを読み取った後に途中で失敗しました。ファイルの値の一部だけで続行せず、ここで実行を停止します。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
-    <value>整合ファイル{0}の{2}は{1}ですが、第1パスのプリカーサーセットが含まれていません。この解析の{3}ファイルを削除し、第1パスを再実行してください。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
-    <value>整合ファイル{0}の{2}は{1}ですが、対象とする入力ファイル（{3}）が記載されていません。この解析の{4}ファイルを削除し、第1パスを再実行してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">

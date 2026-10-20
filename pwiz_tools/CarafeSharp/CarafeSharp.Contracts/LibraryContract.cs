@@ -31,7 +31,7 @@ namespace pwiz.CarafeSharp.Contracts
     /// What a correct Osprey spectral library is, checked by one piece of code on both sides:
     /// CarafeSharp runs it before it keeps a library it writes in contract mode, and Osprey runs
     /// it when it loads a library that claims the contract (the <see cref="METADATA_KEY"/> row of
-    /// its <c>OspreyMetadata</c> table). The rules, by number (Osprey docs, "The Osprey library
+    /// its <c>LibMetadata</c> table). The rules, by number (Osprey docs, "The Osprey library
     /// contract"):
     /// <list type="number">
     /// <item>One row per precursor: no two rows share a modified sequence and charge.</item>
@@ -53,7 +53,7 @@ namespace pwiz.CarafeSharp.Contracts
     /// </summary>
     public static class LibraryContract
     {
-        /// <summary>The <c>OspreyMetadata</c> key a library claims the contract with, and its value.</summary>
+        /// <summary>The <c>LibMetadata</c> key a library claims the contract with (one of the shared, unprefixed keys), and its value.</summary>
         public const string METADATA_KEY = @"library_contract";
         public const string METADATA_VALUE = @"1";
 
@@ -108,10 +108,16 @@ namespace pwiz.CarafeSharp.Contracts
                     CheckMarkingAgainstManifest(row, marks, entry, tallies);
                 }
             }
-            if (bySequence != null && (checks & LibraryContractChecks.Pairs) != 0)
-                CheckPairs(rows, manifest, bySequence, tallies);
+            bool pairsFromLibrary = false;
+            if ((checks & LibraryContractChecks.Pairs) != 0)
+            {
+                if (bySequence != null)
+                    CheckPairs(rows, manifest, bySequence, tallies);
+                else
+                    pairsFromLibrary = CheckPairsFromLibrary(rows, tallies);
+            }
             var violations = tallies.OrderBy(pair => pair.Key).Select(pair => pair.Value.ToViolation(pair.Key)).ToArray();
-            return new LibraryContractReport(violations, manifest != null);
+            return new LibraryContractReport(violations, manifest != null, pairsFromLibrary);
         }
 
         private static void CheckDuplicates(IReadOnlyList<LibraryContractRow> rows, Dictionary<LibraryContractViolationClass, Tally> tallies)
@@ -250,6 +256,64 @@ namespace pwiz.CarafeSharp.Contracts
                     : LibraryContractViolationClass.UnpairedTarget;
                 Hit(tallies, violationClass, string.Format(CultureInfo.InvariantCulture, @"{0}/{1} (no {2}/{1})", row.Sequence, row.Charge, partner));
             }
+        }
+
+        /// <summary>
+        /// Rule 6 from the library's own pairing, for a library without a manifest: every decoy
+        /// row names a target row of the same charge in <see cref="LibraryContractRow.TargetRefSpectraId"/>,
+        /// and every target row is named by exactly one decoy row - the rule Osprey pairs by. A
+        /// decoy naming no target, or a target of another charge, is unpaired; so is a target no
+        /// decoy names, or that two name. Returns false when no row carries a spectrum id, so the
+        /// caller knows the pairs went unchecked.
+        /// </summary>
+        private static bool CheckPairsFromLibrary(IReadOnlyList<LibraryContractRow> rows, Dictionary<LibraryContractViolationClass, Tally> tallies)
+        {
+            var byId = new Dictionary<long, LibraryContractRow>();
+            foreach (var row in rows)
+            {
+                if (row.RefSpectraId.HasValue && row.MarkedDecoy.HasValue)
+                    byId[row.RefSpectraId.Value] = row;
+            }
+            if (byId.Count == 0)
+                return false;
+            var decoysByTarget = new Dictionary<long, List<LibraryContractRow>>();
+            foreach (var row in byId.Values.OrderBy(r => r.RefSpectraId.Value))
+            {
+                if (!row.MarkedDecoy.Value)
+                    continue;
+                var target = row.TargetRefSpectraId.HasValue && byId.TryGetValue(row.TargetRefSpectraId.Value, out var t) ? t : null;
+                if (target == null || target.MarkedDecoy.Value || target.Charge != row.Charge)
+                {
+                    Hit(tallies, LibraryContractViolationClass.UnpairedDecoy,
+                        string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_target_in_pair__2__,
+                            row.Sequence, row.Charge, row.PairingId));
+                    continue;
+                }
+                if (!decoysByTarget.TryGetValue(target.RefSpectraId.Value, out var decoys))
+                    decoysByTarget.Add(target.RefSpectraId.Value, decoys = new List<LibraryContractRow>());
+                decoys.Add(row);
+            }
+            foreach (var row in byId.Values.OrderBy(r => r.RefSpectraId.Value))
+            {
+                if (row.MarkedDecoy.Value)
+                    continue;
+                if (!decoysByTarget.TryGetValue(row.RefSpectraId.Value, out var decoys))
+                {
+                    Hit(tallies, LibraryContractViolationClass.UnpairedTarget,
+                        string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___no_decoy_in_pair__2__,
+                            row.Sequence, row.Charge, row.PairingId));
+                    continue;
+                }
+                // A target pairs with the first decoy naming it (Osprey claims a target once);
+                // any other decoy naming it is unpaired.
+                for (int i = 1; i < decoys.Count; i++)
+                {
+                    Hit(tallies, LibraryContractViolationClass.UnpairedDecoy,
+                        string.Format(ContractsResources.LibraryContract_CheckPairsFromLibrary__0___1___pair__2__has__3__decoy_row_s__and__4__target_row_s__,
+                            decoys[i].Sequence, decoys[i].Charge, decoys[i].PairingId, decoys.Count, 1));
+                }
+            }
+            return true;
         }
 
         private static PeptideKind PartnerKind(PeptideKind kind)
@@ -393,20 +457,30 @@ namespace pwiz.CarafeSharp.Contracts
     public sealed class LibraryContractRow
     {
         public LibraryContractRow(string sequence, string modifiedSequence, int charge, IReadOnlyList<string> accessions,
-            bool? markedDecoy = null)
+            bool? markedDecoy = null, int? pairingId = null, long? refSpectraId = null, long? targetRefSpectraId = null)
         {
             Sequence = sequence;
             ModifiedSequence = modifiedSequence;
             Charge = charge;
             Accessions = accessions ?? Array.Empty<string>();
             MarkedDecoy = markedDecoy;
+            PairingId = pairingId;
+            RefSpectraId = refSpectraId;
+            TargetRefSpectraId = targetRefSpectraId;
         }
 
         public string Sequence { get; }
         public string ModifiedSequence { get; }
         public int Charge { get; }
         public IReadOnlyList<string> Accessions { get; }
+        /// <summary>The library's own marking of the row (a blib's <c>DecoyPairs.IsDecoy</c>), when it has one.</summary>
         public bool? MarkedDecoy { get; }
+        /// <summary>The library's own pairing of the row (a blib's <c>DecoyPairs.PairingID</c>), when it has one.</summary>
+        public int? PairingId { get; }
+        /// <summary>The row's spectrum id in the library (a blib's <c>RefSpectraID</c>), when it has one.</summary>
+        public long? RefSpectraId { get; }
+        /// <summary>A decoy row's target spectrum (a blib's <c>DecoyPairs.TargetRefSpectraID</c>), when it names one.</summary>
+        public long? TargetRefSpectraId { get; }
     }
 
     /// <summary>Which rules <see cref="LibraryContract.Validate"/> applies; rule 1 always runs.</summary>
@@ -459,14 +533,18 @@ namespace pwiz.CarafeSharp.Contracts
     /// <summary>Every violation of a library, by class, and whether a manifest was there to check rules 5 and 6.</summary>
     public sealed class LibraryContractReport
     {
-        public LibraryContractReport(IReadOnlyList<LibraryContractViolation> violations, bool manifestChecked)
+        public LibraryContractReport(IReadOnlyList<LibraryContractViolation> violations, bool manifestChecked,
+            bool pairsCheckedFromLibrary = false)
         {
             Violations = violations;
             ManifestChecked = manifestChecked;
+            PairsCheckedFromLibrary = pairsCheckedFromLibrary;
         }
 
         public IReadOnlyList<LibraryContractViolation> Violations { get; }
         public bool ManifestChecked { get; }
+        /// <summary>Rule 6 was checked from the library's own pairing (a blib's <c>DecoyPairs</c>), with no manifest.</summary>
+        public bool PairsCheckedFromLibrary { get; }
 
         public bool IsValid
         {
@@ -488,7 +566,11 @@ namespace pwiz.CarafeSharp.Contracts
                     text.AppendLine(@"  " + violation);
             }
             if (!ManifestChecked)
-                text.AppendLine(ContractsResources.LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds__accessions_and_pairs_were_not_checked_against_one_);
+            {
+                text.AppendLine(PairsCheckedFromLibrary
+                    ? ContractsResources.LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds_and_accessions_were_not_checked_against_one__the_pairs_were_checked_from_the_library_s_own_DecoyPairs_table_
+                    : ContractsResources.LibraryContractReport_Describe_No_pairing_manifest_was_given__so_the_rows__kinds__accessions_and_pairs_were_not_checked_against_one_);
+            }
             return text.ToString().TrimEnd();
         }
 

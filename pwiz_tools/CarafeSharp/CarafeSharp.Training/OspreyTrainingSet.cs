@@ -490,7 +490,7 @@ namespace pwiz.CarafeSharp.Training
                     counts[activation] = (counts.TryGetValue(activation, out long n) ? n : 0) + pair.Value;
             }
             if (counts.Count > 1)
-                throw MixedClasses(export, @"activations", counts, @"-activation");
+                throw MixedClasses(export, @"activations", counts, @"--activation");
             return counts.Keys.FirstOrDefault();
         }
 
@@ -514,7 +514,7 @@ namespace pwiz.CarafeSharp.Training
                     counts[analyzer] = (counts.TryGetValue(analyzer, out long n) ? n : 0) + pair.Value;
             }
             if (counts.Count > 1)
-                throw MixedClasses(export, @"analyzers", counts, @"-analyzer");
+                throw MixedClasses(export, @"analyzers", counts, @"--analyzer");
             if (counts.Count == 1)
                 return counts.Keys.First();
             string model = export.InstrumentModel?.Trim();

@@ -234,8 +234,6 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public bool WriteSummaryReport { get; set; } = true;
 
-        /// <summary>Write PIN files for external tools.</summary>
-        public bool WritePin { get; set; }
 
         /// <summary>
         /// -d / --diagnostics: master switch that turns on the cross-impl
@@ -275,6 +273,13 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
+        /// The command line this run was given, as one line of text, recorded in the library it
+        /// writes (<c>LibMetadata</c>, key <c>osprey.command</c>) so the library carries how it
+        /// was made. Null (a config built in code) records nothing. Runtime-only.
+        /// </summary>
+        public string CommandLine { get; set; }
+
+        /// <summary>
         /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
         /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
         /// tools and regression.ps1 read. Off by default so the human log stays clean.
@@ -297,6 +302,14 @@ namespace pwiz.Osprey.Core
         /// Off by default, and in no identity hash: off, it is not declared at all.
         /// </summary>
         public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
+
+        /// <summary>
+        /// The one-command library build (<c>--fasta</c>): the library is predicted before the
+        /// search and <see cref="LibrarySource"/> is set to it when it has been. Off by default,
+        /// and in no identity hash of the search: the search keys on the library file it reads,
+        /// whichever way the file came to exist.
+        /// </summary>
+        public LibraryBuildConfig LibraryBuild { get; set; } = new LibraryBuildConfig();
 
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;

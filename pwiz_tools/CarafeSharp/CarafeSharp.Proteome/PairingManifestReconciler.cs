@@ -26,6 +26,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.BiblioSpec.IO;
 using pwiz.CarafeSharp.Contracts;
 using pwiz.Common.SystemUtil;
 
@@ -98,9 +99,16 @@ namespace pwiz.CarafeSharp.Proteome
         private static void WriteReconciled(List<List<PairingManifestRow>> groups, HashSet<string> librarySequences, string path,
             PairingReconciliationResult result)
         {
+            // The entrapment-method column is kept when the manifest read had it.
+            bool withMethod = false;
+            foreach (var group in groups)
+            {
+                foreach (var row in group)
+                    withMethod |= row.EntrapmentMethodText != null;
+            }
             using (var writer = EntrapmentFastaBuilder.CreateWriter(path))
             {
-                PairingManifest.WriteHeader(writer);
+                PairingManifest.WriteHeader(writer, withMethod);
                 int newPairIndex = 0;
                 foreach (var group in groups)
                 {
@@ -132,7 +140,7 @@ namespace pwiz.CarafeSharp.Proteome
                         PairingManifest.WriteRow(writer, row.Sequence,
                             row.DecoyText ?? (row.IsDecoy ? PairingManifest.DECOY_YES : PairingManifest.DECOY_NO),
                             row.ProteinsText ?? string.Join(PairingManifest.PROTEIN_SEPARATOR.ToString(), row.Proteins),
-                            row.KindText, newPairIndex);
+                            row.KindText, newPairIndex, withMethod ? row.EntrapmentMethodText ?? string.Empty : null);
                         result.RowsKept++;
                     }
                     if (!decoyKept)
@@ -214,24 +222,18 @@ namespace pwiz.CarafeSharp.Proteome
             var sequences = new HashSet<string>();
             try
             {
-                var builder = new SQLiteConnectionStringBuilder { DataSource = blib, ReadOnly = true };
-                using (var connection = new SQLiteConnection(builder.ToString()))
+                using (var reader = new BlibReader(blib))
                 {
-                    connection.Open();
-                    using (var command = new SQLiteCommand(@"SELECT peptideSeq FROM RefSpectra", connection))
-                    using (var reader = command.ExecuteReader())
+                    foreach (var spectrum in reader.ReadSpectra(false))
                     {
-                        while (reader.Read())
-                        {
-                            string sequence = reader.IsDBNull(0) ? null : reader.GetString(0);
-                            if (!string.IsNullOrEmpty(sequence))
-                                sequences.Add(Normalize(sequence));
-                        }
+                        if (!string.IsNullOrEmpty(spectrum.PeptideSeq))
+                            sequences.Add(Normalize(spectrum.PeptideSeq));
                     }
                 }
             }
-            catch (SQLiteException e)
+            catch (Exception e) when (e is SQLiteException || e is InvalidDataException)
             {
+                // A file that is not a library, or one without its RefSpectra table.
                 throw new IOException(@"failed to read peptides from blib: " + blib, e);
             }
             return sequences;

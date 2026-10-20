@@ -37,8 +37,10 @@ namespace pwiz.CarafeSharp.Proteome
     /// precursor pairs with a decoy precursor of the same charge and modification set, zipped
     /// in RefSpectra id order; the entrapment pair (<c>p_target</c> / <c>p_decoy</c>) is planned
     /// the same way with IsEntrapment set. Groups are visited in pair-index order and PairIDs
-    /// count from 1. Method is <c>reverse</c> when the decoy is the C-terminus-preserving
-    /// reverse of the target, else <c>cycle</c>.
+    /// count from 1. Method is how a row's sequence was made from the row it was made from:
+    /// <c>reverse</c> on a decoy that is the C-terminus-preserving reverse of its target, else
+    /// <c>cycle</c>; on an entrapment target, the manifest's <c>entrapment_method</c>
+    /// (<c>shuffle</c>, <c>foreign</c>) when it has the column; null on an original target.
     /// <para>
     /// One departure: Carafe's I/L normalization merges two library peptides that differ only
     /// by I and L, so both of their groups pair the same precursors and Carafe's insert fails
@@ -81,17 +83,22 @@ namespace pwiz.CarafeSharp.Proteome
                 list.Add(precursor);
             }
             var groups = new SortedDictionary<int, Dictionary<string, string>>();
+            var entrapmentMethods = new Dictionary<int, string>();
             foreach (var entry in manifest)
             {
                 if (!groups.TryGetValue(entry.PairIndex, out var group))
                     groups.Add(entry.PairIndex, group = new Dictionary<string, string>(StringComparer.Ordinal));
-                group[JavaText.Trim(entry.PeptideType ?? string.Empty).ToLowerInvariant()] = entry.Sequence;
+                string kind = JavaText.Trim(entry.PeptideType ?? string.Empty).ToLowerInvariant();
+                group[kind] = entry.Sequence;
+                if (kind == ENTRAPMENT_TARGET && entry.EntrapmentMethod != null)
+                    entrapmentMethods[entry.PairIndex] = entry.EntrapmentMethod;
             }
             var planned = new PlannedPairs();
-            foreach (var group in groups.Values)
+            foreach (var group in groups)
             {
-                EmitSidePair(Lookup(group, TARGET), Lookup(group, DECOY), false, bySequence, planned);
-                EmitSidePair(Lookup(group, ENTRAPMENT_TARGET), Lookup(group, ENTRAPMENT_DECOY), true, bySequence, planned);
+                EmitSidePair(Lookup(group.Value, TARGET), Lookup(group.Value, DECOY), false, group.Key, null, bySequence, planned);
+                EmitSidePair(Lookup(group.Value, ENTRAPMENT_TARGET), Lookup(group.Value, ENTRAPMENT_DECOY), true, group.Key,
+                    entrapmentMethods.TryGetValue(group.Key, out var entrapmentMethod) ? entrapmentMethod : null, bySequence, planned);
             }
             skippedPairs = planned.Skipped;
             return planned.Rows;
@@ -109,12 +116,16 @@ namespace pwiz.CarafeSharp.Proteome
             if (new FileInfo(path).Length == 0)
                 return rows;
             foreach (var row in PairingManifest.Read(path, true, out _))
-                rows.Add(new ManifestEntry(JavaText.Trim(row.Sequence), row.IsDecoy, JavaText.Trim(row.KindText), row.PairIndex));
+                rows.Add(new ManifestEntry(JavaText.Trim(row.Sequence), row.IsDecoy, JavaText.Trim(row.KindText), row.PairIndex, row.EntrapmentMethod));
             return rows;
         }
 
-        private static void EmitSidePair(string targetSequence, string decoySequence, bool entrapment,
-            Dictionary<string, List<Precursor>> bySequence, PlannedPairs planned)
+        /// <summary>
+        /// Plans the pairs of one side of a group; <paramref name="targetMethod"/> is the target
+        /// rows' Method (an entrapment target's <c>entrapment_method</c>; null for an original).
+        /// </summary>
+        private static void EmitSidePair(string targetSequence, string decoySequence, bool entrapment, int pairingId,
+            string targetMethod, Dictionary<string, List<Precursor>> bySequence, PlannedPairs planned)
         {
             if (targetSequence == null || decoySequence == null)
                 return;
@@ -133,7 +144,7 @@ namespace pwiz.CarafeSharp.Proteome
                 var decoyIds = decoyBucket.Select(p => p.RefSpectraId).OrderBy(id => id).ToList();
                 int count = Math.Min(targetIds.Count, decoyIds.Count);
                 for (int i = 0; i < count; i++)
-                    planned.Add(targetIds[i], decoyIds[i], entrapment, method);
+                    planned.Add(targetIds[i], decoyIds[i], entrapment, pairingId, method, targetMethod);
             }
         }
 
@@ -169,7 +180,7 @@ namespace pwiz.CarafeSharp.Proteome
 
             public int Skipped { get; private set; }
 
-            public void Add(int targetId, int decoyId, bool entrapment, string method)
+            public void Add(int targetId, int decoyId, bool entrapment, int pairingId, string method, string targetMethod)
             {
                 if (_paired.Contains(targetId) || _paired.Contains(decoyId) || targetId == decoyId)
                 {
@@ -178,9 +189,8 @@ namespace pwiz.CarafeSharp.Proteome
                 }
                 _paired.Add(targetId);
                 _paired.Add(decoyId);
-                int pairId = Rows.Count / 2 + 1;
-                Rows.Add(new DecoyPairRow(targetId, false, entrapment, pairId, null));
-                Rows.Add(new DecoyPairRow(decoyId, true, entrapment, pairId, method));
+                Rows.Add(new DecoyPairRow(targetId, false, entrapment, pairingId, null, targetMethod));
+                Rows.Add(new DecoyPairRow(decoyId, true, entrapment, pairingId, targetId, method));
             }
         }
 
@@ -208,18 +218,21 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>One row of the pairing manifest.</summary>
         public sealed class ManifestEntry
         {
-            public ManifestEntry(string sequence, bool isDecoy, string peptideType, int pairIndex)
+            public ManifestEntry(string sequence, bool isDecoy, string peptideType, int pairIndex, string entrapmentMethod = null)
             {
                 Sequence = sequence;
                 IsDecoy = isDecoy;
                 PeptideType = peptideType;
                 PairIndex = pairIndex;
+                EntrapmentMethod = entrapmentMethod;
             }
 
             public string Sequence { get; }
             public bool IsDecoy { get; }
             public string PeptideType { get; }
             public int PairIndex { get; }
+            /// <summary>The manifest's <c>entrapment_method</c> for a <c>p_target</c> row, or null.</summary>
+            public string EntrapmentMethod { get; }
         }
     }
 }

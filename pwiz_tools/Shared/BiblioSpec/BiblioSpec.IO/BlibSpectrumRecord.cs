@@ -25,18 +25,21 @@ namespace pwiz.BiblioSpec.IO
 {
     /// <summary>
     /// One <c>RefSpectra</c> row and the rows that hang off it - its peaks, their annotations,
-    /// its modifications and its proteins - as <see cref="BlibWriter.AddSpectrum"/> writes
+    /// its modifications and its proteins - as <see cref="BlibWriter.AddSpectrum(BlibSpectrumRecord)"/> writes
     /// them. Every column of <c>RefSpectra</c> is here, named as the table names it, so a
     /// peptide writer (Osprey's search output, CarafeSharp's predicted library) and a
     /// small-molecule writer fill the same record. The defaults are what BiblioSpec writes
     /// for a column a writer has nothing for: <c>-</c> flanking residues, one copy, empty
     /// small-molecule text (Skyline reads those columns with GetString, so never NULL), and
-    /// NULL for the optional numbers.
+    /// NULL for the optional numbers. <see cref="BlibReader"/> reads the same record back, with
+    /// <see cref="Id"/> set; a column a library of an older schema lacks keeps its default.
     /// </summary>
     public sealed class BlibSpectrumRecord
     {
         public const string NO_FLANKING_RESIDUE = @"-";
 
+        /// <summary>The <c>RefSpectra</c> id a reader found the row under; the writer assigns its own and ignores this.</summary>
+        public long Id { get; set; }
         public string PeptideSeq { get; set; }
         public double PrecursorMz { get; set; }
         public int PrecursorCharge { get; set; }
@@ -68,7 +71,22 @@ namespace pwiz.BiblioSpec.IO
         /// <summary>A <c>ScoreTypes</c> id, <see cref="BlibWriter.SCORE_TYPE_UNKNOWN"/> by default.</summary>
         public int ScoreType { get; set; } = BlibWriter.SCORE_TYPE_UNKNOWN;
 
-        /// <summary>The peak m/z values as <see cref="BlibWriter.CompressMzs"/> encodes them.</summary>
+        /// <summary>
+        /// The experiment-wide (global) precursor q-value, written to the optional
+        /// <see cref="BlibSchema.PrecursorQValue"/> column when the writer added it
+        /// (<see cref="BlibWriter.AddOptionalColumn"/>) and read from it when the library has it;
+        /// null where unknown. The three below are its PEP and the peptide's q-value and PEP.
+        /// </summary>
+        public double? PrecursorQValue { get; set; }
+        public double? PrecursorPep { get; set; }
+        public double? PeptideQValue { get; set; }
+        public double? PeptidePep { get; set; }
+
+        /// <summary>
+        /// The peak m/z values as <see cref="BlibWriter.CompressMzs"/> encodes them; null for a
+        /// spectrum with no <c>RefSpectraPeaks</c> row at all, as BiblioSpec writes a
+        /// precursor-only entry (an empty array is a row of empty blobs).
+        /// </summary>
         public byte[] MzBlob { get; set; }
         /// <summary>The peak intensities as <see cref="BlibWriter.CompressIntensities"/> encodes them.</summary>
         public byte[] IntensityBlob { get; set; }
@@ -98,20 +116,27 @@ namespace pwiz.BiblioSpec.IO
     }
 
     /// <summary>
-    /// One <c>RefSpectraPeakAnnotations</c> row of a peptide fragment: the peak's index, its
-    /// ion name (<c>y7</c>, <c>b3-H2O</c>), charge, calculated m/z and the m/z stored for the
-    /// peak, which Skyline checks against the peak list to 1e-7. The small-molecule text columns
-    /// (formula, InChI key, other keys, adduct, comment) are written empty.
+    /// One <c>RefSpectraPeakAnnotations</c> row: the peak's index, its ion name (<c>y7</c>,
+    /// <c>b3-H2O</c>, or a fragment molecule's name), charge, calculated m/z and the m/z stored
+    /// for the peak, which Skyline checks against the peak list to 1e-7. A small-molecule
+    /// fragment also carries its neutral formula, InChI key, other keys, adduct and a comment;
+    /// a peptide fragment leaves them empty, as the tools writing peptide libraries do.
     /// </summary>
     public sealed class BlibPeakAnnotation
     {
-        public BlibPeakAnnotation(int peakIndex, string name, int charge, double mzTheoretical, double mzObserved)
+        public BlibPeakAnnotation(int peakIndex, string name, int charge, double mzTheoretical, double mzObserved,
+            string formula = null, string inchiKey = null, string otherKeys = null, string adduct = null, string comment = null)
         {
             PeakIndex = peakIndex;
             Name = name;
             Charge = charge;
             MzTheoretical = mzTheoretical;
             MzObserved = mzObserved;
+            Formula = formula ?? string.Empty;
+            InchiKey = inchiKey ?? string.Empty;
+            OtherKeys = otherKeys ?? string.Empty;
+            Adduct = adduct ?? string.Empty;
+            Comment = comment ?? string.Empty;
         }
 
         public int PeakIndex { get; }
@@ -119,6 +144,11 @@ namespace pwiz.BiblioSpec.IO
         public int Charge { get; }
         public double MzTheoretical { get; }
         public double MzObserved { get; }
+        public string Formula { get; }
+        public string InchiKey { get; }
+        public string OtherKeys { get; }
+        public string Adduct { get; }
+        public string Comment { get; }
     }
 
     /// <summary>

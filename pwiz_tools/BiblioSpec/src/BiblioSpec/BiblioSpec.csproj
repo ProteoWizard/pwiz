@@ -21,6 +21,10 @@
          sibling .raw (via WatersPusherInterval) when none is forced, mirroring the native
          BlibBuild's USE_WATERS_READER path. -->
     <ProjectReference Include="$(PwizRepoRoot)pwiz\data\vendor_readers\Waters\Waters.csproj" />
+    <!-- The .blib schema and the one writer every tool of ours writes .blib files through:
+         BlibMaker (BlibBuild, BlibFilter) writes its libraries with BlibWriter, as Osprey and
+         CarafeSharp do, so a library any of them writes is the same database for every reader. -->
+    <ProjectReference Include="$(PwizRepoRoot)pwiz_tools\Shared\BiblioSpec\BiblioSpec.IO\BiblioSpec.IO.csproj" />
   </ItemGroup>
 
   <ItemGroup>

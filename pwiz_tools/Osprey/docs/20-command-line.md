@@ -12,10 +12,12 @@ runs as a standalone .NET 8 executable on Windows and Linux.
 
 ```
 osprey -i <file1.mzML ...> -l <library.tsv|.blib> -o <output.blib> [options]
+osprey -i <file1.mzML ...> --fasta <proteome.fasta> -o <output.blib> [options]
 ```
 
-The three required inputs are `-i`/`--input` (one or more mzML), `-l`/`--library`
-(a DIA-NN TSV or `.blib`), and `-o`/`--output` (the result `.blib`). Everything else
+The three required inputs are `-i`/`--input` (one or more mzML), a library - `-l`/`--library`
+(a DIA-NN TSV or `.blib`) or `--fasta` (a protein FASTA the library is predicted from, see
+[Library build](#library-build)) - and `-o`/`--output` (the result `.blib`). Everything else
 has a sensible default; `--resolution` is the one flag you will almost always set.
 
 A DIA-NN TSV is validated in full before any search: a value Osprey cannot read in any
@@ -99,8 +101,72 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `-o`, `--output` | `<output.blib>` | Output `.blib` (see [13-blib-output-schema.md](13-blib-output-schema.md)). |
 | `--work-dir` | `<dir>` | Write derived artifacts **and** the spectra cache here, so the input data dir can be read-only. Default: beside the input. |
 | `--output-dir` | `<dir>` | Directory for derived artifacts (overrides `--work-dir`). |
-| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the `<library-leaf>.libcache` (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
+| `--cache-dir` | `<dir>` | Directory for the rebuildable caches - `.spectra.bin` and the derived `<library-leaf>.blib` of a `.tsv` library (overrides `--work-dir`). Required on a `--task` leg whose `--output-dir` differs from the data directory: such a leg has no raw input path to resolve the cache from. |
 | `--report` | `<report.tsv>` | Also write a TSV report. |
+
+### Library build
+
+One command goes from a protein FASTA and the runs to a `.blib`, the way DIA-NN's does from
+`--fasta` and `--f`: the library is predicted in-process with CarafeSharp's models and then
+searched by the same four stages, with no library-building step the user runs and no second
+executable. Three modes, chosen by the options given, on top of the search of a given library:
+
+| Mode | Command (shape) | What runs |
+|---|---|---|
+| search | `osprey -i runs... -l library.blib -o out.blib` | the four stages |
+| predict | `osprey -i runs... --fasta proteome.fasta -o out.blib` | predict with the pretrained models (AlphaPeptDeep MS2, Chronologer RT), then the four stages |
+| saved model | `osprey -i runs... --fasta proteome.fasta --model tuned.carafemodel -o out.blib` | as predict, with a fine-tuned model CarafeSharp's training saved |
+
+(A third mode, tuning the models on some of the runs first, is the next step of this work.)
+
+| Option | Value | Effect |
+|--------|-------|--------|
+| `--fasta` | `<proteome.fasta>` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library`, `--decoy-pairing-manifest` and, for now, `--task` (the HPC addressing of the library phase is still to come). |
+| `--model` | `<file.carafemodel>` | Predict with this saved fine-tuned model instead of the pretrained models. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
+| `--device` | `gpu \| cpu` | Where the library is predicted. `gpu` (the default) falls back to the CPU with a warning when no CUDA runtime is present, as CarafeSharp does. |
+| `--entrapment` | `[<ratio>]` | Add an entrapment peptide to every target (or to this fraction of them, 0.1 to 1), shuffled from the target or, with `--entrapment-fasta`, drawn mass-matched from a foreign proteome, each with a decoy of its own. The pairing manifest FDRBench reads is written beside the working files. |
+| `--entrapment-fasta` | `<foreign.fasta>` | With `--entrapment`: the foreign-species proteome to draw from. |
+
+**The library-build parameters are CarafeSharp's.** The digest (`--enzyme`, `--miss-c`,
+`--minLength`, `--maxLength`, `--clip-n-m`, `--I2L`), the modifications (`--fixMod`,
+`--varMod`, `--maxVar`), the charges and precursor m/z window (`--min-pep-charge`,
+`--max-pep-charge`, `--min-pep-mz`, `--max-pep-mz`), the fragments kept
+(`--lf-frag-mz-min`, `--lf-frag-mz-max`, `--lf-top-n-frag`, `--lf-min-n-frag`,
+`--lf-frag-n-min`), the acquisition the models predict for (`--nce`, `--ms-instrument`,
+`--activation`, `--analyzer`, `--rt-max`, `--ccs`), the RT model (`--rt-model`) and the
+pretrained archive (`--pretrained`) are CarafeSharp's declarations,
+presented in Osprey's help as the sections **Library Digest** and **Library Prediction** under
+Osprey's grammar, with CarafeSharp's text and defaults. They are listed in the standard form
+(`--miss-c 1`); for compatibility with Java Carafe's command lines, each is also accepted with
+Carafe's underscores (`--miss_c 1`). Any of them without `--fasta` is refused rather than
+ignored. What Osprey derives is not surfaced: CarafeSharp's `-db`, `-o`, `-lf_type`, the pairing
+manifest and the model folder.
+
+**What a run writes**, with `-o out.blib`:
+
+```
+out.blib              the result, with its sidecars, as for any search
+out.library.blib      the library the result was searched with (-l takes it next time)
+out.library/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
+```
+
+They land beside `out.blib`, or under `--output-dir` when it is given, as the run's other
+artifacts do. The library carries the prediction's validity stamp and the command line that
+made it (`LibMetadata`), and the search keys on the library file as it keys on any given
+library. So a re-run of the same command line predicts nothing and searches nothing; a changed
+digest or prediction option predicts the library again and the search follows; a changed `-i`
+alone searches again against the current library.
+
+**Decoys and pairing.** The digest is made in memory from the FASTA - its targets, their
+decoys (reversed, C-terminus preserved, unique against every target, as CarafeSharp's
+entrapment FASTA build makes them) and with `--entrapment` the entrapment peptides and theirs -
+and the predicted library carries every pair in its `DecoyPairs` table. The search therefore
+takes the library's decoys (`--decoys-in-library` is implied) and reads no manifest. Protein
+accessions are the proteome's, `db|accession|entry` joined by `;` across a shared peptide's
+proteins, with decoys prefixed `decoy_`.
+
+Log lines: the prediction is a task like the four stages, with `[TASK] PredictLibrary:starting`
+/ `:skipping (outputs valid)` / `:done (<s>s)` in the machine channel.
 
 ### Scoring & Tolerance
 
@@ -132,7 +198,6 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 |--------|-------|--------|
 | `--decoys-in-library` | — | Trust decoys already in the library instead of generating reverse decoys (hard error if none recognised). See [01-decoy-generation.md](01-decoy-generation.md). |
 | `--decoy-pairing-manifest` | `<manifest.tsv>` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
-| `--write-pin` | — | Write PIN files for external tools (diagnostic only; the engine does not consume them). |
 
 ### Training Export
 
@@ -343,6 +408,10 @@ listing on the CLI by design (these are not user-facing knobs).
 - **Value validation.** Osprey's tokenizer does **not** reject values outside the listed
   set - an unrecognized `--fdr-level` value warns and falls back to the default rather than
   erroring. An unknown ARGUMENT is an error, and that includes the removed `--fdr-method`.
+- **Option spelling.** Names are hyphenated (`--run-fdr`). An underscore in a typed name is
+  read as a hyphen (`--run_fdr`), a rule that exists for the library-build options Carafe
+  users have in scripts with Carafe's spelling; the help lists every option in the standard
+  form.
 
 ## Divergences from the Rust CLI
 

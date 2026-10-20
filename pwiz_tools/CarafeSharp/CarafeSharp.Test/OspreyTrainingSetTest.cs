@@ -28,6 +28,7 @@ using pwiz.CarafeSharp.Contracts;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using pwiz.CarafeSharp.Training;
 
 namespace pwiz.CarafeSharp.Test
@@ -340,8 +341,9 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(1960.0, settings.Library.MaxFragmentMz);
             // Carafe's XIC options are Osprey's to decide; they are reported, not silently dropped.
             Assert.AreEqual(2, commandLine.Warnings.Count);
-            StringAssert.Contains(commandLine.Warnings[0], @"-itol -itolu -rf -rf_rt_win -min_mz");
-            StringAssert.Contains(commandLine.Warnings[1], @"-ez");
+            // Named in the standard spelling, whatever spelling they were typed in.
+            StringAssert.Contains(commandLine.Warnings[0], @"--itol --itolu --rf --rf-rt-win --min-mz");
+            StringAssert.Contains(commandLine.Warnings[1], @"--ez");
 
             // Carafe's code defaults when the options are absent; training exports named directly
             // train without -ms, which Carafe could never have read.

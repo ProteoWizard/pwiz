@@ -1,5 +1,5 @@
 format-version: 1.4
-date: 17:06:2025 11:31
+date: 17:02:2026 11:36
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -46581,6 +46581,218 @@ xref: spec_6_hidden "1"
 xref: spec_6_site "Y"
 xref: spec_6_position "Anywhere"
 xref: spec_6_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2138
+name: HCCA-Lys
+def: "Lysine labelled with HCCA tag." [PMID:17591739, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2138]
+xref: record_id "2138"
+xref: delta_mono_mass "412.211056"
+xref: delta_avge_mass "412.4821"
+xref: delta_composition "H(28) C(22) N(4) O(4)"
+xref: username_of_poster "Lomane"
+xref: group_of_poster ""
+xref: date_time_posted "2025-07-10 14:26:02"
+xref: date_time_modified "2026-02-17 11:34:13"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2139
+name: Phosphocholine
+def: "Serine/Threonine/Tyrosine of a protein becomes posttranslationally modified with a phosphocholine moiety.." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2139]
+comment: Serine/Threonine/Tyrosine of a protein becomes posttranslationally modified with a phosphocholine moiety. Phosphocholine itself has a molecular weight of 183,1426 Da for (C5H14NO4P), but in classic LC-MS it would be protonated due to the acidic environment (C5H15NO4P) and would have a molecular weight of 184,1205 Da. Since the modification is attached to the protein in an enzymatic process the actual mass gain of a phosphocholination to a peptide is: 166,1357 Da if no acidic environment is present and 167,1436 Da for evironments that are acidic.
+synonym: "C5H14NO3P PC" RELATED []
+xref: record_id "2139"
+xref: delta_mono_mass "165.05548"
+xref: delta_avge_mass "165.1274"
+xref: delta_composition "H(12) C(5) N O(3) P"
+xref: username_of_poster "sandkamm"
+xref: group_of_poster ""
+xref: date_time_posted "2025-07-11 12:43:21"
+xref: date_time_modified "2026-02-17 11:34:50"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "T"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Post-translational"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2140
+name: Methyl:13C(1)2H(2)
+def: "Heavy-Methyl:13C(1)2H(2)." [PMID:27644970, PMID:16335955, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2140]
+xref: record_id "2140"
+xref: delta_mono_mass "17.031558"
+xref: delta_avge_mass "17.0316"
+xref: delta_composition "2H(2) 13C"
+xref: username_of_poster "NilsBurger"
+xref: group_of_poster ""
+xref: date_time_posted "2025-08-04 14:10:56"
+xref: date_time_modified "2026-02-17 11:35:15"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2141
+name: c-type-ion
+def: "Cleavage at the N atom from the N+1 residue as reaction inside the mass spectrometer." [PMID:2074849, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2141]
+comment: Search engines that analyze MS3 spectra derived from c-ions from the MS2 stage must recognize this virtual modification for this purpose.
+xref: record_id "2141"
+xref: delta_mono_mass "-0.984016"
+xref: delta_avge_mass "-0.9848"
+xref: delta_composition "H N O(-1)"
+xref: username_of_poster "edeutsch"
+xref: group_of_poster ""
+xref: date_time_posted "2025-10-03 16:31:57"
+xref: date_time_modified "2025-10-03 17:04:13"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C-term"
+xref: spec_1_position "Any C-term"
+xref: spec_1_classification "Other"
+xref: spec_1_misc_notes "Virtual modification for MS/MS of c-type ions"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2142
+name: x-type-ion
+def: "Cleavage at the carbonyl from the N-1 residue as reaction inside the mass spectrometer." [PMID:2074849, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2142]
+comment: Search engines that analyze MS3 spectra derived from x-ions from the MS2 stage must recognize this virtual modification for this purpose.
+xref: record_id "2142"
+xref: delta_mono_mass "25.979265"
+xref: delta_avge_mass "25.9942"
+xref: delta_composition "H(-2) C O"
+xref: username_of_poster "edeutsch"
+xref: group_of_poster ""
+xref: date_time_posted "2025-10-03 16:50:58"
+xref: date_time_modified "2025-10-03 17:06:22"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+xref: spec_1_misc_notes "Virtual modification for MS/MS of x-type ions"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2143
+name: z-type-ion
+def: "Ammonia loss from N-terminus as reaction inside the mass spectrometer." [PMID:2074849, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2143]
+comment: Search engines that analyze MS3 spectra derived from z-ions from the MS2 stage must recognize this virtual modification for this purpose.
+xref: record_id "2143"
+xref: delta_mono_mass "-17.026549"
+xref: delta_avge_mass "-17.0305"
+xref: delta_composition "H(-3) N(-1)"
+xref: username_of_poster "edeutsch"
+xref: group_of_poster ""
+xref: date_time_posted "2025-10-03 16:56:40"
+xref: date_time_modified "2025-10-03 16:56:40"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+xref: spec_1_misc_notes "Virtual modification for MS/MS of z-type ions. This is for the Biemann z-type ion, but the most common ETD z-dot ion has one more hydrogen."
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2144
+name: Dehydromethionine
+def: "Intramolecular cyclization product of N-terminal methionine, forming a five-membered azasulfonium ion where the sulfur atom bonds to the amine group." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2144]
+xref: record_id "2144"
+xref: delta_mono_mass "-2.01565"
+xref: delta_avge_mass "-2.0159"
+xref: delta_composition "H(-2)"
+xref: username_of_poster "rnascimento"
+xref: group_of_poster ""
+xref: date_time_posted "2025-10-15 13:12:00"
+xref: date_time_modified "2026-02-17 11:35:59"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "M"
+xref: spec_1_position "Protein N-term"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2146
+name: Label:2H(8)
+def: "SILAC: Lysine_D8." [URL:https\://isotope.com/silac-reagents-and-sets/l-lysine-2hcl-3-3-4-4-5-5-6-6-d8-dlm-2641-025, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2146]
+xref: record_id "2146"
+xref: delta_mono_mass "8.050214"
+xref: delta_avge_mass "8.0493"
+xref: delta_composition "H(-8) 2H(8)"
+xref: username_of_poster "FengmingLI"
+xref: group_of_poster ""
+xref: date_time_posted "2025-12-10 02:42:54"
+xref: date_time_modified "2026-02-17 11:36:11"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2147
+name: imidazolone
+def: "Imidazolone from 3-DG." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2147]
+xref: record_id "2147"
+xref: delta_mono_mass "144.042259"
+xref: delta_avge_mass "144.1253"
+xref: delta_composition "H(8) C(6) O(4)"
+xref: username_of_poster "hoaianhtran"
+xref: group_of_poster ""
+xref: date_time_posted "2025-12-10 10:24:37"
+xref: date_time_modified "2026-02-17 11:36:21"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "R"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Non-standard residue"
 is_a: UNIMOD:0 ! unimod root node
 
 

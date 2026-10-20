@@ -34,6 +34,7 @@ using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using pwiz.CarafeSharp.Tasks;
 using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
@@ -792,7 +793,7 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>
         /// Contract mode (<c>--library_contract</c>): a FASTA of targets and their decoys with the
         /// manifest pairing them predicts a library that claims the contract, with the marker in
-        /// its OspreyMetadata and its DecoyPairs rows; a FASTA whose accessions carry Carafe's
+        /// its LibMetadata and its DecoyPairs rows; a FASTA whose accessions carry Carafe's
         /// per-peptide suffix is refused before any prediction with the class named; a manifest
         /// whose decoys the FASTA lacks writes a library with unpaired targets, which is discarded,
         /// leaving nothing in the output folder. The command line requires the .blib output and
@@ -803,10 +804,10 @@ namespace pwiz.CarafeSharp.Test
         {
             var refused = Assert.ThrowsException<ArgumentException>(() =>
                 CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-lf_type", @"blib", @"-library_contract" }));
-            StringAssert.Contains(refused.Message, @"-pairing_manifest");
+            StringAssert.Contains(refused.Message, @"--pairing-manifest");
             refused = Assert.ThrowsException<ArgumentException>(() =>
                 CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-pairing_manifest", @"m.tsv", @"-library_contract" }));
-            StringAssert.Contains(refused.Message, @"-lf_type blib");
+            StringAssert.Contains(refused.Message, @"--lf-type blib");
 
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Contract_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(folder);
@@ -833,7 +834,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.IsTrue(generator.SpectrumCount > 0, log.ToString());
                 StringAssert.Contains(log.ToString(), @"Library contract:");
                 Assert.AreEqual(LibraryContract.METADATA_VALUE, Scalar(generator.BlibPath,
-                    @"SELECT Value FROM OspreyMetadata WHERE Key = '" + LibraryContract.METADATA_KEY + @"'"));
+                    @"SELECT value FROM LibMetadata WHERE key = '" + LibraryContract.METADATA_KEY + @"'"));
                 Assert.IsTrue((long)Scalar(generator.BlibPath, @"SELECT COUNT(*) FROM DecoyPairs") > 0);
 
                 // Carafe's per-peptide suffix on an accession: refused before prediction, nothing written.
@@ -907,7 +908,9 @@ namespace pwiz.CarafeSharp.Test
             // order; group 2 then finds all of its precursors paired, where Carafe fails.
             Assert.AreEqual(3, skipped);
             CollectionAssert.AreEqual(new[] { 1, 2, 6, 7, 3, 5 }, rows.Select(r => r.RefSpectraId).ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 1, 2, 2, 3, 3 }, rows.Select(r => r.PairId).ToArray());
+            // The pairing is the manifest's index, shared by every pair the group makes; a decoy names its target.
+            CollectionAssert.AreEqual(new[] { 1, 1, 1, 1, 1, 1 }, rows.Select(r => r.PairingId).ToArray());
+            CollectionAssert.AreEqual(new int?[] { null, 1, null, 6, null, 3 }, rows.Select(r => r.TargetRefSpectraId).ToArray());
             CollectionAssert.AreEqual(new[] { false, true, false, true, false, true }, rows.Select(r => r.IsDecoy).ToArray());
             CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"reverse" }, rows.Select(r => r.Method).ToArray());
             Assert.IsFalse(rows.Any(r => r.IsEntrapment));
