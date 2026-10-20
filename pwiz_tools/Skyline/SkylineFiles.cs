@@ -1349,14 +1349,6 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// When saving to a new name ("Save As"), copies the document-specific spectral library
-        /// to the new name and updates the document to reference the library by its new name. This
-        /// includes renaming the library on each precursor's spectrum header info so that the saved
-        /// file does not require a slow settings update the next time it is opened. Returns the
-        /// updated document (which has also been set as the current document), or the current
-        /// document unchanged if there is no document-specific library to rename.
-        /// </summary>
-        /// <summary>
         /// If the document has a document-specific spectral library and this is a "Save As" to a new
         /// name, copies the library files to the new name and returns a <see cref="RenamedDocumentLibrary"/>
         /// holding the copied (not yet committed) files together with the document renamed to reference
@@ -1367,18 +1359,20 @@ namespace pwiz.Skyline
         /// </summary>
         private RenamedDocumentLibrary RenameDocumentLibraryAs(SrmDocument document, string newDocFilePath)
         {
-            string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+            var libraries = document.Settings.PeptideSettings.Libraries;
+            if (!libraries.HasDocumentLibrary)
+                return null;
+
+            // Copy from the file the document library spec names. For a document opened from disk
+            // this is the library beside the current .sky file, but a document built in memory may
+            // hold a document library written somewhere else.
+            string oldDocLibFile = libraries.LibrarySpecs.FirstOrDefault(spec => spec != null && spec.IsDocumentLibrary)?.FilePath;
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
-            // If the document has no document-specific library, or the files for it do not
-            // exist on disk, or it's stale due to conversion of document to small molecule
-            // representation, there is nothing to rename.
-            if (!document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                || !File.Exists(oldDocLibFile)
-                || Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
-            {
+            // If the files for the library do not exist on disk, or the library is already
+            // at the new name, there is nothing to copy.
+            if (!File.Exists(oldDocLibFile) || string.Equals(oldDocLibFile, newDocLibFile, StringComparison.OrdinalIgnoreCase))
                 return null;
-            }
 
             var fileSavers = new List<FileSaver>();
             try
