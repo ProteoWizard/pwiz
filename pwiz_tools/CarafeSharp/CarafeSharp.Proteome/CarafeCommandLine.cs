@@ -930,10 +930,6 @@ namespace pwiz.CarafeSharp.Proteome
                 throw new NotSupportedException(ARG_AI_VERSION.ArgumentText + @" " + aiVersion + @" is not supported by CarafeSharp; only v2");
         }
 
-        /// <summary>
-        /// True when <c>-i</c> names an Osprey training export or a folder of them, input Carafe
-        /// could not read, so CarafeSharp trains on it without <c>-ms</c>.
-        /// </summary>
         /// <summary>With training, <c>-model</c> is the model to fine-tune further, and the new file holds both of its models.</summary>
         private void CheckModelTrainingType()
         {
@@ -944,6 +940,10 @@ namespace pwiz.CarafeSharp.Proteome
             }
         }
 
+        /// <summary>
+        /// True when <c>-i</c> names an Osprey training export or a folder of them, input Carafe
+        /// could not read, so CarafeSharp trains on it without <c>-ms</c>.
+        /// </summary>
         private bool NamesTrainingExports()
         {
             return TryGet(ARG_I, out string identifications) &&

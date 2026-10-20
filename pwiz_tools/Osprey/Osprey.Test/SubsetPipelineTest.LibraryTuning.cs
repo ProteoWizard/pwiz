@@ -110,6 +110,13 @@ namespace pwiz.Osprey.Test
                 AssertTunedPhases(retune, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
                 Assert.IsTrue(File.Exists(products.Model), products.Model);
 
+                // The model kept but its folder, which the library is predicted from, lost: the
+                // tuning runs again rather than being skipped as current.
+                Directory.Delete(products.ModelDirectory, true);
+                string refolder = RunOsprey(buildArgs, Verifier(false));
+                AssertTunedPhases(refolder, TUNING_PHASES.Take(1), TUNING_PHASES.Skip(1), true, true);
+                Assert.IsTrue(Directory.Exists(products.ModelDirectory), products.ModelDirectory);
+
                 // A tuning option changes the tuning and what follows it, not the training library
                 // or its search.
                 var seedArgs = buildArgs.Concat(new[] { CarafeCommandLine.ARG_SEED.ArgumentText, @"7" }).ToArray();
@@ -145,6 +152,11 @@ namespace pwiz.Osprey.Test
             string missing = Path.Combine(_testDir, @"missing.mzML");
             StringAssert.Contains(RunOspreyExpecting(TunedArgs(fasta, workDir, inputs, new[] { missing }).ToArray(), Verifier(false), Program.EXIT_CODE_FAILURE_TO_START),
                 string.Format(OspreyResources.Program_LibraryBuildError_Training_input_file_not_found___0_, missing));
+            // A training-run RT reference that names none of the tuning runs, refused before any phase runs.
+            string badReference = RunOspreyExpecting(buildArgs.Concat(new[] { CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, @"no_such_run" }).ToArray(),
+                Verifier(false), Program.EXIT_CODE_FAILURE_TO_START);
+            StringAssert.Contains(badReference, @"no_such_run");
+            Assert.IsFalse(badReference.Contains(TaskLine(LibraryBuildWorkflow.PREDICT_TRAINING_LIBRARY_TASK, @"starting")), badReference);
             // A saved model tunes further with both of its models, never one.
             AssertLibraryBuildRefused(fasta, workDir, OspreyCommandArgs.ARG_TRAINING_INPUT.ArgumentText, inputs[1],
                 OspreyCommandArgs.ARG_MODEL.ArgumentText, products.Model, CarafeCommandLine.ARG_TF.ArgumentText, @"ms2");

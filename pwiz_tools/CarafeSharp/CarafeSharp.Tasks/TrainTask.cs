@@ -52,7 +52,7 @@ namespace pwiz.CarafeSharp.Tasks
             _name = name;
         }
 
-        public override string Name => _name;
+        public override string Name => _name ?? TASK_NAME;
 
         /// <summary>Changes the fine-tuning options before the run; for a host's tests, which cannot afford a full fine-tune.</summary>
         public Action<FineTuneOptions> ConfigureFineTune { get; set; }

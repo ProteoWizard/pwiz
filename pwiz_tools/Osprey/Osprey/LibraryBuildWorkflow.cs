@@ -21,7 +21,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Tasks;
 using pwiz.CarafeSharp.Training;
@@ -158,6 +160,7 @@ namespace pwiz.Osprey
             {
                 if (training != null)
                 {
+                    CheckRtReference(library, training);
                     int tuningExit = RunTuning(training, workDirectory);
                     if (tuningExit != 0)
                         return tuningExit;
@@ -236,7 +239,54 @@ namespace pwiz.Osprey
             training.MsFiles = _config.LibraryBuild.TrainingInputs.Select(Path.GetFullPath).ToArray();
             training.OutputDirectory = Path.Combine(workDirectory, MODEL_FOLDER);
             training.ModelFile = ModelPath(_config);
+            DiscardModelWithoutFolder(training.ModelFile, training.OutputDirectory);
             return RunPhase(new TrainTask(training, TRAIN_MODEL_TASK) { ConfigureFineTune = ConfigureFineTuneForTests });
+        }
+
+        /// <summary>
+        /// The training-run RT reference (<c>--rt-reference</c>), checked before any phase runs, as
+        /// CarafeSharp's training checks it before the fine-tune: it needs the tuning runs aligned and
+        /// the Chronologer RT model, and must name one of the tuning runs. The tuning predicts no
+        /// library of its own here, so its own check, which reads the library's reference, never runs.
+        /// </summary>
+        private void CheckRtReference(LibrarySettings library, TrainingSettings training)
+        {
+            string rtReference = library.RtReference;
+            if (rtReference == null)
+                return;
+            if (training.RtAlignment != RtAlignmentType.kde)
+            {
+                throw new ArgumentException(string.Format(@"{0} {1} needs the training runs aligned ({2} kde), not {2} {3}.",
+                    CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, rtReference, CarafeCommandLine.ARG_RT_ALIGN.ArgumentText, training.RtAlignment));
+            }
+            var rtModel = training.RtModelType ?? LibrarySettings.DEFAULT_RT_MODEL;
+            if (rtModel != RtModelType.chronologer)
+            {
+                throw new ArgumentException(string.Format(@"{0} {1} needs the Chronologer RT model, not {2}.",
+                    CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, rtReference, rtModel));
+            }
+            // The tuning runs' names are their exports' stems, as the tuning names them.
+            RtAlignment.FindRun(_config.LibraryBuild.TrainingInputs.Select(Path.GetFileNameWithoutExtension).ToArray(), rtReference);
+        }
+
+        /// <summary>
+        /// The library is predicted from the model folder, so a current <c>&lt;out&gt;.carafemodel</c>
+        /// whose folder lost any of the files it packed (the working files deleted, the model kept)
+        /// is discarded, and the tuning runs again from the exports, rather than skipping the tuning
+        /// and predicting from what is left.
+        /// </summary>
+        private static void DiscardModelWithoutFolder(string modelFile, string modelFolder)
+        {
+            if (!File.Exists(modelFile))
+                return;
+            bool complete;
+            using (var archive = ZipFile.OpenRead(modelFile))
+            {
+                complete = archive.Entries.Where(e => e.Name.Length > 0 && e.FullName != CarafeModelFile.MANIFEST_ENTRY)
+                    .All(e => File.Exists(Path.Combine(modelFolder, e.FullName)));
+            }
+            if (!complete)
+                File.Delete(modelFile);
         }
 
         /// <summary>
@@ -264,6 +314,8 @@ namespace pwiz.Osprey
             config.OutputReport = null;
             config.OutputFdrBench = null;
             config.ModelDiagnostics = false;
+            // Not the one command's analysis: its result was not searched with tuned models.
+            config.LibraryBuild = new LibraryBuildConfig();
             config.TrainingExport = new TrainingExportConfig
             {
                 Enabled = true,
@@ -274,17 +326,19 @@ namespace pwiz.Osprey
             Directory.CreateDirectory(trainingDirectory);
 
             string outputDir = ArtifactPaths.OutputDir;
-            string cacheFallbackDir = ArtifactPaths.CacheFallbackDir;
-            ArtifactPaths.OutputDir = trainingDirectory;
-            ArtifactPaths.CacheFallbackDir = outputDir;
-            try
+            // The cache resolves as the output's search resolves it, so a run both analyses read is
+            // parsed once and a run without --output-dir never probes the data directory.
+            using (ArtifactPaths.ResolveCacheAs(outputDir))
             {
-                return new AnalysisPipeline().Run(config, pipeline);
-            }
-            finally
-            {
-                ArtifactPaths.OutputDir = outputDir;
-                ArtifactPaths.CacheFallbackDir = cacheFallbackDir;
+                ArtifactPaths.OutputDir = trainingDirectory;
+                try
+                {
+                    return new AnalysisPipeline().Run(config, pipeline);
+                }
+                finally
+                {
+                    ArtifactPaths.OutputDir = outputDir;
+                }
             }
         }
 

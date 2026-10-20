@@ -1036,13 +1036,19 @@ namespace pwiz.Osprey
             if (build.Tuning)
             {
                 // A tuning run that is also an input is checked with the inputs, where a spectra
-                // cache may stand in for it; one searched for the tuning only is read here.
-                foreach (string run in build.TrainingInputs)
+                // cache may stand in for it; one searched for the tuning only is read here (a file,
+                // or a folder-format run such as a Bruker .d).
+                var heldOut = build.TrainingInputs.Where(run => !config.InputFiles.Any(input => IsSamePath(input, run))).ToList();
+                foreach (string run in heldOut)
                 {
-                    if (!config.InputFiles.Any(input => IsSamePath(input, run)) && !File.Exists(run))
+                    if (!File.Exists(run) && !Directory.Exists(run))
                         return string.Format(OspreyResources.Program_LibraryBuildError_Training_input_file_not_found___0_, run);
                 }
-                string dupErr = DuplicateInputStemError(build.TrainingInputs);
+                // The two analyses share the spectra cache, which is named by stem, so a tuning run
+                // must not share its stem with another tuning run or with an input.
+                string dupErr = DuplicateInputStemError(config.InputFiles.Concat(heldOut).ToList());
+                if (dupErr == null)
+                    dupErr = DuplicateInputStemError(build.TrainingInputs);
                 if (dupErr != null)
                     return dupErr;
             }
