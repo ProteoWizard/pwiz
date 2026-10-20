@@ -391,7 +391,7 @@ set TESTS_FAILED=0
 set FAILED_PASSES=
 
 echo ##teamcity[progressMessage 'TestRunner full suite ^(English^)']
-call :run_tests %RUNNER_MODE% loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %TC_DECORATION% %PERF_TESTS%
+call :run_tests %RUNNER_MODE% loop=1 language=en offscreen=on runsmallmoleculeversions=on results="%TC_TEST_RESULTS%" %TC_DECORATION% %PERF_TESTS%
 if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_PASSES=%FAILED_PASSES% full-suite")
 
 echo ##teamcity[progressMessage 'TestRunner pass0 build check ^(CommonTest, Test, TestData^)']
