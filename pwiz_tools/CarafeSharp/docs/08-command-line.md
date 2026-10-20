@@ -119,8 +119,7 @@ host surfaces, Osprey declares each again for its own parser from the declaratio
 parse calls `InterpretHostedLibrary` with the values it derives itself (the FASTA, a `.blib`
 output, the saved model, the device), which reads them as `Interpret` does and returns the
 `LibrarySettings`. Their help text is this tool's (`GetDescription`). What Osprey derives, and
-training, are not surfaced; Osprey's own `--model` and `--device` stand for `-model` and
-`-device`.
+training, are not surfaced; Osprey's own `--model` and `--device` stand for CarafeSharp's.
 
 ## Adding or changing an option
 
