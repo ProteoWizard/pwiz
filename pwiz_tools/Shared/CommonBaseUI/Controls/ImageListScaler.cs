@@ -66,6 +66,21 @@ namespace pwiz.Common.Controls
         /// resampling it to the list's size when they differ. At 100% nothing is resampled.
         /// The image is not disposed: callers often pass shared resources.
         /// </summary>
+        /// <summary>
+        /// Prepares a list to receive icons already rendered for the control's DPI (see
+        /// Skyline's DpiUtil.GetIcon): 32-bit, the image size scaled from the 96-DPI size
+        /// the list was designed with, and no color key, since the icons carry alpha. At
+        /// 100% the list is left as designed, because the native bitmaps are added unchanged.
+        /// </summary>
+        public static void PrepareForDpi(Control control, ImageList imageList)
+        {
+            if (!DpiScale.IsScaled(control))
+                return;
+            imageList.ColorDepth = ColorDepth.Depth32Bit;
+            imageList.ImageSize = DpiScale.ScaleSize(control, imageList.ImageSize);
+            imageList.TransparentColor = Color.Transparent;
+        }
+
         public static void AddScaled(ImageList imageList, Image image)
         {
             imageList.Images.Add(image.Size == imageList.ImageSize ? image : Resample(imageList, image));

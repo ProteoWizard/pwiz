@@ -531,7 +531,9 @@ namespace pwiz.Skyline.FileUI
                 // Runtime-created controls get no AutoScaleMode.Font treatment: the combo
                 // inherits the form's DPI-scaled font but keeps the 96-DPI default Button
                 // height, clipping its text at high DPI; its dropdown-arrow glyph is a
-                // 96-DPI bitmap, pre-scaled here to keep pace (issue #4599).
+                // 96-DPI bitmap, pre-scaled here to keep pace (issue #4599). It is recolored
+                // to the fore color at run time, so no pre-rendered icon (DpiUtil.GetIcon)
+                // could stand in for it.
                 combo.Height = DpiUtil.Scale(this, combo.Height);
                 combo.Image = DpiUtil.ScaleImage(this, combo.Image);
                 ComboBoxes.Add(combo);

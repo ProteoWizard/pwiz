@@ -60,11 +60,11 @@ namespace pwiz.Skyline.Controls
         {
             MatchTypes = ProteinMatchTypes.ALL;
             _documentUiContainer = documentUiContainer;
-            AddImage(Resources.Protein);   // 16bpp
-            AddImage(Resources.Peptide);   // 4bpp
-            // 16x16 icons are a 96-DPI design (issue #4599); no control exists yet, so the
-            // system DPI is used
-            ImageListScaler.ScaleToDpi(null, _imageList);
+            // The 16x16 icons are a 96-DPI design, added at the pixel size for the DPI by
+            // DpiUtil.GetIcon (issue #4599); no control exists yet, so the system DPI is used
+            ImageListScaler.PrepareForDpi(null, _imageList);
+            AddImage(nameof(Resources.Protein), Resources.Protein);   // 16bpp
+            AddImage(nameof(Resources.Peptide), Resources.Peptide);   // 4bpp
             _hideOnLoseFocus = hideOnLoseFocus;
         }
 
@@ -714,9 +714,9 @@ namespace pwiz.Skyline.Controls
         public event Action<StatementCompletionItem> SelectionMade;
         public event Action TextBoxLoseFocus;
 
-        private void AddImage(Image image)
+        private void AddImage(string name, Image image)
         {
-            _imageList.Images.Add(image);
+            _imageList.Images.Add(DpiUtil.GetIcon(null, name, image, Color.Magenta));
         }
     }
 

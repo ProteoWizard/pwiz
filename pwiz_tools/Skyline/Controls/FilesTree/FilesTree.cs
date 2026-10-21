@@ -76,36 +76,36 @@ namespace pwiz.Skyline.Controls.FilesTree
             _timerUpdate = new System.Windows.Forms.Timer { Interval = UPDATE_DELAY_MS };
             _timerUpdate.Tick += OnUpdateTimer;
 
-            // Icons are 16x16 at 96 DPI; AddNodeImage pre-scales them to the DPI-sized
-            // ImageList.ImageSize (issue #4599).
+            // The 16x16 icons are a 96-DPI design: each is added at the pixel size for
+            // this DPI by DpiUtil.GetIcon (issue #4599)
             ImageList = new ImageList
             {
                 TransparentColor = Color.Magenta,
                 ColorDepth = ColorDepth.Depth32Bit
             };
-            AddNodeImage(Resources.Blank);              // 1bpp
-            AddNodeImage(Resources.Folder);             // 32bpp
-            AddNodeImage(Resources.FolderMissing);      // 32bpp
-            AddNodeImage(Resources.File);               // 8bpp
-            AddNodeImage(Resources.FileMissing);        // 32bpp
-            AddNodeImage(Resources.Replicate);          // 24bpp
-            AddNodeImage(Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
-            AddNodeImage(Resources.DataProcessing);     // 8bpp
-            AddNodeImage(Resources.PeptideLib);         // 4bpp
-            AddNodeImage(Resources.Skyline_FilesTree);  // 24bpp
-            AddNodeImage(Resources.AuditLog);           // 32bpp
-            AddNodeImage(Resources.CacheFile);          // 32bpp
-            AddNodeImage(Resources.ViewFile);           // 32bpp
-            AddNodeImage(Resources.ProtDB);             // 32bpp
-            AddNodeImage(Resources.ImsDB);              // 32bpp
-            AddNodeImage(Resources.OptDB);              // 32bpp
-            AddNodeImage(Resources.IrtCalculator);      // 32bpp
-            ImageListScaler.ScaleToDpi(this, ImageList);   // 16x16 icons are a 96-DPI design (issue #4599)
+            ImageListScaler.PrepareForDpi(this, ImageList);
+            AddNodeImage(nameof(Resources.Blank), Resources.Blank);              // 1bpp
+            AddNodeImage(nameof(Resources.Folder), Resources.Folder);             // 32bpp
+            AddNodeImage(nameof(Resources.FolderMissing), Resources.FolderMissing);      // 32bpp
+            AddNodeImage(nameof(Resources.File), Resources.File);               // 8bpp
+            AddNodeImage(nameof(Resources.FileMissing), Resources.FileMissing);        // 32bpp
+            AddNodeImage(nameof(Resources.Replicate), Resources.Replicate);          // 24bpp
+            AddNodeImage(nameof(Resources.ReplicateMissing), Resources.ReplicateMissing);   // 24bpp // CONSIDER: improve icon?
+            AddNodeImage(nameof(Resources.DataProcessing), Resources.DataProcessing);     // 8bpp
+            AddNodeImage(nameof(Resources.PeptideLib), Resources.PeptideLib);         // 4bpp
+            AddNodeImage(nameof(Resources.Skyline_FilesTree), Resources.Skyline_FilesTree);  // 24bpp
+            AddNodeImage(nameof(Resources.AuditLog), Resources.AuditLog);           // 32bpp
+            AddNodeImage(nameof(Resources.CacheFile), Resources.CacheFile);          // 32bpp
+            AddNodeImage(nameof(Resources.ViewFile), Resources.ViewFile);           // 32bpp
+            AddNodeImage(nameof(Resources.ProtDB), Resources.ProtDB);             // 32bpp
+            AddNodeImage(nameof(Resources.ImsDB), Resources.ImsDB);              // 32bpp
+            AddNodeImage(nameof(Resources.OptDB), Resources.OptDB);              // 32bpp
+            AddNodeImage(nameof(Resources.IrtCalculator), Resources.IrtCalculator);      // 32bpp
         }
 
-        private void AddNodeImage(Image image)
+        private void AddNodeImage(string name, Image image)
         {
-            ImageList.Images.Add(image);
+            ImageList.Images.Add(DpiUtil.GetIcon(this, name, image, Color.Magenta));
         }
 
         [Browsable(false)]
