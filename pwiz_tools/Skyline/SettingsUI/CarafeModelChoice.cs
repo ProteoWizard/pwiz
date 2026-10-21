@@ -63,13 +63,62 @@ namespace pwiz.Skyline.SettingsUI
         {
             Path = model.Path;
             Instrument = GetInstrument(model);
-            Details = GetDetails(model);
+            if (model.RtMax > 0)
+                GradientMinutes = model.RtMax;
+            var runs = model.Training?.Runs ?? Array.Empty<CarafeModelTrainingRun>();
+            var mzMins = runs.Where(run => run.IsolationMzMin.HasValue).Select(run => run.IsolationMzMin.Value).ToList();
+            var mzMaxes = runs.Where(run => run.IsolationMzMax.HasValue).Select(run => run.IsolationMzMax.Value).ToList();
+            if (mzMins.Count > 0 && mzMaxes.Count > 0)
+            {
+                PrecursorMzMin = mzMins.Min();
+                PrecursorMzMax = mzMaxes.Max();
+            }
+            Nce = model.Nce;
+            Fragmentation = TextUtil.TextSeparate(@" ", model.Activation, model.Analyzer);
+            TrainingRunCount = runs.Count > 0 ? runs.Count : model.Runs.Count;
+            var metrics = model.Training?.HeldOutMetrics;
+            if (metrics != null && metrics.TryGetValue(@"ms2.finetuned.cos", out double ms2Cosine))
+                Ms2Cosine = ms2Cosine;
+            if (metrics != null && metrics.TryGetValue(@"rt.finetuned.r2", out double rtR2))
+                RtR2 = rtR2;
+            if (DateTime.TryParse(model.Created, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var saved))
+                Saved = saved.ToLocalTime();
+            Details = GetDetails();
         }
 
         public string Path { get; }
 
+        public string FileName
+        {
+            get { return System.IO.Path.GetFileName(Path); }
+        }
+
         /// <summary>The instrument the training runs were acquired on, as their files name it.</summary>
         public string Instrument { get; }
+
+        /// <summary>The gradient length a library predicted with the model takes its retention times on, if any.</summary>
+        public double? GradientMinutes { get; }
+
+        /// <summary>The precursor m/z range the training runs isolated, if they say.</summary>
+        public double? PrecursorMzMin { get; }
+        public double? PrecursorMzMax { get; }
+
+        /// <summary>The NCE a library predicted with the model takes.</summary>
+        public double Nce { get; }
+
+        /// <summary>The activation and MS2 analyzer a library predicted with the model takes.</summary>
+        public string Fragmentation { get; }
+
+        public int TrainingRunCount { get; }
+
+        /// <summary>The fine-tuned MS2 model's cosine similarity on held-out spectra, if the file records it.</summary>
+        public double? Ms2Cosine { get; }
+
+        /// <summary>The fine-tuned RT model's R² on held-out peptides, if the file records it.</summary>
+        public double? RtR2 { get; }
+
+        /// <summary>When the model was saved, local time.</summary>
+        public DateTime? Saved { get; }
 
         /// <summary>
         /// The gradient, precursor m/z range, NCE, fragmentation and analyzer a library predicted with
@@ -81,8 +130,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                string fileName = System.IO.Path.GetFileName(Path);
-                return string.IsNullOrEmpty(Instrument) ? fileName : TextUtil.ColonSeparate(fileName, Instrument);
+                return string.IsNullOrEmpty(Instrument) ? FileName : TextUtil.ColonSeparate(FileName, Instrument);
             }
         }
 
@@ -100,32 +148,35 @@ namespace pwiz.Skyline.SettingsUI
             return runInstruments.Count > 0 ? runInstruments.CommaSeparateListItems() : model.Instrument;
         }
 
-        private static string GetDetails(CarafeModelFile model)
+        /// <summary>The precursor m/z range as the model list and grid show it, or null when unknown.</summary>
+        public string PrecursorMzRange
+        {
+            get
+            {
+                if (!PrecursorMzMin.HasValue || !PrecursorMzMax.HasValue)
+                    return null;
+                var culture = LocalizationHelper.CurrentCulture;
+                return string.Format(SettingsUIResources.CarafeModelChoice_PrecursorMzRange__0___1_,
+                    PrecursorMzMin.Value.ToString(@"0", culture), PrecursorMzMax.Value.ToString(@"0", culture));
+            }
+        }
+
+        private string GetDetails()
         {
             var culture = LocalizationHelper.CurrentCulture;
             var parts = new List<string>();
-            if (model.RtMax > 0)
+            if (GradientMinutes.HasValue)
             {
                 parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails__0__min_gradient,
-                    model.RtMax.ToString(@"0.#", culture)));
+                    GradientMinutes.Value.ToString(@"0.#", culture)));
             }
-            var runs = model.Training?.Runs ?? Array.Empty<CarafeModelTrainingRun>();
-            var mzMins = runs.Where(run => run.IsolationMzMin.HasValue).Select(run => run.IsolationMzMin.Value).ToList();
-            var mzMaxes = runs.Where(run => run.IsolationMzMax.HasValue).Select(run => run.IsolationMzMax.Value).ToList();
-            if (mzMins.Count > 0 && mzMaxes.Count > 0)
-            {
-                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_precursor_m_z__0___1_,
-                    mzMins.Min().ToString(@"0", culture), mzMaxes.Max().ToString(@"0", culture)));
-            }
-            parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_NCE__0_, model.Nce.ToString(@"0.#", culture)));
-            string fragmentation = TextUtil.TextSeparate(@" ", model.Activation, model.Analyzer);
-            if (fragmentation.Length > 0)
-                parts.Add(fragmentation);
-            if (DateTime.TryParse(model.Created, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var created))
-            {
-                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_saved__0_,
-                    created.ToLocalTime().ToString(@"d", culture)));
-            }
+            if (PrecursorMzRange != null)
+                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_precursor_m_z__0_, PrecursorMzRange));
+            parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_NCE__0_, Nce.ToString(@"0.#", culture)));
+            if (Fragmentation.Length > 0)
+                parts.Add(Fragmentation);
+            if (Saved.HasValue)
+                parts.Add(string.Format(SettingsUIResources.CarafeModelChoice_GetDetails_saved__0_, Saved.Value.ToString(@"d", culture)));
             return parts.CommaSeparateListItems();
         }
 

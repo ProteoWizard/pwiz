@@ -381,15 +381,6 @@ namespace pwiz.Skyline.SettingsUI {
 
 
         /// <summary>
-        ///   Looks up a localized string similar to Fine-tuned Carafe Models.
-        /// </summary>
-        public static string BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models {
-            get {
-                return ResourceManager.GetString("BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Access violation attempting to write to {0}..
         /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_Access_violation_attempting_to_write_to__0__ {
@@ -512,11 +503,29 @@ namespace pwiz.Skyline.SettingsUI {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to precursor m/z {0}-{1}.
+        ///   Looks up a localized string similar to precursor m/z {0}.
         /// </summary>
-        public static string CarafeModelChoice_GetDetails_precursor_m_z__0___1_ {
+        public static string CarafeModelChoice_GetDetails_precursor_m_z__0_ {
             get {
-                return ResourceManager.GetString("CarafeModelChoice_GetDetails_precursor_m_z__0___1_", resourceCulture);
+                return ResourceManager.GetString("CarafeModelChoice_GetDetails_precursor_m_z__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0}-{1}.
+        /// </summary>
+        public static string CarafeModelChoice_PrecursorMzRange__0___1_ {
+            get {
+                return ResourceManager.GetString("CarafeModelChoice_PrecursorMzRange__0___1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose a folder of fine-tuned Carafe models.
+        /// </summary>
+        public static string CarafeModelChooserDlg_ChooseFolder_Choose_a_folder_of_fine_tuned_Carafe_models {
+            get {
+                return ResourceManager.GetString("CarafeModelChooserDlg_ChooseFolder_Choose_a_folder_of_fine_tuned_Carafe_models", resourceCulture);
             }
         }
 

@@ -1725,6 +1725,18 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CarafeModelDirectory {
+            get {
+                return ((string)(this["CarafeModelDirectory"]));
+            }
+            set {
+                this["CarafeModelDirectory"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
         public global::System.Drawing.Point AllChromatogramsLocation {
             get {

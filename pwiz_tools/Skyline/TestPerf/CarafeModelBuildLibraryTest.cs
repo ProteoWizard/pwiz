@@ -89,11 +89,25 @@ namespace TestPerf
                 buildLibraryDlg.LibraryPath = libraryPath;
                 buildLibraryDlg.AlphaPeptDeep = true;
             });
-            RunLongNativeDlg<NativeOpenFileDialog>(buildLibraryDlg.ShowCarafeModelDlg, dlg =>
+            var chooserDlg = ShowDialog<CarafeModelChooserDlg>(buildLibraryDlg.ShowCarafeModelDlg);
+            RunLongNativeDlg<NativeFolderBrowserDialog>(chooserDlg.ChooseFolder, dlg =>
             {
-                dlg.EnterPath(modelPath);
-                dlg.Accept();
+                dlg.SetValue(@"Folder", TestFilesDir.FullPath);
+                dlg.DismissWithAcceptButton();
             });
+            RunUI(() =>
+            {
+                Assert.AreEqual(TestFilesDir.FullPath, chooserDlg.FolderPath);
+                var model = chooserDlg.Models.Single();
+                Assert.AreEqual(modelPath, model.Path);
+                Assert.AreEqual(@"Thermo Orbitrap Astral", model.Instrument);
+                Assert.AreEqual(24, model.GradientMinutes.Value, 0.1);
+                Assert.AreEqual(25, model.Nce);
+                Assert.AreEqual(1, model.TrainingRunCount);
+                Assert.IsTrue(model.RtR2 > 0.99);
+                chooserDlg.SelectedModelPath = modelPath;
+            });
+            OkDialog(chooserDlg, chooserDlg.OkDialog);
             RunUI(() => Assert.AreEqual(modelPath, buildLibraryDlg.CarafeModelPath));
 
             RunUI(buildLibraryDlg.OkWizardPage);

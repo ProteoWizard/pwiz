@@ -1241,14 +1241,17 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_" xml:space="preserve">
     <value>The file {0} is not a valid fine-tuned Carafe model.</value>
   </data>
-  <data name="BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models" xml:space="preserve">
-    <value>Fine-tuned Carafe Models</value>
-  </data>
   <data name="CarafeModelChoice_GetDetails__0__min_gradient" xml:space="preserve">
     <value>{0} min gradient</value>
   </data>
-  <data name="CarafeModelChoice_GetDetails_precursor_m_z__0___1_" xml:space="preserve">
-    <value>precursor m/z {0}-{1}</value>
+  <data name="CarafeModelChoice_GetDetails_precursor_m_z__0_" xml:space="preserve">
+    <value>precursor m/z {0}</value>
+  </data>
+  <data name="CarafeModelChoice_PrecursorMzRange__0___1_" xml:space="preserve">
+    <value>{0}-{1}</value>
+  </data>
+  <data name="CarafeModelChooserDlg_ChooseFolder_Choose_a_folder_of_fine_tuned_Carafe_models" xml:space="preserve">
+    <value>Choose a folder of fine-tuned Carafe models</value>
   </data>
   <data name="CarafeModelChoice_GetDetails_NCE__0_" xml:space="preserve">
     <value>NCE {0}</value>

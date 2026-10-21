@@ -524,19 +524,15 @@ namespace pwiz.Skyline.SettingsUI
             ShowCarafeModelDlg();
         }
 
+        /// <summary>
+        /// Shows the fine-tuned models in a folder, and those recently used, with what each was trained
+        /// on, and takes the one chosen.
+        /// </summary>
         public void ShowCarafeModelDlg()
         {
-            using var dlg = new OpenFileDialog();
-            string currentPath = CarafeModelPath.Trim();
-            dlg.InitialDirectory = File.Exists(currentPath)
-                ? Path.GetDirectoryName(currentPath)
-                : Settings.Default.LibraryDirectory;
-            dlg.CheckFileExists = true;
-            dlg.DefaultExt = CarafeModelFile.EXTENSION;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
-                SettingsUIResources.BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models, CarafeModelFile.EXTENSION));
+            using var dlg = new CarafeModelChooserDlg(CarafeModelPath.Trim());
             if (dlg.ShowDialog(this) == DialogResult.OK)
-                CarafeModelPath = dlg.FileName;
+                CarafeModelPath = dlg.SelectedModelPath;
         }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
