@@ -185,6 +185,15 @@ matchPaths = [
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     # Osprey and CarafeSharp import Shared/Lib/Parquet/ParquetNet.targets and its patched Parquet.dll.
     ("pwiz_tools/Shared/Lib/Parquet/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
+    # The Shared projects Osprey and CarafeSharp build from source (their csproj ProjectReferences):
+    # the .blib reader and writer every library they make or read goes through, the utilities, and
+    # the wrapper they read raw data through. A change to one is an Osprey change, so the Osprey
+    # configs run on it rather than on the next unrelated Osprey-side commit. Keep this list in
+    # step with the ProjectReferences under pwiz_tools/Osprey and pwiz_tools/CarafeSharp, and keep
+    # it ABOVE the generic pwiz_tools/Shared/.* pattern below, which does not include Osprey.
+    ("pwiz_tools/Shared/BiblioSpec/BiblioSpec.IO/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
+    ("pwiz_tools/Shared/CommonUtil/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
+    ("pwiz_tools/Shared/ProteowizardWrapper/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'], targets['Osprey'])),
     # pwiz compiles Shared/zedgraph + Shared/MSGraph in place and links Shared/Lib binaries.
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['CoreNet'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['Osprey']),

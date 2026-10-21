@@ -24,7 +24,7 @@ using System.Reflection;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// The shared <see cref="TaskContext"/> with what CarafeSharp's tasks read: the parsed
@@ -32,7 +32,7 @@ namespace pwiz.CarafeSharp
     /// <see cref="BuildVersion"/>, and <see cref="CarafeStamps.Read"/> finds the stamp inside the
     /// artifacts CarafeSharp writes.
     /// </summary>
-    internal sealed class CarafeContext : TaskContext
+    public sealed class CarafeContext : TaskContext
     {
         /// <summary>
         /// The build version every stamp carries (<see cref="TaskContext.Version"/>): the informational
@@ -51,7 +51,17 @@ namespace pwiz.CarafeSharp
             Output = output;
         }
 
-        /// <summary>The command line the run was given, with the settings of the mode it selects.</summary>
+        /// <summary>
+        /// The context of a host that runs CarafeSharp's tasks inside its own command (Osprey's
+        /// library build), which has no CarafeSharp command line: the stamps and the stamp reader
+        /// are the same, so a library either front end writes is current to the other.
+        /// </summary>
+        public CarafeContext(IEnumerable<PipelineTask> tasks, TextWriter output, TextWriter error)
+            : this(null, tasks, output, error)
+        {
+        }
+
+        /// <summary>The command line the run was given, with the settings of the mode it selects; null for a host's run.</summary>
         public CarafeCommandLine CommandLine { get; }
 
         /// <summary>Where the stages write their prose (standard output, or the log file).</summary>

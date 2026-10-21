@@ -1060,6 +1060,21 @@
   <data name="ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_" xml:space="preserve">
     <value>The list of precursor candidates kept for cross-run reconciliation is missing or unreadable: {0}. To rebuild it, delete this analysis's {1} files and run the first pass again.</value>
   </data>
+  <data name="ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_cannot_be_used" xml:space="preserve">
+    <value>The list of precursor candidates kept for cross-run reconciliation cannot be used: {0}: {1}. To rebuild it, delete this analysis's {2} files and run the first pass again.</value>
+  </data>
+  <data name="Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it" xml:space="preserve">
+    <value>The cross-run consensus {0} cannot be used: {1}. To rebuild it, delete this analysis's {2} files and run the first pass again.</value>
+  </data>
+  <data name="ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp" xml:space="preserve">
+    <value>the file has no validity stamp</value>
+  </data>
+  <data name="ScoringTaskShared_FirstPassProductStampProblem_the_file_was_written_by__0__of_Osprey__1___not_by__2__of_this_build___3__" xml:space="preserve">
+    <value>the file was written by {0} of Osprey {1}, not by {2} of this build ({3})</value>
+  </data>
+  <data name="ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run" xml:space="preserve">
+    <value>the file does not match {0}, so one of the two is left over from another {1} run</value>
+  </data>
   <data name="SecondPassFdrTask_CollectPassingEntries_Collecting_passing_precursors_for_the_blib_from_1_file" xml:space="preserve">
     <value>Collecting passing precursors for the blib from 1 file</value>
   </data>

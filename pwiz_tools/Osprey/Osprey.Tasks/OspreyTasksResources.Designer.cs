@@ -3179,7 +3179,34 @@ namespace pwiz.Osprey.Tasks {
                 return ResourceManager.GetString("ScoringTaskShared_EnsureSpectraCache__0__was_acquired_with_overlapping_isolation_windows_and_is_searched_as_acquired", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to the file does not match {0}, so one of the two is left over from another {1} run.
+        /// </summary>
+        public static string ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_FirstPassProductStampProblem_the_file_does_not_match__0___so_one_of_the_two_is_left_over_from_another__1__run", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the file has no validity stamp.
+        /// </summary>
+        public static string ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_FirstPassProductStampProblem_the_file_has_no_validity_stamp", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to the file was written by {0} of Osprey {1}, not by {2} of this build ({3}).
+        /// </summary>
+        public static string ScoringTaskShared_FirstPassProductStampProblem_the_file_was_written_by__0__of_Osprey__1___not_by__2__of_this_build___3__ {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_FirstPassProductStampProblem_the_file_was_written_by__0__of_Osprey__1___not_by__2__of_this_build___3__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Cannot find the folder of the calibration file for input &apos;{0}&apos;. {1} needs the calibration that {2} saved for this input..
         /// </summary>
@@ -3299,6 +3326,15 @@ namespace pwiz.Osprey.Tasks {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The list of precursor candidates kept for cross-run reconciliation cannot be used: {0}: {1}. To rebuild it, delete this analysis&apos;s {2} files and run the first pass again..
+        /// </summary>
+        public static string ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_cannot_be_used {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_cannot_be_used", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to The list of precursor candidates kept for cross-run reconciliation is missing or unreadable: {0}. To rebuild it, delete this analysis&apos;s {1} files and run the first pass again..
         /// </summary>
@@ -3748,6 +3784,15 @@ namespace pwiz.Osprey.Tasks {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The cross-run consensus {0} cannot be used: {1}. To rebuild it, delete this analysis&apos;s {2} files and run the first pass again..
+        /// </summary>
+        public static string Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it {
+            get {
+                return ResourceManager.GetString("Stage6ConsensusFile_Load_The_cross_run_consensus__0__cannot_be_used___1___To_rebuild_it", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to the file is incomplete or was written by another Osprey build.
         /// </summary>

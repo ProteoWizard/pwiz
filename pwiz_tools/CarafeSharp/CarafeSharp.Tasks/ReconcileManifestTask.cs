@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// Carafe's <c>-reconcile_manifest</c>: the pairing manifest reduced to the pair groups

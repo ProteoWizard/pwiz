@@ -38,7 +38,7 @@ using pwiz.Common.Pipeline;
 using pwiz.Common.SystemUtil;
 using static TorchSharp.torch;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// Carafe's library prediction (<c>-db</c> without <c>-ms</c>): digests the FASTA, lists
@@ -68,6 +68,8 @@ namespace pwiz.CarafeSharp
         private string _modelFileFolder;
         private DecoyPairGate _pairGate;
         private List<PairingManifestRow> _contractManifest;
+        // The pairing the DecoyPairs table is planned from: the in-memory digest's, or the manifest file's.
+        private IReadOnlyList<DecoyPairPlanner.ManifestEntry> _pairing;
         // The rt_max this run's library RT is scaled by; 0 (iRT) for the pretrained Chronologer, whose
         // hydrophobic index is not a fraction of the gradient.
         private double _libraryRtMax;
@@ -84,6 +86,14 @@ namespace pwiz.CarafeSharp
 
         /// <summary>The validity stamp the .blib records, or null for none (a library predicted outside a task).</summary>
         public ArtifactStamp Stamp { get; set; }
+
+        /// <summary>
+        /// The peptides to predict, digested in memory from a protein FASTA with their proteins and
+        /// their pairing (<see cref="LibraryPeptides"/>), called once the models have loaded; null
+        /// digests <see cref="LibrarySettings.Database"/> as Carafe does and pairs from
+        /// <see cref="LibrarySettings.PairingManifest"/>. Osprey's one-command library build sets it.
+        /// </summary>
+        public Func<LibraryPeptides> PeptideSource { get; set; }
 
         /// <summary>The .blib written, or null.</summary>
         public string BlibPath { get; private set; }
@@ -137,6 +147,9 @@ namespace pwiz.CarafeSharp
         {
             _clock.Restart();
             Directory.CreateDirectory(_settings.OutputDirectory);
+            string outputFileDirectory = _settings.OutputFile != null ? Path.GetDirectoryName(Path.GetFullPath(_settings.OutputFile)) : null;
+            if (!string.IsNullOrEmpty(outputFileDirectory))
+                Directory.CreateDirectory(outputFileDirectory);
             CheckOutputsReplaceable(_settings, _settings.OutputDirectory);
             var modelDirectory = OpenModelDirectory();
             var outputs = LibraryOutputs.FromFormat(_settings.LibraryFormat, _settings.Fast);
@@ -155,13 +168,33 @@ namespace pwiz.CarafeSharp
             using (var rt = LoadRtModel(modelDirectory, device))
             using (var ccs = _settings.PredictIonMobility ? LoadCcsModel(modelDirectory, device) : null)
             {
-                var digester = new Digester(_settings.Digest);
-                var peptides = LibraryDatabase.DigestPeptides(_settings.Database, digester, Log);
-                var generator = new PeptideIsoformGenerator(_settings.Modifications, digester.ProteinNTermPeptides);
+                HashSet<string> peptides;
+                IReadOnlyDictionary<string, string> peptideToProteins = null;
+                ISet<string> proteinNTermPeptides;
+                if (PeptideSource != null)
+                {
+                    // One digest, in memory, with the proteins and the pairing: nothing is read back.
+                    var libraryPeptides = PeptideSource();
+                    peptides = libraryPeptides.Peptides;
+                    peptideToProteins = libraryPeptides.PeptideToProteins;
+                    proteinNTermPeptides = libraryPeptides.ProteinNTermPeptides;
+                    _pairing = libraryPeptides.Pairing;
+                    Log(string.Format(CultureInfo.InvariantCulture, @"Predicting {0} peptides digested from {1}", peptides.Count, _settings.Database));
+                }
+                else
+                {
+                    var digester = new Digester(_settings.Digest);
+                    peptides = LibraryDatabase.DigestPeptides(_settings.Database, digester, Log);
+                    proteinNTermPeptides = digester.ProteinNTermPeptides;
+                }
+                var generator = new PeptideIsoformGenerator(_settings.Modifications, proteinNTermPeptides);
                 var forms = LibraryPeptideForms.Enumerate(peptides, generator);
                 Log(string.Format(CultureInfo.InvariantCulture, @"Generating peptide forms: {0}", forms.Count));
-                var peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
-                Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
+                if (PeptideSource == null)
+                {
+                    peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
+                    Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
+                }
                 if (_settings.LibraryContract)
                     CheckContractBeforePrediction(peptides, peptideToProteins);
 
@@ -191,8 +224,8 @@ namespace pwiz.CarafeSharp
             Ms2Model ms2, IRtPredictor rt, CcsModel ccs, (double Slope, double Intercept) irt)
         {
             TsvPath = outputs.WritesTsv ? Path.Combine(_settings.OutputDirectory, CarafeLibraryTsvWriter.FILE_NAME) : null;
-            BlibPath = outputs.WritesBlib ? Path.Combine(_settings.OutputDirectory, BlibLibraryWriter.FILE_NAME) : null;
-            var pairingPrecursors = BlibPath != null && !string.IsNullOrEmpty(_settings.PairingManifest)
+            BlibPath = outputs.WritesBlib ? BlibOutput(_settings, _settings.OutputDirectory) : null;
+            var pairingPrecursors = BlibPath != null && (_pairing != null || !string.IsNullOrEmpty(_settings.PairingManifest))
                 ? new List<DecoyPairPlanner.Precursor>()
                 : null;
             _pairGate = CreatePairGate(forms);
@@ -300,7 +333,7 @@ namespace pwiz.CarafeSharp
             var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
             var paths = new[]
             {
-                outputs.WritesBlib ? Path.Combine(outputDirectory, BlibLibraryWriter.FILE_NAME) : null,
+                outputs.WritesBlib ? BlibOutput(settings, outputDirectory) : null,
                 outputs.WritesTsv ? Path.Combine(outputDirectory, CarafeLibraryTsvWriter.FILE_NAME) : null,
             };
             foreach (string path in paths.Where(p => p != null && File.Exists(p)))
@@ -314,9 +347,19 @@ namespace pwiz.CarafeSharp
                 catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
                 {
                     throw new IOException(string.Format(CultureInfo.InvariantCulture,
-                        @"{0} cannot be replaced ({1}). Close it in the program that has it open, or choose another -o folder.", path, e.Message), e);
+                        @"{0} cannot be replaced ({1}). Close it in the program that has it open, or choose another {2} folder.", path, e.Message, CarafeCommandLine.ARG_O.ArgumentText), e);
                 }
             }
+        }
+
+        /// <summary>
+        /// The <c>.blib</c> a prediction with <paramref name="settings"/> writes: its
+        /// <see cref="LibrarySettings.OutputFile"/>, else Carafe's fixed name in
+        /// <paramref name="outputDirectory"/>.
+        /// </summary>
+        public static string BlibOutput(LibrarySettings settings, string outputDirectory)
+        {
+            return settings.OutputFile ?? Path.Combine(outputDirectory, BlibLibraryWriter.FILE_NAME);
         }
 
         /// <summary>The first N from 2 for which "name (N)" is free for every output path given.</summary>
@@ -342,12 +385,12 @@ namespace pwiz.CarafeSharp
         /// </summary>
         private DecoyPairGate CreatePairGate(List<PeptideIsoform> forms)
         {
-            if (string.IsNullOrEmpty(_settings.PairingManifest))
+            if (_pairing == null && string.IsNullOrEmpty(_settings.PairingManifest))
                 return null;
             DecoyPairGate gate;
             try
             {
-                gate = new DecoyPairGate(DecoyPairPlanner.ReadManifest(_settings.PairingManifest));
+                gate = new DecoyPairGate(ReadPairing());
             }
             catch (Exception e)
             {
@@ -528,15 +571,20 @@ namespace pwiz.CarafeSharp
             return _contractManifest ?? (_contractManifest = PairingManifest.Read(_settings.PairingManifest, true, out _));
         }
 
+        /// <summary>The pairing the DecoyPairs table is planned from: the in-memory digest's, else the manifest file's, read once.</summary>
+        private IReadOnlyList<DecoyPairPlanner.ManifestEntry> ReadPairing()
+        {
+            return _pairing ?? (_pairing = DecoyPairPlanner.ReadManifest(_settings.PairingManifest));
+        }
+
         private void WriteDecoyPairs(BlibLibraryWriter blib, List<DecoyPairPlanner.Precursor> precursors)
         {
             try
             {
-                var manifest = DecoyPairPlanner.ReadManifest(_settings.PairingManifest);
-                var rows = DecoyPairPlanner.Plan(precursors, manifest, out int skipped);
+                var rows = DecoyPairPlanner.Plan(precursors, ReadPairing(), out int skipped);
                 blib.WriteDecoyPairs(rows);
-                Log(string.Format(CultureInfo.InvariantCulture, @"DecoyPairs: wrote {0} rows ({1} target/decoy pairs) from manifest {2}",
-                    rows.Count, rows.Count / 2, _settings.PairingManifest));
+                Log(string.Format(CultureInfo.InvariantCulture, @"DecoyPairs: wrote {0} rows ({1} target/decoy pairs) from {2}",
+                    rows.Count, rows.Count / 2, _settings.PairingManifest ?? @"the digest's pairing"));
                 if (skipped > 0)
                 {
                     Log(string.Format(CultureInfo.InvariantCulture,
@@ -646,7 +694,7 @@ namespace pwiz.CarafeSharp
             if (type == RtModelType.chronologer)
                 return WithAlignment(LoadChronologer(path, device), modelDirectory);
             if (_settings.RtReference != null)
-                throw new InvalidOperationException(string.Format(@"-rt_reference {0} needs the Chronologer RT model, not {1}.", _settings.RtReference, type));
+                throw new InvalidOperationException(string.Format(@"{0} {1} needs the Chronologer RT model, not {2}.", CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, type));
             if (path != null)
             {
                 Log(@"Using fine-tuned RT model " + path);
@@ -678,8 +726,8 @@ namespace pwiz.CarafeSharp
                     if (_settings.RtReference != null)
                     {
                         throw new InvalidOperationException(string.Format(
-                            @"-rt_reference {0} needs a Chronologer trained with -rt_align kde, whose runs' maps ({1}) its model folder holds.",
-                            _settings.RtReference, ModelFiles.RT_MAPS));
+                            @"{0} {1} needs a Chronologer trained with {2} kde, whose runs' maps ({3}) its model folder holds.",
+                            CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, CarafeCommandLine.ARG_RT_ALIGN.ArgumentText, ModelFiles.RT_MAPS));
                     }
                     return rt;
                 }
@@ -688,7 +736,7 @@ namespace pwiz.CarafeSharp
                     if (_settings.RtReference != null)
                     {
                         throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture,
-                            @"-rt_reference {0} needs a library in minutes, which an rt_max of {1} is not.", _settings.RtReference, _settings.RtMax));
+                            @"{0} {1} needs a library in minutes, which {2} {3} is not.", CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, _settings.RtReference, CarafeCommandLine.ARG_RT_MAX.ArgumentText, _settings.RtMax));
                     }
                     return rt;
                 }
@@ -706,7 +754,7 @@ namespace pwiz.CarafeSharp
                     var medianToRun = rt.PredictsNormalizedRt ? alignment.MedianToRunMinutes(run) : null;
                     Func<double, double> toMinutes = medianToRun != null ? rtNorm => medianToRun(rtNorm * trainingRtMax) : alignment.ToRunMinutes(run);
                     LogMapsTakeMinutes();
-                    Log(string.Format(@"Library RT: minutes of training run {0} (-rt_reference, {1}): {2}", run, path, alignment));
+                    Log(string.Format(@"Library RT: minutes of training run {0} ({1}, {2}): {3}", run, CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, path, alignment));
                     return new AlignedRtPredictor(rt, toMinutes, _settings.RtMax);
                 }
                 if (rt.PredictsNormalizedRt)
@@ -715,8 +763,8 @@ namespace pwiz.CarafeSharp
                 {
                     Log(string.Format(CultureInfo.InvariantCulture,
                         @"WARNING: the training runs are on different gradients ({0}), so their median minutes are none of theirs; " +
-                        @"the library RT is iRT. Name a run with -rt_reference for its minutes: {1}.",
-                        alignment, string.Join(@", ", alignment.Runs.Select(r => r.Run))));
+                        @"the library RT is iRT. Name a run with {1} for its minutes: {2}.",
+                        alignment, CarafeCommandLine.ARG_RT_REFERENCE.ArgumentText, string.Join(@", ", alignment.Runs.Select(r => r.Run))));
                     return rt;
                 }
                 LogMapsTakeMinutes();
@@ -735,8 +783,8 @@ namespace pwiz.CarafeSharp
         {
             if (_settings.UserRtMax)
             {
-                Log(string.Format(CultureInfo.InvariantCulture, @"Ignored -rt_max {0}: the library's minutes come from the training runs' maps",
-                    _settings.RtMax));
+                Log(string.Format(CultureInfo.InvariantCulture, @"Ignored {0} {1}: the library's minutes come from the training runs' maps",
+                    CarafeCommandLine.ARG_RT_MAX.ArgumentText, _settings.RtMax));
             }
         }
 

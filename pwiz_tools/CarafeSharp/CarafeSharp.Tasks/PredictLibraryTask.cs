@@ -20,12 +20,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Pipeline;
 
-namespace pwiz.CarafeSharp
+namespace pwiz.CarafeSharp.Tasks
 {
     /// <summary>
     /// Carafe's library prediction from <c>-db</c> (<see cref="LibraryGenerator"/>). The
@@ -33,22 +31,41 @@ namespace pwiz.CarafeSharp
     /// settings is skipped; a run that writes a TSV (alone or beside the blib) declares no output
     /// and always predicts.
     /// </summary>
-    internal sealed class PredictLibraryTask : CarafeTask
+    public sealed class PredictLibraryTask : CarafeTask
     {
         public const string TASK_NAME = @"PredictLibrary";
 
         private readonly LibrarySettings _settings;
+        private readonly EntrapmentFastaSettings _digest;
 
         public PredictLibraryTask(LibrarySettings settings)
         {
             _settings = settings;
         }
 
+        /// <summary>
+        /// A prediction over a digest made in memory from the protein FASTA
+        /// <paramref name="digest"/> names (its decoys and entrapment included), which runs only
+        /// when the library is not current: the digest's settings and its foreign FASTA join the
+        /// key, so a changed entrapment ratio or seed predicts again.
+        /// </summary>
+        public PredictLibraryTask(LibrarySettings settings, EntrapmentFastaSettings digest)
+            : this(settings)
+        {
+            _digest = digest;
+        }
+
         public override string Name => TASK_NAME;
+
+        /// <summary>The peptides the last <see cref="Run"/> predicted from an in-memory digest, or null.</summary>
+        public LibraryPeptides Peptides { get; private set; }
 
         public override IEnumerable<string> Inputs(TaskContext ctx)
         {
-            return Inputs(_settings);
+            foreach (string input in Inputs(_settings))
+                yield return input;
+            if (_digest?.EntrapmentSourceFasta != null)
+                yield return _digest.EntrapmentSourceFasta;
         }
 
         /// <summary>The files a library prediction with <paramref name="settings"/> reads, nulls left out by the key.</summary>
@@ -78,13 +95,14 @@ namespace pwiz.CarafeSharp
         {
             var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
             return outputs.WritesBlib && !outputs.WritesTsv
-                ? Path.Combine(outputDirectory, BlibLibraryWriter.FILE_NAME)
+                ? LibraryGenerator.BlibOutput(settings, outputDirectory)
                 : null;
         }
 
         public override string ValidityKey(TaskContext ctx)
         {
-            return CarafeValidity.Key(@"library", _settings, Inputs(ctx));
+            string key = CarafeValidity.Key(@"library", _settings, Inputs(ctx));
+            return _digest == null ? key : key + @";" + CarafeValidity.Key(@"digest", _digest, Array.Empty<string>());
         }
 
         public override bool Run(TaskContext ctx)
@@ -92,7 +110,11 @@ namespace pwiz.CarafeSharp
             // The stamp first, before the run touches a setting, so it carries the key the next
             // run's resume check computes.
             var stamp = OutputStamp(ctx);
-            new LibraryGenerator(_settings, Context(ctx).Output) { Stamp = stamp }.Run();
+            var output = Context(ctx).Output;
+            var generator = new LibraryGenerator(_settings, output) { Stamp = stamp };
+            if (_digest != null)
+                generator.PeptideSource = () => Peptides = LibraryPeptides.Build(_digest, output);
+            generator.Run();
             return true;
         }
 

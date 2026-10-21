@@ -1,28 +1,28 @@
 # 06. Saved models (.carafemodel)
 
 A fine-tuned model saved as one file, to predict libraries of any peptides from later without
-training again, or to fine-tune further on new runs. Every training run writes one, `-model`
-predicts from it (or, with training, starts from it), and `-model_info` describes it. The file also records what the model was trained on (instruments, fragmentation,
+training again, or to fine-tune further on new runs. Every training run writes one, `--model`
+predicts from it (or, with training, starts from it), and `--model-info` describes it. The file also records what the model was trained on (instruments, fragmentation,
 NCE, gradient, windows, charges, peptides and how the fine-tune scored), so a user can choose among
 saved models: on CarafeSharp's command line, in its GUI to come, or in Skyline.
 
 This is CarafeSharp's, not Carafe's. Carafe keeps its fine-tuned models in the training run's output
-folder and predicts from that folder with `-model_dir`, which also takes the training run's precursor
-window. `-model_dir` still works as Carafe's does.
+folder and predicts from that folder with `--model-dir`, which also takes the training run's precursor
+window. `--model-dir` still works as Carafe's does.
 
 ## Using one
 
 ```
-CarafeSharp -i <x.training.parquet|folder> -ms <runs> -o train_out -db proteins.fasta [training options]
+CarafeSharp --i <x.training.parquet|folder> --ms <runs> --o train_out --db proteins.fasta [training options]
     # also writes train_out/carafe_fine_tuned_model.carafemodel
 
-CarafeSharp -model_info train_out/carafe_fine_tuned_model.carafemodel
+CarafeSharp --model-info train_out/carafe_fine_tuned_model.carafemodel
     # what the model was trained on
 
-CarafeSharp -db other_proteins.fasta -model train_out/carafe_fine_tuned_model.carafemodel -o new_library [library options]
+CarafeSharp --db other_proteins.fasta --model train_out/carafe_fine_tuned_model.carafemodel --o new_library [library options]
     # predicts other_proteins.fasta with the fine-tuned model, no training
 
-CarafeSharp -i <new.training.parquet|folder> -ms <new runs> -model train_out/carafe_fine_tuned_model.carafemodel -o more_out [training options]
+CarafeSharp --i <new.training.parquet|folder> --ms <new runs> --model train_out/carafe_fine_tuned_model.carafemodel --o more_out [training options]
     # fine-tunes the saved model further on the new runs; writes more_out/carafe_fine_tuned_model.carafemodel
 ```
 
@@ -33,20 +33,20 @@ what to predict. The training run supplies only what its fine-tuned models depen
 
 | Setting | From |
 |---|---|
-| Precursor m/z window (`-min_pep_mz`, `-max_pep_mz`), charges, digestion, modifications | the command line |
+| Precursor m/z window (`--min-pep-mz`, `--max-pep-mz`), charges, digestion, modifications | the command line |
 | Fragment m/z range, top fragments, minimum fragments, library format | the command line |
-| NCE, instrument, activation, analyzer | the training run, unless `-nce`, `-ms_instrument`, `-activation` or `-analyzer` is given |
-| rt_max | the training run, unless `-rt_max` is given |
-| RT model (AlphaPeptDeep or Chronologer) | the file's (`models.rt.model`), unless `-rt_model` is given |
+| NCE, instrument, activation, analyzer | the training run, unless `--nce`, `--ms-instrument`, `--activation` or `--analyzer` is given |
+| rt_max | the training run, unless `--rt-max` is given |
+| RT model (AlphaPeptDeep or Chronologer) | the file's (`models.rt.model`), unless `--rt-model` is given |
 
 rt_max comes from the training run because the fine-tuned RT model predicts retention time on the
 training run's gradient: its predictions are in minutes only when scaled by that run's rt_max. Give
-`-rt_max` only for a run on a different gradient, knowing that the model was trained on another.
+`--rt-max` only for a run on a different gradient, knowing that the model was trained on another.
 With several training runs, the library takes the last run's NCE, instrument, activation and
 analyzer and the largest rt_max, as the library predicted right after training does. A Chronologer that
 predicts a hydrophobic index, pretrained or trained on runs of different gradients, has no gradient in
-it: with the training runs' maps (`rt_maps.json`, from `-rt_align kde`, the default) its library is in
-their median minutes, or one run's with `-rt_reference <run>`, or iRT for runs on different gradients;
+it: with the training runs' maps (`rt_maps.json`, from `--rt-align kde`, the default) its library is in
+their median minutes, or one run's with `--rt-reference <run>`, or iRT for runs on different gradients;
 without the maps its library RT is iRT and rt_max does not apply (the log says `Ignored rt_max`). A
 Chronologer fine-tuned on runs of one gradient, the usual case, predicts their minutes itself.
 07-chronologer.md has the alignment.
@@ -54,36 +54,36 @@ Chronologer fine-tuned on runs of one gradient, the usual case, predicts their m
 **Which models apply.** The file holds the fine-tuned models the training chose to predict with:
 - MS2: the fine-tuned model only when it beat the pretrained one on all four held-out metrics (as
   Carafe decides it); otherwise the file has none and the bundled pretrained model predicts MS2.
-- RT: the fine-tuned model (Chronologer by default, AlphaPeptDeep's with `-rt_model alphapeptdeep`) whenever
-  the RT model was trained (`-tf all` or `-tf rt`). With `-tf ms2` the file holds none and names the
+- RT: the fine-tuned model (Chronologer by default, AlphaPeptDeep's with `--rt-model alphapeptdeep`) whenever
+  the RT model was trained (`--tf all` or `--tf rt`). With `--tf ms2` the file holds none and names the
   pretrained RT model the training's library predicted with, which a library from the file predicts
-  with too: a `-tf ms2` model's libraries have the pretrained Chronologer in the training runs' median
+  with too: a `--tf ms2` model's libraries have the pretrained Chronologer in the training runs' median
   minutes when the training aligned its runs, else in iRT, unless it was trained with
-  `-rt_model alphapeptdeep`.
-- `-rt_model` naming the other kind of RT model than the file's replaces the fine-tuned RT model with
+  `--rt-model alphapeptdeep`.
+- `--rt-model` naming the other kind of RT model than the file's replaces the fine-tuned RT model with
   that kind's pretrained model, and the log says so.
 - Chronologer, fine-tuned or pretrained, needs the pretrained archive too: AlphaPeptDeep's pretrained
   RT model predicts the peptides Chronologer cannot encode (07-chronologer.md, which documents the model).
 
-`-tf ms2` or `-tf rt` on the prediction command takes only that model from the file, and the other
+`--tf ms2` or `--tf rt` on the prediction command takes only that model from the file, and the other
 pretrained. The log says which it used: `Use the saved model ...: MS2 fine-tuned, RT fine-tuned;
 trained on ...` (`RT fine-tuned Chronologer` for a Chronologer).
 
 **Fine-tuning further.** A fine-tuned model differs from the pretrained one only in its weights, so it
-can be the start of another fine-tune, as the pretrained model is. With training, `-model` names the
+can be the start of another fine-tune, as the pretrained model is. With training, `--model` names the
 saved model to fine-tune further on the new runs:
 - Both models start from the saved model's: those it holds, and the pretrained one for a model it does
   not hold. The held-out metrics called `pretrained` are then the saved model's.
-- The RT model is fine-tuned as the kind `-rt_model` names, else as the saved model's kind. A saved
+- The RT model is fine-tuned as the kind `--rt-model` names, else as the saved model's kind. A saved
   fine-tuned RT model of the other kind is not the start: the named kind starts from its pretrained
   model, the held-out `pretrained` RT metrics are that model's, and the log warns
-  (`WARNING: -rt_model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not
+  (`WARNING: --rt-model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not
   fine-tuned further`).
 - The new fine-tuned MS2 model is kept when it beats the saved one on all four held-out metrics, as
   against the pretrained model. Otherwise the new file holds the saved model's MS2 model
   (`ms2_base.safetensors`), not the pretrained one, and a library from it predicts with that.
 - The RT model is fine-tuned on the new runs' gradient and their rt_max, as in any training.
-- Only `-tf all`: the new file holds both models. `-model` is refused with `-ms2_model`, which also
+- Only `--tf all`: the new file holds both models. `--model` is refused with `--ms2-model`, which also
   names an MS2 model to start from.
 - The new file records the runs this training used, and names the saved models it descends from in
   `base_models`.
@@ -94,10 +94,10 @@ model of the other kind, an MS2 model the saved model did not hold). Each model'
 this training fine-tuned it from, and each `base_models` entry records its own models' `start`, so one
 file holds each model's whole lineage: follow `base` from the file to `base_models[0]`, from there to
 `base_models[1]`, and so on, until a `pretrained` (of `model` and `model_version`) or `ms2_model`.
-`-model_info` prints it (`RT origin: chronologer 20220601193755, fine-tuned from the base model`, and
+`--model-info` prints it (`RT origin: chronologer 20220601193755, fine-tuned from the base model`, and
 each base model's `its MS2: ...; its RT: ...`).
 
-Carafe's `-ms2_model` is unchanged: when the fine-tuned model does not beat it, predictions take the
+Carafe's `--ms2-model` is unchanged: when the fine-tuned model does not beat it, predictions take the
 pretrained model.
 
 **Reproducibility.** Over the training library's own precursor window, the saved model predicts it
@@ -117,9 +117,9 @@ files and shows what each was trained on. A `.carafemodel` file is a zip holding
 | `ms2.safetensors` | the fine-tuned MS2 model (AlphaPeptDeep's BERT, safetensors) | when `models.ms2.entry` names it |
 | `ms2_base.safetensors` | the MS2 model of the saved model this one was fine-tuned further from, which the fine-tuned one did not beat | when `models.ms2.entry` names it |
 | `rt.safetensors` | the fine-tuned RT model: AlphaPeptDeep's LSTM/CNN, or Chronologer (`models.rt.model`; its safetensors metadata has `carafesharp.rt_model = chronologer`) | when `models.rt.used` |
-| `rt_maps.json` | each training run's map between its minutes and the pretrained Chronologer's hydrophobic index, how it was fitted, their median, and the training's rt_max normalizer, by which a library takes a Chronologer's HI to minutes, or a model's minutes to one run's with `-rt_reference` (`RtAlignment`, 07-chronologer.md) | when the training aligned its runs |
+| `rt_maps.json` | each training run's map between its minutes and the pretrained Chronologer's hydrophobic index, how it was fitted, their median, and the training's rt_max normalizer, by which a library takes a Chronologer's HI to minutes, or a model's minutes to one run's with `--rt-reference` (`RtAlignment`, 07-chronologer.md) | when the training aligned its runs |
 | `model_evaluation_metrics.json` | the held-out metrics of the pretrained and fine-tuned models, as Carafe writes them | when the training wrote it |
-| `meta.json` | the training runs, as Carafe writes it (what `-model_dir` reads) | when the training wrote it |
+| `meta.json` | the training runs, as Carafe writes it (what `--model-dir` reads) | when the training wrote it |
 
 A reader that only lists models, as a model picker does, needs `manifest.json` alone.
 
@@ -264,36 +264,36 @@ file holds only the fine-tuned RT model:
 | `format` | `carafemodel-2`. A reader refuses any value it does not know: a new value means a change old readers cannot read. Fields may be added within a format; readers ignore fields they do not know. `carafemodel-2` added each model's `model`, `model_version` and `start`, and `base_models[].models`, as its `rt.safetensors` can be a Chronologer, which a `carafemodel-1` reader would take for AlphaPeptDeep's; CarafeSharp still reads `carafemodel-1`, whose RT model is the one its `rt.safetensors` holds, else AlphaPeptDeep's pretrained one, whatever the default now is. A new network or release is a new `model` or `model_version` value, not a new format. |
 | `osprey_validity` | The validity stamp of the training run: its task (`Train`), the CarafeSharp version and a key over the settings and input files. Written first, as every stamped artifact places it; the shared pipeline driver reads it to skip a re-run whose model is current. Absent from a file written outside a task. |
 | `creator`, `created` | The CarafeSharp version that wrote the file, and when (UTC, ISO 8601). |
-| `training_type` | The training run's `-tf`: `all`, `ms2` or `rt`. |
+| `training_type` | The training run's `--tf`: `all`, `ms2` or `rt`. |
 | `models.<ms2\|rt>.fine_tuned` | The training fine-tuned this model. |
 | `models.<ms2\|rt>.used` | The file holds the model, at `entry`, and prediction uses it. False with `fine_tuned` true: the fine-tuned MS2 model did not beat the pretrained one. |
 | `models.<ms2\|rt>.entry` | The entry that holds the model, or null. For MS2, `ms2_base.safetensors` when the fine-tuned model did not beat the saved model it was fine-tuned further from. |
-| `models.<ms2\|rt>.model` | The network: `alphapeptdeep` for MS2; `alphapeptdeep` or `chronologer` for RT. With `used`, the model at `entry`; without, that network's pretrained model, which a library from the file predicts with (for RT, a `-tf ms2` file names the pretrained `-rt_model`, by default Chronologer, whose libraries have iRT, or the runs' minutes with `rt_maps.json`). A reader refuses a network it does not know. |
-| `models.<ms2\|rt>.model_version` | The pretrained release the model is or descends from: AlphaPeptDeep's `v1` (`models/alphapeptdeep-v1`; MannLabs has since published v2 and v3), Chronologer's `20220601193755` (`models/chronologer-20220601193755`, whose encoding a fine-tuned Chronologer needs). Null when unknown: an MS2 model whose lineage starts from `-ms2_model`. |
-| `models.<ms2\|rt>.start` | What the training that wrote the file fine-tuned the model from: `pretrained`, `base` (the same model of `base_models[0]`, the `-model` it was fine-tuned further from), or `ms2_model` (`ms2_start_model`); null when it did not fine-tune the model. A reader refuses a value it does not know. |
+| `models.<ms2\|rt>.model` | The network: `alphapeptdeep` for MS2; `alphapeptdeep` or `chronologer` for RT. With `used`, the model at `entry`; without, that network's pretrained model, which a library from the file predicts with (for RT, a `--tf ms2` file names the pretrained `--rt-model`, by default Chronologer, whose libraries have iRT, or the runs' minutes with `rt_maps.json`). A reader refuses a network it does not know. |
+| `models.<ms2\|rt>.model_version` | The pretrained release the model is or descends from: AlphaPeptDeep's `v1` (`models/alphapeptdeep-v1`; MannLabs has since published v2 and v3), Chronologer's `20220601193755` (`models/chronologer-20220601193755`, whose encoding a fine-tuned Chronologer needs). Null when unknown: an MS2 model whose lineage starts from `--ms2-model`. |
+| `models.<ms2\|rt>.start` | What the training that wrote the file fine-tuned the model from: `pretrained`, `base` (the same model of `base_models[0]`, the `--model` it was fine-tuned further from), or `ms2_model` (`ms2_start_model`); null when it did not fine-tune the model. A reader refuses a value it does not know. |
 | `pretrained_sha256` | The SHA-256 of the pretrained archive the training started from (AlphaPeptDeep v1, `models/alphapeptdeep-v1`), or null. |
-| `ms2_start_model` | The file name of the `-ms2_model` the MS2 fine-tune started from instead of the pretrained model, or null. |
-| `base_models` | The saved models these were fine-tuned further from, newest first (the training run's `-model`, then the one that was fine-tuned from, ...); empty for none. Each has `file`, `sha256` (of the whole file, to find it again), `creator`, `created`, `runs` (the MS files it was trained on) and `models` (its `ms2` and `rt` models' `model`, `model_version` and `start`, as its own manifest has them; null for a `carafemodel-1` base). |
+| `ms2_start_model` | The file name of the `--ms2-model` the MS2 fine-tune started from instead of the pretrained model, or null. |
+| `base_models` | The saved models these were fine-tuned further from, newest first (the training run's `--model`, then the one that was fine-tuned from, ...); empty for none. Each has `file`, `sha256` (of the whole file, to find it again), `creator`, `created`, `runs` (the MS files it was trained on) and `models` (its `ms2` and `rt` models' `model`, `model_version` and `start`, as its own manifest has them; null for a `carafemodel-1` base). |
 | `training` | What the models were trained on, or null (below). |
 | `acquisition` | The activations and analyzers the MS2 model has columns for (`activations`, `analyzers`), or null. |
-| `prediction_defaults` | The NCE, instrument, activation, analyzer and rt_max a library takes unless its command line gives its own (`-nce`, `-ms_instrument`, `-activation`, `-analyzer`, `-rt_max`); each may be null. |
+| `prediction_defaults` | The NCE, instrument, activation, analyzer and rt_max a library takes unless its command line gives its own (`--nce`, `--ms-instrument`, `--activation`, `--analyzer`, `--rt-max`); each may be null. |
 | `entries` | Every other entry and its SHA-256 (lowercase hex). |
 
 `training`:
 
 | Field | Meaning |
 |---|---|
-| `settings` | The run q-value the precursors were selected at (`-fdr`), the fragment correlation masking kept ions at (`-cor`), whether masking was on (`-no_masking`), and the seed. |
+| `settings` | The run q-value the precursors were selected at (`--fdr`), the fragment correlation masking kept ions at (`--cor`), whether masking was on (`--no-masking`), and the seed. |
 | `data.ms2_spectra`, `data.rt_peptide_forms` | How many MS2 spectra and RT peptide forms the models trained on. |
 | `data.ms2_charges` | The MS2 spectra by precursor charge. |
 | `data.peptide_length_min`, `_max` | The training peptides' lengths. |
 | `data.modifications` | The training peptide forms carrying each modification (alphabase names). |
 | `runs[]` | Each training run, from Osprey's training export footer (Osprey's docs/22-training-export.md). |
-| `runs[].run`, `ms_file` | The run's name, and its file as `-ms` named it. |
+| `runs[].run`, `ms_file` | The run's name, and its file as `--ms` named it. |
 | `runs[].instrument_vendor`, `instrument_model` | As the run's data file reports them; null when Osprey searched it without the file. |
 | `runs[].instrument` | The instrument name the run trained as (Carafe's: Eclipse, Lumos, Astral, QE, Stellar, ...), or empty when Carafe names none. |
 | `runs[].activation`, `analyzer` | How the run's precursors were activated (`beam-CID`, `reCID`) and which analyzer read its MS2 spectra out (`Orbitrap`, `LIT`, `ToF`), as it trained; null when unknown (01-model-spec.md). |
-| `runs[].nce`, `nce_source` | The NCE the models were trained with, and where it came from: `file` (a Thermo run's own NCE), `calibrated` (on the run's spectra, its energy being in eV; 01-model-spec.md), `-nce`, or `default` (Carafe's 27). |
+| `runs[].nce`, `nce_source` | The NCE the models were trained with, and where it came from: `file` (a Thermo run's own NCE), `calibrated` (on the run's spectra, its energy being in eV; 01-model-spec.md), `--nce`, or `default` (Carafe's 27). |
 | `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method (pwiz's short names: `HCD` for beam-type, `CID` for resonance CID) and by collision energy as the file reports it, over the spectra Osprey sampled; empty without the data file. |
 | `runs[].collision_energy_unit` | The unit of `collision_energies`: `NCE` for Thermo (the value pwiz reports is the scan filter's NCE), `eV` for any other vendor, or null when the run reports none. |
 | `runs[].ms2_mass_analyzers` | MS2 spectra by the mass analyzers of their scan configuration, as Osprey's footer names them (pwiz's names joined with `/`: a Stellar's `radial ejection linear ion trap`, an Astral's `quadrupole/asymmetric track lossless time-of-flight analyzer`); empty without the data file or from an Osprey without the key (before #4757). |
@@ -320,28 +320,28 @@ does not match its SHA-256.
   model that lost to the pretrained one left out; a damaged entry, a file that is not a zip, one
   without a manifest, a newer format, an unknown network or start and a missing file each refused; each
   model's origin as written; a `carafemodel-1` file still read.
-- `FineTuneLoopTest.TestChronologerTrainingRun`: a `-rt_model chronologer` training run saves a model
+- `FineTuneLoopTest.TestChronologerTrainingRun`: a `--rt-model chronologer` training run saves a model
   that names its fine-tuned Chronologer, which the library after training and one from the file
-  predict with, in minutes; a `-tf ms2 -rt_model chronologer` run's file names the pretrained
+  predict with, in minutes; a `--tf ms2 --rt-model chronologer` run's file names the pretrained
   Chronologer, which a library from it predicts with in iRT, ignoring rt_max.
-- `FineTuneLoopTest.TestChronologerSavedModelChoice`: fine-tuning further, `-rt_model chronologer` on a
-  saved AlphaPeptDeep model and `-rt_model alphapeptdeep` on a saved Chronologer each start from the
+- `FineTuneLoopTest.TestChronologerSavedModelChoice`: fine-tuning further, `--rt-model chronologer` on a
+  saved AlphaPeptDeep model and `--rt-model alphapeptdeep` on a saved Chronologer each start from the
   named kind's pretrained model with a warning, which the RT model's `start` records; without
-  `-rt_model`, a saved Chronologer is the start, and its lineage leaves out the AlphaPeptDeep model
+  `--rt-model`, a saved Chronologer is the start, and its lineage leaves out the AlphaPeptDeep model
   before it.
 - `FineTuneLoopTest.TestModelTrainerRun`: a training run writes the file, with the model it chose, its
   start model, the run's defaults, and the training description (settings, data, the run's
-  instrument, windows, gradient and charges, the held-out metrics), which `-model_info` prints.
+  instrument, windows, gradient and charges, the held-out metrics), which `--model-info` prints.
 - `FineTuneLoopTest.TestModelTrainerFromSavedModel`: a saved model fine-tuned further starts both
   models from its own; a fine-tuned MS2 model that does not beat it leaves the saved one's in the new
   file (byte for byte), which a library from it predicts with; a second round starts from that and
   names both models back, with each model's lineage (base, base, pretrained); a later run into the same
-  folder without `-model` does not take it.
-- `LibraryCommandLineTest.TestLibraryCommandLine`: `-model` and `-model_info` are parsed; `-model`
-  with training names the model to fine-tune further, with `-tf all` only, and the library after
-  training predicts with the new models; `-model` is refused with `-model_dir`, with `-ms2_model`, and
-  without `-db` or training.
+  folder without `--model` does not take it.
+- `LibraryCommandLineTest.TestLibraryCommandLine`: `--model` and `--model-info` are parsed; `--model`
+  with training names the model to fine-tune further, with `--tf all` only, and the library after
+  training predicts with the new models; `--model` is refused with `--model-dir`, with `--ms2-model`, and
+  without `--db` or training.
 - The chained regression leg (`regression.ps1 -Leg Chained`, [04](04-testing.md)): the model a real
-  training run saved predicts a second library with `-model` over a wider precursor window; every
+  training run saved predicts a second library with `--model` over a wider precursor window; every
   precursor of the library training predicted is in it, with the same m/z, retention time and
   fragments, and intensities within 1e-5.

@@ -98,6 +98,8 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     private readonly string _specLibFile;
     private readonly Library _specLib = new();
+    // The RefSpectra id each speclib entry's spectrum was written under, by its index.
+    private readonly Dictionary<int, int> _refSpectraIdBySpecIndex = new();
     private IonMobilityType _ionMobilityType = IonMobilityType.None;
     private int _missingFromSpeclibCount;
 
@@ -344,25 +346,13 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
         FilteredOutPsmCount = _specLib.Entries.Count - Psms.Count;
 
-        // cpp parity: DiaNNSpecLibReader.cpp:1242 — populate the RetentionTimes table.
-        Verbosity.Status($"Building retention time table with {redundantPsmCount.ToString(CultureInfo.InvariantCulture)} entries.");
-        BlibMaker.BeginTransaction();
+        // cpp parity: DiaNNSpecLibReader.cpp:1242 — each entry's copy count is the number of
+        // runs that observed it; written with its RefSpectra row below.
         foreach (var kvp in retentionTimesByPrecursorId)
         {
-            var precursorIdStr = kvp.Key;
-            var redundantPsms = kvp.Value;
-            if (!_specLib.EntryByName.TryGetValue(precursorIdStr, out var entry)) continue;
-
-            foreach (var psm in redundantPsms)
-            {
-                int bestSpectrum = entry.BestPsm != null && entry.BestPsm.FileId == psm.FileId ? 1 : 0;
-                BindAndExecRtInsert(entry.Target.Index, psm, bestSpectrum);
-            }
-
-            if (psmByPrecursorId.TryGetValue(precursorIdStr, out var nrpsm))
-                nrpsm.Copies = redundantPsms.Count;
+            if (psmByPrecursorId.TryGetValue(kvp.Key, out var nrpsm))
+                nrpsm.Copies = kvp.Value.Count;
         }
-        BlibMaker.EndTransaction();
 
         // Global.Q.Value is DIA-NN's experiment-wide precursor q-value.
         EnableOptionalColumn(BlibSchema.PrecursorQValue);
@@ -371,17 +361,42 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
         Verbosity.Status($"Reading {Psms.Count.ToString(CultureInfo.InvariantCulture)} spectra from speclib.");
         SetSpecFileName(firstRun, checkFile: false);
+        _refSpectraIdBySpecIndex.Clear();
         BuildTables(PsmScoreType.GenericQValue);
 
-        // cpp parity: DiaNNSpecLibReader.cpp:1289 — remap RetentionTimes.RefSpectraID after
-        // duplicate filtering reorders RefSpectra rows.
-        BlibMaker.SqlStmt(
-            "UPDATE RetentionTimes SET RefSpectraID = newId " +
-            "FROM (SELECT DISTINCT t.[RefSpectraID] as oldId, s.[id] as newId " +
-            "FROM RefSpectra s, RetentionTimes t WHERE s.[SpecIdInFile] = t.[RefSpectraID]) AS IdMapping " +
-            "WHERE RefSpectraID == IdMapping.oldId");
+        // cpp parity: DiaNNSpecLibReader.cpp:1242 and 1289 — the RetentionTimes rows, one per
+        // run that observed the entry. cpp wrote them before the spectra under the speclib index
+        // and remapped them by SQL once the duplicate filtering had decided which spectra were
+        // written; here they are written after, under the id each spectrum got
+        // (<see cref="OnSpectrumInserted"/>), in the same order.
+        Verbosity.Status($"Building retention time table with {redundantPsmCount.ToString(CultureInfo.InvariantCulture)} entries.");
+        BlibMaker.BeginTransaction();
+        foreach (var kvp in retentionTimesByPrecursorId)
+        {
+            var precursorIdStr = kvp.Key;
+            var redundantPsms = kvp.Value;
+            if (!_specLib.EntryByName.TryGetValue(precursorIdStr, out var entry)) continue;
+            if (!_refSpectraIdBySpecIndex.TryGetValue(entry.Target.Index, out var refSpectraId))
+            {
+                Verbosity.Debug($"No spectrum was written for speclib entry {entry.Target.Index}; its retention times are left out.");
+                continue;
+            }
+
+            foreach (var psm in redundantPsms)
+            {
+                int bestSpectrum = entry.BestPsm != null && entry.BestPsm.FileId == psm.FileId ? 1 : 0;
+                BindAndExecRtInsert(refSpectraId, psm, bestSpectrum);
+            }
+        }
+        BlibMaker.EndTransaction();
 
         return true;
+    }
+
+    /// <summary>Records the RefSpectra id each speclib entry's spectrum was written under, for the retention times.</summary>
+    protected override void OnSpectrumInserted(PSM psm, int refSpectraId)
+    {
+        _refSpectraIdBySpecIndex[psm.SpecIndex] = refSpectraId;
     }
 
     // --- sibling-report discovery -------------------------------------------------------

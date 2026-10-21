@@ -59,8 +59,8 @@ namespace pwiz.Common.CommandLine
 
         /// <summary>
         /// The prefix an argument's long name is spelled with in help and messages
-        /// (<see cref="ArgumentBase.ArgumentText"/>): <c>--</c> for Skyline and Osprey, <c>-</c>
-        /// for CarafeSharp, which keeps Carafe's spelling.
+        /// (<see cref="ArgumentBase.ArgumentText"/>): <c>--</c> for Skyline, Osprey and
+        /// CarafeSharp, whose grammar also accepts Carafe's single dash when parsing.
         /// </summary>
         public string Prefix { get; init; } = ArgumentBase.ARG_PREFIX;
 
@@ -112,6 +112,14 @@ namespace pwiz.Common.CommandLine
         /// </summary>
         public StrayTokenPolicy StrayTokens { get; init; } = StrayTokenPolicy.ignore;
 
+        /// <summary>
+        /// True when an underscore and a hyphen are the same character in an option's name, so
+        /// <c>--miss_c</c> names the declaration spelled <c>miss-c</c>. Osprey and CarafeSharp
+        /// spell their names with hyphens and accept the underscore spelling Carafe's recorded
+        /// command lines use, with no alias per option; false (the default) matches names exactly.
+        /// </summary>
+        public bool NameSeparatorsEquivalent { get; init; }
+
         private IReadOnlyList<string> _longPrefixes;
 
         /// <summary>
@@ -146,6 +154,31 @@ namespace pwiz.Common.CommandLine
                     return true;
             }
             return ShortPrefix != null && token.StartsWith(ShortPrefix, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// True when <paramref name="typed"/>, the name as it was typed, names the declaration
+        /// <paramref name="declared"/>: exactly, or with <see cref="NameSeparatorsEquivalent"/>
+        /// with every underscore read as a hyphen.
+        /// </summary>
+        public bool NamesMatch(string declared, string typed)
+        {
+            if (string.Equals(declared, typed, StringComparison.Ordinal))
+                return true;
+            if (!NameSeparatorsEquivalent || declared.Length != typed.Length)
+                return false;
+            for (int i = 0; i < declared.Length; i++)
+            {
+                char d = declared[i], t = typed[i];
+                if (d != t && !(IsSeparator(d) && IsSeparator(t)))
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool IsSeparator(char c)
+        {
+            return c == '-' || c == '_';
         }
     }
 }
