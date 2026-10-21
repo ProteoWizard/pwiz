@@ -115,14 +115,20 @@ executable. Three modes, chosen by the options given, on top of the search of a 
 |---|---|---|
 | search | `osprey -i runs... -l library.blib -o out.blib` | the four stages |
 | predict | `osprey -i runs... --fasta proteome.fasta -o out.blib` | predict with the pretrained models (AlphaPeptDeep MS2, Chronologer RT), then the four stages |
-| saved model | `osprey -i runs... --fasta proteome.fasta --model tuned.carafemodel -o out.blib` | as predict, with a fine-tuned model CarafeSharp's training saved |
+| tune | `osprey -i runs... --fasta proteome.fasta --training-input run2 -o out.blib` | predict with the pretrained models, search the tuning runs with the training export, fine-tune the models on it, predict again with the tuned models, then the four stages |
+| saved model | `osprey -i runs... --fasta proteome.fasta --model out.carafemodel -o out2.blib` | as predict, with a model an earlier tuned run saved (any proteome) |
 
-(A third mode, tuning the models on some of the runs first, is the next step of this work.)
+Tuning is never inferred: without `--training-input` the pretrained models (or `--model`) predict
+the library. A tuning run may be one of the `-i` runs (the lab's "search the middle file") or not
+(held-out tuning); one that is not is searched for the tuning only, absent from the result's
+`SpectrumSourceFiles` and recorded in its `LibMetadata` as `osprey.training_input`. `--model`
+with `--training-input` tunes the saved model further.
 
 | Option | Value | Effect |
 |--------|-------|--------|
 | `--fasta` | `<proteome.fasta>` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library`, `--decoy-pairing-manifest` and, for now, `--task` (the HPC addressing of the library phase is still to come). |
-| `--model` | `<file.carafemodel>` | Predict with this saved fine-tuned model instead of the pretrained models. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
+| `--training-input` | `<run ...>` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.carafemodel`. The options of the **Library Tuning** section apply. |
+| `--model` | `<file.carafemodel>` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
 | `--device` | `gpu \| cpu` | Where the library is predicted. `gpu` (the default) falls back to the CPU with a warning when no CUDA runtime is present, as CarafeSharp does. |
 | `--entrapment` | `[<ratio>]` | Add an entrapment peptide to every target (or to this fraction of them, 0.1 to 1), shuffled from the target or, with `--entrapment-fasta`, drawn mass-matched from a foreign proteome, each with a decoy of its own. The pairing manifest FDRBench reads is written beside the working files. |
 | `--entrapment-fasta` | `<foreign.fasta>` | With `--entrapment`: the foreign-species proteome to draw from. |
@@ -136,7 +142,12 @@ executable. Three modes, chosen by the options given, on top of the search of a 
 `--activation`, `--analyzer`, `--rt-max`, `--ccs`), the RT model (`--rt-model`) and the
 pretrained archive (`--pretrained`) are CarafeSharp's declarations,
 presented in Osprey's help as the sections **Library Digest** and **Library Prediction** under
-Osprey's grammar, with CarafeSharp's text and defaults. They are listed in the standard form
+Osprey's grammar, with CarafeSharp's text and defaults. The tuning options are likewise, in
+**Library Tuning**: which models train (`--tf`), Carafe's rules for the ions trained on (`--cor`,
+`--n-ion-min`, `--c-ion-min`, `--nf`, `--min-n`, `--valid`, `--no-masking`), the seed (`--seed`)
+and the training runs' RT alignment (`--rt-align`, `--rt-select`, `--rt-reference`); any of them
+without `--training-input` is refused. Their defaults are CarafeSharp's, which are Carafe's; the
+lab's workflow script passes `--cor 0.8 --n-ion-min 2 --c-ion-min 2 --valid`. They are listed in the standard form
 (`--miss-c 1`); for compatibility with Java Carafe's command lines, each is also accepted with
 Carafe's underscores (`--miss_c 1`). Any of them without `--fasta` is refused rather than
 ignored. What Osprey derives is not surfaced: CarafeSharp's `-db`, `-o`, `-lf_type`, the pairing
@@ -145,17 +156,31 @@ manifest and the model folder.
 **What a run writes**, with `-o out.blib`:
 
 ```
-out.blib              the result, with its sidecars, as for any search
-out.library.blib      the library the result was searched with (-l takes it next time)
-out.library/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
+out.blib                the result: what the search detected, with its sidecars, as for any search
+out.predicted.blib      the predicted library the result was searched with (-l takes it next time)
+out.carafemodel         with --training-input: the tuned model (--model takes it next time)
+out.predicted/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
+  initial.blib          with --training-input: the library the tuning runs were searched with
+  training/             the tuning runs' search: its artifacts, <stem>.training.parquet, training.blib
+  model/                Carafe's model folder the tuning wrote, the library's input
 ```
+
+The two `.blib` files differ in what their spectra are: `out.blib` holds the precursors the
+search detected, with their observed retention times, for Skyline; `out.predicted.blib` holds a
+predicted spectrum for every precursor the search looked for, which is what makes it a library to
+search again.
 
 They land beside `out.blib`, or under `--output-dir` when it is given, as the run's other
 artifacts do. The library carries the prediction's validity stamp and the command line that
 made it (`LibMetadata`), and the search keys on the library file as it keys on any given
 library. So a re-run of the same command line predicts nothing and searches nothing; a changed
 digest or prediction option predicts the library again and the search follows; a changed `-i`
-alone searches again against the current library.
+alone searches again against the current library. With tuning, each phase checkpoints the same
+way - the training library, the tuning runs' search (its own artifacts, in `out.predicted/training/`;
+a tuning run that is also an input is parsed once, from the shared spectra cache), the model and
+the library - so a changed tuning option tunes again and predicts again without searching the
+tuning runs again, `--entrapment` changes only the final library, and a run that died resumes
+at the phase it died in.
 
 **Decoys and pairing.** The digest is made in memory from the FASTA - its targets, their
 decoys (reversed, C-terminus preserved, unique against every target, as CarafeSharp's
@@ -166,7 +191,8 @@ accessions are the proteome's, `db|accession|entry` joined by `;` across a share
 proteins, with decoys prefixed `decoy_`.
 
 Log lines: the prediction is a task like the four stages, with `[TASK] PredictLibrary:starting`
-/ `:skipping (outputs valid)` / `:done (<s>s)` in the machine channel.
+/ `:skipping (outputs valid)` / `:done (<s>s)` in the machine channel; with tuning,
+`PredictTrainingLibrary`, the four stages of the tuning runs' search and `TrainModel` come first.
 
 ### Scoring & Tolerance
 

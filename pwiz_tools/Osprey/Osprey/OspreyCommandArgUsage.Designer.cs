@@ -475,6 +475,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to With {0}: tune the models on these runs before the library is predicted. The runs are searched with  [rest of string was truncated]";.
+        /// </summary>
+        public static string _training_input {
+            get {
+                return ResourceManager.GetString("_training_input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show more detail (e.g. per-fold Percolator iterations) that is hidden by default.
         /// </summary>
         public static string _verbose {

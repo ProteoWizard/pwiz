@@ -538,7 +538,8 @@ namespace pwiz.Osprey.Test
             var hosted = OspreyCommandArgs.HostedArguments.ToList();
             Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(a => !a.IsHosted), declared.Count,
                 @"Every declared argument must be in a help group");
-            Assert.AreEqual(CarafeCommandLine.HostedDigestArguments.Count + CarafeCommandLine.HostedPredictionArguments.Count, hosted.Count);
+            Assert.AreEqual(CarafeCommandLine.HostedDigestArguments.Count + CarafeCommandLine.HostedPredictionArguments.Count +
+                            CarafeCommandLine.HostedTrainingArguments.Count, hosted.Count);
             Assert.AreEqual(hosted.Count, OspreyCommandArgs.AllArguments.Count(a => a.IsHosted));
             foreach (var arg in hosted)
             {

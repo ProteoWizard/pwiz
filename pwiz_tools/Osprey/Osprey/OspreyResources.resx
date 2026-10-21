@@ -481,4 +481,22 @@
   <data name="LibraryBuildWorkflow_Run_Wrote_the_pairing_manifest__0_" xml:space="preserve">
     <value>Wrote the pairing manifest {0}</value>
   </data>
+  <data name="OspreyCommandArgs_Group_Library_Tuning" xml:space="preserve">
+    <value>Library Tuning</value>
+  </data>
+  <data name="OspreyCommandArgs_GROUP_LIBRARY_TUNING_With__0___how_the_models_are_tuned_on_its_runs" xml:space="preserve">
+    <value>With {0}: how the models are tuned on its runs. These are CarafeSharp's options under their standard names.</value>
+  </data>
+  <data name="Program_Run_Tuning__the_models_are_tuned_on__0__first__and_saved_as__1_" xml:space="preserve">
+    <value>Tuning: the models are tuned on {0} first, and saved as {1}</value>
+  </data>
+  <data name="Program_LibraryBuildError_Training_input_file_not_found___0_" xml:space="preserve">
+    <value>Training input file not found: {0}</value>
+  </data>
+  <data name="LibraryBuildWorkflow_Run_Searching_the_tuning_runs_with__0_" xml:space="preserve">
+    <value>Searching the tuning runs with {0}</value>
+  </data>
+  <data name="Program_LibraryBuildError__0__names_the_model_this_run_writes___1___Copy_it__or_choose_another__2__" xml:space="preserve">
+    <value>{0} names the model this run writes: {1}. Copy it, or choose another {2}.</value>
+  </data>
 </root>

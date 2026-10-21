@@ -230,10 +230,10 @@
     <value>Write intermediate files AND the spectra cache here (so input data can be read-only); default: beside input</value>
   </data>
   <data name="_fasta" xml:space="preserve">
-    <value>Predict the spectral library from this protein FASTA with CarafeSharp's models and search it, in place of {0}. The library is written beside the output as {1} and can be given to {0} next time; its working files go in {2}. The options of the Library Digest and Library Prediction sections apply.</value>
+    <value>Predict the spectral library from this protein FASTA with CarafeSharp's models and search it, in place of {0}. The library is written beside the output as {1} and can be given to {0} next time; its working files go in {2}. The options of the Library Digest and Library Prediction sections apply, and with {3} those of Library Tuning.</value>
   </data>
   <data name="_model" xml:space="preserve">
-    <value>With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) instead of the pretrained models.</value>
+    <value>With {0}: predict the library with this saved fine-tuned model ({1}, from CarafeSharp's training) instead of the pretrained models. With {2}, the tuning starts from it.</value>
   </data>
   <data name="_device" xml:space="preserve">
     <value>With {0}: where the library is predicted, {1} (falling back to the CPU with a warning when no CUDA runtime is present) or {2} (default: {1}).</value>
@@ -243,5 +243,8 @@
   </data>
   <data name="_entrapment_fasta" xml:space="preserve">
     <value>With {0}: draw the entrapment peptides, matched in mass, from this foreign-species protein FASTA instead of shuffling the targets.</value>
+  </data>
+  <data name="_training_input" xml:space="preserve">
+    <value>With {0}: tune the models on these runs before the library is predicted. The runs are searched with a library predicted as it is without this option, their training exports tune the MS2 and RT models, and the library the output is searched with is predicted with the tuned models. A run need not be one of {1}: one that is not is searched for the tuning only and is absent from the output. The tuned model is saved beside the output as {2}, which {3} takes next time. The options of the Library Tuning section apply.</value>
   </data>
 </root>

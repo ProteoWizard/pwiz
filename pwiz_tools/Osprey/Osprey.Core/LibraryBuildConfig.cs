@@ -38,6 +38,16 @@ namespace pwiz.Osprey.Core
         /// <summary>True when the run builds its library.</summary>
         public bool Enabled => FastaPath != null;
 
+        /// <summary>
+        /// The runs the models are tuned on before the library is predicted (<c>--training-input</c>);
+        /// empty for no tuning. A run may be one of the inputs or not: one that is not is searched
+        /// for the tuning only and is absent from the output.
+        /// </summary>
+        public List<string> TrainingInputs { get; } = new List<string>();
+
+        /// <summary>True when the run tunes the models on <see cref="TrainingInputs"/> first.</summary>
+        public bool Tuning => TrainingInputs.Count > 0;
+
         /// <summary>A saved fine-tuned model to predict with (<c>--model</c>), or null for the pretrained models.</summary>
         public string ModelPath { get; set; }
 
@@ -58,5 +68,8 @@ namespace pwiz.Osprey.Core
         /// the one refusal that names them: without the FASTA they would change nothing.
         /// </summary>
         public List<string> OptionsWithoutFasta { get; } = new List<string>();
+
+        /// <summary>The tuning options given without <c>--training-input</c>, as typed: without the runs they would change nothing.</summary>
+        public List<string> OptionsWithoutTrainingInput { get; } = new List<string>();
     }
 }

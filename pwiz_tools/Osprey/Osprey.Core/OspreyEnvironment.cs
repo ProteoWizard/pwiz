@@ -113,7 +113,7 @@ namespace pwiz.Osprey.Core
             @"OSPREY_PROTEIN_FDR_ONLY", @"OSPREY_RELEASE_LIBRARY_FRAGMENTS",
             @"OSPREY_SCAN_MAJOR_CAL_PREFILTER", @"OSPREY_SCAN_MAJOR_PREFILTER", @"OSPREY_SCAN_MAJOR_XIC",
             @"OSPREY_SERIAL_READ_SCOPE", @"OSPREY_SERIAL_WINDOW_READS", @"OSPREY_STAGE7_PROTEIN_FDR_ONLY",
-            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
+            @"OSPREY_STANDARDIZER_ONLY", @"OSPREY_STOP_AFTER_TASKS", @"OSPREY_STUB_IDENTITY", @"OSPREY_SUBSAMPLE_ONLY",
             @"OSPREY_SVM_C_TOLERANCE", @"OSPREY_SVM_WEIGHTS_ONLY", @"OSPREY_TRAIN_PICK_RUN",
             @"OSPREY_VERSION_OVERRIDE"
         };
@@ -365,6 +365,16 @@ namespace pwiz.Osprey.Core
         /// experiment reverts as a unit. See <c>PipelineContext.DropAllButLibrary</c>.
         /// </summary>
         public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
+
+        /// <summary>
+        /// DEVELOPER. <c>OSPREY_STOP_AFTER_TASKS=N</c> ends the run cleanly once N tasks have RUN in
+        /// it - a task skipped because its outputs are current does not count - with exit code 0
+        /// and a <c>[TASK] stop:</c> line. Run again and again, a run then advances exactly one task
+        /// at a time, which is how a resume test shows that a re-run skips every task already done
+        /// and recomputes none of it. Read on every access, so a command-line test can vary it;
+        /// unset or 0 for no stop.
+        /// </summary>
+        public static int StopAfterTasks => ParseIntOrNull(@"OSPREY_STOP_AFTER_TASKS") ?? 0;
 
         /// <summary>
         /// DIAGNOSTIC. Calibration and the Stage 6 re-score read a run's spectra cache one isolation

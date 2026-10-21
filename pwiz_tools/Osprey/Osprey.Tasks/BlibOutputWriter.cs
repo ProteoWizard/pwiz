@@ -353,6 +353,10 @@ namespace pwiz.Osprey.Tasks
                 config.ExperimentFdr.ToString(CultureInfo.InvariantCulture));
             if (config.CommandLine != null)
                 writer.AddMetadata(OspreyBlibWriter.KEY_COMMAND, config.CommandLine);
+            // The runs the library's models were tuned on, which SpectrumSourceFiles does not name
+            // when they were searched for the tuning only.
+            if (config.LibraryBuild.Tuning)
+                writer.AddMetadata(OspreyBlibWriter.KEY_TRAINING_INPUT, string.Join(@";", config.LibraryBuild.TrainingInputs));
         }
 
         /// <summary>

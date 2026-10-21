@@ -33,10 +33,11 @@ a { color: #1565c0; }
 <div class="RowType">Library Build</div>
 <table>
 <tr><th>参数</th><th>描述</th></tr>
-<tr><td><nobr>--fasta</nobr>&nbsp;&lt;proteome.fasta&gt;</td><td>Predict the spectral library from this protein FASTA with CarafeSharp&#39;s models and search it, in place of <nobr>-l</nobr>. The library is written beside the output as &lt;output&gt;.library.blib and can be given to <nobr>-l</nobr> next time; its working files go in &lt;output&gt;.library/. The options of the Library Digest and Library Prediction sections apply.</td></tr>
-<tr><td><nobr>--model</nobr>&nbsp;&lt;file.carafemodel&gt;</td><td>With <nobr>--fasta</nobr>: predict the library with this saved <nobr>fine-tuned</nobr> model (.carafemodel, from CarafeSharp&#39;s training) instead of the pretrained models.</td></tr>
+<tr><td><nobr>--fasta</nobr>&nbsp;&lt;proteome.fasta&gt;</td><td>Predict the spectral library from this protein FASTA with CarafeSharp&#39;s models and search it, in place of <nobr>-l</nobr>. The library is written beside the output as &lt;output&gt;.predicted.blib and can be given to <nobr>-l</nobr> next time; its working files go in &lt;output&gt;.predicted/. The options of the Library Digest and Library Prediction sections apply, and with <nobr>--training-input</nobr> those of Library Tuning.</td></tr>
+<tr><td><nobr>--training-input</nobr>&nbsp;&lt;file1.mzML&nbsp;...&gt;</td><td>With <nobr>--fasta</nobr>: tune the models on these runs before the library is predicted. The runs are searched with a library predicted as it is without this option, their training exports tune the MS2 and RT models, and the library the output is searched with is predicted with the tuned models. A run need not be one of <nobr>-i</nobr>: one that is not is searched for the tuning only and is absent from the output. The tuned model is saved beside the output as &lt;output&gt;.carafemodel, which <nobr>--model</nobr> takes next time. The options of the Library Tuning section apply.</td></tr>
+<tr><td><nobr>--model</nobr>&nbsp;&lt;file.carafemodel&gt;</td><td>With <nobr>--fasta</nobr>: predict the library with this saved <nobr>fine-tuned</nobr> model (.carafemodel, from CarafeSharp&#39;s training) instead of the pretrained models. With <nobr>--training-input</nobr>, the tuning starts from it.</td></tr>
 <tr><td><nobr>--device</nobr> &lt;gpu | cpu&gt;</td><td>With <nobr>--fasta</nobr>: where the library is predicted, gpu (falling back to the CPU with a warning when no CUDA runtime is present) or cpu (default: gpu).</td></tr>
-<tr><td><nobr>--entrapment</nobr>&nbsp;[&lt;ratio&gt;]</td><td>With <nobr>--fasta</nobr>: add an entrapment peptide to every target (or to this fraction of the targets, 0.1 to 1), shuffled from the target or, with <nobr>--entrapment-fasta</nobr>, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as &lt;output&gt;.library/pairing.tsv.</td></tr>
+<tr><td><nobr>--entrapment</nobr>&nbsp;[&lt;ratio&gt;]</td><td>With <nobr>--fasta</nobr>: add an entrapment peptide to every target (or to this fraction of the targets, 0.1 to 1), shuffled from the target or, with <nobr>--entrapment-fasta</nobr>, drawn from a foreign proteome, each with a decoy of its own. For measuring the true FDR with FDRBench, whose pairing manifest is written as &lt;output&gt;.predicted/pairing.tsv.</td></tr>
 <tr><td><nobr>--entrapment-fasta</nobr>&nbsp;&lt;foreign.fasta&gt;</td><td>With <nobr>--entrapment</nobr>: draw the entrapment peptides, matched in mass, from this <nobr>foreign-species</nobr> protein FASTA instead of shuffling the targets.</td></tr>
 </table>
 <div class="RowType">Library Digest</div>
@@ -74,6 +75,23 @@ a { color: #1565c0; }
 <tr><td><nobr>--ccs</nobr></td><td>Predict ion mobility (1/K0) for timsTOF.</td></tr>
 <tr><td><nobr>--rt-model</nobr> &lt;alphapeptdeep | chronologer&gt;</td><td>The <nobr>retention-time</nobr> model (default: the one of a saved model or model folder, else chronologer). A different one from a <nobr>fine-tuned</nobr> model&#39;s predicts with its pretrained model, Chronologer&#39;s in iRT. Not in Java Carafe.</td></tr>
 <tr><td><nobr>--pretrained</nobr>&nbsp;&lt;pretrained_models.zip&gt;</td><td>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</td></tr>
+</table>
+<div class="RowType">Library Tuning</div>
+<p>With --training-input: how the models are tuned on its runs. These are CarafeSharp's options under their standard names.</p>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--tf</nobr> &lt;all | ms2 | rt&gt;</td><td>The models to train, or to predict with from <nobr>--model-dir</nobr>: all (default), ms2 or rt.</td></tr>
+<tr><td><nobr>--cor</nobr>&nbsp;&lt;r&gt;</td><td>The minimum fragment correlation of a precursor trained on (default 0.75).</td></tr>
+<tr><td><nobr>--n-ion-min</nobr>&nbsp;&lt;n&gt;</td><td>The lowest <nobr>b-ion</nobr> ordinal trained on (default 0, every ordinal).</td></tr>
+<tr><td><nobr>--c-ion-min</nobr>&nbsp;&lt;n&gt;</td><td>The lowest <nobr>y-ion</nobr> ordinal trained on (default 0, every ordinal).</td></tr>
+<tr><td><nobr>--nf</nobr>&nbsp;&lt;n&gt;</td><td>The minimum matched fragments of a precursor trained on (default 4).</td></tr>
+<tr><td><nobr>--min-n</nobr>&nbsp;&lt;n&gt;</td><td>The minimum valid fragments of a precursor trained on (default 4).</td></tr>
+<tr><td><nobr>--valid</nobr></td><td>Require a precursor&#39;s most intense fragment to be valid.</td></tr>
+<tr><td><nobr>--no-masking</nobr></td><td>Train on every ion of the kept spectra, masking none.</td></tr>
+<tr><td><nobr>--seed</nobr>&nbsp;&lt;n&gt;</td><td>The random seed of training (default 2024; not negative).</td></tr>
+<tr><td><nobr>--rt-align</nobr> &lt;none | kde&gt;</td><td>How the training runs&#39; retention times are aligned before the RT model is <nobr>fine-tuned</nobr>: kde (default; each run&#39;s minutes mapped onto Chronologer&#39;s hydrophobic index by a KDE ridge on 1000 peptide forms or more, else a LOESS or a line; runs on one gradient train a model of their aligned minutes, runs on different gradients a Chronologer of the index) or none (Carafe&#39;s one rt_max). Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-select</nobr> &lt;best | median&gt;</td><td>With aligned runs, the retention time a peptide form trains on: its best run, or the runs&#39; median. Not in Java Carafe.</td></tr>
+<tr><td><nobr>--rt-reference</nobr>&nbsp;&lt;run&gt;</td><td>With a model trained with <nobr>--rt-align</nobr> kde, the training run whose minutes the library takes; else the model&#39;s, and iRT for a model of runs on different gradients. Not in Java Carafe.</td></tr>
 </table>
 <div class="RowType">评分与耐受性</div>
 <table>
