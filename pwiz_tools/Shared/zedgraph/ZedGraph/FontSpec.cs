@@ -823,7 +823,10 @@ namespace ZedGraph
 				g.TextRenderingHint = TextRenderingHint.AntiAlias;
 			}
 			else if ( IsRotated( g ) )
+			{
+				// Non-horizontal text is jagged without antialiasing
 				g.TextRenderingHint = TextRenderingHint.AntiAlias;
+			}
 
 			SizeF sizeF;
 			if ( layoutArea.IsEmpty )
@@ -938,7 +941,10 @@ namespace ZedGraph
 				g.TextRenderingHint = TextRenderingHint.AntiAlias;
 			}
 			else if ( IsRotated( g ) )
+			{
+				// Non-horizontal text is jagged without antialiasing
 				g.TextRenderingHint = TextRenderingHint.AntiAlias;
+			}
 
 			// make sure the font size is properly scaled
 			Remake( scaleFactor, this.Size, ref _scaledSize, ref _font );
