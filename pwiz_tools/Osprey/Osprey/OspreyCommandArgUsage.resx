@@ -98,7 +98,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="_cache_dir" xml:space="preserve">
-    <value>Directory for the {0} cache (overrides {1})</value>
+    <value>Write the rebuildable caches here, overriding {1}: each run's {0} spectra and a {2} library's loaded form, which later searches reuse. Needed on a {3} node whose {4} differs from the data folder, which has no input path to find the cache from.</value>
   </data>
   <data name="_decoy_pairing_manifest" xml:space="preserve">
     <value>FDRBench 5-column pairing manifest (TSV), used with {0}</value>
@@ -113,13 +113,13 @@
     <value>Write developer diagnostic dump files, for comparison with the Rust implementation</value>
   </data>
   <data name="_experiment_fdr" xml:space="preserve">
-    <value>Experiment-level FDR threshold (default: 0.01)</value>
+    <value>The experiment-level FDR threshold (default: 0.01): a precursor is reported when its q-value across all the runs is at most this. {0} says which q-value.</value>
   </data>
   <data name="_export_library" xml:space="preserve">
-    <value>Write the spectral library given by {0} to this path as a {1} file that Skyline and Osprey can read, and exit without searching</value>
+    <value>Convert the library given by {0} into a self-contained {1} at this path, and exit without searching. The library is loaded as a search would load it - deduplicated, and with {2} its decoys marked and paired (by {3} for a {4}) - and the {1} keeps that pairing in its own table, so it searches back exactly as the original did, needs no manifest, and Skyline can import it. Use it once to turn a DIA-NN format {4} and its manifest into the {1} form Osprey reads directly.</value>
   </data>
   <data name="_fdr_level" xml:space="preserve">
-    <value>FDR level (default: {0})</value>
+    <value>Which experiment-level q-value {1} applies to: {0} (the default; each precursor's own), peptide (its peptide's, over all its charge states), or both (the larger of the two).</value>
   </data>
   <data name="_fdrbench" xml:space="preserve">
     <value>Write an FDRBench-compatible input TSV to this path. The level is taken from {0} ({2}; {3} and {4} emit precursor-level). Includes every reported target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as '{1}', so FDRBench can compute true FDR via entrapment counting without truncation at Osprey's threshold.</value>
@@ -131,22 +131,22 @@
     <value>With {0}: emit one row per (precursor, run) using run-level q-values (adds a '{1}' column). Default is one row per precursor using experiment-level q-values.</value>
   </data>
   <data name="_fragment_tolerance" xml:space="preserve">
-    <value>Fragment m/z tolerance (default: 10)</value>
+    <value>The fragment m/z tolerance, in the unit {0} names (default: 10 ppm, or 0.5 m/z with {1} {2}).</value>
   </data>
   <data name="_fragment_unit" xml:space="preserve">
-    <value>Fragment tolerance unit (default: {0})</value>
+    <value>The unit of {0}: ppm or mz (default: ppm, or mz with {1} {2}).</value>
   </data>
   <data name="_help" xml:space="preserve">
     <value>Show this help message ({0})</value>
   </data>
   <data name="_input" xml:space="preserve">
-    <value>Input mzML files</value>
+    <value>Mass spectrometry data files to search: mzML, or any format ProteoWizard reads, including vendor files (.raw, .d, .wiff, .lcd) where the vendor readers are installed</value>
   </data>
   <data name="_input_list" xml:space="preserve">
     <value>File of input paths, one per line (# comments ignored). Bounded alternative to a long {0} list.</value>
   </data>
   <data name="_library" xml:space="preserve">
-    <value>Spectral library ({0}, {1})</value>
+    <value>Spectral library to search: a {0} (as {4} and CarafeSharp write it, or one from Skyline or BiblioSpec), or a DIA-NN format {1}. Without {2}, Osprey generates a reversed decoy for every target, and a library that holds decoys is refused. With {2}, the library's own decoys are used: a {0} pairs them from its own table, and a {1} marks them by its Decoy column or a decoy accession prefix and pairs them by {3} (an FDRBench pairing manifest) or by composition.</value>
   </data>
   <data name="_log_file" xml:space="preserve">
     <value>Write all output to this file instead of stderr</value>
@@ -158,13 +158,13 @@
     <value>Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment</value>
   </data>
   <data name="_no_prefilter" xml:space="preserve">
-    <value>Disable coelution signal pre-filter</value>
+    <value>Score every library precursor in each isolation window, not only those whose fragments first show a coelution signal. About 30% slower; for checking that the pre-filter loses no detections.</value>
   </data>
   <data name="_output" xml:space="preserve">
-    <value>Output blib file</value>
+    <value>The search result, for Skyline: a {0} that holds, for every precursor that passes FDR, the library spectrum it was searched with (the predicted one, with {3}), the retention time and peak boundaries of its best run, its experiment-wide precursor q-value and PEP and its peptide q-value, and, for every run it was detected in, that run's retention time, peak boundaries and q-value. The protein groups its peptides belong to are in it too, with their q-values. Beside it Osprey writes {1} and {2}, summaries of the same results in the shape of DIA-NN's reports, for comparing the two tools; Osprey does not need them.</value>
   </data>
   <data name="_output_dir" xml:space="preserve">
-    <value>Directory for intermediate files (overrides {0})</value>
+    <value>Write the intermediate files here - each run's scores and calibration and the analysis-wide FDR files - overriding {0}. The output and its reports stay where {1} names.</value>
   </data>
   <data name="_parallel_files" xml:space="preserve">
     <value>Input files run concurrently by each per-file stage (OUTER) that has no flag of its own below. Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from {0}.</value>
@@ -182,22 +182,19 @@
     <value>Emit the machine-parseable {0} lines that scripts and performance tools read (off by default)</value>
   </data>
   <data name="_protein_fdr" xml:space="preserve">
-    <value>Protein-level FDR threshold (optional)</value>
+    <value>Protein-level FDR threshold (default: 0.01)</value>
   </data>
   <data name="_reconciliation_compaction_fdr" xml:space="preserve">
     <value>Peptide q-value threshold for keeping first-pass peptides for cross-run reconciliation and the second pass (default: 0.01 = {0}; loosen e.g. to 0.05 to broaden the reconciliation pool)</value>
   </data>
-  <data name="_report" xml:space="preserve">
-    <value>Write TSV report to file</value>
-  </data>
   <data name="_resolution" xml:space="preserve">
-    <value>Resolution mode (default: {0})</value>
+    <value>How spectra are scored: {0} (the default; Orbitrap, Astral and TOF instruments) bins them finely, uses the MS1 precursor features, and matches fragments and precursors within 10 ppm; {1} (ion traps such as Stellar) bins them coarsely, without MS1 features, and matches fragments within 0.5 m/z and precursors within 1.0 m/z. The resolution is not detected from the data: a search of unit-resolution data must give {1}.</value>
   </data>
   <data name="_run_fdr" xml:space="preserve">
-    <value>Run-level FDR threshold (default: 0.01)</value>
+    <value>The run-level FDR threshold (default: 0.01). A reported precursor gets an identification in Skyline in each run where its q-value in that run is at most this, or in its best run when it is in none; the scoring model is also trained and tested at it.</value>
   </data>
   <data name="_shared_peptides" xml:space="preserve">
-    <value>Shared peptide handling (default: {0})</value>
+    <value>How a peptide shared by several protein groups counts in protein inference: {0} (the default; toward every group it maps to), razor (toward only the group with the most unique peptides), or unique (toward none).</value>
   </data>
   <data name="_task" xml:space="preserve">
     <value>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output.</value>
@@ -227,7 +224,7 @@
     <value>Show version</value>
   </data>
   <data name="_work_dir" xml:space="preserve">
-    <value>Write intermediate files AND the spectra cache here (so input data can be read-only); default: beside input</value>
+    <value>Write the intermediate files and the caches here instead of beside each input, so the data folder can be read-only. {0} and {1} send one of the two elsewhere.</value>
   </data>
   <data name="_fasta" xml:space="preserve">
     <value>Predict the spectral library from this protein FASTA with CarafeSharp's models and search it, in place of {0}. The library is written beside the output as {1} and can be given to {0} next time; its working files go in {2}. The options of the Library Digest and Library Prediction sections apply, and with {3} those of Library Tuning.</value>
@@ -246,5 +243,8 @@
   </data>
   <data name="_training_input" xml:space="preserve">
     <value>With {0}: tune the models on these runs before the library is predicted. The runs are searched with a library predicted as it is without this option, their training exports tune the MS2 and RT models, and the library the output is searched with is predicted with the tuned models. A run need not be one of {1}: one that is not is searched for the tuning only and is absent from the output. The tuned model is saved beside the output as {2}, which {3} takes next time. The options of the Library Tuning section apply.</value>
+  </data>
+  <data name="_training_input_list" xml:space="preserve">
+    <value>With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long list of runs on the command line can pass the Windows command-line limit and hides the other arguments.</value>
   </data>
 </root>

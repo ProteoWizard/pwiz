@@ -484,6 +484,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to With {3}: a file of {0} runs, one path per line (# comments ignored), as {1} is for {2}: a long  [rest of string was truncated]";.
+        /// </summary>
+        public static string _training_input_list {
+            get {
+                return ResourceManager.GetString("_training_input_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show more detail (e.g. per-fold Percolator iterations) that is hidden by default.
         /// </summary>
         public static string _verbose {

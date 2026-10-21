@@ -346,7 +346,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
+        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mass spectrometry data files (mzML, or vendor files where the vendor readers are installed) plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
         /// </summary>
         public static string OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab {
             get {
@@ -436,6 +436,15 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_Group_General_IO {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_Group_General_IO", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} runs as one process: the library build and the search of its library are not split into tasks ye [rest of string was truncated]";.
+        /// </summary>
+        public static string OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GROUP_HPC__0__runs_as_one_process", resourceCulture);
             }
         }
         
@@ -539,6 +548,51 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;integer&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_INT_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_INT_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;number&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_NUM_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_NUM_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path/to/file.
+        /// </summary>
+        public static string OspreyCommandArgs_PATH_TO_FILE_path_to_file {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_PATH_TO_FILE_path_to_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to path/to/folder.
+        /// </summary>
+        public static string OspreyCommandArgs_PATH_TO_FOLDER {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_PATH_TO_FOLDER", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;ratio&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_RATIO_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_RATIO_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} file not found: {1}.
         /// </summary>
         public static string OspreyCommandArgs_ReadInputList__0__file_not_found___1_ {
@@ -553,6 +607,15 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_ {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;threshold&gt;.
+        /// </summary>
+        public static string OspreyCommandArgs_THRESHOLD_VALUE {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_THRESHOLD_VALUE", resourceCulture);
             }
         }
         

@@ -118,15 +118,11 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        // Report file stem = the output blib without its extension, else the report path,
-        // else null (caller skips). Path.ChangeExtension(x, null) drops the extension.
+        // Report file stem = the output blib without its extension, else null (caller skips).
+        // Path.ChangeExtension(x, null) drops the extension.
         private static string ReportStem(OspreyConfig config)
         {
-            if (!string.IsNullOrEmpty(config.OutputBlib))
-                return Path.ChangeExtension(config.OutputBlib, null);
-            if (!string.IsNullOrEmpty(config.OutputReport))
-                return Path.ChangeExtension(config.OutputReport, null);
-            return null;
+            return string.IsNullOrEmpty(config.OutputBlib) ? null : Path.ChangeExtension(config.OutputBlib, null);
         }
 
         // ------------------------------------------------------------------ protein groups

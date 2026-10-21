@@ -324,7 +324,6 @@ namespace pwiz.Osprey
             config.OutputBlib = Path.Combine(trainingDirectory, TRAINING_OUTPUT_FILE_NAME);
             config.OutputDir = trainingDirectory;
             // What the user asked of the run is the final search's; this one writes what the tuning reads.
-            config.OutputReport = null;
             config.OutputFdrBench = null;
             config.ModelDiagnostics = false;
             // Not the one command's analysis: its result was not searched with tuned models.

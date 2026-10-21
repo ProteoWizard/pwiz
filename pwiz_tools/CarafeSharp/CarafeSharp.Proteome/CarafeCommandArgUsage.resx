@@ -95,27 +95,27 @@
     <value>Print this usage and exit. An optional value picks the form: ascii or unicode (the default) tables, sections (the section names only), html, or a section name for that section alone.</value>
   </data>
   <data name="_enzyme" xml:space="preserve">
-    <value>The enzyme, by Carafe's index (default 1, trypsin), or NoCut for the non-specific digest, which forces 100 missed cleavages.</value>
+    <value>The enzyme, by its index or name in the ENZYMES list below (default 1, Trypsin). Index 0, non-specific, cleaves after every residue and forces 100 missed cleavages; NoCut, the last, never cleaves, so each FASTA record is one peptide.</value>
   </data>
   <data name="_miss_c" xml:space="preserve">
     <value>Maximum missed cleavages (default 2).</value>
   </data>
-  <data name="_minLength" xml:space="preserve">
+  <data name="_min_length" xml:space="preserve">
     <value>Minimum peptide length (default 7).</value>
   </data>
-  <data name="_maxLength" xml:space="preserve">
+  <data name="_max_length" xml:space="preserve">
     <value>Maximum peptide length (default 35).</value>
   </data>
   <data name="_clip_n_m" xml:space="preserve">
     <value>Also digest each protein with its N-terminal methionine removed.</value>
   </data>
-  <data name="_fixMod" xml:space="preserve">
-    <value>Fixed modifications, Carafe's ids comma-separated (default 1, carbamidomethyl C).</value>
+  <data name="_fix_mod" xml:space="preserve">
+    <value>Fixed modifications, by their ids in the MODIFICATIONS list below, comma-separated (default 1, Carbamidomethyl of C).</value>
   </data>
-  <data name="_varMod" xml:space="preserve">
-    <value>Variable modifications, Carafe's ids comma-separated (default 2, oxidation M).</value>
+  <data name="_var_mod" xml:space="preserve">
+    <value>Variable modifications, by their ids in the MODIFICATIONS list below, comma-separated (default 2, Oxidation of M).</value>
   </data>
-  <data name="_maxVar" xml:space="preserve">
+  <data name="_max_var" xml:space="preserve">
     <value>Maximum variable modifications per peptide (default 1).</value>
   </data>
   <data name="_min_pep_mz" xml:space="preserve">
@@ -130,7 +130,7 @@
   <data name="_max_pep_charge" xml:space="preserve">
     <value>Maximum precursor charge (default 3 for the FASTA build, 4 for library prediction).</value>
   </data>
-  <data name="_I2L" xml:space="preserve">
+  <data name="_i2l" xml:space="preserve">
     <value>Convert isoleucine to leucine in every sequence.</value>
   </data>
   <data name="_entrapment" xml:space="preserve">
@@ -212,7 +212,7 @@
     <value>With a model trained with --rt-align kde, the training run whose minutes the library takes; else the model's, and iRT for a model of runs on different gradients. Not in Java Carafe.</value>
   </data>
   <data name="_model_dir" xml:space="preserve">
-    <value>A Carafe fine-tuned model folder to predict with: its MS2 and RT models, metrics and training-run summary.</value>
+    <value>A Carafe fine-tuned model folder to predict with: its MS2 and RT models (those --tf names), metrics and training-run summary.</value>
   </data>
   <data name="_model" xml:space="preserve">
     <value>A saved model (.model.zip, a ZIP archive), which every training run writes into --o: predict a library with it, or with --i fine-tune it further. Not in Java Carafe.</value>
@@ -221,7 +221,7 @@
     <value>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</value>
   </data>
   <data name="_tf" xml:space="preserve">
-    <value>The models to train, or to predict with from --model-dir: all (default), ms2 or rt.</value>
+    <value>The models to train: all (default), ms2 or rt.</value>
   </data>
   <data name="_rt_model" xml:space="preserve">
     <value>The retention-time model (default: the one of a saved model or model folder, else chronologer). A different one from a fine-tuned model's predicts with its pretrained model, Chronologer's in iRT. Not in Java Carafe.</value>
@@ -322,7 +322,7 @@
   <data name="_skyline" xml:space="preserve">
     <value>See --ez.</value>
   </data>
-  <data name="_printPTM" xml:space="preserve">
+  <data name="_print_ptm" xml:space="preserve">
     <value>Not supported by CarafeSharp.</value>
   </data>
   <data name="_build_koina_library" xml:space="preserve">

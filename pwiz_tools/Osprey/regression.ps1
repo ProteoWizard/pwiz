@@ -894,8 +894,8 @@ function Invoke-OneCommandRun {
                   '--device', 'cpu', '--resolution', $Resolution, '--protein-fdr', '0.01',
                   '--threads', $Threads.ToString(), '--work-dir', $WorkDir,
                   # The lab's digest and prediction (Run-CarafeSharpWorkflow.ps1 stages 1a and 2).
-                  '--enzyme', '2', '--miss-c', '1', '--minLength', '7', '--maxLength', '35',
-                  '--fixMod', '1', '--varMod', '0', '--maxVar', '1',
+                  '--enzyme', '2', '--miss-c', '1', '--min-length', '7', '--max-length', '35',
+                  '--fix-mod', '1', '--var-mod', '0', '--max-var', '1',
                   '--min-pep-charge', '2', '--max-pep-charge', '3', '--min-pep-mz', '400', '--max-pep-mz', '900',
                   '--lf-frag-mz-min', '200', '--lf-frag-mz-max', '1960', '--lf-top-n-frag', '20',
                   '--lf-min-n-frag', '2', '--lf-frag-n-min', '2')

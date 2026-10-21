@@ -99,6 +99,11 @@ namespace pwiz.Osprey.Test
                 CollectionAssert.AreEqual(new[] { @"a.mzML", @"b.mzML", @"a.mzML", @"b.mzML" },
                     Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath, OspreyCommandArgs.ARG_INPUT_LIST + listPath).InputFiles.ToArray());
 
+                // --training-input-list is the same list for the tuning runs, after any --training-input.
+                CollectionAssert.AreEqual(new[] { @"t.mzML", @"a.mzML", @"b.mzML" },
+                    Parse(OspreyCommandArgs.ARG_FASTA + @"p.fasta", OspreyCommandArgs.ARG_TRAINING_INPUT + @"t.mzML",
+                        OspreyCommandArgs.ARG_TRAINING_INPUT_LIST + listPath).LibraryBuild.TrainingInputs.ToArray());
+
                 // A list that names nothing is fatal, not an empty cohort.
                 File.WriteAllLines(listPath, new[] { @"# nothing but a comment", string.Empty });
                 Assert.ThrowsException<InvalidDataException>(() => Parse(OspreyCommandArgs.ARG_INPUT_LIST + listPath));
@@ -133,8 +138,6 @@ namespace pwiz.Osprey.Test
             // Backslashes before the closing quote or an embedded quote are doubled, so the text parses back.
             Assert.AreEqual(@"""C:\out dir\\""", CommandLineText.Quote(@"C:\out dir\"));
             Assert.AreEqual(@"""a\\\""b c""", CommandLineText.Quote(@"a\""b c"));
-
-            Assert.AreEqual(@"r.tsv", Parse(OspreyCommandArgs.ARG_REPORT + @"r.tsv").OutputReport);
 
             // --work-dir fans out to both; an explicit --output-dir / --cache-dir overrides one.
             var work = Parse(OspreyCommandArgs.ARG_WORK_DIR + @"w");

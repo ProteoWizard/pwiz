@@ -108,6 +108,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>The <c>-device</c> values libtorch can be asked for.</summary>
         private static readonly string[] DEVICES = { @"cpu", @"gpu", @"cuda" };
 
+        // Path values as Skyline's command line writes them (--in=path/to/file.sky). CarafeSharp has
+        // no translated text, so these are not resources; Osprey's own placeholders are.
+        private const string PATH_TO_FILE = @"path/to/file";
+        private const string PATH_TO_FOLDER = @"path/to/folder";
+        private const string EXT_FASTA = @".fasta";
+        private const string EXT_TSV = @".tsv";
+
         // Install the grammar and the text the help renderer and the parser's errors need
         // before any argument text is built.
         static CarafeCommandLine()
@@ -124,15 +131,15 @@ namespace pwiz.CarafeSharp.Proteome
         // --- Modes and files ---------------------------------------------------------------
         // Carafe's names, one declaration each; the parser records what was given (Record), and
         // Interpret below reads the records as it always has.
-        public static readonly CarafeArgument ARG_BUILD_ENTRAPMENT_FASTA = Value(@"build-entrapment-fasta", @"<out.fasta>");
-        public static readonly CarafeArgument ARG_RECONCILE_MANIFEST = Value(@"reconcile-manifest", @"<out.tsv>");
-        public static readonly CarafeArgument ARG_MANIFEST = Value(@"manifest", @"<manifest.tsv>");
-        public static readonly CarafeArgument ARG_PREDICTED_LIBRARY = Value(@"predicted-library", @"<library.tsv|.blib>");
-        public static readonly CarafeArgument ARG_MODEL_INFO = Value(@"model-info", @"<file" + CarafeModelFile.EXTENSION + @">");
-        public static readonly CarafeArgument ARG_DB = Value(@"db", @"<proteins.fasta|peptides.fasta>");
-        public static readonly CarafeArgument ARG_I = Value(@"i", @"<osprey.blib|run" + TrainingExportParquet.EXT + @"|folder>");
+        public static readonly CarafeArgument ARG_BUILD_ENTRAPMENT_FASTA = Value(@"build-entrapment-fasta", PATH_TO_FILE + EXT_FASTA);
+        public static readonly CarafeArgument ARG_RECONCILE_MANIFEST = Value(@"reconcile-manifest", PATH_TO_FILE + EXT_TSV);
+        public static readonly CarafeArgument ARG_MANIFEST = Value(@"manifest", PATH_TO_FILE + EXT_TSV);
+        public static readonly CarafeArgument ARG_PREDICTED_LIBRARY = Value(@"predicted-library", PATH_TO_FILE + EXT_TSV + @"|.blib");
+        public static readonly CarafeArgument ARG_MODEL_INFO = Value(@"model-info", PATH_TO_FILE + CarafeModelFile.EXTENSION);
+        public static readonly CarafeArgument ARG_DB = Value(@"db", PATH_TO_FILE + EXT_FASTA);
+        public static readonly CarafeArgument ARG_I = Value(@"i", PATH_TO_FILE + @".blib|" + TrainingExportParquet.EXT + @"|" + PATH_TO_FOLDER);
         public static readonly CarafeArgument ARG_MS = Value(@"ms", @"<run1,run2,...>");
-        public static readonly CarafeArgument ARG_O = Value(@"o", @"<folder>");
+        public static readonly CarafeArgument ARG_O = Value(@"o", PATH_TO_FOLDER);
         // -h is Carafe's and Osprey's; -help and --help are the same declaration. The optional
         // value picks the help format (ascii | unicode | sections | html | <Section>).
         public static readonly CarafeArgument ARG_HELP = new CarafeArgument(@"help", () => @"<format|Section>", (c, p) => c.Record(p))
@@ -143,19 +150,19 @@ namespace pwiz.CarafeSharp.Proteome
             ARG_DB, ARG_I, ARG_MS, ARG_O, ARG_HELP);
 
         // --- Digest and modifications ------------------------------------------------------
-        public static readonly CarafeArgument ARG_ENZYME = Value(@"enzyme", @"<index|" + EnzymeTable.NO_CUT_ENZYME_NAME + @">");
+        public static readonly CarafeArgument ARG_ENZYME = Value(@"enzyme", @"<index|name>");
         public static readonly CarafeArgument ARG_MISS_C = Value(@"miss-c", @"<n>");
-        public static readonly CarafeArgument ARG_MIN_LENGTH = Value(@"minLength", @"<n>");
-        public static readonly CarafeArgument ARG_MAX_LENGTH = Value(@"maxLength", @"<n>");
+        public static readonly CarafeArgument ARG_MIN_LENGTH = Value(@"min-length", @"<n>");
+        public static readonly CarafeArgument ARG_MAX_LENGTH = Value(@"max-length", @"<n>");
         public static readonly CarafeArgument ARG_CLIP_N_M = Flag(@"clip-n-m");
-        public static readonly CarafeArgument ARG_FIX_MOD = Value(@"fixMod", @"<ids>");
-        public static readonly CarafeArgument ARG_VAR_MOD = Value(@"varMod", @"<ids>");
-        public static readonly CarafeArgument ARG_MAX_VAR = Value(@"maxVar", @"<n>");
+        public static readonly CarafeArgument ARG_FIX_MOD = Value(@"fix-mod", @"<ids>");
+        public static readonly CarafeArgument ARG_VAR_MOD = Value(@"var-mod", @"<ids>");
+        public static readonly CarafeArgument ARG_MAX_VAR = Value(@"max-var", @"<n>");
         public static readonly CarafeArgument ARG_MIN_PEP_MZ = Value(@"min-pep-mz", @"<mz>");
         public static readonly CarafeArgument ARG_MAX_PEP_MZ = Value(@"max-pep-mz", @"<mz>");
         public static readonly CarafeArgument ARG_MIN_PEP_CHARGE = Value(@"min-pep-charge", @"<z>");
         public static readonly CarafeArgument ARG_MAX_PEP_CHARGE = Value(@"max-pep-charge", @"<z>");
-        public static readonly CarafeArgument ARG_I2L = Flag(@"I2L");
+        public static readonly CarafeArgument ARG_I2L = Flag(@"i2l");
 
         private static readonly CarafeArgumentGroup GROUP_DIGEST = new CarafeArgumentGroup(() => @"Digest and modifications", true,
             ARG_ENZYME, ARG_MISS_C, ARG_MIN_LENGTH, ARG_MAX_LENGTH, ARG_CLIP_N_M, ARG_FIX_MOD, ARG_VAR_MOD, ARG_MAX_VAR,
@@ -168,7 +175,7 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_MZ_FILTER = Flag(@"mz-filter");
         public static readonly CarafeArgument ARG_ENTRAPMENT_SEED = Value(@"entrapment-seed", @"<n>");
         public static readonly CarafeArgument ARG_DECOY_SEED = Value(@"decoy-seed", @"<n>");
-        public static readonly CarafeArgument ARG_ENTRAPMENT_DB = Value(@"entrapment-db", @"<proteins.fasta>");
+        public static readonly CarafeArgument ARG_ENTRAPMENT_DB = Value(@"entrapment-db", PATH_TO_FILE + EXT_FASTA);
         public static readonly CarafeArgument ARG_ENTRAPMENT_RATIO = Value(@"entrapment-ratio", @"<ratio>");
         public static readonly CarafeArgument ARG_NO_SIMILARITY_GATE = Flag(@"no-similarity-gate");
         public static readonly CarafeArgument ARG_IGNORE_PAIRING_ERRORS = Flag(@"ignore-pairing-errors");
@@ -191,7 +198,7 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_ANALYZER = Choice(@"analyzer", AcquisitionVocabulary.KNOWN_ANALYZERS.ToArray());
         public static readonly CarafeArgument ARG_RT_MAX = Value(@"rt-max", @"<minutes>");
         public static readonly CarafeArgument ARG_CCS = Flag(@"ccs");
-        public static readonly CarafeArgument ARG_PAIRING_MANIFEST = Value(@"pairing-manifest", @"<manifest.tsv>");
+        public static readonly CarafeArgument ARG_PAIRING_MANIFEST = Value(@"pairing-manifest", PATH_TO_FILE + EXT_TSV);
         public static readonly CarafeArgument ARG_LIBRARY_CONTRACT = Flag(@"library-contract");
         public static readonly CarafeArgument ARG_RT_REFERENCE = Value(@"rt-reference", @"<run>");
 
@@ -201,9 +208,9 @@ namespace pwiz.CarafeSharp.Proteome
             ARG_RT_REFERENCE);
 
         // --- Models ------------------------------------------------------------------------
-        public static readonly CarafeArgument ARG_MODEL_DIR = Value(@"model-dir", @"<folder>");
-        public static readonly CarafeArgument ARG_MODEL = Value(@"model", @"<file" + CarafeModelFile.EXTENSION + @">");
-        public static readonly CarafeArgument ARG_PRETRAINED = Value(@"pretrained", @"<pretrained_models.zip>");
+        public static readonly CarafeArgument ARG_MODEL_DIR = Value(@"model-dir", PATH_TO_FOLDER);
+        public static readonly CarafeArgument ARG_MODEL = Value(@"model", PATH_TO_FILE + CarafeModelFile.EXTENSION);
+        public static readonly CarafeArgument ARG_PRETRAINED = Value(@"pretrained", PATH_TO_FILE + @".zip");
         public static readonly CarafeArgument ARG_TF = Choice(@"tf", @"all", @"ms2", @"rt");
         public static readonly CarafeArgument ARG_RT_MODEL = Choice(@"rt-model", Enum.GetNames(typeof(RtModelType)));
         public static readonly CarafeArgument ARG_DEVICE = Choice(@"device", DEVICES);
@@ -231,7 +238,7 @@ namespace pwiz.CarafeSharp.Proteome
             ARG_RT_ALIGN, ARG_RT_SELECT);
 
         // --- Output (CarafeSharp's, as Osprey's --log-file / --timestamp / --memstamp) --------
-        public static readonly CarafeArgument ARG_LOG_FILE = Value(@"log-file", @"<path>");
+        public static readonly CarafeArgument ARG_LOG_FILE = Value(@"log-file", PATH_TO_FILE);
         public static readonly CarafeArgument ARG_TIMESTAMP = Flag(@"timestamp");
         public static readonly CarafeArgument ARG_MEMSTAMP = Flag(@"memstamp");
 
@@ -259,12 +266,12 @@ namespace pwiz.CarafeSharp.Proteome
         public static readonly CarafeArgument ARG_KOINA_RT_MODEL = Value(@"koina-rt-model", @"<name>");
         public static readonly CarafeArgument ARG_NCE_MS = Value(@"nce-ms", @"<nce>");
         public static readonly CarafeArgument ARG_MODE = Value(@"mode", @"<mode>");
-        public static readonly CarafeArgument ARG_PYTHON = Value(@"python", @"<path>");
+        public static readonly CarafeArgument ARG_PYTHON = Value(@"python", PATH_TO_FILE);
         public static readonly CarafeArgument ARG_MOD2MASS = Value(@"mod2mass", @"<mapping>");
         public static readonly CarafeArgument ARG_USER_VAR_MODS = Value(@"user-var-mods", @"<mods>");
         public static readonly CarafeArgument ARG_VERBOSE = Value(@"verbose", @"<level>");
         public static readonly CarafeArgument ARG_AI_VERSION = Value(@"ai-version", @"<version>");
-        public static readonly CarafeArgument ARG_PRINT_PTM = Flag(@"printPTM");
+        public static readonly CarafeArgument ARG_PRINT_PTM = Flag(@"print-ptm");
         public static readonly CarafeArgument ARG_NM = Flag(@"nm");
         public static readonly CarafeArgument ARG_CS = Flag(@"cs");
         public static readonly CarafeArgument ARG_EZ = Flag(@"ez");
@@ -294,22 +301,26 @@ namespace pwiz.CarafeSharp.Proteome
         {
             get
             {
-                return new IUsageBlock[]
+                return new[]
                 {
                     new ParaUsageBlock(@"CarafeSharp - spectral library prediction and fine-tuning for Osprey (C# port of Carafe)"),
-                    new ParaUsageBlock(@"USAGE: CarafeSharp " + ARG_BUILD_ENTRAPMENT_FASTA.ArgumentText + @" <out.fasta> " + ARG_DB.ArgumentText +
-                                       @" <proteins.fasta> [options]"),
-                    new ParaUsageBlock(@"       CarafeSharp " + ARG_RECONCILE_MANIFEST.ArgumentText + @" <out.tsv> " + ARG_MANIFEST.ArgumentText +
-                                       @" <in.tsv> " + ARG_PREDICTED_LIBRARY.ArgumentText + @" <library.tsv|.blib>"),
-                    new ParaUsageBlock(@"       CarafeSharp " + ARG_DB.ArgumentText + @" <peptides.fasta|proteins.fasta> " + ARG_O.ArgumentText +
-                                       @" <folder> [options]   (library prediction)"),
-                    new ParaUsageBlock(@"       CarafeSharp " + ARG_I.ArgumentText + @" <osprey.blib> " + ARG_MS.ArgumentText + @" <runs> " +
-                                       ARG_O.ArgumentText + @" <folder> [" + ARG_DB.ArgumentText + @" <fasta>] [options]   (training)"),
-                    new ParaUsageBlock(@"       CarafeSharp " + ARG_I.ArgumentText + @" <run" + TrainingExportParquet.EXT + @"|folder> [" +
-                                       ARG_MS.ArgumentText + @" <runs>] " + ARG_O.ArgumentText + @" <folder> [" + ARG_DB.ArgumentText + @" <fasta>] [options]"),
-                    new ParaUsageBlock(@"       CarafeSharp " + ARG_MODEL_INFO.ArgumentText + @" <file" + CarafeModelFile.EXTENSION + @">"),
+                    new ParaUsageBlock(@"USAGE: CarafeSharp " + ARG_BUILD_ENTRAPMENT_FASTA.ArgumentText + @" " + PATH_TO_FILE + EXT_FASTA + @" " +
+                                       ARG_DB.ArgumentText + @" " + PATH_TO_FILE + EXT_FASTA + @" [options]"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_RECONCILE_MANIFEST.ArgumentText + @" " + PATH_TO_FILE + EXT_TSV + @" " +
+                                       ARG_MANIFEST.ArgumentText + @" " + PATH_TO_FILE + EXT_TSV + @" " +
+                                       ARG_PREDICTED_LIBRARY.ArgumentText + @" " + PATH_TO_FILE + EXT_TSV + @"|.blib"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_DB.ArgumentText + @" " + PATH_TO_FILE + EXT_FASTA + @" " + ARG_O.ArgumentText +
+                                       @" " + PATH_TO_FOLDER + @" [options]   (library prediction)"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_I.ArgumentText + @" " + PATH_TO_FILE + @".blib " + ARG_MS.ArgumentText + @" <runs> " +
+                                       ARG_O.ArgumentText + @" " + PATH_TO_FOLDER + @" [" + ARG_DB.ArgumentText + @" " + PATH_TO_FILE + EXT_FASTA +
+                                       @"] [options]   (training)"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_I.ArgumentText + @" " + PATH_TO_FILE + TrainingExportParquet.EXT + @"|" + PATH_TO_FOLDER +
+                                       @" [" + ARG_MS.ArgumentText + @" <runs>] " + ARG_O.ArgumentText + @" " + PATH_TO_FOLDER + @" [" +
+                                       ARG_DB.ArgumentText + @" " + PATH_TO_FILE + EXT_FASTA + @"] [options]"),
+                    new ParaUsageBlock(@"       CarafeSharp " + ARG_MODEL_INFO.ArgumentText + @" " + PATH_TO_FILE + CarafeModelFile.EXTENSION),
                     GROUP_MODES,
                     GROUP_DIGEST,
+                    DigestTablesBlock,
                     GROUP_ENTRAPMENT,
                     GROUP_LIBRARY,
                     GROUP_MODELS,
@@ -319,7 +330,8 @@ namespace pwiz.CarafeSharp.Proteome
                     new ParaUsageBlock(@"OTHER FORMS ACCEPTED: the options are listed in the standard form (" + ARG_LF_TYPE.ArgumentText +
                                        @" blib). A value may follow its option or be joined to it (" + ARG_LF_TYPE.ArgumentText + @"=blib), " +
                                        @"and for compatibility with Java Carafe every option is also accepted in Carafe's form, with a single " +
-                                       @"dash and underscores (-lf_type blib, -lf_type=blib), so a Carafe 2.2.0 command line runs unchanged. " +
+                                       @"dash, underscores and camel case (-lf_type blib, -lf_type=blib, -minLength 7), so a Carafe 2.2.0 command " +
+                                       @"line runs unchanged. " +
                                        @"A repeated option keeps its first value, as in Carafe."),
                 };
             }
@@ -338,6 +350,29 @@ namespace pwiz.CarafeSharp.Proteome
                     ARG_ENZYME, ARG_MISS_C, ARG_MIN_LENGTH, ARG_MAX_LENGTH, ARG_CLIP_N_M, ARG_FIX_MOD, ARG_VAR_MOD, ARG_MAX_VAR,
                     ARG_MIN_PEP_MZ, ARG_MAX_PEP_MZ, ARG_MIN_PEP_CHARGE, ARG_MAX_PEP_CHARGE, ARG_I2L,
                 };
+            }
+        }
+
+        /// <summary>
+        /// Carafe's enzymes and modifications, by the index and id <see cref="ARG_ENZYME"/>,
+        /// <see cref="ARG_FIX_MOD"/> and <see cref="ARG_VAR_MOD"/> take, generated from the tables
+        /// the digest reads so the help cannot drift from them. The help is the only place a user
+        /// can learn what <c>--enzyme 7</c> or <c>--var-mod 2,7</c> means, so a host that presents
+        /// the digest options presents this after them too.
+        /// </summary>
+        public static IUsageBlock DigestTablesBlock
+        {
+            get
+            {
+                var enzymes = EnzymeTable.All.Select((enzyme, index) =>
+                    string.Format(CultureInfo.InvariantCulture, @"{0} {1}", index, enzyme.Name));
+                var modifications = CarafeModification.TopModifications.Select(modification =>
+                    string.Format(CultureInfo.InvariantCulture, @"{0} {1} ({2:+0.0###;-0.0###})",
+                        modification.Id, modification.Name, modification.Mass));
+                return new ParaUsageBlock(@"ENZYMES (" + ARG_ENZYME.ArgumentText + @", by index or name): " +
+                                          string.Join(@", ", enzymes) + @". MODIFICATIONS (" + ARG_FIX_MOD.ArgumentText +
+                                          @" and " + ARG_VAR_MOD.ArgumentText + @", by id): " +
+                                          string.Join(@", ", modifications) + @".");
             }
         }
 
@@ -630,9 +665,10 @@ namespace pwiz.CarafeSharp.Proteome
                 digest.MaxMissedCleavages = ParseInt(ARG_MISS_C, missedCleavages);
             if (TryGet(ARG_ENZYME, out string enzyme))
             {
-                digest.EnzymeIndex = string.Equals(enzyme, EnzymeTable.NO_CUT_ENZYME_NAME, StringComparison.OrdinalIgnoreCase)
-                    ? EnzymeTable.GetIndexByName(enzyme)
-                    : ParseInt(ARG_ENZYME, enzyme);
+                // By index, as Carafe takes it, or by any name in the table (Carafe takes NoCut).
+                digest.EnzymeIndex = int.TryParse(enzyme, NumberStyles.Integer, CultureInfo.InvariantCulture, out int index)
+                    ? index
+                    : EnzymeTable.GetIndexByName(enzyme);
             }
             // Carafe validates the index here, through its non-specific check.
             if (EnzymeTable.IsNonSpecific(EnzymeTable.GetByIndex(digest.EnzymeIndex)))

@@ -97,10 +97,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="_cache_dir" xml:space="preserve">
-    <value>{0} 缓存的目录（覆盖“{1}”）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_decoy_pairing_manifest" xml:space="preserve">
     <value>FDRBench 5 列配对清单 (TSV)，与“{0}”一起使用</value>
     <comment>Needs Review:New resource</comment>
@@ -111,14 +107,6 @@
   </data>
   <data name="_diagnostics" xml:space="preserve">
     <value>写入开发人员诊断转储文件，用于与 Rust 实现进行比较</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_experiment_fdr" xml:space="preserve">
-    <value>实验水平 FDR 阈值（默认：0.01）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_fdr_level" xml:space="preserve">
-    <value>FDR 水平（默认：{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_fdrbench" xml:space="preserve">
@@ -133,28 +121,12 @@
     <value>与“{0}”一起使用：每个（母离子，运行）输出一行，使用运行水平 q 值（增加“{1}”列）。默认每个母离子输出一行，使用实验水平 q 值。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_fragment_tolerance" xml:space="preserve">
-    <value>碎片质荷比耐受性（默认：10）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_fragment_unit" xml:space="preserve">
-    <value>碎片耐受性单位（默认：{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_help" xml:space="preserve">
     <value>显示此帮助信息（{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_input" xml:space="preserve">
-    <value>输入 mzML 文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_input_list" xml:space="preserve">
     <value>输入路径列表文件，每行一个（忽略 # 注释）。可替代很长的“{0}”列表。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_library" xml:space="preserve">
-    <value>谱图库（{0}，{1}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_log_file" xml:space="preserve">
@@ -169,18 +141,6 @@
     <value>写入独立的交互式 HTML 报告，内容包括训练好的评分模型、FDR 校准，以及单峰多 ID 重复分配</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_no_prefilter" xml:space="preserve">
-    <value>禁用共洗脱信号预过滤</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_output" xml:space="preserve">
-    <value>输出 blib 文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_output_dir" xml:space="preserve">
-    <value>中间文件的目录（覆盖“{0}”）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_parallel_files" xml:space="preserve">
     <value>同时评分的输入文件数（外层）。省略：每次一个（默认）。不带值：根据可用内存和核心数自动确定。&lt;N&gt;：不论内存和核心数，恰好为 N。与“{0}”不同。</value>
     <comment>Needs Review:New resource</comment>
@@ -189,28 +149,8 @@
     <value>输出脚本和性能工具读取的机器可解析 {0} 行（默认关闭）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="_protein_fdr" xml:space="preserve">
-    <value>蛋白质水平 FDR 阈值（可选）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="_reconciliation_compaction_fdr" xml:space="preserve">
     <value>为跨运行协调和第二轮保留第一轮肽段的肽段 q 值阈值（默认：0.01 =“{0}”；可放宽，例如到 0.05，以扩大协调池）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_report" xml:space="preserve">
-    <value>将 TSV 报告写入文件</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_resolution" xml:space="preserve">
-    <value>分辨率模式（默认：{0}）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_run_fdr" xml:space="preserve">
-    <value>运行水平 FDR 阈值（默认：0.01）</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_shared_peptides" xml:space="preserve">
-    <value>共享肽段处理方式（默认：{0}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_task" xml:space="preserve">
@@ -231,10 +171,6 @@
   </data>
   <data name="_version" xml:space="preserve">
     <value>显示版本</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="_work_dir" xml:space="preserve">
-    <value>将中间文件和谱图缓存写入此处（使输入数据可以是只读的）；默认：输入旁</value>
     <comment>Needs Review:New resource</comment>
   </data>
 </root>
