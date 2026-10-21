@@ -215,7 +215,7 @@
 
   <rect class="input-pill-opt" x="720" y="10" width="200" height="44" rx="22"/>
   <text class="stage-title" x="820" y="29" text-anchor="middle">Saved model</text>
-  <text class="stage-desc"  x="820" y="45" text-anchor="middle">--model out.carafemodel (mode 3)</text>
+  <text class="stage-desc"  x="820" y="45" text-anchor="middle">--model out.model.zip (mode 3)</text>
 
   <rect class="input-pill" x="940" y="10" width="220" height="44" rx="22"/>
   <text class="stage-title" x="1050" y="29" text-anchor="middle">Pretrained models</text>
@@ -283,7 +283,7 @@
   <text class="phase-label" x="20" y="22">mode 2</text>
   <text class="phase-title" x="20" y="40">Tune, then predict</text>
   <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
-  <text class="phase-cmd" x="20" y="71">       --training-input run2 [--model prior.carafemodel]</text>
+  <text class="phase-cmd" x="20" y="71">       --training-input run2 [--model prior.model.zip]</text>
 
   <!-- A: digest -->
   <g transform="translate(16, 86)">
@@ -331,7 +331,7 @@
     <text class="stage-desc" x="12" y="59">MS2 kept only when it beats the pretrained on held-out</text>
   </g>
   <path class="flow" d="M 180 416 L 180 436" marker-end="url(#lb-arrow)"/>
-  <text class="file" x="188" y="430">out.carafemodel</text>
+  <text class="file" x="188" y="430">out.model.zip</text>
 
   <!-- E: predict the library -->
   <g transform="translate(16, 438)">
@@ -359,12 +359,12 @@
   <!-- G: output -->
   <rect class="output-pill" x="16" y="608" width="328" height="44" rx="22"/>
   <text class="stage-title" x="180" y="627" text-anchor="middle">out.blib</text>
-  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib + out.carafemodel</text>
+  <text class="stage-desc"  x="180" y="643" text-anchor="middle">+ out.predicted.blib + out.model.zip</text>
 </g>
 
 <!-- The tuned model of mode 2 is the saved model of mode 3 -->
 <path class="flow-loop" d="M 764 613 L 790 613 L 790 222 L 820 222 L 820 206" marker-end="url(#lb-arrow-loop)"/>
-<text class="flow-loop-label" x="791" y="440" text-anchor="middle" transform="rotate(-90 791 440)">out.carafemodel is a --model next time</text>
+<text class="flow-loop-label" x="791" y="440" text-anchor="middle" transform="rotate(-90 791 440)">out.model.zip is a --model next time</text>
 
 <!-- ================================================================= -->
 <!-- MODE 3: SAVED MODEL                                                -->
@@ -374,7 +374,7 @@
   <text class="phase-label" x="20" y="22">mode 3</text>
   <text class="phase-title" x="20" y="40">Predict with a saved model</text>
   <text class="phase-cmd" x="20" y="58">Osprey -i runs... --fasta proteome.fasta -o out.blib</text>
-  <text class="phase-cmd" x="20" y="71">       --model out.carafemodel</text>
+  <text class="phase-cmd" x="20" y="71">       --model out.model.zip</text>
 
   <!-- A: digest -->
   <g transform="translate(16, 86)">
@@ -443,7 +443,7 @@
       <tr><td>Digest (inside the prediction tasks)</td><td>none</td><td>CarafeSharp <code>Digester</code> + the decoy and entrapment steps of <code>EntrapmentFastaBuilder</code></td><td><code>--fasta</code></td><td>nothing: an in-memory enumerable of peptides, proteins, decoys and pair ids that the predictor and the blib writer consume</td><td>1, 2, 3</td></tr>
       <tr><td>Predict the training library</td><td><code>PredictTrainingLibrary</code></td><td>CarafeSharp <code>PredictLibraryTask</code></td><td>the entrapment-free digest; pretrained models or <code>--model</code></td><td><code>out.predicted/initial.blib</code></td><td>2</td></tr>
       <tr><td>Search the tuning runs</td><td>the four stages</td><td>Osprey, its own task set and output folder</td><td><code>initial.blib</code>, <code>--training-input</code></td><td><code>out.predicted/training/&lt;stem&gt;.training.parquet</code> per run, that analysis's artifacts, <code>training.blib</code></td><td>2</td></tr>
-      <tr><td>Tune</td><td><code>TrainModel</code></td><td>CarafeSharp <code>TrainTask</code></td><td>the exports; pretrained models or <code>--model</code></td><td><code>out.carafemodel</code> and Carafe's model folder <code>out.predicted/model/</code></td><td>2</td></tr>
+      <tr><td>Tune</td><td><code>TrainModel</code></td><td>CarafeSharp <code>TrainTask</code></td><td>the exports; pretrained models or <code>--model</code></td><td><code>out.model.zip</code> and Carafe's model folder <code>out.predicted/model/</code></td><td>2</td></tr>
       <tr><td>Predict the library</td><td><code>PredictLibrary</code></td><td>CarafeSharp <code>PredictLibraryTask</code></td><td>the digest (quartets with <code>--entrapment</code>); pretrained, <code>--model</code>, or the tuned model folder</td><td><code>out.predicted.blib</code></td><td>1, 2, 3</td></tr>
       <tr><td>Search</td><td>the canonical four</td><td>Osprey</td><td><code>out.predicted.blib</code>, <code>-i</code></td><td><code>out.blib</code> and its sidecars (part 2)</td><td>all</td></tr>
     </tbody>
@@ -452,7 +452,7 @@
   <p><strong>What the user gets</strong> (<code>--output-dir</code> relocates it as it relocates the search's sidecars):</p>
 <pre>out.blib                  the result: what the search detected, for Skyline (-o), sidecars as for any search
 out.predicted.blib        the predicted library it was searched with (modes 1-3); -l takes it next time
-out.carafemodel           the tuned model (mode 2); --model takes it next time; CarafeSharp --model-info describes it
+out.model.zip             the tuned model (mode 2); --model takes it next time; CarafeSharp --model-info describes it
 out.predicted/            working files of the library build - one folder a user can delete
   pairing.tsv             only with --entrapment: the FDRBench quartets
   initial.blib            the training library (mode 2)

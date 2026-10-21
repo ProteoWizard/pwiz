@@ -77,7 +77,7 @@
     <value>The predicted library (a TSV, or a .blib) a manifest is reconciled against.</value>
   </data>
   <data name="_model_info" xml:space="preserve">
-    <value>Describe a saved model (.carafemodel): what it was trained on, and how.</value>
+    <value>Describe a saved model (.model.zip, a ZIP archive): what it was trained on, and how.</value>
   </data>
   <data name="_db" xml:space="preserve">
     <value>The FASTA to predict a library from (peptides, as --build-entrapment-fasta writes them, or proteins), or the proteins --build-entrapment-fasta digests. With training (--i), the library predicted with the fine-tuned models afterwards.</value>
@@ -89,7 +89,7 @@
     <value>The runs trained on, comma-separated. CarafeSharp reads no spectra: the fragment matches, XICs and peak boundaries come from Osprey's training export, so --ms only names the runs.</value>
   </data>
   <data name="_o" xml:space="preserve">
-    <value>The output folder: the library, and for training the fine-tuned model folder and the saved .carafemodel.</value>
+    <value>The output folder: the library, and for training the fine-tuned model folder and the saved .model.zip.</value>
   </data>
   <data name="_help" xml:space="preserve">
     <value>Print this usage and exit. An optional value picks the form: ascii or unicode (the default) tables, sections (the section names only), html, or a section name for that section alone.</value>
@@ -215,7 +215,7 @@
     <value>A Carafe fine-tuned model folder to predict with: its MS2 and RT models, metrics and training-run summary.</value>
   </data>
   <data name="_model" xml:space="preserve">
-    <value>A saved model (.carafemodel), which every training run writes into --o: predict a library with it, or with --i fine-tune it further. Not in Java Carafe.</value>
+    <value>A saved model (.model.zip, a ZIP archive), which every training run writes into --o: predict a library with it, or with --i fine-tune it further. Not in Java Carafe.</value>
   </data>
   <data name="_pretrained" xml:space="preserve">
     <value>The AlphaPeptDeep pretrained models zip (default: the one beside the executable). Not in Java Carafe.</value>

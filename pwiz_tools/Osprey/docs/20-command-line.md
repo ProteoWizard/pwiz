@@ -116,7 +116,7 @@ executable. Three modes, chosen by the options given, on top of the search of a 
 | search | `osprey -i runs... -l library.blib -o out.blib` | the four stages |
 | predict | `osprey -i runs... --fasta proteome.fasta -o out.blib` | predict with the pretrained models (AlphaPeptDeep MS2, Chronologer RT), then the four stages |
 | tune | `osprey -i runs... --fasta proteome.fasta --training-input run2 -o out.blib` | predict with the pretrained models, search the tuning runs with the training export, fine-tune the models on it, predict again with the tuned models, then the four stages |
-| saved model | `osprey -i runs... --fasta proteome.fasta --model out.carafemodel -o out2.blib` | as predict, with a model an earlier tuned run saved (any proteome) |
+| saved model | `osprey -i runs... --fasta proteome.fasta --model out.model.zip -o out2.blib` | as predict, with a model an earlier tuned run saved (any proteome) |
 
 Tuning is never inferred: without `--training-input` the pretrained models (or `--model`) predict
 the library. A tuning run may be one of the `-i` runs (the lab's "search the middle file") or not
@@ -127,8 +127,8 @@ with `--training-input` tunes the saved model further.
 | Option | Value | Effect |
 |--------|-------|--------|
 | `--fasta` | `<proteome.fasta>` | Predict the library from this proteome and search it, in place of `-l`. Refused together with `-l`, `--export-library`, `--decoy-pairing-manifest` and, for now, `--task` (the HPC addressing of the library phase is still to come). |
-| `--training-input` | `<run ...>` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.carafemodel`. The options of the **Library Tuning** section apply. |
-| `--model` | `<file.carafemodel>` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
+| `--training-input` | `<run ...>` | Tune the models on these runs before the library is predicted (variadic, as `-i`). Their training exports (`--training-export-max-q` and the other export options apply to them) fine-tune the MS2 and RT models; the tuned model is saved as `<out>.model.zip`. The options of the **Library Tuning** section apply. |
+| `--model` | `<file.model.zip>` | Predict with this saved fine-tuned model instead of the pretrained models; with `--training-input`, start the tuning from it. Its training run's NCE, instrument and gradient length apply where the command line gives none. |
 | `--device` | `gpu \| cpu` | Where the library is predicted. `gpu` (the default) falls back to the CPU with a warning when no CUDA runtime is present, as CarafeSharp does. |
 | `--entrapment` | `[<ratio>]` | Add an entrapment peptide to every target (or to this fraction of them, 0.1 to 1), shuffled from the target or, with `--entrapment-fasta`, drawn mass-matched from a foreign proteome, each with a decoy of its own. The pairing manifest FDRBench reads is written beside the working files. |
 | `--entrapment-fasta` | `<foreign.fasta>` | With `--entrapment`: the foreign-species proteome to draw from. |
@@ -158,7 +158,7 @@ manifest and the model folder.
 ```
 out.blib                the result: what the search detected, with its sidecars, as for any search
 out.predicted.blib      the predicted library the result was searched with (-l takes it next time)
-out.carafemodel         with --training-input: the tuned model (--model takes it next time)
+out.model.zip           with --training-input: the tuned model (--model takes it next time)
 out.predicted/          the library build's working files (with --entrapment, pairing.tsv for FDRBench)
   initial.blib          with --training-input: the library the tuning runs were searched with
   training/             the tuning runs' search: its artifacts, <stem>.training.parquet, training.blib

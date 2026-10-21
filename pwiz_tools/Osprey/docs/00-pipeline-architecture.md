@@ -280,7 +280,7 @@ entrapment included) and the search - and the second takes the first's product,
 tuning runs' search (an Osprey analysis over a derived config: the tuning runs, the initial
 library, `--training-export`, and `<out>.predicted/training/` as its `--output-dir`), and
 `TrainModel` (CarafeSharp's `TrainTask` on the exports, writing the model folder
-`<out>.predicted/model/` and `<out>.carafemodel`); the final `PredictLibrary` then predicts from
+`<out>.predicted/model/` and `<out>.model.zip`); the final `PredictLibrary` then predicts from
 that folder, as CarafeSharp's own training does right after the fine-tune.
 
 The two analyses run in one process, so each gets its own task set (`OspreyTasks.Create()`): a

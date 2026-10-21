@@ -18,7 +18,7 @@ CarafeSharp --reconcile-manifest <out.tsv> --manifest <in.tsv> --predicted-libra
 CarafeSharp --db <peptides.fasta|proteins.fasta> --o <folder> [options]            (library prediction)
 CarafeSharp --i <osprey.blib> --ms <runs> --o <folder> [--db <fasta>] [options]     (training)
 CarafeSharp --i <run.training.parquet|folder> [--ms <runs>] --o <folder> [--db <fasta>] [options]
-CarafeSharp --model-info <file.carafemodel>
+CarafeSharp --model-info <file.model.zip>
 CarafeSharp -h [ascii|unicode|sections|html|<Section>]
 ```
 
@@ -74,7 +74,7 @@ The mode is decided from the options given, in Carafe's order of precedence:
 |---|---|---|
 | nothing, or `-h` | help | prints the usage |
 | `--build-entrapment-fasta` | entrapment FASTA build | `EntrapmentFastaBuilder`: digest `--db`, add decoys and entrapment, write the pairing manifest of `--manifest` |
-| `--model-info` | model info | describes a saved `.carafemodel` |
+| `--model-info` | model info | describes a saved `.model.zip` |
 | `--reconcile-manifest` | manifest reconciliation | `PairingManifestReconciler` against `--predicted-library` |
 | `--ms`, or `--i` naming training exports, without `--model-dir` | training | `ModelTrainer` on Osprey's `.training.parquet` exports, then the library of `--db` with the fine-tuned models when `--db` is given |
 | `--db` | library prediction | `LibraryGenerator` with the pretrained models, a `--model-dir` folder or a saved `--model` |

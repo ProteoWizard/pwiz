@@ -397,11 +397,16 @@ namespace pwiz.CarafeSharp.Test
             File.Copy(RandomRtModel(@"base_rt", 12), Path.Combine(baseFolder, ModelFiles.RT_SAFETENSORS));
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":true}}");
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.META), @"{""earlier.mzML"":{""ms_file"":""earlier.mzML"",""nce"":30.0,""rt_max"":40.0}}");
-            string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.EXTENSION);
+            // Named as model files were before the rename to .model.zip: it still lists, and still
+            // opens to be fine-tuned further below, since a model file is known by its manifest.
+            string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.LEGACY_EXTENSION);
             var written = CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null,
                 TestModels.PretrainedOrigin(), TestModels.PretrainedOrigin());
             Assert.IsTrue(written.Ms2Used && written.RtUsed);
             Assert.AreEqual(0, written.BaseModels.Count);
+            Assert.IsTrue(CarafeModelFile.IsModelFileName(baseFile));
+            CollectionAssert.AreEqual(new[] { baseFile },
+                CarafeModelFile.FilePatterns.SelectMany(pattern => Directory.GetFiles(_folder, pattern)).ToArray());
 
             // Fine-tuned further at learning rate 0: the fine-tuned models are the saved ones, so the MS2 model does not beat it.
             string first = Path.Combine(_folder, @"first");
@@ -427,7 +432,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(written.Entries[ModelFiles.MS2_SAFETENSORS], saved.Entries[ModelFiles.MS2_BASE_SAFETENSORS], @"the saved model's MS2 model, as it was");
             Assert.IsTrue(saved.RtUsed);
             var chain = saved.BaseModels.Single();
-            Assert.AreEqual(@"earlier" + CarafeModelFile.EXTENSION, chain.File);
+            Assert.AreEqual(Path.GetFileName(baseFile), chain.File);
             Assert.AreEqual(written.FileSha256, chain.Sha256);
             Assert.AreEqual(written.Created, chain.Created);
             CollectionAssert.AreEqual(new[] { @"earlier.mzML" }, chain.Runs.ToArray());
@@ -443,7 +448,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(12.1, saved.RtMax, 1e-12);
             string info = saved.FormatInfo();
             StringAssert.Contains(info, @"MS2 model: the base model's (the fine-tuned model did not beat it)");
-            StringAssert.Contains(info, @"Fine-tuned further from earlier" + CarafeModelFile.EXTENSION + @" (SHA-256 " + written.FileSha256);
+            StringAssert.Contains(info, @"Fine-tuned further from " + Path.GetFileName(baseFile) + @" (SHA-256 " + written.FileSha256);
             StringAssert.Contains(info, @"Held-out metrics (start model -> fine-tuned)");
             // A library from the new file predicts with the kept model.
             var extracted = saved.Extract(Path.Combine(_folder, @"first_extracted"));
@@ -457,7 +462,7 @@ namespace pwiz.CarafeSharp.Test
             again.Run();
             Assert.AreEqual(trainer.Result.Ms2Pretrained.ToString(), again.Result.Ms2Pretrained.ToString());
             var twice = CarafeModelFile.Open(Path.Combine(second, CarafeModelFile.DEFAULT_FILE_NAME));
-            CollectionAssert.AreEqual(new[] { CarafeModelFile.DEFAULT_FILE_NAME, @"earlier" + CarafeModelFile.EXTENSION },
+            CollectionAssert.AreEqual(new[] { CarafeModelFile.DEFAULT_FILE_NAME, Path.GetFileName(baseFile) },
                 twice.BaseModels.Select(b => b.File).ToArray());
             Assert.AreEqual(saved.FileSha256, twice.BaseModels[0].Sha256);
             // The RT model's lineage, back through the chain: base, base, pretrained.
