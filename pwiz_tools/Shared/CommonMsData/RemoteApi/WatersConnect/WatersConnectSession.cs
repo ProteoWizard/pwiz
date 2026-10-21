@@ -105,6 +105,42 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         /// <summary>
+        /// Looks up a folder in the folder tree by its id. The folder tree must already have been fetched.
+        /// </summary>
+        public bool TryGetFolderById(string folderId, out WatersConnectFolderObject folder)
+        {
+            folder = null;
+            if (TryGetData(GetRootContentsUrl(), out ImmutableList<WatersConnectFolderObject> folders))
+                folder = folders.FirstOrDefault(f => WatersConnectObject.IdEquals(f.Id, folderId));
+            return folder != null;
+        }
+
+        /// <summary>
+        /// Gets the properties of the sample set with the given id via
+        /// GET /waters_connect/v2.0/sample-sets/{sampleSetId}, synchronously. The returned object's
+        /// <see cref="WatersConnectFolderObject.ParentId"/> is the id of the folder holding the sample set.
+        /// Returns null if the server has no sample set with that id.
+        /// </summary>
+        public WatersConnectFolderObject GetSampleSet(string sampleSetId)
+        {
+            var requestUri = new Uri(WatersConnectAccount.ServerUrl +
+                                     string.Format(@"/waters_connect/v2.0/sample-sets/{0}", Uri.EscapeDataString(sampleSetId)));
+            string responseBody;
+            try
+            {
+                responseBody = _httpClient.DownloadString(requestUri);
+            }
+            catch (NetworkRequestException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                    return null;
+                throw MapToRemoteServerException(e);
+            }
+            var jsonObject = JObject.Parse(responseBody);
+            return new WatersConnectFolderObject(jsonObject, WatersConnectObject.GetProperty(jsonObject, @"folderId"), true);
+        }
+
+        /// <summary>
         /// Creates a new folder under the folder identified by <paramref name="parentFolderId"/> via
         /// PUT /waters_connect/v2.0/folders/{parentFolderId}. Returns the HTTP status code so the caller
         /// can give specific feedback (e.g. Forbidden when the user lacks folder-create permission).

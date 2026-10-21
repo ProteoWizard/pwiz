@@ -591,13 +591,14 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Parses an --import-file value. A friendly waters_connect path of the form
-        /// "waters_connect:&lt;account alias&gt;/Path/To/Injection" is carried as a path-form URL
+        /// Parses an --import-file value, or a remote --import-all value. A friendly waters_connect path
+        /// of the form "waters_connect:&lt;account alias&gt;/Path/To/Injection" is carried as a path-form URL
         /// (the alias followed by the path parts) and resolved against the server at import time.
-        /// The serialized query-string form ("waters_connect:path=...&amp;server=...&amp;id=...") is
-        /// parsed normally, as are all other (local and remote) data source paths.
+        /// The query-string forms ("waters_connect:path=...&amp;server=...&amp;id=...", or
+        /// "waters_connect:sampleSetId=...&amp;injectionId=...") are parsed normally, as are all other
+        /// (local and remote) data source paths.
         /// </summary>
-        private static MsDataFileUri ParseImportFileValue(string value)
+        public static MsDataFileUri ParseImportFileValue(string value)
         {
             if (WatersConnectUrl.IsFriendlyUrl(value))
                 return WatersConnectUrl.ParseFriendly(value);

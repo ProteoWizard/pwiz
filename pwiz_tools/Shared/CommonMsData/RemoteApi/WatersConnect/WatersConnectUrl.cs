@@ -1,5 +1,6 @@
 /*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com>
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2024 University of Washington - Seattle, WA
  *
@@ -48,15 +49,18 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             type,
             id,
-            injectionId
+            injectionId,
+            sampleSetId // Read only: lets a user name a sample set by its waters_connect id
         }
 
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
             InjectionId = nameValueParameters.GetValue(Attr.injectionId.ToString());
-            FolderOrSampleSetId = nameValueParameters.GetValue(Attr.id.ToString());
-            Type = (ItemType?) nameValueParameters.GetLongValue(Attr.type.ToString()) ?? ItemType.folder;
+            var sampleSetId = nameValueParameters.GetValue(Attr.sampleSetId.ToString());
+            FolderOrSampleSetId = nameValueParameters.GetValue(Attr.id.ToString()) ?? sampleSetId;
+            Type = (ItemType?) nameValueParameters.GetLongValue(Attr.type.ToString()) ??
+                   (sampleSetId != null ? ItemType.sample_set : ItemType.folder);
         }
         public string InjectionId { get; private set; }
         public string FolderOrSampleSetId { get; private set; }
@@ -90,6 +94,18 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             if (type != ItemType.folder && type != ItemType.folder_with_methods)
                 result.Type = ItemType.folder; 
             return result;
+        }
+
+        // waters_connect folder, sample set and injection names are not file names: a '.' in one does
+        // not start an extension, so "QC_0.5ng" must not become "QC_0"
+        public override string GetFileName()
+        {
+            return LastPathPart;
+        }
+
+        public override string GetFileNameWithoutExtension()
+        {
+            return LastPathPart;
         }
 
         public override bool IsWatersLockmassCorrectionCandidate()
@@ -179,61 +195,190 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         }
 
         /// <summary>
-        /// Resolves a friendly or path-form waters_connect URL (one without an injection id) to a concrete
-        /// injection by matching the account and navigating the server. A friendly URL (no server) matches
-        /// the account by its alias (the first path part), falling back to the server URL; a path-form URL
-        /// (with a server) matches by server and username. Returns this URL unchanged if it is already
-        /// resolved (has an injection id). Throws <see cref="RemoteServerException"/> if the account or
-        /// injection cannot be found or the server does not respond.
+        /// Resolves a waters_connect URL to a concrete injection. Accepts a friendly path, a path-form URL
+        /// (with a server), or an id form ("waters_connect:sampleSetId=...&amp;injectionId=...");
+        /// see <see cref="FindAccount"/> for how each picks its account. A path names the injection by its
+        /// folder, sample set and injection names. An id form needs the sample set id as well as the
+        /// injection id, because the server cannot look an injection up by its id alone. Returns this URL
+        /// unchanged if it is already resolved (has a server, a path and both ids). Throws
+        /// <see cref="RemoteServerException"/> if the account or injection cannot be found or the server
+        /// does not respond.
         /// </summary>
         public WatersConnectUrl ResolveInjection()
         {
-            if (InjectionId != null)
+            if (InjectionId != null && FolderOrSampleSetId != null && ServerUrl != null && EncodedPath != null)
                 return this;
 
-            var pathParts = GetPathParts().ToList();
-            WatersConnectAccount account;
-            IList<string> dataPathParts;
-            if (ServerUrl == null)
-            {
-                // Friendly form: the first path part is the account alias
-                var alias = pathParts.FirstOrDefault();
-                account = FindAccountByAlias(alias);
-                if (account == null)
-                    throw new RemoteServerException(string.Format(
-                        WatersConnectResources.WatersConnectUrl_ResolveInjection_No_waters_connect_account_was_found_with_the_alias_or_server___0__, alias));
-                dataPathParts = pathParts.Skip(1).ToList();
-            }
-            else
-            {
-                account = FindMatchingAccount() as WatersConnectAccount;
-                if (account == null)
-                    throw new RemoteServerException(string.Format(
-                        WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__,
-                        Username, ServerUrl));
-                dataPathParts = pathParts;
-            }
+            // An injection id needs its sample set id, and a URL with no injection id needs a path
+            if (InjectionId != null ? FolderOrSampleSetId == null : EncodedPath == null)
+                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_);
 
-            var injectionName = dataPathParts.LastOrDefault();
-            var sampleSetUrl = (WatersConnectUrl) account.GetRootUrl()
-                .ChangePathParts(dataPathParts.Take(Math.Max(0, dataPathParts.Count - 1)));
-            using (var session = RemoteSession.CreateSession(account))
+            var account = FindAccount(out var dataPathParts);
+            using (var session = (WatersConnectSession) RemoteSession.CreateSession(account))
             {
-                var injection = injectionName == null
-                    ? null
-                    : FetchContents(session, sampleSetUrl).FirstOrDefault(item => Equals(item.Label, injectionName));
-                if (injection == null)
+                if (InjectionId != null)
+                {
+                    var sampleSetUrl = FindSampleSetById(session, account, FolderOrSampleSetId);
+                    var injectionUrl = FetchContents(session, sampleSetUrl)
+                        .Select(item => (WatersConnectUrl) item.MsDataFileUri)
+                        .FirstOrDefault(url => WatersConnectObject.IdEquals(url.InjectionId, InjectionId));
+                    if (injectionUrl == null)
+                    {
+                        throw new RemoteServerException(string.Format(
+                            WatersConnectResources.WatersConnectUrl_ResolveInjection_Could_not_find_the_waters_connect_injection_with_the_id___0__,
+                            InjectionId));
+                    }
+                    return injectionUrl;
+                }
+
+                var injectionPathUrl = FindItemByPath(session, account, dataPathParts);
+                if (injectionPathUrl?.Type != ItemType.injection)
+                {
                     throw new RemoteServerException(string.Format(
                         WatersConnectResources.WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__,
-                        injectionName ?? string.Empty, string.Join(@"/", pathParts)));
-                return (WatersConnectUrl) injection.MsDataFileUri;
+                        dataPathParts.LastOrDefault() ?? string.Empty, string.Join(@"/", GetPathParts())));
+                }
+                return injectionPathUrl;
             }
+        }
+
+        /// <summary>
+        /// Lists the injections in the sample set this URL names, as concrete injection URLs. Accepts a
+        /// friendly path or path-form URL to a sample set, or an id form ("waters_connect:sampleSetId=...");
+        /// see <see cref="FindAccount"/> for how each picks its account. Throws
+        /// <see cref="RemoteServerException"/> if the account or sample set cannot be found, the path names
+        /// something other than a sample set, or the server does not respond.
+        /// </summary>
+        public IList<WatersConnectUrl> ListSampleSetInjections()
+        {
+            var account = FindAccount(out var dataPathParts);
+            using (var session = (WatersConnectSession) RemoteSession.CreateSession(account))
+            {
+                WatersConnectUrl sampleSetUrl;
+                if (dataPathParts.Count == 0 && FolderOrSampleSetId != null)
+                {
+                    sampleSetUrl = FindSampleSetById(session, account, FolderOrSampleSetId);
+                }
+                else
+                {
+                    sampleSetUrl = FindItemByPath(session, account, dataPathParts);
+                    if (sampleSetUrl?.Type != ItemType.sample_set)
+                    {
+                        throw new RemoteServerException(string.Format(
+                            WatersConnectResources.WatersConnectUrl_ListSampleSetInjections_The_waters_connect_path___0___is_not_a_sample_set_,
+                            string.Join(@"/", GetPathParts())));
+                    }
+                }
+                return FetchContents(session, sampleSetUrl).Select(item => (WatersConnectUrl) item.MsDataFileUri).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Finds the saved account for a URL being resolved, and the path parts below the account. A URL
+        /// with a server matches by server and username. Without a server, a friendly path names the
+        /// account by its alias (falling back to its server URL) in the first path part, and an id form
+        /// uses the only saved waters_connect account (with the URL's username, if it gives one).
+        /// </summary>
+        private WatersConnectAccount FindAccount(out IList<string> dataPathParts)
+        {
+            var pathParts = GetPathParts().ToList();
+            if (ServerUrl != null)
+            {
+                // Path-form or id-form URL naming its server
+                dataPathParts = pathParts;
+                if (FindMatchingAccount() is WatersConnectAccount matchingAccount)
+                    return matchingAccount;
+                throw new RemoteServerException(string.Format(
+                    WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__,
+                    Username, ServerUrl));
+            }
+
+            if (pathParts.Count == 0)
+            {
+                dataPathParts = pathParts;
+                return FindOnlyAccount(Username);
+            }
+
+            // Friendly form: the first path part is the account alias
+            var alias = pathParts[0];
+            dataPathParts = pathParts.Skip(1).ToList();
+            var aliasAccount = FindAccountByAlias(alias);
+            if (aliasAccount == null)
+            {
+                throw new RemoteServerException(string.Format(
+                    WatersConnectResources.WatersConnectUrl_ResolveInjection_No_waters_connect_account_was_found_with_the_alias_or_server___0__, alias));
+            }
+            return aliasAccount;
+        }
+
+        /// <summary>
+        /// Returns the only saved waters_connect account, or the only one with the given username if
+        /// there is one.
+        /// </summary>
+        private static WatersConnectAccount FindOnlyAccount(string username)
+        {
+            var accounts = GetWatersConnectAccounts()
+                .Where(account => username == null || Equals(account.Username, username)).ToArray();
+            if (accounts.Length == 0)
+                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_FindOnlyAccount_No_waters_connect_account_has_been_saved_);
+            if (accounts.Length > 1)
+                throw new RemoteServerException(WatersConnectResources.WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_);
+            return accounts[0];
+        }
+
+        private static WatersConnectAccount[] GetWatersConnectAccounts()
+        {
+            return (RemoteAccountStorage?.GetRemoteAccounts() ?? Array.Empty<RemoteAccount>())
+                .OfType<WatersConnectAccount>().ToArray();
+        }
+
+        /// <summary>
+        /// Lists the parent of the item the path parts name and returns the child with the last name,
+        /// or null if there is none. The returned URL carries the ids the server assigned.
+        /// </summary>
+        private static WatersConnectUrl FindItemByPath(RemoteSession session, WatersConnectAccount account, IList<string> dataPathParts)
+        {
+            var itemName = dataPathParts.LastOrDefault();
+            if (itemName == null)
+                return null;
+            // The root URL has no path at all; an empty path would not be recognized as the root
+            var parentUrl = dataPathParts.Count == 1
+                ? account.GetRootUrl()
+                : account.GetRootUrl().ChangePathParts(dataPathParts.Take(dataPathParts.Count - 1));
+            var item = FetchContents(session, parentUrl).FirstOrDefault(i => Equals(i.Label, itemName));
+            return (WatersConnectUrl) item?.MsDataFileUri;
+        }
+
+        /// <summary>
+        /// Returns the URL of the sample set with the given id, with its full folder path, as listing its
+        /// folder would produce it. The sample set's properties name its folder, and the folder tree gives
+        /// that folder's path.
+        /// </summary>
+        private static WatersConnectUrl FindSampleSetById(WatersConnectSession session, WatersConnectAccount account, string sampleSetId)
+        {
+            var sampleSet = session.GetSampleSet(sampleSetId);
+            if (sampleSet != null)
+            {
+                var rootUrl = (WatersConnectUrl) account.GetRootUrl();
+                FetchContents(session, rootUrl);    // Loads the folder tree
+                if (session.TryGetFolderById(sampleSet.ParentId, out var folder))
+                {
+                    var sampleSetUrl = FetchContents(session, folder.ToUrl(rootUrl))
+                        .Select(item => (WatersConnectUrl) item.MsDataFileUri)
+                        .FirstOrDefault(url => url.Type == ItemType.sample_set &&
+                                               WatersConnectObject.IdEquals(url.FolderOrSampleSetId, sampleSetId));
+                    if (sampleSetUrl != null)
+                        return sampleSetUrl;
+                }
+            }
+            throw new RemoteServerException(string.Format(
+                WatersConnectResources.WatersConnectUrl_FindSampleSetById_Could_not_find_the_waters_connect_sample_set_with_the_id___0__,
+                sampleSetId));
         }
 
         private static WatersConnectAccount FindAccountByAlias(string alias)
         {
-            var accounts = (RemoteAccountStorage?.GetRemoteAccounts() ?? Array.Empty<RemoteAccount>())
-                .OfType<WatersConnectAccount>().ToArray();
+            var accounts = GetWatersConnectAccounts();
             var matches = accounts.Where(account => Equals(account.AccountAlias, alias)).ToArray();
             if (matches.Length == 0)
                 matches = accounts.Where(account => Equals(account.ServerUrl, alias)).ToArray();

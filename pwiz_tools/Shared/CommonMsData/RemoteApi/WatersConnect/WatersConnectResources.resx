@@ -173,4 +173,22 @@
   <data name="WatersConnectUrl_ResolveInjection_No_waters_connect_account_was_found_with_the_alias_or_server___0__" xml:space="preserve">
     <value>No waters_connect account was found with the alias or server '{0}'.</value>
   </data>
+  <data name="WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_" xml:space="preserve">
+    <value>More than one waters_connect account has been saved. Add '&amp;server=&lt;server URL&gt;' or '&amp;username=&lt;user name&gt;' to choose one.</value>
+  </data>
+  <data name="WatersConnectUrl_FindOnlyAccount_No_waters_connect_account_has_been_saved_" xml:space="preserve">
+    <value>No waters_connect account has been saved.</value>
+  </data>
+  <data name="WatersConnectUrl_FindSampleSetById_Could_not_find_the_waters_connect_sample_set_with_the_id___0__" xml:space="preserve">
+    <value>Could not find the waters_connect sample set with the id '{0}'.</value>
+  </data>
+  <data name="WatersConnectUrl_ListSampleSetInjections_The_waters_connect_path___0___is_not_a_sample_set_" xml:space="preserve">
+    <value>The waters_connect path '{0}' is not a sample set.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveInjection_Could_not_find_the_waters_connect_injection_with_the_id___0__" xml:space="preserve">
+    <value>Could not find the waters_connect injection with the id '{0}'.</value>
+  </data>
+  <data name="WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_" xml:space="preserve">
+    <value>Name a waters_connect injection by its path, or by its ids as 'sampleSetId=&lt;id&gt;&amp;injectionId=&lt;id&gt;'.</value>
+  </data>
 </root>

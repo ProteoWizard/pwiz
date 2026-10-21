@@ -209,11 +209,65 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to More than one waters_connect account has been saved. Add &apos;&amp;server=&lt;server URL&gt;&apos; or &apos;&amp;username=&lt;user name&gt;&apos; to choose one..
+        /// </summary>
+        public static string WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_FindOnlyAccount_More_than_one_waters_connect_account_has_been_saved__Add_a_server_or_username_to_choose_one_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No waters_connect account has been saved..
+        /// </summary>
+        public static string WatersConnectUrl_FindOnlyAccount_No_waters_connect_account_has_been_saved_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_FindOnlyAccount_No_waters_connect_account_has_been_saved_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find the waters_connect sample set with the id &apos;{0}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_FindSampleSetById_Could_not_find_the_waters_connect_sample_set_with_the_id___0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_FindSampleSetById_Could_not_find_the_waters_connect_sample_set_with_the_id___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The waters_connect path &apos;{0}&apos; is not a sample set..
+        /// </summary>
+        public static string WatersConnectUrl_ListSampleSetInjections_The_waters_connect_path___0___is_not_a_sample_set_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ListSampleSetInjections_The_waters_connect_path___0___is_not_a_sample_set_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the injection &apos;{0}&apos; under the waters_connect path &apos;{1}&apos;..
         /// </summary>
         public static string WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__ {
             get {
                 return ResourceManager.GetString("WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find the waters_connect injection with the id &apos;{0}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveInjection_Could_not_find_the_waters_connect_injection_with_the_id___0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveInjection_Could_not_find_the_waters_connect_injection_with_the_id___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Name a waters_connect injection by its path, or by its ids as &apos;sampleSetId=&lt;id&gt;&amp;injectionId=&lt;id&gt;&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveInjection_Name_a_waters_connect_injection_by_its_path_or_its_ids_", resourceCulture);
             }
         }
 
