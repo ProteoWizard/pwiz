@@ -232,7 +232,7 @@
   </ItemGroup>
 
   <!-- Deploy the output of every ProjectReference marked DeployOutput="true" (BlibBuild,
-       BlibFilter, msconvert, bullseye-sharp) to Skyline's bin dir AND to any project that
+       BlibFilter, msconvert, bullseye-sharp, SkylineProcessRunner) to Skyline's bin dir AND to any project that
        references Skyline via ProjectReference (test assemblies). Content items propagate
        through ProjectReference by default.
 
@@ -408,20 +408,15 @@
   <!-- SkylineProcessRunner (tiny console helper Skyline shells out to, often elevated, to run a
        command via cmd.exe and stream output back over a named pipe - used by the R/Python/tool
        installers). Skyline resolves SkylineProcessRunner.exe from its own assembly directory
-       (UtilIO.GetSkylineProcessRunnerExePath). Reference the project so it builds first; the Content
-       include deploys its net8 apphost bundle (.exe + .dll + .runtimeconfig.json + .deps.json) next
-       to Skyline. net8-only: the net472 build gets SkylineProcessRunner.exe from the Jam toolchain. -->
+       (UtilIO.GetSkylineProcessRunnerExePath). Reference the project so it builds first; the
+       _DeployBundledToolOutputs target above deploys its net8 apphost bundle (.exe + .dll +
+       .runtimeconfig.json + .deps.json) next to Skyline. net8-only: the net472 build gets
+       SkylineProcessRunner.exe from the Jam toolchain. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="Executables\SkylineProcessRunner\SkylineProcessRunner\SkylineProcessRunner.csproj"
                       ReferenceOutputAssembly="false"
-                      Private="false" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows')">
-    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <Visible>false</Visible>
-    </Content>
+                      Private="false"
+                      DeployOutput="true" />
   </ItemGroup>
 
   <!-- SkylineCmd.exe launcher - command-line tests (e.g. CmdLineAssociateProteinsTest)
