@@ -822,6 +822,8 @@ namespace ZedGraph
 				g.SmoothingMode = SmoothingMode.HighQuality;
 				g.TextRenderingHint = TextRenderingHint.AntiAlias;
 			}
+			else if ( IsRotated( g ) )
+				g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
 			SizeF sizeF;
 			if ( layoutArea.IsEmpty )
@@ -935,6 +937,8 @@ namespace ZedGraph
 				g.SmoothingMode = SmoothingMode.HighQuality;
 				g.TextRenderingHint = TextRenderingHint.AntiAlias;
 			}
+			else if ( IsRotated( g ) )
+				g.TextRenderingHint = TextRenderingHint.AntiAlias;
 
 			// make sure the font size is properly scaled
 			Remake( scaleFactor, this.Size, ref _scaledSize, ref _font );
@@ -993,6 +997,23 @@ namespace ZedGraph
 
 			g.SmoothingMode = sModeSave;
 			g.TextRenderingHint = sHintSave;
+		}
+
+		/// <summary>
+		/// True if text drawn with this font will appear rotated away from horizontal, as
+		/// Y axis titles and vertical labels do, which render jagged unless anti-aliased.
+		/// Applies the same rotation as <see cref="SetupMatrix"/>, so it can be called before
+		/// the text is measured.
+		/// </summary>
+		private bool IsRotated( Graphics g )
+		{
+			using ( Matrix matrix = g.Transform )
+			{
+				if ( _angle != 0.0F )
+					matrix.Rotate( -_angle, MatrixOrder.Prepend );
+				// Elements[1] is the rotation (shear) component; zero for horizontal text
+				return Math.Abs( matrix.Elements[1] ) > 1e-4f;
+			}
 		}
 	#endregion
 
