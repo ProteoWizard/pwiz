@@ -248,7 +248,11 @@ namespace pwiz.SkylineTestFunctional
             var outBlib = TestFilesDir.GetTestPath("Koina.blib");
 
             if (newDocument)
+            {
                 RunUI(() => SkylineWindow.NewDocument(true));
+                // The new document starts loading the libraries in the last-used settings, Koina.blib included
+                WaitForDocumentLoaded();
+            }
 
             var doc = SkylineWindow.Document;
 
