@@ -1,0 +1,53 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Undo multiple: the Undo arrow drawn twice, a lighter outer copy offset up and to the
+       right, and the full-color copy offset down and to the left in front of it. -->
+  <!-- Outer, lighter arrow -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TranslateTransform X="4" Y="-4"/>
+    </Canvas.RenderTransform>
+    <Path Data="M 9,11 C 18,3 28,6 27,15 C 26.5,22 23,25.5 19,27" StrokeThickness="4.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Round">
+      <Path.Stroke>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+          <GradientStop Color="#7FA6E4" Offset="0"/>
+          <GradientStop Color="#9ABCEE" Offset="0.5"/>
+          <GradientStop Color="#C2D6F5" Offset="1"/>
+        </LinearGradientBrush>
+      </Path.Stroke>
+    </Path>
+    <Path Data="M 4,6 L 8,6 L 12.5,13 L 4,13 Z">
+      <Path.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+          <GradientStop Color="#7FA6E4" Offset="0"/>
+          <GradientStop Color="#5C86D2" Offset="0.6"/>
+          <GradientStop Color="#4A72C0" Offset="1"/>
+        </LinearGradientBrush>
+      </Path.Fill>
+    </Path>
+  </Canvas>
+  <!-- Front, full-color arrow -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TranslateTransform X="-5" Y="4"/>
+    </Canvas.RenderTransform>
+    <Path Data="M 9,11 C 18,3 28,6 27,15 C 26.5,22 23,25.5 19,27" StrokeThickness="4.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Round">
+      <Path.Stroke>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+          <GradientStop Color="#4A7FD8" Offset="0"/>
+          <GradientStop Color="#6A9AE6" Offset="0.5"/>
+          <GradientStop Color="#9ABCEE" Offset="1"/>
+        </LinearGradientBrush>
+      </Path.Stroke>
+    </Path>
+    <Path Data="M 12,8.5 C 19,4 25,6.5 25.5,13" StrokeThickness="1.5" Stroke="#A9C6F0" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0.8"/>
+    <Path Data="M 5,6 L 9.5,6 L 16,17 L 5,17 Z">
+      <Path.Fill>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+          <GradientStop Color="#4F84DC" Offset="0"/>
+          <GradientStop Color="#2D5FBE" Offset="0.6"/>
+          <GradientStop Color="#1F4BA3" Offset="1"/>
+        </LinearGradientBrush>
+      </Path.Fill>
+    </Path>
+  </Canvas>
+</Canvas>

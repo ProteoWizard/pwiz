@@ -1,0 +1,11 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Home: a black house silhouette with a chimney at the upper right, a wide roof chevron
+       carrying a gray stripe along its upper edge, a white door at the lower left and a
+       white window at the right. -->
+  <Rectangle Canvas.Left="22" Canvas.Top="3" Width="4" Height="8" Fill="#000000"/>
+  <Path Data="M 5,14 L 16,5 L 27,14 L 27,30 L 5,30 Z" Fill="#000000"/>
+  <Path Data="M 1,15.5 L 16,2.5 L 31,15.5" Stroke="#000000" StrokeThickness="4" StrokeLineJoin="Miter" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 2,14 L 16,2 L 30,14" Stroke="#9A9A9A" StrokeThickness="1.4" StrokeLineJoin="Miter"/>
+  <Rectangle Canvas.Left="9" Canvas.Top="20" Width="6" Height="10" Fill="#FFFFFF"/>
+  <Rectangle Canvas.Left="19" Canvas.Top="19" Width="6" Height="6" Fill="#FFFFFF"/>
+</Canvas>

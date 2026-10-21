@@ -1,0 +1,26 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Read-write folder: the same open folder as ReadOnlyFolder with a green badge disc over
+       the lower-right corner. -->
+  <Path Data="M 24,8 L 29,8 L 29,24 L 2,24 L 2,27 L 26,27 Z" Fill="#8A8A8A" Opacity="0.75"/>
+  <Rectangle Canvas.Left="3" Canvas.Top="26" Width="24" Height="2" Fill="#A0A0A0" Opacity="0.7"/>
+  <Path Data="M 2,4 L 10,4 L 13,7 L 24,7 L 24,23 L 2,23 Z" Fill="#FFF4B0" Stroke="#C08A10" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <Path Data="M 6,11 L 26,11 L 24,25 L 4,25 Z" Stroke="#B8860B" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFF6B8" Offset="0"/>
+        <GradientStop Color="#FFE468" Offset="0.5"/>
+        <GradientStop Color="#F3B220" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 7,12.5 L 25,12.5" Stroke="#FFFBE0" StrokeThickness="1" Opacity="0.9"/>
+  <Ellipse Canvas.Left="20" Canvas.Top="20" Width="18" Height="18">
+    <Ellipse.Fill>
+      <RadialGradientBrush GradientOrigin="0.35,0.35">
+        <GradientStop Color="#60E040" Offset="0"/>
+        <GradientStop Color="#22C000" Offset="0.6"/>
+        <GradientStop Color="#189800" Offset="1"/>
+      </RadialGradientBrush>
+    </Ellipse.Fill>
+  </Ellipse>
+</Canvas>

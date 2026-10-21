@@ -1,0 +1,25 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Open folder: pale yellow back panel with a tab, gold-outlined front flap leaning right and
+       shading from pale yellow to orange, a soft gray shadow underneath, and a steel-blue arrow
+       at the top right that arcs over from the left and ends in a navy head pointing down. -->
+  <Path Data="M 3,25 L 3,27 L 27,27 L 29,25 L 29,28 L 3,28 Z" Fill="#B0A898" Opacity="0.6"/>
+  <Rectangle Canvas.Left="2" Canvas.Top="26" Width="27" Height="3" RadiusX="1" RadiusY="1" Fill="#B8B0A0" Opacity="0.7"/>
+  <!-- Back panel -->
+  <Path Data="M 1,6 L 10,6 L 12,9 L 21,9 L 21,25 L 1,25 Z" Fill="#FFF4B0" Stroke="#A87A10" StrokeThickness="2" StrokeLineJoin="Miter"/>
+  <!-- Front flap -->
+  <Path Data="M 8,12 L 30,12 L 25,25 L 3,25 Z" Stroke="#B8860B" StrokeThickness="2" StrokeLineJoin="Miter">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFF6B8" Offset="0"/>
+        <GradientStop Color="#FFE468" Offset="0.45"/>
+        <GradientStop Color="#F3B220" Offset="0.8"/>
+        <GradientStop Color="#D08A00" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 9,13 L 28,13" Stroke="#FFFBE0" StrokeThickness="1" Opacity="0.9"/>
+  <!-- Arrow: arc from the left over the top, head pointing down at the right -->
+  <Path Data="M 18.5,4.5 A 5,4 0 0 1 28.5,4.5" Stroke="#8CA0BC" StrokeThickness="2.5" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 19,3.5 A 4.5,3.2 0 0 1 28,3.5" Stroke="#D8E0EC" StrokeThickness="0.8" Opacity="0.9"/>
+  <Path Data="M 25,3.5 L 32,3.5 L 28.5,8.5 Z" Fill="#3C5078"/>
+</Canvas>

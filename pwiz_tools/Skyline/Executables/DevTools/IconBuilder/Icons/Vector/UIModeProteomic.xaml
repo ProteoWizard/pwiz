@@ -1,0 +1,39 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Proteomics UI mode: an alpha helix running from the upper left to the lower right, drawn as a
+       dark backbone with three tilted ribbon turns stacked along it, each lit light blue on top and
+       deep blue underneath, darker toward the lower right. Transparent background. -->
+  <Path Data="M 8,7 L 16,16 L 24,25" Stroke="#1A3FBF" StrokeThickness="5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+  <!-- Turn 1 -->
+  <Ellipse Canvas.Left="1.5" Canvas.Top="3.25" Width="13" Height="7.5" Stroke="#12309F" StrokeThickness="0.8" RenderTransformOrigin="0.5,0.5">
+    <Ellipse.RenderTransform><RotateTransform Angle="-35"/></Ellipse.RenderTransform>
+    <Ellipse.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#A6D2FB" Offset="0"/>
+        <GradientStop Color="#4F8DEA" Offset="0.5"/>
+        <GradientStop Color="#1D45CC" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Fill>
+  </Ellipse>
+  <!-- Turn 2 -->
+  <Ellipse Canvas.Left="9.5" Canvas.Top="12.25" Width="13" Height="7.5" Stroke="#12309F" StrokeThickness="0.8" RenderTransformOrigin="0.5,0.5">
+    <Ellipse.RenderTransform><RotateTransform Angle="-35"/></Ellipse.RenderTransform>
+    <Ellipse.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#86BCF7" Offset="0"/>
+        <GradientStop Color="#3A78E0" Offset="0.5"/>
+        <GradientStop Color="#1638BD" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Fill>
+  </Ellipse>
+  <!-- Turn 3 -->
+  <Ellipse Canvas.Left="17.5" Canvas.Top="21.25" Width="13" Height="7.5" Stroke="#12309F" StrokeThickness="0.8" RenderTransformOrigin="0.5,0.5">
+    <Ellipse.RenderTransform><RotateTransform Angle="-35"/></Ellipse.RenderTransform>
+    <Ellipse.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#6CA8F2" Offset="0"/>
+        <GradientStop Color="#2D63D6" Offset="0.5"/>
+        <GradientStop Color="#1228AC" Offset="1"/>
+      </LinearGradientBrush>
+    </Ellipse.Fill>
+  </Ellipse>
+</Canvas>

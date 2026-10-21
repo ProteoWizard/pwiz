@@ -1,0 +1,16 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Magic wand: a dark gray wand from the lower left to the upper right with a pale
+       highlight along its upper edge and a white tip, and a deep yellow sunburst with eight
+       longer rays at the upper right. -->
+  <!-- Sunburst -->
+  <Path Data="M 22,10 L 20.3,4 L 21,-1 L 23.7,4 Z M 22,10 L 27,6 L 31.5,1.5 L 29.3,7.2 Z M 22,10 L 27.6,8.3 L 33,11 L 27.6,12.8 Z M 22,10 L 26.5,14 L 29.3,20 L 24.8,16.7 Z M 22,10 L 23.2,16.2 L 22.6,22.5 L 20.3,16.2 Z M 22,10 L 17,7.2 L 12,2.7 L 17.5,5 Z M 22,10 L 16.4,10.6 L 10.3,8.9 L 16.4,7.8 Z" Fill="#E8A80A"/>
+  <Ellipse Canvas.Left="15.5" Canvas.Top="3.5" Width="13" Height="13" Fill="#EEB010"/>
+  <Ellipse Canvas.Left="18" Canvas.Top="5.5" Width="5.5" Height="4.5" Fill="#F7D050" Opacity="0.8"/>
+  <!-- Wand -->
+  <Path Data="M 4.5,27.5 L 17.5,14.5" Stroke="#303030" StrokeThickness="8" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 3,24.5 L 15,12.5" Stroke="#CFCFCF" StrokeThickness="2" StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"/>
+  <Path Data="M 2,30.5 L 2,27 L 5,27 Z" Fill="#8A8A8A"/>
+  <!-- Tip -->
+  <Path Data="M 14,12 L 18,8 L 23,13 L 19,17 Z" Fill="#F2F2F2" Stroke="#8C8C8C" StrokeThickness="1" StrokeLineJoin="Miter"/>
+  <Path Data="M 15.5,12 L 18,9.5 L 20,11.5 L 17.5,14 Z" Fill="#FFFFFF"/>
+</Canvas>

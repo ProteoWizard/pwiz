@@ -1,0 +1,12 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Peptide decoy with library overlay: red disc with white P, dark red D with gray bars, black spectrum bars at the lower right. -->
+  <Path Data="M 6,0 L 16,0 L 20,4 L 20,10 L 16,14 L 6,14 L 2,10 L 2,4 Z" Fill="#FF0000"/>
+  <Path Data="M 8,2 L 14,2 L 16,4 L 16,6 L 14,8 L 10,8 L 10,12 L 8,12 Z M 10,4 L 14,4 L 14,6 L 10,6 Z" Fill="#FFFFFF"/>
+  <Path Data="M 6,16 L 14,16 L 16,18 L 16,26 L 14,28 L 6,28 Z M 8,18 L 12,18 L 12,20 L 14,20 L 14,24 L 12,24 L 12,26 L 8,26 Z" Fill="#800000"/>
+  <Rectangle Canvas.Left="8" Canvas.Top="18" Width="2" Height="8" Fill="#808080"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="20" Width="2" Height="4" Fill="#808080"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="16" Width="2" Height="12" Fill="#000000"/>
+  <Rectangle Canvas.Left="20" Canvas.Top="20" Width="2" Height="8" Fill="#000000"/>
+  <Rectangle Canvas.Left="28" Canvas.Top="24" Width="2" Height="4" Fill="#000000"/>
+  <Rectangle Canvas.Left="18" Canvas.Top="28" Width="12" Height="2" Fill="#000000"/>
+</Canvas>

@@ -1,0 +1,24 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Yellow sticky note: dark khaki 2-unit border, pale-to-gold fill, darker right and bottom
+       edges, and a curled fold at the bottom-left corner with a dark crease line. -->
+  <Rectangle Canvas.Left="3" Canvas.Top="3" Width="26" Height="26" Stroke="#7C6B44" StrokeThickness="2">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FFF6BE" Offset="0"/>
+        <GradientStop Color="#FBE58E" Offset="0.55"/>
+        <GradientStop Color="#EDC75A" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <Path Data="M 27,5 L 29,5 L 29,29 L 5,29 L 5,27 L 27,27 Z" Fill="#6E5C34" Opacity="0.7"/>
+  <Path Data="M 4,17 L 15,28 L 4,28 Z">
+    <Path.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E8AE00" Offset="0"/>
+        <GradientStop Color="#CC8E00" Offset="1"/>
+      </LinearGradientBrush>
+    </Path.Fill>
+  </Path>
+  <Path Data="M 4,17 L 15,28" Stroke="#A87600" StrokeThickness="1.2"/>
+  <Path Data="M 6,20.5 L 12.5,27 L 6,27 Z" Fill="#F3C62E" Opacity="0.85"/>
+</Canvas>

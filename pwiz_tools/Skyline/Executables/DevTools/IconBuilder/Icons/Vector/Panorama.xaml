@@ -1,0 +1,40 @@
+<Canvas xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="32" Height="32">
+  <!-- Panorama: a pale yellow sun ring with a white interior behind, a blue ground gradient over
+       the lower third, three high-rise blocks in the middle, and the Space Needle at the left edge
+       (spire, domed saucer with a tapered underside, one thin vertical core). -->
+  <Ellipse Canvas.Left="-0.5" Canvas.Top="4.5" Width="33" Height="33" Fill="#FFFFFF" Stroke="#FBEBC0" StrokeThickness="4"/>
+  <Ellipse Canvas.Left="0.5" Canvas.Top="5.5" Width="31" Height="31" Stroke="#F6D98F" StrokeThickness="2"/>
+  <!-- Ground -->
+  <Rectangle Canvas.Left="0" Canvas.Top="22" Width="32" Height="10">
+    <Rectangle.Fill>
+      <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#1A579F" Offset="0"/>
+        <GradientStop Color="#4D83CE" Offset="0.45"/>
+        <GradientStop Color="#99BDF8" Offset="1"/>
+      </LinearGradientBrush>
+    </Rectangle.Fill>
+  </Rectangle>
+  <!-- Buildings -->
+  <Rectangle Canvas.Left="12" Canvas.Top="12" Width="4" Height="12" Fill="#86A5C9"/>
+  <Rectangle Canvas.Left="12" Canvas.Top="12" Width="4" Height="2" Fill="#AFC5DE"/>
+  <Rectangle Canvas.Left="17" Canvas.Top="9" Width="2" Height="15" Fill="#8CABCF"/>
+  <Rectangle Canvas.Left="19" Canvas.Top="9" Width="4" Height="15" Fill="#0D4B93"/>
+  <Rectangle Canvas.Left="24" Canvas.Top="15" Width="2" Height="9" Fill="#2B65AF"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="15" Width="4" Height="9" Fill="#7CA4DD"/>
+  <Rectangle Canvas.Left="26" Canvas.Top="15" Width="4" Height="1.5" Fill="#A9C2E6"/>
+  <!-- Space Needle, same drawing as Skyline_FilesTree scaled to the left edge -->
+  <Canvas>
+    <Canvas.RenderTransform>
+      <TransformGroup>
+        <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
+        <TranslateTransform X="-1" Y="0.6"/>
+      </TransformGroup>
+    </Canvas.RenderTransform>
+    <Rectangle Canvas.Left="7.4" Canvas.Top="11" Width="3.2" Height="17.5" Fill="#1A579F"/>
+    <Path Data="M 2.5,8.5 L 15.5,8.5 L 11,11.5 L 7,11.5 Z" Fill="#2B65AF"/>
+    <Rectangle Canvas.Left="1.5" Canvas.Top="6.5" Width="15" Height="2.5" RadiusX="1.25" RadiusY="1.25" Fill="#1A579F"/>
+    <Path Data="M 3.5,6.5 Q 9,1.5 14.5,6.5 Z" Fill="#2A63AB"/>
+    <Path Data="M 6,6.5 Q 9,3.6 12,6.5 Z" Fill="#5F8EC8"/>
+    <Rectangle Canvas.Left="8.3" Canvas.Top="0.5" Width="1.4" Height="4" Fill="#1A579F"/>
+  </Canvas>
+</Canvas>
